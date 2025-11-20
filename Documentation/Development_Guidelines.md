@@ -323,8 +323,8 @@ const total = subtotal * 0.9;
 
 ### Copyright-Safe Comments
 ```javascript
-// ✅ GOOD - Can explain PRINCE2 in comments
-/* This component implements PRINCE2 stage-gate process */
+// ✅ GOOD - Can explain structured PM processes in comments
+/* This component implements structured PM stage-gate process */
 function StructuredStageGate() {
   // Component code
 }

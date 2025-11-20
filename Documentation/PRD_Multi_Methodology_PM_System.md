@@ -4,19 +4,19 @@
 **Version:** 2.0
 **Date:** 2025-11-15
 **Status:** Ready for Review
-**Methodology Support:** PRINCE2 | Scrum | Kanban | Agile | Hybrid
+**Methodology Support:** Structured/Traditional PM | Scrum | Kanban | Agile | Hybrid
 
 ---
 
 ## 1. Executive Summary
 
-This document outlines requirements for a comprehensive, methodology-agnostic web-based Project Management System that supports multiple project management frameworks including PRINCE2, Scrum, Kanban, Agile, and hybrid approaches. The system provides organizations with the flexibility to choose and configure their preferred methodology while maintaining enterprise-grade security, advanced planning capabilities, and role-based access control.
+This document outlines requirements for a comprehensive, methodology-agnostic web-based Project Management System that supports multiple project management frameworks including Structured/Traditional PM, Scrum, Kanban, Agile, and hybrid approaches. The system provides organizations with the flexibility to choose and configure their preferred methodology while maintaining enterprise-grade security, advanced planning capabilities, and role-based access control.
 
 ### 1.1 Vision Statement
 To deliver a unified project management platform that empowers organizations to manage projects using their chosen methodology—whether traditional, agile, or hybrid—with seamless transitions, consistent tooling, and enterprise security.
 
 ### 1.2 Key Differentiators
-- **Methodology Flexibility:** Support for PRINCE2, Scrum, Kanban, Agile frameworks, and custom hybrid approaches
+- **Methodology Flexibility:** Support for Structured/Traditional PM, Scrum, Kanban, Agile frameworks, and custom hybrid approaches
 - **Adaptive Interface:** UI adapts based on selected methodology and role
 - **Advanced Planning:** Microsoft Project-like capabilities with Agile boards
 - **Enterprise Security:** Multi-layered security with separate admin application
@@ -28,7 +28,7 @@ To deliver a unified project management platform that empowers organizations to 
 
 ### 2.1 Purpose
 A unified project management platform that supports multiple methodologies, enabling organizations to:
-- Execute projects using PRINCE2, Scrum, Kanban, or hybrid methodologies
+- Execute projects using Structured/Traditional PM, Scrum, Kanban, or hybrid methodologies
 - Transition between methodologies as project needs evolve
 - Maintain consistent reporting and governance across all methodologies
 - Leverage best practices from multiple frameworks
@@ -45,7 +45,7 @@ A unified project management platform that supports multiple methodologies, enab
 
 ### 2.3 Supported Methodologies
 
-#### 2.3.1 PRINCE2 (PRojects IN Controlled Environments)
+#### 2.3.1 Structured/Traditional PM
 - Structured project management with defined processes
 - Stage-gate approach with governance
 - Comprehensive documentation and control
@@ -108,7 +108,7 @@ A unified project management platform that supports multiple methodologies, enab
 
 ### 3.1 Project Methodology Selection
 Each project can select its primary methodology during initialization:
-- **PRINCE2:** Full PRINCE2 process implementation
+- **Structured/Traditional PM:** Full structured PM process implementation
 - **Scrum:** Sprint-based with Scrum ceremonies
 - **Kanban:** Continuous flow with visual boards
 - **Agile (Hybrid):** Customizable agile approach
@@ -124,7 +124,7 @@ Organizations can configure:
 - Required vs. optional processes
 
 ### 3.3 Hybrid Methodology Support
-- Mix PRINCE2 governance with Scrum delivery
+- Mix Structured PM governance with Scrum delivery
 - Combine Kanban workflow with traditional planning
 - Use stage-gates with iterative development
 - Custom process definitions
@@ -140,12 +140,12 @@ Organizations can configure:
 
 ---
 
-## 4. PRINCE2 Module Suite
+## 4. Structured PM Module Suite
 
 ### 4.1 Overview
-Complete PRINCE2 implementation following the seven processes, themes, and principles. This module is activated when a project selects PRINCE2 methodology.
+Complete Structured PM implementation following structured project management processes, themes, and principles. This module is activated when a project selects Structured/Traditional PM methodology.
 
-### 4.2 PRINCE2 Processes (Chronological Implementation)
+### 4.2 Structured PM Processes (Chronological Implementation)
 
 #### 4.2.1 Starting Up a Project (SU)
 **Purpose:** Ensure project prerequisites are in place before committing resources.
@@ -387,7 +387,7 @@ Complete PRINCE2 implementation following the seven processes, themes, and princ
 
 ---
 
-### 4.3 PRINCE2 Themes (Cross-Cutting)
+### 4.3 Structured PM Themes (Cross-Cutting)
 
 #### Business Case Theme
 - Business justification throughout project
@@ -732,7 +732,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 ### 7.2 Planning Views
 
 #### 7.2.1 Gantt Chart View
-**For:** PRINCE2, Waterfall, Hybrid projects
+**For:** Structured PM, Waterfall, Hybrid projects
 **Features:**
 - Interactive timeline visualization
 - Task hierarchy (WBS)
@@ -773,7 +773,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 - Multi-month view
 
 #### 7.2.5 Network Diagram
-**For:** PRINCE2, Complex projects
+**For:** Structured PM, Complex projects
 **Features:**
 - Task dependency network
 - Critical path analysis
@@ -813,7 +813,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 - Task templates
 
 **Methodology-Specific:**
-- **PRINCE2:** Work Packages, Products
+- **Structured PM:** Work Packages, Products
 - **Scrum:** User Stories, Tasks
 - **Kanban:** Cards
 - **Agile:** Stories, Epics, Features
@@ -922,7 +922,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 - Issue linking (to tasks, stories, etc.)
 
 **Methodology-Specific Terms:**
-- **PRINCE2:** Issues and Exceptions
+- **Structured PM:** Issues and Exceptions
 - **Scrum:** Impediments
 - **Kanban:** Blockers
 - **Agile:** Issues/Bugs
@@ -957,7 +957,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 - `risk_monitoring`
 
 ### 8.3 Change Management
-**Available to:** PRINCE2, Hybrid, Enterprise projects
+**Available to:** Structured PM, Hybrid, Enterprise projects
 
 **Features:**
 - Change request submission
@@ -989,7 +989,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 - Definition of Done enforcement
 
 **Methodology-Specific:**
-- **PRINCE2:** Quality Management Strategy, Quality Register
+- **Structured PM:** Quality Management Strategy, Quality Register
 - **Scrum:** Definition of Done, Acceptance Criteria
 - **Kanban:** Quality policies
 - **Agile:** Acceptance Criteria, Testing
@@ -1038,7 +1038,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 - Issue/Impediment reports
 - Team performance
 
-**PRINCE2 Reports:**
+**Structured PM Reports:**
 - Highlight Reports
 - End Stage Reports
 - End Project Report
@@ -1093,7 +1093,7 @@ Advanced planning capabilities available to all methodologies, with UI adaptatio
 
 The system supports role mapping across methodologies:
 
-| Universal Role | PRINCE2 Role | Scrum Role | Agile Role | Access Level |
+| Universal Role | Structured PM Role | Scrum Role | Agile Role | Access Level |
 |----------------|-------------|------------|------------|--------------|
 | **Executive/Sponsor** | Executive/Project Board | Product Owner | Product Owner | Strategic |
 | **Project Leader** | Project Manager | Scrum Master | Agile Coach | Operational |
@@ -1105,7 +1105,7 @@ The system supports role mapping across methodologies:
 
 ### 9.2 Role Definitions by Methodology
 
-#### 9.2.1 PRINCE2 Roles
+#### 9.2.1 Structured PM Roles
 
 **Project Board (Executive, Senior User, Senior Supplier)**
 - **Responsibilities:** Strategic decisions, authorization, governance
@@ -1253,7 +1253,7 @@ The system supports role mapping across methodologies:
 - `tasks` - Universal tasks
 - `user_stories` - Scrum stories
 - `epics` - Epic tracking
-- `work_packages` - PRINCE2 work packages
+- `work_packages` - Structured PM work packages
 - `kanban_cards` - Kanban items
 - `task_assignments` - Resource assignments
 - `task_dependencies` - Dependencies
@@ -1283,7 +1283,7 @@ The system supports role mapping across methodologies:
 - `wip_limits` - WIP configurations
 - `flow_metrics` - Flow data
 
-#### PRINCE2-Specific Tables
+#### Structured PM-Specific Tables
 - `project_mandates` - Mandates
 - `project_briefs` - Project briefs
 - `business_cases` - Business cases
@@ -1787,7 +1787,7 @@ All tables must be registered in `database_tables` table as per system requireme
 
 ### 13.5 Methodology-Specific UI
 
-#### PRINCE2 UI
+#### Structured PM UI
 - Process-based navigation
 - Document-centric interfaces
 - Approval workflows UI
@@ -2290,8 +2290,8 @@ All tables must be registered in `database_tables` table as per system requireme
 **Deliverables:**
 - [ ] Methodology selection module
 - [ ] Project creation with methodology choice
-- [ ] PRINCE2: Starting Up a Project module
-- [ ] PRINCE2: Initiating a Project module
+- [ ] Structured PM: Starting Up a Project module
+- [ ] Structured PM: Initiating a Project module
 - [ ] Scrum: Product Backlog module
 - [ ] Scrum: Sprint creation and planning
 - [ ] Kanban: Basic board creation
@@ -2312,8 +2312,8 @@ All tables must be registered in `database_tables` table as per system requireme
 - [ ] Sprint board module
 - [ ] Task dependencies
 - [ ] Resource allocation
-- [ ] PRINCE2: Controlling a Stage
-- [ ] PRINCE2: Managing Product Delivery
+- [ ] Structured PM: Controlling a Stage
+- [ ] Structured PM: Managing Product Delivery
 - [ ] Scrum: Daily Scrum module
 - [ ] Scrum: Sprint Review and Retrospective
 - [ ] Issue management module
@@ -2342,12 +2342,12 @@ All tables must be registered in `database_tables` table as per system requireme
 ---
 
 ### 19.5 Phase 5: Governance & Reporting (Weeks 27-32)
-**Objective:** Complete PRINCE2 processes and reporting
+**Objective:** Complete Structured PM processes and reporting
 
 **Deliverables:**
-- [ ] PRINCE2: Directing a Project (full)
-- [ ] PRINCE2: Managing Stage Boundaries
-- [ ] PRINCE2: Closing a Project
+- [ ] Structured PM: Directing a Project (full)
+- [ ] Structured PM: Managing Stage Boundaries
+- [ ] Structured PM: Closing a Project
 - [ ] Change management module
 - [ ] Quality management module
 - [ ] Communication management
@@ -2452,7 +2452,7 @@ All tables must be registered in `database_tables` table as per system requireme
 
 ### 20.1 Functional Success Criteria
 
-- ✅ All three methodologies (PRINCE2, Scrum, Kanban) fully implemented
+- ✅ All three methodologies (Structured PM, Scrum, Kanban) fully implemented
 - ✅ All methodology-specific features operational
 - ✅ All cross-methodology features functional
 - ✅ Role-based access control working across all methodologies
@@ -2647,7 +2647,7 @@ All tables must be registered in `database_tables` table as per system requireme
 ### 23.1 Glossary
 
 **Methodology Terms:**
-- **PRINCE2:** PRojects IN Controlled Environments - structured project management method
+- **Structured/Traditional PM:** Structured project management method with defined processes and governance
 - **Scrum:** Agile framework for iterative product development
 - **Kanban:** Visual workflow management method
 - **Sprint:** Time-boxed iteration in Scrum (1-4 weeks)
@@ -2669,10 +2669,10 @@ All tables must be registered in `database_tables` table as per system requireme
 
 ### 23.2 References
 
-**PRINCE2:**
-- Managing Successful Projects with PRINCE2 (official manual)
-- PRINCE2 Agile
-- AXELOS official resources
+**Structured/Traditional PM:**
+- Structured project management best practices
+- Traditional project management methodologies
+- Stage-gate and governance frameworks
 
 **Scrum:**
 - The Scrum Guide (Schwaber & Sutherland)
@@ -2730,8 +2730,8 @@ All tables must be registered in `database_tables` table as per system requireme
 - **Distribution:** Stakeholders, Development Team, Project Team
 
 **Version History:**
-- v1.0 - Initial PRINCE2-focused PRD
-- v2.0 - Multi-methodology PRD (PRINCE2, Scrum, Kanban, Agile, Hybrid)
+- v1.0 - Initial Structured PM-focused PRD
+- v2.0 - Multi-methodology PRD (Structured PM, Scrum, Kanban, Agile, Hybrid)
 
 ### 24.2 Review & Approval
 
@@ -2774,7 +2774,7 @@ All tables must be registered in `database_tables` table as per system requireme
 ## 25. Questions for Stakeholder Discussion
 
 1. **Methodology Prioritization:**
-   - Which methodology should we prioritize for Phase 1? (Recommendation: PRINCE2 + Scrum basics)
+   - Which methodology should we prioritize for Phase 1? (Recommendation: Structured PM + Scrum basics)
    - Are there specific methodologies we should deprioritize or exclude?
 
 2. **Feature Prioritization:**

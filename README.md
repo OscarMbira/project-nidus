@@ -1,7 +1,7 @@
 # Project Nidus
 ## Multi-Methodology Project Management System
 
-A comprehensive, enterprise-grade web-based project management system supporting multiple methodologies including Structured PM (PRINCE2-based), Scrum, Kanban, Agile, and hybrid approaches.
+A comprehensive, enterprise-grade web-based project management system supporting multiple methodologies including Structured/Traditional PM, Scrum, Kanban, Agile, and hybrid approaches.
 
 ---
 
@@ -11,7 +11,7 @@ Project Nidus is a unified project management platform that empowers organizatio
 
 ### Key Features
 
-- ✅ **Multi-Methodology Support:** PRINCE2-based Structured PM, Scrum, Kanban, Agile, and custom hybrid approaches
+- ✅ **Multi-Methodology Support:** Structured/Traditional PM, Scrum, Kanban, Agile, and custom hybrid approaches
 - ✅ **Adaptive Interface:** UI adapts based on selected methodology and user role
 - ✅ **Advanced Planning:** Microsoft Project-like Gantt charts alongside Kanban boards
 - ✅ **Enterprise Security:** Multi-layered security with separate admin application
@@ -210,8 +210,8 @@ Project Nidus/
 
 ## 👥 Supported Methodologies
 
-### 1. Structured PM (PRINCE2-Based)
-- Complete implementation of PRINCE2 processes
+### 1. Structured/Traditional PM
+- Complete implementation of structured project management processes
 - Stage-gate governance
 - Comprehensive documentation
 - **Best for:** Large-scale projects, regulated industries
@@ -372,9 +372,7 @@ npm run build
 
 ## ⚖️ Legal Disclaimers
 
-**PRINCE2®** is a registered trademark of AXELOS Limited, used under permission. All rights reserved.
-
-This software supports the PRINCE2 methodology but is not affiliated with, endorsed by, or certified by AXELOS Limited.
+This software implements structured/traditional project management methodologies and is not affiliated with, endorsed by, or certified by any specific methodology certification body.
 
 ---
 

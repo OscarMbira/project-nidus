@@ -26,6 +26,9 @@
 25. All data should be fetched from the DB tables and do not use mock or dummy data until I have confirmed the same.
 26. For all features that amy require to upload bulk data from other existing project management tools or data, create a feature for both a) Single record capture and b) Bulk record upload/capture with all CRUD and user confirmation flows and where applicable, user the multi-step flows.
 26. When creating new and named components/folders always avoid Copyright/Trademark names for compliance with international laws and avoiding lawsuits.
+27. Do not use or name any component with the word PRINCE2 due to copyright sensitivity. Use other non-copyright/trademark text, e.g. structured/traditional
+28. The default them for all components/pages/forms/tables/dropdowns etc, should be dark during creation and setup.
+29. For frontend components, always optimise for progressive web app(PWA) for mobile responsivenes.
 
 ## Database Table Registration Rule
 Whenever a new database table is created in the system, you MUST register it in the database_tables table for the ID Generation Rules system:

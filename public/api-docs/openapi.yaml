@@ -1,0 +1,1223 @@
+openapi: 3.0.3
+info:
+  title: Project Nidus API
+  description: |
+    Comprehensive RESTful API for Project Nidus - A Multi-Methodology Project Management System.
+    
+    This API provides full CRUD operations for projects, tasks, resources, issues, risks, and more.
+    All API requests must be authenticated using API keys.
+    
+    ## Authentication
+    Include your API key in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_API_KEY
+    ```
+    
+    ## Rate Limiting
+    API requests are rate-limited per API key. The default rate limit is 60 requests per minute.
+    Rate limit information is included in response headers.
+    
+    ## Base URL
+    ```
+    https://api.projectnidus.com/api/v1
+    ```
+  version: 1.0.0
+  contact:
+    name: Project Nidus API Support
+    email: api-support@projectnidus.com
+  license:
+    name: Proprietary
+    url: https://projectnidus.com/license
+
+servers:
+  - url: https://api.projectnidus.com/api/v1
+    description: Production server
+  - url: https://staging-api.projectnidus.com/api/v1
+    description: Staging server
+
+tags:
+  - name: Projects
+    description: Project management operations
+  - name: Tasks
+    description: Task management operations
+  - name: Users
+    description: User management operations
+  - name: Resources
+    description: Resource management operations
+  - name: Issues
+    description: Issue tracking operations
+  - name: Risks
+    description: Risk management operations
+  - name: Authentication
+    description: API authentication operations
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: API Key
+      description: |
+        API Key Authentication. Include your API key in the Authorization header.
+        Example: `Authorization: Bearer nidus_xxxxxxxxxxxxx`
+  
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            code:
+              type: string
+            details:
+              type: object
+        message:
+          type: string
+    
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_name:
+          type: string
+        description:
+          type: string
+        project_code:
+          type: string
+        status:
+          type: string
+          enum: [planning, active, on_hold, completed, cancelled]
+        methodology:
+          type: string
+          enum: [structured, scrum, kanban, hybrid]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        budget:
+          type: number
+          format: decimal
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        task_name:
+          type: string
+        description:
+          type: string
+        project_id:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [todo, in_progress, review, done, blocked]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        due_date:
+          type: string
+          format: date-time
+        estimated_hours:
+          type: number
+        actual_hours:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+    
+    Resource:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        resource_name:
+          type: string
+        resource_type:
+          type: string
+          enum: [human, equipment, material]
+        availability:
+          type: number
+          format: decimal
+        cost_per_hour:
+          type: number
+          format: decimal
+        skills:
+          type: array
+          items:
+            type: string
+    
+    Issue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        issue_name:
+          type: string
+        description:
+          type: string
+        project_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [open, in_progress, resolved, closed]
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        reported_by:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+    
+    Risk:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        risk_name:
+          type: string
+        description:
+          type: string
+        project_id:
+          type: string
+          format: uuid
+        probability:
+          type: string
+          enum: [low, medium, high]
+        impact:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [identified, assessed, mitigated, closed]
+        mitigation_plan:
+          type: string
+    
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+    
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        message:
+          type: string
+
+paths:
+  /projects:
+    get:
+      tags:
+        - Projects
+      summary: List all projects
+      description: Retrieve a paginated list of projects
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [planning, active, on_hold, completed, cancelled]
+        - name: methodology
+          in: query
+          schema:
+            type: string
+            enum: [structured, scrum, kanban, hybrid]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+    
+    post:
+      tags:
+        - Projects
+      summary: Create a new project
+      description: Create a new project with the provided details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - project_name
+              properties:
+                project_name:
+                  type: string
+                description:
+                  type: string
+                project_code:
+                  type: string
+                methodology:
+                  type: string
+                  enum: [structured, scrum, kanban, hybrid]
+                start_date:
+                  type: string
+                  format: date
+                end_date:
+                  type: string
+                  format: date
+                budget:
+                  type: number
+                  format: decimal
+      responses:
+        '201':
+          description: Project created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects/{id}:
+    get:
+      tags:
+        - Projects
+      summary: Get project details
+      description: Retrieve detailed information about a specific project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    put:
+      tags:
+        - Projects
+      summary: Update project
+      description: Update an existing project
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project_name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [planning, active, on_hold, completed, cancelled]
+                budget:
+                  type: number
+                  format: decimal
+      responses:
+        '200':
+          description: Project updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Project'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    
+    delete:
+      tags:
+        - Projects
+      summary: Delete project
+      description: Delete a project (soft delete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Project deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: List all tasks
+      description: Retrieve a paginated list of tasks
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [todo, in_progress, review, done, blocked]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+    
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      description: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - task_name
+                - project_id
+              properties:
+                task_name:
+                  type: string
+                description:
+                  type: string
+                project_id:
+                  type: string
+                  format: uuid
+                assigned_to:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [todo, in_progress, review, done, blocked]
+                priority:
+                  type: string
+                  enum: [low, medium, high, critical]
+                due_date:
+                  type: string
+                  format: date-time
+                estimated_hours:
+                  type: number
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Task'
+
+  /tasks/{id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get task details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Task'
+    
+    put:
+      tags:
+        - Tasks
+      summary: Update task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task_name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                priority:
+                  type: string
+                due_date:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Task'
+    
+    delete:
+      tags:
+        - Tasks
+      summary: Delete task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List all users
+      description: Retrieve a paginated list of users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+    
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - full_name
+              properties:
+                email:
+                  type: string
+                  format: email
+                full_name:
+                  type: string
+                role:
+                  type: string
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+    
+    put:
+      tags:
+        - Users
+      summary: Update user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                role:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+    
+    delete:
+      tags:
+        - Users
+      summary: Delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /resources:
+    get:
+      tags:
+        - Resources
+      summary: List all resources
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Resource'
+    
+    post:
+      tags:
+        - Resources
+      summary: Create a new resource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - resource_name
+                - resource_type
+              properties:
+                resource_name:
+                  type: string
+                resource_type:
+                  type: string
+                  enum: [human, equipment, material]
+                availability:
+                  type: number
+                cost_per_hour:
+                  type: number
+                skills:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Resource created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Resource'
+
+  /resources/{id}:
+    get:
+      tags:
+        - Resources
+      summary: Get resource details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Resource'
+    
+    put:
+      tags:
+        - Resources
+      summary: Update resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                resource_name:
+                  type: string
+                availability:
+                  type: number
+                cost_per_hour:
+                  type: number
+      responses:
+        '200':
+          description: Resource updated successfully
+    
+    delete:
+      tags:
+        - Resources
+      summary: Delete resource
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Resource deleted successfully
+
+  /issues:
+    get:
+      tags:
+        - Issues
+      summary: List all issues
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, in_progress, resolved, closed]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+    
+    post:
+      tags:
+        - Issues
+      summary: Create a new issue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - issue_name
+                - project_id
+              properties:
+                issue_name:
+                  type: string
+                description:
+                  type: string
+                project_id:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [open, in_progress, resolved, closed]
+                severity:
+                  type: string
+                  enum: [low, medium, high, critical]
+                assigned_to:
+                  type: string
+                  format: uuid
+      responses:
+        '201':
+          description: Issue created successfully
+
+  /issues/{id}:
+    get:
+      tags:
+        - Issues
+      summary: Get issue details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+    
+    put:
+      tags:
+        - Issues
+      summary: Update issue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                issue_name:
+                  type: string
+                status:
+                  type: string
+                severity:
+                  type: string
+      responses:
+        '200':
+          description: Issue updated successfully
+    
+    delete:
+      tags:
+        - Issues
+      summary: Delete issue
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Issue deleted successfully
+
+  /risks:
+    get:
+      tags:
+        - Risks
+      summary: List all risks
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: project_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Risk'
+    
+    post:
+      tags:
+        - Risks
+      summary: Create a new risk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - risk_name
+                - project_id
+              properties:
+                risk_name:
+                  type: string
+                description:
+                  type: string
+                project_id:
+                  type: string
+                  format: uuid
+                probability:
+                  type: string
+                  enum: [low, medium, high]
+                impact:
+                  type: string
+                  enum: [low, medium, high, critical]
+                status:
+                  type: string
+                  enum: [identified, assessed, mitigated, closed]
+                mitigation_plan:
+                  type: string
+      responses:
+        '201':
+          description: Risk created successfully
+
+  /risks/{id}:
+    get:
+      tags:
+        - Risks
+      summary: Get risk details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful response
+    
+    put:
+      tags:
+        - Risks
+      summary: Update risk
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                risk_name:
+                  type: string
+                status:
+                  type: string
+                probability:
+                  type: string
+                impact:
+                  type: string
+                mitigation_plan:
+                  type: string
+      responses:
+        '200':
+          description: Risk updated successfully
+    
+    delete:
+      tags:
+        - Risks
+      summary: Delete risk
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Risk deleted successfully
+

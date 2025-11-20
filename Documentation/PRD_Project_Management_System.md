@@ -1,5 +1,5 @@
 # Product Requirements Document (PRD)
-## PRINCE2-Based Project Management System
+## Structured/Traditional PM-Based Project Management System
 
 **Version:** 1.0  
 **Date:** 2024  
@@ -9,17 +9,17 @@
 
 ## 1. Executive Summary
 
-This document outlines the requirements for developing a comprehensive, secure, and professional web-based Project Management System based on PRINCE2 methodology. The system will support the complete project lifecycle from Mandate through Project Closure, with role-based access control, Microsoft Project-like planning capabilities, and enterprise-grade security features.
+This document outlines the requirements for developing a comprehensive, secure, and professional web-based Project Management System based on Structured/Traditional PM methodology. The system will support the complete project lifecycle from Mandate through Project Closure, with role-based access control, Microsoft Project-like planning capabilities, and enterprise-grade security features.
 
 ---
 
 ## 2. System Overview
 
 ### 2.1 Purpose
-A fully-fledged project management system that implements PRINCE2 processes and best practices, providing organizations with a structured approach to project delivery.
+A fully-fledged project management system that implements Structured/Traditional PM processes and best practices, providing organizations with a structured approach to project delivery.
 
 ### 2.2 Key Objectives
-- Implement all PRINCE2 processes in chronological order
+- Implement all Structured PM processes in chronological order
 - Provide role-based access with customized menus per role
 - Deliver Microsoft Project-like planning functionality
 - Ensure enterprise-level security and compliance
@@ -38,10 +38,10 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 
 ---
 
-## 3. PRINCE2 Process Modules (Chronological Order)
+## 3. Structured PM Process Modules (Chronological Order)
 
 ### 3.1 Module 1: Mandate & Project Startup
-**PRINCE2 Process:** Starting Up a Project (SU)
+**Structured PM Process:** Starting Up a Project (SU)
 
 **Functionality:**
 - Capture project mandate and authorization
@@ -74,7 +74,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.2 Module 2: Project Initiation
-**PRINCE2 Process:** Initiating a Project (IP)
+**Structured PM Process:** Initiating a Project (IP)
 
 **Functionality:**
 - Create Project Initiation Document (PID)
@@ -119,7 +119,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.3 Module 3: Project Planning
-**PRINCE2 Process:** Planning (PL) - Integrated with all processes
+**Structured PM Process:** Planning (PL) - Integrated with all processes
 
 **Functionality:**
 - Microsoft Project-like planning interface
@@ -173,7 +173,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.4 Module 4: Directing a Project
-**PRINCE2 Process:** Directing a Project (DP)
+**Structured PM Process:** Directing a Project (DP)
 
 **Functionality:**
 - Project Board decision making
@@ -212,7 +212,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.5 Module 5: Controlling a Stage
-**PRINCE2 Process:** Controlling a Stage (CS)
+**Structured PM Process:** Controlling a Stage (CS)
 
 **Functionality:**
 - Work package authorization
@@ -260,7 +260,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.6 Module 6: Managing Product Delivery
-**PRINCE2 Process:** Managing Product Delivery (MP)
+**Structured PM Process:** Managing Product Delivery (MP)
 
 **Functionality:**
 - Accept work packages
@@ -298,7 +298,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.7 Module 7: Managing Stage Boundaries
-**PRINCE2 Process:** Managing Stage Boundaries (SB)
+**Structured PM Process:** Managing Stage Boundaries (SB)
 
 **Functionality:**
 - Plan next stage
@@ -332,7 +332,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ---
 
 ### 3.8 Module 8: Closing a Project
-**PRINCE2 Process:** Closing a Project (CP)
+**Structured PM Process:** Closing a Project (CP)
 
 **Functionality:**
 - Project closure notification
@@ -1169,7 +1169,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ## 17. Success Criteria
 
 ### 17.1 Functional Requirements
-- ✅ All PRINCE2 processes implemented
+- ✅ All Structured PM processes implemented
 - ✅ All roles have appropriate access
 - ✅ Planning module matches MS Project core features
 - ✅ All security requirements met
@@ -1227,7 +1227,7 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 - Users have modern web browsers
 - Internet connectivity available
 - Supabase service availability
-- Users are familiar with PRINCE2 methodology
+- Users are familiar with Structured/Traditional PM methodology
 
 ### 19.2 Constraints
 - Budget limitations
@@ -1258,12 +1258,12 @@ A fully-fledged project management system that implements PRINCE2 processes and 
 ## 21. Appendices
 
 ### 21.1 Glossary
-- PRINCE2 terminology
+- Structured PM terminology
 - System-specific terms
 - Technical acronyms
 
 ### 21.2 References
-- PRINCE2 methodology documentation
+- Structured PM methodology documentation
 - Project Management best practices
 - Security standards (ISO 27001, OWASP)
 
