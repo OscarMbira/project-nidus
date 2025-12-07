@@ -1,14 +1,14 @@
-# PM Simulator User Guide
+# Simulator User Guide
 
-## Welcome to PM Simulator
+## Welcome to Simulator
 
-The PM Simulator is an interactive platform designed to help you develop and practice project management skills through realistic simulations.
+The Simulator is an interactive platform designed to help you develop and practice project management skills through realistic simulations.
 
 ## Getting Started
 
 ### Creating an Account
 
-1. Navigate to the PM Simulator
+1. Navigate to the Simulator
 2. Click "Sign Up" or "Get Started"
 3. Enter your email and create a password
 4. Verify your email address (check your inbox)

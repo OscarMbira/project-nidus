@@ -1,8 +1,8 @@
-# PM Simulator API Documentation
+# Simulator API Documentation
 
 ## Overview
 
-The PM Simulator API provides programmatic access to simulation data, user progress, and analytics. This API is available for Enterprise customers and requires API key authentication.
+The Simulator API provides programmatic access to simulation data, user progress, and analytics. This API is available for Enterprise customers and requires API key authentication.
 
 ## Base URL
 

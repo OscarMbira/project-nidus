@@ -17,7 +17,7 @@ import CheckoutCancel from './pages/checkout/CheckoutCancel';
 
 // Add to your Routes configuration:
 
-{/* PM Platform Pricing */}
+{/* Platform Pricing */}
 <Route path="/pricing" element={<PMPricing />} />
 
 {/* Bundle Pricing */}
@@ -42,10 +42,10 @@ import CheckoutCancel from './pages/checkout/CheckoutCancel';
 
 ## Updated Protected Routes with Platform Access
 
-### PM Platform Routes
+### Platform Routes
 
 ```jsx
-{/* Dashboard - PM Platform */}
+{/* Dashboard - Platform */}
 <Route
   path="/dashboard"
   element={
@@ -55,7 +55,7 @@ import CheckoutCancel from './pages/checkout/CheckoutCancel';
   }
 />
 
-{/* Projects - PM Platform */}
+{/* Projects - Platform */}
 <Route
   path="/projects"
   element={
@@ -131,7 +131,7 @@ import SubscriptionDashboard from './pages/SubscriptionDashboard';
 import CheckoutSuccess from './pages/checkout/CheckoutSuccess';
 import CheckoutCancel from './pages/checkout/CheckoutCancel';
 
-// PM Platform Pages
+// Platform Pages
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 
@@ -167,7 +167,7 @@ function App() {
         <Route path="/checkout/success" element={<CheckoutSuccess />} />
         <Route path="/checkout/cancel" element={<CheckoutCancel />} />
 
-        {/* PM Platform Routes (Protected with PM platform requirement) */}
+        {/* Platform Routes (Protected with PM platform requirement) */}
         <Route
           path="/dashboard"
           element={
@@ -266,9 +266,9 @@ Add to your sidebar menu configuration:
 
 ```javascript
 const menuItems = [
-  // PM Platform Section
+  // Platform Section
   {
-    title: 'PM Platform',
+    title: 'Platform',
     visible: platformAccess.pm,
     items: [
       { path: '/dashboard', label: 'Dashboard', icon: 'LayoutDashboard' },

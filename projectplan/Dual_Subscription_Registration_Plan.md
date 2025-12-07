@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-This document outlines the implementation plan for a seamless dual-subscription registration system that allows users to register separately for the PM Platform and Simulator with either the same or different email addresses.
+This document outlines the implementation plan for a seamless dual-subscription registration system that allows users to register separately for the Platform and Simulator with either the same or different email addresses.
 
 ### Current State Analysis
 
@@ -143,7 +143,7 @@ After analyzing the requirements, **Option 3 (Hybrid Approach)** is recommended 
 
 ## Database Schema Design
 
-### 1. PM Platform Subscriptions Table
+### 1. Platform Subscriptions Table
 
 Create a new table in the `public` schema for PM subscriptions:
 
@@ -258,7 +258,7 @@ CREATE TABLE public.account_links (
 - User wants to add another platform
 
 **Options:**
-- "I want to use PM Platform only"
+- "I want to use Platform only"
 - "I want to use Simulator only"
 - "I want to use both platforms"
 
@@ -397,7 +397,7 @@ $$ LANGUAGE plpgsql;
 ```
 1. User visits registration page
 2. Enters email, password, full name
-3. Selects platforms: ☑ PM Platform  ☑ Simulator
+3. Selects platforms: ☑ Platform  ☑ Simulator
 4. Reviews subscription options
 5. Completes registration
 6. Email verification sent
@@ -414,7 +414,7 @@ $$ LANGUAGE plpgsql;
 ```
 1. User visits registration page
 2. Enters email, password, full name
-3. Selects platform: ☑ PM Platform  ☐ Simulator
+3. Selects platform: ☑ Platform  ☐ Simulator
 4. Reviews subscription options
 5. Completes registration
 6. Email verification sent
@@ -460,7 +460,7 @@ $$ LANGUAGE plpgsql;
 
 ## Subscription Tiers Design
 
-### PM Platform Subscription Tiers
+### Platform Subscription Tiers
 
 | Tier | Monthly | Annual | Features |
 |------|---------|--------|----------|
@@ -647,7 +647,7 @@ Encourage users to subscribe to both platforms:
 2. On first PM platform access:
    - Create user_platform_access record for 'pm'
    - Create free PM subscription
-   - Show welcome modal: "Try PM Platform Free!"
+   - Show welcome modal: "Try Platform Free!"
 3. Track conversion to paid PM subscription
 ```
 
@@ -887,7 +887,7 @@ POST   /api/account-links/merge
 ### C. Environment Variables
 
 ```env
-# Stripe (PM Platform)
+# Stripe (Platform)
 VITE_STRIPE_PM_PRICE_FREE=price_xxx
 VITE_STRIPE_PM_PRICE_STARTER_MONTHLY=price_xxx
 VITE_STRIPE_PM_PRICE_STARTER_YEARLY=price_xxx
@@ -927,7 +927,7 @@ VITE_ENABLE_PLATFORM_MIGRATION=true
 - [x] Added indexes for performance optimization
 
 **Backend Services (✅ Complete):**
-- [x] Created `pmSubscriptionService.js` - Manages PM Platform subscriptions
+- [x] Created `pmSubscriptionService.js` - Manages Platform subscriptions
 - [x] Created `unifiedSubscriptionService.js` - Unified interface for both platforms
 - [x] Created `accountLinkingService.js` - Advanced email linking features
 - [x] All services follow existing patterns from `subscriptionService.js`
@@ -999,7 +999,7 @@ VITE_ENABLE_PLATFORM_MIGRATION=true
 ### What's Still Needed (Optional Enhancements)
 
 **Phase 7: Pricing & Checkout (Not Yet Implemented):**
-- [ ] Create `/pricing` page for PM Platform
+- [ ] Create `/pricing` page for Platform
 - [ ] Create bundle pricing page
 - [ ] Implement Stripe checkout flows
 - [ ] Add discount code support

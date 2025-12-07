@@ -1,18 +1,18 @@
-# PM Platform Getting Started Guide
+# Platform Getting Started Guide
 
 **Project Nidus - Project Management Platform**
 
 ---
 
-## Welcome to PM Platform
+## Welcome to Platform
 
-Welcome to Project Nidus PM Platform! This comprehensive project management tool helps you manage projects from startup to closure using structured methodologies. Whether you're a Project Manager, Team Lead, or Team Member, this guide will help you get started.
+Welcome to Project Nidus Platform! This comprehensive project management tool helps you manage projects from startup to closure using structured methodologies. Whether you're a Project Manager, Team Lead, or Team Member, this guide will help you get started.
 
 ---
 
 ## Introduction
 
-Project Nidus PM Platform is designed to support multiple project management methodologies including Structured PM, Scrum, and Kanban. The platform provides:
+Project Nidus Platform is designed to support multiple project management methodologies including Structured PM, Scrum, and Kanban. The platform provides:
 
 - **Structured Project Workflows** - Follow proven methodologies for consistent delivery
 - **Role-Based Dashboards** - Customized views for different user roles
@@ -28,7 +28,7 @@ Project Nidus PM Platform is designed to support multiple project management met
 
 ### Creating Your Account
 
-1. Navigate to the PM Platform homepage
+1. Navigate to the Platform homepage
 2. Click **"Sign Up"** or **"Get Started"**
 3. Enter your email address and create a secure password
 4. Verify your email address (check your inbox for verification link)
@@ -36,7 +36,7 @@ Project Nidus PM Platform is designed to support multiple project management met
 
 ### Your First Login
 
-1. Go to the PM Platform login page
+1. Go to the Platform login page
 2. Enter your email and password
 3. Click **"Login"**
 4. You'll be taken to your dashboard based on your role

@@ -2,7 +2,7 @@
 
 ## Executive Summary
 This plan outlines the comprehensive implementation of a multi-tenant login and role assignment system that allows Programme/Project Managers to:
-1. Subscribe to the PM Platform
+1. Subscribe to the Platform
 2. Create project-specific roles
 3. Register up to 30 project users without additional subscription
 4. Purchase additional user seats at a discounted rate
@@ -498,7 +498,7 @@ This plan outlines the comprehensive implementation of a multi-tenant login and 
 3. Fills registration form:
    - Full name, email, password
    - Account/Organization name
-   - Platform selection (PM Platform)
+   - Platform selection (Platform)
    - Preferred plan (Starter/Professional/Enterprise)
 4. Email verification sent
 5. User verifies email
@@ -758,7 +758,7 @@ FROM projects;
 ## Success Criteria
 
 ### Functional Requirements
-✓ Programme/Project Manager can subscribe to PM Platform
+✓ Programme/Project Manager can subscribe to Platform
 ✓ Account is created and linked to subscription
 ✓ First project can be created with default roles
 ✓ Project Manager can invite up to 30 users without extra cost

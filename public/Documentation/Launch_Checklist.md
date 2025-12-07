@@ -1,4 +1,4 @@
-# PM Simulator Launch Checklist
+# Simulator Launch Checklist
 
 ## Pre-Launch (4 Weeks Before)
 

@@ -8,7 +8,7 @@
 
 ## Overview
 
-This document provides the implementation guide for Stripe webhooks that handle subscription lifecycle events for both PM Platform and Simulator subscriptions.
+This document provides the implementation guide for Stripe webhooks that handle subscription lifecycle events for both Platform and Simulator subscriptions.
 
 ---
 

@@ -2,14 +2,14 @@
 
 ## Overview
 
-Users can have access to both PM Platform and Simulator Platform with a single account. This guide explains how platform switching works.
+Users can have access to both Platform and Simulator Platform with a single account. This guide explains how platform switching works.
 
 ## Platform Access
 
 ### Registration
 
 During registration, users can select:
-- PM Platform only
+- Platform only
 - Simulator Platform only
 - Both platforms
 
@@ -43,7 +43,7 @@ For users with multiple platforms:
 
 ## Platform Features
 
-### PM Platform
+### Platform
 - Account-based organization
 - Multi-tenant structure
 - Team collaboration

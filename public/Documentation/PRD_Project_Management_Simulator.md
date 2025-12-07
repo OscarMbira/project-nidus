@@ -372,7 +372,7 @@ The system extracts and structures:
 | Module Completion | Complete any module with 70%+ | Free (with subscription) |
 | Role Mastery | Complete all modules in role path with 80%+ | $19.99 |
 | Methodology Expert | Complete methodology-specific advanced simulations | $29.99 |
-| PM Simulator Professional | Complete full lifecycle at Expert level with 85%+ | $49.99 |
+| Simulator Professional | Complete full lifecycle at Expert level with 85%+ | $49.99 |
 | Verified Certificate | Above + identity verification + LinkedIn badge | $79.99 |
 
 **Certificate Features:**
@@ -656,7 +656,7 @@ The monetization strategy is designed to maximize revenue through multiple strea
 | Module Completion | Free (with subscription) |
 | Role Mastery | $19.99 |
 | Methodology Expert | $29.99 |
-| PM Simulator Professional | $49.99 |
+| Simulator Professional | $49.99 |
 | Verified Certificate + LinkedIn Badge | $79.99 |
 | Physical Certificate (add-on) | $29.99 |
 

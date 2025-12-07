@@ -1,14 +1,14 @@
-# PM Platform User Management Guide
+# Platform User Management Guide
 
 ## Overview
 
-This guide explains how to manage users, roles, and permissions in the PM Platform.
+This guide explains how to manage users, roles, and permissions in the Platform.
 
 ## Account Setup
 
 ### Creating an Account
 
-1. Complete PM Platform onboarding (`/onboarding/pm-account-setup`)
+1. Complete Platform onboarding (`/onboarding/pm-account-setup`)
 2. Provide account details (name, type, billing email)
 3. Create your first project
 4. Account is automatically created and linked to your subscription

@@ -210,7 +210,7 @@ export default defineConfig({
 ### **Best Practice for Blog Links:**
 
 **Use these URLs in your blog:**
-- PM Platform: `https://yourdomain.com/pm`
+- Platform: `https://yourdomain.com/pm`
 - Simulator: `https://yourdomain.com/simulator`
 
 These are:
@@ -231,7 +231,7 @@ These are:
   
   <p>Managing projects effectively requires the right tools and methodology...</p>
   
-  <!-- CTA to PM Platform -->
+  <!-- CTA to Platform -->
   <div class="cta-section">
     <h2>Ready to Manage Your Projects?</h2>
     <p>Try Project Nidus - A comprehensive project management platform</p>

@@ -2,14 +2,14 @@
 
 ## Overview
 
-This document provides an overview of the unified login and role assignment system that supports both PM Platform and Simulator platforms.
+This document provides an overview of the unified login and role assignment system that supports both Platform and Simulator platforms.
 
 ## System Architecture
 
 ### Platform Separation
 
 The system maintains strict separation between:
-- **PM Platform** (`public` schema) - Account-based, multi-tenant project management
+- **Platform** (`public` schema) - Account-based, multi-tenant project management
 - **Simulator Platform** (`sim` schema) - Individual-based learning platform
 
 ### Key Components
@@ -19,23 +19,23 @@ The system maintains strict separation between:
    - Platform selection after authentication
    - Platform switching for users with multiple access
 
-2. **Account Management** (PM Platform only)
+2. **Account Management** (Platform only)
    - Multi-tenant account structure
    - Account ownership and membership
    - Project organization under accounts
 
-3. **Role & Permission System** (PM Platform)
+3. **Role & Permission System** (Platform)
    - System role templates
    - Custom project roles
    - Granular permission system
    - Permission-based access control
 
-4. **Seat Management** (PM Platform)
+4. **Seat Management** (Platform)
    - Base 30 seats per project
    - Extra seat purchases
    - Seat usage tracking
 
-5. **Invitation System** (PM Platform)
+5. **Invitation System** (Platform)
    - Email-based invitations
    - Token-based acceptance
    - New user onboarding flow
@@ -80,7 +80,7 @@ The system maintains strict separation between:
 - `PlatformSwitcher.jsx` - Header platform switcher
 - `PlatformContext.jsx` - Platform state management
 
-### PM Platform
+### Platform
 
 - `PMAccountSetup.jsx` - Account onboarding wizard
 - `AccountSettings.jsx` - Account management page

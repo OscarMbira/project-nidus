@@ -34,7 +34,7 @@ The theme toggle button is already implemented and working across all applicatio
 </button>
 ```
 
-#### ✅ PMHomepage (PM Platform Homepage)
+#### ✅ PMHomepage (Platform Homepage)
 **Location:** Header navigation (lines 109-115)
 - Same styling and functionality as NidusHomepage
 - Positioned next to Login/Sign Up buttons

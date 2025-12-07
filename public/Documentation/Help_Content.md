@@ -1,4 +1,4 @@
-# PM Simulator Help Content
+# Simulator Help Content
 
 ## Quick Start Guide
 

@@ -216,7 +216,7 @@ Template Name: React App Embed
 **3. Cross-Domain Linking:**
 ```html
 <!-- In WordPress -->
-<a href="https://app.projectnidus.com/pm">PM Platform</a>
+<a href="https://app.projectnidus.com/pm">Platform</a>
 <a href="https://app.projectnidus.com/simulator">Simulator</a>
 
 <!-- In React App -->
@@ -365,7 +365,7 @@ VITE_WORDPRESS_SITE_URL=https://yourwordpress.com
 
 ```html
 <!-- In WordPress navigation or posts -->
-<a href="https://your-react-app.com/pm">PM Platform</a>
+<a href="https://your-react-app.com/pm">Platform</a>
 <a href="https://your-react-app.com/simulator">Simulator</a>
 ```
 

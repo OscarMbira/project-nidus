@@ -8,7 +8,7 @@
 
 ## Overview
 
-This guide walks you through setting up and testing the dual-subscription system that allows users to register for PM Platform and Simulator separately with either the same or different email addresses.
+This guide walks you through setting up and testing the dual-subscription system that allows users to register for Platform and Simulator separately with either the same or different email addresses.
 
 ---
 
@@ -82,50 +82,50 @@ AND routine_name LIKE '%subscription%' OR routine_name LIKE '%platform%';
 
 ## Step 2: Stripe Configuration
 
-### 2.1 Create PM Platform Products
+### 2.1 Create Platform Products
 
 1. Log in to your **Stripe Dashboard**
 2. Navigate to **Products** → **Add Product**
 3. Create the following products:
 
 #### PM Free Tier
-- **Name:** PM Platform - Free
+- **Name:** Platform - Free
 - **Price:** $0
 - **Billing:** N/A (free tier)
 - Copy the Price ID
 
 #### PM Starter Monthly
-- **Name:** PM Platform - Starter (Monthly)
+- **Name:** Platform - Starter (Monthly)
 - **Price:** $19.99/month
 - **Billing:** Recurring - Monthly
 - Copy the Price ID
 
 #### PM Starter Yearly
-- **Name:** PM Platform - Starter (Yearly)
+- **Name:** Platform - Starter (Yearly)
 - **Price:** $191.90/year (20% discount)
 - **Billing:** Recurring - Yearly
 - Copy the Price ID
 
 #### PM Professional Monthly
-- **Name:** PM Platform - Professional (Monthly)
+- **Name:** Platform - Professional (Monthly)
 - **Price:** $49.99/month
 - **Billing:** Recurring - Monthly
 - Copy the Price ID
 
 #### PM Professional Yearly
-- **Name:** PM Platform - Professional (Yearly)
+- **Name:** Platform - Professional (Yearly)
 - **Price:** $479.90/year (20% discount)
 - **Billing:** Recurring - Yearly
 - Copy the Price ID
 
 #### PM Lifetime Starter
-- **Name:** PM Platform - Lifetime Starter
+- **Name:** Platform - Lifetime Starter
 - **Price:** $399.99
 - **Billing:** One-time payment
 - Copy the Price ID
 
 #### PM Lifetime Professional
-- **Name:** PM Platform - Lifetime Professional
+- **Name:** Platform - Lifetime Professional
 - **Price:** $999.99
 - **Billing:** One-time payment
 - Copy the Price ID
@@ -163,15 +163,15 @@ Add the following Stripe Price IDs to your `.env` file:
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 STRIPE_SECRET_KEY=sk_test_xxxxx
 
-# PM Platform Pricing (Monthly)
+# Platform Pricing (Monthly)
 VITE_STRIPE_PM_PRICE_STARTER_MONTHLY=price_xxxxx
 VITE_STRIPE_PM_PRICE_PROFESSIONAL_MONTHLY=price_xxxxx
 
-# PM Platform Pricing (Yearly)
+# Platform Pricing (Yearly)
 VITE_STRIPE_PM_PRICE_STARTER_YEARLY=price_xxxxx
 VITE_STRIPE_PM_PRICE_PROFESSIONAL_YEARLY=price_xxxxx
 
-# PM Platform Pricing (Lifetime)
+# Platform Pricing (Lifetime)
 VITE_STRIPE_PM_PRICE_LIFETIME_STARTER=price_xxxxx
 VITE_STRIPE_PM_PRICE_LIFETIME_PROFESSIONAL=price_xxxxx
 
@@ -205,8 +205,8 @@ npm run dev
    - Email: `test@example.com`
    - Password: `password123`
 3. Select **both platforms**:
-   - ✅ PM Platform
-   - ✅ PM Simulator
+   - ✅ Platform
+   - ✅ Simulator
 4. Click **Create account**
 
 **Expected Results:**
@@ -241,9 +241,9 @@ WHERE u.email = 'test@example.com';
    - Full Name: `PM Only User`
    - Email: `pmonly@example.com`
    - Password: `password123`
-3. Select **PM Platform only**:
-   - ✅ PM Platform
-   - ☐ PM Simulator
+3. Select **Platform only**:
+   - ✅ Platform
+   - ☐ Simulator
 4. Click **Create account**
 
 **Expected Results:**
@@ -260,8 +260,8 @@ WHERE u.email = 'test@example.com';
    - Email: `simonly@example.com`
    - Password: `password123`
 3. Select **Simulator only**:
-   - ☐ PM Platform
-   - ✅ PM Simulator
+   - ☐ Platform
+   - ✅ Simulator
 4. Click **Create account**
 
 **Expected Results:**
@@ -311,7 +311,7 @@ WHERE u.email = 'test@example.com';
    - Monthly Spend: $0.00 (for free tiers)
 
 2. **Subscriptions List:**
-   - PM Platform subscription card
+   - Platform subscription card
      - Plan type
      - Status badge
      - Start date
@@ -323,12 +323,12 @@ WHERE u.email = 'test@example.com';
      - Actions (Manage Plan button)
 
 3. **Platform Access Status:**
-   - PM Platform (✓ Active)
-   - PM Simulator (✓ Active)
+   - Platform (✓ Active)
+   - Simulator (✓ Active)
 
 ### Test Manage Plan Actions
 
-1. Click **Manage Plan** on PM Platform
+1. Click **Manage Plan** on Platform
    - Should navigate to `/pricing`
 
 2. Click **Manage Plan** on Simulator
@@ -340,7 +340,7 @@ WHERE u.email = 'test@example.com';
 
 ### Test Protected Routes
 
-**PM Platform Routes (require `requiredPlatform="pm"`):**
+**Platform Routes (require `requiredPlatform="pm"`):**
 
 ```jsx
 // Example usage in App.jsx or routes file
@@ -444,7 +444,7 @@ SELECT * FROM get_all_user_subscriptions('user-uuid-here');
 
 ### Test Subscription Upgrade Flow
 
-1. Navigate to `/pricing` (PM Platform pricing page)
+1. Navigate to `/pricing` (Platform pricing page)
 2. Click **Upgrade** on Starter plan
 3. Complete Stripe checkout
 4. Return to app after payment
@@ -625,7 +625,7 @@ Before deploying to production:
 
 You have successfully set up and tested the dual-subscription system! Users can now:
 
-✅ Register for PM Platform and Simulator separately
+✅ Register for Platform and Simulator separately
 ✅ Use a single email for both platforms (recommended)
 ✅ Add a second platform after initial registration
 ✅ Manage subscriptions independently

@@ -14,7 +14,7 @@
 **File:** `SQL/v82_pm_subscriptions.sql`
 
 **Created Tables:**
-1. `public.pm_subscriptions` - PM Platform subscription management
+1. `public.pm_subscriptions` - Platform subscription management
 2. `public.user_platform_access` - Platform registration tracking
 3. `public.account_links` - Optional secondary email linking
 
@@ -37,7 +37,7 @@
 **Services Created:**
 
 1. **`src/services/pmSubscriptionService.js`**
-   - Manages PM Platform subscriptions
+   - Manages Platform subscriptions
    - Feature access control
    - Usage limits checking
    - Subscription status management
@@ -68,7 +68,7 @@
 
 1. **`src/pages/auth/Register.jsx`** (Updated)
    - Beautiful platform selection UI
-   - Checkbox for PM Platform
+   - Checkbox for Platform
    - Checkbox for Simulator
    - Validation for at least one platform
    - Auto-creates free subscriptions
@@ -94,7 +94,7 @@
    - Checks active subscription
 
 5. **`src/pages/PMPricing.jsx`**
-   - PM Platform pricing tiers
+   - Platform pricing tiers
    - Monthly/Yearly toggle
    - Lifetime options
    - Feature comparison table
@@ -235,7 +235,7 @@ VITE_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxx
 STRIPE_SECRET_KEY=sk_test_xxxxx
 STRIPE_WEBHOOK_SECRET=whsec_xxxxx
 
-# PM Platform Pricing
+# Platform Pricing
 VITE_STRIPE_PM_PRICE_STARTER_MONTHLY=price_xxxxx
 VITE_STRIPE_PM_PRICE_STARTER_YEARLY=price_xxxxx
 VITE_STRIPE_PM_PRICE_PROFESSIONAL_MONTHLY=price_xxxxx
@@ -331,7 +331,7 @@ Follow `Documentation/Dual_Subscription_Setup_Guide.md`:
 ### For Business
 
 **Revenue Streams:**
-- ✅ PM Platform subscriptions
+- ✅ Platform subscriptions
 - ✅ Simulator subscriptions
 - ✅ Bundle subscriptions (increased value)
 - ✅ Lifetime revenue options

@@ -9,7 +9,7 @@
 
 ## Overview
 
-Phase 3 focuses on implementing gamification features (XP, leveling, badges, leaderboards) and social features (reviews, community) to enhance user engagement and retention in the PM Simulator.
+Phase 3 focuses on implementing gamification features (XP, leveling, badges, leaderboards) and social features (reviews, community) to enhance user engagement and retention in the Simulator.
 
 ---
 

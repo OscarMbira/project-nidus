@@ -9,7 +9,7 @@
 
 ## Overview
 
-This guide provides comprehensive testing procedures for validating AI event quality, difficulty calibration, and collecting user feedback for the PM Simulator Phase 2 features.
+This guide provides comprehensive testing procedures for validating AI event quality, difficulty calibration, and collecting user feedback for the Simulator Phase 2 features.
 
 ---
 
