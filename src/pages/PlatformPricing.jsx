@@ -134,7 +134,7 @@ export default function PlatformPricing() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Choose Your PM Platform Plan
+            Choose Your Platform Plan
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Powerful project management tools for teams of all sizes
