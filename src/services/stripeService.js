@@ -1,7 +1,7 @@
 /**
  * Stripe Payment Service
  * 
- * Handles all Stripe payment operations for the PM Simulator
+ * Handles all Stripe payment operations for the Simulator
  */
 
 // Note: In production, Stripe should be called from a backend API

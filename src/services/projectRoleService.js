@@ -1,8 +1,8 @@
 /**
  * Project Role Service
- * Handles project-specific role management for PM Platform
+ * Handles project-specific role management for Platform
  *
- * IMPORTANT: PM Platform specific - uses appDb (public schema)
+ * IMPORTANT: Platform specific - uses appDb (public schema)
  * Manages custom project roles and role templates
  */
 

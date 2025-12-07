@@ -130,7 +130,7 @@ const BetaProgram = () => {
           <Users className="w-16 h-16 mx-auto mb-4 text-blue-500" />
           <h1 className="text-3xl font-bold mb-4">Join the Beta Program</h1>
           <p className={`text-lg mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-            Help shape the future of PM Simulator by joining our beta program. Get early access to new features and provide feedback.
+            Help shape the future of Simulator by joining our beta program. Get early access to new features and provide feedback.
           </p>
           <div className="space-y-4 mb-8 text-left max-w-2xl mx-auto">
             <div className="flex items-start">

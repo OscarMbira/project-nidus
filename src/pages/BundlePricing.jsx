@@ -157,7 +157,7 @@ export default function BundlePricing() {
             Bundle & Save
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Get both PM Platform and Simulator together and save up to $200/year
+            Get both Platform and Simulator together and save up to $200/year
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export default function BundlePricing() {
                   <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">PM Platform</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Platform</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Manage real projects
                   </p>
@@ -198,7 +198,7 @@ export default function BundlePricing() {
                   <Gamepad2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">PM Simulator</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Simulator</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Practice PM skills
                   </p>

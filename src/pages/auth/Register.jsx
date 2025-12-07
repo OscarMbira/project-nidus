@@ -323,7 +323,7 @@ export default function Register() {
                   Which platforms would you like to use?
                 </label>
                 <div className="space-y-3">
-                  {/* PM Platform Option */}
+                  {/* Platform Option */}
                   <div
                     onClick={() => handlePlatformToggle('pm')}
                     className={`relative flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
@@ -342,7 +342,7 @@ export default function Register() {
                       </div>
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          PM Platform
+                          Platform
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Real project management for your team
@@ -373,7 +373,7 @@ export default function Register() {
                       </div>
                       <div className="ml-3 flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          PM Simulator
+                          Simulator
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Practice PM skills in a risk-free environment

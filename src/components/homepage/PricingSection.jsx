@@ -20,7 +20,7 @@ const PricingSection = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Card className="p-8 bg-gray-50 dark:bg-gray-900">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">PM Platform</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Platform</h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">Starting at $19/month</p>
             <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 text-white">
               <Link to="/pm">View Pricing →</Link>

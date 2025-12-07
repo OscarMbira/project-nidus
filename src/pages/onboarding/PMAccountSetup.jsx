@@ -1,6 +1,6 @@
 /**
  * PM Account Setup Onboarding
- * Multi-step wizard for setting up PM Platform account
+ * Multi-step wizard for setting up Platform account
  */
 
 import { useState } from 'react'

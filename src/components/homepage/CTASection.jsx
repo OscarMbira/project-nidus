@@ -19,7 +19,7 @@ const CTASection = () => {
           </p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* PM Platform Card */}
+          {/* Platform Card */}
           <Card className="h-full p-8 md:p-12 bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-600 dark:hover:border-blue-500 transition-all hover:shadow-xl relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 to-blue-400 transform scale-x-0 hover:scale-x-100 transition-transform duration-300"></div>
             <div className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-4">

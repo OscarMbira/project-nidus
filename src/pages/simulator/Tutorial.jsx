@@ -9,7 +9,7 @@ const Tutorial = () => {
 
   const steps = [
     {
-      title: 'Welcome to PM Simulator',
+      title: 'Welcome to Simulator',
       content: 'This tutorial will guide you through how simulations work. You\'ll learn to make decisions, receive feedback, and track your progress.',
       image: 'welcome',
       highlight: null,

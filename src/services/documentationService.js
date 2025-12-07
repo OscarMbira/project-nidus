@@ -5,10 +5,10 @@
 
 // Map documentation files to their paths and platforms
 const DOCUMENTATION_MAP = {
-  // PM Platform Documentation
+  // Platform Documentation
   'pm-platform': {
     platform: 'pm',
-    name: 'PM Platform',
+    name: 'Platform',
     guides: [
       {
         id: 'getting-started',

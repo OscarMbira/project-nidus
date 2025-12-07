@@ -154,7 +154,7 @@ export default function SubscriptionDashboard() {
             Subscription Management
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage your PM Platform and Simulator subscriptions
+            Manage your Platform and Simulator subscriptions
           </p>
         </div>
 
@@ -233,7 +233,7 @@ export default function SubscriptionDashboard() {
                         <div>
                           <div className="flex items-center space-x-3">
                             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {subscription.platform === 'pm' ? 'PM Platform' : 'PM Simulator'}
+                              {subscription.platform === 'platform' ? 'Platform' : 'Simulator'}
                             </h3>
                             {getStatusBadge(subscription.status, subscription.is_active)}
                           </div>
@@ -341,12 +341,12 @@ export default function SubscriptionDashboard() {
             Platform Access
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* PM Platform */}
+            {/* Platform */}
             <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
               <div className="flex items-center space-x-3">
                 <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">PM Platform</p>
+                  <p className="font-medium text-gray-900 dark:text-white">Platform</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     Real project management
                   </p>
@@ -369,7 +369,7 @@ export default function SubscriptionDashboard() {
               <div className="flex items-center space-x-3">
                 <Gamepad2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">PM Simulator</p>
+                  <p className="font-medium text-gray-900 dark:text-white">Simulator</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Practice PM skills</p>
                 </div>
               </div>

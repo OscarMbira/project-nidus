@@ -135,7 +135,7 @@ const NidusHomepage = () => {
                 to="/pm"
                 className="hidden sm:inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
               >
-                <span className="hidden md:inline">PM Platform</span>
+                <span className="hidden md:inline">Platform</span>
                 <span className="md:hidden">PM</span>
               </Link>
               <Link
@@ -192,7 +192,7 @@ const NidusHomepage = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                 >
-                  PM Platform
+                  Platform
                 </Link>
                 <Link
                   to="/simulator"

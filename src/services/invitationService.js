@@ -2,7 +2,7 @@
  * Invitation Service
  * Handles project invitation email sending and management
  *
- * IMPORTANT: PM Platform specific - uses appDb (public schema)
+ * IMPORTANT: Platform specific - uses appDb (public schema)
  * Works with projectMembershipService for invitation workflow
  */
 

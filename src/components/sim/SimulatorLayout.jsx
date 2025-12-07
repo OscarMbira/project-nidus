@@ -193,7 +193,7 @@ const SimulatorLayout = ({ children }) => {
             </button>
             <Link to="/simulator" className="ml-4 flex items-center">
               <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-                PM Simulator
+                Simulator
               </span>
             </Link>
           </div>

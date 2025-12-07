@@ -1,6 +1,6 @@
 /**
- * PM Platform Menu Configuration
- * Defines menu structure for PM Platform with permission requirements
+ * Platform Menu Configuration
+ * Defines menu structure for Platform with permission requirements
  */
 
 export const pmMenuConfig = [

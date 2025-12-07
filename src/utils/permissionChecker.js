@@ -1,6 +1,6 @@
 /**
  * Permission Checker Utility
- * Handles permission checking for PM Platform projects
+ * Handles permission checking for Platform projects
  */
 
 import { appDb } from '../services/supabaseClient'

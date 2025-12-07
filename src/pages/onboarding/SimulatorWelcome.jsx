@@ -28,7 +28,7 @@ export default function SimulatorWelcome() {
       // Update onboarding progress
       await updateOnboardingProgress(user.id, 'simulator', 1, true)
 
-      showToast('success', 'Welcome to PM Simulator!')
+      showToast('success', 'Welcome to Simulator!')
       navigate('/simulator/dashboard', { replace: true })
     } catch (error) {
       console.error('Error completing onboarding:', error)
@@ -67,7 +67,7 @@ export default function SimulatorWelcome() {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Welcome to PM Simulator!
+            Welcome to Simulator!
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-400">
             Practice project management skills in a risk-free environment

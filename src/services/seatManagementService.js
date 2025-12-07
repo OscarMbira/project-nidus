@@ -1,8 +1,8 @@
 /**
  * Seat Management Service
- * Handles seat allocation and extra seat purchases for PM Platform
+ * Handles seat allocation and extra seat purchases for Platform
  *
- * IMPORTANT: PM Platform specific - uses appDb (public schema)
+ * IMPORTANT: Platform specific - uses appDb (public schema)
  * Manages project seat limits and purchases
  */
 

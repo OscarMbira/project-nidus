@@ -119,7 +119,7 @@ export async function createBundleCheckoutSession(userId, bundleType, billingCyc
 }
 
 /**
- * Get PM Platform Price ID from environment variables
+ * Get Platform Price ID from environment variables
  */
 function getPMPriceId(planType, billingCycle) {
   const planMap = {

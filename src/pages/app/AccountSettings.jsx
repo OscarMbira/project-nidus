@@ -1,6 +1,6 @@
 /**
  * Account Settings Page
- * View and edit account information for PM Platform
+ * View and edit account information for Platform
  */
 
 import { useState, useEffect } from 'react'

@@ -1,8 +1,8 @@
 /**
  * Account Service
- * Handles account (organization) management for PM Platform
+ * Handles account (organization) management for Platform
  *
- * IMPORTANT: This is PM Platform specific - uses appDb (public schema)
+ * IMPORTANT: This is Platform specific - uses appDb (public schema)
  * NOT used by Simulator (which is individual-based, not account-based)
  */
 

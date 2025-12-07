@@ -33,17 +33,17 @@ export default function PlatformSwitcher() {
   }
 
   const platformInfo = {
-    pm: {
-      name: 'PM Platform',
+    platform: {
+      name: 'Platform',
       icon: Briefcase,
     },
     simulator: {
-      name: 'PM Simulator',
+      name: 'Simulator',
       icon: Gamepad2,
     },
   }
 
-  const currentInfo = platformInfo[currentPlatform] || platformInfo.pm
+  const currentInfo = platformInfo[currentPlatform] || platformInfo.platform
   const CurrentIcon = currentInfo.icon
 
   const handleSwitch = async (platform) => {

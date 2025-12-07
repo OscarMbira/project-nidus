@@ -19,8 +19,8 @@ export default function PlatformSelectionModal({ isOpen, onClose, platform, user
   if (!isOpen) return null;
 
   const platformInfo = {
-    pm: {
-      name: 'PM Platform',
+    platform: {
+      name: 'Platform',
       icon: Briefcase,
       description: 'Manage real projects with your team',
       features: [
@@ -36,7 +36,7 @@ export default function PlatformSelectionModal({ isOpen, onClose, platform, user
       },
     },
     simulator: {
-      name: 'PM Simulator',
+      name: 'Simulator',
       icon: Gamepad2,
       description: 'Practice project management skills',
       features: [
@@ -53,7 +53,7 @@ export default function PlatformSelectionModal({ isOpen, onClose, platform, user
     },
   };
 
-  const info = platformInfo[platform] || platformInfo.pm;
+  const info = platformInfo[platform] || platformInfo.platform;
   const Icon = info.icon;
 
   const handleStartFreeTrial = async () => {

@@ -130,7 +130,7 @@ const SimulatorDashboard = () => {
     <div className="space-y-6">
       {/* Welcome Section */}
       <div className={`rounded-xl p-6 ${theme === 'dark' ? 'bg-gradient-to-r from-blue-900 to-purple-900' : 'bg-gradient-to-r from-blue-500 to-purple-600'} text-white`}>
-        <h1 className="text-2xl font-bold mb-2">Welcome to PM Simulator!</h1>
+        <h1 className="text-2xl font-bold mb-2">Welcome to Simulator!</h1>
         <p className="opacity-90">
           Practice your project management skills in a risk-free environment.
           Complete simulations to earn XP, badges, and certificates.

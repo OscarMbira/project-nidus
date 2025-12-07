@@ -1,8 +1,8 @@
 /**
  * Project Membership Service
- * Handles project invitations and user memberships for PM Platform
+ * Handles project invitations and user memberships for Platform
  *
- * IMPORTANT: PM Platform specific - uses appDb (public schema)
+ * IMPORTANT: Platform specific - uses appDb (public schema)
  * Manages invitations and role assignments to projects
  */
 

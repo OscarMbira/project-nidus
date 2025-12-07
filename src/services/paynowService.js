@@ -1,6 +1,6 @@
 /**
  * Paynow Service
- * Handles Paynow payment integration for PM Platform
+ * Handles Paynow payment integration for Platform
  *
  * IMPORTANT: This is a basic implementation
  * In production, you would integrate with Paynow API properly
@@ -22,7 +22,7 @@ export async function createCheckoutSession(subscriptionData) {
       reference: subscriptionData.reference || `SUB-${Date.now()}`,
       returnUrl: subscriptionData.returnUrl || `${window.location.origin}/checkout/success`,
       resultUrl: subscriptionData.resultUrl || `${window.location.origin}/api/webhooks/paynow`,
-      description: subscriptionData.description || 'PM Platform Subscription',
+      description: subscriptionData.description || 'Platform Subscription',
     }
 
     // In production, make API call to Paynow
