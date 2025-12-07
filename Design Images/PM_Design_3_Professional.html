@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Nidus - PM Design 3: Professional</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #4b5563;
+            --border-color: #e5e7eb;
+            --card-bg: #ffffff;
+            --header-bg: white;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --card-bg: #1f2937;
+            --header-bg: #1f2937;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            background: var(--header-bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+        
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+        
+        nav {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #1e40af;
+        }
+        
+        .theme-toggle {
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-primary);
+            border-color: #1e40af;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.65rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-muted);
+        }
+        
+        .btn-outline:hover {
+            border-color: #1e40af;
+            color: #1e40af;
+        }
+        
+        .btn-primary {
+            background: #1e40af;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1e3a8a;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 8rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 3.75rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn-large {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            background: white;
+            color: #1e40af;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-large:hover {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            background: white;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stats-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+        
+        .stat-item h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-item p {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        
+        /* Features Grid */
+        .features {
+            padding: 6rem 2rem;
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        
+        .section-header p {
+            font-size: 1.1rem;
+            color: #6b7280;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            border-color: #1e40af;
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: #eff6ff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #1e40af;
+            font-size: 1.5rem;
+        }
+        
+        .feature-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+        
+        .feature-content p {
+            color: #6b7280;
+            line-height: 1.7;
+        }
+        
+        /* Process Section */
+        .process {
+            padding: 6rem 2rem;
+            background: white;
+        }
+        
+        .process-timeline {
+            max-width: 1000px;
+            margin: 4rem auto 0;
+            position: relative;
+        }
+        
+        .process-timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+            transform: translateX(-50%);
+        }
+        
+        .process-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+        
+        .process-step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+        
+        .step-content {
+            width: 45%;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: #1e40af;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-content h3 {
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+        
+        .step-content p {
+            color: #6b7280;
+        }
+        
+        /* Footer */
+        footer {
+            background: #111827;
+            color: white;
+            padding: 3rem 2rem;
+        }
+        
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .footer-links a {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+            }
+            
+            .hero {
+                padding: 4rem 1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .process-timeline::before {
+                left: 30px;
+            }
+            
+            .process-step {
+                flex-direction: row !important;
+                padding-left: 4rem;
+            }
+            
+            .step-content {
+                width: 100%;
+            }
+            
+            .step-number {
+                left: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <span>⚡</span>
+                <span>Project Nidus</span>
+            </div>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#resources">Resources</a>
+                <a href="#about">About</a>
+            </nav>
+            <div class="header-buttons">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+                <a href="#" class="btn btn-outline">Login</a>
+                <a href="#" class="btn btn-primary">Sign Up</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Master Your Projects with the Power of Project Nidus</h1>
+            <p>The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+            <a href="#" class="btn btn-large">
+                Start Your Free Project Today →
+            </a>
+        </div>
+    </section>
+
+    <section class="stats-bar">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>10K+</h3>
+                <p>Active Projects</p>
+            </div>
+            <div class="stat-item">
+                <h3>50K+</h3>
+                <p>Users</p>
+            </div>
+            <div class="stat-item">
+                <h3>99%</h3>
+                <p>Success Rate</p>
+            </div>
+            <div class="stat-item">
+                <h3>24/7</h3>
+                <p>Support</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Why Project Nidus?</h2>
+                <p>Empowering you with a structured, methodology-aligned approach to project management for predictable success.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-content">
+                        <h3>Structured Processes</h3>
+                        <p>Follow proven methodologies for consistent project delivery, from startup to closure.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-content">
+                        <h3>Role-Based Dashboards</h3>
+                        <p>Customized views for Project Managers, Team Members, and Stakeholders.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✓</div>
+                    <div class="feature-content">
+                        <h3>Automated Reporting</h3>
+                        <p>Generate insightful reports and analytics with ease, tracking progress and performance.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-content">
+                        <h3>Risk Management</h3>
+                        <p>Identify, assess, and manage project risks proactively within the platform.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-content">
+                        <h3>Quality Management</h3>
+                        <p>Ensure your deliverables meet the required standards with integrated quality checks.</p>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-content">
+                        <h3>Communication Hub</h3>
+                        <p>Centralize project communication, keeping everyone informed and aligned.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="process" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>Your Project Journey, Simplified</h2>
+                <p>Project Nidus guides you through each process group seamlessly.</p>
+            </div>
+            <div class="process-timeline">
+                <div class="process-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Start Up a Project</h3>
+                        <p>Define objectives and create the project brief effortlessly.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Initiate and Plan</h3>
+                        <p>Develop detailed plans, assign roles, and set up controls.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Manage Stage by Stage</h3>
+                        <p>Monitor progress, manage issues, and control stage boundaries.</p>
+                    </div>
+                </div>
+                <div class="process-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Deliver and Close</h3>
+                        <p>Finalize deliverables, evaluate performance, and formally close the project.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing" style="padding: 6rem 2rem; background: var(--bg-primary);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Flexible Pricing for Every Team</h2>
+                <p>Choose the plan that best fits your project management needs.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2.5rem; transition: all 0.3s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Free</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #1e40af; margin-bottom: 0.5rem;">$0</div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> 1 Project</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Basic Task Management</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Community Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2.5rem; transition: all 0.3s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Basic</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #1e40af; margin-bottom: 0.5rem;">$19<span style="font-size: 1rem; font-weight: normal; color: var(--text-secondary);">/month</span></div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> 5 Projects</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Advanced Task Tracking</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Email Support</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Basic Reporting</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: var(--card-bg); border: 2px solid #1e40af; border-radius: 8px; padding: 2.5rem; transition: all 0.3s; position: relative;">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #1e40af; color: white; padding: 0.4rem 1.5rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Most Popular</div>
+                    <div style="text-align: center; margin-bottom: 2rem; margin-top: 1rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Professional</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #1e40af; margin-bottom: 0.5rem;">$49<span style="font-size: 1rem; font-weight: normal; color: var(--text-secondary);">/month</span></div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Unlimited Projects</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Full Workflow</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Advanced Reporting</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Risk Management</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Priority Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2.5rem; transition: all 0.3s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Enterprise</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #1e40af; margin-bottom: 0.5rem;">Custom</div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> All Professional Features</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Dedicated Account Manager</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Custom Integrations</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> SLA</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> On-premise Option</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials" id="about" style="padding: 6rem 2rem; background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Loved by Project Managers</h2>
+                <p>Hear what our users say about Project Nidus.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; transition: all 0.3s;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7;">"Project Nidus transformed how we manage complex projects. The structured approach is invaluable."</p>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Jane Doe</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Project Director, Innovatech Solutions</div>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; transition: all 0.3s;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7;">"The automated reporting saves us hours each week. Highly recommended!"</p>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">John Smith</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Operations Manager, Global Corp</div>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 2rem; transition: all 0.3s;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7;">"Finally, a tool that truly understands project management methodologies."</p>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Alice Brown</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Lead Consultant, Strategy Hub</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Project Nidus. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>
+

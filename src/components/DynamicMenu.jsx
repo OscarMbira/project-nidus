@@ -135,11 +135,24 @@ export default function DynamicMenu() {
   }
 
   if (!menuItems || menuItems.length === 0) {
+    // Show fallback menu items
+    const fallbackItems = [
+      { id: 'fb-dashboard', menu_label: 'Dashboard', route_path: '/dashboard', menu_icon: 'layout-dashboard' },
+      { id: 'fb-projects', menu_label: 'Projects', route_path: '/projects', menu_icon: 'folder-kanban' },
+      { id: 'fb-tasks', menu_label: 'Tasks', route_path: '/tasks', menu_icon: 'list-checks' }
+    ]
+    
     return (
-      <nav className="flex space-x-4">
-        <span className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-          No menu items available
-        </span>
+      <nav className="flex flex-wrap items-center gap-1">
+        {fallbackItems.map((item) => (
+          <Link
+            key={item.id}
+            to={item.route_path}
+            className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          >
+            {item.menu_label}
+          </Link>
+        ))}
       </nav>
     )
   }

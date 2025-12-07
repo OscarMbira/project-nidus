@@ -3,9 +3,9 @@ import { MessageSquare, X, Send, Camera, Image as ImageIcon } from 'lucide-react
 import { supabase } from '../../services/supabaseClient'
 import { submitFeedback } from '../../services/feedbackService'
 import { useToastContext } from '../../context/ToastContext'
-import { Button } from '../ui/Button'
-import { Textarea } from '../ui/Textarea'
-import { Select } from '../ui/Select'
+import Button from '../ui/Button.jsx'
+import Textarea from '../ui/Textarea.jsx'
+import Select from '../ui/Select.jsx'
 
 export default function FeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false)

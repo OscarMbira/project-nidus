@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Combination Preview - Project Nidus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #1a1a1a;
+            font-size: 2.5rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .option-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .option-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .preview-section {
+            margin: 0;
+        }
+
+        /* Option 1 Styles */
+        .option1-header {
+            background: linear-gradient(135deg, #0A1929 0%, #112240 100%);
+            color: #E2E8F0;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option1-hero {
+            background: linear-gradient(135deg, #0066FF 0%, #0040B3 100%);
+            color: #FFFFFF;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .option1-cta {
+            background: #FF6B35;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        /* Option 2 Styles */
+        .option2-header {
+            background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);
+            color: #F5F5F5;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option2-hero {
+            background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);
+            color: #FFFFFF;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .option2-cta {
+            background: #F59E0B;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        /* Option 3 Styles */
+        .option3-header {
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+            color: #CBD5E1;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option3-hero {
+            background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);
+            color: #FFFFFF;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .option3-cta {
+            background: #F97316;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        /* Option 4 Styles */
+        .option4-header {
+            background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);
+            color: #E0E1DD;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option4-hero {
+            background: linear-gradient(135deg, #00B4D8 0%, #0077B6 100%);
+            color: #FFFFFF;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .option4-cta {
+            background: #FF6B6B;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        /* Option 5 Styles */
+        .option5-header {
+            background: linear-gradient(135deg, #2D1B69 0%, #11998E 100%);
+            color: #FFFFFF;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option5-hero {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: #FFFFFF;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .option5-cta {
+            background: #2D1B69;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        /* Option 6 Styles */
+        .option6-header {
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);
+            color: #A8DADC;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option6-hero {
+            background: linear-gradient(135deg, #457B9D 0%, #1D3557 100%);
+            color: #FFFFFF;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .option6-cta {
+            background: #E63946;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a {
+            color: inherit;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 1;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .color-info {
+            padding: 20px;
+            background: #f9fafb;
+        }
+
+        .color-group {
+            margin-bottom: 20px;
+        }
+
+        .color-group-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #374151;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .color-swatch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #e5e7eb;
+            flex-shrink: 0;
+        }
+
+        .color-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+
+        .section-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .preview-section {
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Color Combination Preview</h1>
+
+        <div class="options-grid">
+            <!-- Option 1: Modern Gradient Duo -->
+            <div class="option-card">
+                <div class="option-header" style="background: linear-gradient(135deg, #0A1929 0%, #112240 100%);">
+                    Option 1: Modern Gradient Duo
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Header (Green Circle)</div>
+                    <div class="option1-header">
+                        <div class="logo-text">
+                            <span style="color: #E2E8F0;">Project</span> <span style="color: #64FFDA;">Nidus</span>
+                        </div>
+                        <div class="nav-links">
+                            <a href="#">Features</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Resources</a>
+                            <a href="#">About</a>
+                        </div>
+                    </div>
+                    
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Hero Section (Red Circle)</div>
+                    <div class="option1-hero">
+                        <h2 class="hero-title">Master Your Projects with the Power of Project Nidus</h2>
+                        <p class="hero-subtitle">The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+                        <div class="option1-cta">Get Started</div>
+                    </div>
+                </div>
+
+                <div class="color-info">
+                    <div class="color-group">
+                        <div class="color-group-title">Header Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #0A1929 0%, #112240 100%);"></div>
+                            <span class="color-code">Background: #0A1929 → #112240</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #E2E8F0;"></div>
+                            <span class="color-code">Text: #E2E8F0</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #64FFDA;"></div>
+                            <span class="color-code">Accent: #64FFDA</span>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-group-title">Hero Section Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #0066FF 0%, #0040B3 100%);"></div>
+                            <span class="color-code">Background: #0066FF → #0040B3</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FF6B35;"></div>
+                            <span class="color-code">CTA Accent: #FF6B35</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 2: Dark & Vibrant Contrast -->
+            <div class="option-card">
+                <div class="option-header" style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);">
+                    Option 2: Dark & Vibrant Contrast
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Header (Green Circle)</div>
+                    <div class="option2-header">
+                        <div class="logo-text">
+                            <span style="color: #F5F5F5;">Project</span> <span style="color: #00D4AA;">Nidus</span>
+                        </div>
+                        <div class="nav-links">
+                            <a href="#">Features</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Resources</a>
+                            <a href="#">About</a>
+                        </div>
+                    </div>
+                    
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Hero Section (Red Circle)</div>
+                    <div class="option2-hero">
+                        <h2 class="hero-title">Master Your Projects with the Power of Project Nidus</h2>
+                        <p class="hero-subtitle">The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+                        <div class="option2-cta">Get Started</div>
+                    </div>
+                </div>
+
+                <div class="color-info">
+                    <div class="color-group">
+                        <div class="color-group-title">Header Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%);"></div>
+                            <span class="color-code">Background: #1A1A2E → #16213E</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #F5F5F5;"></div>
+                            <span class="color-code">Text: #F5F5F5</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #00D4AA;"></div>
+                            <span class="color-code">Accent: #00D4AA</span>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-group-title">Hero Section Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #667EEA 0%, #764BA2 100%);"></div>
+                            <span class="color-code">Background: #667EEA → #764BA2</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #F59E0B;"></div>
+                            <span class="color-code">CTA Accent: #F59E0B</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 3: Professional & Clean -->
+            <div class="option-card">
+                <div class="option-header" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);">
+                    Option 3: Professional & Clean
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Header (Green Circle)</div>
+                    <div class="option3-header">
+                        <div class="logo-text">
+                            <span style="color: #CBD5E1;">Project</span> <span style="color: #10B981;">Nidus</span>
+                        </div>
+                        <div class="nav-links">
+                            <a href="#">Features</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Resources</a>
+                            <a href="#">About</a>
+                        </div>
+                    </div>
+                    
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Hero Section (Red Circle)</div>
+                    <div class="option3-hero">
+                        <h2 class="hero-title">Master Your Projects with the Power of Project Nidus</h2>
+                        <p class="hero-subtitle">The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+                        <div class="option3-cta">Get Started</div>
+                    </div>
+                </div>
+
+                <div class="color-info">
+                    <div class="color-group">
+                        <div class="color-group-title">Header Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);"></div>
+                            <span class="color-code">Background: #0F172A → #1E293B</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #CBD5E1;"></div>
+                            <span class="color-code">Text: #CBD5E1</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #10B981;"></div>
+                            <span class="color-code">Accent: #10B981</span>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-group-title">Hero Section Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%);"></div>
+                            <span class="color-code">Background: #3B82F6 → #1E40AF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #F97316;"></div>
+                            <span class="color-code">CTA Accent: #F97316</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 4: Ocean Deep & Coral -->
+            <div class="option-card">
+                <div class="option-header" style="background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);">
+                    Option 4: Ocean Deep & Coral
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Header (Green Circle)</div>
+                    <div class="option4-header">
+                        <div class="logo-text">
+                            <span style="color: #E0E1DD;">Project</span> <span style="color: #00B4D8;">Nidus</span>
+                        </div>
+                        <div class="nav-links">
+                            <a href="#">Features</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Resources</a>
+                            <a href="#">About</a>
+                        </div>
+                    </div>
+                    
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Hero Section (Red Circle)</div>
+                    <div class="option4-hero">
+                        <h2 class="hero-title">Master Your Projects with the Power of Project Nidus</h2>
+                        <p class="hero-subtitle">The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+                        <div class="option4-cta">Get Started</div>
+                    </div>
+                </div>
+
+                <div class="color-info">
+                    <div class="color-group">
+                        <div class="color-group-title">Header Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #0D1B2A 0%, #1B263B 100%);"></div>
+                            <span class="color-code">Background: #0D1B2A → #1B263B</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #E0E1DD;"></div>
+                            <span class="color-code">Text: #E0E1DD</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #00B4D8;"></div>
+                            <span class="color-code">Accent: #00B4D8</span>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-group-title">Hero Section Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #00B4D8 0%, #0077B6 100%);"></div>
+                            <span class="color-code">Background: #00B4D8 → #0077B6</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FF6B6B;"></div>
+                            <span class="color-code">CTA Accent: #FF6B6B</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 5: Purple Teal & Warm Orange -->
+            <div class="option-card">
+                <div class="option-header" style="background: linear-gradient(135deg, #2D1B69 0%, #11998E 100%);">
+                    Option 5: Purple Teal & Warm Orange
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Header (Green Circle)</div>
+                    <div class="option5-header">
+                        <div class="logo-text">
+                            <span style="color: #FFFFFF;">Project</span> <span style="color: #11998E;">Nidus</span>
+                        </div>
+                        <div class="nav-links">
+                            <a href="#">Features</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Resources</a>
+                            <a href="#">About</a>
+                        </div>
+                    </div>
+                    
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Hero Section (Red Circle)</div>
+                    <div class="option5-hero">
+                        <h2 class="hero-title">Master Your Projects with the Power of Project Nidus</h2>
+                        <p class="hero-subtitle">The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+                        <div class="option5-cta">Get Started</div>
+                    </div>
+                </div>
+
+                <div class="color-info">
+                    <div class="color-group">
+                        <div class="color-group-title">Header Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #2D1B69 0%, #11998E 100%);"></div>
+                            <span class="color-code">Background: #2D1B69 → #11998E</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #11998E;"></div>
+                            <span class="color-code">Accent: #11998E</span>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-group-title">Hero Section Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);"></div>
+                            <span class="color-code">Background: #FF6B35 → #F7931E</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #2D1B69;"></div>
+                            <span class="color-code">CTA Accent: #2D1B69</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Option 6: Storm & Electric Blue -->
+            <div class="option-card">
+                <div class="option-header" style="background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);">
+                    Option 6: Storm & Electric Blue
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Header (Green Circle)</div>
+                    <div class="option6-header">
+                        <div class="logo-text">
+                            <span style="color: #A8DADC;">Project</span> <span style="color: #E63946;">Nidus</span>
+                        </div>
+                        <div class="nav-links">
+                            <a href="#">Features</a>
+                            <a href="#">Pricing</a>
+                            <a href="#">Resources</a>
+                            <a href="#">About</a>
+                        </div>
+                    </div>
+                    
+                    <div class="section-label" style="background: rgba(255, 255, 255, 0.3);">Hero Section (Red Circle)</div>
+                    <div class="option6-hero">
+                        <h2 class="hero-title">Master Your Projects with the Power of Project Nidus</h2>
+                        <p class="hero-subtitle">The only project management tool that guides you through every stage, from Startup to Closure, with structured methodologies.</p>
+                        <div class="option6-cta">Get Started</div>
+                    </div>
+                </div>
+
+                <div class="color-info">
+                    <div class="color-group">
+                        <div class="color-group-title">Header Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);"></div>
+                            <span class="color-code">Background: #0F2027 → #203A43</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #A8DADC;"></div>
+                            <span class="color-code">Text: #A8DADC</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #E63946;"></div>
+                            <span class="color-code">Accent: #E63946</span>
+                        </div>
+                    </div>
+                    <div class="color-group">
+                        <div class="color-group-title">Hero Section Colors</div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: linear-gradient(135deg, #457B9D 0%, #1D3557 100%);"></div>
+                            <span class="color-code">Background: #457B9D → #1D3557</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #FFFFFF;"></div>
+                            <span class="color-code">Text: #FFFFFF</span>
+                        </div>
+                        <div class="color-swatch">
+                            <div class="color-box" style="background: #E63946;"></div>
+                            <span class="color-code">CTA Accent: #E63946</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

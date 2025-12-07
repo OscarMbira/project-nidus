@@ -6,9 +6,11 @@ const RUNTIME_CACHE = 'project-nidus-runtime-v1'
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  '/manifest.json'
+  // Icons removed - placeholder files are invalid
+  // Add back when valid icon files are available:
+  // '/icon-192.png',
+  // '/icon-512.png'
 ]
 
 // Install event - cache assets
@@ -53,6 +55,15 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Skip Vite dev server requests during development
+  if (event.request.url.includes('@vite') ||
+      event.request.url.includes('@react-refresh') ||
+      event.request.url.includes('node_modules') ||
+      event.request.url.includes('.hot-update.') ||
+      event.request.url.includes('?t=')) {
+    return
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((cachedResponse) => {
@@ -85,6 +96,8 @@ self.addEventListener('fetch', (event) => {
             if (event.request.mode === 'navigate') {
               return caches.match('/index.html')
             }
+            // Return a proper error response for other requests
+            return new Response('Network error', { status: 408, statusText: 'Network error' })
           })
       })
   )

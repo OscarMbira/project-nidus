@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Nidus - Simulator Design 3: Tech Forward</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #111827;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --border-color: rgba(99, 102, 241, 0.3);
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        /* Animated Background */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                #000000;
+            animation: bgShift 20s ease-in-out infinite;
+        }
+        
+        @keyframes bgShift {
+            0%, 100% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(30deg); }
+        }
+        
+        /* Glitch Effect */
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+        
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 1.25rem 0;
+            z-index: 1000;
+        }
+        
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6366f1, #ec4899, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glitch 3s infinite;
+        }
+        
+        nav {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        nav a::before {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #ec4899);
+            transition: width 0.3s;
+        }
+        
+        nav a:hover {
+            color: white;
+        }
+        
+        nav a:hover::before {
+            width: 100%;
+        }
+        
+        .theme-toggle {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.75rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid rgba(99, 102, 241, 0.5);
+            color: #a5b4fc;
+        }
+        
+        .btn-outline:hover {
+            border-color: #6366f1;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:hover {
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 10rem 2rem;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.6rem 1.5rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.5);
+            border-radius: 50px;
+            color: #a5b4fc;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .hero h1 {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 30%, #ec4899 60%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% 200%;
+            animation: gradientShift 5s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .hero .highlight {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .hero .highlight::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #6366f1, #ec4899);
+            animation: underline 2s ease-in-out infinite;
+        }
+        
+        @keyframes underline {
+            0%, 100% { transform: scaleX(0.8); opacity: 0.5; }
+            50% { transform: scaleX(1); opacity: 1; }
+        }
+        
+        .hero p {
+            font-size: 1.35rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 3rem;
+            max-width: 850px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.8;
+        }
+        
+        .btn-large {
+            padding: 1.25rem 3rem;
+            font-size: 1.15rem;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Simulator Preview */
+        .simulator-preview {
+            margin-top: 6rem;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 24px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .simulator-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.1), transparent 30%);
+            animation: rotate 10s linear infinite;
+        }
+        
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+        
+        .preview-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .preview-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .live-badge {
+            padding: 0.5rem 1.25rem;
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            border-radius: 50px;
+            color: #22c55e;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .live-badge::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse 1s ease-in-out infinite;
+            box-shadow: 0 0 10px #22c55e;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .dashboard-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, #6366f1, #ec4899);
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(99, 102, 241, 0.6);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .dashboard-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .card-content {
+            min-height: 100px;
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 8rem 2rem;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+        
+        .section-header h2 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff, #a5b4fc, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-header p {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 750px;
+            margin: 0 auto;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+        
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+        
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #6366f1, #ec4899);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-card p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 3rem 2rem;
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            nav {
+                display: none;
+            }
+            
+            .hero {
+                padding: 6rem 1rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <span>⚡</span>
+                <span>Project Nidus</span>
+            </div>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#roles">Roles</a>
+                <a href="#how-it-works">How it Works</a>
+                <a href="#resources">Resources</a>
+            </nav>
+            <div class="header-buttons">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+                <a href="#" class="btn btn-outline">Log in</a>
+                <a href="#" class="btn btn-primary">Get started</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="badge">Now | Project Management Simulator included</div>
+        <h1>Turn every project manager into a safe-to-fail <span class="highlight">project pilot</span></h1>
+        <p>Project Nidus combines a powerful project management workspace with a flight simulator-style training mode. Plan real projects, simulate risks and issues, and practice decisions from startup to closure without breaking production.</p>
+        <div class="hero-buttons">
+            <a href="#" class="btn btn-primary btn-large">Start free simulation</a>
+            <a href="#" class="btn btn-secondary btn-large">Watch how it works →</a>
+        </div>
+        
+        <div class="simulator-preview">
+            <div class="preview-content">
+                <div class="preview-header">
+                    <div class="preview-title">Simulation workstation - Demo scenario</div>
+                    <div class="live-badge">Live preview</div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Programme Manager</div>
+                        </div>
+                        <div class="card-content">
+                            <div style="width: 100%; height: 80px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(236, 72, 153, 0.3)); border-radius: 12px; position: relative; overflow: hidden;">
+                                <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(99, 102, 241, 0.8), transparent); clip-path: polygon(0 100%, 10% 80%, 20% 60%, 30% 70%, 40% 50%, 50% 55%, 60% 40%, 70% 45%, 80% 30%, 90% 35%, 100% 20%, 100% 100%, 0 100%);"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Project Manager</div>
+                        </div>
+                        <div class="card-content" style="display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 90px; height: 90px; border-radius: 50%; background: conic-gradient(#6366f1 0deg 280deg, rgba(99, 102, 241, 0.2) 280deg 360deg); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);">
+                                <span style="color: white; font-weight: 700; font-size: 1.2rem;">78%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-header">
+                            <div class="card-title">Team Lead</div>
+                        </div>
+                        <div class="card-content">
+                            <div style="width: 100%; height: 60px; background: rgba(99, 102, 241, 0.2); border-radius: 12px; position: relative; overflow: hidden;">
+                                <div style="position: absolute; left: 0; top: 0; height: 100%; width: 82%; background: linear-gradient(90deg, #6366f1, #ec4899); box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);"></div>
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-weight: 700; font-size: 1.1rem;">82%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Next-Gen Simulation Technology</h2>
+                <p>Experience the future of project management training with cutting-edge simulation capabilities.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>AI-Powered Scenarios</h3>
+                    <p>Dynamic scenarios that adapt to your decisions, creating unique challenges every time you practice.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Real-Time Feedback</h3>
+                    <p>Instant analysis of your decisions with detailed explanations and recommendations for improvement.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Multi-Player Mode</h3>
+                    <p>Collaborate with team members in shared simulations to practice real-world collaboration.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Advanced Analytics</h3>
+                    <p>Deep insights into your performance patterns with predictive analytics and skill assessments.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔮</div>
+                    <h3>Predictive Modeling</h3>
+                    <p>See potential outcomes before making decisions with advanced scenario modeling technology.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Performance Optimization</h3>
+                    <p>Personalized training paths that adapt to your learning style and accelerate skill development.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing" style="padding: 8rem 2rem; position: relative;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simulator Pricing Plans</h2>
+                <p>Choose the plan that fits your training needs.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 4rem;">
+                <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem; transition: all 0.4s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Starter</h3>
+                        <div style="font-size: 3.5rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">$0</div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> 5 Simulations/month</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Basic Scenarios</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Community Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 2px solid rgba(99, 102, 241, 0.6); border-radius: 20px; padding: 2.5rem; transition: all 0.4s; position: relative;">
+                    <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #6366f1, #ec4899); color: white; padding: 0.5rem 1.5rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Most Popular</div>
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Professional</h3>
+                        <div style="font-size: 3.5rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">$29<span style="font-size: 1rem; font-weight: normal; color: var(--text-secondary);">/month</span></div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Unlimited Simulations</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> All Scenarios</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Advanced Analytics</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Progress Tracking</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Priority Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem; transition: all 0.4s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Enterprise</h3>
+                        <div style="font-size: 3.5rem; font-weight: 800; background: linear-gradient(135deg, #6366f1, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem;">Custom</div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> All Professional Features</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Custom Scenarios</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Team Training</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> Dedicated Support</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700; font-size: 1.2rem;">✓</span> On-premise Option</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials" id="about" style="padding: 8rem 2rem; position: relative;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Loved by Project Managers</h2>
+                <p>Hear what our users say about the Simulator.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-top: 4rem;">
+                <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem; transition: all 0.4s;">
+                    <p style="font-size: 1.15rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.8;">"The simulator helped me practice difficult scenarios without risking real projects. Game changer!"</p>
+                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">Sarah Johnson</div>
+                    <div style="font-size: 0.95rem; color: var(--text-secondary);">Senior Project Manager, TechCorp</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem; transition: all 0.4s;">
+                    <p style="font-size: 1.15rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.8;">"Best training tool I've used. The realistic scenarios prepare you for anything."</p>
+                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">Michael Chen</div>
+                    <div style="font-size: 0.95rem; color: var(--text-secondary);">Programme Director, Global Solutions</div>
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid var(--border-color); border-radius: 20px; padding: 2.5rem; transition: all 0.4s;">
+                    <p style="font-size: 1.15rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.8;">"Our team's confidence improved dramatically after using the simulator. Highly recommended!"</p>
+                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 1.1rem;">Emma Williams</div>
+                    <div style="font-size: 0.95rem; color: var(--text-secondary);">Team Lead, Innovation Labs</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Project Nidus. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>
+

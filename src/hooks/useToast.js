@@ -5,6 +5,10 @@ let toastIdCounter = 0
 export function useToast() {
   const [toasts, setToasts] = useState([])
 
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id))
+  }, [])
+
   const addToast = useCallback((toast) => {
     const id = ++toastIdCounter
     const newToast = {
@@ -24,11 +28,7 @@ export function useToast() {
     }
 
     return id
-  }, [])
-
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id))
-  }, [])
+  }, [removeToast])
 
   const success = useCallback((message, options = {}) => {
     return addToast({ type: 'success', message, ...options })

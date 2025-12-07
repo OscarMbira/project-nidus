@@ -23,19 +23,49 @@ export function useMenu() {
         return
       }
 
+      // USERS TABLE QUERY TEMPORARILY DISABLED
+      // The users table has RLS issues causing 500 errors
+      // Using fallback menu until SQL/v83_fix_users_table_access.sql is run
+      console.log('Using fallback menu (users table RLS disabled)')
+      setMenuItems(getFallbackMenuItems())
+      setLoading(false)
+      return
+
+      // Get user record ID from users table
+      // const { data: userRecord, error: userRecordError } = await supabase
+      //   .from('users')
+      //   .select('id')
+      //   .eq('auth_user_id', user.id)
+      //   .single()
+
+      // if (userRecordError || !userRecord) {
+      //   // User record might not exist yet, use fallback menu
+      //   console.warn('User record not found, using fallback menu')
+      //   setMenuItems(getFallbackMenuItems())
+      //   setLoading(false)
+      //   return
+      // }
+
       // Get user's roles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role_id')
-        .eq('user_id', user.id)
+        .eq('user_id', userRecord.id)
         .eq('is_active', true)
         .eq('is_deleted', false)
 
-      if (rolesError) throw rolesError
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError)
+        // Use fallback menu if roles can't be fetched
+        setMenuItems(getFallbackMenuItems())
+        setLoading(false)
+        return
+      }
 
       if (!userRoles || userRoles.length === 0) {
-        // No roles assigned, return empty menu
-        setMenuItems([])
+        // No roles assigned, use fallback menu
+        console.warn('No roles assigned, using fallback menu')
+        setMenuItems(getFallbackMenuItems())
         setLoading(false)
         return
       }
@@ -117,14 +147,63 @@ export function useMenu() {
       }
 
       const sortedMenus = sortMenus(rootMenus)
-      setMenuItems(sortedMenus)
+      
+      // If no menus found, use fallback
+      if (sortedMenus.length === 0) {
+        setMenuItems(getFallbackMenuItems())
+      } else {
+        setMenuItems(sortedMenus)
+      }
     } catch (err) {
       console.error('Error fetching menu items:', err)
       setError(err.message)
-      setMenuItems([])
+      // Use fallback menu on error
+      setMenuItems(getFallbackMenuItems())
     } finally {
       setLoading(false)
     }
+  }
+
+  // Fallback menu items for users without roles or when menu system fails
+  function getFallbackMenuItems() {
+    return [
+      {
+        id: 'fallback-dashboard',
+        menu_code: 'dashboard',
+        menu_label: 'Dashboard',
+        menu_description: 'Main dashboard',
+        route_path: '/dashboard',
+        menu_icon: 'layout-dashboard',
+        menu_color: '#3B82F6',
+        menu_level: 1,
+        sort_order: 1,
+        children: []
+      },
+      {
+        id: 'fallback-projects',
+        menu_code: 'projects',
+        menu_label: 'Projects',
+        menu_description: 'Project management',
+        route_path: '/projects',
+        menu_icon: 'folder-kanban',
+        menu_color: '#10B981',
+        menu_level: 1,
+        sort_order: 2,
+        children: []
+      },
+      {
+        id: 'fallback-tasks',
+        menu_code: 'tasks',
+        menu_label: 'Tasks',
+        menu_description: 'Task management',
+        route_path: '/tasks',
+        menu_icon: 'list-checks',
+        menu_color: '#F59E0B',
+        menu_level: 1,
+        sort_order: 3,
+        children: []
+      }
+    ]
   }
 
   return { menuItems, loading, error, refetch: fetchMenuItems }

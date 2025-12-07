@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Nidus - Simulator Design 2: Educational</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --card-bg: #ffffff;
+            --header-bg: white;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --border-color: #374151;
+            --card-bg: #1f2937;
+            --header-bg: #1f2937;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            background: var(--header-bg);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 1rem 0;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+        
+        .header-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #059669;
+        }
+        
+        nav {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: #4b5563;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #059669;
+        }
+        
+        .theme-toggle {
+            background: transparent;
+            border: 1.5px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            border-color: #059669;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid #d1d5db;
+            color: #4b5563;
+        }
+        
+        .btn-outline:hover {
+            border-color: #059669;
+            color: #059669;
+        }
+        
+        .btn-primary {
+            background: #059669;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #047857;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-text {
+            max-width: 600px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: rgba(5, 150, 105, 0.1);
+            border: 1px solid rgba(5, 150, 105, 0.3);
+            border-radius: 50px;
+            color: #059669;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: #111827;
+        }
+        
+        .hero .highlight {
+            color: #059669;
+        }
+        
+        .hero p {
+            font-size: 1.15rem;
+            color: #4b5563;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn-large {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-secondary {
+            background: white;
+            border: 2px solid #059669;
+            color: #059669;
+        }
+        
+        .btn-secondary:hover {
+            background: #f0fdf4;
+        }
+        
+        /* Simulator Preview Card */
+        .simulator-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .live-badge {
+            padding: 0.4rem 1rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 50px;
+            color: #22c55e;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .live-badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: blink 1s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .dashboard-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .preview-item {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .preview-item-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+        }
+        
+        .preview-chart {
+            height: 60px;
+            background: linear-gradient(90deg, #059669, #10b981);
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            border-radius: 6px;
+        }
+        
+        /* Learning Path Section */
+        .learning-path {
+            padding: 6rem 2rem;
+            background: white;
+        }
+        
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #111827;
+        }
+        
+        .section-header p {
+            font-size: 1.15rem;
+            color: #6b7280;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .path-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .path-step {
+            background: #f9fafb;
+            border-radius: 16px;
+            padding: 2rem;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .path-step:hover {
+            transform: translateY(-4px);
+            border-color: #059669;
+            box-shadow: 0 12px 24px rgba(5, 150, 105, 0.1);
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: #059669;
+            color: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .path-step h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+        
+        .path-step p {
+            color: #6b7280;
+            line-height: 1.7;
+        }
+        
+        /* Features Grid */
+        .features {
+            padding: 6rem 2rem;
+            background: #f9fafb;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+            border-color: #059669;
+        }
+        
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: #ecfdf5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #111827;
+        }
+        
+        .feature-card p {
+            color: #6b7280;
+            line-height: 1.7;
+        }
+        
+        /* Stats Section */
+        .stats {
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+        }
+        
+        .stats-grid {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 3rem;
+            text-align: center;
+        }
+        
+        .stat-item h3 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-item p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* Footer */
+        footer {
+            background: #111827;
+            color: white;
+            padding: 3rem 2rem;
+        }
+        
+        .footer-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .footer-links a {
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: white;
+        }
+        
+        @media (max-width: 968px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
+            
+            nav {
+                display: none;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <span>⚡</span>
+                <span>Project Nidus</span>
+            </div>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#roles">Roles</a>
+                <a href="#how-it-works">How it Works</a>
+                <a href="#resources">Resources</a>
+            </nav>
+            <div class="header-buttons">
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+                <a href="#" class="btn btn-outline">Log in</a>
+                <a href="#" class="btn btn-primary">Get started</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <div class="badge">Now | Project Management Simulator included</div>
+                <h1>Turn every project manager into a safe-to-fail <span class="highlight">project pilot</span></h1>
+                <p>Project Nidus combines a powerful project management workspace with a flight simulator-style training mode. Plan real projects, simulate risks and issues, and practice decisions from startup to closure without breaking production.</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary btn-large">Start free simulation</a>
+                    <a href="#" class="btn btn-secondary btn-large">Watch how it works →</a>
+                </div>
+            </div>
+            <div class="simulator-card">
+                <div class="card-header">
+                    <div class="card-title">Simulation workstation - Demo scenario</div>
+                    <div class="live-badge">Live preview</div>
+                </div>
+                <div class="dashboard-preview">
+                    <div class="preview-item">
+                        <div class="preview-item-title">Programme Manager</div>
+                        <div class="preview-chart" style="background: linear-gradient(90deg, #059669 0%, #10b981 100%);"></div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-item-title">Project Manager</div>
+                        <div style="display: flex; align-items: center; justify-content: center; height: 60px;">
+                            <div style="width: 60px; height: 60px; border-radius: 50%; background: conic-gradient(#059669 0deg 280deg, #e5e7eb 280deg 360deg); display: flex; align-items: center; justify-content: center;">
+                                <span style="font-weight: 600; color: #059669;">78%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-item-title">Team Lead</div>
+                        <div class="preview-chart">
+                            <div class="preview-progress" style="width: 82%;"></div>
+                        </div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-item-title">On Track</div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 75%; height: 100%; background: #059669;"></div>
+                            </div>
+                            <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 60%; height: 100%; background: #3b82f6;"></div>
+                            </div>
+                            <div style="height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 90%; height: 100%; background: #f59e0b;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="learning-path" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>Your Learning Journey</h2>
+                <p>Master project management through structured, hands-on simulation experiences.</p>
+            </div>
+            <div class="path-steps">
+                <div class="path-step">
+                    <div class="step-number">1</div>
+                    <h3>Choose Your Role</h3>
+                    <p>Select from Programme Manager, Project Manager, Team Lead, or Team Member to practice role-specific scenarios.</p>
+                </div>
+                <div class="path-step">
+                    <div class="step-number">2</div>
+                    <h3>Start Simulation</h3>
+                    <p>Launch a realistic project scenario and begin making decisions in a safe, controlled environment.</p>
+                </div>
+                <div class="path-step">
+                    <div class="step-number">3</div>
+                    <h3>Make Decisions</h3>
+                    <p>Navigate through challenges, manage risks, and handle issues as they arise in your simulated project.</p>
+                </div>
+                <div class="path-step">
+                    <div class="step-number">4</div>
+                    <h3>Learn & Improve</h3>
+                    <p>Review outcomes, understand consequences, and refine your approach with detailed feedback and analytics.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Key Features</h2>
+                <p>Everything you need to become a confident project manager.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Realistic Scenarios</h3>
+                    <p>Experience authentic project challenges based on real-world situations and industry best practices.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Iterative Practice</h3>
+                    <p>Try different strategies, see immediate results, and learn from every decision you make.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Performance Analytics</h3>
+                    <p>Track your progress with comprehensive metrics and insights into your decision-making patterns.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>4 Roles Supported</h3>
+                    <p>Practice as Programme Manager, Project Manager, Team Lead, or Team Member with role-specific challenges.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Safe Environment</h3>
+                    <p>Make mistakes and experiment freely without any risk to real projects or deadlines.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📚</div>
+                    <h3>End-to-End Lifecycle</h3>
+                    <p>Experience the complete project journey from Mandate through Startup, Initiation, Planning, Delivery, to Closure.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <h3>4</h3>
+                <p>Roles Supported</p>
+            </div>
+            <div class="stat-item">
+                <h3>100+</h3>
+                <p>Scenarios Available</p>
+            </div>
+            <div class="stat-item">
+                <h3>50K+</h3>
+                <p>Simulations Completed</p>
+            </div>
+            <div class="stat-item">
+                <h3>95%</h3>
+                <p>User Satisfaction</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing" id="pricing" style="padding: 6rem 2rem; background: var(--bg-primary);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simulator Pricing Plans</h2>
+                <p>Choose the plan that fits your training needs.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 2.5rem; transition: all 0.3s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Starter</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #059669; margin-bottom: 0.5rem;">$0</div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> 5 Simulations/month</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Basic Scenarios</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Community Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: var(--card-bg); border: 2px solid #059669; border-radius: 16px; padding: 2.5rem; transition: all 0.3s; position: relative;">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #059669; color: white; padding: 0.4rem 1.5rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Most Popular</div>
+                    <div style="text-align: center; margin-bottom: 2rem; margin-top: 1rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Professional</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #059669; margin-bottom: 0.5rem;">$29<span style="font-size: 1rem; font-weight: normal; color: var(--text-secondary);">/month</span></div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Unlimited Simulations</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> All Scenarios</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Advanced Analytics</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Progress Tracking</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Priority Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary" style="width: 100%; text-align: center; display: block;">Get Started</a>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 2.5rem; transition: all 0.3s;">
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem;">Enterprise</h3>
+                        <div style="font-size: 3rem; font-weight: 800; color: #059669; margin-bottom: 0.5rem;">Custom</div>
+                    </div>
+                    <ul style="list-style: none; margin-bottom: 2rem;">
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> All Professional Features</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Custom Scenarios</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Team Training</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> Dedicated Support</li>
+                        <li style="padding: 0.75rem 0; color: var(--text-secondary); display: flex; align-items: center; gap: 0.75rem;"><span style="color: #22c55e; font-weight: 700;">✓</span> On-premise Option</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; display: block;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials" id="about" style="padding: 6rem 2rem; background: var(--bg-secondary);">
+        <div class="container">
+            <div class="section-header">
+                <h2>Loved by Project Managers</h2>
+                <p>Hear what our users say about the Simulator.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem; transition: all 0.3s;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7;">"The simulator helped me practice difficult scenarios without risking real projects. Game changer!"</p>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Sarah Johnson</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Senior Project Manager, TechCorp</div>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem; transition: all 0.3s;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7;">"Best training tool I've used. The realistic scenarios prepare you for anything."</p>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Michael Chen</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Programme Director, Global Solutions</div>
+                </div>
+                <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem; transition: all 0.3s;">
+                    <p style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin-bottom: 1.5rem; line-height: 1.7;">"Our team's confidence improved dramatically after using the simulator. Highly recommended!"</p>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">Emma Williams</div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary);">Team Lead, Innovation Labs</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Project Nidus. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>
+

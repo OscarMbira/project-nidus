@@ -18,7 +18,7 @@ function generateTOTPSecret() {
 /**
  * Generate backup codes
  */
-function generateBackupCodes(count = 10) {
+function createBackupCodes(count = 10) {
   const codes = []
   for (let i = 0; i < count; i++) {
     const code = Array.from(crypto.getRandomValues(new Uint8Array(8)))
@@ -157,7 +157,7 @@ export async function verifyMFADevice(deviceId, verificationCode) {
     if (error) throw error
 
     // Generate backup codes
-    const backupCodes = generateBackupCodes(10)
+    const backupCodes = createBackupCodes(10)
     const backupCodesData = backupCodes.map(code => ({
       user_id: user.id,
       code, // Should be encrypted in production
@@ -441,7 +441,7 @@ export async function generateBackupCodes(count = 10) {
       .eq('is_used', false)
 
     // Generate new backup codes
-    const codes = generateBackupCodes(count)
+    const codes = createBackupCodes(count)
     const backupCodesData = codes.map(code => ({
       user_id: user.id,
       code, // Should be encrypted in production

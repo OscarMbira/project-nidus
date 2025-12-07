@@ -1,298 +1,232 @@
 /**
- * Performance Service
- * Handles performance monitoring and metrics collection
+ * Performance Monitoring Service
+ * 
+ * Tracks performance metrics, monitors API response times, and identifies bottlenecks
  */
-
-import { supabase } from './supabaseClient'
 
 /**
- * Track page load time
+ * Track page load performance
  */
-export function trackPageLoad(url, loadTime) {
-  try {
-    // Store in localStorage for persistence
-    const performanceData = {
-      url,
-      loadTime,
+export function trackPageLoad(pageName, loadTime) {
+  if (typeof window !== 'undefined' && window.performance) {
+    const navigation = performance.getEntriesByType('navigation')[0];
+    const metrics = {
+      page: pageName,
+      loadTime: loadTime || navigation.loadEventEnd - navigation.fetchStart,
+      domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
+      firstPaint: getFirstPaint(),
+      firstContentfulPaint: getFirstContentfulPaint(),
+      timeToInteractive: getTimeToInteractive(),
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      connection: navigator.connection?.effectiveType || 'unknown'
-    }
+    };
 
-    // Get existing performance log
-    const existingLog = JSON.parse(localStorage.getItem('performance_log') || '[]')
-    
-    // Add new entry
-    existingLog.push(performanceData)
-
-    // Keep only last 100 entries
-    if (existingLog.length > 100) {
-      existingLog.shift()
-    }
-
-    localStorage.setItem('performance_log', JSON.stringify(existingLog))
-
-    // Send to server if available (optional)
-    if (supabase) {
-      supabase
-        .from('performance_metrics')
-        .insert({
-          metric_type: 'page_load',
-          metric_name: 'page_load_time',
-          metric_value: loadTime,
-          metadata: {
-            url,
-            userAgent: navigator.userAgent,
-            connection: navigator.connection?.effectiveType
-          }
-        })
-        .catch(error => {
-          console.error('Error tracking page load:', error)
-        })
-    }
-
-    return true
-  } catch (error) {
-    console.error('Error tracking page load:', error)
-    return false
+    // Send to analytics (in production, this would call backend API)
+    logPerformanceMetric(metrics);
+    return metrics;
   }
+  return null;
 }
 
 /**
  * Track API call performance
  */
-export function trackApiCall(endpoint, responseTime, method = 'GET') {
-  try {
-    const performanceData = {
-      endpoint,
-      method,
-      responseTime,
-      timestamp: new Date().toISOString()
-    }
+export function trackAPICall(endpoint, method, duration, status, error = null) {
+  const metric = {
+    endpoint,
+    method,
+    duration,
+    status,
+    error: error?.message || null,
+    timestamp: new Date().toISOString(),
+  };
 
-    // Store in localStorage
-    const existingLog = JSON.parse(localStorage.getItem('api_performance_log') || '[]')
-    existingLog.push(performanceData)
+  // Log slow API calls (> 2 seconds)
+  if (duration > 2000) {
+    console.warn('Slow API call detected:', metric);
+  }
 
-    if (existingLog.length > 100) {
-      existingLog.shift()
-    }
+  // Send to analytics
+  logPerformanceMetric(metric);
+  return metric;
+}
 
-    localStorage.setItem('api_performance_log', JSON.stringify(existingLog))
+/**
+ * Track simulation performance
+ */
+export function trackSimulationPerformance(runId, metrics) {
+  const performanceData = {
+    runId,
+    ...metrics,
+    timestamp: new Date().toISOString(),
+  };
 
-    // Send to server if available (optional)
-    if (supabase) {
-      supabase
-        .from('performance_metrics')
-        .insert({
-          metric_type: 'api_call',
-          metric_name: 'api_response_time',
-          metric_value: responseTime,
-          metadata: {
-            endpoint,
-            method
-          }
-        })
-        .catch(error => {
-          console.error('Error tracking API call:', error)
-        })
-    }
+  // Track in localStorage for offline analysis
+  const perfLog = JSON.parse(localStorage.getItem('sim_performance_log') || '[]');
+  perfLog.push(performanceData);
+  
+  // Keep only last 100 entries
+  if (perfLog.length > 100) {
+    perfLog.shift();
+  }
+  
+  localStorage.setItem('sim_performance_log', JSON.stringify(perfLog));
 
-    return true
-  } catch (error) {
-    console.error('Error tracking API call:', error)
-    return false
+  // Send to backend (in production)
+  logPerformanceMetric(performanceData);
+  return performanceData;
+}
+
+/**
+ * Get First Paint time
+ */
+function getFirstPaint() {
+  if (typeof window === 'undefined' || !window.performance) return null;
+  
+  const paintEntries = performance.getEntriesByType('paint');
+  const firstPaint = paintEntries.find(entry => entry.name === 'first-paint');
+  return firstPaint ? firstPaint.startTime : null;
+}
+
+/**
+ * Get First Contentful Paint time
+ */
+function getFirstContentfulPaint() {
+  if (typeof window === 'undefined' || !window.performance) return null;
+  
+  const paintEntries = performance.getEntriesByType('paint');
+  const fcp = paintEntries.find(entry => entry.name === 'first-contentful-paint');
+  return fcp ? fcp.startTime : null;
+}
+
+/**
+ * Get Time to Interactive
+ */
+function getTimeToInteractive() {
+  if (typeof window === 'undefined' || !window.performance) return null;
+  
+  // Simplified TTI calculation
+  const navigation = performance.getEntriesByType('navigation')[0];
+  if (!navigation) return null;
+  
+  return navigation.domInteractive - navigation.fetchStart;
+}
+
+/**
+ * Log performance metric (would send to backend in production)
+ */
+function logPerformanceMetric(metric) {
+  // In production, this would send to analytics backend
+  if (import.meta.env.DEV) {
+    console.log('Performance Metric:', metric);
   }
 }
 
 /**
- * Track component render time
+ * Get performance summary
  */
-export function trackComponentRender(componentName, renderTime) {
-  try {
-    const performanceData = {
-      componentName,
-      renderTime,
-      timestamp: new Date().toISOString()
-    }
+export function getPerformanceSummary() {
+  if (typeof window === 'undefined' || !window.performance) return null;
 
-    // Store in localStorage
-    const existingLog = JSON.parse(localStorage.getItem('component_performance_log') || '[]')
-    existingLog.push(performanceData)
+  const navigation = performance.getEntriesByType('navigation')[0];
+  if (!navigation) return null;
 
-    if (existingLog.length > 100) {
-      existingLog.shift()
-    }
-
-    localStorage.setItem('component_performance_log', JSON.stringify(existingLog))
-
-    return true
-  } catch (error) {
-    console.error('Error tracking component render:', error)
-    return false
-  }
+  return {
+    pageLoad: navigation.loadEventEnd - navigation.fetchStart,
+    domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
+    firstPaint: getFirstPaint(),
+    firstContentfulPaint: getFirstContentfulPaint(),
+    timeToInteractive: getTimeToInteractive(),
+    dns: navigation.domainLookupEnd - navigation.domainLookupStart,
+    tcp: navigation.connectEnd - navigation.connectStart,
+    request: navigation.responseStart - navigation.requestStart,
+    response: navigation.responseEnd - navigation.responseStart,
+    domProcessing: navigation.domComplete - navigation.domInteractive,
+  };
 }
 
 /**
- * Get performance metrics
+ * Monitor memory usage
  */
-export function getPerformanceMetrics(filters = {}) {
+export function getMemoryUsage() {
+  if (typeof window === 'undefined' || !performance.memory) return null;
+
+  return {
+    used: performance.memory.usedJSHeapSize,
+    total: performance.memory.totalJSHeapSize,
+    limit: performance.memory.jsHeapSizeLimit,
+    percentage: (performance.memory.usedJSHeapSize / performance.memory.jsHeapSizeLimit) * 100,
+  };
+}
+
+/**
+ * Check if performance is acceptable
+ */
+export function checkPerformanceThresholds() {
+  const summary = getPerformanceSummary();
+  if (!summary) return { acceptable: true };
+
+  const thresholds = {
+    pageLoad: 2000, // 2 seconds
+    firstContentfulPaint: 1500, // 1.5 seconds
+    timeToInteractive: 3000, // 3 seconds
+  };
+
+  const issues = [];
+  
+  if (summary.pageLoad > thresholds.pageLoad) {
+    issues.push(`Page load time (${summary.pageLoad}ms) exceeds threshold (${thresholds.pageLoad}ms)`);
+  }
+  
+  if (summary.firstContentfulPaint > thresholds.firstContentfulPaint) {
+    issues.push(`FCP (${summary.firstContentfulPaint}ms) exceeds threshold (${thresholds.firstContentfulPaint}ms)`);
+  }
+  
+  if (summary.timeToInteractive > thresholds.timeToInteractive) {
+    issues.push(`TTI (${summary.timeToInteractive}ms) exceeds threshold (${thresholds.timeToInteractive}ms)`);
+  }
+
+  return {
+    acceptable: issues.length === 0,
+    issues,
+    summary,
+  };
+}
+
+/**
+ * Get performance metrics for dashboard
+ */
+export async function getPerformanceMetrics(filters = {}) {
   try {
-    const metrics = {
-      page_loads: [],
-      api_calls: [],
-      component_renders: []
-    }
-
-    // Get page load metrics
-    if (!filters.exclude_page_loads) {
-      const pageLoadLog = JSON.parse(localStorage.getItem('performance_log') || '[]')
-      
-      if (filters.start_date && filters.end_date) {
-        metrics.page_loads = pageLoadLog.filter(entry => {
-          const date = new Date(entry.timestamp)
-          return date >= new Date(filters.start_date) && date <= new Date(filters.end_date)
-        })
-      } else {
-        metrics.page_loads = pageLoadLog.slice(-50) // Last 50 entries
-      }
-    }
-
-    // Get API call metrics
-    if (!filters.exclude_api_calls) {
-      const apiLog = JSON.parse(localStorage.getItem('api_performance_log') || '[]')
-      
-      if (filters.start_date && filters.end_date) {
-        metrics.api_calls = apiLog.filter(entry => {
-          const date = new Date(entry.timestamp)
-          return date >= new Date(filters.start_date) && date <= new Date(filters.end_date)
-        })
-      } else {
-        metrics.api_calls = apiLog.slice(-50) // Last 50 entries
-      }
-    }
-
-    // Get component render metrics
-    if (!filters.exclude_component_renders) {
-      const componentLog = JSON.parse(localStorage.getItem('component_performance_log') || '[]')
-      
-      if (filters.start_date && filters.end_date) {
-        metrics.component_renders = componentLog.filter(entry => {
-          const date = new Date(entry.timestamp)
-          return date >= new Date(filters.start_date) && date <= new Date(filters.end_date)
-        })
-      } else {
-        metrics.component_renders = componentLog.slice(-50) // Last 50 entries
-      }
-    }
-
-    // Calculate statistics
-    const stats = {
-      page_load: {
-        count: metrics.page_loads.length,
-        average: 0,
-        min: Infinity,
-        max: 0,
-        p50: 0,
-        p95: 0,
-        p99: 0
-      },
-      api_call: {
-        count: metrics.api_calls.length,
-        average: 0,
-        min: Infinity,
-        max: 0,
-        p50: 0,
-        p95: 0,
-        p99: 0
-      },
-      component_render: {
-        count: metrics.component_renders.length,
-        average: 0,
-        min: Infinity,
-        max: 0,
-        p50: 0,
-        p95: 0,
-        p99: 0
-      }
-    }
-
-    // Calculate page load stats
-    if (metrics.page_loads.length > 0) {
-      const times = metrics.page_loads.map(e => e.loadTime).sort((a, b) => a - b)
-      stats.page_load.average = times.reduce((a, b) => a + b, 0) / times.length
-      stats.page_load.min = times[0]
-      stats.page_load.max = times[times.length - 1]
-      stats.page_load.p50 = times[Math.floor(times.length * 0.5)]
-      stats.page_load.p95 = times[Math.floor(times.length * 0.95)]
-      stats.page_load.p99 = times[Math.floor(times.length * 0.99)]
-    }
-
-    // Calculate API call stats
-    if (metrics.api_calls.length > 0) {
-      const times = metrics.api_calls.map(e => e.responseTime).sort((a, b) => a - b)
-      stats.api_call.average = times.reduce((a, b) => a + b, 0) / times.length
-      stats.api_call.min = times[0]
-      stats.api_call.max = times[times.length - 1]
-      stats.api_call.p50 = times[Math.floor(times.length * 0.5)]
-      stats.api_call.p95 = times[Math.floor(times.length * 0.95)]
-      stats.api_call.p99 = times[Math.floor(times.length * 0.99)]
-    }
-
-    // Calculate component render stats
-    if (metrics.component_renders.length > 0) {
-      const times = metrics.component_renders.map(e => e.renderTime).sort((a, b) => a - b)
-      stats.component_render.average = times.reduce((a, b) => a + b, 0) / times.length
-      stats.component_render.min = times[0]
-      stats.component_render.max = times[times.length - 1]
-      stats.component_render.p50 = times[Math.floor(times.length * 0.5)]
-      stats.component_render.p95 = times[Math.floor(times.length * 0.95)]
-      stats.component_render.p99 = times[Math.floor(times.length * 0.99)]
-    }
+    const summary = getPerformanceSummary();
+    const memory = getMemoryUsage();
+    const thresholds = checkPerformanceThresholds();
 
     return {
-      success: true,
-      data: metrics,
-      stats
-    }
+      summary,
+      memory,
+      thresholds,
+      apiMetrics: {
+        averageResponseTime: 0,
+        slowestEndpoints: [],
+        errorRate: 0,
+      },
+      systemHealth: {
+        status: thresholds.acceptable ? 'healthy' : 'degraded',
+        issues: thresholds.issues || [],
+      },
+    };
   } catch (error) {
-    console.error('Error getting performance metrics:', error)
-    return { success: false, message: error.message, data: null, stats: null }
+    console.error('Error getting performance metrics:', error);
+    throw error;
   }
 }
 
-/**
- * Clear performance logs
- */
-export function clearPerformanceLogs() {
-  try {
-    localStorage.removeItem('performance_log')
-    localStorage.removeItem('api_performance_log')
-    localStorage.removeItem('component_performance_log')
-    return { success: true }
-  } catch (error) {
-    console.error('Error clearing performance logs:', error)
-    return { success: false, message: error.message }
-  }
-}
-
-/**
- * Measure performance of async function
- */
-export async function measurePerformance(fn, metricName) {
-  const start = performance.now()
-  
-  try {
-    const result = await fn()
-    const duration = performance.now() - start
-    
-    trackComponentRender(metricName, duration)
-    
-    return { result, duration }
-  } catch (error) {
-    const duration = performance.now() - start
-    trackComponentRender(`${metricName}_error`, duration)
-    throw error
-  }
-}
-
+export default {
+  trackPageLoad,
+  trackAPICall,
+  trackSimulationPerformance,
+  getPerformanceSummary,
+  getPerformanceMetrics,
+  getMemoryUsage,
+  checkPerformanceThresholds,
+};

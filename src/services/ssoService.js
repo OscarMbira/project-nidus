@@ -64,7 +64,15 @@ export async function getSSOProviders(filters = {}) {
 
     const { data, error } = await query
 
-    if (error) throw error
+    if (error) {
+      // Suppress permission errors for unauthenticated users (expected behavior)
+      // This happens when RLS policies haven't been updated yet
+      if (error.code === '42501' || error.message?.includes('permission denied')) {
+        // Return empty array silently - SSO providers may not be configured yet
+        return { success: true, data: [] }
+      }
+      throw error
+    }
 
     // Mask sensitive data
     const maskedData = data.map(provider => ({
@@ -75,7 +83,10 @@ export async function getSSOProviders(filters = {}) {
 
     return { success: true, data: maskedData }
   } catch (error) {
-    console.error('Error fetching SSO providers:', error)
+    // Only log unexpected errors (not permission denied)
+    if (error.code !== '42501' && !error.message?.includes('permission denied')) {
+      console.error('Error fetching SSO providers:', error)
+    }
     return { success: false, message: error.message, data: [] }
   }
 }

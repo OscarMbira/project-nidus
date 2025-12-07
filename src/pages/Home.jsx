@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
@@ -13,13 +13,11 @@ import {
   Twitter, 
   Linkedin, 
   ArrowRight,
-  Moon,
-  Sun,
   Youtube
 } from 'lucide-react'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
-import { useThemeContext } from '../context/ThemeContext'
+import ThemeToggle from '../components/ThemeToggle'
 
 const featureList = [
   {
@@ -75,16 +73,6 @@ const testimonials = [
 ]
 
 const Home = () => {
-  const { theme, toggleTheme } = useThemeContext()
-
-  // Ensure homepage starts in dark mode by default
-  useEffect(() => {
-    if (theme !== 'dark') {
-      toggleTheme()
-    }
-    // we intentionally run only on initial mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const navItems = [
     { label: 'Features', href: '#features' },
@@ -99,46 +87,50 @@ const Home = () => {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700">
+      {/* Header - Always dark theme, not affected by theme toggle */}
+      <header className="sticky top-0 z-50 bg-gray-800/80 backdrop-blur-md border-b border-gray-700">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            <Zap className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            <span className="text-2xl font-bold">Project Nidus</span>
+            <Zap className="h-8 w-8 text-blue-400" />
+            <span className="text-4xl font-bold">
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                Project
+              </span>
+              <span className="bg-gradient-to-r from-orange-400 via-red-500 to-red-600 bg-clip-text text-transparent ml-2">
+                Nidus
+              </span>
+            </span>
           </Link>
           <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
-                className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="text-sm font-medium text-gray-400 hover:text-blue-400 transition-colors"
               >
                 {item.label}
               </a>
             ))}
             <Button
               variant="ghost"
-              className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+              className="text-sm font-medium text-gray-400 hover:text-blue-400"
             >
               Request a Demo
             </Button>
           </nav>
           <div className="flex items-center space-x-3">
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
-              aria-label="Toggle theme"
+            <ThemeToggle />
+            <Button 
+              variant="outline" 
+              asChild
+              className="bg-transparent border-gray-600 text-gray-300 hover:bg-gray-700"
             >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </button>
-            <Button variant="outline" asChild>
               <Link to="/login">Login</Link>
             </Button>
-            <Button asChild>
+            <Button 
+              asChild
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               <Link to="/register">Sign Up</Link>
             </Button>
             <Button variant="default" className="hidden lg:inline-flex">Contact</Button>

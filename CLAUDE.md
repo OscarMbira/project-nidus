@@ -29,6 +29,102 @@
 27. Do not use or name any component with the word PRINCE2 due to copyright sensitivity. Use other non-copyright/trademark text, e.g. structured/traditional
 28. The default them for all components/pages/forms/tables/dropdowns etc, should be dark during creation and setup.
 29. For frontend components, always optimise for progressive web app(PWA) for mobile responsivenes.
+30. All created images should be stored under the root folder "Design Images". Create it if it doesn't exist.
+
+## Simulator Module Architecture Rules
+
+The platform contains ONE unified application with TWO major domains that must be kept strictly separate:
+
+### Domain Separation
+1. **Platform (Project Management Application)**
+   - Real projects, tasks, and schedules
+   - Uses **Supabase `public` schema**
+   - Uses **`platformDb` client** (legacy: `appDb` for backward compatibility)
+   - UI routes start with: `/app/...`
+   - Components in: `src/components/app/`
+   - Modules in: `src/modules/platform/`
+
+2. **Simulator (Project Management Simulator)**
+   - Simulation scenarios, runs, and AI events
+   - Uses **Supabase `sim` schema**
+   - Uses **`simDb` client**
+   - UI routes start with: `/simulator/...`
+   - Components in: `src/components/sim/`
+   - Modules in: `src/modules/sim/`
+
+### Critical Rules for Simulator Development
+- **NEVER mix Platform and Simulator components, modules, or database calls**
+- **NEVER write simulation data to `public` schema**
+- **NEVER write real project data to `sim` schema**
+- Always use `simDb` for simulation operations
+- Always use `platformDb` for real project operations
+- Always place simulation logic in `modules/sim`
+- Always generate RLS-enabled SQL for new sim tables
+
+### Simulator Folder Structure
+```
+src/
+  app/
+    app/                    # Main Platform system routes
+    simulator/              # Simulation system routes
+  modules/
+    core/                   # Shared logic (auth, subscriptions, roles)
+    platform/               # Platform logic (public schema)
+    sim/                    # Simulator logic (sim schema)
+  services/
+    supabase/
+      supabaseClient.js     # Exports platformDb and simDb
+  components/
+    ui/                     # Shared UI components
+    app/                    # Platform-specific components
+    sim/                    # Simulator-specific components
+```
+
+### Supabase Client Configuration
+```typescript
+// platformDb — public schema (Platform)
+export const platformDb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  db: { schema: 'public' },
+});
+
+// Legacy export for backward compatibility
+export const appDb = platformDb;
+
+// simDb — sim schema (Simulator)
+export const simDb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  db: { schema: 'sim' },
+});
+```
+
+### Simulator Database Tables (sim schema)
+All simulation tables MUST live inside the `sim` schema:
+- `sim.scenarios` - Pre-built and custom scenarios
+- `sim.simulation_runs` - User simulation sessions
+- `sim.module_scores` - Scoring per module
+- `sim.user_progress` - Learning progress tracking
+- `sim.ai_events` - Dynamic AI-generated events
+- `sim.certificates` - Completion certificates
+- `sim.leaderboards` - User rankings
+
+### Simulator Routing Conventions
+```
+/simulator                    # Simulator dashboard
+/simulator/scenarios          # Scenario library
+/simulator/runs               # Active/completed runs
+/simulator/modules            # Module-specific simulations
+/simulator/custom-scenarios   # User-uploaded scenarios
+/simulator/certificates       # User certificates
+/simulator/leaderboard        # Rankings
+```
+
+### Monetization Integration
+The SIM module integrates with existing PM monetization and must support:
+- Free Tier (limited access)
+- Premium subscriptions (monthly/yearly)
+- Lifetime Access (one-time payment)
+- Scenario Packs (industry-specific)
+- Certificate sales
+- Corporate licensing
 
 ## Database Table Registration Rule
 Whenever a new database table is created in the system, you MUST register it in the database_tables table for the ID Generation Rules system:
@@ -56,3 +152,8 @@ ON CONFLICT (table_name) DO UPDATE SET
 4. Examples:
    - Application table: `('customer_orders', 'Customer purchase orders and transaction history', false, true)`
    - System table: `('audit_trail', 'System-wide audit log for all table changes', true, true)`
+- Make sure admin application is a separate application in       
+the root E:\Hifo\AI Business and should be called 
+project-nidus-admin. It should not be in the same application    
+ folder the way you have shown on your plan. If this is clear    
+ proceed.

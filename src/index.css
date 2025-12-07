@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* CRITICAL: Tailwind v4 requires this custom variant definition for dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Ensure dark mode works by explicitly setting it on html */
+html.dark {
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
+/* Ensure body also respects dark mode */
+body.dark {
+  color-scheme: dark;
+}
+
 /* Screen reader only class for accessibility */
 .sr-only {
   position: absolute;

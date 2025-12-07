@@ -1,6 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+/**
+ * Legacy Supabase client export
+ * Re-exports from the new location to maintain backwards compatibility
+ * New code should import from './supabase/supabaseClient' directly
+ */
+export { supabase, platformDb, appDb, simDb } from './supabase/supabaseClient'
+export { supabase as default } from './supabase/supabaseClient'

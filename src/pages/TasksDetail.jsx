@@ -614,7 +614,7 @@ export default function TasksDetail() {
               />
             </div>
           </div>
-        )}
+        ) : null}
 
         {errors.submit && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300">

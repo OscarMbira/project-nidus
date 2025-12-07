@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
-import { Activity, Filter, Search, Calendar, User, Project } from 'lucide-react'
+import { Activity, Filter, Search, Calendar, User, FolderKanban } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 
 export default function ActivityFeed() {
@@ -183,7 +183,7 @@ export default function ActivityFeed() {
             </select>
           </div>
           <div className="flex items-center gap-2">
-            <Project className="h-5 w-5 text-gray-400" />
+            <FolderKanban className="h-5 w-5 text-gray-400" />
             <select
               value={filters.entity_type}
               onChange={(e) => setFilters({ ...filters, entity_type: e.target.value })}

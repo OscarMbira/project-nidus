@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation System Preview - Project Nidus</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+
+        /* Header Preview - PM Platform */
+        .header-pm {
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #A8DADC;
+            border-bottom: 1px solid #203A43;
+        }
+
+        .header-pm .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .header-pm nav {
+            display: flex;
+            gap: 30px;
+        }
+
+        .header-pm nav a {
+            color: #A8DADC;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .header-pm nav a:hover,
+        .header-pm nav a.active {
+            color: #FFFFFF;
+        }
+
+        .header-pm nav a.doc-link {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: rgba(168, 218, 220, 0.1);
+        }
+
+        /* Header Preview - Simulator */
+        .header-sim {
+            background: linear-gradient(to right, #065f46, #047857, #059669);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #d1fae5;
+            border-bottom: 1px solid #047857;
+            margin-top: 20px;
+        }
+
+        .header-sim nav a.doc-link {
+            background: rgba(209, 250, 229, 0.1);
+        }
+
+        /* Documentation Page Layout */
+        .doc-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        /* Sidebar Navigation */
+        .doc-sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .doc-sidebar h3 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .doc-sidebar ul {
+            list-style: none;
+        }
+
+        .doc-sidebar li {
+            margin-bottom: 8px;
+        }
+
+        .doc-sidebar a {
+            color: #374151;
+            text-decoration: none;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .doc-sidebar a:hover {
+            background: #f3f4f6;
+            color: #111827;
+        }
+
+        .doc-sidebar a.active {
+            background: #e0e7ff;
+            color: #4338ca;
+            font-weight: 500;
+        }
+
+        .doc-category {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Main Content Area */
+        .doc-content {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .doc-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .doc-header h1 {
+            font-size: 2.5rem;
+            color: #111827;
+            margin-bottom: 10px;
+        }
+
+        .doc-header .meta {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .doc-body {
+            color: #374151;
+        }
+
+        .doc-body h2 {
+            font-size: 1.75rem;
+            color: #111827;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .doc-body h3 {
+            font-size: 1.25rem;
+            color: #111827;
+            margin-top: 30px;
+            margin-bottom: 12px;
+        }
+
+        .doc-body p {
+            margin-bottom: 16px;
+            line-height: 1.8;
+        }
+
+        .doc-body ul, .doc-body ol {
+            margin: 16px 0;
+            padding-left: 30px;
+        }
+
+        .doc-body li {
+            margin-bottom: 8px;
+        }
+
+        .doc-body code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+
+        .doc-body pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .doc-body pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .doc-body blockquote {
+            border-left: 4px solid #3b82f6;
+            padding-left: 20px;
+            margin: 20px 0;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .doc-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .doc-body table th,
+        .doc-body table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .doc-body table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Platform Badge */
+        .platform-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-pm {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-sim {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Search Box */
+        .doc-search {
+            margin-bottom: 20px;
+        }
+
+        .doc-search input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .doc-search input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #6b7280;
+        }
+
+        .breadcrumb a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 1024px) {
+            .doc-container {
+                grid-template-columns: 1fr;
+            }
+
+            .doc-sidebar {
+                position: static;
+            }
+        }
+
+        .preview-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .preview-title {
+            font-size: 1.5rem;
+            color: #111827;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div style="max-width: 1600px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; margin-bottom: 40px; color: #111827;">📚 Documentation System Preview</h1>
+
+        <!-- Header Preview - PM Platform -->
+        <div class="preview-section">
+            <h2 class="preview-title">Header with Documentation Link - PM Platform</h2>
+            <div class="header-pm">
+                <div class="logo">
+                    <span style="color: #A8DADC;">Project</span> <span style="color: #E63946;">Nidus</span>
+                </div>
+                <nav>
+                    <a href="#features">Features</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="#resources">Resources</a>
+                    <a href="#about">About</a>
+                    <a href="#documentation" class="doc-link active">
+                        📖 Documentation
+                    </a>
+                </nav>
+                <div style="display: flex; gap: 10px;">
+                    <button style="padding: 8px 16px; background: transparent; border: 1px solid #A8DADC; color: #A8DADC; border-radius: 4px; cursor: pointer;">Login</button>
+                    <button style="padding: 8px 16px; background: #E63946; border: none; color: white; border-radius: 4px; cursor: pointer;">Sign Up</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Preview - Simulator -->
+        <div class="preview-section">
+            <h2 class="preview-title">Header with Documentation Link - Simulator</h2>
+            <div class="header-sim">
+                <div class="logo">
+                    Project Nidus
+                </div>
+                <nav>
+                    <a href="#features">Features</a>
+                    <a href="#roles">Roles</a>
+                    <a href="#how-it-works">How it Works</a>
+                    <a href="#resources">Resources</a>
+                    <a href="#documentation" class="doc-link active">
+                        📖 Documentation
+                    </a>
+                </nav>
+                <div style="display: flex; gap: 10px;">
+                    <button style="padding: 8px 16px; background: transparent; border: 1px solid #d1fae5; color: #d1fae5; border-radius: 4px; cursor: pointer;">Log in</button>
+                    <button style="padding: 8px 16px; background: #059669; border: none; color: white; border-radius: 4px; cursor: pointer;">Get started</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Documentation Page Preview -->
+        <div class="preview-section">
+            <h2 class="preview-title">Documentation Page Layout</h2>
+            <div class="doc-container">
+                <!-- Sidebar -->
+                <div class="doc-sidebar">
+                    <div class="doc-search">
+                        <input type="text" placeholder="Search documentation...">
+                    </div>
+
+                    <div>
+                        <h3>PM Platform Guides</h3>
+                        <ul>
+                            <li><a href="#" class="active">Getting Started</a></li>
+                            <li><a href="#">Project Manager Guide</a></li>
+                            <li><a href="#">Team Lead Guide</a></li>
+                            <li><a href="#">Team Member Guide</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-category">
+                        <h3>Features</h3>
+                        <ul>
+                            <li><a href="#">Task Management</a></li>
+                            <li><a href="#">Gantt Charts</a></li>
+                            <li><a href="#">Kanban Boards</a></li>
+                            <li><a href="#">Risk Management</a></li>
+                            <li><a href="#">Reporting</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="doc-category">
+                        <h3>Methodologies</h3>
+                        <ul>
+                            <li><a href="#">Structured PM</a></li>
+                            <li><a href="#">Scrum Guide</a></li>
+                            <li><a href="#">Kanban Guide</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="doc-content">
+                    <div class="breadcrumb">
+                        <a href="/documentation">Documentation</a> / 
+                        <a href="/documentation/pm-platform">PM Platform</a> / 
+                        <span>Getting Started</span>
+                    </div>
+
+                    <div class="doc-header">
+                        <h1>
+                            Getting Started with PM Platform
+                            <span class="platform-badge badge-pm">PM Platform</span>
+                        </h1>
+                        <div class="meta">
+                            Last updated: January 2025 • Estimated read time: 10 minutes
+                        </div>
+                    </div>
+
+                    <div class="doc-body">
+                        <h2>Introduction</h2>
+                        <p>
+                            Welcome to Project Nidus PM Platform! This guide will help you get started with managing your projects efficiently.
+                        </p>
+
+                        <h2>Your First Project</h2>
+                        <p>To create your first project:</p>
+                        <ol>
+                            <li>Navigate to <strong>Projects</strong> from the main menu</li>
+                            <li>Click <strong>Create New Project</strong></li>
+                            <li>Enter project details:
+                                <ul>
+                                    <li>Project name</li>
+                                    <li>Description</li>
+                                    <li>Start date</li>
+                                    <li>Methodology (Structured PM, Scrum, or Kanban)</li>
+                                </ul>
+                            </li>
+                            <li>Click <strong>Create</strong></li>
+                        </ol>
+
+                        <h2>Key Features</h2>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Feature</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Task Management</td>
+                                    <td>Create, assign, and track tasks with dependencies</td>
+                                </tr>
+                                <tr>
+                                    <td>Timeline Planning</td>
+                                    <td>Visualize project timelines with Gantt charts</td>
+                                </tr>
+                                <tr>
+                                    <td>Risk Management</td>
+                                    <td>Identify and manage project risks proactively</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <blockquote>
+                            <p><strong>Tip:</strong> Start with a simple project to familiarize yourself with the platform before managing complex projects.</p>
+                        </blockquote>
+
+                        <h2>Next Steps</h2>
+                        <p>Now that you've created your first project, explore these guides:</p>
+                        <ul>
+                            <li><a href="#">Task Management Guide</a></li>
+                            <li><a href="#">Resource Allocation</a></li>
+                            <li><a href="#">Reporting and Analytics</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Context-Specific Documentation -->
+        <div class="preview-section">
+            <h2 class="preview-title">Context-Specific Documentation Mapping</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="padding: 20px; background: #f9fafb; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px; color: #111827;">PM Platform Docs</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            📘 <strong>Project Manager Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Creating projects, methodologies, reporting</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            📗 <strong>Team Lead Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Team management, sprint planning, Kanban</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            📙 <strong>Team Member Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Tasks, time tracking, collaboration</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            📕 <strong>Gantt Chart Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Timeline visualization and planning</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            📔 <strong>Kanban User Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Board management and workflow</span>
+                        </li>
+                    </ul>
+                </div>
+                <div style="padding: 20px; background: #f9fafb; border-radius: 8px;">
+                    <h3 style="margin-bottom: 15px; color: #111827;">Simulator Docs</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            🎮 <strong>User Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Getting started with simulations</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            🎯 <strong>Scenario Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Understanding scenarios and roles</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            📊 <strong>Analytics Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Performance tracking and insights</span>
+                        </li>
+                        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                            🏆 <strong>Achievements Guide</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Badges, certificates, progress</span>
+                        </li>
+                        <li style="padding: 8px 0;">
+                            ❓ <strong>FAQ & Help</strong><br>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Common questions and troubleshooting</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

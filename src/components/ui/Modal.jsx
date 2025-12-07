@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { trapFocus, restoreFocus } from '../../utils/accessibilityUtils'
-import { Button } from './Button'
+import Button from './Button'
 
-export default function Modal({
+function Modal({
   isOpen,
   onClose,
   title,
@@ -178,3 +178,5 @@ export default function Modal({
   )
 }
 
+export { Modal }
+export default Modal

@@ -9,10 +9,26 @@
 export async function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
+      // Unregister all existing service workers first to clear cache
+      const registrations = await navigator.serviceWorker.getRegistrations()
+      for (const registration of registrations) {
+        await registration.unregister()
+      }
+      
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys()
+        await Promise.all(cacheNames.map(name => caches.delete(name)))
+      }
+      
+      // Register new service worker
       const registration = await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/'
+        scope: '/',
+        updateViaCache: 'none' // Prevent caching of service worker
       })
-      console.log('Service Worker registered:', registration)
+      if (import.meta.env.DEV) {
+        console.log('Service Worker registered:', registration)
+      }
       return registration
     } catch (error) {
       console.error('Service Worker registration failed:', error)

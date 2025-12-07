@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { HelpCircle, X, Search } from 'lucide-react'
 import { getHelpArticles, searchHelpArticles } from '../../services/helpService'
-import { Input } from '../ui/input'
+import Input from '../ui/Input.jsx'
 
 export default function HelpButton() {
   const [isOpen, setIsOpen] = useState(false)

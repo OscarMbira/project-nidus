@@ -1,0 +1,280 @@
+Here’s a **ready-to-paste prompt** you can feed directly into your vibe-coding tool.
+You can tweak the parts in `[[square brackets]]` (e.g. tech stack, branding) if needed.
+
+---
+
+```text
+You are an expert full-stack architect and senior engineer.
+
+I’m building a secure, multi-tenant PROJECT MANAGEMENT web application.
+
+### Tech & Architecture
+
+- Frontend: [[React + TypeScript + Tailwind CSS (SPA or Next.js)]]
+- Backend: [[Node.js + TypeScript + REST/GraphQL API]]
+- Auth & DB: [[Supabase (PostgreSQL, Row Level Security) OR standard PostgreSQL + JWT auth]]
+- Payments: [Paynow] for subscriptions and extra seat purchases
+
+Please design and generate the BACKEND + FRONTEND logic for:
+
+1. **Authentication & Login**
+2. **Programme / Project Manager subscription sign-up**
+3. **Project-specific user registration (non-paying users)**
+4. **Project roles & role assignment**
+5. **Seat limit logic (first 30 free for that project, extra at discounted rate)**
+
+Make the solution production-grade, secure and easy to extend.
+
+---
+
+## 1. Core Concepts & Data Model
+
+Design a relational, multi-tenant data model with the following tables (you can merge/adjust where needed):
+
+- `accounts`  
+  - `id` (PK)  
+  - `owner_user_id` (FK → users.id, usually the Programme/Project Manager)  
+  - `name` (e.g. company or client name)  
+  - `created_at`, `updated_at`
+
+- `users`  
+  - `id` (PK)  
+  - `email` (unique, required)  
+  - `password_hash` (or external auth provider data)  
+  - `full_name`  
+  - `is_global_admin` (bool, default false)  
+  - `created_at`, `last_login_at`, `status` (active/disabled)
+
+- `projects`  
+  - `id` (PK)  
+  - `account_id` (FK → accounts.id)  
+  - `name`  
+  - `code` (short unique identifier)  
+  - `description`  
+  - `project_manager_user_id` (FK → users.id, optional)  
+  - `created_at`, `status` (planned/active/closed)
+
+- `project_roles` (project-specific roles)  
+  - `id` (PK)  
+  - `project_id` (FK → projects.id)  
+  - `name` (e.g. “Project Board”, “Project Manager”, “Team Lead”, “Business Analyst”)  
+  - `description`  
+  - `is_system_default` (bool)  // true for predefined PRINCE2-style roles  
+  - `permissions` (JSONB)       // e.g. list of permission keys
+
+- `project_memberships` (user <-> project relation)  
+  - `id` (PK)  
+  - `project_id` (FK → projects.id)  
+  - `user_id` (FK → users.id)  
+  - `role_id` (FK → project_roles.id)  
+  - `invited_by_user_id` (FK → users.id)  
+  - `invitation_status` (pending/accepted/expired)  
+  - `created_at`
+
+- `subscription_plans`  
+  - `id` (PK)  
+  - `code` (e.g. `PM_STANDARD`, `PM_PRO`)  
+  - `base_price` (includes up to 30 users per project)  
+  - `included_users_per_project` (integer, default 30)  
+  - `extra_user_price` (discounted per extra user seat)  
+  - `billing_period` (monthly/annual)
+
+- `subscriptions`  
+  - `id` (PK)  
+  - `account_id` (FK → accounts.id)  
+  - `plan_id` (FK → subscription_plans.id)  
+  - `Paynow_customer_id`, `Paynow_subscription_id`  
+  - `starts_at`, `renews_at`, `status` (active/past_due/cancelled)
+
+- `project_user_seat_usage` (or calculate from memberships)  
+  - `id` (PK)  
+  - `project_id` (FK → projects.id)  
+  - `included_seats` (default 30)  
+  - `extra_seats_purchased`  
+  - `current_user_count` (cached for quick checks)
+
+Include **indexes** for `email`, foreign keys, and any fields used for JOINs and lookups.
+
+---
+
+## 2. Auth & Signup Flows
+
+### 2.1 Programme / Project Manager subscription sign-up (PAYING USER)
+
+Implement a flow where a new Programme/Project Manager can:
+
+1. Click **“Start Free Trial” / “Subscribe”** on the marketing site.
+2. Fill in **Account Owner Signup Form**:
+   - Full name  
+   - Work email  
+   - Password (with strong password rules)  
+   - Account/organisation name  
+   - Preferred plan  
+3. Verify email address (simple email verification token).
+4. Redirect to Paynow Checkout to start subscription.
+5. On successful payment:
+   - Create `account` record
+   - Create `subscription` record and link to `account`
+   - Link the owner user to that `account`
+   - Let the owner create the first `project` for that account.
+6. After the first project is created:
+   - Auto-seed default `project_roles` for that project:  
+     - Project Board  
+     - Project Director  
+     - Programme Manager  
+     - Project Manager  
+     - Team Manager / Lead  
+     - Project Assurance  
+     - Quality Assurance  
+     - Project Member / Team Member  
+   - Allow the owner to **add or edit** project-specific custom roles.
+
+### 2.2 Non-paying project users (up to 30 users per project)
+
+Implement a flow where these users **do not go through Paynow or subscription** directly:
+
+1. Only a Project Manager / Programme Manager (with appropriate permission) can:
+   - Open “Project Users” screen for a given project.
+   - Click **“Invite User”**.
+2. The PM enters:
+   - Name  
+   - Email  
+   - Role (selected from `project_roles` dropdown)  
+3. The backend:
+   - Checks the current number of `project_memberships` for that project.
+   - Compares it to `included_users_per_project` (30) + any `extra_seats_purchased`.
+   - If under or equal to the allowed user count:
+     - Create a `project_memberships` record with `invitation_status = 'pending'`.
+     - If the email is new, create a `users` record with a password-set token.
+     - Send an email with an **“Accept Invitation / Set Password”** link.
+   - If exceeding seat limit:
+     - Return an error code that signals the UI to open **“Purchase Extra Seats”** dialog.
+4. When the invited user clicks the email link:
+   - They set a password.
+   - They accept the invitation.
+   - They are logged in and taken straight to that project’s dashboard.
+
+### 2.3 Extra users beyond 30 (discounted additional amount)
+
+Design an endpoint `POST /projects/:id/purchase-extra-seats` that:
+
+- Accepts `project_id` and `additional_seats` (integer).
+- Redirects to Paynow Checkout with the discounted **per-seat price** from `subscription_plans.extra_user_price`.
+- On successful payment:
+  - Increase `extra_seats_purchased` for that project.
+  - Allow the PM to invite more users up to the new limit.
+
+---
+
+## 3. Role-Based Access Control (RBAC)
+
+Implement **RBAC** so that **all project actions** are checked against the user’s role and permissions.
+
+Define a `permissions` enum or set of keys, for example:
+
+- `project.view`
+- `project.edit`
+- `project.manage_users`
+- `project.manage_roles`
+- `plan.view_billing`
+- `plan.manage_billing`
+- `workitems.view`
+- `workitems.edit`
+- `risks.view`
+- `risks.edit`
+- `documents.view`
+- `documents.edit`
+
+In `project_roles.permissions` (JSON array), store what each role can do.  
+Create utility functions:
+
+- `getUserProjectRole(userId, projectId)`  
+- `can(userId, projectId, permissionKey)`
+
+Use middleware on the backend to enforce this on every protected API route.
+
+---
+
+## 4. Frontend: Screens & Components
+
+Create the following key screens/components:
+
+1. **Public Signup (Subscription) Page**
+   - Inputs for owner name, email, password, account name.
+   - Plan selector.
+   - On submit, call backend to create user + account, then redirect to Paynow.
+
+2. **Login Page**
+   - Email + password.
+   - “Forgot password” flow (password reset email).
+   - Simple, clean UI.
+   - After login, if user is invited to multiple projects, show a **Project Picker**.
+
+3. **Project Users Management Page (for PM/Programme Manager)**
+   - Table listing project members:
+     - Name, email, role, status, last login.
+   - Button **“Invite User”** → modal with form (name, email, role).
+   - Show a **seat usage indicator**:
+     - `XX / YY seats used` (e.g. `24 / 30` or `35 / 40`).
+   - If user tries to invite above limit, show dialog:  
+     “You’ve used all included seats. Purchase extra seats at discounted rate”  
+     with a button that triggers the extra seat purchase flow.
+
+4. **Role Management Page (per project)**
+   - List of roles with description and permissions.
+   - Ability to:
+     - Add new custom role.
+     - Edit permissions (checkbox matrix for each permission).
+     - Delete custom roles (with safeguards).
+   - System roles (like Project Board, Project Manager) are visible but can have limited edits (e.g. cannot delete, only toggle some permissions).
+
+5. **Header UI**
+   - Show:
+     - Current project name.
+     - User avatar + dropdown (Profile, My Projects, Logout).
+   - Reflect role in UI (e.g. label: “Project Manager”).
+
+Make sure all UI components are **responsive** (desktop, tablet, mobile).
+
+---
+
+## 5. Security & Best Practices
+
+Please implement:
+
+- Secure password hashing (e.g. bcrypt/argon2).
+- Email verification on signup.
+- JWTs with refresh tokens or secure cookie-based sessions.
+- CSRF protection where relevant.
+- Rate-limiting on login and invitation endpoints.
+- Account-scoped and project-scoped access checks:
+  - A user must belong to the `account` that owns the `project`.
+  - A user must have a `project_memberships` record for that project.
+- Row Level Security (RLS) policies if using Supabase/PostgreSQL.
+- Audit logging:
+  - When users are invited, accepted, removed, or their roles changed.
+
+---
+
+## 6. What I want from you (the AI coding assistant)
+
+1. The **database schema** (SQL or Supabase migration) for all the tables above.
+2. Backend **API endpoints** with clear route definitions, request/response shapes, and authorization checks:
+   - `/auth/signup-owner`
+   - `/auth/login`
+   - `/projects`
+   - `/projects/:id/invite-user`
+   - `/projects/:id/members`
+   - `/projects/:id/roles`
+   - `/projects/:id/purchase-extra-seats`
+3. Frontend **React components/pages** for:
+   - Owner signup + Paynow subscription.
+   - Login.
+   - Project users management.
+   - Role management.
+4. Example unit-level or integration-level **tests** for:
+   - Seat limit logic.
+   - Permission checks for managing users.
+   - Invite + accept flow.
+
+Write the code and explanations in a clean

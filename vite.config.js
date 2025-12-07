@@ -3,9 +3,11 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({
+    jsxRuntime: 'automatic'
+  })],
   optimizeDeps: {
-    include: ['react-router-dom'],
+    include: ['react', 'react-dom', 'react-router-dom', '@supabase/supabase-js'],
     force: true
   },
   resolve: {
@@ -14,6 +16,11 @@ export default defineConfig({
   server: {
     fs: {
       strict: false
+    },
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
     }
   },
   build: {

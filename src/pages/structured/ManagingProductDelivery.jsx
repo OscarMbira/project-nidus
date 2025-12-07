@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
-import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, QualityCheck } from 'lucide-react'
+import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, CheckSquare } from 'lucide-react'
 import ProductForm from '../../components/structured/ProductForm'
 import QualityCriteria from '../../components/structured/QualityCriteria'
 
@@ -224,7 +224,7 @@ export default function ManagingProductDelivery() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             }`}
           >
-            <QualityCheck className="h-4 w-4 inline mr-2" />
+            <CheckSquare className="h-4 w-4 inline mr-2" />
             Quality
           </button>
         </nav>

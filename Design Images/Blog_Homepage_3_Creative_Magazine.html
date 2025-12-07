@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Nidus Blog - Creative Magazine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --accent-blue: #2563eb;
+            --accent-green: #059669;
+            --accent-purple: #7c3aed;
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a0;
+            --border-color: #333333;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        /* Header */
+        header {
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 0;
+            z-index: 1000;
+            transition: background 0.3s;
+        }
+        
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            padding: 0.25rem 0;
+        }
+        
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent-blue);
+            transition: width 0.3s;
+        }
+        
+        nav a:hover {
+            color: var(--text-primary);
+        }
+        
+        nav a:hover::after {
+            width: 100%;
+        }
+        
+        nav a.active {
+            color: var(--text-primary);
+        }
+        
+        nav a.active::after {
+            width: 100%;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .header-btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        
+        .header-btn-pm {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .header-btn-pm:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .header-btn-sim {
+            background: var(--accent-green);
+            color: white;
+        }
+        
+        .header-btn-sim:hover {
+            background: #047857;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+        
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-left: 1rem;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-primary);
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 8rem 2rem 6rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 50px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+        
+        .hero h1 {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+            letter-spacing: -2px;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 4rem;
+            line-height: 1.8;
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 2rem;
+            background: var(--bg-secondary);
+        }
+        
+        .cta-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .cta-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+        
+        .cta-header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+        }
+        
+        .cta-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+        
+        .cta-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+        }
+        
+        .cta-card {
+            background: var(--bg-primary);
+            border-radius: 24px;
+            padding: 4rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .cta-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+        
+        .cta-card.pm-card::before {
+            background: linear-gradient(90deg, var(--accent-blue), #3b82f6);
+        }
+        
+        .cta-card.simulator-card::before {
+            background: linear-gradient(90deg, var(--accent-green), #10b981);
+        }
+        
+        .cta-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
+        }
+        
+        .cta-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .cta-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+        
+        .cta-card.pm-card .cta-label {
+            color: var(--accent-blue);
+        }
+        
+        .cta-card.simulator-card .cta-label {
+            color: var(--accent-green);
+        }
+        
+        .cta-card h3 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            line-height: 1.2;
+            letter-spacing: -1px;
+        }
+        
+        .cta-card p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+        }
+        
+        .cta-features {
+            list-style: none;
+            margin-bottom: 2.5rem;
+        }
+        
+        .cta-features li {
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .cta-features li::before {
+            content: '→';
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .cta-card.pm-card .cta-features li::before {
+            color: var(--accent-blue);
+        }
+        
+        .cta-card.simulator-card .cta-features li::before {
+            color: var(--accent-green);
+        }
+        
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1.25rem 3rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+        
+        .cta-card.pm-card .cta-button {
+            background: var(--accent-blue);
+            color: white;
+        }
+        
+        .cta-card.pm-card .cta-button:hover {
+            background: #1d4ed8;
+            transform: translateX(4px);
+        }
+        
+        .cta-card.simulator-card .cta-button {
+            background: var(--accent-green);
+            color: white;
+        }
+        
+        .cta-card.simulator-card .cta-button:hover {
+            background: #047857;
+            transform: translateX(4px);
+        }
+        
+        /* Blog Posts */
+        .blog-section {
+            padding: 8rem 2rem;
+        }
+        
+        .blog-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            margin-bottom: 4rem;
+            text-align: center;
+        }
+        
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+        }
+        
+        .blog-card {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+            border: 1px solid var(--border-color);
+        }
+        
+        .blog-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .blog-image {
+            width: 100%;
+            height: 240px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .blog-image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.3));
+        }
+        
+        .blog-category {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 1;
+        }
+        
+        .blog-content {
+            padding: 2rem;
+        }
+        
+        .blog-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        
+        .blog-card h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+        
+        .blog-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+        
+        .blog-link {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: gap 0.3s;
+        }
+        
+        .blog-link:hover {
+            gap: 0.75rem;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-secondary);
+            padding: 5rem 2rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 4rem;
+            margin-bottom: 4rem;
+        }
+        
+        .footer-brand h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        
+        .footer-brand p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-column h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 1rem;
+        }
+        
+        .footer-column ul li a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-column ul li a:hover {
+            color: var(--text-primary);
+        }
+        
+        .footer-bottom {
+            padding-top: 3rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 38px;
+            height: 38px;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .mobile-menu-toggle:hover {
+            background: var(--bg-primary);
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .mobile-menu.active {
+            display: flex;
+        }
+        
+        .mobile-menu a {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .mobile-menu a:last-child {
+            border-bottom: none;
+        }
+        
+        @media (max-width: 968px) {
+            .cta-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            nav {
+                display: none;
+            }
+            
+            .mobile-menu-toggle {
+                display: flex;
+            }
+            
+            header {
+                position: relative;
+            }
+            
+            .header-container {
+                position: relative;
+            }
+            
+            .header-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        .btn-short {
+            display: none;
+        }
+        
+        @media (max-width: 640px) {
+            .header-buttons {
+                gap: 0.5rem;
+            }
+            
+            .header-btn {
+                padding: 0.5rem 0.875rem;
+                font-size: 0.8rem;
+            }
+            
+            .btn-text {
+                display: none;
+            }
+            
+            .btn-short {
+                display: inline;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <a href="/" class="logo">Project Nidus</a>
+            <nav>
+                <a href="/">Home</a>
+                <a href="#articles">Blog</a>
+                <a href="#resources">Resources</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <div class="header-buttons">
+                <a href="/pm" class="header-btn header-btn-pm"><span class="btn-text">PM Platform</span><span class="btn-short">PM</span></a>
+                <a href="/simulator" class="header-btn header-btn-sim"><span class="btn-text">Simulator</span><span class="btn-short">SIM</span></a>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">☰</button>
+            </div>
+        </div>
+        <nav class="mobile-menu" id="mobileMenu">
+            <a href="/">Home</a>
+            <a href="#articles">Blog</a>
+            <a href="#resources">Resources</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-badge">Project Management Blog</div>
+        <h1>Elevate Your Project Management Expertise</h1>
+        <p>Discover insights, strategies, and best practices from industry experts. Learn structured methodologies, risk management, team leadership, and more.</p>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta-container">
+            <div class="cta-header">
+                <h2>Ready to Get Started?</h2>
+                <p>Choose the tool that fits your needs</p>
+            </div>
+            <div class="cta-grid">
+                <div class="cta-card pm-card">
+                    <div class="cta-label">Platform</div>
+                    <h3>Project Management Platform</h3>
+                    <p>Comprehensive project management solution with structured methodologies. Perfect for managing real projects from startup to closure.</p>
+                    <ul class="cta-features">
+                        <li>Structured project workflows</li>
+                        <li>Role-based dashboards</li>
+                        <li>Advanced reporting & analytics</li>
+                        <li>Risk & quality management</li>
+                    </ul>
+                    <a href="/pm" class="cta-button">
+                        Launch Platform <span>→</span>
+                    </a>
+                </div>
+                <div class="cta-card simulator-card">
+                    <div class="cta-label">Training</div>
+                    <h3>Project Management Simulator</h3>
+                    <p>Practice project management in a risk-free environment. Learn through realistic simulations with instant feedback and detailed analytics.</p>
+                    <ul class="cta-features">
+                        <li>Realistic project scenarios</li>
+                        <li>Safe-to-fail practice environment</li>
+                        <li>Performance tracking & analytics</li>
+                        <li>4 roles supported</li>
+                    </ul>
+                    <a href="/simulator" class="cta-button">
+                        Start Simulation <span>→</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="blog-section" id="articles" style="scroll-margin-top: 100px;">
+        <div class="blog-container">
+            <div class="section-title">Latest Articles</div>
+            <div class="blog-grid">
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <div class="blog-category">Methodology</div>
+                    </div>
+                    <div class="blog-content">
+                        <div class="blog-date">November 20, 2025</div>
+                        <h4>Mastering Project Initiation: A Complete Guide</h4>
+                        <p>Learn the essential steps for starting projects correctly. From understanding the mandate to creating a comprehensive project brief.</p>
+                        <a href="#" class="blog-link">Read more →</a>
+                    </div>
+                </div>
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <div class="blog-category">Risk Management</div>
+                    </div>
+                    <div class="blog-content">
+                        <div class="blog-date">November 18, 2025</div>
+                        <h4>Advanced Risk Management Strategies</h4>
+                        <p>Discover proven techniques for identifying, assessing, and mitigating project risks before they impact your timeline or budget.</p>
+                        <a href="#" class="blog-link">Read more →</a>
+                    </div>
+                </div>
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <div class="blog-category">Team Leadership</div>
+                    </div>
+                    <div class="blog-content">
+                        <div class="blog-date">November 15, 2025</div>
+                        <h4>Building High-Performance Project Teams</h4>
+                        <p>Explore the principles of team formation, role assignment, and performance management that drive exceptional results.</p>
+                        <a href="#" class="blog-link">Read more →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="blog-section" style="background: var(--bg-secondary); scroll-margin-top: 100px;">
+        <div class="blog-container">
+            <div class="section-title">Pricing Plans</div>
+            <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+                <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-primary);">Choose Your Plan</h2>
+                <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 3rem; line-height: 1.8;">
+                    Both our Project Management Platform and Simulator offer flexible pricing options to suit your needs.
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                    <div style="background: var(--bg-primary); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">PM Platform</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.7;">Starting at $19/month</p>
+                        <a href="/pm" class="header-btn header-btn-pm" style="width: 100%; justify-content: center; text-align: center;">View Pricing →</a>
+                    </div>
+                    <div style="background: var(--bg-primary); padding: 2.5rem; border-radius: 16px; border: 1px solid var(--border-color);">
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--text-primary);">Simulator</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.7;">Starting at $29/month</p>
+                        <a href="/simulator" class="header-btn header-btn-sim" style="width: 100%; justify-content: center; text-align: center;">View Pricing →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resources Section -->
+    <section id="resources" class="blog-section" style="scroll-margin-top: 100px;">
+        <div class="blog-container">
+            <div class="section-title">Resources</div>
+            <div style="text-align: center; margin-bottom: 4rem;">
+                <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-primary);">Helpful Resources</h2>
+                <p style="font-size: 1.15rem; color: var(--text-secondary); max-width: 700px; margin: 0 auto; line-height: 1.8;">
+                    Access guides, templates, and tools to enhance your project management skills.
+                </p>
+            </div>
+            <div class="blog-grid">
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <div class="blog-category">Guide</div>
+                    </div>
+                    <div class="blog-content">
+                        <h4>Getting Started Guide</h4>
+                        <p>Complete guide to getting started with Project Nidus platform and best practices.</p>
+                        <a href="#" class="blog-link">Download →</a>
+                    </div>
+                </div>
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <div class="blog-category">Template</div>
+                    </div>
+                    <div class="blog-content">
+                        <h4>Project Templates</h4>
+                        <p>Ready-to-use project templates for various industries and project types.</p>
+                        <a href="#" class="blog-link">Browse →</a>
+                    </div>
+                </div>
+                <div class="blog-card">
+                    <div class="blog-image">
+                        <div class="blog-category">Tool</div>
+                    </div>
+                    <div class="blog-content">
+                        <h4>Project Calculator</h4>
+                        <p>Calculate project timelines, budgets, and resource requirements with our tools.</p>
+                        <a href="#" class="blog-link">Use Tool →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="blog-section" style="background: var(--bg-secondary); scroll-margin-top: 100px;">
+        <div class="blog-container">
+            <div style="max-width: 900px; margin: 0 auto; text-align: center;">
+                <div class="section-title">About Us</div>
+                <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 2rem; color: var(--text-primary);">About Project Nidus</h2>
+                <p style="font-size: 1.15rem; color: var(--text-secondary); line-height: 1.9; margin-bottom: 2rem;">
+                    Project Nidus is a comprehensive project management platform designed to empower project managers, teams, and organizations with structured methodologies and practical tools. We combine powerful project management capabilities with innovative simulation training to help you succeed.
+                </p>
+                <p style="font-size: 1.15rem; color: var(--text-secondary); line-height: 1.9;">
+                    Our mission is to make professional project management accessible, practical, and effective for teams of all sizes. Whether you're managing real projects or practicing your skills, Project Nidus provides the tools and insights you need to excel.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="blog-section" style="scroll-margin-top: 100px;">
+        <div class="blog-container">
+            <div style="max-width: 700px; margin: 0 auto; text-align: center;">
+                <div class="section-title">Get In Touch</div>
+                <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-primary);">Contact Us</h2>
+                <p style="font-size: 1.15rem; color: var(--text-secondary); margin-bottom: 3rem; line-height: 1.8;">
+                    Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+                </p>
+                <div style="background: var(--bg-secondary); padding: 3rem; border-radius: 16px; border: 1px solid var(--border-color);">
+                    <form style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <input type="text" placeholder="Your Name" style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); font-size: 1rem;">
+                        <input type="email" placeholder="Your Email" style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); font-size: 1rem;">
+                        <textarea placeholder="Your Message" rows="5" style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; resize: vertical;"></textarea>
+                        <button type="submit" class="header-btn header-btn-pm" style="width: 100%; justify-content: center; padding: 1.25rem;">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>Project Nidus</h3>
+                    <p>Empowering project managers with structured methodologies, comprehensive tools, and hands-on training to deliver successful projects.</p>
+                </div>
+                <div class="footer-column">
+                    <h4>Platforms</h4>
+                    <ul>
+                        <li><a href="/pm">Project Management</a></li>
+                        <li><a href="/simulator">Simulator</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#articles">Articles</a></li>
+                        <li><a href="#resources">Resources</a></li>
+                        <li><a href="#about">About</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Project Nidus. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+        
+        function updateThemeIcon(theme) {
+            themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        // Mobile Menu Toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        if (mobileMenuToggle && mobileMenu) {
+            mobileMenuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('active');
+                mobileMenuToggle.textContent = mobileMenu.classList.contains('active') ? '✕' : '☰';
+            });
+            
+            // Close mobile menu when clicking on a link
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.remove('active');
+                    mobileMenuToggle.textContent = '☰';
+                });
+            });
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!mobileMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+                    mobileMenu.classList.remove('active');
+                    mobileMenuToggle.textContent = '☰';
+                }
+            });
+        }
+        
+        // Active link highlighting based on scroll position
+        const navLinks = document.querySelectorAll('nav a[href^="#"]');
+        const sections = document.querySelectorAll('section[id]');
+        
+        function updateActiveLink() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (window.pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', updateActiveLink);
+        updateActiveLink();
+    </script>
+</body>
+</html>
+

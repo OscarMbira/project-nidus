@@ -1,318 +1,475 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import Layout from './components/Layout'
-import ProtectedRoute from './components/ProtectedRoute'
+import { lazy, Suspense } from 'react'
 import ErrorBoundary from './components/ErrorBoundary'
-import { ToastProvider } from './context/ToastContext'
-import Home from './pages/Home'
-import Projects from './pages/Projects'
-import ProjectsCreate from './pages/ProjectsCreate'
-import ProjectsDetail from './pages/ProjectsDetail'
-import ProjectsEdit from './pages/ProjectsEdit'
-import Tasks from './pages/Tasks'
-import TasksBoard from './pages/TasksBoard'
-import TasksCalendar from './pages/TasksCalendar'
-import TasksCreate from './pages/TasksCreate'
-import TasksDetail from './pages/TasksDetail'
-import MethodologySelection from './pages/MethodologySelection'
-import Dashboard from './pages/Dashboard'
-import MethodologyDashboard from './pages/MethodologyDashboard'
-import StartingUpProject from './pages/structured/StartingUpProject'
-import InitiatingProject from './pages/structured/InitiatingProject'
-import StageGates from './pages/structured/StageGates'
-import ControllingStage from './pages/structured/ControllingStage'
-import ManagingProductDelivery from './pages/structured/ManagingProductDelivery'
-import DirectingProject from './pages/structured/DirectingProject'
-import Issues from './pages/Issues'
-import Risks from './pages/Risks'
-import RiskDetail from './pages/RiskDetail'
-import RAIDLog from './pages/RAIDLog'
-import ProductBacklog from './pages/scrum/ProductBacklog'
-import SprintPlanning from './pages/scrum/SprintPlanning'
-import SprintBoard from './pages/scrum/SprintBoard'
-import DailyScrum from './pages/scrum/DailyScrum'
-import SprintReview from './pages/scrum/SprintReview'
-import SprintRetrospective from './pages/scrum/SprintRetrospective'
-import KanbanBoards from './pages/kanban/KanbanBoards'
-import KanbanBoard from './pages/kanban/KanbanBoard'
-import MetricsDashboard from './pages/kanban/MetricsDashboard'
-import Resources from './pages/Resources'
-import ResourceCapacity from './pages/ResourceCapacity'
-import ResourceDetail from './pages/ResourceDetail'
-import ResourceConflicts from './pages/ResourceConflicts'
-import Reports from './pages/Reports'
-import ReportBuilder from './pages/ReportBuilder'
-import AnalyticsDashboard from './pages/AnalyticsDashboard'
-import ScheduledReports from './pages/ScheduledReports'
-import Integrations from './pages/Integrations'
-import IntegrationConfig from './pages/IntegrationConfig'
-import IntegrationSync from './pages/IntegrationSync'
-import Notifications from './pages/Notifications'
-import ActivityFeed from './pages/ActivityFeed'
-import Automation from './pages/Automation'
-import AutomationRuleBuilder from './pages/AutomationRuleBuilder'
-import Portfolio from './pages/portfolio/Portfolio'
-import PortfolioDetail from './pages/portfolio/PortfolioDetail'
-import PortfolioEdit from './pages/portfolio/PortfolioEdit'
-import Programme from './pages/programme/Programme'
-import ProgrammeDetail from './pages/programme/ProgrammeDetail'
-import ProgrammeEdit from './pages/programme/ProgrammeEdit'
-import CrossProjectResources from './pages/CrossProjectResources'
-import ResourceForecasts from './pages/ResourceForecasts'
-import ResourceUtilization from './pages/ResourceUtilization'
-import Dependencies from './pages/Dependencies'
-import DependencyMap from './pages/DependencyMap'
-import DependencyImpacts from './pages/DependencyImpacts'
-import Benefits from './pages/benefits/Benefits'
-import BenefitMeasurements from './pages/benefits/BenefitMeasurements'
-import BenefitsRealization from './pages/benefits/BenefitsRealization'
-import StrategicObjectives from './pages/StrategicObjectives'
-import StrategicAlignment from './pages/StrategicAlignment'
-import StrategicContribution from './pages/StrategicContribution'
-import StrategicPortfolio from './pages/StrategicPortfolio'
-import StrategicReports from './pages/StrategicReports'
-import QualityManagement from './pages/QualityManagement'
-import QualityReviews from './pages/QualityReviews'
-import QualityInspections from './pages/QualityInspections'
-import QualityReports from './pages/QualityReports'
-import StakeholderManagement from './pages/StakeholderManagement'
-import AnalyticsKPIs from './pages/analytics/AnalyticsKPIs'
-import AnalyticsExecutive from './pages/analytics/AnalyticsExecutive'
-import AnalyticsProjectHealth from './pages/analytics/AnalyticsProjectHealth'
-import AnalyticsPortfolio from './pages/analytics/AnalyticsPortfolio'
-import AnalyticsTrends from './pages/analytics/AnalyticsTrends'
-import ChangeRequests from './pages/change/ChangeRequests'
-import ChangeRequestDetail from './pages/change/ChangeRequestDetail'
-import ChangeBoard from './pages/change/ChangeBoard'
-import ChangeLogPage from './pages/change/ChangeLogPage'
-// Phase 8: Security & Compliance
-import SecurityMonitoring from './pages/admin/SecurityMonitoring'
-import SecurityAlerts from './pages/admin/SecurityAlerts'
-import SecurityIncidents from './pages/admin/SecurityIncidents'
-import AuditLogs from './pages/admin/AuditLogs'
-import GDPRCompliance from './pages/admin/GDPRCompliance'
-import SSOManagement from './pages/admin/SSOManagement'
-import SecuritySettings from './pages/settings/SecuritySettings'
-import PrivacyCenter from './pages/settings/PrivacyCenter'
-import MFASetup from './pages/security/MFASetup'
-import SSOCallback from './pages/auth/SSOCallback'
-import Login from './pages/auth/Login'
-// Phase 7: Integrations & API
-import ApiDocs from './pages/ApiDocs'
-import Webhooks from './pages/Webhooks'
-// Phase 9: Help System
-import HelpCenter from './pages/HelpCenter'
-import PerformanceDashboard from './pages/admin/PerformanceDashboard'
-import HelpManagement from './pages/admin/HelpManagement'
-import BugTracking from './pages/admin/BugTracking'
-// Phase 10: Launch & Support
-import FeatureRequests from './pages/support/FeatureRequests'
-import SubmitFeedback from './pages/support/SubmitFeedback'
-import SupportTickets from './pages/support/SupportTickets'
-import FeedbackAnalysis from './pages/admin/FeedbackAnalysis'
-import MonitoringDashboard from './pages/admin/MonitoringDashboard'
-import FeatureRequestsManagement from './pages/admin/FeatureRequestsManagement'
-import ImprovementBacklog from './pages/admin/ImprovementBacklog'
-import MaintenanceDashboard from './pages/admin/MaintenanceDashboard'
-import PWAInstallPrompt from './components/PWAInstallPrompt'
-import './App.css'
+// Keep NidusHomepage completely standalone - no providers needed
+import NidusHomepage from './pages/NidusHomepage'
+
+// Lazy load ALL other components to prevent blocking
+const ThemeProvider = lazy(() => import('./context/ThemeContext').then(m => ({ default: m.ThemeProvider })))
+const ToastProvider = lazy(() => import('./context/ToastContext').then(m => ({ default: m.ToastProvider })))
+const Layout = lazy(() => import('./components/Layout'))
+const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'))
+const Home = lazy(() => import('./pages/Home'))
+const PlatformHomepage = lazy(() => import('./pages/PlatformHomepage'))
+const SimulatorHomepage = lazy(() => import('./pages/SimulatorHomepage'))
+const Documentation = lazy(() => import('./pages/Documentation'))
+
+// Lazy load all other pages
+const Projects = lazy(() => import('./pages/Projects'))
+const ProjectsCreate = lazy(() => import('./pages/ProjectsCreate'))
+const ProjectsDetail = lazy(() => import('./pages/ProjectsDetail'))
+const ProjectsEdit = lazy(() => import('./pages/ProjectsEdit'))
+const Tasks = lazy(() => import('./pages/Tasks'))
+const TasksBoard = lazy(() => import('./pages/TasksBoard'))
+const TasksCalendar = lazy(() => import('./pages/TasksCalendar'))
+const TasksCreate = lazy(() => import('./pages/TasksCreate'))
+const TasksDetail = lazy(() => import('./pages/TasksDetail'))
+const MethodologySelection = lazy(() => import('./pages/MethodologySelection'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const MethodologyDashboard = lazy(() => import('./pages/MethodologyDashboard'))
+const StartingUpProject = lazy(() => import('./pages/structured/StartingUpProject'))
+const InitiatingProject = lazy(() => import('./pages/structured/InitiatingProject'))
+const StageGates = lazy(() => import('./pages/structured/StageGates'))
+const ControllingStage = lazy(() => import('./pages/structured/ControllingStage'))
+const ManagingProductDelivery = lazy(() => import('./pages/structured/ManagingProductDelivery'))
+const DirectingProject = lazy(() => import('./pages/structured/DirectingProject'))
+const Issues = lazy(() => import('./pages/Issues'))
+const Risks = lazy(() => import('./pages/Risks'))
+const RiskDetail = lazy(() => import('./pages/RiskDetail'))
+const RAIDLog = lazy(() => import('./pages/RAIDLog'))
+const ProductBacklog = lazy(() => import('./pages/scrum/ProductBacklog'))
+const SprintPlanning = lazy(() => import('./pages/scrum/SprintPlanning'))
+const SprintBoard = lazy(() => import('./pages/scrum/SprintBoard'))
+const DailyScrum = lazy(() => import('./pages/scrum/DailyScrum'))
+const SprintReview = lazy(() => import('./pages/scrum/SprintReview'))
+const SprintRetrospective = lazy(() => import('./pages/scrum/SprintRetrospective'))
+const KanbanBoards = lazy(() => import('./pages/kanban/KanbanBoards'))
+const KanbanBoard = lazy(() => import('./pages/kanban/KanbanBoard'))
+const MetricsDashboard = lazy(() => import('./pages/kanban/MetricsDashboard'))
+const Resources = lazy(() => import('./pages/Resources'))
+const ResourceCapacity = lazy(() => import('./pages/ResourceCapacity'))
+const ResourceDetail = lazy(() => import('./pages/ResourceDetail'))
+const ResourceConflicts = lazy(() => import('./pages/ResourceConflicts'))
+const Reports = lazy(() => import('./pages/Reports'))
+const ReportBuilder = lazy(() => import('./pages/ReportBuilder'))
+const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'))
+const BenefitsRealization = lazy(() => import('./pages/BenefitsRealization'))
+const Dependencies = lazy(() => import('./pages/Dependencies'))
+const IntegrationSync = lazy(() => import('./pages/IntegrationSync'))
+const Login = lazy(() => import('./pages/auth/Login'))
+const Register = lazy(() => import('./pages/auth/Register'))
+const EmailConfirmation = lazy(() => import('./pages/auth/EmailConfirmation'))
+const RoleSelection = lazy(() => import('./pages/onboarding/RoleSelection'))
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt'))
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+    </div>
+  </div>
+)
 
 function App() {
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <BrowserRouter future={{ v7_startTransition: true }}>
-          <PWAInstallPrompt />
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-        {/* Standalone home page with its own header */}
-        <Route path="/" element={<Home />} />
-        
-        {/* App routes with Layout wrapper */}
-        <Route element={<Layout />}>
-          <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="dashboard/methodology/:methodologyCode" element={<ProtectedRoute><MethodologyDashboard /></ProtectedRoute>} />
-          <Route path="methodology-selection" element={<ProtectedRoute><MethodologySelection /></ProtectedRoute>} />
-          <Route path="projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-          <Route path="projects/create" element={<ProtectedRoute><ProjectsCreate /></ProtectedRoute>} />
-          <Route path="projects/:id" element={<ProtectedRoute><ProjectsDetail /></ProtectedRoute>} />
-          <Route path="projects/:id/edit" element={<ProtectedRoute><ProjectsEdit /></ProtectedRoute>} />
-          <Route path="tasks" element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
-          <Route path="tasks/board" element={<ProtectedRoute><TasksBoard /></ProtectedRoute>} />
-          <Route path="tasks/calendar" element={<ProtectedRoute><TasksCalendar /></ProtectedRoute>} />
-          <Route path="tasks/create" element={<ProtectedRoute><TasksCreate /></ProtectedRoute>} />
-          <Route path="tasks/:id" element={<ProtectedRoute><TasksDetail /></ProtectedRoute>} />
-          <Route path="projects/:projectId/structured/starting-up" element={<ProtectedRoute><StartingUpProject /></ProtectedRoute>} />
-          <Route path="projects/:projectId/structured/initiating" element={<ProtectedRoute><InitiatingProject /></ProtectedRoute>} />
-                <Route path="projects/:projectId/structured/stage-gates" element={<ProtectedRoute><StageGates /></ProtectedRoute>} />
-                <Route path="projects/:projectId/structured/controlling-stage" element={<ProtectedRoute><ControllingStage /></ProtectedRoute>} />
-                <Route path="projects/:projectId/structured/managing-product-delivery" element={<ProtectedRoute><ManagingProductDelivery /></ProtectedRoute>} />
-                <Route path="projects/:projectId/structured/directing" element={<ProtectedRoute><DirectingProject /></ProtectedRoute>} />
-                <Route path="projects/:projectId/issues" element={<ProtectedRoute><Issues /></ProtectedRoute>} />
-                <Route path="projects/:projectId/risks" element={<ProtectedRoute><Risks /></ProtectedRoute>} />
-                <Route path="projects/:projectId/risks/:riskId" element={<ProtectedRoute><RiskDetail /></ProtectedRoute>} />
-                <Route path="projects/:projectId/raid-log" element={<ProtectedRoute><RAIDLog /></ProtectedRoute>} />
-                <Route path="projects/:projectId/scrum/product-backlog" element={<ProtectedRoute><ProductBacklog /></ProtectedRoute>} />
-          <Route path="projects/:projectId/scrum/sprint-planning" element={<ProtectedRoute><SprintPlanning /></ProtectedRoute>} />
-                <Route path="projects/:projectId/scrum/sprint/:sprintId/board" element={<ProtectedRoute><SprintBoard /></ProtectedRoute>} />
-                <Route path="projects/:projectId/scrum/sprint/:sprintId/daily-scrum" element={<ProtectedRoute><DailyScrum /></ProtectedRoute>} />
-                <Route path="projects/:projectId/scrum/sprint/:sprintId/review" element={<ProtectedRoute><SprintReview /></ProtectedRoute>} />
-                <Route path="projects/:projectId/scrum/sprint/:sprintId/retrospective" element={<ProtectedRoute><SprintRetrospective /></ProtectedRoute>} />
-                <Route path="projects/:projectId/kanban" element={<ProtectedRoute><KanbanBoards /></ProtectedRoute>} />
-          <Route path="projects/:projectId/kanban/board/:boardId" element={<ProtectedRoute><KanbanBoard /></ProtectedRoute>} />
-          <Route path="projects/:projectId/kanban/metrics" element={<ProtectedRoute><MetricsDashboard /></ProtectedRoute>} />
+          {/* NidusHomepage - Completely standalone, no providers, instant load */}
+        <Route path="/" element={<NidusHomepage />} />
           
-          {/* Phase 4: Resource Planning */}
-          <Route path="resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
-          <Route path="resources/:id" element={<ProtectedRoute><ResourceDetail /></ProtectedRoute>} />
-          <Route path="resources/capacity" element={<ProtectedRoute><ResourceCapacity /></ProtectedRoute>} />
-          <Route path="resources/conflicts" element={<ProtectedRoute><ResourceConflicts /></ProtectedRoute} />
+          {/* Other homepages - lazy loaded with ThemeProvider */}
+          <Route path="/pm" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <PlatformHomepage />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="/project-management" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <PlatformHomepage />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="/simulator" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <SimulatorHomepage />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="/simulator-home" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <SimulatorHomepage />
+              </ThemeProvider>
+            </Suspense>
+          } />
           
-          {/* Phase 6: Cross-Project Resource Management */}
-          <Route path="resources/cross-project" element={<ProtectedRoute><CrossProjectResources /></ProtectedRoute>} />
-          <Route path="resources/forecast" element={<ProtectedRoute><ResourceForecasts /></ProtectedRoute>} />
-          <Route path="resources/utilization" element={<ProtectedRoute><ResourceUtilization /></ProtectedRoute>} />
+          {/* Documentation routes */}
+          <Route path="/documentation/:platform/:guideId" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <Documentation />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="/documentation/:platform" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <Documentation />
+              </ThemeProvider>
+            </Suspense>
+          } />
           
-          {/* Phase 4: Enhanced Reporting */}
-          <Route path="reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-          <Route path="reports/builder" element={<ProtectedRoute><ReportBuilder /></ProtectedRoute>} />
-          <Route path="reports/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
-          <Route path="reports/scheduled" element={<ProtectedRoute><ScheduledReports /></ProtectedRoute>} />
-          
-          {/* Phase 4: Integrations */}
-          <Route path="integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
-          <Route path="integrations/create" element={<ProtectedRoute><IntegrationConfig /></ProtectedRoute>} />
-          <Route path="integrations/:id/edit" element={<ProtectedRoute><IntegrationConfig /></ProtectedRoute>} />
-          <Route path="integrations/:id/sync" element={<ProtectedRoute><IntegrationSync /></ProtectedRoute>} />
-          
-          {/* Phase 7: API & Webhooks */}
-          <Route path="api/docs" element={<ProtectedRoute><ApiDocs /></ProtectedRoute>} />
-          <Route path="webhooks" element={<ProtectedRoute><Webhooks /></ProtectedRoute>} />
-          <Route path="webhooks/:id" element={<ProtectedRoute><Webhooks /></ProtectedRoute>} />
-          
-          {/* Phase 4: Collaboration */}
-          <Route path="notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-          <Route path="activity" element={<ProtectedRoute><ActivityFeed /></ProtectedRoute>} />
-          <Route path="projects/:projectId/activity" element={<ProtectedRoute><ActivityFeed /></ProtectedRoute>} />
-          
-          {/* Phase 4: Automation */}
-          <Route path="automation" element={<ProtectedRoute><Automation /></ProtectedRoute>} />
-          <Route path="automation/create" element={<ProtectedRoute><AutomationRuleBuilder /></ProtectedRoute>} />
-          <Route path="automation/:id/edit" element={<ProtectedRoute><AutomationRuleBuilder /></ProtectedRoute>} />
-          
-          {/* Phase 6: Portfolio Management */}
-          <Route path="portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
-          <Route path="portfolio/:id" element={<ProtectedRoute><PortfolioDetail /></ProtectedRoute>} />
-          <Route path="portfolio/:id/edit" element={<ProtectedRoute><PortfolioEdit /></ProtectedRoute>} />
-          
-          {/* Phase 6: Programme Management */}
-          <Route path="programme" element={<ProtectedRoute><Programme /></ProtectedRoute>} />
-          <Route path="programme/:id" element={<ProtectedRoute><ProgrammeDetail /></ProtectedRoute>} />
-          <Route path="programme/:id/edit" element={<ProtectedRoute><ProgrammeEdit /></ProtectedRoute>} />
-          
-          {/* Phase 6: Inter-Project Dependencies */}
-          <Route path="dependencies" element={<ProtectedRoute><Dependencies /></ProtectedRoute>} />
-          <Route path="dependencies/inter-project" element={<ProtectedRoute><Dependencies /></ProtectedRoute>} />
-          <Route path="dependencies/map" element={<ProtectedRoute><DependencyMap /></ProtectedRoute>} />
-          <Route path="dependencies/impacts" element={<ProtectedRoute><DependencyImpacts /></ProtectedRoute>} />
-          
-          {/* Phase 6: Benefits Realization */}
-          <Route path="benefits" element={<ProtectedRoute><Benefits /></ProtectedRoute>} />
-          <Route path="benefits/register" element={<ProtectedRoute><Benefits /></ProtectedRoute>} />
-          <Route path="benefits/measurements" element={<ProtectedRoute><BenefitMeasurements /></ProtectedRoute>} />
-          <Route path="benefits/realization" element={<ProtectedRoute><BenefitsRealization /></ProtectedRoute>} />
-          
-          {/* Phase 6: Strategic Alignment */}
-          <Route path="strategy/objectives" element={<ProtectedRoute><StrategicObjectives /></ProtectedRoute>} />
-          <Route path="strategy/alignment" element={<ProtectedRoute><StrategicAlignment /></ProtectedRoute>} />
-          <Route path="strategy/contribution" element={<ProtectedRoute><StrategicContribution /></ProtectedRoute>} />
-          <Route path="strategy/portfolio" element={<ProtectedRoute><StrategicPortfolio /></ProtectedRoute>} />
-          <Route path="strategy/reports" element={<ProtectedRoute><StrategicReports /></ProtectedRoute>} />
-          
-          {/* Phase 5: Quality Management */}
-          <Route path="quality-management" element={<ProtectedRoute><QualityManagement /></ProtectedRoute>} />
-          <Route path="quality-management/reviews" element={<ProtectedRoute><QualityReviews /></ProtectedRoute>} />
-          <Route path="quality-management/inspections" element={<ProtectedRoute><QualityInspections /></ProtectedRoute>} />
-          <Route path="quality-management/reports" element={<ProtectedRoute><QualityReports /></ProtectedRoute>} />
-          
-          {/* Phase 5: Stakeholder Management */}
-          <Route path="stakeholders" element={<ProtectedRoute><StakeholderManagement /></ProtectedRoute>} />
-          
-          {/* Phase 5: Change Management */}
-          <Route path="change-management" element={<ProtectedRoute><ChangeRequests /></ProtectedRoute>} />
-          <Route path="change-management/requests" element={<ProtectedRoute><ChangeRequests /></ProtectedRoute>} />
-          <Route path="change-management/:id" element={<ProtectedRoute><ChangeRequestDetail /></ProtectedRoute>} />
-          <Route path="change-management/board/:boardId" element={<ProtectedRoute><ChangeBoard /></ProtectedRoute>} />
-          <Route path="change-management/log" element={<ProtectedRoute><ChangeLogPage /></ProtectedRoute>} />
-          <Route path="projects/:projectId/change-management/board/:boardId" element={<ProtectedRoute><ChangeBoard /></ProtectedRoute>} />
-          
-          {/* Phase 5: Analytics & KPIs */}
-          <Route path="analytics" element={<ProtectedRoute><AnalyticsExecutive /></ProtectedRoute>} />
-          <Route path="analytics/kpis" element={<ProtectedRoute><AnalyticsKPIs /></ProtectedRoute>} />
-          <Route path="analytics/executive" element={<ProtectedRoute><AnalyticsExecutive /></ProtectedRoute>} />
-          <Route path="analytics/project-health" element={<ProtectedRoute><AnalyticsProjectHealth /></ProtectedRoute>} />
-          <Route path="analytics/portfolio" element={<ProtectedRoute><AnalyticsPortfolio /></ProtectedRoute>} />
-          <Route path="analytics/trends" element={<ProtectedRoute><AnalyticsTrends /></ProtectedRoute>} />
-          
-          {/* Phase 8: Security & Compliance - Admin */}
-          <Route path="admin/security/monitoring" element={<ProtectedRoute><SecurityMonitoring /></ProtectedRoute>} />
-          <Route path="admin/security/alerts" element={<ProtectedRoute><SecurityAlerts /></ProtectedRoute>} />
-          <Route path="admin/security/alerts/:id" element={<ProtectedRoute><SecurityAlerts /></ProtectedRoute>} />
-          <Route path="admin/security/incidents" element={<ProtectedRoute><SecurityIncidents /></ProtectedRoute>} />
-          <Route path="admin/security/incidents/:id" element={<ProtectedRoute><SecurityIncidents /></ProtectedRoute>} />
-          <Route path="admin/security/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
-          <Route path="admin/security/data-access-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
-          <Route path="admin/gdpr" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/gdpr/consent" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/gdpr/export-requests" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/gdpr/deletion-requests" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/gdpr/data-breaches" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/gdpr/data-breaches/:id" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/gdpr/reports" element={<ProtectedRoute><GDPRCompliance /></ProtectedRoute>} />
-          <Route path="admin/authentication/sso-providers" element={<ProtectedRoute><SSOManagement /></ProtectedRoute>} />
-          <Route path="admin/authentication/mfa-policies" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          <Route path="admin/authentication/password-policies" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          <Route path="admin/authentication/sessions" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          <Route path="admin/encryption/keys" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          <Route path="admin/encryption/fields" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          <Route path="admin/encryption/rotation" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          
-          {/* Phase 8: User Settings */}
-          <Route path="settings/security" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
-          <Route path="settings/privacy" element={<ProtectedRoute><PrivacyCenter /></ProtectedRoute>} />
-          <Route path="security/mfa-setup" element={<ProtectedRoute><MFASetup /></ProtectedRoute>} />
-          
-          {/* Phase 9: Help System */}
-          <Route path="help" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-          <Route path="help/tutorials" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-          <Route path="help/guides" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-          <Route path="help/faq" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-          <Route path="help/contact" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-          <Route path="help/article/:slug" element={<ProtectedRoute><HelpCenter /></ProtectedRoute>} />
-          
-          {/* Phase 9: Admin - Performance & Help Management */}
-          <Route path="admin/performance" element={<ProtectedRoute><PerformanceDashboard /></ProtectedRoute>} />
-          <Route path="admin/help" element={<ProtectedRoute><HelpManagement /></ProtectedRoute>} />
-          <Route path="admin/bugs" element={<ProtectedRoute><BugTracking /></ProtectedRoute>} />
-          
-          {/* Phase 10: Support & Feedback */}
-          <Route path="support/feature-requests" element={<ProtectedRoute><FeatureRequests /></ProtectedRoute>} />
-          <Route path="support/feedback" element={<ProtectedRoute><SubmitFeedback /></ProtectedRoute>} />
-          <Route path="support/tickets" element={<ProtectedRoute><SupportTickets /></ProtectedRoute>} />
-          <Route path="admin/feedback/analysis" element={<ProtectedRoute><FeedbackAnalysis /></ProtectedRoute>} />
-          <Route path="admin/monitoring" element={<ProtectedRoute><MonitoringDashboard /></ProtectedRoute>} />
-          <Route path="admin/feature-requests" element={<ProtectedRoute><FeatureRequestsManagement /></ProtectedRoute>} />
-          <Route path="admin/improvements" element={<ProtectedRoute><ImprovementBacklog /></ProtectedRoute>} />
-          <Route path="admin/maintenance" element={<ProtectedRoute><MaintenanceDashboard /></ProtectedRoute>} />
-        </Route>
-        
-        {/* Phase 8: Authentication (public routes) */}
-        <Route path="login" element={<Login />} />
-        <Route path="auth/sso/callback" element={<SSOCallback />} />
-        
+          {/* App routes with providers - lazy loaded */}
+          <Route path="app/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Layout>
+                      <Routes>
+                        <Route path="dashboard" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Dashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="home" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Home />
+                          </Suspense>
+                        } />
+                        <Route path="projects" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Projects />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/create" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectsCreate />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectsDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:id/edit" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectsEdit />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="tasks" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Tasks />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="tasks/board" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <TasksBoard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="tasks/calendar" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <TasksCalendar />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="tasks/create" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <TasksCreate />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="tasks/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <TasksDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="methodology/select" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MethodologySelection />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="methodology/dashboard" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MethodologyDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="structured/starting-up" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <StartingUpProject />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="structured/initiating" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <InitiatingProject />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="structured/stage-gates" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <StageGates />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="structured/controlling" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ControllingStage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="structured/managing-delivery" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ManagingProductDelivery />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="structured/directing" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <DirectingProject />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="issues" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Issues />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="risks" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Risks />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="risks/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <RiskDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="raid-log" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <RAIDLog />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="scrum/product-backlog" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProductBacklog />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="scrum/sprint-planning" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintPlanning />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="scrum/sprint-board" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintBoard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="scrum/daily-scrum" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <DailyScrum />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="scrum/sprint-review" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintReview />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="scrum/sprint-retrospective" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintRetrospective />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="kanban/boards" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <KanbanBoards />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="kanban/board/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <KanbanBoard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="kanban/metrics" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MetricsDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="resources" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Resources />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="resources/capacity" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ResourceCapacity />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="resources/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ResourceDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="resources/conflicts" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ResourceConflicts />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="reports" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Reports />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="reports/builder" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ReportBuilder />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="analytics" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AnalyticsDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="benefits" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <BenefitsRealization />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="dependencies" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Dependencies />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="integrations" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <IntegrationSync />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                      </Routes>
+                    </Layout>
+                  </Suspense>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+
+          {/* Auth routes - lazy loaded with minimal providers */}
+          <Route path="login" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <Login />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="register" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <Register />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="auth/confirm-email" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <EmailConfirmation />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="role-selection" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ProtectedRoute>
+                  <RoleSelection />
+                </ProtectedRoute>
+              </ThemeProvider>
+            </Suspense>
+          } />
+
         {/* Catch all - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-      </ToastProvider>
     </ErrorBoundary>
   )
 }

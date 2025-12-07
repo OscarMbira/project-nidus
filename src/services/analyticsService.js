@@ -1,270 +1,160 @@
-import { supabase } from './supabaseClient';
-
 /**
  * Analytics Service
- * Handles analytics snapshots, dashboard configurations, and analytics data aggregation
+ * 
+ * Tracks user behavior, events, and provides analytics data
  */
+
+import { simDb } from './supabase/supabaseClient';
 
 /**
- * Get analytics snapshot by ID
+ * Track user event
  */
-export async function getAnalyticsSnapshot(snapshotId) {
-  const { data, error } = await supabase
-    .from('analytics_snapshots')
-    .select(`
-      *,
-      project:projects(id, project_name, project_code),
-      created_by_user:users!created_by(id, email, full_name)
-    `)
-    .eq('id', snapshotId)
-    .eq('is_deleted', false)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Get analytics snapshots with filters
- */
-export async function getAnalyticsSnapshots(filters = {}) {
-  let query = supabase
-    .from('analytics_snapshots')
-    .select(`
-      *,
-      project:projects(id, project_name, project_code),
-      created_by_user:users!created_by(id, email, full_name)
-    `)
-    .eq('is_deleted', false);
-
-  if (filters.project_id) {
-    query = query.eq('project_id', filters.project_id);
-  }
-  if (filters.snapshot_date) {
-    query = query.eq('snapshot_date', filters.snapshot_date);
-  }
-  if (filters.snapshot_type) {
-    query = query.eq('snapshot_type', filters.snapshot_type);
-  }
-  if (filters.search) {
-    query = query.or(`snapshot_name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-  }
-
-  query = query.order('snapshot_date', { ascending: false });
-  query = query.order('created_at', { ascending: false });
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data || [];
-}
-
-/**
- * Save analytics snapshot
- */
-export async function saveAnalyticsSnapshot(snapshotData, snapshotId = null) {
-  if (snapshotId) {
-    const { data, error } = await supabase
-      .from('analytics_snapshots')
-      .update({
-        ...snapshotData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', snapshotId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } else {
-    const { data, error } = await supabase
-      .from('analytics_snapshots')
-      .insert({
-        ...snapshotData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-}
-
-/**
- * Delete analytics snapshot
- */
-export async function deleteAnalyticsSnapshot(snapshotId) {
-  const { data, error } = await supabase
-    .from('analytics_snapshots')
-    .update({
-      is_deleted: true,
-      deleted_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', snapshotId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Get dashboard configuration for a user
- */
-export async function getDashboardConfiguration(userId, dashboardType = 'default') {
-  const { data, error } = await supabase
-    .from('dashboard_configurations')
-    .select(`
-      *,
-      widgets:dashboard_widgets(*)
-    `)
-    .eq('user_id', userId)
-    .eq('dashboard_type', dashboardType)
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
-
-  if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
-  return data || null;
-}
-
-/**
- * Save dashboard configuration
- */
-export async function saveDashboardConfiguration(configData, configId = null) {
-  if (configId) {
-    const { data, error } = await supabase
-      .from('dashboard_configurations')
-      .update({
-        ...configData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', configId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } else {
-    const { data, error } = await supabase
-      .from('dashboard_configurations')
-      .insert({
-        ...configData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-}
-
-/**
- * Get dashboard widgets for a dashboard
- */
-export async function getDashboardWidgets(dashboardId) {
-  const { data, error } = await supabase
-    .from('dashboard_widgets')
-    .select('*')
-    .eq('dashboard_id', dashboardId)
-    .eq('is_deleted', false)
-    .order('display_order', { ascending: true });
-
-  if (error) throw error;
-  return data || [];
-}
-
-/**
- * Save dashboard widget
- */
-export async function saveDashboardWidget(widgetData, widgetId = null) {
-  if (widgetId) {
-    const { data, error } = await supabase
-      .from('dashboard_widgets')
-      .update({
-        ...widgetData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', widgetId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  } else {
-    const { data, error } = await supabase
-      .from('dashboard_widgets')
-      .insert({
-        ...widgetData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-}
-
-/**
- * Delete dashboard widget
- */
-export async function deleteDashboardWidget(widgetId) {
-  const { data, error } = await supabase
-    .from('dashboard_widgets')
-    .update({
-      is_deleted: true,
-      deleted_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', widgetId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Get analytics statistics
- */
-export async function getAnalyticsStats(filters = {}) {
+export async function trackEvent(eventName, eventData = {}, userId = null) {
   try {
-    // This is a placeholder - implement actual aggregation logic based on your analytics tables
-    const stats = {
-      totalSnapshots: 0,
-      totalDashboards: 0,
-      totalWidgets: 0,
+    const event = {
+      event_name: eventName,
+      event_data: eventData,
+      user_id: userId,
+      timestamp: new Date().toISOString(),
+      session_id: getSessionId(),
+      page_url: window.location.href,
+      user_agent: navigator.userAgent,
     };
 
-    const [snapshots, dashboards, widgets] = await Promise.all([
-      supabase
-        .from('analytics_snapshots')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_deleted', false),
-      supabase
-        .from('dashboard_configurations')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_deleted', false),
-      supabase
-        .from('dashboard_widgets')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_deleted', false),
-    ]);
+    // In production, this would send to analytics backend
+    // For now, log to console in development
+    if (import.meta.env.DEV) {
+      console.log('Analytics Event:', event);
+    }
 
-    if (snapshots.count !== null) stats.totalSnapshots = snapshots.count;
-    if (dashboards.count !== null) stats.totalDashboards = dashboards.count;
-    if (widgets.count !== null) stats.totalWidgets = widgets.count;
+    // Store in localStorage for offline tracking
+    const events = JSON.parse(localStorage.getItem('analytics_events') || '[]');
+    events.push(event);
+    
+    // Keep only last 1000 events
+    if (events.length > 1000) {
+      events.shift();
+    }
+    
+    localStorage.setItem('analytics_events', JSON.stringify(events));
 
-    return stats;
+    // Send to backend (would batch in production)
+    // await sendEventsToBackend([event]);
+
+    return event;
   } catch (error) {
-    console.error('Error fetching analytics stats:', error);
+    console.error('Error tracking event:', error);
+  }
+}
+
+/**
+ * Track page view
+ */
+export function trackPageView(pageName, pageData = {}) {
+  return trackEvent('page_view', {
+    page: pageName,
+    ...pageData,
+  });
+}
+
+/**
+ * Track simulation start
+ */
+export function trackSimulationStart(scenarioId, scenarioName) {
+  return trackEvent('simulation_start', {
+    scenario_id: scenarioId,
+    scenario_name: scenarioName,
+  });
+}
+
+/**
+ * Track simulation completion
+ */
+export function trackSimulationComplete(runId, score, duration) {
+  return trackEvent('simulation_complete', {
+    run_id: runId,
+    score,
+    duration,
+  });
+}
+
+/**
+ * Track purchase
+ */
+export function trackPurchase(itemType, itemId, amount) {
+  return trackEvent('purchase', {
+    item_type: itemType,
+    item_id: itemId,
+    amount,
+  });
+}
+
+/**
+ * Track subscription
+ */
+export function trackSubscription(action, planType, amount = null) {
+  return trackEvent('subscription', {
+    action, // 'subscribe', 'upgrade', 'downgrade', 'cancel'
+    plan_type: planType,
+    amount,
+  });
+}
+
+/**
+ * Get session ID
+ */
+function getSessionId() {
+  let sessionId = sessionStorage.getItem('analytics_session_id');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('analytics_session_id', sessionId);
+  }
+  return sessionId;
+}
+
+/**
+ * Get analytics summary
+ */
+export async function getAnalyticsSummary(organizationId = null, dateRange = {}) {
+  try {
+    // In production, this would query analytics database
+    // For now, return mock data structure
+    return {
+      totalUsers: 0,
+      activeUsers: 0,
+      totalSimulations: 0,
+      completedSimulations: 0,
+      averageScore: 0,
+      totalRevenue: 0,
+      conversionRate: 0,
+    };
+  } catch (error) {
+    console.error('Error getting analytics summary:', error);
+    throw error;
+  }
+}
+
+/**
+ * Export analytics data
+ */
+export async function exportAnalyticsData(format = 'csv', filters = {}) {
+  try {
+    // In production, this would generate export file
+    const response = await fetch('/api/analytics/export', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ format, filters }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to export analytics');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    return url;
+  } catch (error) {
+    console.error('Error exporting analytics:', error);
     throw error;
   }
 }
@@ -272,25 +162,76 @@ export async function getAnalyticsStats(filters = {}) {
 /**
  * Get project analytics summary
  */
-export async function getProjectAnalyticsSummary(projectId) {
+export async function getProjectAnalyticsSummary(projectId = null) {
   try {
-    // This is a placeholder - implement actual calculation logic
-    // You might want to aggregate data from tasks, milestones, risks, etc.
-    const summary = {
-      project_id: projectId,
-      completion_percentage: 0,
-      budget_utilization: 0,
-      schedule_performance: 0,
-      quality_score: 0,
-      risk_score: 0,
-      last_updated: new Date().toISOString(),
+    // In production, this would query analytics database for project-specific metrics
+    return {
+      projectId,
+      totalTasks: 0,
+      completedTasks: 0,
+      overdueTasks: 0,
+      teamMembers: 0,
+      averageCompletionRate: 0,
+      budgetUtilization: 0,
+      healthScore: 0,
     };
-
-    // Add actual calculations here based on your project data
-    return summary;
   } catch (error) {
-    console.error('Error fetching project analytics summary:', error);
+    console.error('Error getting project analytics summary:', error);
     throw error;
   }
 }
 
+/**
+ * Get analytics stats
+ */
+export async function getAnalyticsStats(filters = {}) {
+  try {
+    // In production, this would query analytics database
+    return {
+      totalEvents: 0,
+      uniqueUsers: 0,
+      averageSessionDuration: 0,
+      bounceRate: 0,
+      topPages: [],
+      topEvents: [],
+    };
+  } catch (error) {
+    console.error('Error getting analytics stats:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get analytics snapshots for trend analysis
+ */
+export async function getAnalyticsSnapshots(dateRange = {}) {
+  try {
+    // In production, this would query time-series analytics data
+    return {
+      snapshots: [],
+      period: dateRange,
+      trends: {
+        users: [],
+        events: [],
+        revenue: [],
+      },
+    };
+  } catch (error) {
+    console.error('Error getting analytics snapshots:', error);
+    throw error;
+  }
+}
+
+export default {
+  trackEvent,
+  trackPageView,
+  trackSimulationStart,
+  trackSimulationComplete,
+  trackPurchase,
+  trackSubscription,
+  getAnalyticsSummary,
+  getProjectAnalyticsSummary,
+  getAnalyticsStats,
+  getAnalyticsSnapshots,
+  exportAnalyticsData,
+};
