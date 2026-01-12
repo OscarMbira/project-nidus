@@ -1364,14 +1364,15 @@ Each phase is independent and can be rolled back:
 - [ ] Commit changes with message "feat(phase4): add authorisation enforcement" (User action required)
 
 ### Phase 5 - Audit Logging
-- [ ] Create SQL migration v156_project_audit_logging.sql
-- [ ] Run SQL migration in Supabase
-- [ ] Verify audit_log table exists
-- [ ] Update all RPC functions to log actions
-- [ ] Add trigger to log draft saves
-- [ ] Add success message in UI
-- [ ] Manual testing: Verify audit log records all actions
-- [ ] Commit changes with message "feat(phase5): add audit logging"
+- [x] Create SQL migration v156_project_audit_logging.sql
+- [ ] Run SQL migration in Supabase (User action required)
+- [x] Created/verified audit_log table with comprehensive schema
+- [x] Updated all RPC functions to log actions (authorise, reject, suspend, validate_readiness)
+- [x] Added trigger to log draft creation and updates
+- [x] Created log_project_action() helper function for consistent logging
+- [x] Success messages already displayed in UI from Phase 4
+- [ ] Manual testing: Verify audit log records all actions (User action required)
+- [ ] Commit changes with message "feat(phase5): add audit logging" (User action required)
 
 ### Phase 6 - Integration Hooks (Optional)
 - [ ] Create SQL migration v157_project_integration_hooks.sql
@@ -1483,9 +1484,47 @@ Each phase is independent and can be rolled back:
 #### Known Issues
 - None at this stage
 
+### Phase 5 Summary (Completed: 2026-01-12)
+
+#### Changes Made
+- Implemented comprehensive audit logging system for all project lifecycle actions
+- Created centralized logging function for consistency across all actions
+- Added automatic logging triggers for draft creation and updates
+- Updated all RPC functions to log their actions with detailed context
+
+#### Files Created
+1. **SQL/v156_project_audit_logging.sql**
+   - Created/verified `audit_log` table with indexes for performance
+   - Created `log_project_action()` helper function for consistent logging
+   - Updated `authorise_project()` to log authorisation with context
+   - Updated `reject_project()` to log rejection with reason
+   - Updated `suspend_project()` to log suspension with reason
+   - Updated `validate_project_readiness()` to log validation attempts
+   - Created trigger `trg_projects_log_draft_save` for automatic draft logging
+
+#### Audit Log Features
+- **Actions Logged**: create_draft, update_draft, validate_readiness, authorise, reject, suspend
+- **Data Captured**: table_name, record_id, action, action_details (JSONB), performed_by, performed_at
+- **Action Details**: Previous/new status, reasons, project name, user IDs, timestamps
+- **Performance**: Indexed on table_name, record_id, action, performed_by, performed_at
+
+#### Testing Results
+- Pending user manual testing:
+  1. Create draft project - verify audit_log entry with action='create_draft'
+  2. Update draft - verify audit_log entry with action='update_draft'
+  3. Validate readiness - verify audit_log entry with action='validate_readiness'
+  4. Authorise project - verify audit_log entry with action='authorise' and status transition
+  5. Reject project - verify audit_log entry with action='reject' and reason captured
+  6. Suspend project - verify audit_log entry with action='suspend' and reason captured
+  7. Query: `SELECT * FROM audit_log WHERE table_name = 'projects' ORDER BY performed_at DESC;`
+
+#### Known Issues
+- None at this stage
+
 #### Future Enhancements
-- Phase 5: Add comprehensive audit logging for all authorisation actions
 - Phase 6: Add stage gate initialisation hooks
+- Consider adding IP address and user agent capture to audit_log
+- Consider adding audit log viewer UI for PMO Admins
 
 ---
 
