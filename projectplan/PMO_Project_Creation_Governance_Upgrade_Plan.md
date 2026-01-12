@@ -1350,16 +1350,18 @@ Each phase is independent and can be rolled back:
 - [ ] Commit changes with message "feat(phase3): add readiness validation" (User action required)
 
 ### Phase 4 - Enforce Authorisation
-- [ ] Create SQL migration v155_project_authorisation.sql
-- [ ] Run SQL migration in Supabase
-- [ ] Add "Authorise Project" button (conditional on readiness pass)
-- [ ] Add "Reject Project" button with reason modal
-- [ ] Add "Suspend Project" button with reason modal
-- [ ] Implement RPC calls for all authorisation actions
-- [ ] Add success/error handling
-- [ ] Manual testing: Authorise as PMO Admin (should succeed)
-- [ ] Manual testing: Authorise as non-PMO Admin (should fail)
-- [ ] Commit changes with message "feat(phase4): add authorisation enforcement"
+- [x] Create SQL migration v155_project_authorisation.sql
+- [ ] Run SQL migration in Supabase (User action required)
+- [x] Created AuthorisationActions component with buttons and modals
+- [x] Add "Authorise Project" button (conditional on readiness pass)
+- [x] Add "Reject Project" button with reason modal
+- [x] Add "Suspend Project" button with reason modal
+- [x] Implement RPC calls for all authorisation actions (authorise, reject, suspend)
+- [x] Add success/error handling with visual feedback
+- [x] Enforce PMO Admin only access to authorisation actions
+- [ ] Manual testing: Authorise as PMO Admin (should succeed) (User action required)
+- [ ] Manual testing: Authorise as non-PMO Admin (should fail) (User action required)
+- [ ] Commit changes with message "feat(phase4): add authorisation enforcement" (User action required)
 
 ### Phase 5 - Audit Logging
 - [ ] Create SQL migration v156_project_audit_logging.sql
@@ -1439,9 +1441,50 @@ Each phase is independent and can be rolled back:
 #### Known Issues
 - None at this stage
 
+### Phase 4 Summary (Completed: 2026-01-12)
+
+#### Changes Made
+- Created authorisation enforcement system with three PMO Admin actions: Authorise, Reject, and Suspend
+- Implemented comprehensive validation checks before authorisation (must pass readiness)
+- Added modal dialogs for Reject and Suspend actions requiring reason input
+- Enforced PMO Admin role requirement at both database (RLS) and UI levels
+
+#### Files Modified
+1. **src/pages/ProjectsCreate.jsx**
+   - Added authorisation state management (`intakeStatus`, `isProcessingAuthorisation`)
+   - Added three action handlers: `handleAuthoriseProject()`, `handleRejectProject()`, `handleSuspendProject()`
+   - Integrated AuthorisationActions component display
+   - Added success/error message displays for authorisation actions
+
+#### Files Created
+1. **SQL/v155_project_authorisation.sql**
+   - Created `authorise_project()` RPC function - validates readiness before authorisation
+   - Created `reject_project()` RPC function - requires reason, prevents rejecting authorised projects
+   - Created `suspend_project()` RPC function - requires reason, can suspend any status
+   - Added RLS policy "PMO Admin can update project intake status" for security
+   - All functions check PMO Admin role before allowing action
+
+2. **src/components/project/AuthorisationActions.jsx**
+   - Reusable component for displaying authorisation action buttons
+   - Conditional button enabling based on readiness status
+   - Modal dialogs for Reject and Suspend with validation
+   - Status display panels for authorised/rejected/suspended projects
+   - Only visible to PMO Admin users
+
+#### Testing Results
+- Pending user manual testing:
+  1. As PMO Admin, save draft project and validate readiness (must pass)
+  2. Click "Authorise Project" - should succeed and update intake_status
+  3. Try to reject already authorised project - should fail with error message
+  4. As PMO Admin, reject a draft project with reason - should succeed
+  5. As non-PMO Admin user, authorisation buttons should not be visible
+  6. Verify RLS prevents non-PMO Admin from calling RPC functions directly
+
+#### Known Issues
+- None at this stage
+
 #### Future Enhancements
-- Phase 4: Add authorisation actions (Authorise/Reject/Suspend)
-- Phase 5: Add comprehensive audit logging
+- Phase 5: Add comprehensive audit logging for all authorisation actions
 - Phase 6: Add stage gate initialisation hooks
 
 ---

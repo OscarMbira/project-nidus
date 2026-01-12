@@ -16,6 +16,9 @@ import ProjectFormTabs from '../components/project/ProjectFormTabs'
 // Phase 3: Import readiness validation component
 import ReadinessPanel from '../components/project/ReadinessPanel'
 
+// Phase 4: Import authorisation actions component
+import AuthorisationActions from '../components/project/AuthorisationActions'
+
 // Lazy load role assignment services only when needed
 const loadRoleServices = () => Promise.all([
   import('../services/organisationRoleService'),
@@ -109,6 +112,10 @@ export default function ProjectsCreate() {
   const [createdProjectId, setCreatedProjectId] = useState(null)
   const [readinessData, setReadinessData] = useState(null)
   const [isValidatingReadiness, setIsValidatingReadiness] = useState(false)
+
+  // Phase 4: Authorisation state
+  const [intakeStatus, setIntakeStatus] = useState('draft')
+  const [isProcessingAuthorisation, setIsProcessingAuthorisation] = useState(false)
 
   // Optimized: Progressive loading - show form immediately, load data in background
   useEffect(() => {
@@ -563,6 +570,143 @@ export default function ProjectsCreate() {
       }))
     } finally {
       setIsValidatingReadiness(false)
+    }
+  }, [createdProjectId])
+
+  // Phase 4: Authorisation handlers
+  const handleAuthoriseProject = useCallback(async () => {
+    if (!createdProjectId) {
+      setErrors(prev => ({ ...prev, authorisation: 'No project to authorise' }))
+      return
+    }
+
+    try {
+      setIsProcessingAuthorisation(true)
+      setErrors(prev => {
+        const next = { ...prev }
+        delete next.authorisation
+        return next
+      })
+
+      const { data, error } = await supabase.rpc('authorise_project', {
+        p_project_id: createdProjectId
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Authorisation failed')
+      }
+
+      setIntakeStatus('authorised')
+      setErrors(prev => ({
+        ...prev,
+        authorisation: null,
+        success: 'Project authorised successfully! The project is now ready for execution.'
+      }))
+
+      // Navigate to project detail after short delay
+      setTimeout(() => {
+        navigate(`/projects/${createdProjectId}`)
+      }, 2000)
+    } catch (error) {
+      console.error('Authorisation error:', error)
+      setErrors(prev => ({
+        ...prev,
+        authorisation: error.message || 'Failed to authorise project'
+      }))
+    } finally {
+      setIsProcessingAuthorisation(false)
+    }
+  }, [createdProjectId, navigate])
+
+  const handleRejectProject = useCallback(async (reason) => {
+    if (!createdProjectId) {
+      setErrors(prev => ({ ...prev, authorisation: 'No project to reject' }))
+      return
+    }
+
+    try {
+      setIsProcessingAuthorisation(true)
+      setErrors(prev => {
+        const next = { ...prev }
+        delete next.authorisation
+        return next
+      })
+
+      const { data, error } = await supabase.rpc('reject_project', {
+        p_project_id: createdProjectId,
+        p_rejection_reason: reason
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Rejection failed')
+      }
+
+      setIntakeStatus('rejected')
+      setErrors(prev => ({
+        ...prev,
+        authorisation: null,
+        success: 'Project rejected successfully.'
+      }))
+    } catch (error) {
+      console.error('Rejection error:', error)
+      setErrors(prev => ({
+        ...prev,
+        authorisation: error.message || 'Failed to reject project'
+      }))
+    } finally {
+      setIsProcessingAuthorisation(false)
+    }
+  }, [createdProjectId])
+
+  const handleSuspendProject = useCallback(async (reason) => {
+    if (!createdProjectId) {
+      setErrors(prev => ({ ...prev, authorisation: 'No project to suspend' }))
+      return
+    }
+
+    try {
+      setIsProcessingAuthorisation(true)
+      setErrors(prev => {
+        const next = { ...prev }
+        delete next.authorisation
+        return next
+      })
+
+      const { data, error } = await supabase.rpc('suspend_project', {
+        p_project_id: createdProjectId,
+        p_suspended_reason: reason
+      })
+
+      if (error) {
+        throw error
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Suspension failed')
+      }
+
+      setIntakeStatus('suspended')
+      setErrors(prev => ({
+        ...prev,
+        authorisation: null,
+        success: 'Project suspended successfully.'
+      }))
+    } catch (error) {
+      console.error('Suspension error:', error)
+      setErrors(prev => ({
+        ...prev,
+        authorisation: error.message || 'Failed to suspend project'
+      }))
+    } finally {
+      setIsProcessingAuthorisation(false)
     }
   }, [createdProjectId])
 
@@ -1023,6 +1167,36 @@ export default function ProjectsCreate() {
               isValidating={isValidatingReadiness}
               projectId={createdProjectId}
             />
+          </div>
+        )}
+
+        {/* Phase 4: Authorisation Actions */}
+        {createdProjectId && isPmoAdmin && (
+          <div className="mt-6">
+            <AuthorisationActions
+              projectId={createdProjectId}
+              readinessStatus={readinessData?.readiness_status}
+              isPmoAdmin={isPmoAdmin}
+              intakeStatus={intakeStatus}
+              onAuthorise={handleAuthoriseProject}
+              onReject={handleRejectProject}
+              onSuspend={handleSuspendProject}
+              isProcessing={isProcessingAuthorisation}
+            />
+          </div>
+        )}
+
+        {/* Success Message */}
+        {errors.success && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <p className="text-sm text-green-600 dark:text-green-400">{errors.success}</p>
+          </div>
+        )}
+
+        {/* Authorisation Error Message */}
+        {errors.authorisation && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-sm text-red-600 dark:text-red-400">{errors.authorisation}</p>
           </div>
         )}
 
