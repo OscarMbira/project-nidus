@@ -1,12 +1,40 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { getMandateByIdOrReference, canEditMandate, canCreateProject, createProjectFromMandate, getAssociatedDocuments, getStakeholders } from '../../services/projectMandateService'
+import { getMandateByIdOrReference, getAssociatedDocuments, getStakeholders } from '../../services/projectMandateService'
 import { getConstraintsByMandate } from '../../services/mandateConstraintService'
 import { submitForApproval, getApprovalStatus } from '../../services/mandateWorkflowService'
 import { useToastContext } from '../../context/ToastContext'
 import ConstraintListItem from '../../components/constraints/ConstraintListItem'
 import MandateSubmitModal from '../../components/mandate/MandateSubmitModal'
+import ExportRecordMenu from '../../components/ui/ExportRecordMenu'
+
+/** All mandate fields for export; Word/PPT let user choose up to 10. */
+const MANDATE_EXPORT_SECTIONS = [
+  { title: 'Basic Information', fields: [
+    { key: 'mandate_reference', label: 'Reference' },
+    { key: 'mandate_title', label: 'Title' },
+    { key: 'version_number', label: 'Version' },
+    { key: 'created_date', label: 'Created Date' },
+    { key: 'document_status', label: 'Status' },
+    { key: 'project_created_date', label: 'Project Created Date' }
+  ]},
+  { title: '1. Purpose', fields: [{ key: 'purpose', label: 'Purpose' }] },
+  { title: '2. Authority', fields: [{ key: 'authority_responsible', label: 'Authority Responsible' }] },
+  { title: '3. Background', fields: [{ key: 'background', label: 'Background' }] },
+  { title: '4. Project Objectives', fields: [{ key: 'project_objectives', label: 'Objectives' }] },
+  { title: '5. Scope', fields: [
+    { key: 'scope', label: 'In-Scope' },
+    { key: 'scope_exclusions', label: 'Out-of-Scope Exclusions' }
+  ]},
+  { title: '7. Interfaces', fields: [{ key: 'interfaces', label: 'Interfaces' }] },
+  { title: '8. Quality Expectations', fields: [{ key: 'quality_expectations', label: 'Quality Expectations' }] },
+  { title: '9. Outline Business Case', fields: [{ key: 'outline_business_case', label: 'Outline Business Case' }] },
+  { title: '11. Proposed Roles', fields: [
+    { key: 'proposed_executive_name', label: 'Proposed Executive' },
+    { key: 'proposed_pm_name', label: 'Proposed PM' }
+  ]}
+]
 
 /** Parse JSON array or return raw string for display */
 function parseListOrText(value) {
@@ -32,7 +60,6 @@ export default function ProjectMandateView() {
   const [canEdit, setCanEdit] = useState(false)
   const [canCreate, setCanCreate] = useState(false)
   const [approvalPending, setApprovalPending] = useState(false)
-  const [creatingProject, setCreatingProject] = useState(false)
   const [submittingForApproval, setSubmittingForApproval] = useState(false)
   const [constraints, setConstraints] = useState([])
   const [associatedDocuments, setAssociatedDocuments] = useState([])
@@ -49,9 +76,18 @@ export default function ProjectMandateView() {
       if (!data) return
 
       const id = data.id
-      const [editable, creatable, approvalStatus, constraintsResult, docsData, stakeholdersData] = await Promise.all([
-        canEditMandate(id),
-        canCreateProject(id),
+
+      // Compute canEdit / canCreate from already-fetched data — no extra DB calls needed.
+      // canEditMandate logic: draft or rejected status AND not yet linked to a project
+      const editable = ['draft', 'rejected'].includes(data.document_status) && !data.project_id
+      // canCreateProject logic: approved, not linked, has at least one proposed lead
+      const creatable =
+        data.document_status === 'approved' &&
+        data.project_id === null &&
+        !!(data.proposed_executive_id || data.proposed_executive_name ||
+           data.proposed_pm_id || data.proposed_pm_name)
+
+      const [approvalStatus, constraintsResult, docsData, stakeholdersData] = await Promise.all([
         getApprovalStatus(id).catch(() => ({ isPending: false })),
         getConstraintsByMandate(id).catch(() => ({ success: false })),
         getAssociatedDocuments(id).catch(() => []),
@@ -102,20 +138,44 @@ export default function ProjectMandateView() {
     return <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{fallbackText || ''}</p>
   }
 
-  const handleCreateProject = async () => {
-    if (!confirm('Create a new project from this approved mandate?')) return
-
+  const handleCreateProject = () => {
+    // Parse project_objectives (JSON array → newline-joined string for strategic_alignment)
+    let objectivesText = ''
     try {
-      setCreatingProject(true)
-      const projectId = await createProjectFromMandate(mandate.id)
-      toast.success('Project created successfully!')
-      navigate(`/projects/${projectId}`)
-    } catch (error) {
-      console.error('Error creating project:', error)
-      toast.error('Error creating project: ' + (error?.message || 'Unknown error'))
-    } finally {
-      setCreatingProject(false)
+      const parsed = JSON.parse(mandate.project_objectives || '[]')
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        objectivesText = parsed.join('\n')
+      }
+    } catch {
+      objectivesText = mandate.project_objectives || ''
     }
+
+    // Short URL: only project code (mandate is derived from PRJ-{mandateRef} when needed)
+    const defaultProjectCode = mandate.mandate_reference
+      ? `PRJ-${mandate.mandate_reference}`
+      : `PRJ-${mandate.id?.slice(0, 8) || 'new'}`
+    const createPath = `/app/projects/create?projectCode=${encodeURIComponent(defaultProjectCode)}`
+    navigate(createPath, {
+      state: {
+        fromMandate: {
+          mandateId: mandate.id,
+          mandateReference: mandate.mandate_reference,
+          mandateTitle: mandate.mandate_title,
+          // Project Details tab
+          project_name: mandate.mandate_title || '',
+          project_description: mandate.background || '',
+          // Governance tab
+          executive_user_id: mandate.proposed_executive_id || '',
+          proposed_executive_name: mandate.proposed_executive_name || '',
+          // Business Justification tab
+          business_objective: mandate.purpose || '',
+          strategic_alignment: objectivesText,
+          expected_benefits_summary: mandate.outline_business_case || '',
+          // Document Governance
+          mandate_status: 'approved'
+        }
+      }
+    })
   }
 
   const canSubmitForApproval = mandate && (mandate.document_status === 'draft' || mandate.document_status === 'rejected') && !approvalPending
@@ -203,7 +263,12 @@ export default function ProjectMandateView() {
             </p>
           </div>
           
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 items-center">
+            <ExportRecordMenu
+              sections={MANDATE_EXPORT_SECTIONS}
+              record={mandate}
+              baseFilename={`Mandate_${mandate.mandate_reference || mandate.id}`}
+            />
             {canSubmitForApproval && (
               <button
                 onClick={() => setShowSubmitModal(true)}
@@ -217,11 +282,10 @@ export default function ProjectMandateView() {
             {canCreate && (
               <button
                 onClick={handleCreateProject}
-                disabled={creatingProject}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                {creatingProject ? 'Creating...' : 'Create Project'}
+                Create Project
               </button>
             )}
             {canEdit && (
@@ -472,37 +536,64 @@ export default function ProjectMandateView() {
           </div>
         )}
 
-        {/* Approval History */}
+        {/* Approval History — audit trail: approver, date, time, IP */}
         {approvalHistory.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Approval History</h2>
-            <div className="space-y-3">
-              {approvalHistory.map((approval) => (
-                <div key={approval.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <div className="mt-0.5">{getApprovalStatusIcon(approval.approval_status)}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${getApprovalBadgeClass(approval.approval_status)}`}>
-                        {approval.approval_status.toUpperCase()}
-                      </span>
-                      {approval.approver_name && (
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{approval.approver_name}</span>
-                      )}
-                      {approval.approval_date && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(approval.approval_date).toLocaleDateString()}
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Audit trail for mandate approvals and rejections.</p>
+            <div className="space-y-4">
+              {approvalHistory.map((approval) => {
+                const approvalTimestamp = approval.approval_at || approval.approval_date
+                const approvalDate = approvalTimestamp ? new Date(approvalTimestamp) : null
+                return (
+                  <div key={approval.id} className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <div className="mt-0.5 shrink-0">{getApprovalStatusIcon(approval.approval_status)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${getApprovalBadgeClass(approval.approval_status)}`}>
+                          {approval.approval_status.toUpperCase()}
                         </span>
+                        {approval.approver_name && (
+                          <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{approval.approver_name}</span>
+                        )}
+                      </div>
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                        {approvalDate && (
+                          <>
+                            <dt className="text-gray-500 dark:text-gray-400">Date</dt>
+                            <dd className="text-gray-700 dark:text-gray-300">
+                              {approvalDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </dd>
+                            {approval.approval_at && (
+                              <>
+                                <dt className="text-gray-500 dark:text-gray-400">Time</dt>
+                                <dd className="text-gray-700 dark:text-gray-300">
+                                  {approvalDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                </dd>
+                              </>
+                            )}
+                          </>
+                        )}
+                        {approval.approval_ip_address && (
+                          <>
+                            <dt className="text-gray-500 dark:text-gray-400">IP Address</dt>
+                            <dd className="text-gray-700 dark:text-gray-300 font-mono text-xs">{approval.approval_ip_address}</dd>
+                          </>
+                        )}
+                        <dt className="text-gray-500 dark:text-gray-400">Requested</dt>
+                        <dd className="text-gray-700 dark:text-gray-300">
+                          {approval.created_at ? new Date(approval.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                        </dd>
+                      </dl>
+                      {approval.approval_comments && (
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                          {approval.approval_comments}
+                        </p>
                       )}
                     </div>
-                    {approval.approval_comments && (
-                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{approval.approval_comments}</p>
-                    )}
-                    <p className="text-xs text-gray-400 mt-1">
-                      Requested: {new Date(approval.created_at).toLocaleDateString()}
-                    </p>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}
