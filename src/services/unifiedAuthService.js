@@ -3,7 +3,7 @@
  * Handles authentication and platform access for both PM and Simulator platforms
  *
  * IMPORTANT: This service works with both platforms
- * Uses appDb for PM platform data, simDb for Simulator data
+ * Uses appDb for Platform data, simDb for Simulator data
  */
 
 import { appDb, supabase } from './supabase/supabaseClient'
@@ -34,18 +34,39 @@ export async function login(email, password) {
       }
     }
 
-    // Get user's platform access
-    const platforms = await getPlatformAccess(data.user.id)
+    // Run platform access check and org check in parallel
+    const [platformsData, orgResult] = await Promise.all([
+      getPlatformAccess(data.user.id),
+      appDb
+        .from('accounts')
+        .select('id, organisation_verified')
+        .eq('owner_user_id', data.user.id)
+        .maybeSingle(),
+    ])
 
     // Filter to only registered platforms
-    const registeredPlatforms = platforms.filter((p) => p.has_registered)
+    const registeredPlatforms = platformsData.filter((p) => p.has_registered)
 
-    return {
+    const org = orgResult.data
+
+    // Add organisation status to response
+    const result = {
       success: true,
       user: data.user,
       platforms: registeredPlatforms,
       error: null,
     }
+
+    if (!org) {
+      // No organisation - redirect to create one
+      result.requiresOrganisationSetup = true
+    } else if (!org.organisation_verified) {
+      // Organisation exists but not verified
+      result.requiresOrganisationVerification = true
+      result.organisationId = org.id
+    }
+
+    return result
   } catch (error) {
     console.error('Login error:', error)
     return {
@@ -96,13 +117,14 @@ export async function getUserPlatformAccess(userId) {
 /**
  * Switch active platform context
  * @param {string} userId - Auth user ID
- * @param {string} platform - Platform to switch to ('pm' or 'simulator')
+ * @param {string} platform - Platform to switch to ('platform' or 'simulator')
  * @returns {Promise<{success: boolean, error: string|null}>}
  */
 export async function switchPlatform(userId, platform) {
   try {
-    // Validate platform
-    if (platform !== 'pm' && platform !== 'simulator') {
+    // Validate platform - accept both 'platform' and legacy 'pm' for backward compatibility
+    const normalizedPlatform = platform === 'pm' ? 'platform' : platform;
+    if (normalizedPlatform !== 'platform' && normalizedPlatform !== 'simulator') {
       return {
         success: false,
         error: 'Invalid platform',
@@ -110,19 +132,19 @@ export async function switchPlatform(userId, platform) {
     }
 
     // Check if user has access to this platform
-    const hasAccess = await canAccessPlatform(userId, platform)
+    const hasAccess = await canAccessPlatform(userId, normalizedPlatform)
     if (!hasAccess) {
       return {
         success: false,
-        error: `You don't have access to ${platform} platform`,
+        error: `You don't have access to ${normalizedPlatform} platform`,
       }
     }
 
     // Update platform access (tracks last access)
-    await updatePlatformAccess(userId, platform)
+    await updatePlatformAccess(userId, normalizedPlatform)
 
     // Store current platform in sessionStorage
-    sessionStorage.setItem('currentPlatform', platform)
+    sessionStorage.setItem('currentPlatform', normalizedPlatform)
 
     return {
       success: true,
@@ -139,7 +161,7 @@ export async function switchPlatform(userId, platform) {
 
 /**
  * Get current active platform from session
- * @returns {string|null} - Current platform ('pm' or 'simulator') or null
+ * @returns {string|null} - Current platform ('platform' or 'simulator') or null
  */
 export function getCurrentPlatform() {
   if (typeof window === 'undefined') return null
@@ -148,7 +170,7 @@ export function getCurrentPlatform() {
 
 /**
  * Set current active platform in session
- * @param {string} platform - Platform to set ('pm' or 'simulator')
+ * @param {string} platform - Platform to set ('platform' or 'simulator')
  */
 export function setCurrentPlatform(platform) {
   if (typeof window === 'undefined') return
@@ -207,7 +229,7 @@ export async function getRecommendedPlatform(userId) {
 
     return {
       success: true,
-      platform: sortedPlatforms[0]?.platform || 'pm',
+      platform: sortedPlatforms[0]?.platform || 'platform',
       error: null,
     }
   } catch (error) {

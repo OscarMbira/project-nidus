@@ -3,9 +3,11 @@ import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { supabase, appDb, simDb } from '../../services/supabaseClient'
 import SSOLoginButton from '../../components/security/SSOLoginButton'
 import PlatformSelector from '../../components/PlatformSelector'
-import { login, getRecommendedPlatform, switchPlatform, getUserPlatformAccess } from '../../services/unifiedAuthService'
-import { registerForPlatform, PLATFORMS } from '../../services/unifiedSubscriptionService'
+import { login, getUserPlatformAccess } from '../../services/unifiedAuthService'
+import { registerForPlatform, updatePlatformAccess, PLATFORMS } from '../../services/unifiedSubscriptionService'
 import { Mail, Lock, AlertCircle, Loader, LogIn } from 'lucide-react'
+import MainHeader from '../../components/homepage/MainHeader'
+import Footer from '../../components/homepage/Footer'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -24,11 +26,19 @@ export default function Login() {
 
   useEffect(() => {
     // Check if user is already authenticated
+    // But don't auto-redirect if they're coming from email confirmation
+    // (They should manually log in after email confirmation)
     checkAuth()
   }, [])
 
   const checkAuth = async () => {
     try {
+      // If coming from email confirmation, don't auto-redirect
+      // User should manually log in
+      if (location.state?.fromEmailConfirmation || location.state?.message?.includes('Email confirmed')) {
+        return // Stay on login page
+      }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         navigate(from, { replace: true })
@@ -61,235 +71,180 @@ export default function Login() {
           return
         }
 
-        // Check platform access
+        // ── Org check: use data already fetched inside login() ──────────────
+        if (result.requiresOrganisationSetup) {
+          navigate('/onboarding/organisation-setup', { replace: true })
+          setLoading(false)
+          return
+        }
+
+        // ── Platform access ───────────────────────────────────────────────
         let platforms = result.platforms || []
-        
-        // If no platform access found, try to recover by checking subscriptions
+
+        // Recovery block: only runs when platform access is missing.
+        // PM + SIM subscription queries run in parallel to minimise latency.
         if (platforms.length === 0) {
           try {
-            console.log('No platform access found, attempting recovery...')
-            
-            // First, check if user record exists in users table
-            const { data: userRecord, error: userRecordError } = await appDb
-              .from('users')
-              .select('id')
-              .eq('auth_user_id', result.user.id)
-              .maybeSingle()
-            
-            if (userRecordError) {
-              console.error('Error checking user record:', userRecordError)
-            }
-            
-            if (!userRecord) {
-              console.warn('User record not found in users table for auth_user_id:', result.user.id)
-              // Try to create user record if it doesn't exist
-              try {
-                const { data: newUserRecord, error: createError } = await appDb
-                  .from('users')
-                  .insert([
-                    {
-                      auth_user_id: result.user.id,
-                      email: result.user.email,
-                      full_name: result.user.user_metadata?.full_name || result.user.email?.split('@')[0] || 'User',
-                      is_active: true,
-                      is_verified: result.user.email_confirmed_at !== null,
-                    },
-                  ])
-                  .select()
-                  .single()
-                
-                if (createError) {
-                  if (createError.code === '23505' || createError.message?.includes('duplicate')) {
-                    console.log('User record was created by another process')
-                  } else {
-                    console.error('Error creating user record during login:', createError)
-                  }
-                } else {
-                  console.log('Created user record during login recovery:', newUserRecord)
-                }
-              } catch (createUserError) {
-                console.error('Exception creating user record:', createUserError)
-              }
-            }
-            
-            // Check if user has PM subscription (using appDb for public schema)
-            // pm_subscriptions.user_id references auth.users.id
-            // Status can be: 'active', 'trialing', 'paused' (we accept any non-cancelled/expired)
-            // Handle RLS errors gracefully
-            let pmSub = null
-            try {
-              const { data, error: pmError } = await appDb
-                .from('pm_subscriptions')
+            // 1. Check user record + both subscriptions in parallel
+            const [
+              userRecordResult,
+              pmSubResult,
+              simSubResult,
+            ] = await Promise.allSettled([
+              appDb.from('users').select('id').eq('auth_user_id', result.user.id).maybeSingle(),
+              appDb
+                .from('platform_subscriptions')
                 .select('id, status, plan_type')
                 .eq('user_id', result.user.id)
                 .in('status', ['active', 'trialing', 'paused', 'past_due'])
                 .limit(1)
-                .maybeSingle()
-              
-              if (pmError) {
-                // Check if it's an RLS recursion error
-                if (pmError.code === '42P17' || pmError.message?.includes('infinite recursion')) {
-                  console.warn('RLS recursion error on pm_subscriptions, trying alternative check')
-                  // Try to check via user_platform_access instead
-                  const { data: platformAccess } = await appDb
-                    .from('user_platform_access')
-                    .select('platform')
-                    .eq('user_id', result.user.id)
-                    .eq('platform', 'pm')
-                    .maybeSingle()
-                  
-                  if (platformAccess) {
-                    pmSub = { id: 'exists', status: 'active' } // Mark as existing
-                  }
-                } else {
-                  console.error('Error checking PM subscription:', pmError)
-                }
-              } else {
-                pmSub = data
-              }
-            } catch (pmCheckError) {
-              console.error('Exception checking PM subscription:', pmCheckError)
-            }
-            
-            if (pmSub) {
-              console.log('Found PM subscription:', pmSub)
-              try {
-                await registerForPlatform(result.user.id, PLATFORMS.PM)
-                console.log('Successfully registered for PM platform')
-              } catch (pmRegError) {
-                console.error('Error registering PM platform:', pmRegError)
-              }
-            }
-            
-            // Check if user has Simulator subscription (using simDb for sim schema)
-            // Note: simulator_subscriptions uses user_id which references auth.users.id
-            // Accept any subscription that's not cancelled or expired
-            let simSub = null
-            try {
-              const { data, error: simError } = await simDb
+                .maybeSingle(),
+              simDb
                 .from('simulator_subscriptions')
                 .select('id, status, plan_type')
                 .eq('user_id', result.user.id)
                 .in('status', ['active', 'trialing', 'paused', 'past_due'])
                 .limit(1)
-                .maybeSingle()
-              
-              if (simError) {
-                // Check if it's an RLS recursion error
-                if (simError.code === '42P17' || simError.message?.includes('infinite recursion')) {
-                  console.warn('RLS recursion error on simulator_subscriptions, trying alternative check')
-                  // Try to check via user_platform_access instead
-                  const { data: platformAccess } = await appDb
-                    .from('user_platform_access')
-                    .select('platform')
-                    .eq('user_id', result.user.id)
-                    .eq('platform', 'simulator')
-                    .maybeSingle()
-                  
-                  if (platformAccess) {
-                    simSub = { id: 'exists', status: 'active' } // Mark as existing
-                  }
-                } else {
-                  console.error('Error checking Simulator subscription:', simError)
+                .maybeSingle(),
+            ])
+
+            const userRecord =
+              userRecordResult.status === 'fulfilled' ? userRecordResult.value?.data : null
+
+            // Handle missing user record
+            if (!userRecord) {
+              try {
+                const { error: createError } = await appDb.from('users').insert([
+                  {
+                    auth_user_id: result.user.id,
+                    email: result.user.email,
+                    full_name:
+                      result.user.user_metadata?.full_name ||
+                      result.user.email?.split('@')[0] ||
+                      'User',
+                    is_active: true,
+                    is_verified: result.user.email_confirmed_at !== null,
+                  },
+                ])
+                if (createError && createError.code !== '23505') {
+                  console.error('Error creating user record during login:', createError)
                 }
+              } catch (createUserError) {
+                console.error('Exception creating user record:', createUserError)
+              }
+            }
+
+            // Register platforms found via subscription checks
+            let pmSub = null
+            if (pmSubResult.status === 'fulfilled') {
+              const { data, error: pmError } = pmSubResult.value
+              if (pmError?.code === '42P17' || pmError?.message?.includes('infinite recursion')) {
+                // RLS fallback: check user_platform_access directly
+                const { data: pa } = await appDb
+                  .from('user_platform_access')
+                  .select('platform')
+                  .eq('user_id', result.user.id)
+                  .eq('platform', 'platform')
+                  .maybeSingle()
+                if (pa) pmSub = { id: 'exists', status: 'active' }
+              } else {
+                pmSub = data
+              }
+            }
+
+            let simSub = null
+            if (simSubResult.status === 'fulfilled') {
+              const { data, error: simError } = simSubResult.value
+              if (simError?.code === '42P17' || simError?.message?.includes('infinite recursion')) {
+                const { data: pa } = await appDb
+                  .from('user_platform_access')
+                  .select('platform')
+                  .eq('user_id', result.user.id)
+                  .eq('platform', 'simulator')
+                  .maybeSingle()
+                if (pa) simSub = { id: 'exists', status: 'active' }
               } else {
                 simSub = data
               }
-            } catch (simCheckError) {
-              console.error('Exception checking Simulator subscription:', simCheckError)
             }
-            
-            if (simSub) {
-              console.log('Found Simulator subscription:', simSub)
-              try {
-                await registerForPlatform(result.user.id, PLATFORMS.SIMULATOR)
-                console.log('Successfully registered for Simulator platform')
-              } catch (simRegError) {
-                console.error('Error registering Simulator platform:', simRegError)
-              }
-            }
-            
-            // If still no platforms, check user_platform_access directly
-            // Maybe records exist but has_registered is false
-            const { data: platformAccess, error: platformAccessError } = await appDb
+
+            // Register for found platforms in parallel
+            const registrations = []
+            if (pmSub) registrations.push(registerForPlatform(result.user.id, PLATFORMS.PLATFORM).catch(console.error))
+            if (simSub) registrations.push(registerForPlatform(result.user.id, PLATFORMS.SIMULATOR).catch(console.error))
+            if (registrations.length > 0) await Promise.all(registrations)
+
+            // Fix stale has_registered flags
+            const { data: platformAccess } = await appDb
               .from('user_platform_access')
               .select('*')
               .eq('user_id', result.user.id)
-            
-            if (platformAccessError) {
-              console.error('Error checking platform access:', platformAccessError)
-            } else if (platformAccess && platformAccess.length > 0) {
-              console.log('Found platform access records:', platformAccess)
-              // Update has_registered to true for existing records
-              for (const access of platformAccess) {
-                if (!access.has_registered) {
-                  try {
-                    const { error: updateError } = await appDb
-                      .from('user_platform_access')
-                      .update({ has_registered: true })
-                      .eq('id', access.id)
-                    
-                    if (updateError) {
-                      console.error('Error updating platform access:', updateError)
-                    } else {
-                      console.log('Updated platform access for:', access.platform)
-                    }
-                  } catch (updateError) {
-                    console.error('Error updating platform access:', updateError)
-                  }
-                }
-              }
+
+            if (platformAccess?.length > 0) {
+              const stale = platformAccess.filter((a) => !a.has_registered)
+              await Promise.all(
+                stale.map((access) =>
+                  appDb
+                    .from('user_platform_access')
+                    .update({
+                      has_registered: true,
+                      registration_date: access.registration_date || new Date().toISOString(),
+                    })
+                    .eq('id', access.id)
+                    .catch(console.error)
+                )
+              )
             }
-            
-            // Re-fetch platform access after recovery
+
+            // Re-fetch after recovery
             const platformResult = await getUserPlatformAccess(result.user.id)
             if (platformResult.success) {
               platforms = platformResult.platforms || []
-              console.log('Platforms after recovery:', platforms)
-            } else {
-              console.error('Error re-fetching platform access:', platformResult.error)
             }
-            
-            // If still no platforms after all recovery attempts, check if user record exists
-            // If user exists, they should have at least one platform (create default PM access)
+
+            // Last resort: create default Platform access if user record exists
             if (platforms.length === 0 && userRecord) {
-              console.log('User exists but no platform access found, creating default PM platform access...')
               try {
-                await registerForPlatform(result.user.id, PLATFORMS.PM)
+                await registerForPlatform(result.user.id, PLATFORMS.PLATFORM)
                 const finalResult = await getUserPlatformAccess(result.user.id)
-                if (finalResult.success) {
-                  platforms = finalResult.platforms || []
-                  console.log('Created default PM platform access, platforms:', platforms)
-                }
+                if (finalResult.success) platforms = finalResult.platforms || []
               } catch (defaultError) {
                 console.error('Error creating default platform access:', defaultError)
               }
             }
           } catch (recoveryError) {
             console.error('Error recovering platform access:', recoveryError)
-            console.error('Recovery error details:', {
-              message: recoveryError.message,
-              stack: recoveryError.stack,
-              name: recoveryError.name
-            })
           }
         }
-        
+
         setUserPlatforms(platforms)
 
         if (platforms.length === 0) {
-          // No platform access - redirect to registration
-          setError('You need to register for at least one platform. Please sign up.')
+          // Check verification status for appropriate error message
+          const { data: userRec } = await appDb
+            .from('users')
+            .select('is_verified')
+            .eq('auth_user_id', result.user.id)
+            .maybeSingle()
+
+          if (userRec && !userRec.is_verified) {
+            setError('Please verify your email address before signing in. Check your inbox for the confirmation email.')
+          } else if (userRec) {
+            setError("Your account exists but you haven't completed platform registration. Please sign up to register for a platform.")
+          } else {
+            setError('You need to register for at least one platform. Please sign up.')
+          }
           setLoading(false)
           return
         }
 
         if (platforms.length === 1) {
-          // Single platform - auto-redirect
+          // Single platform — navigate immediately; update access in background
           const platform = platforms[0].platform
-          await switchPlatform(result.user.id, platform)
-          
-          const redirectPath = platform === 'pm' ? '/app/dashboard' : '/simulator/dashboard'
+          sessionStorage.setItem('currentPlatform', platform)
+          updatePlatformAccess(result.user.id, platform).catch(() => {})
+          const redirectPath =
+            platform === 'platform' || platform === 'pm' ? '/app/dashboard' : '/simulator/dashboard'
           navigate(redirectPath, { replace: true })
         } else {
           // Multiple platforms - show selector
@@ -312,7 +267,7 @@ export default function Login() {
       await switchPlatform(user.id, platform)
       setShowPlatformSelector(false)
       
-      const redirectPath = platform === 'pm' ? '/app/dashboard' : '/simulator/dashboard'
+      const redirectPath = platform === 'platform' || platform === 'pm' ? '/app/dashboard' : '/simulator/dashboard'
       navigate(redirectPath, { replace: true })
     } catch (error) {
       console.error('Error selecting platform:', error)
@@ -329,13 +284,14 @@ export default function Login() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <MainHeader />
       <PlatformSelector
         isOpen={showPlatformSelector}
         onClose={() => setShowPlatformSelector(false)}
         platforms={userPlatforms}
       />
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
@@ -508,9 +464,10 @@ export default function Login() {
             </div>
           </div>
         </div>
+        </div>
       </div>
-      </div>
-    </>
+      <Footer />
+    </div>
   )
 }
 
