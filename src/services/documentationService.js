@@ -6,14 +6,14 @@
 // Map documentation files to their paths and platforms
 const DOCUMENTATION_MAP = {
   // Platform Documentation
-  'pm-platform': {
-    platform: 'pm',
+  'platform': {
+    platform: 'platform',
     name: 'Platform',
     guides: [
       {
         id: 'getting-started',
         title: 'Getting Started',
-        file: 'PM_Platform_Getting_Started.md',
+        file: 'Platform_Getting_Started.md',
         category: 'Getting Started'
       },
       {
@@ -132,10 +132,17 @@ export async function loadDocumentationFile(filename) {
     try {
       const response = await fetch(path);
       if (response.ok) {
-        return await response.text();
+        const content = await response.text();
+        // Verify it's not HTML (like index.html fallback)
+        if (content.trim().startsWith('<!DOCTYPE') || content.trim().startsWith('<!doctype') || content.trim().startsWith('<html')) {
+          console.warn(`Received HTML instead of markdown for ${filename} at path ${path}`);
+          continue; // Try next path
+        }
+        return content;
       }
     } catch (error) {
       // Continue to next path
+      console.warn(`Failed to load ${filename} from ${path}:`, error);
       continue;
     }
   }
@@ -148,7 +155,9 @@ export async function loadDocumentationFile(filename) {
  * Get all documentation guides for a platform
  */
 export function getDocumentationGuides(platform) {
-  const platformKey = platform === 'pm' ? 'pm-platform' : 'simulator';
+  // Handle both old 'pm' and new 'platform' identifiers for backward compatibility
+  const normalizedPlatform = platform === 'pm' || platform === 'pm-platform' ? 'platform' : platform;
+  const platformKey = normalizedPlatform === 'platform' ? 'platform' : 'simulator';
   return DOCUMENTATION_MAP[platformKey] || null;
 }
 

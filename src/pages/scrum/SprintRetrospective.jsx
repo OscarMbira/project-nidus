@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, ThumbsUp, MessageSquare, CheckCircle, X, Save, AlertCircle } from 'lucide-react'
@@ -7,7 +9,8 @@ import RetroBoard from '../../components/scrum/RetroBoard'
 import ActionItemTracker from '../../components/scrum/ActionItemTracker'
 
 export default function SprintRetrospective() {
-  const { projectId, sprintId } = useParams()
+  const { sprintId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [sprint, setSprint] = useState(null)
   const [project, setProject] = useState(null)

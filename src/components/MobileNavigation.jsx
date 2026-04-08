@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, Home, LayoutDashboard, FolderKanban, Settings, HelpCircle, LogOut } from 'lucide-react'
 import { useMenu } from '../hooks/useMenu'
 import { supabase } from '../services/supabaseClient'
+import { resolveMenuRoutePath, menuPathIsActive } from '../utils/sidebarRouteUtils'
 
 export default function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -62,8 +63,12 @@ export default function MobileNavigation() {
   }, [isOpen])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    navigate('/login')
+    try {
+      await supabase.auth.signOut()
+      navigate('/platform/login', { replace: true })
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   const handleMenuItemClick = () => {
@@ -208,12 +213,23 @@ export default function MobileNavigation() {
 
 function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
   const location = useLocation()
-  const [isExpanded, setIsExpanded] = useState(false)
-  
-  const hasChildren = menuItems?.some(child => child.parent_menu_id === item.id) || false
   const children = menuItems?.filter(child => child.parent_menu_id === item.id) || []
-  const isActive = location.pathname === item.route_path || 
-                   (item.route_path && location.pathname.startsWith(item.route_path + '/'))
+  const hasChildren = children.length > 0
+  const resolved = resolveMenuRoutePath(item.route_path, location.pathname)
+  const linkTo = !item.route_path ? '#' : (resolved === '/' ? '/platform/dashboard' : resolved)
+  const childActive = children.some((ch) => {
+    if (!ch.route_path) return false
+    const r = resolveMenuRoutePath(ch.route_path, location.pathname)
+    return menuPathIsActive(location.pathname, r)
+  })
+  const [isExpanded, setIsExpanded] = useState(childActive)
+  useEffect(() => {
+    if (childActive) setIsExpanded(true)
+  }, [location.pathname, childActive])
+
+  const isActive = item.route_path
+    ? menuPathIsActive(location.pathname, resolved)
+    : childActive
 
   const handleClick = (e) => {
     if (hasChildren) {
@@ -263,7 +279,7 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
         </a>
       ) : (
         <Link
-          to={item.route_path || '#'}
+          to={linkTo}
           onClick={handleClick}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
             isActive

@@ -1,16 +1,29 @@
-import { useState, useEffect } from 'react';
-import { Target, AlertCircle, CheckCircle, TrendingUp, Info } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Target, AlertCircle, CheckCircle, TrendingUp, Info, Edit2 } from 'lucide-react';
 import { getStakeholderAnalysis } from '../../services/stakeholderService';
 
-export default function PowerInterestMatrix({ projectId, stakeholders = [] }) {
+function quadrantFromPowerInterest(power, interest) {
+  const high = (v) => v >= 4;
+  const low = (v) => v <= 2;
+  if (high(power) && high(interest)) return 'manage-closely';
+  if (high(power) && low(interest)) return 'keep-satisfied';
+  if (low(power) && high(interest)) return 'keep-informed';
+  return 'monitor';
+}
+
+export default function PowerInterestMatrix({ projectId, stakeholders = [], refreshTrigger, onStakeholderClick, onEditAnalysis, onReposition }) {
   const [analysis, setAnalysis] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [draggingItem, setDraggingItem] = useState(null);
+  const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
+  const svgRef = useRef(null);
+  const justRepositionedRef = useRef(false);
 
   useEffect(() => {
     if (projectId) {
       fetchAnalysis();
     }
-  }, [projectId]);
+  }, [projectId, refreshTrigger]);
 
   const fetchAnalysis = async () => {
     try {
@@ -91,6 +104,61 @@ export default function PowerInterestMatrix({ projectId, stakeholders = [] }) {
     return { x, y };
   };
 
+  // Convert SVG coords (grid 10–210) to power_level and interest_level (1–5)
+  const svgToPowerInterest = useCallback((svgX, svgY) => {
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const gridX = svgX - 10;
+    const gridY = svgY - 10;
+    const power = clamp(Math.round((gridX / 200) * 4) + 1, 1, 5);
+    const interest = clamp(Math.round(((200 - gridY) / 200) * 4) + 1, 1, 5);
+    return { power_level: power, interest_level: interest, matrix_quadrant: quadrantFromPowerInterest(power, interest) };
+  }, []);
+
+  const getSvgPoint = useCallback((clientX, clientY) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x, y };
+  }, []);
+
+  const handlePointerDown = useCallback((e, item) => {
+    if (!onReposition || !item.stakeholder_id && !item.stakeholder?.id) return;
+    e.preventDefault();
+    setDraggingItem(item);
+    const pos = getStakeholderPosition(item);
+    setDragPosition({ x: pos.x + 10, y: pos.y + 10 });
+  }, [onReposition, getStakeholderPosition]);
+
+  useEffect(() => {
+    if (!draggingItem) return;
+    const handlePointerMove = (e) => {
+      const pt = getSvgPoint(e.clientX, e.clientY);
+      if (pt) setDragPosition({ x: pt.x, y: pt.y });
+    };
+    const handlePointerUp = (e) => {
+      const pt = getSvgPoint(e.clientX, e.clientY);
+      if (pt && onReposition) {
+        justRepositionedRef.current = true;
+        const { power_level, interest_level, matrix_quadrant } = svgToPowerInterest(pt.x, pt.y);
+        const stakeholderId = draggingItem.stakeholder_id || draggingItem.stakeholder?.id;
+        onReposition(
+          { ...draggingItem, stakeholder_id: stakeholderId },
+          { power_level, interest_level, matrix_quadrant }
+        );
+      }
+      setDraggingItem(null);
+    };
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [draggingItem, onReposition, getSvgPoint, svgToPowerInterest]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -112,7 +180,13 @@ export default function PowerInterestMatrix({ projectId, stakeholders = [] }) {
         
         <div className="relative">
           {/* Matrix Grid */}
-          <svg width="100%" height="400" viewBox="0 0 220 220" className="border border-gray-300 dark:border-gray-600 rounded-lg">
+          <svg
+            ref={svgRef}
+            width="100%"
+            height="400"
+            viewBox="0 0 220 220"
+            className="border border-gray-300 dark:border-gray-600 rounded-lg"
+          >
             {/* Grid Lines */}
             <line x1="110" y1="0" x2="110" y2="220" stroke="#e5e7eb" strokeWidth="2" strokeDasharray="4" />
             <line x1="0" y1="110" x2="220" y2="110" stroke="#e5e7eb" strokeWidth="2" strokeDasharray="4" />
@@ -151,23 +225,39 @@ export default function PowerInterestMatrix({ projectId, stakeholders = [] }) {
               High Power
             </text>
             
-            {/* Stakeholder Points */}
+            {/* Stakeholder Points – click opens profile; drag to reposition when onReposition provided */}
             {allItems.map((item, index) => {
               if (!item.power_level || !item.interest_level) return null;
               const pos = getStakeholderPosition(item);
               const stakeholder = item.stakeholder || item;
               const name = stakeholder.stakeholder_name || 'Unknown';
+              const stakeholderId = item.stakeholder_id || stakeholder?.id;
+              const isClickable = onStakeholderClick && stakeholderId;
+              const isDraggable = onReposition && (item.id || stakeholderId);
+              const isDragging = draggingItem && (draggingItem.id === item.id || (draggingItem.stakeholder_id || draggingItem.stakeholder?.id) === stakeholderId);
+              const cx = isDragging ? dragPosition.x : pos.x + 10;
+              const cy = isDragging ? dragPosition.y : pos.y + 10;
               return (
-                <g key={item.id || index}>
+                <g
+                  key={item.id || index}
+                  onClick={() => {
+                    if (justRepositionedRef.current) { justRepositionedRef.current = false; return; }
+                    if (isClickable) onStakeholderClick(stakeholderId);
+                  }}
+                  onPointerDown={(e) => isDraggable && handlePointerDown(e, item)}
+                  style={{ cursor: isDraggable ? 'grab' : isClickable ? 'pointer' : 'default' }}
+                  className={isClickable || isDraggable ? 'hover:opacity-90' : ''}
+                >
                   <circle
-                    cx={pos.x + 10}
-                    cy={pos.y + 10}
-                    r="4"
-                    fill="#3b82f6"
+                    cx={cx}
+                    cy={cy}
+                    r="6"
+                    fill={isDragging ? '#2563eb' : '#3b82f6'}
                     stroke="#1e40af"
-                    strokeWidth="1"
+                    strokeWidth={isDragging ? 2 : 1}
+                    style={isDragging ? { cursor: 'grabbing' } : undefined}
                   />
-                  <title>{name}</title>
+                  <title>{name}{isDraggable ? ' — drag to reposition' : ''}</title>
                 </g>
               );
             })}
@@ -207,16 +297,36 @@ export default function PowerInterestMatrix({ projectId, stakeholders = [] }) {
                 items.slice(0, 10).map((item, index) => {
                   const stakeholder = item.stakeholder || item;
                   const name = stakeholder.stakeholder_name || 'Unknown';
+                  const stakeholderId = item.stakeholder_id || stakeholder?.id;
+                  const hasAnalysis = item.id && (item.power_level != null || item.interest_level != null);
                   return (
                     <div
-                      key={item.id || stakeholder.id || index}
-                      className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded px-2 py-1"
+                      key={item.id || stakeholder?.id || index}
+                      className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 rounded px-2 py-1 flex items-center justify-between gap-2 group"
                     >
-                      {name}
-                      {item.power_level && item.interest_level && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Power: {item.power_level}/5, Interest: {item.interest_level}/5
-                        </div>
+                      <div
+                        className="flex-1 min-w-0 cursor-pointer"
+                        onClick={() => onStakeholderClick && stakeholderId && onStakeholderClick(stakeholderId)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => e.key === 'Enter' && onStakeholderClick && stakeholderId && onStakeholderClick(stakeholderId)}
+                      >
+                        <span className="font-medium">{name}</span>
+                        {item.power_level != null && item.interest_level != null && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Power: {item.power_level}/5, Interest: {item.interest_level}/5
+                          </div>
+                        )}
+                      </div>
+                      {onEditAnalysis && projectId && stakeholderId && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); onEditAnalysis({ projectId, stakeholderId, analysisRecord: hasAnalysis ? item : null }); }}
+                          className="flex-shrink-0 p-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                          title="Edit analysis"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
                       )}
                     </div>
                   );

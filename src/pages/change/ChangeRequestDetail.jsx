@@ -6,6 +6,16 @@ import ChangeRequestForm from '../../components/change/ChangeRequestForm';
 import ChangeAssessmentForm from '../../components/change/ChangeAssessmentForm';
 import ChangeImpactAnalysis from '../../components/change/ChangeImpactAnalysis';
 import ChangeLog from '../../components/change/ChangeLog';
+import ExportRecordButtons from '../../components/ui/ExportRecordButtons';
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils';
+
+const CHANGE_REQUEST_VIEW_SECTIONS = [
+  { title: 'Change Request', fields: [
+    { key: 'change_reference', label: 'Reference' },
+    { key: 'change_title', label: 'Title' },
+    { key: 'change_status', label: 'Status' }
+  ]}
+];
 
 export default function ChangeRequestDetail() {
   const { id } = useParams();
@@ -122,13 +132,24 @@ export default function ChangeRequestDetail() {
               )}
             </div>
           </div>
-          <button
-            onClick={() => setShowEditForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Edit2 className="h-4 w-4" />
-            Edit
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ExportRecordButtons
+              onExportPPT={() => exportRecordToPPT(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportWord={() => exportRecordToWord(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportExcel={() => exportRecordToExcel(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportCSV={() => exportRecordToCSV(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportXML={() => exportRecordToXML(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportJSON={() => exportRecordToJSON(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportPrint={() => exportRecordToPrint(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+            />
+            <button
+              onClick={() => setShowEditForm(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit
+            </button>
+          </div>
         </div>
       </div>
 

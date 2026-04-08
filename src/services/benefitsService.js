@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { platformDb } from './supabase/supabaseClient'
 
 /**
  * Benefits Service - API functions for Benefits Realization Tracking module
@@ -12,7 +12,7 @@ import { supabase } from './supabaseClient'
  * Get all benefits
  */
 export async function getBenefits(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('benefits')
     .select(`
       *,
@@ -30,7 +30,7 @@ export async function getBenefits(filters = {}) {
         id,
         project_name,
         project_code,
-        project_status
+        status_id
       ),
       benefit_owner:benefit_owner_user_id (id, email, full_name)
     `)
@@ -74,7 +74,7 @@ export async function getBenefits(filters = {}) {
  * Get a single benefit by ID
  */
 export async function getBenefit(benefitId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefits')
     .select(`
       *,
@@ -92,7 +92,7 @@ export async function getBenefit(benefitId) {
         id,
         project_name,
         project_code,
-        project_status
+        status_id
       ),
       benefit_owner:benefit_owner_user_id (id, email, full_name)
     `)
@@ -108,7 +108,7 @@ export async function getBenefit(benefitId) {
  * Create or update a benefit
  */
 export async function saveBenefit(benefitData, benefitId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -117,7 +117,7 @@ export async function saveBenefit(benefitData, benefitId = null) {
   }
 
   if (benefitId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefits')
       .update(updateData)
       .eq('id', benefitId)
@@ -131,7 +131,7 @@ export async function saveBenefit(benefitData, benefitId = null) {
     if (!updateData.benefit_owner_user_id) {
       updateData.benefit_owner_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefits')
       .insert(updateData)
       .select()
@@ -146,10 +146,10 @@ export async function saveBenefit(benefitData, benefitId = null) {
  * Delete a benefit (soft delete)
  */
 export async function deleteBenefit(benefitId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefits')
     .update({
       is_deleted: true,
@@ -169,7 +169,7 @@ export async function deleteBenefit(benefitId) {
  * Calculate benefit realization percentage
  */
 export async function calculateBenefitRealization(benefitId) {
-  const { data, error } = await supabase.rpc('calculate_benefit_realization', {
+  const { data, error } = await platformDb.rpc('calculate_benefit_realization', {
     p_benefit_id: benefitId,
   })
 
@@ -185,7 +185,7 @@ export async function calculateBenefitRealization(benefitId) {
  * Get benefit measures
  */
 export async function getBenefitMeasures(benefitId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_measures')
     .select(`
       *,
@@ -203,7 +203,7 @@ export async function getBenefitMeasures(benefitId) {
  * Create or update a benefit measure
  */
 export async function saveBenefitMeasure(benefitId, measureData, measureId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -213,7 +213,7 @@ export async function saveBenefitMeasure(benefitId, measureData, measureId = nul
   }
 
   if (measureId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_measures')
       .update(updateData)
       .eq('id', measureId)
@@ -227,7 +227,7 @@ export async function saveBenefitMeasure(benefitId, measureData, measureId = nul
     if (!updateData.measure_owner_user_id) {
       updateData.measure_owner_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_measures')
       .insert(updateData)
       .select()
@@ -242,10 +242,10 @@ export async function saveBenefitMeasure(benefitId, measureData, measureId = nul
  * Delete a benefit measure (soft delete)
  */
 export async function deleteBenefitMeasure(measureId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_measures')
     .update({
       is_deleted: true,
@@ -269,7 +269,7 @@ export async function deleteBenefitMeasure(measureId) {
  * Get benefit measurements
  */
 export async function getBenefitMeasurements(benefitId, filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('benefit_measurements')
     .select(`
       *,
@@ -303,7 +303,7 @@ export async function getBenefitMeasurements(benefitId, filters = {}) {
  * Create or update a benefit measurement
  */
 export async function saveBenefitMeasurement(benefitId, measurementData, measurementId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -313,7 +313,7 @@ export async function saveBenefitMeasurement(benefitId, measurementData, measure
   }
 
   if (measurementId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_measurements')
       .update(updateData)
       .eq('id', measurementId)
@@ -328,7 +328,7 @@ export async function saveBenefitMeasurement(benefitId, measurementData, measure
     return data
   } else {
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_measurements')
       .insert(updateData)
       .select()
@@ -347,11 +347,11 @@ export async function saveBenefitMeasurement(benefitId, measurementData, measure
  * Update benefit's current_value and last_measured_date from latest measurement
  */
 async function updateBenefitMeasurementValues(benefitId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   // Get latest actual measurement
-  const { data: latestMeasurement } = await supabase
+  const { data: latestMeasurement } = await platformDb
     .from('benefit_measurements')
     .select('measurement_value, measurement_date')
     .eq('benefit_id', benefitId)
@@ -362,7 +362,7 @@ async function updateBenefitMeasurementValues(benefitId) {
     .single()
 
   if (latestMeasurement) {
-    await supabase
+    await platformDb
       .from('benefits')
       .update({
         current_value: latestMeasurement.measurement_value,
@@ -377,10 +377,10 @@ async function updateBenefitMeasurementValues(benefitId) {
  * Delete a benefit measurement (soft delete)
  */
 export async function deleteBenefitMeasurement(measurementId, benefitId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_measurements')
     .update({
       is_deleted: true,
@@ -408,7 +408,7 @@ export async function deleteBenefitMeasurement(measurementId, benefitId) {
  * Get benefit targets
  */
 export async function getBenefitTargets(benefitId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_targets')
     .select(`
       *,
@@ -426,7 +426,7 @@ export async function getBenefitTargets(benefitId) {
  * Create or update a benefit target
  */
 export async function saveBenefitTarget(benefitId, targetData, targetId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -436,7 +436,7 @@ export async function saveBenefitTarget(benefitId, targetData, targetId = null) 
   }
 
   if (targetId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_targets')
       .update(updateData)
       .eq('id', targetId)
@@ -450,7 +450,7 @@ export async function saveBenefitTarget(benefitId, targetData, targetId = null) 
     if (!updateData.target_owner_user_id) {
       updateData.target_owner_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_targets')
       .insert(updateData)
       .select()
@@ -465,10 +465,10 @@ export async function saveBenefitTarget(benefitId, targetData, targetId = null) 
  * Delete a benefit target (soft delete)
  */
 export async function deleteBenefitTarget(targetId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_targets')
     .update({
       is_deleted: true,
@@ -492,7 +492,7 @@ export async function deleteBenefitTarget(targetId) {
  * Get benefit attributions
  */
 export async function getBenefitAttributions(benefitId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_attributions')
     .select(`
       *,
@@ -526,7 +526,7 @@ export async function getBenefitAttributions(benefitId) {
  * Create or update a benefit attribution
  */
 export async function saveBenefitAttribution(benefitId, attributionData, attributionId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -536,7 +536,7 @@ export async function saveBenefitAttribution(benefitId, attributionData, attribu
   }
 
   if (attributionId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_attributions')
       .update(updateData)
       .eq('id', attributionId)
@@ -550,7 +550,7 @@ export async function saveBenefitAttribution(benefitId, attributionData, attribu
     if (!updateData.attributed_by_user_id) {
       updateData.attributed_by_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_attributions')
       .insert(updateData)
       .select()
@@ -565,10 +565,10 @@ export async function saveBenefitAttribution(benefitId, attributionData, attribu
  * Delete a benefit attribution (soft delete)
  */
 export async function deleteBenefitAttribution(attributionId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_attributions')
     .update({
       is_deleted: true,
@@ -592,7 +592,7 @@ export async function deleteBenefitAttribution(attributionId) {
  * Get benefit realization reports
  */
 export async function getBenefitRealizationReports(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('benefit_realization_reports')
     .select(`
       *,
@@ -646,7 +646,7 @@ export async function getBenefitRealizationReports(filters = {}) {
  * Create or update a benefit realization report
  */
 export async function saveBenefitRealizationReport(reportData, reportId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -655,7 +655,7 @@ export async function saveBenefitRealizationReport(reportData, reportId = null) 
   }
 
   if (reportId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_realization_reports')
       .update(updateData)
       .eq('id', reportId)
@@ -672,7 +672,7 @@ export async function saveBenefitRealizationReport(reportData, reportId = null) 
     if (!updateData.generated_by_user_id) {
       updateData.generated_by_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('benefit_realization_reports')
       .insert(updateData)
       .select()
@@ -687,10 +687,10 @@ export async function saveBenefitRealizationReport(reportData, reportId = null) 
  * Delete a benefit realization report (soft delete)
  */
 export async function deleteBenefitRealizationReport(reportId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('benefit_realization_reports')
     .update({
       is_deleted: true,
@@ -780,3 +780,242 @@ export async function getBenefitsVsCosts(filters = {}) {
   }
 }
 
+/**
+ * Get benefits rollup for a programme
+ * @param {string} programmeId - Programme ID
+ * @returns {Promise<Object>} Benefits rollup data
+ */
+export async function getBenefitsRollup(programmeId) {
+  try {
+    const { data, error } = await platformDb
+      .from('programme_rollup_view')
+      .select('total_planned_benefits, total_forecast_benefits, total_realised_benefits')
+      .eq('programme_id', programmeId)
+      .single()
+
+    if (error) throw error
+
+    return {
+      success: true,
+      data: {
+        planned: parseFloat(data?.total_planned_benefits || 0),
+        forecast: parseFloat(data?.total_forecast_benefits || 0),
+        realised: parseFloat(data?.total_realised_benefits || 0),
+        programme_id: programmeId
+      }
+    }
+  } catch (error) {
+    console.error('Error getting benefits rollup:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Get portfolio benefits rollup
+ * @param {string} portfolioId - Portfolio ID
+ * @returns {Promise<Object>} Portfolio benefits rollup data
+ */
+export async function getPortfolioBenefitsRollup(portfolioId) {
+  try {
+    // Get all programmes in this portfolio
+    const { data: programmes, error: progError } = await platformDb
+      .from('programmes')
+      .select('id')
+      .eq('portfolio_id', portfolioId)
+      .eq('is_deleted', false)
+
+    if (progError) throw progError
+
+    if (!programmes || programmes.length === 0) {
+      return {
+        success: true,
+        data: {
+          planned: 0,
+          forecast: 0,
+          realised: 0,
+          portfolio_id: portfolioId,
+          programme_count: 0
+        }
+      }
+    }
+
+    const programmeIds = programmes.map(p => p.id)
+
+    // Get rollup data for all programmes
+    const { data: rollups, error: rollupError } = await platformDb
+      .from('programme_rollup_view')
+      .select('total_planned_benefits, total_forecast_benefits, total_realised_benefits')
+      .in('programme_id', programmeIds)
+
+    if (rollupError) throw rollupError
+
+    const totals = (rollups || []).reduce((acc, r) => {
+      acc.planned += parseFloat(r.total_planned_benefits || 0)
+      acc.forecast += parseFloat(r.total_forecast_benefits || 0)
+      acc.realised += parseFloat(r.total_realised_benefits || 0)
+      return acc
+    }, { planned: 0, forecast: 0, realised: 0 })
+
+    return {
+      success: true,
+      data: {
+        ...totals,
+        portfolio_id: portfolioId,
+        programme_count: programmes.length
+      }
+    }
+  } catch (error) {
+    console.error('Error getting portfolio benefits rollup:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Get benefits at risk (benefits with low realization rate or overdue)
+ * @param {string} accountId - Account ID (optional)
+ * @returns {Promise<Object>} Benefits at risk data
+ */
+export async function getBenefitsAtRisk(accountId = null) {
+  try {
+    let query = platformDb
+      .from('programme_benefits')
+      .select(`
+        *,
+        programme:programme_id (id, programme_name, programme_code),
+        project:project_id (id, project_name, project_code)
+      `)
+      .eq('is_deleted', false)
+
+    if (accountId) {
+      // Filter by account through projects
+      const { data: projects } = await platformDb
+        .from('projects')
+        .select('id')
+        .eq('account_id', accountId)
+        .eq('is_deleted', false)
+
+      if (projects && projects.length > 0) {
+        const projectIds = projects.map(p => p.id)
+        query = query.in('project_id', projectIds)
+      } else {
+        return { success: true, data: [] }
+      }
+    }
+
+    const { data: benefits, error } = await query
+
+    if (error) throw error
+
+    // Calculate at-risk benefits (less than 80% realized or overdue)
+    const atRiskBenefits = (benefits || []).filter(benefit => {
+      const target = parseFloat(benefit.target_value || 0)
+      const realized = parseFloat(benefit.realized_value || 0)
+      const current = parseFloat(benefit.current_value || 0)
+      const totalRealized = realized + current
+
+      // At risk if less than 80% realized
+      const realizationRate = target > 0 ? (totalRealized / target) * 100 : 0
+      if (realizationRate < 80) return true
+
+      // At risk if overdue (if there's a target date)
+      if (benefit.target_date) {
+        const targetDate = new Date(benefit.target_date)
+        const today = new Date()
+        if (targetDate < today && realizationRate < 100) return true
+      }
+
+      return false
+    })
+
+    return {
+      success: true,
+      data: atRiskBenefits.map(b => ({
+        ...b,
+        realization_rate: b.target_value > 0 
+          ? ((parseFloat(b.realized_value || 0) + parseFloat(b.current_value || 0)) / parseFloat(b.target_value)) * 100 
+          : 0
+      }))
+    }
+  } catch (error) {
+    console.error('Error getting benefits at risk:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+// ================================================
+// BENEFITS REVIEW PLAN INTEGRATION
+// ================================================
+
+/**
+ * Link benefit to a review plan
+ */
+export async function linkBenefitToReviewPlan(benefitId, planId) {
+  const { data: { user } } = await platformDb.auth.getUser()
+  if (!user) throw new Error('User not authenticated')
+
+  const { data: userRecord } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', user.id)
+    .eq('is_deleted', false)
+    .single()
+
+  if (!userRecord) {
+    throw new Error('User record not found')
+  }
+
+  const { data, error } = await platformDb
+    .from('benefits')
+    .update({
+      review_plan_id: planId,
+      updated_by: userRecord.id,
+    })
+    .eq('id', benefitId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+/**
+ * Get benefits by review plan
+ */
+export async function getBenefitsByReviewPlan(planId) {
+  const { data, error } = await platformDb
+    .from('benefits')
+    .select(`
+      *,
+      benefit_owner:benefit_owner_user_id (id, email, full_name),
+      project:project_id (
+        id,
+        project_name,
+        project_code
+      )
+    `)
+    .eq('review_plan_id', planId)
+    .eq('is_deleted', false)
+    .order('benefit_name', { ascending: true })
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Get benefits without a review plan for a project
+ */
+export async function getBenefitsWithoutReviewPlan(projectId) {
+  const { data, error } = await platformDb
+    .from('benefits')
+    .select(`
+      *,
+      benefit_owner:benefit_owner_user_id (id, email, full_name)
+    `)
+    .eq('project_id', projectId)
+    .is('review_plan_id', null)
+    .eq('is_deleted', false)
+    .order('benefit_name', { ascending: true })
+
+  if (error) throw error
+  return data || []
+}

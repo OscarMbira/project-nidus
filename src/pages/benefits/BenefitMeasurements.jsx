@@ -1,17 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Plus, Edit2, Trash2, Calendar } from 'lucide-react';
 import { getBenefits, getBenefitMeasurements, saveBenefitMeasurement, deleteBenefitMeasurement } from '../../services/benefitsService';
-import { supabase } from '../../services/supabaseClient';
+import SortToolbar from '../../components/ui/SortToolbar';
+import { TableHeaderCell } from '../../components/ui/Table';
+import { useSortableTable } from '../../hooks/useSortableTable';
+import { useViewMode } from '../../hooks/useViewMode';
+import ViewToggle from '../../components/ui/ViewToggle';
 
 export default function BenefitMeasurements() {
   const navigate = useNavigate();
+  const [measurementViewMode, setMeasurementViewMode] = useViewMode('benefit-measurements', 'grid');
   const [benefits, setBenefits] = useState([]);
   const [selectedBenefitId, setSelectedBenefitId] = useState('');
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedMeasurement, setSelectedMeasurement] = useState(null);
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'measurement_date', direction: 'desc' },
+    storageKey: 'nidus-benefit-measurements-sort',
+  });
+  const measureAccessors = useMemo(
+    () => ({
+      measurement_name: (m) => String(m.measurement_value ?? ''),
+      measurement_status: (m) => m.measurement_type ?? '',
+      due: (m) => m.measurement_date ?? '',
+    }),
+    []
+  );
+  const displayMeasurements = useMemo(
+    () => sortedData(measurements, measureAccessors),
+    [measurements, sortedData, measureAccessors]
+  );
+
   const [formData, setFormData] = useState({
     benefit_id: '',
     measure_id: null,
@@ -211,7 +233,62 @@ export default function BenefitMeasurements() {
           </div>
         ) : (
           <div className="space-y-4">
-            {measurements.map((measurement) => (
+            <div className="flex justify-end mb-2">
+              <ViewToggle value={measurementViewMode} onChange={setMeasurementViewMode} ariaLabel="Benefit measurements layout" />
+            </div>
+            <SortToolbar
+              columns={[
+                { key: 'measurement_name', label: 'Name / value' },
+                { key: 'measurement_status', label: 'Status' },
+                { key: 'due', label: 'Due date' },
+              ]}
+              getSortDirection={getSortDirectionForColumn}
+              onSort={handleSort}
+            />
+            {measurementViewMode === 'list' ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <TableHeaderCell sortable={false} className="!normal-case">Date</TableHeaderCell>
+                        <TableHeaderCell sortable={false} className="!normal-case">Type</TableHeaderCell>
+                        <TableHeaderCell sortable={false} className="!normal-case">Value</TableHeaderCell>
+                        <TableHeaderCell sortable={false} className="!normal-case">Notes</TableHeaderCell>
+                        <TableHeaderCell sortable={false} className="!normal-case text-right">Actions</TableHeaderCell>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {displayMeasurements.map((measurement) => (
+                        <tr key={measurement.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                          <td className="px-6 py-3 text-sm">{new Date(measurement.measurement_date).toLocaleDateString()}</td>
+                          <td className="px-6 py-3">
+                            <span className={`px-2 py-1 text-xs rounded ${
+                              measurement.measurement_type === 'actual'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            }`}>{measurement.measurement_type}</span>
+                          </td>
+                          <td className="px-6 py-3 font-medium text-gray-900 dark:text-white">
+                            {measurement.measurement_value} {measurement.measurement_unit || ''}
+                          </td>
+                          <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">{measurement.notes || '—'}</td>
+                          <td className="px-6 py-3 text-right">
+                            <button type="button" onClick={() => handleEditMeasurement(measurement)} className="p-2 text-blue-600 mr-1" aria-label="Edit">
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button type="button" onClick={() => handleDeleteMeasurement(measurement)} className="p-2 text-red-600" aria-label="Delete">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+            displayMeasurements.map((measurement) => (
               <div
                 key={measurement.id}
                 className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
@@ -260,7 +337,8 @@ export default function BenefitMeasurements() {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         )
       ) : (

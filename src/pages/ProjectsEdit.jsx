@@ -1,67 +1,166 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { format } from 'date-fns'
-import { supabase } from '../services/supabaseClient'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { platformDb } from '../services/supabase/supabaseClient'
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId'
+import { platformProjectPath, looksLikeProjectUuid } from '../utils/projectRouteParam'
+import ProjectFormTabs from '../components/project/ProjectFormTabs'
+import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
+import { getFundingSources } from '../services/fundingSourceService'
+import { getBudgetCategories } from '../services/budgetCategoryService'
+import { getByProjectId, saveForProject } from '../services/projectBudgetCategoryService'
+import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
+import {
+  getEmptyWizardFormData,
+  mapDbProjectToWizardForm,
+  wizardFormToProjectUpdatePayload,
+} from '../utils/projectWizardFormUtils'
+import {
+  getProjectPortfolio,
+  addProjectToPortfolio,
+  removeProjectFromPortfolio,
+} from '../services/portfolioService'
+import {
+  getProjectProgramme,
+  addProjectToProgramme,
+  removeProjectFromProgramme,
+} from '../services/programmeService'
 
 export default function ProjectsEdit() {
-  const { id } = useParams()
+  const { projectId, routeKey, loading: routeResolving, error: routeError } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
-  const [formData, setFormData] = useState({
-    project_name: '',
-    project_description: '',
-    project_type_id: '',
-    project_status_id: '',
-    methodology_id: '',
-    start_date: '',
-    end_date: '',
-    budget: '',
-    project_code: ''
-  })
+  const [activeTab, setActiveTab] = useState('details')
+  const [formData, setFormData] = useState(() => getEmptyWizardFormData())
+  const formDataRef = useRef(formData)
+  formDataRef.current = formData
+
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
   const [methodologies, setMethodologies] = useState([])
+  const [fundingSources, setFundingSources] = useState([])
+  const [budgetCategoriesLookup, setBudgetCategoriesLookup] = useState([])
+  const [lifecycleTemplates, setLifecycleTemplates] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
 
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(null)
+  const [selectedPortfolio, setSelectedPortfolio] = useState(null)
+  const [selectedProgrammeId, setSelectedProgrammeId] = useState(null)
+  const [selectedProgramme, setSelectedProgramme] = useState(null)
+  const [assignmentSnapshot, setAssignmentSnapshot] = useState({
+    portfolioId: null,
+    programmeId: null,
+  })
+
+  const urlProjectSegment = useMemo(() => {
+    const code = formData.project_code?.trim()
+    if (code) return code
+    if (project?.id) return project.id
+    return routeKey || ''
+  }, [formData.project_code, project, routeKey])
+
   useEffect(() => {
-    fetchProject()
     fetchLookupData()
-  }, [id])
+  }, [])
+
+  useEffect(() => {
+    if (routeError === 'missing') {
+      navigate('/platform/projects', { replace: true })
+      return
+    }
+    if (routeResolving) return
+    if (routeError === 'not_found') {
+      setLoading(false)
+      setProject(null)
+      return
+    }
+    if (projectId) {
+      fetchProject()
+    }
+  }, [projectId, routeResolving, routeError, navigate])
+
+  const loadFinancialLookups = useCallback(() => {
+    Promise.all([getFundingSources({ activeOnly: true }), getBudgetCategories({ activeOnly: true })])
+      .then(([fundingRes, budgetCatRes]) => {
+        if (fundingRes?.success && Array.isArray(fundingRes.data)) setFundingSources(fundingRes.data)
+        if (budgetCatRes?.success && Array.isArray(budgetCatRes.data)) {
+          setBudgetCategoriesLookup(budgetCatRes.data)
+        }
+      })
+      .catch((err) => console.error('Failed to load financial lookups:', err))
+  }, [])
+
+  const loadLifecycleTemplates = useCallback(() => {
+    getLifecycleTemplates()
+      .then((result) => {
+        if (result?.success && Array.isArray(result.data)) setLifecycleTemplates(result.data)
+      })
+      .catch((err) => console.error('Failed to load lifecycle templates:', err))
+  }, [])
+
+  const prevDeliveryTabRef = useRef(false)
+  useEffect(() => {
+    const onDelivery = activeTab === 'delivery' || activeTab === 'tolerances'
+    if (onDelivery && !prevDeliveryTabRef.current) loadLifecycleTemplates()
+    prevDeliveryTabRef.current = onDelivery
+  }, [activeTab, loadLifecycleTemplates])
+
+  const prevFinancialTabRef = useRef(false)
+  useEffect(() => {
+    const onFinancial = activeTab === 'financial'
+    if (onFinancial && !prevFinancialTabRef.current) loadFinancialLookups()
+    prevFinancialTabRef.current = onFinancial
+  }, [activeTab, loadFinancialLookups])
 
   const fetchProject = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const { data, error } = await platformDb
         .from('projects')
         .select(`
           *,
-          project_methodologies!inner (
-            methodology_id
+          project_methodologies (
+            id,
+            methodology_id,
+            is_deleted
           )
         `)
-        .eq('id', id)
+        .eq('id', projectId)
         .eq('is_deleted', false)
         .single()
 
       if (error) throw error
       setProject(data)
 
-      // Initialize form data
+      const code = data?.project_code?.trim()
+      if (code && routeKey && looksLikeProjectUuid(routeKey)) {
+        navigate(platformProjectPath(code), { replace: true })
+      }
+
       if (data) {
-        const methodologyId = data.project_methodologies?.[0]?.methodology_id || ''
-        setFormData({
-          project_name: data.project_name || '',
-          project_description: data.project_description || '',
-          project_type_id: data.project_type_id || '',
-          project_status_id: data.status_id || '',
-          methodology_id: methodologyId,
-          start_date: data.start_date ? format(new Date(data.start_date), 'yyyy-MM-dd') : '',
-          end_date: data.end_date ? format(new Date(data.end_date), 'yyyy-MM-dd') : '',
-          budget: data.budget || '',
-          project_code: data.project_code || ''
-        })
+        const pmList = data.project_methodologies || []
+        const activePm = pmList.find((m) => m.is_deleted === false) || pmList[0]
+        const methodologyId = activePm?.methodology_id || ''
+        const legacyBudget = data.budget_amount ?? data.budget
+
+        const catRes = await getByProjectId(projectId)
+        const rows = catRes?.success && Array.isArray(catRes.data) ? catRes.data : []
+
+        const mapped = mapDbProjectToWizardForm(data, methodologyId, rows, legacyBudget)
+        setFormData(mapped)
+
+        const [portRes, progRes] = await Promise.all([
+          getProjectPortfolio(projectId).catch(() => null),
+          getProjectProgramme(projectId).catch(() => null),
+        ])
+        const pId = portRes?.portfolio_id ?? null
+        const gId = progRes?.programme_id ?? null
+        setSelectedPortfolioId(pId)
+        setSelectedPortfolio(portRes?.portfolios ?? null)
+        setSelectedProgrammeId(gId)
+        setSelectedProgramme(progRes?.programmes ?? null)
+        setAssignmentSnapshot({ portfolioId: pId, programmeId: gId })
       }
     } catch (error) {
       console.error('Error fetching project:', error)
@@ -72,69 +171,120 @@ export default function ProjectsEdit() {
 
   const fetchLookupData = async () => {
     try {
-      // Fetch project types
-      const { data: types, error: typesError } = await supabase
-        .from('project_types')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_deleted', false)
-        .order('type_name', { ascending: true })
+      const [typesRes, statusesRes, methodsRes] = await Promise.all([
+        platformDb
+          .from('project_types')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_deleted', false)
+          .order('type_name', { ascending: true }),
+        platformDb
+          .from('project_statuses')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_deleted', false)
+          .order('status_name', { ascending: true }),
+        platformDb
+          .from('methodologies')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_deleted', false)
+          .order('methodology_name', { ascending: true }),
+      ])
 
-      if (typesError) throw typesError
+      if (typesRes.error) throw typesRes.error
+      if (statusesRes.error) throw statusesRes.error
+      if (methodsRes.error) throw methodsRes.error
 
-      // Fetch project statuses
-      const { data: statuses, error: statusesError } = await supabase
-        .from('project_statuses')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_deleted', false)
-        .order('status_name', { ascending: true })
-
-      if (statusesError) throw statusesError
-
-      // Fetch methodologies
-      const { data: methods, error: methodsError } = await supabase
-        .from('methodologies')
-        .select('*')
-        .eq('is_active', true)
-        .eq('is_deleted', false)
-        .order('methodology_name', { ascending: true })
-
-      if (methodsError) throw methodsError
-
-      setProjectTypes(types || [])
-      setProjectStatuses(statuses || [])
-      setMethodologies(methods || [])
+      setProjectTypes(typesRes.data || [])
+      setProjectStatuses(statusesRes.data || [])
+      setMethodologies(methodsRes.data || [])
     } catch (error) {
       console.error('Error fetching lookup data:', error)
     }
   }
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }))
-    }
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setErrors((prev) => {
+      if (!prev[name]) return prev
+      const next = { ...prev }
+      delete next[name]
+      return next
+    })
+  }, [])
 
-  const validateForm = () => {
+  const handleBudgetCategoriesChange = useCallback((categories) => {
+    setFormData((prev) => ({ ...prev, budget_categories: categories }))
+  }, [])
+
+  const handleProjectTypeChange = useCallback((value) => {
+    setFormData((prev) => ({ ...prev, project_type_id: value }))
+    setErrors((prev) => {
+      if (!prev.project_type_id) return prev
+      const next = { ...prev }
+      delete next.project_type_id
+      return next
+    })
+  }, [])
+
+  const handleProjectStatusChange = useCallback((value) => {
+    setFormData((prev) => ({ ...prev, project_status_id: value }))
+    setErrors((prev) => {
+      if (!prev.project_status_id) return prev
+      const next = { ...prev }
+      delete next.project_status_id
+      return next
+    })
+  }, [])
+
+  const handleAuthorityNameChange = useCallback((nameField, idField) => (value) => {
+    setFormData((prev) => ({ ...prev, [nameField]: value || '', [idField]: '' }))
+  }, [])
+
+  const validateForm = useCallback(() => {
+    const data = formDataRef.current
     const newErrors = {}
-    if (!formData.project_name.trim()) {
+
+    if (!data.project_name.trim()) {
       newErrors.project_name = 'Project name is required'
     }
-    if (!formData.project_type_id) {
+    if (!data.project_type_id) {
       newErrors.project_type_id = 'Please select a project type'
     }
-    if (!formData.project_status_id) {
+    if (!data.project_status_id) {
       newErrors.project_status_id = 'Please select a project status'
     }
-    if (!formData.methodology_id) {
+    if (methodologies.length > 0 && !data.methodology_id) {
       newErrors.methodology_id = 'Please select a methodology'
     }
+
+    if (!(data.executive_user_id || (data.executive_name && data.executive_name.trim()))) {
+      newErrors.executive_name = 'Project Executive / Sponsor is required'
+    }
+    if (!(data.funding_authority_user_id || (data.funding_authority_name && data.funding_authority_name.trim()))) {
+      newErrors.funding_authority_name = 'Funding Authority is required'
+    }
+    if (!(data.approving_authority_user_id || (data.approving_authority_name && data.approving_authority_name.trim()))) {
+      newErrors.approving_authority_name = 'Approving Authority is required'
+    }
+
+    if (data.start_date && data.end_date) {
+      if (new Date(data.start_date) > new Date(data.end_date)) {
+        newErrors.end_date = 'End date must be after start date'
+      }
+    }
+
+    const timeLines = (data.tolerance_time_days || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+    const costLines = (data.tolerance_cost_percentage || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
+    if (timeLines.length === 0 && costLines.length === 0) {
+      newErrors.tolerances = 'At least one tolerance (time or cost) must be defined for authorisation'
+    }
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
+  }, [methodologies.length])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -142,60 +292,259 @@ export default function ProjectsEdit() {
 
     try {
       setSaving(true)
-      const { data: { user } } = await supabase.auth.getUser()
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next.submit
+        return next
+      })
+
+      const authResult = await Promise.race([
+        platformDb.auth.getUser(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Sign-in check timed out. Please refresh and try again.')), 20000),
+        ),
+      ])
+      const {
+        data: { user },
+        error: authError,
+      } = authResult
+      if (authError) throw authError
       if (!user) throw new Error('User not authenticated')
 
-      const updateData = {
-        project_name: formData.project_name,
-        project_description: formData.project_description || null,
-        project_type_id: formData.project_type_id,
-        status_id: formData.project_status_id,
-        start_date: formData.start_date || null,
-        end_date: formData.end_date || null,
-        budget: formData.budget ? parseFloat(formData.budget) : null,
-        project_code: formData.project_code || null,
-        updated_by: user.id
+      const fd = formDataRef.current
+      const updatePayload = wizardFormToProjectUpdatePayload(fd, user.id)
+
+      const { error: projectErr } = await platformDb.from('projects').update(updatePayload).eq('id', projectId)
+
+      if (projectErr) throw projectErr
+
+      if (methodologies.length > 0 && fd.methodology_id) {
+        const { data: pmRows, error: pmSelectErr } = await platformDb
+          .from('project_methodologies')
+          .select('id, methodology_id, is_deleted')
+          .eq('project_id', projectId)
+          .limit(1)
+
+        if (pmSelectErr) throw pmSelectErr
+
+        const pmRow = pmRows?.[0]
+        const methodologyUnchanged =
+          pmRow && pmRow.methodology_id === fd.methodology_id && pmRow.is_deleted === false
+
+        if (!methodologyUnchanged) {
+          if (pmRow?.id) {
+            const { error: pmUpErr } = await platformDb
+              .from('project_methodologies')
+              .update({
+                methodology_id: fd.methodology_id,
+                is_deleted: false,
+                deleted_at: null,
+              })
+              .eq('id', pmRow.id)
+
+            if (pmUpErr) throw pmUpErr
+          } else {
+            const { error: pmInsErr } = await platformDb.from('project_methodologies').insert({
+              project_id: projectId,
+              methodology_id: fd.methodology_id,
+            })
+
+            if (pmInsErr) throw pmInsErr
+          }
+        }
       }
 
-      const { error } = await supabase
-        .from('projects')
-        .update(updateData)
-        .eq('id', id)
+      const cats = fd.budget_categories || []
+      const toSave = cats
+        .filter((c) => (c.category_name && String(c.category_name).trim()) || (Number(c.amount) || 0) > 0)
+        .map((c) => ({
+          category_name: (c.category_name || '').trim() || 'Unnamed',
+          budget_amount: Number(c.amount) || 0,
+          funding_source_id: c.funding_source_id || null,
+        }))
 
-      if (error) throw error
-
-      // Update methodology if changed
-      if (formData.methodology_id !== project.project_methodologies?.[0]?.methodology_id) {
-        // Remove old methodology link
-        await supabase
-          .from('project_methodologies')
-          .update({ is_deleted: true, deleted_at: new Date().toISOString() })
-          .eq('project_id', id)
-
-        // Add new methodology link
-        await supabase
-          .from('project_methodologies')
-          .insert({
-            project_id: id,
-            methodology_id: formData.methodology_id,
-            created_by: user.id
-          })
+      const saveCatRes = await Promise.race([
+        saveForProject(projectId, toSave),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Saving budget lines timed out. Check your network and try again.')), 60000),
+        ),
+      ])
+      if (!saveCatRes.success) {
+        setErrors({
+          submit:
+            saveCatRes.error ||
+            'Project was saved, but budget lines could not be saved. You can try again from the Financial tab.',
+        })
+        return
       }
 
-      navigate('/projects/' + id)
+      const oldP = assignmentSnapshot.portfolioId
+      const newP = selectedPortfolioId
+      try {
+        if (oldP && oldP !== newP) {
+          await removeProjectFromPortfolio(oldP, projectId)
+        }
+        if (newP && newP !== oldP) {
+          await addProjectToPortfolio(newP, projectId)
+        }
+      } catch (portErr) {
+        console.error('Portfolio sync error:', portErr)
+        setErrors({
+          submit:
+            (portErr && portErr.message) ||
+            'Project was saved, but portfolio assignment could not be updated. Try again from the Portfolio tab.',
+        })
+        return
+      }
+
+      const oldG = assignmentSnapshot.programmeId
+      const newG = selectedProgrammeId
+      try {
+        if (oldG && oldG !== newG) {
+          await removeProjectFromProgramme(oldG, projectId)
+        }
+        if (newG && newG !== oldG) {
+          await addProjectToProgramme(newG, projectId)
+        }
+      } catch (progErr) {
+        console.error('Programme sync error:', progErr)
+        setErrors({
+          submit:
+            (progErr && progErr.message) ||
+            'Project was saved, but programme assignment could not be updated. Try again from the Programme tab.',
+        })
+        return
+      }
+
+      setAssignmentSnapshot({ portfolioId: newP ?? null, programmeId: newG ?? null })
+
+      const nextSeg = (fd.project_code || '').trim() || project.id
+      navigate(platformProjectPath(nextSeg))
     } catch (error) {
       console.error('Error updating project:', error)
-      setErrors({ submit: error.message || 'Failed to update project' })
+      const msg =
+        error?.message ||
+        error?.error_description ||
+        (Array.isArray(error?.details) ? error.details.map((d) => d?.message).filter(Boolean).join('; ') : '') ||
+        'Failed to update project'
+      setErrors({ submit: msg })
     } finally {
       setSaving(false)
     }
   }
 
+  const projectTypeOptions = useMemo(() => {
+    if (!projectTypes.length) return []
+    return projectTypes.map((type) => ({
+      value: type.id,
+      label: type.type_name || 'Unnamed',
+    }))
+  }, [projectTypes])
+
+  const statusOptions = useMemo(() => {
+    if (!projectStatuses.length) return []
+    return projectStatuses.map((status) => ({
+      value: status.id,
+      label: status.status_name || 'Unnamed',
+    }))
+  }, [projectStatuses])
+
+  const tabCompletionData = useMemo(
+    () => ({
+      project_name: formData.project_name,
+      project_description: formData.project_description,
+      executive_user_id: formData.executive_user_id,
+      executive_name: formData.executive_name,
+      board_required: formData.board_required,
+      funding_authority_user_id: formData.funding_authority_user_id,
+      funding_authority_name: formData.funding_authority_name,
+      approving_authority_user_id: formData.approving_authority_user_id,
+      approving_authority_name: formData.approving_authority_name,
+      business_objective: formData.business_objective,
+      strategic_alignment: formData.strategic_alignment,
+      expected_benefits_summary: formData.expected_benefits_summary,
+      benefit_owner_user_id: formData.benefit_owner_user_id,
+      benefit_owner_name: formData.benefit_owner_name,
+      delivery_methodology: formData.delivery_methodology,
+      lifecycle_template: formData.lifecycle_template,
+      stage_model: formData.stage_model,
+      stage_gate_enforcement: formData.stage_gate_enforcement,
+      tolerance_time_days: formData.tolerance_time_days,
+      tolerance_cost_percentage: formData.tolerance_cost_percentage,
+      tolerance_scope_description: formData.tolerance_scope_description,
+      tolerance_quality_description: formData.tolerance_quality_description,
+      tolerance_risk_description: formData.tolerance_risk_description,
+      tolerance_benefits_description: formData.tolerance_benefits_description,
+      budget_type: formData.budget_type,
+      budget_categories: formData.budget_categories,
+      budget_approval_status: formData.budget_approval_status,
+      initial_risk_rating: formData.initial_risk_rating,
+      complexity_rating: formData.complexity_rating,
+      delivery_complexity: formData.delivery_complexity,
+      regulatory_impact: formData.regulatory_impact,
+      data_sensitivity: formData.data_sensitivity,
+      estimated_effort: formData.estimated_effort,
+      key_skills_required: formData.key_skills_required,
+      external_vendors_required: formData.external_vendors_required,
+      mandate_status: formData.mandate_status,
+      business_case_status: formData.business_case_status,
+      funding_approval_status: formData.funding_approval_status,
+      rfp_reference: formData.rfp_reference,
+      document_repository_url: formData.document_repository_url,
+      portfolio_id: selectedPortfolioId,
+      programme_id: selectedProgrammeId,
+    }),
+    [
+      formData.project_name,
+      formData.project_description,
+      formData.executive_user_id,
+      formData.executive_name,
+      formData.board_required,
+      formData.funding_authority_user_id,
+      formData.funding_authority_name,
+      formData.approving_authority_user_id,
+      formData.approving_authority_name,
+      formData.business_objective,
+      formData.strategic_alignment,
+      formData.expected_benefits_summary,
+      formData.benefit_owner_user_id,
+      formData.benefit_owner_name,
+      formData.delivery_methodology,
+      formData.lifecycle_template,
+      formData.stage_model,
+      formData.stage_gate_enforcement,
+      formData.tolerance_time_days,
+      formData.tolerance_cost_percentage,
+      formData.tolerance_scope_description,
+      formData.tolerance_quality_description,
+      formData.tolerance_risk_description,
+      formData.tolerance_benefits_description,
+      formData.budget_type,
+      formData.budget_categories,
+      formData.budget_approval_status,
+      formData.initial_risk_rating,
+      formData.complexity_rating,
+      formData.delivery_complexity,
+      formData.regulatory_impact,
+      formData.data_sensitivity,
+      formData.estimated_effort,
+      formData.key_skills_required,
+      formData.external_vendors_required,
+      formData.mandate_status,
+      formData.business_case_status,
+      formData.funding_approval_status,
+      formData.rfp_reference,
+      formData.document_repository_url,
+      selectedPortfolioId,
+      selectedProgrammeId,
+    ],
+  )
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading project...</p>
         </div>
       </div>
@@ -204,12 +553,13 @@ export default function ProjectsEdit() {
 
   if (!project) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">Project not found</p>
+          <p className="mb-4 text-gray-500 dark:text-gray-400">Project not found</p>
           <button
-            onClick={() => navigate('/projects')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            type="button"
+            onClick={() => navigate('/platform/projects')}
+            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
           >
             Back to Projects
           </button>
@@ -219,222 +569,75 @@ export default function ProjectsEdit() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       <button
-        onClick={() => navigate('/projects/' + id)}
-        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
+        type="button"
+        onClick={() => navigate(platformProjectPath(urlProjectSegment))}
+        className="mb-4 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
       >
         ← Back to Project
       </button>
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Edit Project
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Update project details
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit Project</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">Update project details across all sections</p>
       </div>
 
+      <ProjectFormTabs activeTab={activeTab} setActiveTab={setActiveTab} formData={tabCompletionData} />
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Project Name */}
-        <div>
-          <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="project_name"
-            name="project_name"
-            value={formData.project_name}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.project_name ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required
-          />
-          {errors.project_name && (
-            <p className="mt-1 text-sm text-red-600">{errors.project_name}</p>
-          )}
-        </div>
+        <ProjectWizardPanels
+          mode="edit"
+          activeTab={activeTab}
+          formData={formData}
+          errors={errors}
+          handleChange={handleChange}
+          projectTypeOptions={projectTypeOptions}
+          statusOptions={statusOptions}
+          handleProjectTypeChange={handleProjectTypeChange}
+          handleProjectStatusChange={handleProjectStatusChange}
+          handleAuthorityNameChange={handleAuthorityNameChange}
+          lifecycleTemplates={lifecycleTemplates}
+          fundingSources={fundingSources}
+          budgetCategories={budgetCategoriesLookup}
+          handleBudgetCategoriesChange={handleBudgetCategoriesChange}
+          selectedPortfolioId={selectedPortfolioId}
+          selectedPortfolio={selectedPortfolio}
+          onPortfolioChange={(id, p) => {
+            setSelectedPortfolioId(id)
+            setSelectedPortfolio(p)
+          }}
+          selectedProgrammeId={selectedProgrammeId}
+          selectedProgramme={selectedProgramme}
+          onProgrammeChange={(id, p) => {
+            setSelectedProgrammeId(id)
+            setSelectedProgramme(p)
+          }}
+          methodologies={methodologies}
+        />
 
-        {/* Project Description */}
-        <div>
-          <label htmlFor="project_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Description
-          </label>
-          <textarea
-            id="project_description"
-            name="project_description"
-            value={formData.project_description}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-          />
-        </div>
-
-        {/* Project Type */}
-        <div>
-          <label htmlFor="project_type_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Type <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="project_type_id"
-            name="project_type_id"
-            value={formData.project_type_id}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.project_type_id ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required
-          >
-            <option value="">Select a project type</option>
-            {projectTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.type_name}
-              </option>
-            ))}
-          </select>
-          {errors.project_type_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.project_type_id}</p>
-          )}
-        </div>
-
-        {/* Project Status */}
-        <div>
-          <label htmlFor="project_status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Status <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="project_status_id"
-            name="project_status_id"
-            value={formData.project_status_id}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.project_status_id ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required
-          >
-            <option value="">Select a project status</option>
-            {projectStatuses.map((status) => (
-              <option key={status.id} value={status.id}>
-                {status.status_name}
-              </option>
-            ))}
-          </select>
-          {errors.project_status_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.project_status_id}</p>
-          )}
-        </div>
-
-        {/* Methodology */}
-        <div>
-          <label htmlFor="methodology_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Methodology <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="methodology_id"
-            name="methodology_id"
-            value={formData.methodology_id}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.methodology_id ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required
-          >
-            <option value="">Select a methodology</option>
-            {methodologies.map((methodology) => (
-              <option key={methodology.id} value={methodology.id}>
-                {methodology.methodology_name}
-              </option>
-            ))}
-          </select>
-          {errors.methodology_id && (
-            <p className="mt-1 text-sm text-red-600">{errors.methodology_id}</p>
-          )}
-        </div>
-
-        {/* Dates and Budget */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="start_date"
-              name="start_date"
-              value={formData.start_date}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End Date
-            </label>
-            <input
-              type="date"
-              id="end_date"
-              name="end_date"
-              value={formData.end_date}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="budget" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Budget
-            </label>
-            <input
-              type="number"
-              id="budget"
-              name="budget"
-              value={formData.budget}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Project Code
-            </label>
-            <input
-              type="text"
-              id="project_code"
-              name="project_code"
-              value={formData.project_code}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-        </div>
+        {errors.tolerances && (
+          <p className="text-sm text-red-600 dark:text-red-400">{errors.tolerances}</p>
+        )}
 
         {errors.submit && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300">
+          <div className="rounded border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
             {errors.submit}
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex flex-wrap justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-700">
           <button
             type="button"
-            onClick={() => navigate('/projects/' + id)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            onClick={() => navigate(platformProjectPath(urlProjectSegment))}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
@@ -443,4 +646,3 @@ export default function ProjectsEdit() {
     </div>
   )
 }
-

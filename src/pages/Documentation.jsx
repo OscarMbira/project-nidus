@@ -7,6 +7,8 @@ import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import { BookOpen, Search, ChevronRight, Home, Zap } from 'lucide-react';
 import Button from '../components/ui/Button';
 import ThemeToggle from '../components/ThemeToggle';
+import PlatformFooter from '../components/homepage/PlatformFooter';
+import SimulatorFooter from '../components/homepage/SimulatorFooter';
 import {
   getDocumentationGuides,
   getGuideById,
@@ -15,15 +17,15 @@ import {
 } from '../services/documentationService';
 
 const Documentation = () => {
-  const { platform: platformParam = 'pm', guideId: guideIdParam } = useParams();
+  const { platform: platformParam = 'platform', guideId: guideIdParam } = useParams();
   const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState(null);
 
-  // Normalize platform name
-  const platform = platformParam === 'pm-platform' ? 'pm' : platformParam;
+  // Normalize platform name - handle both new 'platform' and legacy 'pm'/'pm-platform' identifiers
+  const platform = platformParam === 'pm-platform' || platformParam === 'pm' ? 'platform' : platformParam;
   const guideId = guideIdParam || 'getting-started';
 
   const platformData = getDocumentationGuides(platform);
@@ -171,7 +173,8 @@ const Documentation = () => {
   }
 
   // Determine header styling based on platform
-  const isPMPlatform = platform === 'pm' || platform === 'pm-platform';
+  // Handle both old 'pm' and new 'platform' identifiers for backward compatibility
+  const isPMPlatform = platform === 'platform' || platform === 'pm' || platform === 'pm-platform';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -224,7 +227,7 @@ const Documentation = () => {
           
           <nav className="hidden md:flex items-center gap-10">
             <Link
-              to={isPMPlatform ? "/pm" : "/simulator"}
+              to={isPMPlatform ? "/platform" : "/simulator"}
               className="text-sm font-medium transition-colors"
               style={isPMPlatform ? { color: '#A8DADC' } : { color: '#d1fae5' }}
               onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
@@ -507,6 +510,8 @@ const Documentation = () => {
           </main>
         </div>
       </div>
+      {/* Context-specific Footer */}
+      {platform === 'platform' ? <PlatformFooter /> : <SimulatorFooter />}
     </div>
   );
 };

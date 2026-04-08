@@ -28,7 +28,7 @@ export default function ProjectObjectiveMapper({ projectId, onAddMapping, onEdit
       const [projectsData, objectivesData] = await Promise.all([
         supabase
           .from('projects')
-          .select('id, project_name, project_code, project_status')
+          .select('id, project_name, project_code, status_id, project_statuses(status_name, status_code)')
           .eq('is_deleted', false)
           .order('project_name', { ascending: true }),
         supabase

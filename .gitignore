@@ -46,6 +46,13 @@ dist-ssr
 Thumbs.db
 .DS_Store
 
+# Claude AI settings (local development only)
+.claude/
+.claude/settings.local.json
+
 # Package manager files
 .pnp
 .pnp.js
+
+# Windows reserved device name files (accidental)
+nul

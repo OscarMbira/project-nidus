@@ -38,7 +38,7 @@ Before starting, ensure you have:
 **Expected Output:**
 ```
 ✓ All tables created successfully
-  - pm_subscriptions: true
+  - platform_subscriptions: true
   - user_platform_access: true
   - account_links: true
 
@@ -61,7 +61,7 @@ Run this verification query in Supabase SQL Editor:
 SELECT table_name
 FROM information_schema.tables
 WHERE table_schema = 'public'
-AND table_name IN ('pm_subscriptions', 'user_platform_access', 'account_links');
+AND table_name IN ('platform_subscriptions', 'user_platform_access', 'account_links');
 ```
 
 **Expected Result:** 3 rows returned
@@ -212,7 +212,7 @@ npm run dev
 **Expected Results:**
 - ✅ User created in Supabase Auth
 - ✅ User record created in `public.users` table
-- ✅ Free PM subscription created in `public.pm_subscriptions`
+- ✅ Free Platform subscription created in `public.platform_subscriptions`
 - ✅ Free Simulator subscription created in `sim.simulator_subscriptions`
 - ✅ Platform access records created in `public.user_platform_access` for both platforms
 - ✅ Email verification sent (if enabled)
@@ -228,7 +228,7 @@ SELECT
   sim.plan_type as sim_plan,
   sim.status as sim_status
 FROM users u
-LEFT JOIN pm_subscriptions pm ON pm.user_id = u.auth_user_id
+LEFT JOIN platform_subscriptions pm ON pm.user_id = u.auth_user_id
 LEFT JOIN sim.simulator_subscriptions sim ON sim.user_id = u.auth_user_id
 WHERE u.email = 'test@example.com';
 ```
@@ -412,7 +412,7 @@ INSERT INTO user_platform_access (user_id, platform, has_registered)
 VALUES ('user-uuid-here', 'pm', true);
 
 -- Check if PM subscription was auto-created
-SELECT * FROM pm_subscriptions WHERE user_id = 'user-uuid-here';
+SELECT * FROM platform_subscriptions WHERE user_id = 'user-uuid-here';
 ```
 
 **Expected:** Free PM subscription created automatically
@@ -514,7 +514,7 @@ SELECT * FROM account_links WHERE primary_user_id = 'user-uuid';
 
 #### Issue 1: Tables Not Created
 
-**Error:** `relation "pm_subscriptions" does not exist`
+**Error:** `relation "platform_subscriptions" does not exist` (Note: Table was renamed from pm_subscriptions to platform_subscriptions in v90)
 
 **Solution:**
 - Re-run the SQL migration file
@@ -527,7 +527,7 @@ SELECT * FROM account_links WHERE primary_user_id = 'user-uuid';
 
 **Solution:**
 - Check RLS policies in Supabase dashboard
-- Temporarily disable RLS for testing: `ALTER TABLE pm_subscriptions DISABLE ROW LEVEL SECURITY;`
+- Temporarily disable RLS for testing: `ALTER TABLE platform_subscriptions DISABLE ROW LEVEL SECURITY;`
 - Verify user authentication status
 
 #### Issue 3: Platform Modal Not Showing

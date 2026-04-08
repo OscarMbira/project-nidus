@@ -5,6 +5,8 @@
 
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { getProjectRoles, getDefaultRoleTemplates, deleteRole } from '../../services/projectRoleService'
 import RoleEditorModal from '../../components/app/RoleEditorModal'
 import PermissionMatrix from '../../components/app/PermissionMatrix'
@@ -13,7 +15,7 @@ import { useToast } from '../../hooks/useToast'
 import PermissionGate from '../../components/auth/PermissionGate'
 
 export default function ProjectRoles() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(true)
   const [roles, setRoles] = useState([])

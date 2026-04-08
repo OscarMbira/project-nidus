@@ -1,11 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { AlertTriangle, TrendingUp, FileText, Link2, Filter, Search, BarChart3, Download } from 'lucide-react'
+import SortToolbar from '../components/ui/SortToolbar'
+import { TableHeaderCell } from '../components/ui/Table'
+import { useSortableTable } from '../hooks/useSortableTable'
+import { useViewMode } from '../hooks/useViewMode'
+import ViewToggle from '../components/ui/ViewToggle'
 
 export default function RAIDLog() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [raidItems, setRaidItems] = useState([])
@@ -15,6 +22,26 @@ export default function RAIDLog() {
     status: '',
     search: '',
   })
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'created_at', direction: 'desc' },
+    storageKey: 'nidus-raid-log-sort',
+  })
+  const raidAccessors = useMemo(
+    () => ({
+      code: (r) => r.code ?? '',
+      raid_type: (r) => r.raid_type ?? '',
+      title: (r) => r.title ?? '',
+      status: (r) => r.status ?? '',
+      priority_level: (r) => r.priority_level ?? '',
+      created_at: (r) => r.created_at ?? '',
+    }),
+    []
+  )
+  const displayRaidItems = useMemo(
+    () => sortedData(raidItems, raidAccessors),
+    [raidItems, sortedData, raidAccessors]
+  )
 
   useEffect(() => {
     if (projectId) {
@@ -158,7 +185,7 @@ export default function RAIDLog() {
   const handleExport = () => {
     const csvRows = [['Type', 'Code', 'Title', 'Status', 'Priority', 'Identified Date', 'Next Review']]
     
-    raidItems.forEach(item => {
+    displayRaidItems.forEach(item => {
       csvRows.push([
         item.raid_type,
         item.code || '',
@@ -353,8 +380,25 @@ export default function RAIDLog() {
             <Download className="h-4 w-4" />
             Export CSV
           </button>
+          <ViewToggle value={raidViewMode} onChange={setRaidViewMode} ariaLabel="RAID log layout" />
         </div>
       </div>
+
+      {raidItems.length > 0 && (
+        <div className="mb-4">
+          <SortToolbar
+            columns={[
+              { key: 'code', label: 'ID / Code' },
+              { key: 'raid_type', label: 'Type' },
+              { key: 'title', label: 'Title' },
+              { key: 'status', label: 'Status' },
+              { key: 'priority_level', label: 'Priority' },
+            ]}
+            getSortDirection={getSortDirectionForColumn}
+            onSort={handleSort}
+          />
+        </div>
+      )}
 
       {/* RAID Items List */}
       <div className="space-y-4">
@@ -368,8 +412,59 @@ export default function RAIDLog() {
               Create risks, assumptions, issues, or dependencies to populate the RAID log
             </p>
           </div>
+        ) : raidViewMode === 'list' ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">ID / Code</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case">Type</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case text-right">Actions</TableHeaderCell>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {displayRaidItems.map((item) => (
+                    <tr key={`${item.raid_type}-${item.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-6 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{item.code || '—'}</td>
+                      <td className="px-6 py-3">
+                        <span className={`px-2 py-1 rounded text-xs capitalize ${getTypeColor(item.raid_type)}`}>{item.raid_type}</span>
+                      </td>
+                      <td className="px-6 py-3 text-gray-900 dark:text-white max-w-md">
+                        <div className="font-medium truncate">{item.title}</div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(item.priority_level)}`}>{item.priority_level || 'N/A'}</span>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">{item.status || '—'}</td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (item.raid_type === 'risk') {
+                              navigate(`/projects/${projectId}/risks/${item.id}`)
+                            } else if (item.raid_type === 'issue') {
+                              navigate(`/projects/${projectId}/issues`)
+                            } else {
+                              navigate(`/projects/${projectId}/risks`)
+                            }
+                          }}
+                          className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded"
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
-          raidItems.map((item) => (
+          displayRaidItems.map((item) => (
             <div
               key={`${item.raid_type}-${item.id}`}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

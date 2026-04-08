@@ -7,6 +7,16 @@ import ResourceForm from '../components/ResourceForm'
 import ResourceAssignment from '../components/ResourceAssignment'
 import ResourceCalendar from '../components/ResourceCalendar'
 import ResourceSkills from '../components/ResourceSkills'
+import ExportRecordButtons from '../components/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+
+const RESOURCE_VIEW_SECTIONS = [
+  { title: 'Resource', fields: [
+    { key: 'resource_name', label: 'Name' },
+    { key: 'resource_code', label: 'Code' },
+    { key: 'resource_type', label: 'Type' }
+  ]}
+]
 
 export default function ResourceDetail() {
   const { id } = useParams()
@@ -133,13 +143,24 @@ export default function ResourceDetail() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button
-        onClick={() => navigate('/resources')}
-        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Resources
-      </button>
+      <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
+        <button
+          onClick={() => navigate('/resources')}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Resources
+        </button>
+        <ExportRecordButtons
+          onExportPPT={() => exportRecordToPPT(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+          onExportWord={() => exportRecordToWord(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+          onExportExcel={() => exportRecordToExcel(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+          onExportCSV={() => exportRecordToCSV(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+          onExportXML={() => exportRecordToXML(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+          onExportJSON={() => exportRecordToJSON(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+          onExportPrint={() => exportRecordToPrint(RESOURCE_VIEW_SECTIONS, resource, `Resource_${resource.resource_code || id}`)}
+        />
+      </div>
 
       {/* Resource Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">

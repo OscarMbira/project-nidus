@@ -1,7 +1,35 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { FileText, Calendar, TrendingUp, TrendingDown, Edit2, Plus, CheckCircle, AlertCircle } from 'lucide-react';
+import ExportListMenu from '../../../components/ui/ExportListMenu';
+import SortToolbar from '../../../components/ui/SortToolbar';
+import { useSortableTable } from '../../../hooks/useSortableTable';
 
-export default function EndStageReportList({ reports, onEdit, onRefresh, onAdd }) {
+const END_STAGE_REPORT_COLUMNS = [
+  { key: 'document_ref', label: 'Document Ref' },
+  { key: 'report_title', label: 'Title' },
+  { key: 'approval_status', label: 'Status' },
+  { key: 'stage_name', label: 'Stage' }
+];
+
+export default function EndStageReportList({ reports, onEdit, onView, onRefresh, onAdd }) {
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'report_date', direction: 'desc' },
+    storageKey: 'nidus-end-stage-reports-sort',
+  });
+  const reportAccessors = useMemo(
+    () => ({
+      report_title: (r) => r.report_title ?? '',
+      stage_name: (r) => r.stage_name ?? '',
+      approval_status: (r) => r.approval_status ?? '',
+      report_date: (r) => r.report_date ?? '',
+    }),
+    []
+  );
+  const displayReports = useMemo(
+    () => sortedData(reports || [], reportAccessors),
+    [reports, sortedData, reportAccessors]
+  );
+
   const getStatusColor = (status) => {
     const colors = {
       draft: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300',
@@ -13,7 +41,7 @@ export default function EndStageReportList({ reports, onEdit, onRefresh, onAdd }
     return colors[status] || colors.draft;
   };
 
-  if (!reports || reports.length === 0) {
+  if (!reports?.length) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
         <FileText className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
@@ -36,26 +64,41 @@ export default function EndStageReportList({ reports, onEdit, onRefresh, onAdd }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             End Stage Reports
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {reports.length} {reports.length === 1 ? 'report' : 'reports'}
+            {displayReports.length} {displayReports.length === 1 ? 'report' : 'reports'}
           </p>
         </div>
-        <button
-          onClick={onAdd}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Create Report
-        </button>
+        <div className="flex gap-2">
+          <ExportListMenu columns={END_STAGE_REPORT_COLUMNS} data={displayReports} baseFilename="EndStageReports" disabled={!displayReports?.length} />
+          <button
+            onClick={onAdd}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Create Report
+          </button>
+        </div>
       </div>
 
+      <SortToolbar
+        columns={[
+          { key: 'report_title', label: 'Title' },
+          { key: 'stage_name', label: 'Stage' },
+          { key: 'approval_status', label: 'Status' },
+          { key: 'report_date', label: 'Date' },
+        ]}
+        getSortDirection={getSortDirectionForColumn}
+        onSort={handleSort}
+        className="mb-2"
+      />
+
       <div className="grid grid-cols-1 gap-4">
-        {reports.map((report) => (
+        {displayReports.map((report) => (
           <div
             key={report.id}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"
@@ -155,13 +198,26 @@ export default function EndStageReportList({ reports, onEdit, onRefresh, onAdd }
                 )}
               </div>
 
-              <button
-                onClick={() => onEdit(report)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                title="View/Edit report"
-              >
-                <Edit2 className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {onView && (
+                  <button
+                    onClick={() => onView(report)}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                    title="View report"
+                  >
+                    <FileText className="h-4 w-4" />
+                  </button>
+                )}
+                {(report.approval_workflow_status === 'draft' || report.approval_status === 'draft' || report.approval_workflow_status === 'rejected') && onEdit && (
+                  <button
+                    onClick={() => onEdit(report)}
+                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
+                    title="Edit report"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ))}

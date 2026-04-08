@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient';
 import { ArrowLeft, FileCheck, MessageSquare, AlertCircle } from 'lucide-react';
 import AuthorizationList from '../../components/structured/directing/AuthorizationList';
@@ -12,7 +14,7 @@ import {
 } from '../../services/directingProjectService';
 
 export default function DirectingAuthorizations() {
-  const { projectId } = useParams();
+  const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
 
   const [project, setProject] = useState(null);

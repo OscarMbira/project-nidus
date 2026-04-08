@@ -1,4 +1,16 @@
-import { supabase } from './supabaseClient';
+import { supabase } from './supabaseClient'
+import {
+  generateReportReference,
+  getReportByStageBoundary,
+  canEditReport,
+  validateReportCompleteness,
+  linkUpdatedDocuments,
+  syncBusinessCaseReview,
+  syncRiskRegister,
+  syncIssueRegister,
+  syncLessonsLearned,
+  submitReportForApproval,
+} from './endStageReportService'
 
 /**
  * Stage Boundaries (SB) Service - API functions for Managing Stage Boundaries
@@ -514,6 +526,18 @@ export default {
   createEndStageReport,
   updateEndStageReport,
   deleteEndStageReport,
+  
+  // End Stage Report Enhanced Methods
+  generateReportReference,
+  getReportByStageBoundary,
+  canEditReport,
+  validateReportCompleteness,
+  linkUpdatedDocuments,
+  syncBusinessCaseReview,
+  syncRiskRegister,
+  syncIssueRegister,
+  syncLessonsLearned,
+  submitReportForApproval,
 
   // Exception Plans
   fetchExceptionPlans,

@@ -1,13 +1,345 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, Target, Users, TrendingUp, AlertTriangle, DollarSign, Activity, Calendar, CheckCircle, Link2 } from 'lucide-react';
-import { getProgramme, deleteProgramme } from '../../services/programmeService';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Edit2, Target, TrendingUp, AlertTriangle, Activity, Calendar, CheckCircle, Link2 } from 'lucide-react';
+import {
+  getProgramme,
+  deleteProgramme,
+  getProgrammeProjects,
+  getProgrammeDependencies,
+  getProgrammeBenefits,
+  getProgrammeMilestones,
+  getProgrammeReports,
+} from '../../services/programmeService';
 import ProgrammeDashboard from '../../components/programme/ProgrammeDashboard';
+import DependencyMapVisualization from '../../components/programme/DependencyMapVisualization';
+import BenefitsRealizationChart from '../../components/programme/BenefitsRealizationChart';
+import ProgrammeTimelineView from '../../components/programme/ProgrammeTimelineView';
 import ProgrammeForm from '../../components/programme/ProgrammeForm';
+import ExportRecordButtons from '../../components/ui/ExportRecordButtons';
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils';
+
+const PROGRAMME_VIEW_SECTIONS = [
+  { title: 'Programme', fields: [
+    { key: 'programme_name', label: 'Name' },
+    { key: 'programme_code', label: 'Code' },
+    { key: 'programme_status', label: 'Status' },
+    { key: 'programme_description', label: 'Description' }
+  ]}
+];
+
+function ProgrammeProjectsTab({ programmeId }) {
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProgrammeProjects(programmeId);
+        setProjects(data || []);
+      } catch (err) {
+        console.error('Error loading programme projects:', err);
+        setError(err.message || 'Failed to load projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (programmeId) load();
+  }, [programmeId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading programme projects...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-800 dark:text-red-200">Error loading projects: {error}</p>
+      </div>
+    );
+  }
+
+  if (!projects.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <p className="text-gray-500 dark:text-gray-400">No projects have been assigned to this programme yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead>
+          <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+            <th className="py-2 pr-4">Project</th>
+            <th className="py-2 pr-4">Code</th>
+            <th className="py-2 pr-4">Status</th>
+            <th className="py-2 pr-4">Programme Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          {projects.map((row) => (
+            <tr key={row.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+              <td className="py-2 pr-4 text-gray-900 dark:text-white">
+                {row.project?.project_name || 'Unknown Project'}
+              </td>
+              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
+                {row.project?.project_code || ''}
+              </td>
+              <td className="py-2 pr-4">
+                <span className="px-2 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200">
+                  {row.project?.project_status || 'unknown'}
+                </span>
+              </td>
+              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300 capitalize">
+                {row.programme_priority || 'normal'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ProgrammeDependenciesTab({ programmeId }) {
+  const [dependencies, setDependencies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProgrammeDependencies(programmeId);
+        setDependencies(data || []);
+      } catch (err) {
+        console.error('Error loading programme dependencies:', err);
+        setError(err.message || 'Failed to load dependencies');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (programmeId) load();
+  }, [programmeId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading dependencies...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-800 dark:text-red-200">Error loading dependencies: {error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <DependencyMapVisualization dependencies={dependencies} />
+  );
+}
+
+function ProgrammeBenefitsTab({ programmeId }) {
+  const [benefits, setBenefits] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProgrammeBenefits(programmeId);
+        setBenefits(data || []);
+      } catch (err) {
+        console.error('Error loading programme benefits:', err);
+        setError(err.message || 'Failed to load benefits');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (programmeId) load();
+  }, [programmeId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading benefits...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-800 dark:text-red-200">Error loading benefits: {error}</p>
+      </div>
+    );
+  }
+
+  return <BenefitsRealizationChart benefits={benefits} />;
+}
+
+function ProgrammeTimelineTab({ programmeId, programme }) {
+  const [milestones, setMilestones] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [ms, proj] = await Promise.all([
+          getProgrammeMilestones(programmeId),
+          getProgrammeProjects(programmeId),
+        ]);
+        setMilestones(ms || []);
+        setProjects(proj || []);
+      } catch (err) {
+        console.error('Error loading programme timeline:', err);
+        setError(err.message || 'Failed to load timeline');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (programmeId) load();
+  }, [programmeId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading timeline...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-800 dark:text-red-200">Error loading timeline: {error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <ProgrammeTimelineView
+      programme={programme}
+      milestones={milestones}
+      projects={projects}
+    />
+  );
+}
+
+function ProgrammeReportsTab({ programmeId }) {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getProgrammeReports(programmeId);
+        setReports(data || []);
+      } catch (err) {
+        console.error('Error loading programme reports:', err);
+        setError(err.message || 'Failed to load reports');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (programmeId) load();
+  }, [programmeId]);
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Loading reports...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <p className="text-sm text-red-800 dark:text-red-200">Error loading reports: {error}</p>
+      </div>
+    );
+  }
+
+  if (!reports.length) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+        <p className="text-gray-500 dark:text-gray-400">No reports found for this programme.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead>
+          <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+            <th className="py-2 pr-4">Date</th>
+            <th className="py-2 pr-4">Type</th>
+            <th className="py-2 pr-4">Status</th>
+            <th className="py-2 pr-4">Generated By</th>
+            <th className="py-2 pr-4">Approved By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reports.map((r) => (
+            <tr key={r.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
+                {r.report_date || '—'}
+              </td>
+              <td className="py-2 pr-4 text-gray-900 dark:text-white capitalize">
+                {r.report_type || '—'}
+              </td>
+              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300 capitalize">
+                {r.report_status || '—'}
+              </td>
+              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
+                {r.generated_by?.full_name || r.generated_by?.email || '—'}
+              </td>
+              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
+                {r.approved_by?.full_name || r.approved_by?.email || '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function ProgrammeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isPlatformContext = location.pathname.startsWith('/platform');
+  const basePath = isPlatformContext ? '/platform/programme' : '/programme';
   const [programme, setProgramme] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -38,7 +370,7 @@ export default function ProgrammeDetail() {
   const handleDelete = async () => {
     try {
       await deleteProgramme(id);
-      navigate('/programme');
+      navigate(basePath, { replace: true, state: { toast: { type: 'success', message: `Programme "${programme?.programme_name}" (${programme?.programme_code || id}) deleted successfully.` } } });
     } catch (error) {
       console.error('Error deleting programme:', error);
       alert('Error deleting programme: ' + error.message);
@@ -72,7 +404,7 @@ export default function ProgrammeDetail() {
             <span className="font-medium">Error loading programme: {error}</span>
           </div>
           <button
-            onClick={() => navigate('/programme')}
+            onClick={() => navigate(basePath)}
             className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
           >
             Back to Programmes
@@ -101,7 +433,7 @@ export default function ProgrammeDetail() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/programme')}
+            onClick={() => navigate(basePath)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -126,7 +458,16 @@ export default function ProgrammeDetail() {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <ExportRecordButtons
+              onExportPPT={() => exportRecordToPPT(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportWord={() => exportRecordToWord(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportExcel={() => exportRecordToExcel(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportCSV={() => exportRecordToCSV(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportXML={() => exportRecordToXML(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportJSON={() => exportRecordToJSON(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportPrint={() => exportRecordToPrint(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+            />
             <button
               onClick={() => setShowForm(true)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
@@ -171,33 +512,23 @@ export default function ProgrammeDetail() {
         )}
 
         {activeTab === 'projects' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-gray-500 dark:text-gray-400">Projects view coming soon...</p>
-          </div>
+          <ProgrammeProjectsTab programmeId={id} />
         )}
 
         {activeTab === 'dependencies' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-gray-500 dark:text-gray-400">Inter-project dependencies view coming soon...</p>
-          </div>
+          <ProgrammeDependenciesTab programmeId={id} />
         )}
 
         {activeTab === 'benefits' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-gray-500 dark:text-gray-400">Benefits realization view coming soon...</p>
-          </div>
+          <ProgrammeBenefitsTab programmeId={id} />
         )}
 
         {activeTab === 'timeline' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-gray-500 dark:text-gray-400">Programme timeline view coming soon...</p>
-          </div>
+          <ProgrammeTimelineTab programmeId={id} programme={programme} />
         )}
 
         {activeTab === 'reports' && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <p className="text-gray-500 dark:text-gray-400">Programme reports view coming soon...</p>
-          </div>
+          <ProgrammeReportsTab programmeId={id} />
         )}
       </div>
 

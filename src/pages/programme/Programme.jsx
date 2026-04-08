@@ -4,9 +4,19 @@ import { Plus, Target, TrendingUp, AlertTriangle, DollarSign, Search } from 'luc
 import { getProgrammes } from '../../services/programmeService';
 import ProgrammeList from '../../components/programme/ProgrammeList';
 import ProgrammeForm from '../../components/programme/ProgrammeForm';
+import ExportListMenu from '../../components/ui/ExportListMenu';
+import { useViewMode } from '../../hooks/useViewMode';
+import ViewToggle from '../../components/ui/ViewToggle';
+
+const PROGRAMME_COLUMNS = [
+  { key: 'programme_name', label: 'Name' },
+  { key: 'programme_code', label: 'Code' },
+  { key: 'programme_status', label: 'Status' }
+];
 
 export default function Programme() {
   const navigate = useNavigate();
+  const [programmeViewMode, setProgrammeViewMode] = useViewMode('programme', 'grid');
   const [programmes, setProgrammes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showProgrammeForm, setShowProgrammeForm] = useState(false);
@@ -71,17 +81,21 @@ export default function Programme() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Programme Management
           </h1>
-          <button
-            onClick={handleCreateProgramme}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            Create Programme
-          </button>
+          <div className="flex flex-wrap gap-2 items-center">
+            <ExportListMenu columns={PROGRAMME_COLUMNS} data={programmes} baseFilename="Programmes" disabled={!programmes.length} />
+            <ViewToggle value={programmeViewMode} onChange={setProgrammeViewMode} ariaLabel="Programme list layout" />
+            <button
+              onClick={handleCreateProgramme}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Create Programme
+            </button>
+          </div>
         </div>
         <p className="text-gray-600 dark:text-gray-400">
           Coordinate related projects to deliver strategic benefits
@@ -179,7 +193,7 @@ export default function Programme() {
       </div>
 
       {/* Programme List */}
-      <ProgrammeList programmes={programmes} onRefresh={fetchProgrammes} />
+      <ProgrammeList programmes={programmes} onRefresh={fetchProgrammes} viewMode={programmeViewMode} />
 
       {/* Programme Form Modal */}
       {showProgrammeForm && (

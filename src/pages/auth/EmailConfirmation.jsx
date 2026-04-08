@@ -1,8 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { Mail, CheckCircle, AlertCircle, Loader, ArrowRight } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import Button from '../../components/ui/Button'
+// Note: createAccount and assignSystemRole imports removed
+// Organisation/Company creation is done manually via organization setup form
+// Role assignment (project_sponsor/executive) happens during organization creation
+import { hasRegisteredForPlatform, registerForPlatform } from '../../services/unifiedSubscriptionService'
+import { acceptOrganisationInvitation } from '../../services/organisationRoleService'
 
 export default function EmailConfirmation() {
   const navigate = useNavigate()
@@ -12,21 +18,51 @@ export default function EmailConfirmation() {
   const [loading, setLoading] = useState(true)
   const [resending, setResending] = useState(false)
   const [email, setEmail] = useState('')
+  const [continueLoading, setContinueLoading] = useState(false)
   const errorCheckedRef = useRef(false)
 
-  useEffect(() => {
-    // Check for error parameters in URL hash first (Supabase redirects errors in hash)
-    const handleInitialCheck = async () => {
-      const hasError = await checkForErrors()
-      // Only proceed with session check if no error was found
-      if (!hasError) {
-        checkSession()
+  const checkUserVerificationStatus = useCallback(async (emailAddress) => {
+    try {
+      // Check if user exists and is verified in our database
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('is_verified, auth_user_id')
+        .eq('email', emailAddress)
+        .eq('is_deleted', false)
+        .single()
+
+      if (userError || !userData) {
+        return false
       }
+
+      // If user is verified in our DB, check Supabase auth status
+      if (userData.is_verified && userData.auth_user_id) {
+        try {
+          // Try to get user from Supabase auth (admin function)
+          // Note: This requires RLS to allow reading auth.users or we use a different approach
+          const { data: { user } } = await supabase.auth.getUser()
+          
+          // If we have a session, check if email is confirmed
+          if (user && user.email === emailAddress) {
+            return user.email_confirmed_at !== null || user.confirmed_at !== null
+          }
+
+          // If no session but user is verified in DB, assume they're verified
+          return userData.is_verified
+        } catch (authError) {
+          // If we can't check auth, trust the DB status
+          return userData.is_verified
+        }
+      }
+
+      return false
+    } catch (err) {
+      console.error('Error checking user verification status:', err)
+      return false
     }
-    handleInitialCheck()
   }, [])
 
-  const checkForErrors = async () => {
+  const checkForErrors = useCallback(async () => {
     // Only check once
     if (errorCheckedRef.current) {
       return status === 'error' || status === 'expired'
@@ -77,66 +113,94 @@ export default function EmailConfirmation() {
       }
     }
     return false
-  }
+  }, [status, checkUserVerificationStatus])
 
-  const checkUserVerificationStatus = async (emailAddress) => {
-    try {
-      // Check if user exists and is verified in our database
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('is_verified, auth_user_id')
-        .eq('email', emailAddress)
-        .eq('is_deleted', false)
-        .single()
-
-      if (userError || !userData) {
-        return false
+  useEffect(() => {
+    // Check for error parameters in URL hash first (Supabase redirects errors in hash)
+    let isMounted = true
+    
+    const handleInitialCheck = async () => {
+      const hasError = await checkForErrors()
+      // Only proceed with session check if no error was found and component is still mounted
+      if (!hasError && isMounted) {
+        await checkSession()
       }
-
-      // If user is verified in our DB, check Supabase auth status
-      if (userData.is_verified && userData.auth_user_id) {
-        try {
-          // Try to get user from Supabase auth (admin function)
-          // Note: This requires RLS to allow reading auth.users or we use a different approach
-          const { data: { user } } = await supabase.auth.getUser()
-          
-          // If we have a session, check if email is confirmed
-          if (user && user.email === emailAddress) {
-            return user.email_confirmed_at !== null || user.confirmed_at !== null
-          }
-
-          // If no session but user is verified in DB, assume they're verified
-          return userData.is_verified
-        } catch (authError) {
-          // If we can't check auth, trust the DB status
-          return userData.is_verified
-        }
-      }
-
-      return false
-    } catch (err) {
-      console.error('Error checking user verification status:', err)
-      return false
     }
-  }
+    
+    handleInitialCheck()
+    
+    return () => {
+      isMounted = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
 
-  const checkSession = async () => {
+  const checkSession = useCallback(async () => {
     try {
       // Check if user is already authenticated (Supabase may have auto-confirmed)
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       
       if (session && session.user) {
-        // User is already authenticated, update database and show success
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            is_verified: true,
-            verified_at: new Date().toISOString()
+        // Create or update user record using atomic function
+        try {
+          // Use atomic function to get or create user
+          const { data: userRecord, error: userError } = await supabase.rpc('get_or_create_user', {
+            p_auth_user_id: session.user.id,
+            p_email: session.user.email || '',
+            p_full_name: session.user.user_metadata?.full_name || null,
+            p_is_verified: true
           })
-          .eq('auth_user_id', session.user.id)
 
-        if (updateError) {
-          console.error('Error updating user verification status:', updateError)
+          if (userError) {
+            console.error('Error getting/creating user record:', userError)
+            // Continue anyway - account creation can happen in Platform Account Setup
+          } else if (userRecord && userRecord.length > 0) {
+            const userData = userRecord[0]
+            console.log('User record ready:', userData.user_id)
+
+            // Check for invitation token (from URL or user metadata)
+            const invitationToken = searchParams.get('invitation') || 
+                                   session.user.user_metadata?.invitation_token ||
+                                   null
+
+            if (invitationToken) {
+              // User signed up via invitation - accept invitation and assign role
+              try {
+                const inviteResult = await acceptOrganisationInvitation(
+                  invitationToken,
+                  session.user.id
+                )
+                if (inviteResult.success) {
+                  console.log('Organisation invitation accepted and role assigned')
+                  // Don't create default account - user is part of invited organisation
+                  setStatus('success')
+                  setEmail(session.user.email || '')
+                  setLoading(false)
+                  return
+                } else {
+                  console.warn('Failed to accept invitation:', inviteResult.error)
+                  // Continue with normal flow
+                }
+              } catch (inviteError) {
+                console.error('Error accepting invitation:', inviteError)
+                // Continue with normal flow
+              }
+            }
+
+            // Note: Organisation/Company creation is NOT done here
+            // Users must manually complete the organization setup form
+            // This ensures they provide proper organization details (company name, address, etc.)
+            // The organization setup form will create the account and assign project_sponsor/executive role
+            // Check if user registered for Platform (for logging purposes only)
+            const registeredForPlatform = await hasRegisteredForPlatform(session.user.id, 'platform')
+            if (registeredForPlatform) {
+              console.log('User registered for Platform - will be redirected to organization setup on login')
+            }
+          }
+        } catch (accountError) {
+          console.error('Error in post-verification setup:', accountError)
+          // Don't fail email verification if account creation fails
+          // Account will be created later in PlatformAccountSetup
         }
 
         setStatus('success')
@@ -151,9 +215,9 @@ export default function EmailConfirmation() {
       console.error('Session check error:', err)
       verifyEmail()
     }
-  }
+  }, [searchParams])
 
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     try {
       // Check URL hash for parameters (Supabase may put params in hash)
       const hash = window.location.hash
@@ -233,18 +297,85 @@ export default function EmailConfirmation() {
       }
 
       if (verifyData?.user) {
-        // Update user record in database
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            is_verified: true,
-            verified_at: new Date().toISOString()
+        // Create or update user record using atomic function
+        try {
+          // Use atomic function to get or create user
+          const { data: userRecord, error: userError } = await supabase.rpc('get_or_create_user', {
+            p_auth_user_id: verifyData.user.id,
+            p_email: verifyData.user.email || emailParam || '',
+            p_full_name: verifyData.user.user_metadata?.full_name || null,
+            p_is_verified: true
           })
-          .eq('auth_user_id', verifyData.user.id)
 
-        if (updateError) {
-          console.error('Error updating user verification status:', updateError)
-          // Don't fail the verification if DB update fails
+          if (userError) {
+            console.error('Error getting/creating user record:', userError)
+            // Continue anyway - account creation can happen in Platform Account Setup
+          } else if (userRecord && userRecord.length > 0) {
+            const userData = userRecord[0]
+            console.log('User record ready:', userData.user_id)
+
+            // Check for invitation token (from URL or user metadata)
+            const invitationToken = searchParams.get('invitation') || 
+                                   verifyData.user.user_metadata?.invitation_token ||
+                                   null
+
+            if (invitationToken) {
+              // User signed up via invitation - accept invitation and assign role
+              try {
+                const inviteResult = await acceptOrganisationInvitation(
+                  invitationToken,
+                  verifyData.user.id
+                )
+                if (inviteResult.success) {
+                  console.log('Organisation invitation accepted and role assigned')
+                  // Don't create default account - user is part of invited organisation
+                  setStatus('success')
+                  setEmail(verifyData.user.email || emailParam || '')
+                  setLoading(false)
+                  return
+                } else {
+                  console.warn('Failed to accept invitation:', inviteResult.error)
+                  // Continue with normal flow
+                }
+              } catch (inviteError) {
+                console.error('Error accepting invitation:', inviteError)
+                // Continue with normal flow
+              }
+            }
+
+            // Note: Account/Organization creation is NOT done here
+            // Users must manually complete the organization setup form
+            // This ensures they provide proper organization details
+            // The organization setup form will assign the project_sponsor/executive role
+            
+            // Register user for platform if they selected it during signup
+            // Check user metadata for platform selection
+            const selectedPlatforms = verifyData.user.user_metadata?.selected_platforms
+            if (selectedPlatforms) {
+              if (selectedPlatforms.platform === true) {
+                try {
+                  await registerForPlatform(verifyData.user.id, 'platform')
+                  console.log('Successfully registered for Platform after email confirmation')
+                } catch (platformError) {
+                  console.error('Error registering for Platform after email confirmation:', platformError)
+                  // Continue anyway - can be registered later
+                }
+              }
+              if (selectedPlatforms.simulator === true) {
+                try {
+                  await registerForPlatform(verifyData.user.id, 'simulator')
+                  console.log('Successfully registered for Simulator after email confirmation')
+                } catch (simError) {
+                  console.error('Error registering for Simulator after email confirmation:', simError)
+                  // Continue anyway - can be registered later
+                }
+              }
+            }
+          }
+        } catch (accountError) {
+          console.error('Error in post-verification setup:', accountError)
+          // Don't fail email verification if account creation fails
+          // Account will be created later in PlatformAccountSetup
         }
 
         setStatus('success')
@@ -260,9 +391,9 @@ export default function EmailConfirmation() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchParams])
 
-  const handleResendConfirmation = async () => {
+  const handleResendConfirmation = useCallback(async () => {
     if (!email) {
       setError('Email address is required to resend confirmation')
       return
@@ -300,14 +431,8 @@ export default function EmailConfirmation() {
       } else {
         setStatus('verifying')
         setError(null)
-        // Show success message with better UX
-        const successMessage = document.createElement('div')
-        successMessage.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50'
-        successMessage.textContent = 'Confirmation email has been resent. Please check your inbox.'
-        document.body.appendChild(successMessage)
-        setTimeout(() => {
-          document.body.removeChild(successMessage)
-        }, 5000)
+        // Use toast instead of DOM manipulation
+        toast.success('Confirmation email has been resent. Please check your inbox.')
       }
     } catch (err) {
       console.error('Resend confirmation error:', err)
@@ -315,7 +440,109 @@ export default function EmailConfirmation() {
     } finally {
       setResending(false)
     }
-  }
+  }, [email, checkUserVerificationStatus])
+
+  const handleContinueSetup = useCallback(async () => {
+    setContinueLoading(true)
+    try {
+      // Get authenticated user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        console.error('User not authenticated:', userError)
+        // Sign out and redirect to login
+        const selectedPlatforms = user?.user_metadata?.selected_platforms || {}
+        const loginRoute = selectedPlatforms.simulator && !selectedPlatforms.platform
+          ? '/simulator/login'
+          : '/platform/login'
+        await supabase.auth.signOut()
+        navigate(loginRoute, { replace: true, state: { message: 'Please log in to continue.', fromEmailConfirmation: true } })
+        return
+      }
+
+      // Step 1: Ensure user record exists using atomic function
+      try {
+        const { data: userResult, error: userRpcError } = await supabase.rpc('get_or_create_user', {
+          p_auth_user_id: user.id,
+          p_email: user.email || '',
+          p_full_name: user.user_metadata?.full_name || null,
+          p_is_verified: true
+        })
+
+        if (userRpcError) {
+          console.error('Error getting/creating user:', userRpcError)
+        }
+      } catch (userError) {
+        console.error('Exception getting/creating user:', userError)
+      }
+
+      // Step 2: Check platform registration from metadata first (faster)
+      const selectedPlatforms = user.user_metadata?.selected_platforms || {}
+      const registeredForPlatform = selectedPlatforms.platform === true
+      const registeredForSimulator = selectedPlatforms.simulator === true
+
+      // Step 3: If metadata not available, check database
+      let hasPlatform = registeredForPlatform
+      let hasSimulator = registeredForSimulator
+
+      if (!hasPlatform && !hasSimulator) {
+        // Check database for platform access
+        try {
+          hasPlatform = await hasRegisteredForPlatform(user.id, 'platform')
+          hasSimulator = await hasRegisteredForPlatform(user.id, 'simulator')
+        } catch (platformError) {
+          console.error('Error checking platform access:', platformError)
+        }
+
+        // If still no platform access found, try to create from metadata
+        if (!hasPlatform && registeredForPlatform) {
+          try {
+            await registerForPlatform(user.id, 'platform')
+            hasPlatform = true
+          } catch (regError) {
+            console.error('Error registering for platform:', regError)
+          }
+        }
+
+        if (!hasSimulator && registeredForSimulator) {
+          try {
+            await registerForPlatform(user.id, 'simulator')
+            hasSimulator = true
+          } catch (regError) {
+            console.error('Error registering for simulator:', regError)
+          }
+        }
+      }
+      
+      // Step 4: Sign out user and redirect to appropriate login page
+      console.log('Email confirmed. Signing out and redirecting to login.')
+      await supabase.auth.signOut()
+      
+      // Determine which login page to redirect to based on platform registration
+      const loginRoute = hasSimulator && !hasPlatform 
+        ? '/simulator/login' 
+        : '/platform/login'
+      
+      navigate(loginRoute, { replace: true, state: { message: 'Email confirmed successfully! Please log in to continue.', fromEmailConfirmation: true } })
+    } catch (error) {
+      console.error('Error in Continue Setup:', error)
+      // Sign out and redirect to login
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        const selectedPlatforms = user?.user_metadata?.selected_platforms || {}
+        const loginRoute = selectedPlatforms.simulator && !selectedPlatforms.platform
+          ? '/simulator/login'
+          : '/platform/login'
+        await supabase.auth.signOut()
+        navigate(loginRoute, { replace: true, state: { message: 'Email confirmed successfully! Please log in to continue.', fromEmailConfirmation: true } })
+      } catch (signOutError) {
+        console.error('Error signing out:', signOutError)
+        navigate('/platform/login', { replace: true, state: { message: 'Email confirmed successfully! Please log in to continue.', fromEmailConfirmation: true } })
+      }
+    } finally {
+      setContinueLoading(false)
+    }
+  }, [navigate])
 
   if (loading) {
     return (
@@ -385,21 +612,138 @@ export default function EmailConfirmation() {
 
               <div className="space-y-3">
                 <Button
-                  asChild
                   className="w-full"
                   size="lg"
+                  disabled={continueLoading}
+                  onClick={async () => {
+                    setContinueLoading(true)
+                    try {
+                      // Get authenticated user
+                      const { data: { user }, error: userError } = await supabase.auth.getUser()
+                      
+                      if (userError || !user) {
+                        console.error('User not authenticated:', userError)
+                        // Sign out and redirect to login
+                        // Try to determine platform from user metadata or default to Platform
+                        const selectedPlatforms = user?.user_metadata?.selected_platforms || {}
+                        const loginRoute = selectedPlatforms.simulator && !selectedPlatforms.platform
+                          ? '/simulator/login'
+                          : '/platform/login'
+                        await supabase.auth.signOut()
+                        navigate(loginRoute, { replace: true, state: { message: 'Please log in to continue.', fromEmailConfirmation: true } })
+                        return
+                      }
+
+                      // Step 1: Ensure user record exists using atomic function
+                      let userRecord = null
+                      try {
+                        const { data: userResult, error: userRpcError } = await supabase.rpc('get_or_create_user', {
+                          p_auth_user_id: user.id,
+                          p_email: user.email || '',
+                          p_full_name: user.user_metadata?.full_name || null,
+                          p_is_verified: true
+                        })
+
+                        if (userRpcError) {
+                          console.error('Error getting/creating user:', userRpcError)
+                        } else if (userResult && userResult.length > 0) {
+                          userRecord = {
+                            id: userResult[0].user_id,
+                            full_name: userResult[0].full_name_out
+                          }
+                        }
+                      } catch (userError) {
+                        console.error('Exception getting/creating user:', userError)
+                      }
+
+                      // Step 2: Check platform registration from metadata first (faster)
+                      // Note: We can continue even if userRecord is null - platform check uses auth user ID
+                      const selectedPlatforms = user.user_metadata?.selected_platforms || {}
+                      const registeredForPlatform = selectedPlatforms.platform === true
+                      const registeredForSimulator = selectedPlatforms.simulator === true
+
+                      // Step 3: If metadata not available, check database
+                      let hasPlatform = registeredForPlatform
+                      let hasSimulator = registeredForSimulator
+
+                      if (!hasPlatform && !hasSimulator) {
+                        // Check database for platform access
+                        try {
+                          hasPlatform = await hasRegisteredForPlatform(user.id, 'platform')
+                          hasSimulator = await hasRegisteredForPlatform(user.id, 'simulator')
+                        } catch (platformError) {
+                          console.error('Error checking platform access:', platformError)
+                        }
+
+                        // If still no platform access found, try to create from metadata
+                        if (!hasPlatform && registeredForPlatform) {
+                          try {
+                            await registerForPlatform(user.id, 'platform')
+                            hasPlatform = true
+                          } catch (regError) {
+                            console.error('Error registering for platform:', regError)
+                          }
+                        }
+
+                        if (!hasSimulator && registeredForSimulator) {
+                          try {
+                            await registerForPlatform(user.id, 'simulator')
+                            hasSimulator = true
+                          } catch (regError) {
+                            console.error('Error registering for simulator:', regError)
+                          }
+                        }
+                      }
+                      
+                      console.log('Platform access check:', { hasPlatform, hasSimulator, userId: user.id })
+                      
+                      // Step 4: Sign out user and redirect to appropriate login page
+                      // After email confirmation, we sign out so user must manually log in
+                      // This ensures they see the login page and can enter their password
+                      // Redirect to Simulator login if they registered for Simulator, otherwise Platform login
+                      console.log('Email confirmed. Signing out and redirecting to login.')
+                      await supabase.auth.signOut()
+                      
+                      // Determine which login page to redirect to based on platform registration
+                      const loginRoute = hasSimulator && !hasPlatform 
+                        ? '/simulator/login' 
+                        : '/platform/login'
+                      
+                      navigate(loginRoute, { replace: true, state: { message: 'Email confirmed successfully! Please log in to continue.', fromEmailConfirmation: true } })
+                      return
+                    } catch (error) {
+                      console.error('Error in Continue Setup:', error)
+                      // Sign out and redirect to login
+                      // Try to determine platform from user metadata or default to Platform
+                      const selectedPlatforms = user.user_metadata?.selected_platforms || {}
+                      const loginRoute = selectedPlatforms.simulator && !selectedPlatforms.platform
+                        ? '/simulator/login'
+                        : '/platform/login'
+                      await supabase.auth.signOut()
+                      navigate(loginRoute, { replace: true, state: { message: 'Email confirmed successfully! Please log in to continue.', fromEmailConfirmation: true } })
+                    } finally {
+                      setContinueLoading(false)
+                    }
+                  }}
                 >
-                  <Link to="/login">
-                    Sign In to Your Account
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
+                  {continueLoading ? (
+                    <>
+                      <Loader className="h-5 w-5 animate-spin mr-2" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      Continue Setup
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
                 </Button>
                 <div className="text-center">
                   <Link
-                    to="/onboarding/role-selection"
+                    to="/login"
                     className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
                   >
-                    Continue Setup (Optional)
+                    Sign In Instead
                   </Link>
                 </div>
               </div>

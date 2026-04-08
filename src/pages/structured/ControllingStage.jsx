@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, BarChart3, Settings } from 'lucide-react'
 import WorkPackageForm from '../../components/structured/WorkPackageForm'
 import WorkPackageList from '../../components/structured/WorkPackageList'
-import CheckpointReport from '../../components/structured/CheckpointReport'
-import HighlightReport from '../../components/structured/HighlightReport'
+// Legacy component kept for backward compatibility
+// import CheckpointReport from '../../components/structured/CheckpointReport'
+import { getCheckpointReportsByProject } from '../../services/checkpointReportService'
+import { getHighlightReports } from '../../services/controllingStageService'
 import ToleranceDashboard from '../../components/structured/ToleranceDashboard'
 
 export default function ControllingStage() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [stageBoundaries, setStageBoundaries] = useState([])
@@ -20,10 +24,9 @@ export default function ControllingStage() {
   const [selectedWorkPackage, setSelectedWorkPackage] = useState(null)
   const [selectedStage, setSelectedStage] = useState(null)
   const [activeTab, setActiveTab] = useState('work-packages') // 'work-packages', 'progress', 'reports', 'tolerances'
-  const [showCheckpointReport, setShowCheckpointReport] = useState(false)
-  const [showHighlightReport, setShowHighlightReport] = useState(false)
   const [checkpointReports, setCheckpointReports] = useState([])
   const [highlightReports, setHighlightReports] = useState([])
+  const [highlightReportFilter, setHighlightReportFilter] = useState('')
 
   useEffect(() => {
     fetchData()
@@ -70,36 +73,22 @@ export default function ControllingStage() {
       if (packagesError) throw packagesError
       setWorkPackages(packagesData || [])
 
-      // Fetch checkpoint reports
-      const { data: checkpointData, error: checkpointError } = await supabase
-        .from('checkpoint_reports')
-        .select(`
-          *,
-          reported_by:reported_by_user_id (id, email, full_name)
-        `)
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
-        .order('checkpoint_date', { ascending: false })
-        .limit(10)
-
-      if (!checkpointError) {
-        setCheckpointReports(checkpointData || [])
+      // Fetch checkpoint reports using service
+      try {
+        const checkpointData = await getCheckpointReportsByProject(projectId, {})
+        setCheckpointReports(checkpointData.slice(0, 10)) // Limit to 10 most recent
+      } catch (checkpointError) {
+        console.error('Error loading checkpoint reports:', checkpointError)
+        setCheckpointReports([])
       }
 
       // Fetch highlight reports
-      const { data: highlightData, error: highlightError } = await supabase
-        .from('highlight_reports')
-        .select(`
-          *,
-          prepared_by:prepared_by_user_id (id, email, full_name)
-        `)
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
-        .order('report_date', { ascending: false })
-        .limit(10)
-
-      if (!highlightError) {
+      try {
+        const highlightData = await getHighlightReports(projectId)
         setHighlightReports(highlightData || [])
+      } catch (highlightError) {
+        console.error('Error loading highlight reports:', highlightError)
+        setHighlightReports([])
       }
 
     } catch (error) {
@@ -330,14 +319,26 @@ export default function ControllingStage() {
             </h2>
             <div className="flex gap-2">
               <button
-                onClick={() => setShowCheckpointReport(true)}
+                onClick={() => {
+                  if (filteredWorkPackages.length > 0) {
+                    // Navigate to create report for first work package, or show selection
+                    const firstWP = filteredWorkPackages[0]
+                    navigate(`/app/projects/${projectId}/work-packages/${firstWP.id}/checkpoint-reports/create`)
+                  } else {
+                    alert('Please create a work package first')
+                  }
+                }}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Checkpoint Report
               </button>
               <button
-                onClick={() => setShowHighlightReport(true)}
+                onClick={() => {
+                  const params = new URLSearchParams()
+                  if (selectedStage) params.set('stage', selectedStage)
+                  navigate(`/app/projects/${projectId}/highlight-reports/create${params.toString() ? `?${params.toString()}` : ''}`)
+                }}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
@@ -356,15 +357,33 @@ export default function ControllingStage() {
             ) : (
               <div className="space-y-3">
                 {checkpointReports.map((report) => (
-                  <div key={report.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div
+                    key={report.id}
+                    onClick={() => {
+                      if (report.work_package_id) {
+                        navigate(`/app/projects/${projectId}/work-packages/${report.work_package_id}/checkpoint-reports/${report.id}`)
+                      }
+                    }}
+                    className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h4 className="font-medium text-gray-900 dark:text-white">
                           {report.report_title || `Checkpoint Report - ${format(new Date(report.checkpoint_date), 'MMM dd, yyyy')}`}
                         </h4>
+                        {report.document_ref && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                            {report.document_ref} - v{report.version_no}
+                          </p>
+                        )}
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {report.reported_by?.full_name || report.reported_by?.email} • {format(new Date(report.report_date), 'MMM dd, yyyy')}
+                          {report.reported_by?.full_name || report.reported_by?.email || report.author?.full_name || report.author?.email} • {format(new Date(report.checkpoint_date || report.report_date), 'MMM dd, yyyy')}
                         </p>
+                        {report.work_package && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            WP: {report.work_package.work_package_name}
+                          </p>
+                        )}
                       </div>
                       <span className={`px-2 py-1 rounded text-xs ${
                         report.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
@@ -387,26 +406,61 @@ export default function ControllingStage() {
 
           {/* Highlight Reports */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Highlight Reports
-            </h3>
-            {highlightReports.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400">No highlight reports yet.</p>
-            ) : (
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Highlight Reports
+              </h3>
+              <input
+                type="search"
+                placeholder="Filter by title, reference…"
+                value={highlightReportFilter}
+                onChange={(e) => setHighlightReportFilter(e.target.value)}
+                className="max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+              />
+            </div>
+            {(() => {
+              const q = highlightReportFilter.trim().toLowerCase()
+              const filtered = q
+                ? highlightReports.filter(
+                    (r) =>
+                      (r.report_title || '').toLowerCase().includes(q) ||
+                      (r.report_reference || '').toLowerCase().includes(q) ||
+                      (r.executive_summary || '').toLowerCase().includes(q)
+                  )
+                : highlightReports
+              const display = filtered.slice(0, 20)
+              if (display.length === 0) {
+                return <p className="text-gray-500 dark:text-gray-400">{q ? 'No matching highlight reports.' : 'No highlight reports yet.'}</p>
+              }
+              return (
               <div className="space-y-3">
-                {highlightReports.map((report) => (
-                  <div key={report.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                {display.map((report) => (
+                  <div
+                    key={report.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate(`/app/projects/${projectId}/highlight-reports/${report.id}`)}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/app/projects/${projectId}/highlight-reports/${report.id}`); } }}
+                    className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h4 className="font-medium text-gray-900 dark:text-white">
                           {report.report_title}
                         </h4>
+                        {report.report_reference && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-mono">
+                            {report.report_reference}{report.version_no ? ` • v${report.version_no}` : ''}
+                          </p>
+                        )}
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {report.prepared_by?.full_name || report.prepared_by?.email} • {format(new Date(report.report_date), 'MMM dd, yyyy')}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {format(new Date(report.reporting_period_start), 'MMM dd')} - {format(new Date(report.reporting_period_end), 'MMM dd')}
-                        </p>
+                        {(report.reporting_period_start && report.reporting_period_end) ? (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {format(new Date(report.reporting_period_start), 'MMM dd')} – {format(new Date(report.reporting_period_end), 'MMM dd')}
+                          </p>
+                        ) : null}
                       </div>
                       <span className={`px-2 py-1 rounded text-xs ${
                         report.stage_status === 'on_track' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
@@ -425,7 +479,8 @@ export default function ControllingStage() {
                   </div>
                 ))}
               </div>
-            )}
+              )
+            })()}
           </div>
         </div>
       )}
@@ -450,31 +505,9 @@ export default function ControllingStage() {
         />
       )}
 
-      {/* Checkpoint Report Modal */}
-      {showCheckpointReport && (
-        <CheckpointReport
-          projectId={projectId}
-          stageBoundaryId={selectedStage}
-          onSave={() => {
-            setShowCheckpointReport(false)
-            fetchData()
-          }}
-          onCancel={() => setShowCheckpointReport(false)}
-        />
-      )}
+      {/* Checkpoint Report Modal - Removed, now using dedicated pages */}
 
       {/* Highlight Report Modal */}
-      {showHighlightReport && (
-        <HighlightReport
-          projectId={projectId}
-          stageBoundaryId={selectedStage}
-          onSave={() => {
-            setShowHighlightReport(false)
-            fetchData()
-          }}
-          onCancel={() => setShowHighlightReport(false)}
-        />
-      )}
     </div>
   )
 }

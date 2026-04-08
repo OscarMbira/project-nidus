@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
 import { Activity, Filter, Search, Calendar, User, FolderKanban } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
 
 export default function ActivityFeed() {
   const navigate = useNavigate()
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const [activities, setActivities] = useState([])
   const [filteredActivities, setFilteredActivities] = useState([])
   const [loading, setLoading] = useState(true)

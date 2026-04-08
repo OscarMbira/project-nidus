@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Target, DollarSign, Calendar } from 'lucide-react';
+import { X, Save, Target, DollarSign, Calendar, ArrowLeft } from 'lucide-react';
 import { saveBenefit } from '../../services/benefitsService';
-import { supabase } from '../../services/supabaseClient';
+import { platformDb } from '../../services/supabase/supabaseClient';
+import { SmartAmountInput } from '../ui/SmartAmountInput';
+import { HoldButton } from '../ui/HoldButton';
 
-export default function BenefitForm({ benefit, onSave, onCancel }) {
+export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete, usePageLayout = false }) {
   const [formData, setFormData] = useState({
     benefit_code: '',
     benefit_name: '',
@@ -36,6 +38,8 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [loadingLookup, setLoadingLookup] = useState(true);
+  const [lookupError, setLookupError] = useState(null);
 
   useEffect(() => {
     if (benefit) {
@@ -70,43 +74,26 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
   }, [benefit]);
 
   const fetchLookupData = async () => {
+    setLoadingLookup(true);
+    setLookupError(null);
     try {
-      // Fetch portfolios
-      const { data: portfoliosData } = await supabase
-        .from('portfolios')
-        .select('id, portfolio_name, portfolio_code')
-        .eq('is_deleted', false)
-        .order('portfolio_name', { ascending: true });
-
-      if (portfoliosData) setPortfolios(portfoliosData);
-
-      // Fetch programmes
-      const { data: programmesData } = await supabase
-        .from('programmes')
-        .select('id, programme_name, programme_code')
-        .eq('is_deleted', false)
-        .order('programme_name', { ascending: true });
-
-      if (programmesData) setProgrammes(programmesData);
-
-      // Fetch projects
-      const { data: projectsData } = await supabase
-        .from('projects')
-        .select('id, project_name, project_code')
-        .eq('is_deleted', false)
-        .order('project_name', { ascending: true });
-
-      if (projectsData) setProjects(projectsData);
-
-      // Fetch users
-      const { data: usersData } = await supabase
-        .from('users')
-        .select('id, email, full_name')
-        .order('full_name', { ascending: true });
-
-      if (usersData) setUsers(usersData);
+      const [portfoliosRes, programmesRes, projectsRes, usersRes] = await Promise.all([
+        platformDb.from('portfolios').select('id, portfolio_name, portfolio_code').eq('is_deleted', false).order('portfolio_name', { ascending: true }),
+        platformDb.from('programmes').select('id, programme_name, programme_code').eq('is_deleted', false).order('programme_name', { ascending: true }),
+        platformDb.from('projects').select('id, project_name, project_code').eq('is_deleted', false).order('project_name', { ascending: true }),
+        platformDb.from('users').select('id, email, full_name').eq('is_deleted', false).order('full_name', { ascending: true }),
+      ]);
+      if (portfoliosRes.data) setPortfolios(portfoliosRes.data);
+      if (programmesRes.data) setProgrammes(programmesRes.data);
+      if (projectsRes.data) setProjects(projectsRes.data);
+      if (usersRes.data) setUsers(usersRes.data);
+      const err = portfoliosRes.error || programmesRes.error || projectsRes.error || usersRes.error;
+      if (err) setLookupError(err?.message || 'Failed to load form data');
     } catch (error) {
       console.error('Error fetching lookup data:', error);
+      setLookupError(error?.message || 'Failed to load form data');
+    } finally {
+      setLoadingLookup(false);
     }
   };
 
@@ -158,24 +145,65 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {benefit ? 'Edit Benefit' : 'Create Benefit'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+  if (loadingLookup) {
+    const loadingContent = (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4" />
+        <p className="text-gray-600 dark:text-gray-300">Loading form...</p>
+      </div>
+    );
+    if (usePageLayout) {
+      return <div className="max-w-4xl mx-auto px-4 py-8">{loadingContent}</div>;
+    }
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        {loadingContent}
+      </div>
+    );
+  }
 
+  if (lookupError) {
+    const errorContent = (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-md">
+        <p className="text-red-600 dark:text-red-400 mb-4">{lookupError}</p>
+        <div className="flex gap-3">
+          <button type="button" onClick={() => fetchLookupData()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
+          <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">Back</button>
+        </div>
+      </div>
+    );
+    if (usePageLayout) {
+      return <div className="max-w-4xl mx-auto px-4 py-8">{errorContent}</div>;
+    }
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        {errorContent}
+      </div>
+    );
+  }
+
+  const formHeader = (
+    <div className={`flex items-center justify-between ${usePageLayout ? 'mb-6' : 'sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 z-10'}`}>
+      <div className="flex items-center gap-3">
+        {usePageLayout ? (
+          <button type="button" onClick={onCancel} className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        ) : null}
+        <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {benefit ? 'Edit Benefit' : 'Create Benefit'}
+        </h2>
+      </div>
+      {!usePageLayout ? (
+        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <X className="h-6 w-6" />
+        </button>
+      ) : null}
+    </div>
+  );
+
+  const formBody = (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
@@ -431,13 +459,10 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Baseline Value
                 </label>
-                <input
-                  type="number"
-                  name="baseline_value"
-                  value={formData.baseline_value || ''}
-                  onChange={handleChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SmartAmountInput
+                  value={formData.baseline_value}
+                  onChange={(value) => setFormData(prev => ({ ...prev, baseline_value: value }))}
+                  placeholder="e.g., 100k"
                 />
               </div>
 
@@ -445,13 +470,10 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Target Value
                 </label>
-                <input
-                  type="number"
-                  name="target_value"
-                  value={formData.target_value || ''}
-                  onChange={handleChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SmartAmountInput
+                  value={formData.target_value}
+                  onChange={(value) => setFormData(prev => ({ ...prev, target_value: value }))}
+                  placeholder="e.g., 500k"
                 />
               </div>
 
@@ -459,13 +481,10 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Current Value
                 </label>
-                <input
-                  type="number"
-                  name="current_value"
-                  value={formData.current_value || ''}
-                  onChange={handleChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SmartAmountInput
+                  value={formData.current_value}
+                  onChange={(value) => setFormData(prev => ({ ...prev, current_value: value }))}
+                  placeholder="e.g., 250k"
                 />
               </div>
 
@@ -473,13 +492,10 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Realized Value
                 </label>
-                <input
-                  type="number"
-                  name="realized_value"
-                  value={formData.realized_value || ''}
-                  onChange={handleChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SmartAmountInput
+                  value={formData.realized_value}
+                  onChange={(value) => setFormData(prev => ({ ...prev, realized_value: value }))}
+                  placeholder="e.g., 200k"
                 />
               </div>
 
@@ -487,13 +503,10 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estimated Value
                 </label>
-                <input
-                  type="number"
-                  name="estimated_value"
-                  value={formData.estimated_value || ''}
-                  onChange={handleChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SmartAmountInput
+                  value={formData.estimated_value}
+                  onChange={(value) => setFormData(prev => ({ ...prev, estimated_value: value }))}
+                  placeholder="e.g., 1m"
                 />
               </div>
 
@@ -501,13 +514,10 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Realized Value (Currency)
                 </label>
-                <input
-                  type="number"
-                  name="realized_value_currency"
-                  value={formData.realized_value_currency || ''}
-                  onChange={handleChange}
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SmartAmountInput
+                  value={formData.realized_value_currency}
+                  onChange={(value) => setFormData(prev => ({ ...prev, realized_value_currency: value }))}
+                  placeholder="e.g., 150k"
                 />
               </div>
 
@@ -602,6 +612,12 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <HoldButton
+              entityType="benefit"
+              entityId={benefit?.id}
+              formData={formData}
+              onHoldComplete={onHoldComplete || onCancel}
+            />
             <button
               type="button"
               onClick={onCancel}
@@ -619,6 +635,23 @@ export default function BenefitForm({ benefit, onSave, onCancel }) {
             </button>
           </div>
         </form>
+  );
+
+  if (usePageLayout) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {formHeader}
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          {formBody}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {formHeader}
+        {formBody}
       </div>
     </div>
   );

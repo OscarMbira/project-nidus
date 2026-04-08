@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient';
 import { Users, Calendar, FileCheck, Settings, AlertCircle, ArrowLeft } from 'lucide-react';
 import ProjectBoardDashboard from '../../components/structured/directing/ProjectBoardDashboard';
@@ -16,7 +18,7 @@ import {
 } from '../../services/directingProjectService';
 
 export default function DirectingProject() {
-  const { projectId } = useParams();
+  const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
 
   const [project, setProject] = useState(null);

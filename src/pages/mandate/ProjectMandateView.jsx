@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { getMandateByIdOrReference, getAssociatedDocuments, getStakeholders } from '../../services/projectMandateService'
-import { getConstraintsByMandate } from '../../services/mandateConstraintService'
-import { submitForApproval, getApprovalStatus } from '../../services/mandateWorkflowService'
+import { getMandateViewData } from '../../services/projectMandateService'
+import { submitForApproval } from '../../services/mandateWorkflowService'
 import { useToastContext } from '../../context/ToastContext'
 import ConstraintListItem from '../../components/constraints/ConstraintListItem'
 import MandateSubmitModal from '../../components/mandate/MandateSubmitModal'
@@ -71,36 +70,46 @@ export default function ProjectMandateView() {
     if (!mandateIdentifier) return
     try {
       setLoading(true)
-      const data = await getMandateByIdOrReference(mandateIdentifier)
-      setMandate(data)
+      // Single query — fetches mandate + approvals + constraints + docs + stakeholders at once
+      const data = await getMandateViewData(mandateIdentifier)
       if (!data) return
 
-      const id = data.id
+      // Extract nested relations returned by the single query
+      const { mandate_approvals, mandate_constraints, mandate_associated_documents, mandate_customers_users, ...mandateData } = data
 
-      // Compute canEdit / canCreate from already-fetched data — no extra DB calls needed.
-      // canEditMandate logic: draft or rejected status AND not yet linked to a project
+      // Sort approvals descending (latest first) to mirror getApprovalStatus ordering
+      const approvals = (mandate_approvals || [])
+        .slice()
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+
+      const constraints = (mandate_constraints || [])
+        .filter(c => c.is_active)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+
+      const docs = (mandate_associated_documents || [])
+        .filter(d => !d.is_deleted)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+
+      const stakeholders = (mandate_customers_users || [])
+        .filter(s => !s.is_deleted)
+        .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+
       const editable = ['draft', 'rejected'].includes(data.document_status) && !data.project_id
-      // canCreateProject logic: approved, not linked, has at least one proposed lead
       const creatable =
         data.document_status === 'approved' &&
         data.project_id === null &&
         !!(data.proposed_executive_id || data.proposed_executive_name ||
            data.proposed_pm_id || data.proposed_pm_name)
+      const isPending = approvals.length > 0 && approvals[0].approval_status === 'pending'
 
-      const [approvalStatus, constraintsResult, docsData, stakeholdersData] = await Promise.all([
-        getApprovalStatus(id).catch(() => ({ isPending: false })),
-        getConstraintsByMandate(id).catch(() => ({ success: false })),
-        getAssociatedDocuments(id).catch(() => []),
-        getStakeholders(id).catch(() => [])
-      ])
-
+      setMandate(mandateData)
       setCanEdit(editable)
       setCanCreate(creatable)
-      setApprovalPending(approvalStatus?.isPending ?? false)
-      setApprovalHistory(approvalStatus?.approvals ?? [])
-      if (constraintsResult.success && constraintsResult.data) setConstraints(constraintsResult.data)
-      if (docsData?.length > 0) setAssociatedDocuments(docsData)
-      if (stakeholdersData?.length > 0) setStakeholders(stakeholdersData)
+      setApprovalPending(isPending)
+      setApprovalHistory(approvals)
+      setConstraints(constraints)
+      setAssociatedDocuments(docs)
+      setStakeholders(stakeholders)
     } catch (error) {
       console.error('Error fetching mandate:', error)
       alert('Error loading mandate: ' + error.message)
@@ -139,7 +148,7 @@ export default function ProjectMandateView() {
   }
 
   const handleCreateProject = () => {
-    // Parse project_objectives (JSON array → newline-joined string for strategic_alignment)
+    // Parse project_objectives (JSON array → newline-joined string for Business Objective / Strategic Alignment)
     let objectivesText = ''
     try {
       const parsed = JSON.parse(mandate.project_objectives || '[]')
@@ -163,13 +172,13 @@ export default function ProjectMandateView() {
           mandateTitle: mandate.mandate_title,
           // Project Details tab
           project_name: mandate.mandate_title || '',
-          project_description: mandate.background || '',
+          project_description: mandate.purpose || '',
           // Governance tab
           executive_user_id: mandate.proposed_executive_id || '',
           proposed_executive_name: mandate.proposed_executive_name || '',
           // Business Justification tab
-          business_objective: mandate.purpose || '',
-          strategic_alignment: objectivesText,
+          business_objective: objectivesText || mandate.purpose || '',
+          strategic_alignment: mandate.outline_business_case || '',
           expected_benefits_summary: mandate.outline_business_case || '',
           // Document Governance
           mandate_status: 'approved'

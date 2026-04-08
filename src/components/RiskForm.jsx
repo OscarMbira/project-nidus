@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { X, Save, User, Calendar, AlertTriangle, TrendingUp } from 'lucide-react'
+import { HoldButton } from './ui/HoldButton'
 
-export default function RiskForm({ risk, projectId, onSave, onCancel, linkedTaskId, linkedWorkPackageId }) {
+export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComplete, linkedTaskId, linkedWorkPackageId }) {
   const [formData, setFormData] = useState({
     risk_title: '',
     risk_code: '',
@@ -548,6 +549,13 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, linkedTask
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <HoldButton
+              entityType="risk"
+              entityId={risk?.id}
+              formData={formData}
+              projectId={projectId}
+              onHoldComplete={onHoldComplete || onCancel}
+            />
             <button
               type="button"
               onClick={onCancel}

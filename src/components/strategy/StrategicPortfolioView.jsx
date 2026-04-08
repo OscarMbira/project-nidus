@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FolderKanban, Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
 import { getStrategicObjectives, getProjectObjectiveMappings, getAlignmentScores } from '../../services/strategicService';
-import { supabase } from '../../services/supabaseClient';
+import { platformDb } from '../../services/supabase/supabaseClient';
 
 export default function StrategicPortfolioView({ portfolioId = null }) {
   const [portfolio, setPortfolio] = useState(null);
@@ -25,7 +25,7 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
 
   const fetchPortfolios = async () => {
     try {
-      const { data } = await supabase
+      const { data } = await platformDb
         .from('portfolios')
         .select('id, portfolio_name, portfolio_code')
         .eq('is_deleted', false)
@@ -42,7 +42,7 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
       setLoading(true);
 
       // Fetch portfolio details
-      const { data: portfolioData } = await supabase
+      const { data: portfolioData } = await platformDb
         .from('portfolios')
         .select('*')
         .eq('id', selectedPortfolioId)
@@ -55,14 +55,15 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
       setObjectives(objectivesData || []);
 
       // Fetch portfolio projects
-      const { data: portfolioProjectsData } = await supabase
+      const { data: portfolioProjectsData } = await platformDb
         .from('portfolio_projects')
         .select(`
           project:project_id (
             id,
             project_name,
             project_code,
-            project_status,
+            status_id,
+            project_statuses(status_name, status_code),
             methodology
           )
         `)
@@ -304,12 +305,12 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 py-1 text-xs font-medium rounded capitalize ${
-                            project.project_status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                            project.project_status === 'on_hold' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
-                            project.project_status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                            (project.project_statuses?.status_code || project.project_status) === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                            (project.project_statuses?.status_code || project.project_status) === 'on_hold' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                            (project.project_statuses?.status_code || project.project_status) === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
                             'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                           }`}>
-                            {project.project_status?.replace('_', ' ')}
+                            {(project.project_statuses?.status_name || project.project_statuses?.status_code || project.project_status)?.replace('_', ' ') || '—'}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

@@ -46,16 +46,26 @@ export default function MandateApprovalDashboard() {
     fetchPendingApprovals()
   }, [fetchPendingApprovals])
 
+  const REQUEST_TIMEOUT_MS = 30000
+
+  const fetchClientIp = async () => {
+    return null
+  }
+
   const handleModalConfirm = async (comments) => {
     if (!actionModal) return
     const { approval, action } = actionModal
+    setActioningId(approval.id)
     try {
-      setActioningId(approval.id)
+      const ipAddress = await fetchClientIp()
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please try again.')), REQUEST_TIMEOUT_MS)
+      )
       if (action === 'approve') {
-        await approveMandate(approval.id, null, comments)
+        await Promise.race([approveMandate(approval.id, null, comments, ipAddress), timeoutPromise])
         toast.success('Mandate approved successfully')
       } else {
-        await rejectMandate(approval.id, null, comments)
+        await Promise.race([rejectMandate(approval.id, null, comments, ipAddress), timeoutPromise])
         toast.success('Mandate rejected')
       }
       setActionModal(null)
@@ -63,6 +73,7 @@ export default function MandateApprovalDashboard() {
     } catch (error) {
       console.error(`Error ${action}ing mandate:`, error)
       toast.error(error?.message || `Failed to ${action} mandate`)
+      setActionModal(null)
     } finally {
       setActioningId(null)
     }

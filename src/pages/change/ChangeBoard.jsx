@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { ArrowLeft, Users } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import ChangeBoardDashboard from '../../components/change/ChangeBoardDashboard';
 
 export default function ChangeBoard() {
-  const { projectId, boardId } = useParams();
+  const { boardId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
   const [board, setBoard] = useState(null);
   const [loading, setLoading] = useState(true);

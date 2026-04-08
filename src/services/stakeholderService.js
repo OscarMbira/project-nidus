@@ -1,30 +1,164 @@
-import { supabase } from './supabaseClient'
+import { platformDb } from './supabaseClient'
 
 /**
  * Stakeholder Service - API functions for Stakeholder Management module
+ * Uses platformDb (public schema) for consistency with Platform app.
  */
+
+/** Max time to wait for auth session read (avoids indefinite hang). */
+const AUTH_SESSION_TIMEOUT_MS = 8000
+/** Max time to wait for a single stakeholders table write (avoids stuck "Saving..."). */
+const STAKEHOLDER_WRITE_TIMEOUT_MS = 45000
+
+/**
+ * Reject if promise does not settle in time (UI can always recover).
+ */
+function withTimeout(promise, ms, label) {
+  let timer
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error(
+            `${label} took longer than ${Math.round(ms / 1000)}s. Check your network or VPN, then try again.`
+          )
+        ),
+      ms
+    )
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer))
+}
+
+/**
+ * Only public.stakeholders columns — strips nested/junk keys from spread form state
+ * (drafts, accidental merges) that can confuse PostgREST or bloat the payload.
+ */
+const STAKEHOLDER_WRITE_KEYS = new Set([
+  'project_id',
+  'user_id',
+  'stakeholder_reference',
+  'stakeholder_name',
+  'stakeholder_title',
+  'stakeholder_organization',
+  'stakeholder_department',
+  'stakeholder_type',
+  'stakeholder_category',
+  'stakeholder_role',
+  'email',
+  'phone',
+  'mobile',
+  'emails',
+  'phones',
+  'mobiles',
+  'office_location',
+  'preferred_contact_method',
+  'reports_to_stakeholder_id',
+  'organization_level',
+  'project_role',
+  'is_decision_maker',
+  'is_influencer',
+  'is_powerful',
+  'is_negatively_affected',
+  'is_positively_affected',
+  'is_affected_by_project',
+  'availability_hours_per_week',
+  'time_zone',
+  'availability_constraints',
+  'stakeholder_status',
+  'status_date',
+  'notes',
+  'special_requirements',
+  'expectations',
+  'tags',
+  'identification_source',
+  'identification_date',
+])
+
+const UUID_LIKE_KEYS = new Set(['project_id', 'user_id', 'reports_to_stakeholder_id'])
+
+/**
+ * @param {Record<string, unknown>} raw
+ * @returns {Record<string, unknown>}
+ */
+export function pickStakeholderWritePayload(raw) {
+  const out = {}
+  if (!raw || typeof raw !== 'object') return out
+  for (const key of STAKEHOLDER_WRITE_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(raw, key)) continue
+    let v = raw[key]
+    if (UUID_LIKE_KEYS.has(key) && v === '') v = null
+    if (key === 'time_zone' && typeof v === 'string' && v.length > 100) {
+      v = v.slice(0, 100)
+    }
+    if (v !== undefined) out[key] = v
+  }
+  return out
+}
+
+/**
+ * Supabase Auth user id (auth.users / session).
+ */
+async function getAuthSessionUserId() {
+  const { data: { session }, error } = await withTimeout(
+    platformDb.auth.getSession(),
+    AUTH_SESSION_TIMEOUT_MS,
+    'Loading your session'
+  )
+  if (error) throw error
+  if (!session?.user?.id) throw new Error('User not authenticated')
+  return session.user.id
+}
+
+/** Cache: auth uid -> public.users.id (FK targets use the latter, not auth uid). */
+let _platformUserCache = { authId: null, platformUserId: null }
+
+/**
+ * public.users.id for audit/FK columns (created_by, updated_by, analyzed_by, …).
+ * Must match users.id — not the same as auth.users id when users.id is a separate PK.
+ */
+async function getPlatformUserId() {
+  const authId = await getAuthSessionUserId()
+  if (_platformUserCache.authId === authId) {
+    return _platformUserCache.platformUserId
+  }
+  const { data: row } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authId)
+    .eq('is_deleted', false)
+    .maybeSingle()
+
+  const platformUserId = row?.id ?? null
+  _platformUserCache = { authId, platformUserId }
+  return platformUserId
+}
 
 // ================================================
 // STAKEHOLDERS
 // ================================================
 
 /**
- * Get all stakeholders
+ * Get all stakeholders. Uses RPC get_stakeholders_list (v304.4) when available
+ * so the list loads regardless of RLS; falls back to table select otherwise.
  */
 export async function getStakeholders(filters = {}) {
-  let query = supabase
+  const limit = filters.limit != null && filters.limit > 0 ? filters.limit : 50
+  const { data: rpcData, error: rpcError } = await platformDb.rpc('get_stakeholders_list', {
+    p_project_id: filters.project_id || null,
+    p_limit: limit,
+    p_stakeholder_type: filters.stakeholder_type || null,
+    p_stakeholder_status: filters.stakeholder_status || null,
+    p_search: filters.search || null,
+  })
+
+  if (!rpcError && Array.isArray(rpcData)) {
+    return rpcData
+  }
+
+  // Fallback if RPC not deployed (e.g. v304.4 not run)
+  let query = platformDb
     .from('stakeholders')
-    .select(`
-      *,
-      project:project_id (
-        id,
-        project_name,
-        project_code,
-        project_status
-      ),
-      user:user_id (id, email, full_name),
-      reports_to:reports_to_stakeholder_id (id, stakeholder_name, stakeholder_reference)
-    `)
+    .select('*')
     .eq('is_deleted', false)
 
   if (filters.project_id) {
@@ -43,7 +177,13 @@ export async function getStakeholders(filters = {}) {
     query = query.or(`stakeholder_name.ilike.%${filters.search}%,stakeholder_reference.ilike.%${filters.search}%,stakeholder_organization.ilike.%${filters.search}%`)
   }
 
-  const { data, error } = await query.order('stakeholder_name', { ascending: true })
+  query = query.order('stakeholder_name', { ascending: true })
+
+  if (filters.limit != null && filters.limit > 0) {
+    query = query.limit(filters.limit)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
   return data
@@ -53,7 +193,7 @@ export async function getStakeholders(filters = {}) {
  * Get a single stakeholder by ID
  */
 export async function getStakeholder(stakeholderId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('stakeholders')
     .select(`
       *,
@@ -77,58 +217,110 @@ export async function getStakeholder(stakeholderId) {
  * Create or update a stakeholder
  */
 export async function saveStakeholder(stakeholderData, stakeholderId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User not authenticated')
+  const platformUserId = await getPlatformUserId()
 
-  const updateData = {
-    ...stakeholderData,
-    updated_by: user.id,
+  const cleaned = pickStakeholderWritePayload(stakeholderData)
+  const updateData = { ...cleaned }
+  if (platformUserId) {
+    updateData.updated_by = platformUserId
+    if (!stakeholderId) {
+      updateData.created_by = platformUserId
+    }
   }
 
   if (stakeholderId) {
-    const { data, error } = await supabase
-      .from('stakeholders')
-      .update(updateData)
-      .eq('id', stakeholderId)
-      .select()
-      .single()
-
-    if (error) throw error
-    return data
-  } else {
-    updateData.created_by = user.id
-    const { data, error } = await supabase
-      .from('stakeholders')
-      .insert(updateData)
-      .select()
-      .single()
+    const { data, error } = await withTimeout(
+      platformDb
+        .from('stakeholders')
+        .update(updateData)
+        .eq('id', stakeholderId)
+        .select()
+        .single(),
+      STAKEHOLDER_WRITE_TIMEOUT_MS,
+      'Saving stakeholder'
+    )
 
     if (error) throw error
     return data
   }
+  const { data, error } = await withTimeout(
+    platformDb.from('stakeholders').insert(updateData).select().single(),
+    STAKEHOLDER_WRITE_TIMEOUT_MS,
+    'Saving stakeholder'
+  )
+
+  if (error) throw error
+  return data
 }
 
 /**
  * Delete a stakeholder (soft delete)
  */
 export async function deleteStakeholder(stakeholderId) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User not authenticated')
+  const platformUserId = await getPlatformUserId()
 
-  const { data, error } = await supabase
+  const patch = {
+    is_deleted: true,
+    deleted_at: new Date().toISOString(),
+  }
+  if (platformUserId) {
+    patch.deleted_by = platformUserId
+    patch.updated_by = platformUserId
+  }
+
+  const { data, error } = await platformDb
     .from('stakeholders')
-    .update({
-      is_deleted: true,
-      deleted_at: new Date().toISOString(),
-      deleted_by: user.id,
-      updated_by: user.id,
-    })
+    .update(patch)
     .eq('id', stakeholderId)
     .select()
     .single()
 
   if (error) throw error
   return data
+}
+
+/**
+ * Bulk import stakeholders from an array of row objects.
+ * @param {Array<object>} rows - Array of row objects (e.g. from CSV parse) with stakeholder_name and optional fields
+ * @param {{ projectId?: string }} options - Optional projectId to assign all imported stakeholders to
+ * @returns {{ created: object[], failed: Array<{ row: object, error: string }> }}
+ */
+export async function importStakeholders(rows, options = {}) {
+  const { projectId = null } = options
+  const created = []
+  const failed = []
+  for (const row of rows) {
+    const name = (row.stakeholder_name || row.name || '').trim()
+    if (!name) {
+      failed.push({ row, error: 'Missing stakeholder_name' })
+      continue
+    }
+    try {
+      const payload = {
+        project_id: projectId,
+        stakeholder_name: name,
+        stakeholder_reference: (row.stakeholder_reference || '').trim() || null,
+        stakeholder_title: (row.stakeholder_title || row.title || '').trim() || null,
+        stakeholder_organization: (row.stakeholder_organization || row.organization || '').trim() || null,
+        stakeholder_department: (row.stakeholder_department || row.department || '').trim() || null,
+        email: (row.email || '').trim() || null,
+        phone: (row.phone || '').trim() || null,
+        mobile: (row.mobile || '').trim() || null,
+        stakeholder_type: (row.stakeholder_type || row.type || 'internal').trim() || 'internal',
+        stakeholder_category: (row.stakeholder_category || row.category || 'individual').trim() || null,
+        project_role: (row.project_role || row.role || '').trim() || null,
+        stakeholder_status: (row.stakeholder_status || row.status || 'active').trim() || 'active',
+        notes: (row.notes || '').trim() || null,
+        special_requirements: (row.special_requirements || '').trim() || null,
+        expectations: (row.expectations || '').trim() || null,
+      }
+      const saved = await saveStakeholder(payload, null)
+      created.push(saved)
+    } catch (err) {
+      failed.push({ row, error: err?.message || String(err) })
+    }
+  }
+  return { created, failed }
 }
 
 // ================================================
@@ -139,7 +331,7 @@ export async function deleteStakeholder(stakeholderId) {
  * Get stakeholder analysis records
  */
 export async function getStakeholderAnalysis(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('stakeholder_analysis')
     .select(`
       *,
@@ -180,16 +372,17 @@ export async function getStakeholderAnalysis(filters = {}) {
  * Create or update stakeholder analysis
  */
 export async function saveStakeholderAnalysis(analysisData, analysisId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User not authenticated')
+  const platformUserId = await getPlatformUserId()
 
   const updateData = {
     ...analysisData,
-    updated_by: user.id,
+  }
+  if (platformUserId) {
+    updateData.updated_by = platformUserId
   }
 
   if (analysisId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('stakeholder_analysis')
       .update(updateData)
       .eq('id', analysisId)
@@ -199,14 +392,16 @@ export async function saveStakeholderAnalysis(analysisData, analysisId = null) {
     if (error) throw error
     return data
   } else {
-    updateData.created_by = user.id
-    if (!updateData.analyzed_by) {
-      updateData.analyzed_by = user.id
+    if (platformUserId) {
+      updateData.created_by = platformUserId
+      if (!updateData.analyzed_by) {
+        updateData.analyzed_by = platformUserId
+      }
     }
     if (!updateData.analysis_date) {
       updateData.analysis_date = new Date().toISOString().split('T')[0]
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('stakeholder_analysis')
       .insert(updateData)
       .select()
@@ -225,7 +420,7 @@ export async function saveStakeholderAnalysis(analysisData, analysisId = null) {
  * Get stakeholder engagement records
  */
 export async function getStakeholderEngagement(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('stakeholder_engagement')
     .select(`
       *,
@@ -260,16 +455,17 @@ export async function getStakeholderEngagement(filters = {}) {
  * Create or update stakeholder engagement
  */
 export async function saveStakeholderEngagement(engagementData, engagementId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User not authenticated')
+  const platformUserId = await getPlatformUserId()
 
   const updateData = {
     ...engagementData,
-    updated_by: user.id,
+  }
+  if (platformUserId) {
+    updateData.updated_by = platformUserId
   }
 
   if (engagementId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('stakeholder_engagement')
       .update(updateData)
       .eq('id', engagementId)
@@ -279,8 +475,10 @@ export async function saveStakeholderEngagement(engagementData, engagementId = n
     if (error) throw error
     return data
   } else {
-    updateData.created_by = user.id
-    const { data, error } = await supabase
+    if (platformUserId) {
+      updateData.created_by = platformUserId
+    }
+    const { data, error } = await platformDb
       .from('stakeholder_engagement')
       .insert(updateData)
       .select()
@@ -291,6 +489,71 @@ export async function saveStakeholderEngagement(engagementData, engagementId = n
   }
 }
 
+/**
+ * Delete stakeholder analysis (soft delete)
+ */
+export async function deleteStakeholderAnalysis(analysisId) {
+  const platformUserId = await getPlatformUserId()
+  const patch = { is_deleted: true, deleted_at: new Date().toISOString() }
+  if (platformUserId) {
+    patch.deleted_by = platformUserId
+    patch.updated_by = platformUserId
+  }
+  const { data, error } = await platformDb
+    .from('stakeholder_analysis')
+    .update(patch)
+    .eq('id', analysisId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// ================================================
+// STAKEHOLDER COMMUNICATIONS (log)
+// ================================================
+
+/**
+ * Get stakeholder communications log
+ */
+export async function getStakeholderCommunications(filters = {}) {
+  let query = platformDb
+    .from('stakeholder_communications')
+    .select(`
+      *,
+      project:project_id (id, project_name, project_code),
+      plan:communication_plan_id (id, plan_name)
+    `)
+    .eq('is_deleted', false)
+  if (filters.project_id) query = query.eq('project_id', filters.project_id)
+  if (filters.communication_plan_id) query = query.eq('communication_plan_id', filters.communication_plan_id)
+  const { data, error } = await query.order('actual_date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+/**
+ * Create or update stakeholder communication log entry
+ */
+export async function saveStakeholderCommunication(logData, logId = null) {
+  const platformUserId = await getPlatformUserId()
+  const updateData = { ...logData }
+  if (platformUserId) {
+    updateData.updated_by = platformUserId
+  }
+  if (logId) {
+    const { data, error } = await platformDb.from('stakeholder_communications').update(updateData).eq('id', logId).select().single()
+    if (error) throw error
+    return data
+  }
+  if (platformUserId) {
+    updateData.created_by = platformUserId
+  }
+  const { data, error } = await platformDb.from('stakeholder_communications').insert(updateData).select().single()
+  if (error) throw error
+  return data
+}
+
 // ================================================
 // COMMUNICATION PLANS
 // ================================================
@@ -299,7 +562,7 @@ export async function saveStakeholderEngagement(engagementData, engagementId = n
  * Get communication plans
  */
 export async function getCommunicationPlans(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('communication_plans')
     .select(`
       *,
@@ -308,7 +571,7 @@ export async function getCommunicationPlans(filters = {}) {
         project_name,
         project_code
       ),
-      owner:owner_user_id (id, email, full_name)
+      owner:communication_owner_user_id (id, email, full_name)
     `)
     .eq('is_deleted', false)
 
@@ -326,16 +589,17 @@ export async function getCommunicationPlans(filters = {}) {
  * Create or update communication plan
  */
 export async function saveCommunicationPlan(planData, planId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('User not authenticated')
+  const platformUserId = await getPlatformUserId()
 
   const updateData = {
     ...planData,
-    updated_by: user.id,
+  }
+  if (platformUserId) {
+    updateData.updated_by = platformUserId
   }
 
   if (planId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('communication_plans')
       .update(updateData)
       .eq('id', planId)
@@ -345,11 +609,13 @@ export async function saveCommunicationPlan(planData, planId = null) {
     if (error) throw error
     return data
   } else {
-    updateData.created_by = user.id
-    if (!updateData.owner_user_id) {
-      updateData.owner_user_id = user.id
+    if (platformUserId) {
+      updateData.created_by = platformUserId
+      if (!updateData.communication_owner_user_id) {
+        updateData.communication_owner_user_id = platformUserId
+      }
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('communication_plans')
       .insert(updateData)
       .select()
@@ -358,6 +624,191 @@ export async function saveCommunicationPlan(planData, planId = null) {
     if (error) throw error
     return data
   }
+}
+
+// ================================================
+// ENGAGEMENT ACTIONS (per-stakeholder action plan)
+// ================================================
+
+/**
+ * Get engagement actions for a project, optionally filtered by stakeholder
+ */
+export async function getEngagementActions(filters = {}) {
+  let query = platformDb
+    .from('stakeholder_engagement_actions')
+    .select(`
+      *,
+      stakeholder:stakeholder_id (id, stakeholder_name, stakeholder_reference),
+      owner:owner_user_id (id, full_name, email)
+    `)
+    .eq('is_deleted', false)
+
+  if (filters.project_id) {
+    query = query.eq('project_id', filters.project_id)
+  }
+  if (filters.stakeholder_id) {
+    query = query.eq('stakeholder_id', filters.stakeholder_id)
+  }
+  if (filters.status) {
+    query = query.eq('status', filters.status)
+  }
+
+  const { data, error } = await query.order('due_date', { ascending: true, nullsFirst: false })
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Create or update an engagement action
+ */
+export async function saveEngagementAction(actionData, actionId = null) {
+  const platformUserId = await getPlatformUserId()
+
+  const payload = {
+    project_id: actionData.project_id,
+    stakeholder_id: actionData.stakeholder_id,
+    action_description: actionData.action_description,
+    owner_user_id: actionData.owner_user_id || null,
+    due_date: actionData.due_date || null,
+    status: actionData.status || 'open',
+    action_type: actionData.action_type || 'other',
+    priority: actionData.priority || 'medium',
+    completion_date: actionData.completion_date || null,
+    outcome_notes: actionData.outcome_notes || null,
+  }
+  if (platformUserId) {
+    payload.updated_by = platformUserId
+  }
+
+  if (actionId) {
+    const { data, error } = await platformDb
+      .from('stakeholder_engagement_actions')
+      .update(payload)
+      .eq('id', actionId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  }
+
+  if (platformUserId) {
+    payload.created_by = platformUserId
+  }
+  const { data, error } = await platformDb
+    .from('stakeholder_engagement_actions')
+    .insert(payload)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+/**
+ * Soft-delete an engagement action
+ */
+export async function deleteEngagementAction(actionId) {
+  const platformUserId = await getPlatformUserId()
+
+  const patch = {
+    is_deleted: true,
+    updated_at: new Date().toISOString(),
+  }
+  if (platformUserId) {
+    patch.updated_by = platformUserId
+  }
+
+  const { data, error } = await platformDb
+    .from('stakeholder_engagement_actions')
+    .update(patch)
+    .eq('id', actionId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+// ================================================
+// STAKEHOLDER RELATIONSHIPS
+// ================================================
+
+/**
+ * Get stakeholder relationships for a project, optionally filtered by stakeholder (from or to)
+ */
+export async function getStakeholderRelationships(filters = {}) {
+  let query = platformDb
+    .from('stakeholder_relationships')
+    .select(`
+      *,
+      from_stakeholder:from_stakeholder_id (id, stakeholder_name, stakeholder_reference),
+      to_stakeholder:to_stakeholder_id (id, stakeholder_name, stakeholder_reference)
+    `)
+    .eq('is_deleted', false)
+
+  if (filters.project_id) query = query.eq('project_id', filters.project_id)
+  if (filters.stakeholder_id) {
+    query = query.or(`from_stakeholder_id.eq.${filters.stakeholder_id},to_stakeholder_id.eq.${filters.stakeholder_id}`)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Create or update a stakeholder relationship
+ */
+export async function saveStakeholderRelationship(relData, relId = null) {
+  const platformUserId = await getPlatformUserId()
+
+  const payload = {
+    project_id: relData.project_id,
+    from_stakeholder_id: relData.from_stakeholder_id,
+    to_stakeholder_id: relData.to_stakeholder_id,
+    relationship_type: relData.relationship_type,
+    relationship_strength: relData.relationship_strength ?? null,
+    notes: relData.notes || null,
+  }
+  if (platformUserId) {
+    payload.updated_by = platformUserId
+  }
+
+  if (relId) {
+    const { data, error } = await platformDb.from('stakeholder_relationships').update(payload).eq('id', relId).select().single()
+    if (error) throw error
+    return data
+  }
+  if (platformUserId) {
+    payload.created_by = platformUserId
+  }
+  const { data, error } = await platformDb.from('stakeholder_relationships').insert(payload).select().single()
+  if (error) throw error
+  return data
+}
+
+/**
+ * Soft-delete a stakeholder relationship
+ */
+export async function deleteStakeholderRelationship(relId) {
+  const platformUserId = await getPlatformUserId()
+
+  const patch = { is_deleted: true, updated_at: new Date().toISOString() }
+  if (platformUserId) {
+    patch.updated_by = platformUserId
+  }
+
+  const { data, error } = await platformDb
+    .from('stakeholder_relationships')
+    .update(patch)
+    .eq('id', relId)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
 }
 
 // ================================================
@@ -410,10 +861,16 @@ export default {
   getStakeholder,
   saveStakeholder,
   deleteStakeholder,
+  importStakeholders,
   
   // Stakeholder Analysis
   getStakeholderAnalysis,
   saveStakeholderAnalysis,
+  deleteStakeholderAnalysis,
+  
+  // Stakeholder Communications (log)
+  getStakeholderCommunications,
+  saveStakeholderCommunication,
   
   // Stakeholder Engagement
   getStakeholderEngagement,
@@ -422,6 +879,16 @@ export default {
   // Communication Plans
   getCommunicationPlans,
   saveCommunicationPlan,
+  
+  // Engagement Actions
+  getEngagementActions,
+  saveEngagementAction,
+  deleteEngagementAction,
+  
+  // Stakeholder Relationships
+  getStakeholderRelationships,
+  saveStakeholderRelationship,
+  deleteStakeholderRelationship,
   
   // Dashboard
   getStakeholderManagementStats,

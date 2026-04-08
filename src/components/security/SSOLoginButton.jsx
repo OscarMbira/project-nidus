@@ -1,15 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { initiateSAMLLogin, initiateOAuthLogin, getSSOProviders } from '../../services/ssoService'
 
 export default function SSOLoginButton({ onLoginStart, onLoginComplete }) {
   const [providers, setProviders] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    fetchProviders()
-  }, [])
-
-  const fetchProviders = async () => {
+  const fetchProviders = useCallback(async () => {
     try {
       setLoading(true)
       const result = await getSSOProviders({ is_active: true })
@@ -21,9 +17,14 @@ export default function SSOLoginButton({ onLoginStart, onLoginComplete }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleSSOLogin = async (provider) => {
+  // Fetch SSO providers on mount
+  useEffect(() => {
+    fetchProviders()
+  }, [fetchProviders])
+
+  const handleSSOLogin = useCallback(async (provider) => {
     try {
       if (onLoginStart) onLoginStart()
 
@@ -34,24 +35,25 @@ export default function SSOLoginButton({ onLoginStart, onLoginComplete }) {
           sessionStorage.setItem('sso_provider_id', provider.id)
           // Redirect to SSO provider
           window.location.href = result.sso_url
+        } else {
+          if (onLoginComplete) onLoginComplete(new Error(result.message || 'SAML initiation failed'), null)
         }
       } else if (provider.provider_type === 'oauth' || provider.provider_type === 'oidc') {
         const result = await initiateOAuthLogin(provider.id)
         if (result.success && result.auth_url) {
           // Store provider ID for callback handling
           sessionStorage.setItem('sso_provider_id', provider.id)
-          // Call onLoginComplete if provided
-          if (onLoginComplete) onLoginComplete()
           // Redirect to OAuth provider
           window.location.href = result.auth_url
+        } else {
+          if (onLoginComplete) onLoginComplete(new Error(result.message || 'OAuth initiation failed'), null)
         }
       }
     } catch (error) {
       console.error('Error initiating SSO login:', error)
-      alert('Failed to initiate SSO login')
-      if (onLoginComplete) onLoginComplete()
+      if (onLoginComplete) onLoginComplete(error, null)
     }
-  }
+  }, [onLoginStart, onLoginComplete])
 
   if (loading) {
     return null

@@ -16,7 +16,7 @@ This document outlines the implementation plan for a seamless dual-subscription 
 **Existing Architecture:**
 - **Single Supabase Auth System** - Shared authentication across both domains
 - **Two Separate Schemas:**
-  - `public` schema - PM Domain (Project Management Application)
+  - `public` schema - Platform Domain (Project Management Application)
   - `sim` schema - SIM Domain (Simulator)
 - **Existing Subscription:** Only `sim.simulator_subscriptions` table exists
 - **Shared User Table:** `public.users` table linked to Supabase Auth
@@ -853,10 +853,10 @@ A: No, subscriptions are non-transferable and tied to your account.
 #### Subscription Management
 
 ```
-GET    /api/subscriptions/pm/:userId
-POST   /api/subscriptions/pm
-PUT    /api/subscriptions/pm/:subscriptionId
-DELETE /api/subscriptions/pm/:subscriptionId
+GET    /api/subscriptions/platform/:userId
+POST   /api/subscriptions/platform
+PUT    /api/subscriptions/platform/:subscriptionId
+DELETE /api/subscriptions/platform/:subscriptionId
 
 GET    /api/subscriptions/simulator/:userId
 POST   /api/subscriptions/simulator

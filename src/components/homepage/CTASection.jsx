@@ -43,7 +43,7 @@ const CTASection = () => {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                navigate('/pm');
+                navigate('/platform');
               }}
               className="w-full h-11 px-8 text-base inline-flex items-center justify-center gap-2 rounded-md font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
             >

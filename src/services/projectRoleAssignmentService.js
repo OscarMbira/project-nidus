@@ -246,14 +246,17 @@ export async function getAvailableProjectRoles() {
 export async function getProjectManagerAssignableRoles() {
   try {
     const { data, error } = await platformDb
-      .from('roles')
+      .from('project_roles')
       .select('id, role_name, role_display_name, role_description, role_level')
       .eq('is_active', true)
-      .eq('is_deleted', false)
+      .eq('is_template', true)
+      .is('project_id', null)
       .in('role_name', [
         'team_manager',
-        'pm_team_manager',
-        'team_member'
+        'team_member',
+        'project_assurance',
+        'quality_assurance',
+        'change_authority',
       ])
       .order('role_level', { ascending: false });
 

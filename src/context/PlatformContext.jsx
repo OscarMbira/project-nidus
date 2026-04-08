@@ -81,7 +81,7 @@ export function PlatformProvider({ children }) {
       setCurrentPlatform(newPlatform)
 
       // Navigate to platform dashboard
-      const redirectPath = newPlatform === 'pm' ? '/app/dashboard' : '/simulator/dashboard'
+      const redirectPath = newPlatform === 'platform' || newPlatform === 'pm' ? '/platform/dashboard' : '/simulator/dashboard'
       navigate(redirectPath)
 
       return { success: true }

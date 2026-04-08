@@ -97,13 +97,10 @@ const TableHeaderCell = forwardRef(({
     <th
       ref={ref}
       scope={scope}
-      className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${className} ${
+      className={`px-6 py-3 min-h-[44px] text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${className} ${
         sortable ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 select-none' : ''
       }`}
-      onClick={sortable && onSort ? () => {
-        const newDirection = sortDirection === 'asc' ? 'desc' : sortDirection === 'desc' ? null : 'asc'
-        onSort(newDirection)
-      } : undefined}
+      onClick={sortable && onSort ? () => onSort() : undefined}
       role={sortable ? 'columnheader' : undefined}
       aria-sort={
         sortable
@@ -118,8 +115,7 @@ const TableHeaderCell = forwardRef(({
       onKeyDown={sortable && onSort ? (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          const newDirection = sortDirection === 'asc' ? 'desc' : sortDirection === 'desc' ? null : 'asc'
-          onSort(newDirection)
+          onSort()
         }
       } : undefined}
       {...props}

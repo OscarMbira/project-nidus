@@ -2,10 +2,12 @@
  * Stage Gate Service
  *
  * Handles stage/phase gate management for PMO oversight
+ * Includes document governance compliance checks
  */
 
 import { platformDb } from './supabase/supabaseClient';
 import { logAction } from './pmoAuditService';
+import { checkStageGateRequirements } from './documentGovernanceService';
 
 /**
  * Get all stage gates with filters
@@ -155,14 +157,76 @@ export async function updateStageGate(gateId, updates, actorUserId) {
 }
 
 /**
- * Approve stage gate
+ * Check stage gate document compliance
+ * Calls database function to validate if gate can be approved
+ * @param {string} gateId - Stage gate/boundary ID
+ * @returns {Promise<Object>} Compliance result with blocking status
+ */
+export async function checkGateDocumentCompliance(gateId) {
+  try {
+    const complianceResult = await checkStageGateRequirements(gateId);
+
+    if (!complianceResult) {
+      return {
+        success: true,
+        can_approve: true,
+        blocking_reason: null,
+        missing_documents_count: 0,
+        unapproved_documents_count: 0,
+        missing_documents: [],
+        unapproved_documents: []
+      };
+    }
+
+    return {
+      success: true,
+      can_approve: complianceResult.can_approve,
+      blocking_reason: complianceResult.blocking_reason,
+      missing_documents_count: complianceResult.missing_documents_count,
+      unapproved_documents_count: complianceResult.unapproved_documents_count,
+      missing_documents: complianceResult.missing_documents || [],
+      unapproved_documents: complianceResult.unapproved_documents || []
+    };
+  } catch (error) {
+    console.error('Error checking gate document compliance:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Approve stage gate (with document compliance check)
  * @param {string} gateId - Gate ID
  * @param {string} actorUserId - User approving the gate
  * @param {string} notes - Approval notes
+ * @param {boolean} bypassCompliance - Set to true to bypass document compliance (PMO Admin only)
  * @returns {Promise<Object>} Updated gate
  */
-export async function approveStageGate(gateId, actorUserId, notes = null) {
+export async function approveStageGate(gateId, actorUserId, notes = null, bypassCompliance = false) {
   try {
+    // Check document compliance before approving
+    if (!bypassCompliance) {
+      const complianceCheck = await checkGateDocumentCompliance(gateId);
+
+      if (!complianceCheck.success) {
+        return {
+          success: false,
+          error: 'Failed to check document compliance'
+        };
+      }
+
+      if (!complianceCheck.can_approve) {
+        return {
+          success: false,
+          error: 'Stage gate cannot be approved due to document compliance issues',
+          compliance_blocked: true,
+          blocking_reason: complianceCheck.blocking_reason,
+          missing_documents: complianceCheck.missing_documents,
+          unapproved_documents: complianceCheck.unapproved_documents
+        };
+      }
+    }
+
+    // Proceed with approval
     const { data, error } = await platformDb
       .from('stage_gates')
       .update({
@@ -182,10 +246,11 @@ export async function approveStageGate(gateId, actorUserId, notes = null) {
 
     // Log action
     await logAction(actorUserId, 'APPROVE_STAGE_GATE', 'STAGE_GATE', gateId,
-      `Approved stage gate: ${data.stage_name}`, {
+      `Approved stage gate: ${data.stage_name}${bypassCompliance ? ' (compliance bypassed)' : ''}`, {
       gate_id: gateId,
       stage_name: data.stage_name,
-      notes: notes
+      notes: notes,
+      bypassed_compliance: bypassCompliance
     });
 
     return { success: true, data };
@@ -311,13 +376,101 @@ export async function escalateGate(gateId, actorUserId, escalationNotes) {
   }
 }
 
+/**
+ * Block stage gate due to document compliance issues
+ * @param {string} gateId - Gate ID
+ * @param {string} reason - Blocking reason
+ * @param {string} actorUserId - User blocking the gate
+ * @returns {Promise<Object>} Updated gate
+ */
+export async function blockStageGate(gateId, reason, actorUserId) {
+  try {
+    const { data, error } = await platformDb
+      .from('stage_gates')
+      .update({
+        gate_status: 'BLOCKED',
+        is_blocked: true,
+        blocked_reason: reason,
+        updated_by: actorUserId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', gateId)
+      .eq('is_deleted', false)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log action
+    await logAction(actorUserId, 'BLOCK_STAGE_GATE', 'STAGE_GATE', gateId,
+      `Blocked stage gate due to document compliance: ${data.stage_name}`, {
+      gate_id: gateId,
+      stage_name: data.stage_name,
+      blocking_reason: reason
+    });
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error blocking stage gate:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Raise document compliance exception
+ * @param {string} projectId - Project ID
+ * @param {object} details - Exception details
+ * @param {string} actorUserId - User raising the exception
+ * @returns {Promise<Object>} Created exception
+ */
+export async function raiseDocumentComplianceException(projectId, details, actorUserId) {
+  try {
+    // Import exception service dynamically
+    const { createException } = await import('./exceptionService');
+
+    const exceptionData = {
+      project_id: projectId,
+      exception_type: 'DOCUMENT_COMPLIANCE',
+      title: details.title || 'Document Compliance Issue',
+      description: details.description || 'Mandatory documents are missing or not approved',
+      severity: details.severity || 'HIGH',
+      status: 'OPEN',
+      details: {
+        missing_documents: details.missing_documents || [],
+        unapproved_documents: details.unapproved_documents || [],
+        stage_code: details.stage_code,
+        stage_name: details.stage_name
+      },
+      raised_by: actorUserId
+    };
+
+    const result = await createException(exceptionData, actorUserId);
+
+    // Log action
+    await logAction(actorUserId, 'RAISE_DOCUMENT_COMPLIANCE_EXCEPTION', 'EXCEPTION', result.data?.id,
+      `Raised document compliance exception for project`, {
+      project_id: projectId,
+      exception_id: result.data?.id,
+      details: exceptionData.details
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error raising document compliance exception:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export default {
   getStageGates,
   getOverdueGates,
   createStageGate,
   updateStageGate,
+  checkGateDocumentCompliance,
   approveStageGate,
   rejectStageGate,
   flagOverdueGate,
-  escalateGate
+  escalateGate,
+  blockStageGate,
+  raiseDocumentComplianceException
 };

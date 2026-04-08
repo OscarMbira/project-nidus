@@ -339,7 +339,7 @@ BEGIN
         -- Get base seats from account subscription
         SELECT id, base_users_per_project
         INTO v_subscription_id, v_base_seats
-        FROM pm_subscriptions
+        FROM platform_subscriptions
         WHERE account_id = NEW.account_id
         AND status IN ('active', 'trialing')
         ORDER BY created_at DESC

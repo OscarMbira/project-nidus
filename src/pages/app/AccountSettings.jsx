@@ -29,6 +29,13 @@ export default function AccountSettings() {
     try {
       setLoading(true)
 
+      // Validate accountId before making API calls
+      if (!accountId || accountId === 'undefined' || accountId === 'null') {
+        showToast('error', 'Invalid account ID')
+        setLoading(false)
+        return
+      }
+
       // Load account
       const accountResult = await getAccountById(accountId)
       if (accountResult.success) {
@@ -76,6 +83,12 @@ export default function AccountSettings() {
 
   const handleSave = async () => {
     try {
+      // Validate accountId before saving
+      if (!accountId || accountId === 'undefined' || accountId === 'null') {
+        showToast('error', 'Invalid account ID')
+        return
+      }
+
       setSaving(true)
       const result = await updateAccount(accountId, formData)
       if (result.success) {

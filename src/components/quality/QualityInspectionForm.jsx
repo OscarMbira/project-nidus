@@ -10,6 +10,7 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
     inspection_type: 'formal-inspection',
     inspection_scope: '',
     inspection_date: '',
+    forecast_date: '',
     inspector_user_id: '',
     inspection_location: '',
     inspection_method: 'checklist',
@@ -23,6 +24,10 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
     corrective_actions_required: false,
     follow_up_inspection_required: false,
     follow_up_inspection_date: '',
+    sign_off_planned_date: '',
+    sign_off_forecast_date: '',
+    programme_id: '',
+    qms_method_id: '',
     inspection_notes: '',
     inspection_findings: '',
   });
@@ -30,6 +35,8 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
   const [projects, setProjects] = useState([]);
   const [qualityRegisterItems, setQualityRegisterItems] = useState([]);
   const [users, setUsers] = useState([]);
+  const [programmes, setProgrammes] = useState([]);
+  const [qmsMethods, setQmsMethods] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -53,6 +60,11 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
         corrective_actions_required: inspection.corrective_actions_required || false,
         follow_up_inspection_required: inspection.follow_up_inspection_required || false,
         follow_up_inspection_date: inspection.follow_up_inspection_date || '',
+        forecast_date: inspection.forecast_date || '',
+        sign_off_planned_date: inspection.sign_off_planned_date || '',
+        sign_off_forecast_date: inspection.sign_off_forecast_date || '',
+        programme_id: inspection.programme_id || '',
+        qms_method_id: inspection.qms_method_id || '',
         inspection_notes: inspection.inspection_notes || '',
         inspection_findings: inspection.inspection_findings || '',
       });
@@ -62,7 +74,19 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
 
   const fetchLookupData = async () => {
     try {
-      const [projectsData, registerData, usersData] = await Promise.all([
+      // Get QMS ID for the project if exists
+      let qmsId = null;
+      if (projectId) {
+        const { data: qmsData } = await supabase
+          .from('quality_management_strategies')
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('is_deleted', false)
+          .single();
+        qmsId = qmsData?.id;
+      }
+
+      const [projectsData, registerData, usersData, programmesData, qmsMethodsData] = await Promise.all([
         supabase
           .from('projects')
           .select('id, project_name, project_code')
@@ -80,11 +104,26 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
           .from('users')
           .select('id, email, full_name')
           .order('full_name', { ascending: true }),
+        supabase
+          .from('programmes')
+          .select('id, programme_name, programme_code')
+          .eq('is_deleted', false)
+          .order('programme_name', { ascending: true }),
+        qmsId
+          ? supabase
+              .from('qms_quality_methods')
+              .select('id, method_name, method_code')
+              .eq('qms_id', qmsId)
+              .eq('is_active', true)
+              .order('display_order', { ascending: true })
+          : Promise.resolve({ data: [] }),
       ]);
 
       if (projectsData.data) setProjects(projectsData.data);
       if (registerData.data) setQualityRegisterItems(registerData.data);
       if (usersData.data) setUsers(usersData.data);
+      if (programmesData.data) setProgrammes(programmesData.data);
+      if (qmsMethodsData.data) setQmsMethods(qmsMethodsData.data);
     } catch (error) {
       console.error('Error fetching lookup data:', error);
     }
@@ -109,6 +148,11 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
         quality_register_id: qualityRegisterId || formData.quality_register_id || null,
         inspector_user_id: formData.inspector_user_id || null,
         inspection_date: formData.inspection_date || null,
+        forecast_date: formData.forecast_date || null,
+        sign_off_planned_date: formData.sign_off_planned_date || null,
+        sign_off_forecast_date: formData.sign_off_forecast_date || null,
+        programme_id: formData.programme_id || null,
+        qms_method_id: formData.qms_method_id || null,
         defects_found_count: formData.defects_found_count ? parseInt(formData.defects_found_count) : 0,
         critical_defects_count: formData.critical_defects_count ? parseInt(formData.critical_defects_count) : 0,
         major_defects_count: formData.major_defects_count ? parseInt(formData.major_defects_count) : 0,
@@ -278,6 +322,45 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Forecast Date
+                </label>
+                <input
+                  type="date"
+                  name="forecast_date"
+                  value={formData.forecast_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sign-Off Planned Date
+                </label>
+                <input
+                  type="date"
+                  name="sign_off_planned_date"
+                  value={formData.sign_off_planned_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sign-Off Forecast Date
+                </label>
+                <input
+                  type="date"
+                  name="sign_off_forecast_date"
+                  value={formData.sign_off_forecast_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Inspector *
                 </label>
                 <select
@@ -424,6 +507,48 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
                   <option value="deferred">Deferred</option>
                 </select>
               </div>
+
+              {programmes.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Programme (Optional)
+                  </label>
+                  <select
+                    name="programme_id"
+                    value={formData.programme_id}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select programme...</option>
+                    {programmes.map(prog => (
+                      <option key={prog.id} value={prog.id}>
+                        {prog.programme_name} {prog.programme_code ? `(${prog.programme_code})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {qmsMethods.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    QMS Quality Method (Optional)
+                  </label>
+                  <select
+                    name="qms_method_id"
+                    value={formData.qms_method_id}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select method...</option>
+                    {qmsMethods.map(method => (
+                      <option key={method.id} value={method.id}>
+                        {method.method_name} {method.method_code ? `(${method.method_code})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="md:col-span-2">

@@ -4,9 +4,21 @@ import { Link2, AlertTriangle, CheckCircle, Target, TrendingUp, FolderKanban, Se
 import { getInterProjectDependencies, getDependencyDashboardStats } from '../services/dependencyService';
 import DependencyList from '../components/dependencies/DependencyList';
 import DependencyForm from '../components/dependencies/DependencyForm';
+import ExportListMenu from '../components/ui/ExportListMenu';
+import { useViewMode } from '../hooks/useViewMode';
+import ViewToggle from '../components/ui/ViewToggle';
+
+const DEPENDENCY_COLUMNS = [
+  { key: 'dependency_type', label: 'Type' },
+  { key: 'dependency_status', label: 'Status' },
+  { key: 'dependency_criticality', label: 'Criticality' },
+  { key: 'source_project_id', label: 'Source Project' },
+  { key: 'target_project_id', label: 'Target Project' }
+];
 
 export default function Dependencies() {
   const navigate = useNavigate();
+  const [dependencyViewMode, setDependencyViewMode] = useViewMode('dependencies', 'grid');
   const [dependencies, setDependencies] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -80,9 +92,10 @@ export default function Dependencies() {
             Inter-Project Dependencies
           </h1>
           <div className="flex items-center gap-2">
+            <ExportListMenu columns={DEPENDENCY_COLUMNS} data={dependencies} baseFilename="Dependencies" disabled={!dependencies.length} />
             <button
               onClick={() => navigate('/dependencies/map')}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm"
             >
               <Network className="h-4 w-4" />
               Dependency Map
@@ -255,6 +268,7 @@ export default function Dependencies() {
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </select>
+            <ViewToggle value={dependencyViewMode} onChange={setDependencyViewMode} ariaLabel="Dependencies layout" />
           </div>
           <div className="flex items-center gap-4 flex-wrap border-t border-gray-200 dark:border-gray-700 pt-4">
             <div className="flex items-center gap-2">
@@ -278,6 +292,7 @@ export default function Dependencies() {
         dependencies={dependencies}
         onEdit={handleEditDependency}
         onRefresh={fetchData}
+        viewMode={dependencyViewMode}
       />
 
       {/* Dependency Form Modal */}

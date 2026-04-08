@@ -6,7 +6,6 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { registerServiceWorker } from './utils/pwaUtils'
 import { debugTheme } from './utils/themeDebugger'
 
 // Clean up old localStorage auth data (we now use sessionStorage for auto-logout)
@@ -52,13 +51,9 @@ if (import.meta.env.DEV) {
   html.setAttribute('data-theme', theme)
 })()
 
-// Register service worker for PWA (only in production)
-// In development, we skip service worker to avoid cache issues
-if ('serviceWorker' in navigator && !import.meta.env.DEV) {
-  window.addEventListener('load', () => {
-    registerServiceWorker()
-  })
-} else if (import.meta.env.DEV) {
+// Service worker registration: production builds use vite-plugin-pwa (`injectRegister: 'auto'`).
+// In development, unregister any stale SWs and clear caches.
+if (import.meta.env.DEV) {
       // In development, unregister any existing service workers
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient';
 import {
   FileX,
@@ -21,6 +23,7 @@ import {
 import ProjectClosureDashboard from '../../components/structured/closing/ProjectClosureDashboard';
 import ProjectClosureForm from '../../components/structured/closing/ProjectClosureForm';
 import EndProjectReportForm from '../../components/structured/closing/EndProjectReportForm';
+import EndProjectReportFormEnhanced from '../../components/structured/closing/EndProjectReportFormEnhanced';
 import LessonsLearnedForm from '../../components/structured/closing/LessonsLearnedForm';
 import LessonsLearnedList from '../../components/structured/closing/LessonsLearnedList';
 import FollowOnActionsForm from '../../components/structured/closing/FollowOnActionsForm';
@@ -28,7 +31,7 @@ import FollowOnActionsList from '../../components/structured/closing/FollowOnAct
 import HandoverChecklist from '../../components/structured/closing/HandoverChecklist';
 
 export default function ClosingProject() {
-  const { projectId } = useParams();
+  const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [project, setProject] = useState(null);
@@ -249,38 +252,69 @@ export default function ClosingProject() {
                 <div className="flex items-start justify-between mb-6">
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      {endReport.report_title}
+                      {endReport.report_title || 'End Project Report'}
                     </h3>
                     <div className="flex items-center gap-4 text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        {new Date(endReport.report_date).toLocaleDateString()}
-                      </span>
+                      {endReport.report_date && (
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {new Date(endReport.report_date).toLocaleDateString()}
+                        </span>
+                      )}
+                      {endReport.document_ref && (
+                        <span className="text-gray-600 dark:text-gray-400">
+                          {endReport.document_ref}
+                        </span>
+                      )}
                       <span className={`px-3 py-1 rounded-full capitalize ${
-                        endReport.report_status === 'final'
+                        endReport.approval_status === 'approved' || endReport.approval_status === 'final'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                          : endReport.approval_status === 'rejected'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                           : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                       }`}>
-                        {endReport.report_status}
+                        {endReport.approval_status || 'draft'}
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowEndReportForm(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-                  >
-                    Edit Report
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => navigate(`/app/projects/${projectId}/closure/end-project-report/${endReport.id}`)}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+                    >
+                      View Full Report
+                    </button>
+                    {(endReport.approval_status === 'draft' || endReport.approval_status === 'rejected') && (
+                      <button
+                        onClick={() => navigate(`/app/projects/${projectId}/closure/end-project-report/${endReport.id}/edit`)}
+                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium"
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Executive Summary
-                    </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {endReport.executive_summary}
-                    </p>
-                  </div>
+                  {endReport.executive_summary && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Executive Summary
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
+                        {endReport.executive_summary}
+                      </p>
+                    </div>
+                  )}
+                  {endReport.project_managers_report && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Project Manager's Report
+                      </h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
+                        {endReport.project_managers_report}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -293,7 +327,7 @@ export default function ClosingProject() {
                   Create a comprehensive end project report
                 </p>
                 <button
-                  onClick={() => setShowEndReportForm(true)}
+                  onClick={() => navigate(`/app/projects/${projectId}/closure/end-project-report/create`)}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
                 >
                   <Plus className="h-5 w-5" />

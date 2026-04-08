@@ -68,7 +68,7 @@ export default function PlatformSelectionModal({ isOpen, onClose, platform, user
       onClose();
 
       // Navigate to the platform
-      const redirectPath = platform === PLATFORMS.PM ? '/dashboard' : '/simulator';
+      const redirectPath = platform === PLATFORMS.PLATFORM ? '/dashboard' : '/simulator';
       navigate(redirectPath);
     } catch (error) {
       console.error('Error starting free trial:', error);
@@ -80,7 +80,7 @@ export default function PlatformSelectionModal({ isOpen, onClose, platform, user
 
   const handleViewPricing = () => {
     onClose();
-    const pricingPath = platform === PLATFORMS.PM ? '/pricing' : '/simulator/pricing';
+    const pricingPath = platform === PLATFORMS.PLATFORM ? '/pricing' : '/simulator/pricing';
     navigate(pricingPath);
   };
 
@@ -142,7 +142,7 @@ export default function PlatformSelectionModal({ isOpen, onClose, platform, user
               Free Tier Limits:
             </p>
             <div className="text-xs text-blue-700 dark:text-blue-400 space-y-1">
-              {platform === PLATFORMS.PM && (
+              {platform === PLATFORMS.PLATFORM && (
                 <>
                   <p>• {info.freeTier.projects} project</p>
                   <p>• {info.freeTier.teamMembers} team members</p>

@@ -4,9 +4,18 @@ import { RefreshCw, Plus, Search } from 'lucide-react';
 import { fetchChangeRequests } from '../../services/changeManagementService';
 import ChangeRequestList from '../../components/change/ChangeRequestList';
 import ChangeRequestForm from '../../components/change/ChangeRequestForm';
+import ExportListMenu from '../../components/ui/ExportListMenu';
+import { useViewMode } from '../../hooks/useViewMode';
+
+const CHANGE_REQUEST_COLUMNS = [
+  { key: 'title', label: 'Title' },
+  { key: 'change_request_number', label: 'Reference' },
+  { key: 'status', label: 'Status' }
+];
 
 export default function ChangeRequests() {
   const navigate = useNavigate();
+  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-requests', 'grid');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -68,17 +77,20 @@ export default function ChangeRequests() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Change Requests
           </h1>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            New Change Request
+          <div className="flex gap-2">
+            <ExportListMenu columns={CHANGE_REQUEST_COLUMNS} data={requests} baseFilename="ChangeRequests" disabled={!requests.length} />
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              New Change Request
           </button>
+          </div>
         </div>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           Manage and track all change requests
@@ -146,6 +158,8 @@ export default function ChangeRequests() {
         onSelect={handleView}
         onRefresh={loadRequests}
         onAdd={handleCreate}
+        viewMode={changeRequestViewMode}
+        onViewModeChange={setChangeRequestViewMode}
       />
 
       {/* Change Request Form Modal */}

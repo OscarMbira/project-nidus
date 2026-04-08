@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { format } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
+import { useOfflineQueue } from '../hooks/useOfflineQueue'
 
 export default function TasksCreate() {
+  useOfflineQueue()
   const navigate = useNavigate()
   const location = useLocation()
   const projectId = location.state?.projectId

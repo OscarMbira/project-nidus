@@ -16,7 +16,8 @@
 15. The countries field on any page(system-wide) should only show the DB table "countries" details where the is_active field is true. This always applies to all dropdown list for the country field.
 16. Make sure after successfully creating/updating any application record/table, there is a succesful form displayed to show the user that the update was successful with record specific information like record id, CRUD operation that was performed.
 17. All SQL files(*.sql) should be created in the folder SQL for easy access. This SQL folder should be created on the root if it doesn't exist
-18. When creating any SQL files, make sure to give some version name that shows the sequence and rpecedence by which the files are created and for future refence.
+18. When creating any SQL files, make sure to give some version name that shows the sequence and rpecedence by which the files are created and for future refence. 
+18.1 Can you apply the same sequencing logic when creating implementation plans in projectplan folder. Versions for easy of knowing the sequence.
 19. All documentation files (*.md) should be created under the Documentation folder and folder should be created on the root if it doesn't exist
 20. Always push the code to the github after a major change has been done to the codebase or every 3 days, whichever comes first.
 21. I will be creating a massive documentaion of this system and therefore do not override any planning files all planning files should be placed in in root folder "projectplan". Always document in a separate file for any changes you make and and guides for documentation for each topic or functionality/feature.
@@ -24,12 +25,25 @@
 23. For each new feature/functionality, always create unit tests for automated testing purposes
 24. Make sure to have a distinct and separate folder strutures for a) Frontend and b) Backend. If they do not exist, created them and be updating/creating project files by following this folder structure religiously for easy future maintainability of the application. Any future updates to any functionality should not have a side effect of affecting any working functionality.
 25. All data should be fetched from the DB tables and do not use mock or dummy data until I have confirmed the same.
-26. For all features that amy require to upload bulk data from other existing project management tools or data, create a feature for both a) Single record capture and b) Bulk record upload/capture with all CRUD and user confirmation flows and where applicable, user the multi-step flows.
+26. **NEVER use fallback data, mock data, or default static data unless explicitly requested by the user.** All data must come from the database. If database queries fail, handle the error appropriately but do not substitute with fallback data.
+26. For all features that may require to upload bulk data from other existing project management tools or data, create a feature for both a) Single record capture and b) Bulk record upload/capture with all CRUD and user confirmation flows and where applicable, user the multi-step flows.
 26. When creating new and named components/folders always avoid Copyright/Trademark names for compliance with international laws and avoiding lawsuits.
 27. Do not use or name any component with the word PRINCE2 due to copyright sensitivity. Use other non-copyright/trademark text, e.g. structured/traditional
 28. The default them for all components/pages/forms/tables/dropdowns etc, should be dark during creation and setup.
 29. For frontend components, always optimise for progressive web app(PWA) for mobile responsivenes.
 30. All created images should be stored under the root folder "Design Images". Create it if it doesn't exist.
+31) Provide clear code patches (full files or diffs) and explain changes.
+32) Do NOT refactor unrelated modules
+33) Always create a todo-list when working on a large or complex features/functionalities.
+34) If you create any new features/functionalities/components in the Platform system/folder, always check if the same is applicable to the Simulator System. If applicable, then create the same functionality to cater for the Simulator System, else not. This includes validations rules, tables, fields, modifications etc. This makes sure that the Platform and Simulator systems are at par interms of applicable features/functionalities and components/tables/fields/RLS etc. the intention is to complete the system at the same time and fully deploy at the same time with similar features/functionalities.
+34.1) **Platform–Simulator parity (compliance):** Any change to a common functionality that exists in both Platform and Simulator MUST be applied to both systems. When you change, optimise, or fix a feature on one system (e.g. Programme Dashboard, list pages, forms, services), apply the same change—or the equivalent for the Simulator schema and routes—on the other. Do not leave the Simulator behind when updating shared behaviour; both systems must remain at par for that functionality.
+35) Always check and fix the duplicate import errors each time a new feature/functionality is created.
+36) Whenever you are creating a new amount/numeric field type, implement a feature/functionality that allows the user to enter some values/figures like 10t/T and convert 10,000(thousand) or 3m/M as 3,000,000(million) etc after pressing the Enter Key. Use any best practice applicable conversions for these amounts.
+37) When creating a new feature that involves capturing new record or amend/edit existing record, always simultenously create a feature (or use existing) for the user to be able to put the record on hold and come back later to continue by selecting the record from the hold/draft queue instead of restarting recapturing the record data again.
+38) Always add a feature/function(for both Plaform and Simulator systems) for each table/list and record viewing/reading as follows: 1) If it is a table/list, add a features/functionality to export to excel/powerpoint/word/csv/xml/json/print for the list of all the records that satisfied the selection criteria for these table records. If it is powerpoint/word, the default maximum number of exportable fields is 5, however, there should be some flexibility for the user to choose the fields to export upto a maximum of 10 fields/attributes.  2) If it is a record view/read/see mode, add feature/function to export a) Powerpoint and can be multiple pages based on the record data, b) MS Word with each field/attribute being a header, 3) Excel with fields/attribute being the column headers. The user should choose the right button based on the preferences. 4) For numbered or bulletted items, make sure that they are exported as such based on the what document type the user choose(ppt, docx, xls, csv, XML, JSon, Print). This makes it easy for human reading.5) For excel, show the bulleted multivalues one per each line, the same way a user will manually press alt+enter to enter values on a separate line. 6) The export functionality should show as a dropdown the list of export formats(excel/word/powerpoint/csv/xml/JSon/Print). 7) Utilise the existing exporting functionality/features to avoid redundant or duplicated code.
+39) Always make sure to implement the Progressive Web App (PWA) functionality which will be used by users to access the system, especially through their mobile devices. This has to be done for ALL NEW/Amended/Updated funtionalities/Features added in the system(both Platform and Simulation).
+40) For any NEW table/list, add clickable, sortable column headers to every table and list view across the Platform and Simulator systems. Clicking a column heading cycles through: **unsorted → ascending → descending → unsorted**. Visual indicators (↑ ↓ ⇅) show the current sort state. This applies consistently to both HTML `<table>` pages and card/list-view pages (via a sort toolbar).
+41) For NEW tables/lists, add a consistent **Card ⊞ / Table-List ≡ view toggle** to every table and list page across the Platform and Simulator systems(show all CRUD operation button for each record). Both views always include a **search bar**. The user's last-chosen view is remembered per page via `localStorage`.
 
 ## Simulator Module Architecture Rules
 
@@ -157,3 +171,41 @@ the root E:\Hifo\AI Business and should be called
 project-nidus-admin. It should not be in the same application    
  folder the way you have shown on your plan. If this is clear    
  proceed.
+
+## Registration Flow Revamp Conventions
+
+### Organisation-First Registration
+31. **Organisation Creation is Mandatory**: All users must create an organisation before accessing the platform. This is enforced at the database level (one email = one organisation).
+32. **Organisation Verification Required**: Organisations must be verified via email before users can create projects. The verification link expires in 24 hours.
+33. **Protected Routes Check**: All protected routes for Platform (`requiredPlatform === 'platform'`) must check for organisation existence and verification. Users without organisations are redirected to `/onboarding/organisation-setup`. Users with unverified organisations are redirected to `/onboarding/organisation-verification-notice`.
+34. **Trial Eligibility**: Each organisation can only create ONE free trial project. This is enforced by the `check_trial_eligibility` database function. Subsequent projects must be paid subscriptions.
+
+### Trial Management
+35. **Trial Duration**: Free trials last 14 days from project creation date. This is tracked in the `trial_project_tracking` table.
+36. **Trial Limitations**: Trial projects have a 5-member limit and access to basic features only. Advanced features are locked.
+37. **Trial Expiry**: Expired trials are automatically locked (read-only). Users can upgrade at any time to unlock. All trial data is preserved during upgrade.
+38. **Trial Automation**: The system runs daily cron jobs to check for expiring trials, send reminders (3 days, 1 day), and lock expired projects.
+
+### Payment Integration (Paynow)
+39. **Payment Gateway**: The system uses Paynow (not Stripe) for all payment processing. All payment-related code should reference Paynow.
+40. **Payment Flow**: Payment initiation → Paynow redirect → Payment verification → Subscription creation → Project unlock.
+41. **Webhook Processing**: Paynow webhooks are handled by Supabase Edge Functions. All webhooks must verify hash before processing.
+42. **Payment Transactions**: All payments are logged in the `payment_transactions` table for audit and tracking.
+
+### Service Conventions
+43. **Organisation Service**: Use `organisationService.js` for all organisation-related operations (create, verify, get, check eligibility).
+44. **Trial Service**: Use `trialService.js` for all trial-related operations (create trial project, get status, upgrade, lock expired).
+45. **Subscription Plan Service**: Use `subscriptionPlanService.js` for plan retrieval and pricing calculations.
+46. **Database Functions**: Use database functions for complex operations (e.g., `check_trial_eligibility`, `get_expiring_trials`) to ensure consistency and performance.
+
+### Testing Conventions
+47. **Unit Tests**: All new services must have unit tests in `src/services/__tests__/`.
+48. **Integration Tests**: Integration tests for complete flows should be in `src/test/integration/`.
+49. **Test Structure**: Use Vitest with React Testing Library. Mock Supabase client in test setup.
+50. **Test Coverage**: Target 70%+ overall coverage, 100% for critical paths (registration, payment, trial expiry).
+
+### Documentation Conventions
+51. **User Guides**: All user-facing documentation goes in `Documentation/` folder (e.g., `Registration_Flow_User_Guide.md`).
+52. **API Documentation**: Document all API endpoints, Edge Functions, and database functions.
+53. **Setup Guides**: Create setup guides for external services (Paynow, email service, cron jobs).
+54. **Deployment Documentation**: Always include deployment checklists and rollback procedures.

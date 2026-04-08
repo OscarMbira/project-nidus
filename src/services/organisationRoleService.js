@@ -416,7 +416,7 @@ export async function getOrganisationUsers(authUserId, alreadyVerifiedAdmin = fa
       .select(`
         id,
         user_id,
-        users:user_id (
+        users:users!user_roles_user_id_fkey (
           id,
           email,
           full_name,

@@ -1,28 +1,37 @@
 /**
  * Feedback Service
- * Handles user feedback collection and management
+ * Handles user feedback collection and management.
+ * Uses platform (public schema) user_feedback table.
  */
 
-import { supabase } from './supabaseClient'
+import { platformDb } from './supabase/supabaseClient'
 
 /**
- * Submit user feedback
+ * Submit user feedback.
+ * Uses the current session's user id for the insert so RLS (auth.uid() = user_id) passes.
  */
 export async function submitFeedback(userId, feedbackType, feedbackText, rating = null, pageUrl = null) {
   try {
-    const { data, error } = await supabase
+    const { data: { user } } = await platformDb.auth.getUser()
+    if (!user) {
+      return { success: false, message: 'You must be logged in to submit feedback' }
+    }
+    // Use session user id so RLS policy (auth.uid() = user_id) is satisfied
+    const insertUserId = user.id
+
+    const { data, error } = await platformDb
       .from('user_feedback')
       .insert({
-        user_id: userId,
-        feedback_type: feedbackType, // bug_report, feature_request, general_feedback, rating
+        user_id: insertUserId,
+        feedback_type: feedbackType,
         feedback_text: feedbackText,
         rating: rating,
-        page_url: pageUrl || window.location.href,
-        user_agent: navigator.userAgent,
+        page_url: pageUrl || (typeof window !== 'undefined' ? window.location.href : null),
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
         browser_info: {
-          platform: navigator.platform,
-          language: navigator.language,
-          cookieEnabled: navigator.cookieEnabled
+          platform: typeof navigator !== 'undefined' ? navigator.platform : null,
+          language: typeof navigator !== 'undefined' ? navigator.language : null,
+          cookieEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : null
         },
         status: 'new'
       })
@@ -34,7 +43,7 @@ export async function submitFeedback(userId, feedbackType, feedbackText, rating 
     return { success: true, data }
   } catch (error) {
     console.error('Error submitting feedback:', error)
-    return { success: false, message: error.message }
+    return { success: false, message: error?.message || 'Failed to submit feedback' }
   }
 }
 
@@ -43,7 +52,7 @@ export async function submitFeedback(userId, feedbackType, feedbackText, rating 
  */
 export async function getFeedback(filters = {}) {
   try {
-    let query = supabase
+    let query = platformDb
       .from('user_feedback')
       .select('*, users:user_id(id, email, full_name)')
       .eq('is_deleted', false)
@@ -98,7 +107,7 @@ export async function updateFeedbackStatus(feedbackId, status, resolutionNotes =
       updates.assigned_to = assignedTo
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('user_feedback')
       .update(updates)
       .eq('id', feedbackId)
@@ -119,7 +128,7 @@ export async function updateFeedbackStatus(feedbackId, status, resolutionNotes =
  */
 export async function getFeedbackStats(filters = {}) {
   try {
-    let query = supabase
+    let query = platformDb
       .from('user_feedback')
       .select('feedback_type, status, rating')
       .eq('is_deleted', false)

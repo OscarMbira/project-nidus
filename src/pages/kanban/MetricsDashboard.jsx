@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import CumulativeFlowDiagram from '../../components/kanban/CumulativeFlowDiagram'
 import ControlChart from '../../components/kanban/ControlChart'
@@ -8,7 +10,7 @@ import { formatISO, subDays, format, startOfDay, endOfDay } from 'date-fns'
 import { Download, AlertTriangle, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react'
 
 export default function MetricsDashboard() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [boards, setBoards] = useState([])
   const [selectedBoardId, setSelectedBoardId] = useState(null)

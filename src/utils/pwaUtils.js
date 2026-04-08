@@ -1,37 +1,81 @@
 /**
- * PWA Utilities
- * Helper functions for Progressive Web App features
+ * PWA Utility Functions
+ * Provides helpers for Progressive Web App installation and detection
  */
 
 /**
- * Register service worker
+ * Check if the app can be installed as a PWA
+ * @returns {boolean}
+ */
+export function canInstallPWA() {
+  // Check if the app is running in a browser that supports PWA installation
+  return !isAppInstalled() && (
+    'BeforeInstallPromptEvent' in window ||
+    isIOSDevice()
+  )
+}
+
+/**
+ * Check if the app is already installed
+ * @returns {boolean}
+ */
+export function isAppInstalled() {
+  // Check if running in standalone mode (app is installed)
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer.includes('android-app://')
+  )
+}
+
+/**
+ * Check if the device is iOS
+ * @returns {boolean}
+ */
+export function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+}
+
+/**
+ * Check if the device is Android
+ * @returns {boolean}
+ */
+export function isAndroidDevice() {
+  return /Android/.test(navigator.userAgent)
+}
+
+/**
+ * Get iOS-specific installation instructions
+ * @returns {object}
+ */
+export function getIOSInstallInstructions() {
+  return {
+    safari: 'Tap the Share button and select "Add to Home Screen"',
+    chrome: 'iOS requires Safari browser to install this app'
+  }
+}
+
+/**
+ * Get Android-specific installation instructions
+ * @returns {object}
+ */
+export function getAndroidInstallInstructions() {
+  return {
+    chrome: 'Tap the menu button and select "Install app" or "Add to Home screen"',
+    firefox: 'Tap the menu button and select "Install"',
+    edge: 'Tap the menu button and select "Add to phone"'
+  }
+}
+
+/**
+ * Service worker registration is handled by `vite-plugin-pwa` (`injectRegister: 'auto'`).
+ * @returns {Promise<ServiceWorkerRegistration|null>}
  */
 export async function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     try {
-      // Unregister all existing service workers first to clear cache
-      const registrations = await navigator.serviceWorker.getRegistrations()
-      for (const registration of registrations) {
-        await registration.unregister()
-      }
-      
-      // Clear all caches
-      if ('caches' in window) {
-        const cacheNames = await caches.keys()
-        await Promise.all(cacheNames.map(name => caches.delete(name)))
-      }
-      
-      // Register new service worker
-      const registration = await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/',
-        updateViaCache: 'none' // Prevent caching of service worker
-      })
-      if (import.meta.env.DEV) {
-        console.log('Service Worker registered:', registration)
-      }
-      return registration
-    } catch (error) {
-      console.error('Service Worker registration failed:', error)
+      return await navigator.serviceWorker.getRegistration()
+    } catch {
       return null
     }
   }
@@ -39,122 +83,62 @@ export async function registerServiceWorker() {
 }
 
 /**
- * Check if app is installed
+ * Unregister service worker
+ * @returns {Promise<boolean>}
  */
-export function isAppInstalled() {
-  // Check if running in standalone mode (installed PWA)
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    return true
+export async function unregisterServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+      if (registration) {
+        const success = await registration.unregister()
+        console.log('Service Worker unregistered:', success)
+        return success
+      }
+    } catch (error) {
+      console.error('Service Worker unregistration failed:', error)
+    }
   }
-  
-  // Check if running in standalone mode on iOS
-  if (window.navigator.standalone === true) {
-    return true
-  }
-  
   return false
 }
 
 /**
- * Check if browser supports PWA installation
+ * Check if service worker is registered
+ * @returns {Promise<boolean>}
  */
-export function canInstallPWA() {
-  // Check for beforeinstallprompt event support
-  return 'onbeforeinstallprompt' in window
+export async function isServiceWorkerRegistered() {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+      return !!registration
+    } catch (error) {
+      console.error('Error checking service worker registration:', error)
+    }
+  }
+  return false
 }
 
 /**
  * Request notification permission
+ * @returns {Promise<NotificationPermission>}
  */
 export async function requestNotificationPermission() {
   if ('Notification' in window) {
-    const permission = await Notification.requestPermission()
-    return permission === 'granted'
-  }
-  return false
-}
-
-/**
- * Check notification permission
- */
-export function hasNotificationPermission() {
-  if ('Notification' in window) {
-    return Notification.permission === 'granted'
-  }
-  return false
-}
-
-/**
- * Show notification
- */
-export function showNotification(title, options = {}) {
-  if (hasNotificationPermission()) {
-    const notification = new Notification(title, {
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-      ...options
-    })
-    
-    notification.onclick = () => {
-      window.focus()
-      notification.close()
-      if (options.url) {
-        window.location.href = options.url
-      }
-    }
-    
-    return notification
-  }
-  return null
-}
-
-/**
- * Check if device is mobile
- */
-export function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
-  )
-}
-
-/**
- * Check if device is iOS
- */
-export function isIOSDevice() {
-  return /iPad|iPhone|iPod/.test(navigator.userAgent)
-}
-
-/**
- * Check if online
- */
-export function isOnline() {
-  return navigator.onLine
-}
-
-/**
- * Get network status
- */
-export function getNetworkStatus() {
-  if ('connection' in navigator) {
-    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
-    return {
-      effectiveType: connection.effectiveType,
-      downlink: connection.downlink,
-      rtt: connection.rtt,
-      saveData: connection.saveData
+    try {
+      const permission = await Notification.requestPermission()
+      return permission
+    } catch (error) {
+      console.error('Error requesting notification permission:', error)
+      return 'denied'
     }
   }
-  return null
+  return 'denied'
 }
 
 /**
- * Add to home screen instructions (for iOS)
+ * Check if notifications are supported and permitted
+ * @returns {boolean}
  */
-export function getIOSInstallInstructions() {
-  return {
-    safari: 'Tap the Share button, then "Add to Home Screen"',
-    chrome: 'Tap the menu button, then "Add to Home Screen"',
-    firefox: 'Tap the menu button, then "Install"'
-  }
+export function canShowNotifications() {
+  return 'Notification' in window && Notification.permission === 'granted'
 }
-

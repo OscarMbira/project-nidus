@@ -40,7 +40,8 @@ export default function AlignmentDashboard({ portfolioId = null, projectId = nul
               id,
               project_name,
               project_code,
-              project_status
+              status_id,
+              project_statuses(status_name, status_code)
             )
           `)
           .eq('portfolio_id', portfolioId)
@@ -53,7 +54,7 @@ export default function AlignmentDashboard({ portfolioId = null, projectId = nul
       } else if (projectId) {
         const { data: projectData } = await supabase
           .from('projects')
-          .select('id, project_name, project_code, project_status')
+          .select('id, project_name, project_code, status_id, project_statuses(status_name, status_code)')
           .eq('id', projectId)
           .single();
 

@@ -15,6 +15,7 @@ import {
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import ThemeToggle from '../components/ThemeToggle';
+import SimulatorFooter from '../components/homepage/SimulatorFooter';
 import { supabase } from '../services/supabaseClient';
 
 const learningPathSteps = [
@@ -195,15 +196,30 @@ const SimulatorHomepage = () => {
             >
               Home
             </button>
-            {['Features', 'Roles', 'How it Works', 'Resources'].map((item) => (
-              <a
-                key={item}
-                href={`#${item.toLowerCase().replace(' ', '-')}`}
-                className="text-sm font-medium text-green-200 hover:text-white transition-colors"
-              >
-                {item}
-              </a>
-            ))}
+            <Link
+              to="/simulator/features"
+              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+            >
+              Features
+            </Link>
+            <Link
+              to="/simulator/blog"
+              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+            >
+              Blog
+            </Link>
+            <Link
+              to="/simulator/resources"
+              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+            >
+              Resources
+            </Link>
+            <Link
+              to="/simulator/pricing"
+              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+            >
+              Pricing
+            </Link>
             <Link
               to="/documentation/simulator"
               className="text-sm font-medium text-green-200 hover:text-white transition-colors"
@@ -212,12 +228,18 @@ const SimulatorHomepage = () => {
             </Link>
           </nav>
           <div className="flex items-center gap-3">
+            <Link
+              to="/simulator/request-demo"
+              className="hidden md:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md"
+            >
+              Request Demo
+            </Link>
             <ThemeToggle />
             <Button variant="outline" asChild className="bg-transparent border-green-400/50 text-green-200 hover:bg-green-800/50 hover:border-green-300">
-              <Link to="/login">Log in</Link>
+              <Link to="/simulator/login">Log in</Link>
             </Button>
             <Button asChild className="bg-green-600 hover:bg-green-500 text-white shadow-lg">
-              <Link to="/register">Get started</Link>
+              <Link to="/simulator/register">Get started</Link>
             </Button>
           </div>
         </div>
@@ -471,7 +493,7 @@ const SimulatorHomepage = () => {
                       variant={tier.popular ? 'default' : 'outline'}
                       asChild
                     >
-                      <Link to="/register">{tier.cta}</Link>
+                      <Link to="/simulator/register">{tier.cta}</Link>
                     </Button>
                   </div>
                 </Card>
@@ -524,23 +546,7 @@ const SimulatorHomepage = () => {
       </motion.section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 dark:bg-black text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-400">
-              &copy; {new Date().getFullYear()} Project Nidus. All rights reserved.
-            </p>
-            <nav className="flex gap-6 text-sm">
-              <Link to="/terms" className="text-gray-400 hover:text-white transition-colors">
-                Terms of Service
-              </Link>
-              <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </footer>
+      <SimulatorFooter />
     </div>
   );
 };

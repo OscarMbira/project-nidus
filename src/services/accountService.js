@@ -16,22 +16,28 @@ import { appDb } from './supabase/supabaseClient'
  */
 export async function createAccount(ownerUserId, accountData) {
   try {
+    // Build insert object with only defined values
+    // This prevents undefined values from being converted to string "undefined"
+    const insertData = {
+      owner_user_id: ownerUserId,
+      account_name: accountData.accountName,
+      account_type: accountData.accountType || 'individual',
+      default_timezone: accountData.defaultTimezone || 'UTC',
+      default_currency: accountData.defaultCurrency || 'USD',
+      default_language: accountData.defaultLanguage || 'en',
+    }
+
+    // Only add optional fields if they have values
+    if (accountData.accountCode) insertData.account_code = accountData.accountCode
+    if (accountData.companyName) insertData.company_name = accountData.companyName
+    if (accountData.billingEmail) insertData.billing_email = accountData.billingEmail
+    if (accountData.primaryEmail) insertData.primary_email = accountData.primaryEmail
+    if (accountData.primaryPhone) insertData.primary_phone = accountData.primaryPhone
+    if (accountData.countryCode) insertData.country_code = accountData.countryCode
+
     const { data, error } = await appDb
       .from('accounts')
-      .insert({
-        owner_user_id: ownerUserId,
-        account_name: accountData.accountName,
-        account_code: accountData.accountCode || null, // Auto-generated if null
-        account_type: accountData.accountType || 'individual',
-        company_name: accountData.companyName || null,
-        billing_email: accountData.billingEmail || null,
-        primary_email: accountData.primaryEmail || null,
-        primary_phone: accountData.primaryPhone || null,
-        country_code: accountData.countryCode || null,
-        default_timezone: accountData.defaultTimezone || 'UTC',
-        default_currency: accountData.defaultCurrency || 'USD',
-        default_language: accountData.defaultLanguage || 'en',
-      })
+      .insert(insertData)
       .select()
       .single()
 
@@ -59,6 +65,15 @@ export async function createAccount(ownerUserId, accountData) {
  */
 export async function getAccountById(accountId) {
   try {
+    // Validate accountId first
+    if (!accountId || accountId === 'undefined' || accountId === 'null' || (typeof accountId === 'string' && accountId.trim() === '')) {
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid account ID. Account ID is required and must be a valid UUID.',
+      }
+    }
+
     const { data, error } = await appDb
       .from('accounts')
       .select('*')
@@ -122,27 +137,61 @@ export async function getUserAccounts() {
  */
 export async function updateAccount(accountId, updates) {
   try {
+    // Validate accountId first - must be a valid UUID string, not undefined, null, or empty
+    if (!accountId || accountId === 'undefined' || accountId === 'null' || (typeof accountId === 'string' && accountId.trim() === '')) {
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid account ID. Account ID is required and must be a valid UUID.',
+      }
+    }
+
+    // Helper function to check if value is valid (not undefined, null, or empty string)
+    const isValid = (value) => value !== undefined && value !== null && value !== ''
+
+    // Build update object only with valid fields
+    // This prevents sending "undefined", null, or empty string values which cause UUID/validation errors
+    const updateData = {}
+
+    // IMPORTANT: Only update user-editable fields
+    // DO NOT update: owner_user_id, created_by, updated_by, deleted_by, suspended_by
+    // These are managed by triggers or admin operations
+
+    // Only add fields that have valid values
+    if (isValid(updates.accountName)) updateData.account_name = updates.accountName
+    if (isValid(updates.accountDisplayName)) updateData.account_display_name = updates.accountDisplayName
+    if (isValid(updates.accountType)) updateData.account_type = updates.accountType
+    if (updates.companyName !== undefined) updateData.company_name = updates.companyName || null
+    if (updates.billingEmail !== undefined) updateData.billing_email = updates.billingEmail || null
+    if (updates.primaryEmail !== undefined) updateData.primary_email = updates.primaryEmail || null
+    if (updates.primaryPhone !== undefined) updateData.primary_phone = updates.primaryPhone || null
+    if (updates.addressLine1 !== undefined) updateData.address_line1 = updates.addressLine1 || null
+    if (updates.addressLine2 !== undefined) updateData.address_line2 = updates.addressLine2 || null
+    if (updates.city !== undefined) updateData.city = updates.city || null
+    if (updates.stateProvince !== undefined) updateData.state_province = updates.stateProvince || null
+    if (updates.postalCode !== undefined) updateData.postal_code = updates.postalCode || null
+    if (updates.countryCode !== undefined) updateData.country_code = updates.countryCode || null
+    if (isValid(updates.defaultTimezone)) updateData.default_timezone = updates.defaultTimezone
+    if (isValid(updates.defaultCurrency)) updateData.default_currency = updates.defaultCurrency
+    if (isValid(updates.defaultLanguage)) updateData.default_language = updates.defaultLanguage
+    if (updates.logoUrl !== undefined) updateData.logo_url = updates.logoUrl || null
+    if (updates.brandColor !== undefined) updateData.brand_color = updates.brandColor || null
+
+    // NOTE: updated_at and updated_by are set automatically by trigger
+    // DO NOT manually set them here
+
+    // If no fields to update, return success without making DB call
+    if (Object.keys(updateData).length === 0) {
+      return {
+        success: true,
+        data: null,
+        error: null,
+      }
+    }
+
     const { data, error } = await appDb
       .from('accounts')
-      .update({
-        account_name: updates.accountName,
-        account_display_name: updates.accountDisplayName,
-        company_name: updates.companyName,
-        billing_email: updates.billingEmail,
-        primary_email: updates.primaryEmail,
-        primary_phone: updates.primaryPhone,
-        address_line1: updates.addressLine1,
-        address_line2: updates.addressLine2,
-        city: updates.city,
-        state_province: updates.stateProvince,
-        postal_code: updates.postalCode,
-        country_code: updates.countryCode,
-        default_timezone: updates.defaultTimezone,
-        default_currency: updates.defaultCurrency,
-        logo_url: updates.logoUrl,
-        brand_color: updates.brandColor,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', accountId)
       .select()
       .single()
@@ -172,6 +221,15 @@ export async function updateAccount(accountId, updates) {
  */
 export async function getAccountProjects(accountId) {
   try {
+    // Validate accountId first
+    if (!accountId || accountId === 'undefined' || accountId === 'null' || (typeof accountId === 'string' && accountId.trim() === '')) {
+      return {
+        success: false,
+        data: [],
+        error: 'Invalid account ID. Account ID is required and must be a valid UUID.',
+      }
+    }
+
     const { data, error } = await appDb.rpc('get_account_projects', {
       p_account_id: accountId,
     })
@@ -201,6 +259,15 @@ export async function getAccountProjects(accountId) {
  */
 export async function getAccountSubscription(accountId) {
   try {
+    // Validate accountId first
+    if (!accountId || accountId === 'undefined' || accountId === 'null' || (typeof accountId === 'string' && accountId.trim() === '')) {
+      return {
+        success: false,
+        data: null,
+        error: 'Invalid account ID. Account ID is required and must be a valid UUID.',
+      }
+    }
+
     const { data, error } = await appDb.rpc('get_account_subscription', {
       p_account_id: accountId,
     })
@@ -229,6 +296,15 @@ export async function getAccountSubscription(accountId) {
  */
 export async function isAccountOwner(accountId) {
   try {
+    // Validate accountId first
+    if (!accountId || accountId === 'undefined' || accountId === 'null' || (typeof accountId === 'string' && accountId.trim() === '')) {
+      return {
+        success: false,
+        isOwner: false,
+        error: 'Invalid account ID. Account ID is required and must be a valid UUID.',
+      }
+    }
+
     const { data: { user } } = await appDb.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 

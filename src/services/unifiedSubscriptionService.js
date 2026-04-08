@@ -103,13 +103,15 @@ export async function getActiveSubscriptions(userId) {
 
 /**
  * Get platform access status
+ * Uses database function to bypass RLS policies
  */
 export async function getPlatformAccess(userId) {
   try {
+    // Use database function that has SECURITY DEFINER to bypass RLS
     const { data, error } = await platformDb
-      .from('user_platform_access')
-      .select('*')
-      .eq('user_id', userId);
+      .rpc('get_user_platform_access', {
+        p_user_id: userId
+      });
 
     if (error) throw error;
 
@@ -122,21 +124,23 @@ export async function getPlatformAccess(userId) {
 
 /**
  * Check if user has registered for a specific platform
+ * Uses database function to bypass RLS policies
  */
 export async function hasRegisteredForPlatform(userId, platform) {
   try {
+    // Use database function that has SECURITY DEFINER to bypass RLS
     const { data, error } = await platformDb
-      .from('user_platform_access')
-      .select('has_registered')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .single();
+      .rpc('check_platform_registration', {
+        p_user_id: userId,
+        p_platform: platform
+      });
 
-    if (error && error.code !== 'PGRST116') {
-      throw error;
+    if (error) {
+      console.error('Error checking platform registration:', error);
+      return false;
     }
 
-    return data?.has_registered || false;
+    return data?.registered || false;
   } catch (error) {
     console.error('Error checking platform registration:', error);
     return false;
@@ -145,29 +149,22 @@ export async function hasRegisteredForPlatform(userId, platform) {
 
 /**
  * Register user for a platform
+ * Uses database function to bypass RLS policies
  */
 export async function registerForPlatform(userId, platform) {
   try {
+    // Use database function that has SECURITY DEFINER to bypass RLS
     const { data, error } = await platformDb
-      .from('user_platform_access')
-      .upsert(
-        {
-          user_id: userId,
-          platform: platform,
-          has_registered: true,
-          registration_date: new Date().toISOString(),
-          first_access_at: new Date().toISOString(),
-          last_access_at: new Date().toISOString(),
-          access_count: 1,
-        },
-        {
-          onConflict: 'user_id,platform',
-        }
-      )
-      .select()
-      .single();
+      .rpc('register_user_for_platform', {
+        p_platform: platform
+      });
 
     if (error) throw error;
+
+    // Check if the function returned a success response
+    if (data && data.success === false) {
+      throw new Error(data.error || 'Failed to register for platform');
+    }
 
     return data;
   } catch (error) {

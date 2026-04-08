@@ -38,9 +38,9 @@ BEGIN
         upa.platform,
         upa.has_registered,
         CASE
-            WHEN upa.platform = 'pm' THEN
+            WHEN upa.platform = 'platform' OR upa.platform = 'pm' THEN
                 EXISTS (
-                    SELECT 1 FROM pm_subscriptions ps
+                    SELECT 1 FROM platform_subscriptions ps
                     WHERE ps.user_id = p_auth_user_id
                     AND ps.status IN ('active', 'trialing')
                 )
@@ -53,8 +53,8 @@ BEGIN
             ELSE FALSE
         END as has_active_subscription,
         CASE
-            WHEN upa.platform = 'pm' THEN
-                (SELECT plan_type FROM pm_subscriptions WHERE user_id = p_auth_user_id ORDER BY created_at DESC LIMIT 1)
+            WHEN upa.platform = 'platform' OR upa.platform = 'pm' THEN
+                (SELECT plan_type FROM platform_subscriptions WHERE user_id = p_auth_user_id ORDER BY created_at DESC LIMIT 1)
             WHEN upa.platform = 'simulator' THEN
                 (SELECT plan_type FROM sim.simulator_subscriptions WHERE user_id = p_auth_user_id ORDER BY created_at DESC LIMIT 1)
             ELSE NULL
@@ -285,7 +285,7 @@ BEGIN
         a.account_code,
         a.account_name,
         TRUE as is_owner,
-        (SELECT COUNT(*) FROM projects WHERE account_id = a.id AND is_deleted = FALSE) as project_count,
+        (SELECT COUNT(*) FROM projects p_count WHERE p_count.account_id = a.id AND p_count.is_deleted = FALSE) as project_count,
         (
             SELECT COUNT(DISTINCT ur.user_id)
             FROM projects p
@@ -296,10 +296,10 @@ BEGIN
             AND ur.is_deleted = FALSE
         ) as total_members,
         (
-            SELECT status
-            FROM pm_subscriptions
-            WHERE account_id = a.id
-            ORDER BY created_at DESC
+            SELECT ps.status
+            FROM platform_subscriptions ps
+            WHERE ps.account_id = a.id
+            ORDER BY ps.created_at DESC
             LIMIT 1
         ) as subscription_status,
         a.created_at
@@ -315,7 +315,7 @@ BEGIN
         a.account_code,
         a.account_name,
         FALSE as is_owner,
-        (SELECT COUNT(*) FROM projects WHERE account_id = a.id AND is_deleted = FALSE) as project_count,
+        (SELECT COUNT(*) FROM projects p_count2 WHERE p_count2.account_id = a.id AND p_count2.is_deleted = FALSE) as project_count,
         (
             SELECT COUNT(DISTINCT ur2.user_id)
             FROM projects p2
@@ -326,10 +326,10 @@ BEGIN
             AND ur2.is_deleted = FALSE
         ) as total_members,
         (
-            SELECT status
-            FROM pm_subscriptions
-            WHERE account_id = a.id
-            ORDER BY created_at DESC
+            SELECT ps2.status
+            FROM platform_subscriptions ps2
+            WHERE ps2.account_id = a.id
+            ORDER BY ps2.created_at DESC
             LIMIT 1
         ) as subscription_status,
         a.created_at

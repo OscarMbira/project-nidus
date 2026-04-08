@@ -1,14 +1,38 @@
-import { supabase } from './supabaseClient'
+import { platformDb } from './supabase/supabaseClient'
+import { platformPublicSelect } from './supabase/platformRestSelect'
 
 /**
  * Programme Service - API functions for Programme Management module
  */
 
 /**
- * Get all programmes
+ * Lightweight list for programme list page – minimal columns + owner only (millisecond-optimised).
+ */
+export async function getProgrammesForList(filters = {}) {
+  let query = platformDb
+    .from('programmes')
+    .select('id, programme_code, programme_name, programme_type, programme_status, programme_description, programme_owner_user_id, programme_owner:programme_owner_user_id (full_name, email)')
+    .eq('is_deleted', false)
+
+  if (filters.status) query = query.eq('programme_status', filters.status)
+  if (filters.type) query = query.eq('programme_type', filters.type)
+  if (filters.owner_id) query = query.eq('programme_owner_user_id', filters.owner_id)
+  if (filters.portfolio_id) query = query.eq('portfolio_id', filters.portfolio_id)
+  if (filters.search && String(filters.search).trim()) {
+    const term = `%${String(filters.search).trim()}%`
+    query = query.or(`programme_name.ilike.${term},programme_code.ilike.${term},programme_description.ilike.${term}`)
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Get all programmes (full payload; use getProgrammesForList for list view)
  */
 export async function getProgrammes(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('programmes')
     .select(`
       *,
@@ -39,7 +63,6 @@ export async function getProgrammes(filters = {}) {
   }
 
   const { data, error } = await query.order('created_at', { ascending: false })
-
   if (error) throw error
   return data
 }
@@ -48,7 +71,7 @@ export async function getProgrammes(filters = {}) {
  * Get a single programme by ID
  */
 export async function getProgramme(programmeId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programmes')
     .select(`
       *,
@@ -68,7 +91,7 @@ export async function getProgramme(programmeId) {
  * Create or update a programme
  */
 export async function saveProgramme(programmeData, programmeId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -78,7 +101,7 @@ export async function saveProgramme(programmeData, programmeId = null) {
 
   if (programmeId) {
     // Update
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programmes')
       .update(updateData)
       .eq('id', programmeId)
@@ -90,7 +113,7 @@ export async function saveProgramme(programmeData, programmeId = null) {
   } else {
     // Create
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programmes')
       .insert(updateData)
       .select()
@@ -105,10 +128,10 @@ export async function saveProgramme(programmeData, programmeId = null) {
  * Delete a programme (soft delete)
  */
 export async function deleteProgramme(programmeId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programmes')
     .update({
       is_deleted: true,
@@ -128,7 +151,7 @@ export async function deleteProgramme(programmeId) {
  * Get projects in a programme
  */
 export async function getProgrammeProjects(programmeId, filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('programme_projects')
     .select(`
       *,
@@ -136,11 +159,12 @@ export async function getProgrammeProjects(programmeId, filters = {}) {
         id,
         project_name,
         project_code,
-        project_status,
-        start_date,
-        end_date,
+        status_id,
+        project_statuses:status_id(status_name, status_color),
+        planned_start_date,
+        planned_end_date,
         project_manager_user_id,
-        methodology
+        delivery_methodology
       )
     `)
     .eq('programme_id', programmeId)
@@ -164,7 +188,7 @@ export async function getProgrammeProjects(programmeId, filters = {}) {
  * Add a project to a programme
  */
 export async function addProjectToProgramme(programmeId, projectId, assignmentData = {}) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const assignment = {
@@ -177,7 +201,7 @@ export async function addProjectToProgramme(programmeId, projectId, assignmentDa
     updated_by: user.id,
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_projects')
     .insert(assignment)
     .select()
@@ -191,10 +215,10 @@ export async function addProjectToProgramme(programmeId, projectId, assignmentDa
  * Remove a project from a programme
  */
 export async function removeProjectFromProgramme(programmeId, projectId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_projects')
     .update({
       assignment_status: 'removed',
@@ -211,10 +235,61 @@ export async function removeProjectFromProgramme(programmeId, projectId) {
 }
 
 /**
+ * Get programme rollup data (aggregated metrics from view)
+ */
+export async function getProgrammeRollups(programmeId) {
+  try {
+    const { data, error } = await platformDb
+      .from('programme_rollup_view')
+      .select('*')
+      .eq('programme_id', programmeId)
+      .single()
+
+    if (error) throw error
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error getting programme rollups:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Get programme rollups for dashboard – single query, slim columns (millisecond-optimised).
+ */
+export async function getProgrammeRollupsForDashboard() {
+  try {
+    const { data, error } = await platformDb
+      .from('programme_rollup_view')
+      .select(
+        'programme_id, programme_name, programme_code, total_projects, active_projects, completed_projects, total_realised_benefits, total_planned_benefits, average_progress_percentage, total_budget, total_spent, green_projects'
+      )
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('Error getting programme rollups for dashboard:', error)
+    return { success: false, error: error.message, data: [] }
+  }
+}
+
+/**
+ * Get all programme rollups for an account
+ */
+export async function getAllProgrammeRollups(accountId) {
+  try {
+    const { success, data, error } = await getProgrammeRollupsForDashboard()
+    if (!success) return { success: false, error }
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('Error getting all programme rollups:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
  * Get programme benefits
  */
 export async function getProgrammeBenefits(programmeId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_benefits')
     .select(`
       *,
@@ -232,7 +307,7 @@ export async function getProgrammeBenefits(programmeId) {
  * Get a single programme benefit
  */
 export async function getProgrammeBenefit(benefitId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_benefits')
     .select(`
       *,
@@ -250,7 +325,7 @@ export async function getProgrammeBenefit(benefitId) {
  * Create or update a programme benefit
  */
 export async function saveProgrammeBenefit(programmeId, benefitData, benefitId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -260,7 +335,7 @@ export async function saveProgrammeBenefit(programmeId, benefitData, benefitId =
   }
 
   if (benefitId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_benefits')
       .update(updateData)
       .eq('id', benefitId)
@@ -271,7 +346,7 @@ export async function saveProgrammeBenefit(programmeId, benefitData, benefitId =
     return data
   } else {
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_benefits')
       .insert(updateData)
       .select()
@@ -286,10 +361,10 @@ export async function saveProgrammeBenefit(programmeId, benefitData, benefitId =
  * Delete a programme benefit (soft delete)
  */
 export async function deleteProgrammeBenefit(benefitId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_benefits')
     .update({
       is_deleted: true,
@@ -309,7 +384,7 @@ export async function deleteProgrammeBenefit(benefitId) {
  * Get programme members
  */
 export async function getProgrammeMembers(programmeId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_members')
     .select(`
       *,
@@ -327,7 +402,7 @@ export async function getProgrammeMembers(programmeId) {
  * Add a member to a programme
  */
 export async function addProgrammeMember(programmeId, userId, memberData = {}) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const member = {
@@ -340,7 +415,7 @@ export async function addProgrammeMember(programmeId, userId, memberData = {}) {
     updated_by: user.id,
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_members')
     .insert(member)
     .select()
@@ -354,10 +429,10 @@ export async function addProgrammeMember(programmeId, userId, memberData = {}) {
  * Remove a member from a programme
  */
 export async function removeProgrammeMember(programmeId, userId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_members')
     .update({
       assignment_status: 'removed',
@@ -378,7 +453,7 @@ export async function removeProgrammeMember(programmeId, userId) {
  * Get programme governance
  */
 export async function getProgrammeGovernance(programmeId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_governance')
     .select(`
       *,
@@ -396,7 +471,7 @@ export async function getProgrammeGovernance(programmeId) {
  * Create or update programme governance
  */
 export async function saveProgrammeGovernance(programmeId, governanceData) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   // Check if governance exists
@@ -410,7 +485,7 @@ export async function saveProgrammeGovernance(programmeId, governanceData) {
 
   if (existing) {
     // Update
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_governance')
       .update(updateData)
       .eq('programme_id', programmeId)
@@ -422,7 +497,7 @@ export async function saveProgrammeGovernance(programmeId, governanceData) {
   } else {
     // Create
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_governance')
       .insert(updateData)
       .select()
@@ -437,7 +512,7 @@ export async function saveProgrammeGovernance(programmeId, governanceData) {
  * Get programme milestones
  */
 export async function getProgrammeMilestones(programmeId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_milestones')
     .select(`
       *,
@@ -455,7 +530,7 @@ export async function getProgrammeMilestones(programmeId) {
  * Create or update a programme milestone
  */
 export async function saveProgrammeMilestone(programmeId, milestoneData, milestoneId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -465,7 +540,7 @@ export async function saveProgrammeMilestone(programmeId, milestoneData, milesto
   }
 
   if (milestoneId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_milestones')
       .update(updateData)
       .eq('id', milestoneId)
@@ -476,7 +551,7 @@ export async function saveProgrammeMilestone(programmeId, milestoneData, milesto
     return data
   } else {
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_milestones')
       .insert(updateData)
       .select()
@@ -491,10 +566,10 @@ export async function saveProgrammeMilestone(programmeId, milestoneData, milesto
  * Delete a programme milestone (soft delete)
  */
 export async function deleteProgrammeMilestone(milestoneId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_milestones')
     .update({
       is_deleted: true,
@@ -514,7 +589,7 @@ export async function deleteProgrammeMilestone(milestoneId) {
  * Get programme dependencies
  */
 export async function getProgrammeDependencies(programmeId, filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('programme_dependencies')
     .select(`
       *,
@@ -543,7 +618,7 @@ export async function getProgrammeDependencies(programmeId, filters = {}) {
  * Create or update a programme dependency
  */
 export async function saveProgrammeDependency(programmeId, dependencyData, dependencyId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -553,7 +628,7 @@ export async function saveProgrammeDependency(programmeId, dependencyData, depen
   }
 
   if (dependencyId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_dependencies')
       .update(updateData)
       .eq('id', dependencyId)
@@ -564,7 +639,7 @@ export async function saveProgrammeDependency(programmeId, dependencyData, depen
     return data
   } else {
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('programme_dependencies')
       .insert(updateData)
       .select()
@@ -579,10 +654,10 @@ export async function saveProgrammeDependency(programmeId, dependencyData, depen
  * Delete a programme dependency (soft delete)
  */
 export async function deleteProgrammeDependency(dependencyId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('programme_dependencies')
     .update({
       is_deleted: true,
@@ -602,7 +677,7 @@ export async function deleteProgrammeDependency(dependencyId) {
  * Get programme reports
  */
 export async function getProgrammeReports(programmeId, filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('programme_reports')
     .select(`
       *,
@@ -621,6 +696,51 @@ export async function getProgrammeReports(programmeId, filters = {}) {
   }
 
   const { data, error } = await query.order('report_date', { ascending: false })
+
+  if (error) throw error
+  return data
+}
+
+const PROGRAMME_LIST_FETCH_MS = 28000
+
+/**
+ * Get a lightweight list of programmes for dropdowns
+ * Returns only id, programme_code, programme_name
+ *
+ * Uses direct PostgREST fetch — avoids supabase-js builder stalls seen as endless "Loading…".
+ */
+export async function getProgrammeList() {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), PROGRAMME_LIST_FETCH_MS)
+  const query =
+    'select=id,programme_code,programme_name&is_deleted=eq.false&order=programme_name.asc'
+  try {
+    const rows = await platformPublicSelect('programmes', query, { signal: controller.signal })
+    clearTimeout(timeoutId)
+    return rows
+  } catch (e) {
+    clearTimeout(timeoutId)
+    if (e?.name === 'AbortError' || (typeof DOMException !== 'undefined' && e instanceof DOMException && e.name === 'AbortError')) {
+      throw new Error(
+        'Could not load programmes in time. Check your network, VPN, firewall, or Supabase status, then try again.'
+      )
+    }
+    throw e
+  }
+}
+
+/**
+ * Get the programme a project is currently assigned to
+ * @param {string} projectId - The project ID
+ */
+export async function getProjectProgramme(projectId) {
+  const { data, error } = await platformDb
+    .from('programme_projects')
+    .select('programme_id, programmes:programme_id (id, programme_code, programme_name)')
+    .eq('project_id', projectId)
+    .eq('assignment_status', 'active')
+    .eq('is_deleted', false)
+    .maybeSingle()
 
   if (error) throw error
   return data

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Plus, Search, Calendar, Clock, Users } from 'lucide-react';
-import { getQualityReviews } from '../services/qualityManagementService';
+import { ArrowLeft, CheckCircle, Plus, Search, Calendar, Clock } from 'lucide-react';
+import { getQualityReviews, deleteQualityReview } from '../services/qualityManagementService';
 import QualityReviewForm from '../components/quality/QualityReviewForm';
+import ExportListMenu from '../components/ui/ExportListMenu';
 import { supabase } from '../services/supabaseClient';
 
 export default function QualityReviews() {
@@ -14,6 +15,7 @@ export default function QualityReviews() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [selectedRegisterId, setSelectedRegisterId] = useState('');
   const [projects, setProjects] = useState([]);
+  const [deleting, setDeleting] = useState(null);
   const [filters, setFilters] = useState({
     project_id: '',
     quality_register_id: '',
@@ -75,6 +77,20 @@ export default function QualityReviews() {
     fetchReviews();
   };
 
+  const handleDelete = async (review) => {
+    if (!window.confirm(`Are you sure you want to delete review "${review.review_title}"?`)) return;
+    try {
+      setDeleting(review.id);
+      await deleteQualityReview(review.id);
+      fetchReviews();
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('Error deleting review: ' + error.message);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
@@ -105,7 +121,7 @@ export default function QualityReviews() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/quality-management')}
+            onClick={() => navigate('/platform/quality-management')}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -119,13 +135,41 @@ export default function QualityReviews() {
               Plan and manage quality reviews
             </p>
           </div>
-          <button
-            onClick={handleCreateReview}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            Create Review
-          </button>
+          <div className="flex items-center gap-2">
+            <ExportListMenu
+              columns={[
+                { key: 'review_title', label: 'Review' },
+                { key: 'review_reference', label: 'Reference' },
+                { key: 'review_type', label: 'Type' },
+                { key: 'product_name', label: 'Product/Deliverable' },
+                { key: 'planned_date', label: 'Planned Date' },
+                { key: 'review_status', label: 'Status' },
+                { key: 'overall_score', label: 'Score' },
+                { key: 'issues_found_count', label: 'Issues' },
+                { key: 'project_name', label: 'Project' },
+              ]}
+              data={reviews.map(r => ({
+                review_title: r.review_title,
+                review_reference: r.review_reference || '',
+                review_type: r.review_type || '',
+                product_name: r.quality_register?.product_name || 'N/A',
+                planned_date: r.planned_date || '',
+                review_status: r.review_status || '',
+                overall_score: r.overall_score != null ? `${Math.round(r.overall_score)}%` : '',
+                issues_found_count: r.issues_found_count ?? '',
+                project_name: r.project?.project_name || '',
+              }))}
+              baseFilename="Quality-Reviews"
+              disabled={reviews.length === 0}
+            />
+            <button
+              onClick={handleCreateReview}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Create Review
+            </button>
+          </div>
         </div>
       </div>
 
@@ -297,10 +341,18 @@ export default function QualityReviews() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => handleEditReview(review)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-2"
                         title="Edit Review"
                       >
                         Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(review)}
+                        disabled={deleting === review.id}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
+                        title="Delete Review"
+                      >
+                        {deleting === review.id ? '…' : 'Delete'}
                       </button>
                     </td>
                   </tr>

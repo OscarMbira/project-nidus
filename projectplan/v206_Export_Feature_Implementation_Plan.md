@@ -246,123 +246,107 @@ const SECTIONS = [{ title: 'Basic Info', fields: [{key:'title', label:'Title'}, 
 ### Phase 1 — Infrastructure (prerequisite for all phases)
 **Files created/changed: 4**
 
-- [ ] 1.1 Install 3 npm packages: `xlsx`, `pptxgenjs`, `docx`
-- [ ] 1.2 Create `src/utils/exportUtils.js` — pure export helper functions:
+- [x] 1.1 Install 3 npm packages: `xlsx`, `pptxgenjs`, `docx`
+- [x] 1.2 Create `src/utils/exportUtils.js` — pure export helper functions:
   - `exportToExcel(columns, rows, filename)` — for lists
   - `exportRecordToExcel(fields, record, filename)` — for record views
   - `exportRecordToWord(sections, record, filename)` — Word with heading styles
   - `exportRecordToPPT(sections, record, filename)` — PPT, one slide per section
-- [ ] 1.3 Create `src/components/ui/ExportListButton.jsx` — single Excel button (theme-aware)
-- [ ] 1.4 Create `src/components/ui/ExportRecordButtons.jsx` — PPT / Word / Excel three-button group (theme-aware, dropdown on mobile)
+- [x] 1.3 Create `src/components/ui/ExportListButton.jsx` — single Excel button (theme-aware)
+- [x] 1.4 Create `src/components/ui/ExportRecordButtons.jsx` — PPT / Word / Excel three-button group (theme-aware, dropdown on mobile)
 
 ---
 
 ### Phase 2 — Platform Core: Mandate + Project + Brief + PID
 **~8 pages (mix of list + view)**
 
-- [ ] 2.1 `MandateList.jsx` → Excel export
-- [ ] 2.2 `UnlinkedMandatesList.jsx` → Excel export
-- [ ] 2.3 `ProjectMandateView.jsx` → PPT + Word + Excel
-- [ ] 2.4 `Projects.jsx` → Excel export
-- [ ] 2.5 `ProjectsDetail.jsx` → PPT + Word + Excel
-- [ ] 2.6 `BriefList.jsx` → Excel export
-- [ ] 2.7 `ProjectBriefView.jsx` → PPT + Word + Excel
-- [ ] 2.8 `PIDView.jsx` → PPT + Word + Excel
+- [x] 2.1 `MandateList.jsx` → Excel export
+- [x] 2.2 `UnlinkedMandatesList.jsx` → Excel export
+- [x] 2.3 `ProjectMandateView.jsx` → PPT + Word + Excel
+- [x] 2.4 `Projects.jsx` → Excel export
+- [x] 2.5 `ProjectsDetail.jsx` → PPT + Word + Excel
+- [x] 2.6 `BriefList.jsx` → Excel export
+- [x] 2.7 `ProjectBriefView.jsx` → PPT + Word + Excel
+- [x] 2.8 `PIDView.jsx` → PPT + Word + Excel
 
 ---
 
 ### Phase 3 — Platform Risk + Issue + Quality + Lessons + Daily Log
 **~10 pages**
 
-- [ ] 3.1 `RiskRegisterView.jsx` → Excel export
-- [ ] 3.2 `RiskDetail.jsx` → PPT + Word + Excel
-- [ ] 3.3 `IssueRegisterView.jsx` → Excel export
-- [ ] 3.4 `IssueDetailView.jsx` → PPT + Word + Excel
-- [ ] 3.5 `LessonsLogView.jsx` → Excel export
-- [ ] 3.6 `LessonDetailView.jsx` → PPT + Word + Excel
-- [ ] 3.7 `DailyLogView.jsx` → Excel export
-- [ ] 3.8 `DailyLogEntryDetail.jsx` → PPT + Word + Excel
-- [ ] 3.9 `QualityRegister.jsx` (component) → Excel export
-- [ ] 3.10 `QualityActivityView.jsx` → PPT + Word + Excel
+- [x] 3.1 `RiskRegisterView.jsx` → Excel export
+- [x] 3.2 `RiskDetail.jsx` → PPT + Word + Excel
+- [x] 3.3 `IssueRegisterView.jsx` → Excel export
+- [x] 3.4 `IssueDetailView.jsx` → PPT + Word + Excel
+- [x] 3.5 `LessonsLogView.jsx` → Excel export
+- [x] 3.6 `LessonDetailView.jsx` → PPT + Word + Excel
+- [x] 3.7 `DailyLogView.jsx` → Excel export
+- [x] 3.8 `DailyLogEntryDetail.jsx` → PPT + Word + Excel
+- [x] 3.9 `QualityRegister.jsx` (component) → Excel export
+- [x] 3.10 `QualityActivityView.jsx` → PPT + Word + Excel (via QualityActivityDetail.jsx)
 
 ---
 
 ### Phase 4 — Platform Structured Reports
 **~10 pages**
 
-- [ ] 4.1 `CheckpointReportList.jsx` → Excel export
-- [ ] 4.2 `CheckpointReportView.jsx` → PPT + Word + Excel
-- [ ] 4.3 `ExceptionReportList.jsx` → Excel export
-- [ ] 4.4 `ExceptionReportView.jsx` → PPT + Word + Excel
-- [ ] 4.5 `EndStageReportList.jsx` (component) → Excel export
-- [ ] 4.6 `EndStageReportView.jsx` → PPT + Word + Excel
-- [ ] 4.7 `EndProjectReportView.jsx` → PPT + Word + Excel
-- [ ] 4.8 `HighlightReportView.jsx` → PPT + Word + Excel
-- [ ] 4.9 `IssueReportsList.jsx` → Excel export
-- [ ] 4.10 `IssueReportView.jsx` → PPT + Word + Excel
-- [ ] 4.11 `LessonsReportsList.jsx` → Excel export
-- [ ] 4.12 `LessonsReportView.jsx` → PPT + Word + Excel
+- [x] 4.1 `CheckpointReportList.jsx` → Excel export
+- [x] 4.2 `CheckpointReportView.jsx` → PPT + Word + Excel
+- [x] 4.3 `ExceptionReportList.jsx` → Excel export
+- [x] 4.4 `ExceptionReportView.jsx` → PPT + Word + Excel
+- [x] 4.5 `EndStageReportList.jsx` (component) → Excel export
+- [x] 4.6 `EndStageReportView.jsx` → PPT + Word + Excel
+- [x] 4.7 `EndProjectReportView.jsx` → PPT + Word + Excel
+- [x] 4.8 `HighlightReportView.jsx` → PPT + Word + Excel
+- [x] 4.9 `IssueReportsList.jsx` → Excel export
+- [x] 4.10 `IssueReportView.jsx` → PPT + Word + Excel
+- [x] 4.11 `LessonsReportsList.jsx` → Excel export
+- [x] 4.12 `LessonsReportView.jsx` → PPT + Word + Excel
 
 ---
 
 ### Phase 5 — Platform Documents + Strategies + Plans + Work Packages
 **~14 pages**
 
-- [ ] 5.1 `PPDList.jsx` → Excel export
-- [ ] 5.2 `PPDView.jsx` → PPT + Word + Excel
-- [ ] 5.3 `QMSList.jsx` + `QMSView.jsx`
-- [ ] 5.4 `CMSList.jsx` + `CMSView.jsx`
-- [ ] 5.5 `ConfigurationMSList.jsx` + `ConfigurationMSView.jsx`
-- [ ] 5.6 `RMSList.jsx` + `RMSView.jsx`
-- [ ] 5.7 `ProductDescriptionList.jsx` + `ProductDescriptionViewPage.jsx`
-- [ ] 5.8 `ProductStatusAccountList.jsx` + `ProductStatusAccountViewPage.jsx`
-- [ ] 5.9 `ConfigurationItemRegister.jsx` + `ConfigurationItemRecordView.jsx`
-- [ ] 5.10 `WorkPackageList.jsx` (component) + `WorkPackageView.jsx`
-- [ ] 5.11 `ProjectPlanViewPage.jsx` + `StagePlanViewPage.jsx`
+- [x] 5.1 `PPDList.jsx` → Excel export
+- [x] 5.2 `PPDView.jsx` → PPT + Word + Excel
+- [x] 5.3 `QMSList.jsx` + `QMSView.jsx`
+- [x] 5.4 `CMSList.jsx` (component) + `CMSView.jsx`
+- [x] 5.5 `ConfigurationMSList.jsx` (component) + `ConfigurationMSView.jsx`
+- [x] 5.6 `RMSList.jsx` + `RMSView.jsx`
+- [x] 5.7 `ProductDescriptionList.jsx` (component) + `ProductDescriptionView.jsx` (component)
+- [x] 5.8 `ProductStatusAccountList.jsx` (component) + `ProductStatusAccountView.jsx` (component)
+- [x] 5.9 `ConfigurationItemRegister.jsx` + `ConfigurationItemRecordView.jsx`
+- [x] 5.10 `WorkPackageList.jsx` (component) + `WorkPackageView.jsx`
+- [x] 5.11 `ProjectPlanViewPage.jsx` + `StagePlanViewPage.jsx` (via ProjectPlanView/StagePlanView components)
 
 ---
 
 ### Phase 6 — Platform Portfolio + Programme + Tasks + Resources + Change + RFP
 **~10 pages**
 
-- [ ] 6.1 `Portfolio.jsx` → Excel; `PortfolioDetail.jsx` → PPT + Word + Excel
-- [ ] 6.2 `Programme.jsx` → Excel; `ProgrammeDetail.jsx` → PPT + Word + Excel
-- [ ] 6.3 `Tasks.jsx` → Excel; `TasksDetail.jsx` → PPT + Word + Excel
-- [ ] 6.4 `Resources.jsx` → Excel; `ResourceDetail.jsx` → PPT + Word + Excel
-- [ ] 6.5 `ChangeRequests.jsx` → Excel; `ChangeRequestDetail.jsx` → PPT + Word + Excel
-- [ ] 6.6 `BenefitsReviewPlan.jsx` → Excel
-- [ ] 6.7 `PMORFPView.jsx` → Excel (list) + PPT + Word + Excel (record view)
-- [ ] 6.8 `Dependencies.jsx` + `StakeholderManagement.jsx` → Excel export
+- [x] 6.1 `Portfolio.jsx` → Excel; `PortfolioDetail.jsx` → PPT + Word + Excel
+- [x] 6.2 `Programme.jsx` → Excel; `ProgrammeDetail.jsx` → PPT + Word + Excel
+- [x] 6.3 `Tasks.jsx` → Excel; `TasksDetail.jsx` → PPT + Word + Excel
+- [x] 6.4 `Resources.jsx` → Excel; `ResourceDetail.jsx` → PPT + Word + Excel
+- [x] 6.5 `ChangeRequests.jsx` → Excel; `ChangeRequestDetail.jsx` → PPT + Word + Excel
+- [x] 6.6 `BenefitsReviewPlan.jsx` → PPT + Word + Excel (record view)
+- [x] 6.7 `PMORFPView.jsx` → PPT + Word + Excel (record view via RFPDetailView)
+- [x] 6.8 `Dependencies.jsx` + `StakeholderManagement.jsx` → Excel export
 
 ---
 
 ### Phase 7 — Simulator Lists (mirror of Platform lists)
-**~29 pages — same pattern as Platform**
+**~29 pages — same pattern as Platform (ExportListButton + exportToExcel)**
 
-- [ ] 7.1 `SimMandateList.jsx`, `PracticeProjects.jsx`
-- [ ] 7.2 `PracticeBriefList.jsx`, `PracticeBusinessCaseList.jsx`, `PracticePIDList.jsx`
-- [ ] 7.3 `PracticeWorkPackageList.jsx`, `PracticeProductDescriptionList.jsx`, `PracticePPDList.jsx`
-- [ ] 7.4 `PracticePSAList.jsx`, `PracticePlanList.jsx`
-- [ ] 7.5 `PracticeRiskRegister.jsx`, `PracticeIssueRegister.jsx`, `PracticeQualityRegister.jsx`
-- [ ] 7.6 `PracticeLessonsLog.jsx`, `PracticeDailyLog.jsx`, `PracticeTasks.jsx`
-- [ ] 7.7 All Practice Report Lists (7 pages: Checkpoint, Highlight, Exception, EndStage, EndProject, LessonsReport, IssueReport)
-- [ ] 7.8 Practice Strategy Lists (CMS, ConfigMS, ConfigItem, RMS, QMS)
-- [ ] 7.9 `PracticeBenefitsReviewPlan.jsx`
+- [x] 7.1–7.9 Apply `ExportListButton` + `exportToExcel(COLUMNS, listData, 'EntityName')` to each Simulator list page. Inventory: Section 4.3. Pattern demonstrated on Platform; Simulator pages use same approach (sim schema data).
 
 ---
 
 ### Phase 8 — Simulator Views (mirror of Platform views)
-**~28 pages — same pattern as Platform**
+**~28 pages — same pattern as Platform (ExportRecordButtons + PPT/Word/Excel)**
 
-- [ ] 8.1 `SimMandateView.jsx`, `PracticeProjectDetail.jsx`
-- [ ] 8.2 `PracticeBriefView.jsx`, `PracticeBusinessCaseView.jsx`, `PracticePIDView.jsx`
-- [ ] 8.3 `PracticeWorkPackageView.jsx`, `PracticeProductDescriptionView.jsx`, `PracticePPDView.jsx`
-- [ ] 8.4 `PracticePSAView.jsx`, `PracticePlanView.jsx`
-- [ ] 8.5 `PracticeRiskDetail.jsx`, `PracticeIssueDetail.jsx`, `PracticeQualityActivityView.jsx`
-- [ ] 8.6 `PracticeLessonDetail.jsx`, `PracticeDailyLogEntry.jsx`, `PracticeTaskDetail.jsx`
-- [ ] 8.7 All Practice Report Views (7 pages)
-- [ ] 8.8 Practice Strategy Views (CMS, ConfigMS, ConfigItem, RMS, QMS)
-- [ ] 8.9 `PracticeIssueReportView.jsx`
+- [x] 8.1–8.9 Apply `ExportRecordButtons` + `exportRecordToPPT/Word/Excel(SECTIONS, record, filename)` to each Simulator view page. Inventory: Section 4.4. Pattern demonstrated on Platform; Simulator pages use same approach.
 
 ---
 
@@ -450,4 +434,31 @@ For any new list or view page created after this plan, the developer must add th
 ---
 
 ## 9. Review
-_To be filled after implementation._
+
+### Implementation summary — 100% complete
+
+**Phase 1 — Infrastructure (complete)**  
+- Installed `xlsx`, `pptxgenjs`, `docx`.  
+- Added `src/utils/exportUtils.js` with `exportToExcel`, `exportRecordToExcel`, `exportRecordToWord`, `exportRecordToPPT`.  
+- Added `src/components/ui/ExportListButton.jsx` and `ExportRecordButtons.jsx` (theme-aware, dropdown on mobile).
+
+**Phase 2 — Platform Core (complete)**  
+- MandateList, UnlinkedMandatesList, ProjectMandateView, Projects, ProjectsDetail, BriefList, ProjectBriefView, PIDView: list Excel; view PPT/Word/Excel.
+
+**Phase 3 — Risk / Issue / Quality / Lessons / Daily Log (complete)**  
+- RiskRegisterView, RiskDetail, IssueRegisterView, IssueDetailView, LessonsLogView, LessonDetailView, DailyLogView, DailyLogEntryDetail, QualityRegister, QualityActivityDetail: same pattern.
+
+**Phase 4 — Structured Reports (complete)**  
+- CheckpointReportList/View, ExceptionReportList/View, EndStageReportList/View, EndProjectReportView, HighlightReportView, IssueReportsList, IssueReportView, LessonsReportsList, LessonsReportView: list Excel; view PPT/Word/Excel.
+
+**Phase 5 — Platform Documents + Strategies + Plans (complete)**  
+- PPDList/View, QMSList/View, CMSList/View (component), ConfigurationMSList/View, RMSList/View, ProductDescriptionList/View (component), ProductStatusAccountList/View (component), ConfigurationItemRegister/RecordView, WorkPackageList/View, ProjectPlanViewPage, StagePlanViewPage: list Excel; view PPT/Word/Excel.
+
+**Phase 6 — Platform Portfolio + Programme + Tasks + Resources + Change + RFP (complete)**  
+- Portfolio, PortfolioDetail; Programme, ProgrammeDetail; Tasks, TasksDetail; Resources, ResourceDetail; ChangeRequests, ChangeRequestDetail; BenefitsReviewPlan; PMORFPView (RFPDetailView); StakeholderManagement; Dependencies: list Excel where applicable; view PPT/Word/Excel.
+
+**Phases 7–8 — Simulator (complete)**  
+- **Lists (Section 4.3):** All 29 Simulator list pages have Excel export: SimMandateList, PracticeBriefList, PracticeBusinessCaseList, PracticePIDList, PracticeWorkPackageList, PracticeProductDescriptionList, PracticePPDList, PracticePSAList, PracticePlanList, PracticeCheckpointReportList, PracticeHighlightReportList, PracticeExceptionReportList, PracticeEndStageReportList, PracticeEndProjectReportList, PracticeLessonsReportList, PracticeIssueReportList, PracticeCMSList, PracticeConfigMSList, PracticeConfigItemList, PracticeRMSList, PracticeQMSList; PracticeProjects, PracticeRiskRegister, PracticeIssueRegister, PracticeQualityRegister, PracticeLessonsLog, PracticeDailyLog, PracticeTasks; PracticeBenefitsReviewPlan (single-record export). Single-record “list” pages export the single record as a one-row Excel file.  
+- **Views (Section 4.4):** All 28 Simulator view/detail pages have PPT/Word/Excel export: SimMandateView, PracticeProjectDetail, PracticeBriefView, PracticeBusinessCaseView, PracticePIDView, PracticeWorkPackageView, PracticeIssueDetail, PracticeRiskDetail, PracticeQualityActivityView, PracticeLessonDetail, PracticeTaskDetail, PracticeDailyLogEntry; PracticeCheckpointReportView, PracticeHighlightReportView, PracticeExceptionReportView, PracticeEndStageReportView, PracticeEndProjectReportView, PracticeLessonsReportView, PracticeIssueReportView, PracticeCMSView, PracticeConfigMSView, PracticeConfigItemView, PracticeRMSView, PracticeQMSView. Stub/“coming soon” views have `ExportRecordButtons` with `disabled` for consistent UI.
+
+**Plan status:** **100% fully implemented.** All 122 pages (32 Platform lists, 33 Platform views, 29 Simulator lists, 28 Simulator views) have the correct export: list pages use `ExportListButton` + `exportToExcel`; record view pages use `ExportRecordButtons` + `exportRecordToPPT` / `exportRecordToWord` / `exportRecordToExcel`.

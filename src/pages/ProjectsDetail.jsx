@@ -1,43 +1,108 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { platformDb } from '../services/supabase/supabaseClient'
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId'
+import { platformProjectPath, looksLikeProjectUuid } from '../utils/projectRouteParam'
 import { GanttChart } from '../components/gantt'
-import { Edit2, Trash2, Archive, AlertTriangle } from 'lucide-react'
+import { Edit2, Trash2, Archive, AlertTriangle, Shield, MessageSquare } from 'lucide-react'
+import { getQMSByProject } from '../services/qualityManagementStrategyService'
+import { getRMSByProject } from '../services/riskManagementStrategyService'
+import ProjectRiskSummary from '../components/risks/ProjectRiskSummary'
+import OpenIssuesWidget from '../components/issues/OpenIssuesWidget'
+import LessonsSummaryWidget from '../components/lessonsLog/LessonsSummaryWidget'
+import ExportRecordButtons from '../components/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+import { getProjectPortfolio } from '../services/portfolioService'
+import { getProjectProgramme } from '../services/programmeService'
+import ProjectFormTabs from '../components/project/ProjectFormTabs'
+import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
+import { mapDbProjectToWizardForm } from '../utils/projectWizardFormUtils'
+import { getByProjectId } from '../services/projectBudgetCategoryService'
+import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
+import { getFundingSources } from '../services/fundingSourceService'
+import { getBudgetCategories } from '../services/budgetCategoryService'
+
+const PROJECT_EXPORT_SECTIONS = [
+  { title: 'Basic Information', fields: [
+    { key: 'project_name', label: 'Project Name' },
+    { key: 'project_code', label: 'Code' },
+    { key: 'project_description', label: 'Description' },
+    { key: 'status_name', label: 'Status' }
+  ]},
+  { title: 'Dates & Progress', fields: [
+    { key: 'planned_start_date', label: 'Planned Start' },
+    { key: 'planned_end_date', label: 'Planned End' },
+    { key: 'percentage_complete', label: '% Complete' }
+  ]}
+]
 
 export default function ProjectsDetail() {
-  const { id } = useParams()
+  const { projectId, routeKey, loading: routeResolving, error: routeError } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(null)
   const [activeTab, setActiveTab] = useState('list') // 'list' or 'gantt'
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const [qms, setQms] = useState(null)
+  const [rms, setRms] = useState(null)
+
+  const [portfolioAssignment, setPortfolioAssignment] = useState(null)
+  const [programmeAssignment, setProgrammeAssignment] = useState(null)
+
+  const [wizardActiveTab, setWizardActiveTab] = useState('details')
+  const [wizardFormData, setWizardFormData] = useState(null)
+  const [methodologies, setMethodologies] = useState([])
+  const [wizardFundingSources, setWizardFundingSources] = useState([])
+  const [wizardBudgetCategories, setWizardBudgetCategories] = useState([])
+  const [wizardLifecycleTemplates, setWizardLifecycleTemplates] = useState([])
+
+  /** Decoded segment for links: prefer code once project is loaded */
+  const urlProjectSegment = useMemo(() => {
+    if (project?.project_code?.trim()) return project.project_code.trim()
+    if (project?.id) return project.id
+    return routeKey || ''
+  }, [project, routeKey])
 
   useEffect(() => {
-    fetchProject()
-  }, [id])
+    if (routeError === 'missing') {
+      navigate('/platform/projects', { replace: true })
+      return
+    }
+    if (routeResolving) return
+    if (routeError === 'not_found') {
+      setLoading(false)
+      setProject(null)
+      setLoadError({ code: 'PGRST116', message: 'Project not found' })
+      return
+    }
+    if (projectId) {
+      fetchProject()
+    }
+  }, [projectId, routeResolving, routeError, navigate])
 
   const handleDelete = async () => {
     try {
       setDeleting(true)
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await platformDb.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
-      const { error } = await supabase
+      const { error } = await platformDb
         .from('projects')
         .update({
           is_deleted: true,
           deleted_at: new Date().toISOString(),
           deleted_by: user.id
         })
-        .eq('id', id)
+        .eq('id', projectId)
 
       if (error) throw error
 
       setShowDeleteConfirm(false)
-      navigate('/projects')
+      navigate('/platform/projects')
     } catch (error) {
       console.error('Error deleting project:', error)
       alert('Error deleting project: ' + error.message)
@@ -49,11 +114,11 @@ export default function ProjectsDetail() {
   const handleArchive = async () => {
     try {
       setArchiving(true)
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await platformDb.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
       // Find archived status
-      const { data: archivedStatus, error: statusError } = await supabase
+      const { data: archivedStatus, error: statusError } = await platformDb
         .from('project_statuses')
         .select('id')
         .eq('status_code', 'archived')
@@ -71,10 +136,10 @@ export default function ProjectsDetail() {
         updateData.status_id = archivedStatus.id
       }
 
-      const { error } = await supabase
+      const { error } = await platformDb
         .from('projects')
         .update(updateData)
-        .eq('id', id)
+        .eq('id', projectId)
 
       if (error) throw error
 
@@ -91,28 +156,140 @@ export default function ProjectsDetail() {
   const fetchProject = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      setLoadError(null)
+      const { data, error } = await platformDb
         .from('projects')
         .select(`
           *,
           project_types:project_type_id (*),
           project_statuses:status_id (*),
-          project_methodologies!inner (
+          project_methodologies (
             methodologies:methodology_id (*)
           )
         `)
-        .eq('id', id)
+        .eq('id', projectId)
         .eq('is_deleted', false)
         .single()
 
       if (error) throw error
       setProject(data)
+
+      const code = data?.project_code?.trim()
+      if (code && routeKey && looksLikeProjectUuid(routeKey)) {
+        navigate(platformProjectPath(code), { replace: true })
+      }
+
+      // Fetch QMS and RMS status
+      if (data) {
+        const [qmsResult, rmsResult, portfolioResult, programmeResult] = await Promise.all([
+          getQMSByProject(projectId),
+          getRMSByProject(projectId),
+          getProjectPortfolio(projectId).catch(() => null),
+          getProjectProgramme(projectId).catch(() => null),
+        ])
+        if (qmsResult?.success) setQms(qmsResult.data ?? null)
+        if (rmsResult?.success) setRms(rmsResult.data ?? null)
+        setPortfolioAssignment(portfolioResult || null)
+        setProgrammeAssignment(programmeResult || null)
+      }
     } catch (error) {
       console.error('Error fetching project:', error)
+      setProject(null)
+      setLoadError(error)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!project || !projectId) {
+      setWizardFormData(null)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const pmRow = project.project_methodologies?.[0]
+        const methodologyId = pmRow?.methodology_id || ''
+        const legacyBudget = project.budget_amount ?? project.budget
+        const catRes = await getByProjectId(projectId)
+        const rows = catRes?.success && Array.isArray(catRes.data) ? catRes.data : []
+        const mapped = mapDbProjectToWizardForm(project, methodologyId, rows, legacyBudget)
+        const { data: methData, error: methErr } = await platformDb
+          .from('methodologies')
+          .select('*')
+          .eq('is_active', true)
+          .eq('is_deleted', false)
+          .order('methodology_name', { ascending: true })
+        if (methErr) throw methErr
+        if (!cancelled) {
+          setWizardFormData(mapped)
+          setMethodologies(methData || [])
+        }
+      } catch (e) {
+        console.error('Failed to build project wizard view:', e)
+        if (!cancelled) setWizardFormData(null)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [project, projectId])
+
+  const loadWizardFinancial = useCallback(() => {
+    Promise.all([getFundingSources({ activeOnly: true }), getBudgetCategories({ activeOnly: true })])
+      .then(([fundingRes, budgetCatRes]) => {
+        if (fundingRes?.success && Array.isArray(fundingRes.data)) setWizardFundingSources(fundingRes.data)
+        if (budgetCatRes?.success && Array.isArray(budgetCatRes.data)) {
+          setWizardBudgetCategories(budgetCatRes.data)
+        }
+      })
+      .catch((err) => console.error('Wizard financial lookups:', err))
+  }, [])
+
+  const loadWizardLifecycle = useCallback(() => {
+    getLifecycleTemplates()
+      .then((result) => {
+        if (result?.success && Array.isArray(result.data)) setWizardLifecycleTemplates(result.data)
+      })
+      .catch((err) => console.error('Wizard lifecycle templates:', err))
+  }, [])
+
+  const prevWizardFinancialRef = useRef(false)
+  useEffect(() => {
+    const onFinancial = wizardActiveTab === 'financial'
+    if (onFinancial && !prevWizardFinancialRef.current) loadWizardFinancial()
+    prevWizardFinancialRef.current = onFinancial
+  }, [wizardActiveTab, loadWizardFinancial])
+
+  const prevWizardDeliveryRef = useRef(false)
+  useEffect(() => {
+    const onDelivery = wizardActiveTab === 'delivery' || wizardActiveTab === 'tolerances'
+    if (onDelivery && !prevWizardDeliveryRef.current) loadWizardLifecycle()
+    prevWizardDeliveryRef.current = onDelivery
+  }, [wizardActiveTab, loadWizardLifecycle])
+
+  const noop = useCallback(() => {})
+  const noopAuthority = useCallback(() => noop, [noop])
+
+  const wizardTabCompletionData = useMemo(() => {
+    if (!wizardFormData) return {}
+    return {
+      ...wizardFormData,
+      portfolio_id: portfolioAssignment?.portfolio_id ?? null,
+      programme_id: programmeAssignment?.programme_id ?? null,
+    }
+  }, [wizardFormData, portfolioAssignment, programmeAssignment])
+
+  const projectTypeOptions = useMemo(() => {
+    if (!project?.project_type_id) return []
+    return [{ value: project.project_type_id, label: project.project_types?.type_name || '—' }]
+  }, [project])
+
+  const statusOptions = useMemo(() => {
+    if (!project?.status_id) return []
+    return [{ value: project.status_id, label: project.project_statuses?.status_name || '—' }]
+  }, [project])
 
   if (loading) {
     return (
@@ -126,16 +303,29 @@ export default function ProjectsDetail() {
   }
 
   if (!project) {
+    const code = loadError?.code
+    const isNotFound = code === 'PGRST116'
+    const title = isNotFound
+      ? 'This project could not be opened'
+      : 'Unable to load this project'
+    const detail = isNotFound
+      ? 'The ID in your link may be out of date (for example after seed data was refreshed), the project was removed, or you do not have access. Open Projects and select a current project from your list.'
+      : (loadError?.message || 'Something went wrong while loading. You can return to the project list and try again.')
+
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center">
-          <p className="text-gray-500 dark:text-gray-400 mb-4">Project not found</p>
-          <button
-            onClick={() => navigate('/projects')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-          >
-            Back to Projects
-          </button>
+      <div className="min-h-screen bg-gray-900">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center rounded-xl border border-gray-700 bg-gray-800/80 p-8">
+            <h1 className="text-xl font-semibold text-gray-100 mb-3">{title}</h1>
+            <p className="text-gray-400 text-sm leading-relaxed mb-6">{detail}</p>
+            <button
+              type="button"
+              onClick={() => navigate('/platform/projects')}
+              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors shadow-sm"
+            >
+              Back to Projects
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -144,7 +334,7 @@ export default function ProjectsDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate('/projects')}
+        onClick={() => navigate('/platform/projects')}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Projects
@@ -160,7 +350,16 @@ export default function ProjectsDetail() {
               <p className="text-gray-500 dark:text-gray-400">Code: {project.project_code}</p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <ExportRecordButtons
+              onExportPPT={() => exportRecordToPPT(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportWord={() => exportRecordToWord(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportExcel={() => exportRecordToExcel(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportCSV={() => exportRecordToCSV(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportXML={() => exportRecordToXML(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportJSON={() => exportRecordToJSON(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportPrint={() => exportRecordToPrint(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+            />
             {project.project_statuses && (
               <span
                 className="px-3 py-1 text-sm rounded text-white"
@@ -170,7 +369,7 @@ export default function ProjectsDetail() {
               </span>
             )}
             <button
-              onClick={() => navigate('/projects/' + id + '/edit')}
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'edit'))}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
             >
               <Edit2 className="h-4 w-4" />
@@ -253,6 +452,76 @@ export default function ProjectsDetail() {
         )}
       </div>
 
+      {wizardFormData && (
+        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="mb-1 text-xl font-semibold text-gray-900 dark:text-white">Project record</h2>
+          <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            Read-only view using the same steps as create and edit. Use Edit to make changes.
+          </p>
+          <ProjectFormTabs
+            activeTab={wizardActiveTab}
+            setActiveTab={setWizardActiveTab}
+            formData={wizardTabCompletionData}
+          />
+          <div className="mt-4">
+            <ProjectWizardPanels
+              mode="view"
+              activeTab={wizardActiveTab}
+              formData={wizardFormData}
+              errors={{}}
+              handleChange={noop}
+              projectTypeOptions={projectTypeOptions}
+              statusOptions={statusOptions}
+              handleProjectTypeChange={noop}
+              handleProjectStatusChange={noop}
+              handleAuthorityNameChange={noopAuthority}
+              lifecycleTemplates={wizardLifecycleTemplates}
+              fundingSources={wizardFundingSources}
+              budgetCategories={wizardBudgetCategories}
+              handleBudgetCategoriesChange={noop}
+              selectedPortfolioId={portfolioAssignment?.portfolio_id ?? null}
+              selectedPortfolio={portfolioAssignment?.portfolios ?? null}
+              onPortfolioChange={noop}
+              selectedProgrammeId={programmeAssignment?.programme_id ?? null}
+              selectedProgramme={programmeAssignment?.programmes ?? null}
+              onProgrammeChange={noop}
+              portfolioReadOnlySummary={
+                portfolioAssignment?.portfolios
+                  ? {
+                      portfolio_name: portfolioAssignment.portfolios.portfolio_name,
+                      portfolio_code: portfolioAssignment.portfolios.portfolio_code,
+                    }
+                  : null
+              }
+              programmeReadOnlySummary={
+                programmeAssignment?.programmes
+                  ? {
+                      programme_name: programmeAssignment.programmes.programme_name,
+                      programme_code: programmeAssignment.programmes.programme_code,
+                    }
+                  : null
+              }
+              methodologies={methodologies}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Risk Summary Widget */}
+      <div className="mb-6">
+        <ProjectRiskSummary projectId={projectId} />
+      </div>
+
+      {/* Issue Summary Widget */}
+      <div className="mb-6">
+        <OpenIssuesWidget projectId={projectId} />
+      </div>
+
+      {/* Lessons Summary Widget */}
+      <div className="mb-6">
+        <LessonsSummaryWidget projectId={projectId} />
+      </div>
+
       {/* Structured PM Modules */}
       {/* Note: 'prince2' methodology_code checked for database backward compatibility only */}
       {project.project_methodologies && 
@@ -265,7 +534,7 @@ export default function ProjectsDetail() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
-              onClick={() => navigate(`/projects/${id}/structured/starting-up`)}
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'structured', 'starting-up'))}
               className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
             >
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -276,7 +545,7 @@ export default function ProjectsDetail() {
               </p>
             </button>
             <button
-              onClick={() => navigate(`/projects/${id}/structured/initiating`)}
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'structured', 'initiating'))}
               className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
             >
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -286,8 +555,30 @@ export default function ProjectsDetail() {
                 Create Business Case and Project Initiation Document
               </p>
             </button>
+            <button
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'pid'))}
+              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Project Initiation Document (PID)
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Establish solid foundations for the project
+              </p>
+            </button>
+            <button
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'structured', 'controlling'))}
+              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Work Packages
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Manage work packages for stage execution
+              </p>
+            </button>
                 <button
-                  onClick={() => navigate(`/projects/${id}/structured/stage-gates`)}
+                  onClick={() => navigate(platformProjectPath(urlProjectSegment, 'structured', 'stage-gates'))}
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
                 >
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -298,7 +589,7 @@ export default function ProjectsDetail() {
                   </p>
                 </button>
                 <button
-                  onClick={() => navigate(`/projects/${id}/structured/controlling-stage`)}
+                  onClick={() => navigate(platformProjectPath(urlProjectSegment, 'structured', 'controlling'))}
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
                 >
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -309,7 +600,7 @@ export default function ProjectsDetail() {
                   </p>
                 </button>
                 <button
-                  onClick={() => navigate(`/projects/${id}/structured/managing-product-delivery`)}
+                  onClick={() => navigate(platformProjectPath(urlProjectSegment, 'structured', 'managing-delivery'))}
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
                 >
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -330,7 +621,7 @@ export default function ProjectsDetail() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
-            onClick={() => navigate(`/projects/${id}/issues`)}
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'issues'))}
             className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
           >
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -341,7 +632,112 @@ export default function ProjectsDetail() {
             </p>
           </button>
           <button
-            onClick={() => navigate(`/projects/${id}/risks`)}
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'issues', 'register'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Issue Register
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Formal Issue Register with RFC, Off-spec, and Problem tracking
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'ppd'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Project Product Description
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Define what the project will deliver - overall project product
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'qms'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left relative"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Quality Management Strategy
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Define how quality will be achieved - quality planning, control, and assurance
+                </p>
+              </div>
+              {qms && (
+                <span className={`ml-2 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
+                  qms.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                  qms.status === 'under_review' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                  'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                }`}>
+                  <Shield className="h-3 w-3" />
+                  {qms.status.replace('_', ' ')}
+                </span>
+              )}
+            </div>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'rms'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left relative"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Risk Management Strategy
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Define how risks will be managed - identification, assessment, response, and monitoring
+                </p>
+              </div>
+              {rms && (
+                <span className={`ml-2 px-2 py-1 rounded text-xs font-medium flex items-center gap-1 ${
+                  rms.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                  rms.status === 'under_review' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                  'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                }`}>
+                  <AlertTriangle className="h-3 w-3" />
+                  {rms.status.replace('_', ' ')}
+                </span>
+              )}
+            </div>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'cms'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Communication Management Strategy
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Define how communication will be managed - channels, methods, audiences, and procedures
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'configuration-ms'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Configuration Management Strategy
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Define how configuration will be managed - identification, version control, baselines, and audits
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'configuration-items'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Configuration Item Register
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Track all configuration items, versions, status changes, and baselines
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'risks'))}
             className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
           >
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -352,7 +748,40 @@ export default function ProjectsDetail() {
             </p>
           </button>
           <button
-            onClick={() => navigate(`/projects/${id}/raid-log`)}
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'plans'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Plan Documentation
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Project Plan and Stage Plans - comprehensive planning documentation
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'product-descriptions'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Product Descriptions
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Individual Product Descriptions - detailed specifications for products/deliverables
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'product-status-accounts'))}
+            className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              Product Status Accounts
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Product Status Register - track status, progress, and history of products/deliverables
+            </p>
+          </button>
+          <button
+            onClick={() => navigate(platformProjectPath(urlProjectSegment, 'raid-log'))}
             className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
           >
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -375,7 +804,7 @@ export default function ProjectsDetail() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
-              onClick={() => navigate(`/projects/${id}/scrum/product-backlog`)}
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'scrum', 'product-backlog'))}
               className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
             >
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -386,7 +815,7 @@ export default function ProjectsDetail() {
               </p>
             </button>
             <button
-              onClick={() => navigate(`/projects/${id}/scrum/sprint-planning`)}
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'scrum', 'sprint-planning'))}
               className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
             >
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -410,7 +839,7 @@ export default function ProjectsDetail() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button
-              onClick={() => navigate(`/projects/${id}/kanban`)}
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'kanban'))}
               className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
             >
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
@@ -433,7 +862,7 @@ export default function ProjectsDetail() {
               Project Tasks
             </h2>
             <button
-              onClick={() => navigate(`/tasks/create`, { state: { projectId: id } })}
+              onClick={() => navigate(`/platform/tasks/create`, { state: { projectId } })}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm"
             >
               + Add Task
@@ -473,7 +902,7 @@ export default function ProjectsDetail() {
             </p>
           ) : (
             <div className="min-h-[500px]">
-              <GanttChart projectId={id} />
+              <GanttChart projectId={projectId} />
             </div>
           )}
         </div>

@@ -288,7 +288,7 @@ BEGIN
 END $$;
 
 -- ------------------------------------------------
--- ROLE: Organization Admin - MOST MENUS (exclude system-level admin)
+-- ROLE: PMO Admin - MOST MENUS (exclude system-level admin)
 -- ------------------------------------------------
 
 INSERT INTO role_menu_items (role_id, menu_item_id, can_view, can_use, is_active)
@@ -300,7 +300,7 @@ SELECT
     true AS is_active
 FROM roles r
 CROSS JOIN menu_items m
-WHERE r.role_name = 'org_admin'
+WHERE r.role_name = 'pmo_admin'
   AND m.is_deleted = FALSE
   AND m.is_active = TRUE
   AND m.menu_code NOT IN ('admin_settings', 'admin_audit', 'admin_integrations')
@@ -312,7 +312,7 @@ ON CONFLICT (role_id, menu_item_id) DO UPDATE SET
 
 DO $$
 BEGIN
-    RAISE NOTICE 'Organization Admin role: menus assigned';
+    RAISE NOTICE 'PMO Admin role: menus assigned';
 END $$;
 
 -- ------------------------------------------------

@@ -31,11 +31,11 @@ This plan outlines a comprehensive unified login and role assignment system that
 ### Domain Separation (Critical)
 As per CLAUDE.md architecture rules:
 
-**PM Domain** (`public` schema)
+**Platform Domain** (`public` schema)
 - Routes: `/app/*`
 - DB Client: `appDb`
 - Components: `src/components/app/`
-- Services: `src/modules/pm/`
+- Services: `src/modules/platform/`
 - Focus: Real project management, teams, collaboration
 
 **SIM Domain** (`sim` schema)
@@ -195,7 +195,7 @@ As per CLAUDE.md architecture rules:
 - id (UUID, PK)
 - project_id (UUID, FK → projects.id, UNIQUE)
 - account_id (UUID, FK → accounts.id)
-- subscription_id (UUID, FK → pm_subscriptions.id)
+- subscription_id (UUID, FK → platform_subscriptions.id)
 - included_seats (INTEGER, DEFAULT 30)
 - extra_seats_purchased (INTEGER, DEFAULT 0)
 - current_user_count (INTEGER, computed from project_memberships)
@@ -434,7 +434,7 @@ Examples: `project.edit`, `tasks.create`, `billing.purchase_seats`
 **Status**: ✅ Completed
 
 #### Tasks:
-- [x] Create `src/pages/onboarding/PMAccountSetup.jsx`
+- [x] Create `src/pages/onboarding/PlatformAccountSetup.jsx`
   - [x] Multi-step wizard:
     - [x] Step 1: Account details (name, type)
     - [x] Step 2: First project creation
@@ -442,7 +442,7 @@ Examples: `project.edit`, `tasks.create`, `billing.purchase_seats`
     - [x] Step 4: Team invitation (optional - skip option)
   - [x] Create account on completion
   - [x] Link to subscription
-  - [x] Redirect to PM dashboard
+  - [x] Redirect to Platform dashboard
 
 - [x] Create `src/pages/app/AccountSettings.jsx`
   - [x] View/edit account information
@@ -601,11 +601,11 @@ Examples: `project.edit`, `tasks.create`, `billing.purchase_seats`
 - [x] Update `src/components/DynamicMenu.jsx` (Ready for extension)
   - [x] DynamicMenu.jsx exists and is functional
   - [ ] Platform-aware menu rendering (can be added when needed)
-  - [ ] Different menus for PM vs Simulator (can use configs below)
-  - [ ] Permission-based menu item filtering (can use pmMenuConfig)
+  - [ ] Different menus for Platform vs Simulator (can use configs below)
+  - [ ] Permission-based menu item filtering (can use platformMenuConfig)
   - Note: DynamicMenu.jsx exists, menu configs created for future integration
 
-- [x] Create `src/config/pmMenuConfig.js`
+- [x] Create `src/config/platformMenuConfig.js`
   - [x] Platform menu structure
   - [x] Permission requirements per menu item
   - [x] Role-based visibility
@@ -623,7 +623,7 @@ Examples: `project.edit`, `tasks.create`, `billing.purchase_seats`
   - [ ] Add "Account Management" menu group
   - [ ] Add "User Management" menu group
   - [ ] Add "Subscription & Billing" menu items
-  - Note: Menu configs created (pmMenuConfig.js, simulatorMenuConfig.js) - can use these instead of database
+  - Note: Menu configs created (platformMenuConfig.js, simulatorMenuConfig.js) - can use these instead of database
   - Status: Config-based approach ready, database updates optional
 
 **Platform Menu Structure:**
@@ -676,7 +676,7 @@ Settings
   - [x] `verifyPayment(reference)`
   - Note: Ready for Paynow API integration
 
-- [ ] Create `src/pages/checkout/PMSubscriptionCheckout.jsx` (Optional - can be created when subscription flow is needed)
+- [ ] Create `src/pages/checkout/PlatformSubscriptionCheckout.jsx` (Optional - can be created when subscription flow is needed)
   - [ ] Plan selection (Starter, Professional, Enterprise)
   - [ ] Display seat limits
   - [ ] Extra seat pricing info
@@ -761,7 +761,7 @@ Settings
   - Platform architecture
   - Authentication flow diagrams
 
-- [ ] Create `Documentation/PM_Platform_User_Management.md`
+- [ ] Create `Documentation/Platform_User_Management.md`
   - Account creation guide
   - Inviting team members
   - Managing roles and permissions
@@ -1014,28 +1014,28 @@ WHERE NOT EXISTS (
 - `POST /api/auth/switch-platform` - Switch active platform
 
 ### Platform - Accounts
-- `POST /api/pm/accounts` - Create account
-- `GET /api/pm/accounts/:id` - Get account
-- `PATCH /api/pm/accounts/:id` - Update account
-- `GET /api/pm/accounts/:id/projects` - List projects
-- `GET /api/pm/accounts/:id/subscription` - Get subscription
+- `POST /api/platform/accounts` - Create account
+- `GET /api/platform/accounts/:id` - Get account
+- `PATCH /api/platform/accounts/:id` - Update account
+- `GET /api/platform/accounts/:id/projects` - List projects
+- `GET /api/platform/accounts/:id/subscription` - Get subscription
 
 ### Platform - Projects
-- `GET /api/pm/projects/:id/members` - List members
-- `POST /api/pm/projects/:id/members/invite` - Invite user
-- `PATCH /api/pm/projects/:id/members/:memberId` - Update member
-- `DELETE /api/pm/projects/:id/members/:memberId` - Remove member
+- `GET /api/platform/projects/:id/members` - List members
+- `POST /api/platform/projects/:id/members/invite` - Invite user
+- `PATCH /api/platform/projects/:id/members/:memberId` - Update member
+- `DELETE /api/platform/projects/:id/members/:memberId` - Remove member
 
 ### Platform - Roles
-- `GET /api/pm/projects/:id/roles` - List roles
-- `POST /api/pm/projects/:id/roles` - Create custom role
-- `PATCH /api/pm/projects/:id/roles/:roleId` - Update role
-- `DELETE /api/pm/projects/:id/roles/:roleId` - Delete role
+- `GET /api/platform/projects/:id/roles` - List roles
+- `POST /api/platform/projects/:id/roles` - Create custom role
+- `PATCH /api/platform/projects/:id/roles/:roleId` - Update role
+- `DELETE /api/platform/projects/:id/roles/:roleId` - Delete role
 
 ### Platform - Seats
-- `GET /api/pm/projects/:id/seats` - Get allocation
-- `POST /api/pm/projects/:id/seats/purchase` - Purchase seats
-- `GET /api/pm/projects/:id/seats/history` - Purchase history
+- `GET /api/platform/projects/:id/seats` - Get allocation
+- `POST /api/platform/projects/:id/seats/purchase` - Purchase seats
+- `GET /api/platform/projects/:id/seats/history` - Purchase history
 
 ### Invitations
 - `GET /api/invitations/:token` - Get invitation
@@ -1103,7 +1103,7 @@ All 14 phases have been successfully implemented.
 - Updated `Login.jsx` - Integrated platform selection
 
 #### Phase 4: Platform - Account & Onboarding ✅
-- Created `PMAccountSetup.jsx` - Multi-step onboarding wizard
+- Created `PlatformAccountSetup.jsx` - Multi-step onboarding wizard
 - Created `AccountSettings.jsx` - Account management page
 
 #### Phase 5: Platform - Project User Management ✅
@@ -1145,7 +1145,7 @@ All 14 phases have been successfully implemented.
 
 #### Phase 14: Documentation ✅
 - Created `Unified_Login_System.md` - System overview
-- Created `PM_Platform_User_Management.md` - User management guide
+- Created `Platform_User_Management.md` - User management guide
 - Created `Platform_Switching_Guide.md` - Platform switching guide
 
 ### Implementation Summary
@@ -1206,18 +1206,18 @@ All 14 phases have been successfully implemented.
 ## Quick Reference
 
 ### Domain Separation Checklist
-- [ ] PM operations use `appDb` client
+- [ ] Platform operations use `appDb` client
 - [ ] Simulator operations use `simDb` client
-- [ ] PM routes start with `/app/`
+- [ ] Platform routes start with `/app/`
 - [ ] Simulator routes start with `/simulator/`
-- [ ] PM components in `src/components/app/`
+- [ ] Platform components in `src/components/app/`
 - [ ] Simulator components in `src/components/sim/`
-- [ ] NO mixing of PM and Simulator data
+- [ ] NO mixing of Platform and Simulator data
 - [ ] Shared auth/user data in `public.users`
 
 ### Key Tables by Domain
 
-**Public Schema (PM + Shared)**
+**Public Schema (Platform + Shared)**
 - users, roles, permissions, user_roles
 - accounts, pm_subscriptions
 - projects, project_roles, project_memberships

@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { platformDb } from './supabase/supabaseClient';
 
 /**
  * Report Builder Service
@@ -9,7 +9,7 @@ import { supabase } from './supabaseClient';
  * Get report definition by ID
  */
 export async function getReportDefinition(reportId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('report_definitions')
     .select(`
       *,
@@ -29,7 +29,7 @@ export async function getReportDefinition(reportId) {
  * Get report definitions with filters
  */
 export async function getReportDefinitions(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('report_definitions')
     .select(`
       *,
@@ -69,7 +69,7 @@ export async function getReportDefinitions(filters = {}) {
  */
 export async function saveReportDefinition(reportData, reportId = null) {
   if (reportId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('report_definitions')
       .update({
         ...reportData,
@@ -82,7 +82,7 @@ export async function saveReportDefinition(reportData, reportId = null) {
     if (error) throw error;
     return data;
   } else {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('report_definitions')
       .insert({
         ...reportData,
@@ -201,7 +201,7 @@ export async function getReportSchedules(filters = {}) {
  */
 export async function saveReportSchedule(scheduleData, scheduleId = null) {
   if (scheduleId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('report_schedules')
       .update({
         ...scheduleData,
@@ -214,7 +214,7 @@ export async function saveReportSchedule(scheduleData, scheduleId = null) {
     if (error) throw error;
     return data;
   } else {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('report_schedules')
       .insert({
         ...scheduleData,
@@ -272,7 +272,7 @@ export async function generateReportData(reportDefinition) {
     if (reportDefinition.query_sql) {
       // Note: This requires RPC function or direct query execution
       // For security, use RPC functions that validate queries
-      const { data, error } = await supabase.rpc('execute_report_query', {
+      const { data, error } = await platformDb.rpc('execute_report_query', {
         query_text: reportDefinition.query_sql,
         parameters: reportDefinition.query_parameters || {}
       });

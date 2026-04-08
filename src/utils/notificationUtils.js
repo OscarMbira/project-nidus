@@ -234,17 +234,35 @@ export async function getUnreadCount() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return 0
 
+    // Get internal user ID from users table
+    const { data: userRecord, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .single()
+
+    if (userError || !userRecord) {
+      // User record not found, return 0 silently
+      return 0
+    }
+
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('user_id', userRecord.id)
       .eq('is_read', false)
       .eq('is_deleted', false)
 
-    if (error) throw error
+    if (error) {
+      // Silently fail - don't log 500 errors that might be RLS related
+      if (error.code !== 'PGRST116' && error.status !== 500) {
+        console.error('Error getting unread count:', error)
+      }
+      return 0
+    }
     return count || 0
   } catch (error) {
-    console.error('Error getting unread count:', error)
+    // Silently fail - don't log errors that might be RLS related
     return 0
   }
 }

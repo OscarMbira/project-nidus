@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, CheckCircle, XCircle, AlertTriangle, Calendar, User } from 'lucide-react';
 import { getQualityInspections, deleteQualityInspection } from '../services/qualityManagementService';
 import QualityInspectionForm from '../components/quality/QualityInspectionForm';
+import ExportListMenu from '../components/ui/ExportListMenu';
 import { supabase } from '../services/supabaseClient';
 
 export default function QualityInspections() {
@@ -136,7 +137,7 @@ export default function QualityInspections() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/quality-management')}
+            onClick={() => navigate('/platform/quality-management')}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -150,13 +151,41 @@ export default function QualityInspections() {
               Record and track quality inspection results
             </p>
           </div>
-          <button
-            onClick={handleCreateInspection}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            Create Inspection
-          </button>
+          <div className="flex items-center gap-2">
+            <ExportListMenu
+              columns={[
+                { key: 'inspection_title', label: 'Inspection' },
+                { key: 'inspection_reference', label: 'Reference' },
+                { key: 'inspection_type', label: 'Type' },
+                { key: 'product_name', label: 'Product/Deliverable' },
+                { key: 'inspector_name', label: 'Inspector' },
+                { key: 'inspection_date', label: 'Date' },
+                { key: 'defects_found_count', label: 'Defects' },
+                { key: 'inspection_result', label: 'Result' },
+                { key: 'project_name', label: 'Project' },
+              ]}
+              data={inspections.map(i => ({
+                inspection_title: i.inspection_title,
+                inspection_reference: i.inspection_reference || '',
+                inspection_type: i.inspection_type || '',
+                product_name: i.quality_register?.product_name || 'N/A',
+                inspector_name: i.inspector?.full_name || i.inspector?.email || 'N/A',
+                inspection_date: i.inspection_date || '',
+                defects_found_count: i.defects_found_count ?? '',
+                inspection_result: i.inspection_result || '',
+                project_name: i.project?.project_name || '',
+              }))}
+              baseFilename="Quality-Inspections"
+              disabled={inspections.length === 0}
+            />
+            <button
+              onClick={handleCreateInspection}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Create Inspection
+            </button>
+          </div>
         </div>
       </div>
 

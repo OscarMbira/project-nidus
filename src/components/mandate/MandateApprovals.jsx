@@ -34,16 +34,21 @@ export default function MandateApprovals({ mandateId, readOnly = false, onStatus
     fetchApprovals()
   }, [fetchApprovals])
 
+  const fetchClientIp = async () => {
+    return null
+  }
+
   const handleModalConfirm = async (comments) => {
     if (!actionModal) return
     const { approvalId, action } = actionModal
     try {
       setProcessing(approvalId)
+      const ipAddress = await fetchClientIp()
       if (action === 'approve') {
-        await approveMandate(approvalId, null, comments)
+        await approveMandate(approvalId, null, comments, ipAddress)
         toast.success('Mandate approved successfully')
       } else {
-        await rejectMandate(approvalId, null, comments)
+        await rejectMandate(approvalId, null, comments, ipAddress)
         toast.success('Mandate rejected')
       }
       setActionModal(null)

@@ -49,6 +49,22 @@
       return;
     }
     
+    // Suppress 403/404 errors for countries table (expected if RLS blocks or table doesn't exist)
+    if (allArgsString && (
+      (allArgsString.includes('countries') || allArgsString.includes('Error loading countries')) &&
+      (allArgsString.includes('403') || allArgsString.includes('404') || allArgsString.includes('Forbidden') || allArgsString.includes('Not Found'))
+    )) {
+      return;
+    }
+    
+    // Suppress generic 403/404 resource loading errors (expected for missing resources)
+    if (allArgsString && (
+      allArgsString.includes('Failed to load resource') &&
+      (allArgsString.includes('403') || allArgsString.includes('404'))
+    )) {
+      return;
+    }
+    
     // Call original console.error for all other messages
     originalConsoleError.apply(console, args);
   };
@@ -74,6 +90,15 @@
     if (message && (
       message.includes('React Router Future Flag') ||
       message.includes('v7_relativeSplatPath')
+    )) {
+      return;
+    }
+    
+    // Suppress Node "stream" externalized warning (handled by vite-plugin-node-polyfills)
+    if (allArgsString && (
+      allArgsString.includes('Module "stream" has been externalized') ||
+      allArgsString.includes('stream.Readable') ||
+      allArgsString.includes('browser compatibility')
     )) {
       return;
     }

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { X, Save, Link2, FolderKanban, Target, AlertTriangle } from 'lucide-react';
 import { saveInterProjectDependency, checkCircularDependency } from '../../services/dependencyService';
-import { supabase } from '../../services/supabaseClient';
+import { platformDb } from '../../services/supabase/supabaseClient';
 
-export default function DependencyForm({ dependency, onSave, onCancel }) {
+export default function DependencyForm({ dependency, onSave, onCancel, usePageLayout = false }) {
   const [formData, setFormData] = useState({
     dependency_code: '',
     dependency_name: '',
@@ -33,6 +33,8 @@ export default function DependencyForm({ dependency, onSave, onCancel }) {
   const [portfolios, setPortfolios] = useState([]);
   const [programmes, setProgrammes] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [loadingLookup, setLoadingLookup] = useState(true);
+  const [lookupError, setLookupError] = useState(null);
   const [circularCheck, setCircularCheck] = useState(null);
   const [checkingCircular, setCheckingCircular] = useState(false);
 
@@ -76,35 +78,25 @@ export default function DependencyForm({ dependency, onSave, onCancel }) {
   }, [formData.source_project_id, formData.target_project_id]);
 
   const fetchLookupData = async () => {
+    setLoadingLookup(true);
+    setLookupError(null);
     try {
-      // Fetch projects
-      const { data: projectsData } = await supabase
-        .from('projects')
-        .select('id, project_name, project_code, project_status')
-        .eq('is_deleted', false)
-        .order('project_name', { ascending: true });
-
-      if (projectsData) setProjects(projectsData);
-
-      // Fetch portfolios
-      const { data: portfoliosData } = await supabase
-        .from('portfolios')
-        .select('id, portfolio_name, portfolio_code')
-        .eq('is_deleted', false)
-        .order('portfolio_name', { ascending: true });
-
-      if (portfoliosData) setPortfolios(portfoliosData);
-
-      // Fetch programmes
-      const { data: programmesData } = await supabase
-        .from('programmes')
-        .select('id, programme_name, programme_code')
-        .eq('is_deleted', false)
-        .order('programme_name', { ascending: true });
-
-      if (programmesData) setProgrammes(programmesData);
+      const [projectsRes, portfoliosRes, programmesRes] = await Promise.all([
+        platformDb.from('projects').select('id, project_name, project_code, status_id').eq('is_deleted', false).order('project_name', { ascending: true }),
+        platformDb.from('portfolios').select('id, portfolio_name, portfolio_code').eq('is_deleted', false).order('portfolio_name', { ascending: true }),
+        platformDb.from('programmes').select('id, programme_name, programme_code').eq('is_deleted', false).order('programme_name', { ascending: true }),
+      ]);
+      if (projectsRes.data) setProjects(projectsRes.data);
+      if (portfoliosRes.data) setPortfolios(portfoliosRes.data);
+      if (programmesRes.data) setProgrammes(programmesRes.data);
+      if (projectsRes.error) throw projectsRes.error;
+      if (portfoliosRes.error) throw portfoliosRes.error;
+      if (programmesRes.error) throw programmesRes.error;
     } catch (error) {
       console.error('Error fetching lookup data:', error);
+      setLookupError(error?.message || 'Failed to load form data');
+    } finally {
+      setLoadingLookup(false);
     }
   };
 
@@ -178,8 +170,34 @@ export default function DependencyForm({ dependency, onSave, onCancel }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  if (loadingLookup) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto mb-4" />
+          <p className="text-gray-400">Loading form...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (lookupError) {
+    return (
+      <div className="bg-gray-800 rounded-lg border border-red-800 p-6 text-center">
+        <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-3" />
+        <p className="text-red-200 mb-4">{lookupError}</p>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg"
+        >
+          Back
+        </button>
+      </div>
+    );
+  }
+
+  const formContent = (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
@@ -633,6 +651,14 @@ export default function DependencyForm({ dependency, onSave, onCancel }) {
           </div>
         </form>
       </div>
+  );
+
+  if (usePageLayout) {
+    return <div className="bg-gray-800 dark:bg-gray-900 rounded-lg border border-gray-700">{formContent}</div>;
+  }
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      {formContent}
     </div>
   );
 }

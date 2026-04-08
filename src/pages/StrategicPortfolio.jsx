@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { FolderKanban, Target, BarChart3 } from 'lucide-react';
 import StrategicPortfolioView from '../components/strategy/StrategicPortfolioView';
 
 export default function StrategicPortfolio() {
-  const [portfolioId, setPortfolioId] = useState('');
+  const { portfolioId: portfolioIdParam } = useParams();
+  const initialPortfolioId = portfolioIdParam || '';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -19,7 +20,7 @@ export default function StrategicPortfolio() {
         </p>
       </div>
 
-      <StrategicPortfolioView portfolioId={portfolioId || null} />
+      <StrategicPortfolioView portfolioId={initialPortfolioId || null} />
     </div>
   );
 }

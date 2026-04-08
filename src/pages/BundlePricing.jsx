@@ -1,7 +1,7 @@
 /**
  * Bundle Pricing Page
  *
- * Displays bundle subscription options for PM + Simulator
+ * Displays bundle subscription options for Platform + Simulator
  * Highlights savings when subscribing to both platforms
  */
 
@@ -20,6 +20,8 @@ import {
 import { supabase } from '../services/supabaseClient';
 import { getSubscriptionSummary } from '../services/unifiedSubscriptionService';
 import { useToast } from '../hooks/useToast';
+import MainHeader from '../components/homepage/MainHeader';
+import Footer from '../components/homepage/Footer';
 
 export default function BundlePricing() {
   const navigate = useNavigate();
@@ -140,24 +142,29 @@ export default function BundlePricing() {
 
   const hasBundle = () => {
     if (!summary) return false;
-    const hasPM = summary.registeredPlatforms?.includes('pm');
+    const hasPM = summary.registeredPlatforms?.includes('platform') || summary.registeredPlatforms?.includes('pm');
     const hasSim = summary.registeredPlatforms?.includes('simulator');
     return hasPM && hasSim;
   };
 
   return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <MainHeader />
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-4">
-            <Gift className="h-8 w-8 text-white" />
+        <div className="text-center mb-12 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 rounded-2xl p-8 md:p-12 shadow-xl border border-slate-500/20">
+          <div className="inline-flex items-center justify-center p-3 bg-white/10 dark:bg-white/5 rounded-full mb-4">
+            <Gift className="h-10 w-10 text-purple-300" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Bundle & Save
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Choose Your <span className="text-purple-300">Bundle</span> Plan
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Get both Platform and Simulator together and save up to $200/year
+          <p className="text-xl text-slate-200 max-w-2xl mx-auto mb-2">
+            Get both Platform and Simulator together - Select the perfect bundle for maximum value
+          </p>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            Compare bundle options below and save up to $200/year when you subscribe to both platforms
           </p>
         </div>
 
@@ -276,7 +283,7 @@ export default function BundlePricing() {
             return (
               <div
                 key={bundle.id}
-                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-transform hover:scale-105 ${
+                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-transform hover:scale-105 flex flex-col ${
                   bundle.popular ? 'ring-2 ring-blue-600' : ''
                 } ${bundle.isLifetime ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10' : ''}`}
               >
@@ -286,7 +293,7 @@ export default function BundlePricing() {
                   </div>
                 )}
 
-                <div className="p-8">
+                <div className="p-8 flex flex-col h-full">
                   {/* Icon */}
                   <div
                     className={`w-12 h-12 rounded-lg bg-${bundle.color}-100 dark:bg-${bundle.color}-900/30 flex items-center justify-center mb-4`}
@@ -333,7 +340,7 @@ export default function BundlePricing() {
                   </div>
 
                   {/* Features */}
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 flex-grow">
                     {bundle.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
                         <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
@@ -359,7 +366,7 @@ export default function BundlePricing() {
                           : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                       }`}
                     >
-                      {user ? 'Get Bundle' : 'Get Started'}
+                      {bundle.isLifetime ? 'Buy Lifetime Access' : 'Subscribe Now'}
                       <ArrowRight className="inline-block ml-2 h-4 w-4" />
                     </button>
                   )}
@@ -451,6 +458,8 @@ export default function BundlePricing() {
           </div>
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 }

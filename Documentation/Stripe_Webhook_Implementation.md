@@ -227,7 +227,7 @@ async function handlePaymentFailed(invoice) {
   }
 }
 
-// Database operations for PM subscriptions
+// Database operations for Platform subscriptions
 async function createOrUpdatePMSubscription(userId, subscription, metadata = {}) {
   const subscriptionData = {
     user_id: userId,
@@ -251,13 +251,13 @@ async function createOrUpdatePMSubscription(userId, subscription, metadata = {})
   };
 
   const { data, error } = await supabase
-    .from('pm_subscriptions')
+    .from('platform_subscriptions')
     .upsert(subscriptionData, {
       onConflict: 'stripe_subscription_id',
     });
 
   if (error) {
-    console.error('Error creating PM subscription:', error);
+    console.error('Error creating Platform subscription:', error);
     throw error;
   }
 
@@ -266,7 +266,7 @@ async function createOrUpdatePMSubscription(userId, subscription, metadata = {})
 
 async function updatePMSubscription(subscription) {
   const { error } = await supabase
-    .from('pm_subscriptions')
+    .from('platform_subscriptions')
     .update({
       status: subscription.status,
       current_period_end: subscription.current_period_end
@@ -278,14 +278,14 @@ async function updatePMSubscription(subscription) {
     .eq('stripe_subscription_id', subscription.id);
 
   if (error) {
-    console.error('Error updating PM subscription:', error);
+    console.error('Error updating Platform subscription:', error);
     throw error;
   }
 }
 
 async function cancelPMSubscription(stripeSubscriptionId) {
   const { error } = await supabase
-    .from('pm_subscriptions')
+    .from('platform_subscriptions')
     .update({
       status: 'cancelled',
       cancelled_at: new Date().toISOString(),
@@ -294,14 +294,14 @@ async function cancelPMSubscription(stripeSubscriptionId) {
     .eq('stripe_subscription_id', stripeSubscriptionId);
 
   if (error) {
-    console.error('Error cancelling PM subscription:', error);
+    console.error('Error cancelling Platform subscription:', error);
     throw error;
   }
 }
 
 async function markPMSubscriptionPastDue(subscription) {
   const { error } = await supabase
-    .from('pm_subscriptions')
+    .from('platform_subscriptions')
     .update({
       status: 'past_due',
       updated_at: new Date().toISOString(),

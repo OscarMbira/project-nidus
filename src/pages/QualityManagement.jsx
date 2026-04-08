@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Plus, Search, CheckCircle, Search as SearchIcon, BarChart3, FileText } from 'lucide-react';
 import { getQualityRegister, getQualityManagementStats } from '../services/qualityManagementService';
 import QualityRegister from '../components/quality/QualityRegister';
 import QualityRegisterForm from '../components/quality/QualityRegisterForm';
 import QualityMetricsDashboard from '../components/quality/QualityMetricsDashboard';
+import QualityActivityBulkImport from '../components/quality/QualityActivityBulkImport';
 import { supabase } from '../services/supabaseClient';
+import { useViewMode } from '../hooks/useViewMode';
+import ViewToggle from '../components/ui/ViewToggle';
 
 export default function QualityManagement() {
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +25,7 @@ export default function QualityManagement() {
     product_type: '',
     search: '',
   });
+  const [qualityRegisterViewMode, setQualityRegisterViewMode] = useViewMode('quality-register', 'grid');
 
   useEffect(() => {
     fetchProjects();
@@ -69,8 +75,13 @@ export default function QualityManagement() {
   };
 
   const handleEditItem = (item) => {
-    setSelectedItem(item);
-    setShowForm(true);
+    if (item && item.type === 'activity' && item.activity_identifier) {
+      // Navigate to activity detail view
+      navigate(`/platform/quality/activity/${item.activity_identifier}`);
+    } else {
+      setSelectedItem(item);
+      setShowForm(true);
+    }
   };
 
   const handleItemSaved = () => {
@@ -177,7 +188,24 @@ export default function QualityManagement() {
             <option value="report">Report</option>
             <option value="other">Other</option>
           </select>
+          <ViewToggle
+            value={qualityRegisterViewMode}
+            onChange={setQualityRegisterViewMode}
+            ariaLabel="Quality register layout"
+          />
         </div>
+      </div>
+
+      {/* Bulk Import Section */}
+      <div className="mb-6">
+        <details className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <summary className="px-6 py-4 cursor-pointer font-medium text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+            Bulk Import Quality Activities
+          </summary>
+          <div className="px-6 pb-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <QualityActivityBulkImport onImportComplete={fetchData} />
+          </div>
+        </details>
       </div>
 
       {/* Quality Register */}
@@ -186,6 +214,8 @@ export default function QualityManagement() {
         onEdit={handleEditItem}
         onView={handleEditItem}
         onRefresh={fetchData}
+        projectId={selectedProjectId || null}
+        registerViewMode={qualityRegisterViewMode}
       />
 
       {/* Quality Register Form Modal */}

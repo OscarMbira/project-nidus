@@ -3,6 +3,23 @@
 /* CRITICAL: Tailwind v4 requires this custom variant definition for dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── Brand CSS custom property defaults ──────────────────────────────────────
+   These are overridden at runtime by BrandingContext (applyBrandingToDOM).
+   Defining them here ensures the app is styled before JS loads.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --brand-primary:        #3B82F6;
+  --brand-secondary:      #1E40AF;
+  --brand-accent:         #F59E0B;
+  --brand-header-bg:      #1F2937;
+  --brand-sidebar-bg:     #111827;
+  --brand-sidebar-active: #3B82F6;
+  --brand-sidebar-text:   #F9FAFB;
+  --brand-button:         #3B82F6;
+  --brand-link:           #60A5FA;
+  --brand-font:           "Inter", sans-serif;
+}
+
 /* Ensure dark mode works by explicitly setting it on html */
 html.dark {
   color-scheme: dark;

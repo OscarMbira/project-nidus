@@ -49,24 +49,20 @@ export default function ThemeToggle({ className = '', size = 'md' }) {
   const handleClick = (e) => {
     e.preventDefault()
     e.stopPropagation()
-    
-    if (!toggleTheme) {
-      console.error('[ThemeToggle] toggleTheme function is not available')
-      return
-    }
-    
-    try {
-      toggleTheme()
-    } catch (error) {
-      console.error('[ThemeToggle] Error calling toggleTheme:', error)
+    if (toggleTheme) {
+      try {
+        toggleTheme()
+      } catch (err) {
+        console.error('[ThemeToggle] Error toggling theme:', err)
+      }
     }
   }
 
   return (
     <button
       onClick={handleClick}
-      className={`p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${className}`}
-      aria-label="Toggle theme"
+      className={`p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 dark:focus:ring-offset-gray-900 cursor-pointer ${className}`}
+      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       type="button"
       data-theme={theme}
       data-testid="theme-toggle-button"

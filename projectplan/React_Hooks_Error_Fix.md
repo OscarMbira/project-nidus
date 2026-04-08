@@ -172,7 +172,7 @@ After clearing browser cache, verify:
    - No console errors
 
 3. **Check All Pages**
-   - Navigate to: `/`, `/pm`, `/simulator`
+   - Navigate to: `/`, `/platform`, `/simulator`
    - All should load without errors
    - Theme toggle should work on all pages
 

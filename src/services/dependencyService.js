@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { platformDb } from './supabase/supabaseClient'
 
 /**
  * Dependency Service - API functions for Inter-Project Dependencies module
@@ -12,7 +12,7 @@ import { supabase } from './supabaseClient'
  * Get all inter-project dependencies
  */
 export async function getInterProjectDependencies(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('inter_project_dependencies')
     .select(`
       *,
@@ -20,17 +20,17 @@ export async function getInterProjectDependencies(filters = {}) {
         id,
         project_name,
         project_code,
-        project_status,
-        project_start_date,
-        project_end_date
+        status_id,
+        planned_start_date,
+        planned_end_date
       ),
       target_project:target_project_id (
         id,
         project_name,
         project_code,
-        project_status,
-        project_start_date,
-        project_end_date
+        status_id,
+        planned_start_date,
+        planned_end_date
       ),
       portfolio:portfolio_id (
         id,
@@ -97,7 +97,7 @@ export async function getInterProjectDependencies(filters = {}) {
  * Get a single dependency by ID
  */
 export async function getInterProjectDependency(dependencyId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('inter_project_dependencies')
     .select(`
       *,
@@ -105,17 +105,17 @@ export async function getInterProjectDependency(dependencyId) {
         id,
         project_name,
         project_code,
-        project_status,
-        project_start_date,
-        project_end_date
+        status_id,
+        planned_start_date,
+        planned_end_date
       ),
       target_project:target_project_id (
         id,
         project_name,
         project_code,
-        project_status,
-        project_start_date,
-        project_end_date
+        status_id,
+        planned_start_date,
+        planned_end_date
       ),
       portfolio:portfolio_id (
         id,
@@ -146,12 +146,12 @@ export async function getInterProjectDependency(dependencyId) {
  * Create or update an inter-project dependency
  */
 export async function saveInterProjectDependency(dependencyData, dependencyId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   // Check for circular dependencies before saving
   if (!dependencyId && dependencyData.source_project_id && dependencyData.target_project_id) {
-    const { data: circularCheck, error: checkError } = await supabase.rpc('detect_circular_dependency', {
+    const { data: circularCheck, error: checkError } = await platformDb.rpc('detect_circular_dependency', {
       p_source_project_id: dependencyData.source_project_id,
       p_target_project_id: dependencyData.target_project_id,
     })
@@ -169,7 +169,7 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
   }
 
   if (dependencyId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('inter_project_dependencies')
       .update(updateData)
       .eq('id', dependencyId)
@@ -186,7 +186,7 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
     if (!updateData.dependency_identified_date) {
       updateData.dependency_identified_date = new Date().toISOString().split('T')[0]
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('inter_project_dependencies')
       .insert(updateData)
       .select()
@@ -201,10 +201,10 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
  * Delete an inter-project dependency (soft delete)
  */
 export async function deleteInterProjectDependency(dependencyId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('inter_project_dependencies')
     .update({
       is_deleted: true,
@@ -224,7 +224,7 @@ export async function deleteInterProjectDependency(dependencyId) {
  * Check for circular dependencies
  */
 export async function checkCircularDependency(sourceProjectId, targetProjectId) {
-  const { data, error } = await supabase.rpc('detect_circular_dependency', {
+  const { data, error } = await platformDb.rpc('detect_circular_dependency', {
     p_source_project_id: sourceProjectId,
     p_target_project_id: targetProjectId,
   })
@@ -241,7 +241,7 @@ export async function checkCircularDependency(sourceProjectId, targetProjectId) 
  * Get dependency impacts
  */
 export async function getDependencyImpacts(dependencyId = null, filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('dependency_impacts')
     .select(`
       *,
@@ -282,7 +282,7 @@ export async function getDependencyImpacts(dependencyId = null, filters = {}) {
  * Create or update a dependency impact
  */
 export async function saveDependencyImpact(impactData, impactId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -291,7 +291,7 @@ export async function saveDependencyImpact(impactData, impactId = null) {
   }
 
   if (impactId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('dependency_impacts')
       .update(updateData)
       .eq('id', impactId)
@@ -305,7 +305,7 @@ export async function saveDependencyImpact(impactData, impactId = null) {
     if (!updateData.impact_assessor_user_id) {
       updateData.impact_assessor_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('dependency_impacts')
       .insert(updateData)
       .select()
@@ -320,10 +320,10 @@ export async function saveDependencyImpact(impactData, impactId = null) {
  * Delete a dependency impact (soft delete)
  */
 export async function deleteDependencyImpact(impactId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('dependency_impacts')
     .update({
       is_deleted: true,
@@ -347,7 +347,7 @@ export async function deleteDependencyImpact(impactId) {
  * Get dependency resolutions
  */
 export async function getDependencyResolutions(dependencyId = null, filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('dependency_resolutions')
     .select(`
       *,
@@ -389,7 +389,7 @@ export async function getDependencyResolutions(dependencyId = null, filters = {}
  * Create or update a dependency resolution
  */
 export async function saveDependencyResolution(resolutionData, resolutionId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -398,7 +398,7 @@ export async function saveDependencyResolution(resolutionData, resolutionId = nu
   }
 
   if (resolutionId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('dependency_resolutions')
       .update(updateData)
       .eq('id', resolutionId)
@@ -412,7 +412,7 @@ export async function saveDependencyResolution(resolutionData, resolutionId = nu
     if (!updateData.resolution_owner_user_id) {
       updateData.resolution_owner_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('dependency_resolutions')
       .insert(updateData)
       .select()
@@ -427,10 +427,10 @@ export async function saveDependencyResolution(resolutionData, resolutionId = nu
  * Delete a dependency resolution (soft delete)
  */
 export async function deleteDependencyResolution(resolutionId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('dependency_resolutions')
     .update({
       is_deleted: true,
@@ -454,7 +454,7 @@ export async function deleteDependencyResolution(resolutionId) {
  * Get dependency critical paths
  */
 export async function getDependencyCriticalPaths(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('dependency_critical_paths')
     .select(`
       *,
@@ -498,7 +498,7 @@ export async function getDependencyCriticalPaths(filters = {}) {
  * Create or update a dependency critical path
  */
 export async function saveDependencyCriticalPath(pathData, pathId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -507,7 +507,7 @@ export async function saveDependencyCriticalPath(pathData, pathId = null) {
   }
 
   if (pathId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('dependency_critical_paths')
       .update(updateData)
       .eq('id', pathId)
@@ -521,7 +521,7 @@ export async function saveDependencyCriticalPath(pathData, pathId = null) {
     if (!updateData.analyzed_by_user_id) {
       updateData.analyzed_by_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('dependency_critical_paths')
       .insert(updateData)
       .select()
@@ -536,10 +536,10 @@ export async function saveDependencyCriticalPath(pathData, pathId = null) {
  * Delete a dependency critical path (soft delete)
  */
 export async function deleteDependencyCriticalPath(pathId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('dependency_critical_paths')
     .update({
       is_deleted: true,

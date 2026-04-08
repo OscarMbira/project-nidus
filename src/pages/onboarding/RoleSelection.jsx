@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Card from '../../components/ui/Card'
+import MainHeader from '../../components/homepage/MainHeader'
+import Footer from '../../components/homepage/Footer'
 
 // Role icons mapping
 const roleIcons = {
@@ -161,8 +163,10 @@ export default function RoleSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <MainHeader />
+      <div className="flex-grow py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -319,7 +323,9 @@ export default function RoleSelection() {
             You can change your roles later in your profile settings.
           </p>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   )
 }

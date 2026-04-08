@@ -1,14 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, AlertCircle, Bug, Zap, CheckCircle, Clock, XCircle, Filter, Search } from 'lucide-react'
+import ExportListMenu from '../components/ui/ExportListMenu'
+import { useViewMode } from '../hooks/useViewMode'
+import ViewToggle from '../components/ui/ViewToggle'
 import IssueForm from '../components/IssueForm'
 import IssueList from '../components/IssueList'
 import Pagination from '../components/Pagination'
+import SortToolbar from '../components/ui/SortToolbar'
+import { useSortableTable } from '../hooks/useSortableTable'
+
+const ISSUE_EXPORT_COLUMNS = [
+  { key: 'issue_title', label: 'Title' },
+  { key: 'issue_type', label: 'Type' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'status', label: 'Status' },
+  { key: 'assigned', label: 'Assigned To' },
+  { key: 'created_at', label: 'Created' },
+]
 
 export default function Issues() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [issues, setIssues] = useState([])
@@ -25,6 +41,23 @@ export default function Issues() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 20
+  const [issueViewMode, setIssueViewMode] = useViewMode('issues', 'grid')
+
+  const { handleSort, getSortDirectionForColumn, supabaseOrder } = useSortableTable({
+    defaultSort: { column: 'created_at', direction: 'desc' },
+    storageKey: 'nidus-issues-sort',
+    serverColumnMap: {
+      priority: 'priority',
+      status: 'status',
+      issue_type: 'issue_type',
+      created_at: 'created_at',
+    },
+  })
+
+  const sortFetchKey = useMemo(
+    () => `${supabaseOrder.column}:${supabaseOrder.ascending ? '1' : '0'}`,
+    [supabaseOrder]
+  )
 
   useEffect(() => {
     if (projectId) {
@@ -36,7 +69,7 @@ export default function Issues() {
     if (projectId) {
       fetchIssues()
     }
-  }, [projectId, filters, currentPage])
+  }, [projectId, filters, currentPage, sortFetchKey])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -119,7 +152,7 @@ export default function Issues() {
       const to = from + itemsPerPage - 1
       
       const { data, error } = await query
-        .order('created_at', { ascending: false })
+        .order(supabaseOrder.column, { ascending: supabaseOrder.ascending })
         .range(from, to)
 
       if (error) throw error
@@ -297,17 +330,29 @@ export default function Issues() {
       </div>
 
       {/* Issues List */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           Issues ({issues.length})
         </h2>
-        <button
-          onClick={handleCreateIssue}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Create Issue
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <ExportListMenu
+            columns={ISSUE_EXPORT_COLUMNS}
+            data={issues.map((i) => ({
+              ...i,
+              assigned: i.assigned_to?.full_name || i.assigned_to?.email || '',
+            }))}
+            baseFilename="Issues"
+            disabled={!issues.length}
+          />
+          <ViewToggle value={issueViewMode} onChange={setIssueViewMode} ariaLabel="Issues layout" />
+          <button
+            onClick={handleCreateIssue}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Create Issue
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -319,11 +364,24 @@ export default function Issues() {
         </div>
       ) : (
         <>
+          <div className="mb-4">
+            <SortToolbar
+              columns={[
+                { key: 'priority', label: 'Priority' },
+                { key: 'status', label: 'Status' },
+                { key: 'issue_type', label: 'Type' },
+                { key: 'created_at', label: 'Created' },
+              ]}
+              getSortDirection={getSortDirectionForColumn}
+              onSort={handleSort}
+            />
+          </div>
           <IssueList
             issues={issues}
             onEdit={handleEditIssue}
             onRefresh={fetchIssues}
             projectId={projectId}
+            viewMode={issueViewMode}
           />
           {totalCount > itemsPerPage && (
             <Pagination

@@ -121,11 +121,11 @@ export default function SubscriptionDashboard() {
   };
 
   const getPlatformIcon = (platform) => {
-    return platform === 'pm' ? Briefcase : Gamepad2;
+    return platform === 'platform' ? Briefcase : Gamepad2;
   };
 
   const getPlanName = (platform, planType) => {
-    if (platform === 'pm') {
+    if (platform === 'platform') {
       const tier = PLATFORM_SUBSCRIPTION_TIERS[planType?.toUpperCase()];
       return tier?.name || planType;
     } else {
@@ -292,7 +292,7 @@ export default function SubscriptionDashboard() {
                         <button
                           onClick={() => {
                             const path =
-                              subscription.platform === 'pm'
+                              subscription.platform === 'platform' || subscription.platform === 'pm'
                                 ? '/pricing'
                                 : '/simulator/pricing';
                             navigate(path);
@@ -352,7 +352,7 @@ export default function SubscriptionDashboard() {
                   </p>
                 </div>
               </div>
-              {summary?.registeredPlatforms?.includes('pm') ? (
+              {summary?.registeredPlatforms?.includes('platform') || summary?.registeredPlatforms?.includes('pm') ? (
                 <CheckCircle className="h-6 w-6 text-green-500" />
               ) : (
                 <button

@@ -22,6 +22,8 @@ import {
 import { supabase } from '../services/supabaseClient';
 import { PLATFORM_SUBSCRIPTION_TIERS, getActivePlatformSubscription } from '../services/platformSubscriptionService';
 import { useToast } from '../hooks/useToast';
+import MainHeader from '../components/homepage/MainHeader';
+import PlatformFooter from '../components/homepage/PlatformFooter';
 
 export default function PlatformPricing() {
   const navigate = useNavigate();
@@ -129,15 +131,20 @@ export default function PlatformPricing() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <MainHeader />
+      <div className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Choose Your Platform Plan
+        <div className="text-center mb-12 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 rounded-2xl p-8 md:p-12 shadow-xl border border-slate-500/20">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Choose Your <span className="text-blue-300">Platform</span> Plan
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Powerful project management tools for teams of all sizes
+          <p className="text-xl text-slate-200 max-w-2xl mx-auto mb-2">
+            Select the perfect plan for your team's project management needs
+          </p>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            Compare features below and choose the plan that best fits your requirements
           </p>
         </div>
 
@@ -179,7 +186,7 @@ export default function PlatformPricing() {
             return (
               <div
                 key={tier.id}
-                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105 ${
+                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden transition-transform hover:scale-105 flex flex-col h-full ${
                   tier.popular ? 'ring-2 ring-blue-600' : ''
                 }`}
               >
@@ -189,7 +196,7 @@ export default function PlatformPricing() {
                   </div>
                 )}
 
-                <div className="p-8">
+                <div className="p-8 flex flex-col h-full">
                   {/* Icon */}
                   <div
                     className={`w-12 h-12 rounded-lg bg-${tier.color}-100 dark:bg-${tier.color}-900/30 flex items-center justify-center mb-4`}
@@ -215,7 +222,7 @@ export default function PlatformPricing() {
                   </div>
 
                   {/* Features */}
-                  <ul className="space-y-4 mb-8">
+                  <ul className="space-y-4 mb-8 flex-grow">
                     {tier.features.map((feature, index) => (
                       <li key={index} className="flex items-start">
                         <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
@@ -270,14 +277,14 @@ export default function PlatformPricing() {
               return (
                 <div
                   key={tier.id}
-                  className="relative bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800"
+                  className="relative bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl shadow-lg overflow-hidden border-2 border-blue-200 dark:border-blue-800 flex flex-col h-full"
                 >
                   <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-4 py-1 rounded-bl-lg">
                     <Sparkles className="inline-block h-3 w-3 mr-1" />
                     LIFETIME
                   </div>
 
-                  <div className="p-8">
+                  <div className="p-8 flex flex-col h-full">
                     <div
                       className={`w-12 h-12 rounded-lg bg-${tier.color}-100 dark:bg-${tier.color}-900/30 flex items-center justify-center mb-4`}
                     >
@@ -295,7 +302,7 @@ export default function PlatformPricing() {
                       <span className="text-gray-600 dark:text-gray-400 ml-2">one-time</span>
                     </div>
 
-                    <ul className="space-y-3 mb-8">
+                    <ul className="space-y-3 mb-8 flex-grow">
                       {tier.features.map((feature, index) => (
                         <li key={index} className="flex items-start">
                           <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
@@ -417,6 +424,8 @@ export default function PlatformPricing() {
           </p>
         </div>
       </div>
+      </div>
+      <PlatformFooter />
     </div>
   );
 }

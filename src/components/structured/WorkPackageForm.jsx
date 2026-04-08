@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, Calendar, User, FileText } from 'lucide-react'
 import { format } from 'date-fns'
+import { HoldButton } from '../ui/HoldButton'
 
-export default function WorkPackageForm({ workPackage, projectId, stageBoundaries, onSave, onCancel }) {
+export default function WorkPackageForm({ workPackage, projectId, stageBoundaries, onSave, onCancel, onHoldComplete }) {
   const [formData, setFormData] = useState({
     work_package_name: '',
     work_package_code: '',
@@ -373,6 +374,13 @@ export default function WorkPackageForm({ workPackage, projectId, stageBoundarie
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <HoldButton
+              entityType="work_package"
+              entityId={workPackage?.id}
+              formData={formData}
+              projectId={projectId}
+              onHoldComplete={onHoldComplete || onCancel}
+            />
             <button
               type="button"
               onClick={onCancel}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Network, Search, Filter } from 'lucide-react';
 import { getInterProjectDependencies } from '../services/dependencyService';
-import { supabase } from '../services/supabaseClient';
+import { platformDb } from '../services/supabase/supabaseClient';
 
 export default function DependencyMap() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function DependencyMap() {
       setLoading(true);
       const [depsData, projectsData] = await Promise.all([
         getInterProjectDependencies(filters),
-        supabase
+        platformDb
           .from('projects')
           .select('id, project_name, project_code')
           .eq('is_deleted', false)
@@ -55,7 +55,7 @@ export default function DependencyMap() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/dependencies')}
+            onClick={() => navigate('/platform/dependencies')}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -140,7 +140,7 @@ export default function DependencyMap() {
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Showing 12 of {dependencies.length} dependencies. View all in{' '}
                   <button
-                    onClick={() => navigate('/dependencies')}
+                    onClick={() => navigate('/platform/dependencies')}
                     className="text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     Dependencies List

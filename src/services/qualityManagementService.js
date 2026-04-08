@@ -642,6 +642,281 @@ export async function getQualityManagementStats(filters = {}) {
   }
 }
 
+// ================================================
+// QUALITY ACTIVITIES (UNIFIED VIEW)
+// ================================================
+
+/**
+ * Get all quality activities (unified view of reviews and inspections)
+ */
+export async function getQualityActivities(projectId, filters = {}) {
+  try {
+    // Query the unified view
+    let query = supabase
+      .from('quality_activities_view')
+      .select('*')
+      .eq('project_id', projectId)
+
+    // Apply filters
+    if (filters.activity_type) {
+      query = query.eq('activity_type', filters.activity_type)
+    }
+
+    if (filters.quality_method) {
+      query = query.eq('quality_method', filters.quality_method)
+    }
+
+    if (filters.result) {
+      query = query.eq('result', filters.result)
+    }
+
+    if (filters.is_reassessment !== undefined) {
+      query = query.eq('is_reassessment', filters.is_reassessment)
+    }
+
+    if (filters.search) {
+      query = query.or(`activity_identifier.ilike.%${filters.search}%,product_title.ilike.%${filters.search}%`)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('Error getting quality activities:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Get quality activity by identifier
+ */
+export async function getActivityByIdentifier(identifier) {
+  try {
+    // Try reviews first
+    let { data: review, error: reviewError } = await supabase
+      .from('quality_reviews')
+      .select(`
+        *,
+        project:project_id(id, project_name, project_code),
+        quality_register:quality_register_id(id, product_name, product_reference),
+        chair:chair_user_id(id, email, full_name),
+        secretary:secretary_user_id(id, email, full_name)
+      `)
+      .eq('activity_identifier', identifier)
+      .eq('is_deleted', false)
+      .single()
+
+    if (review && !reviewError) {
+      return { success: true, data: { ...review, activity_type: 'review' } }
+    }
+
+    // Try inspections
+    const { data: inspection, error: inspectionError } = await supabase
+      .from('quality_inspections')
+      .select(`
+        *,
+        project:project_id(id, project_name, project_code),
+        quality_register:quality_register_id(id, product_name, product_reference),
+        inspector:inspector_user_id(id, email, full_name)
+      `)
+      .eq('activity_identifier', identifier)
+      .eq('is_deleted', false)
+      .single()
+
+    if (inspection && !inspectionError) {
+      return { success: true, data: { ...inspection, activity_type: 'inspection' } }
+    }
+
+    if (reviewError && inspectionError) {
+      throw new Error('Activity not found')
+    }
+
+    return { success: false, error: 'Activity not found' }
+  } catch (error) {
+    console.error('Error getting activity by identifier:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Create reassessment for a failed quality activity
+ */
+export async function createReassessment(activityType, activityId) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // Get user ID from users table
+    const { data: userRecord } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .eq('is_deleted', false)
+      .single()
+
+    if (!userRecord) {
+      throw new Error('User record not found')
+    }
+
+    const { data, error } = await supabase.rpc('create_quality_reassessment', {
+      p_activity_type: activityType,
+      p_activity_id: activityId,
+      p_user_id: userRecord.id
+    })
+
+    if (error) throw error
+
+    return { success: true, data: { new_activity_id: data } }
+  } catch (error) {
+    console.error('Error creating reassessment:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Link quality activity to QMS method
+ */
+export async function linkToQMSMethod(activityType, activityId, qmsMethodId) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const tableName = activityType === 'review' ? 'quality_reviews' : 'quality_inspections'
+    const { data, error } = await supabase
+      .from(tableName)
+      .update({
+        qms_method_id: qmsMethodId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', activityId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error linking to QMS method:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Create quality activity from QMS scheduled activity
+ */
+export async function createActivityFromScheduled(scheduledActivityId, activityType = 'review') {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    // Get scheduled activity
+    const { data: scheduled, error: scheduledError } = await supabase
+      .from('qms_scheduled_activities')
+      .select(`
+        *,
+        qms_method:qms_method_id(*),
+        qms:qms_id(project_id)
+      `)
+      .eq('id', scheduledActivityId)
+      .single()
+
+    if (scheduledError || !scheduled) {
+      throw new Error('Scheduled activity not found')
+    }
+
+    // Create activity based on type
+    if (activityType === 'review') {
+      const { data, error } = await supabase
+        .from('quality_reviews')
+        .insert({
+          project_id: scheduled.qms.project_id,
+          qms_id: scheduled.qms_id,
+          qms_method_id: scheduled.qms_method_id,
+          qms_scheduled_activity_id: scheduled.id,
+          review_title: scheduled.activity_name || 'Quality Review',
+          review_type: scheduled.qms_method?.method_name?.toLowerCase().replace(/\s+/g, '-') || 'peer-review',
+          planned_date: scheduled.planned_date || new Date().toISOString().split('T')[0],
+          review_status: 'planned'
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      return { success: true, data }
+    } else if (activityType === 'inspection') {
+      const { data, error } = await supabase
+        .from('quality_inspections')
+        .insert({
+          project_id: scheduled.qms.project_id,
+          qms_id: scheduled.qms_id,
+          qms_method_id: scheduled.qms_method_id,
+          qms_scheduled_activity_id: scheduled.id,
+          inspection_title: scheduled.activity_name || 'Quality Inspection',
+          inspection_type: scheduled.qms_method?.method_name?.toLowerCase().replace(/\s+/g, '-') || 'process',
+          inspection_date: scheduled.planned_date || new Date().toISOString().split('T')[0]
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+      return { success: true, data }
+    }
+
+    throw new Error('Invalid activity type')
+  } catch (error) {
+    console.error('Error creating activity from scheduled:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Update scheduled activity status when quality activity is completed
+ */
+export async function updateScheduledActivityStatus(activityType, activityId, newStatus = 'completed') {
+  try {
+    // Get the activity to find its scheduled activity ID
+    const tableName = activityType === 'review' ? 'quality_reviews' : 'quality_inspections'
+    const { data: activity, error: activityError } = await supabase
+      .from(tableName)
+      .select('qms_scheduled_activity_id, review_outcome, inspection_result')
+      .eq('id', activityId)
+      .single()
+
+    if (activityError || !activity) {
+      throw new Error('Activity not found')
+    }
+
+    if (!activity.qms_scheduled_activity_id) {
+      return { success: true, message: 'No scheduled activity linked' }
+    }
+
+    // Determine status from outcome
+    let status = newStatus
+    if (activityType === 'review' && activity.review_outcome) {
+      status = activity.review_outcome === 'passed' ? 'completed' : 'in_progress'
+    } else if (activityType === 'inspection' && activity.inspection_result) {
+      status = activity.inspection_result === 'passed' ? 'completed' : 'in_progress'
+    }
+
+    // Update scheduled activity
+    const { error } = await supabase
+      .from('qms_scheduled_activities')
+      .update({
+        status: status,
+        actual_date: new Date().toISOString().split('T')[0]
+      })
+      .eq('id', activity.qms_scheduled_activity_id)
+
+    if (error) throw error
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating scheduled activity status:', error)
+    return { success: false, error: error.message }
+  }
+}
+
 export default {
   // Quality Register
   getQualityRegister,
@@ -670,6 +945,14 @@ export default {
   // Quality Criteria Templates
   getQualityCriteriaTemplates,
   saveQualityCriteriaTemplate,
+  
+  // Quality Activities (Unified)
+  getQualityActivities,
+  getActivityByIdentifier,
+  createReassessment,
+  linkToQMSMethod,
+  createActivityFromScheduled,
+  updateScheduledActivityStatus,
   
   // Dashboard
   getQualityManagementStats,

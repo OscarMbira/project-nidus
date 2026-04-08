@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 
 export default function InitiatingProject() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [businessCase, setBusinessCase] = useState(null)
@@ -134,7 +136,7 @@ export default function InitiatingProject() {
         <BusinessCaseTab projectId={projectId} businessCase={businessCase} onSave={fetchData} />
       )}
       {activeTab === 'pid' && (
-        <PIDTab projectId={projectId} pid={pid} businessCaseId={businessCase?.id} onSave={fetchData} />
+        <PIDTab projectId={projectId} pid={pid} businessCaseId={businessCase?.id} onSave={fetchData} navigate={navigate} />
       )}
     </div>
   )
@@ -469,8 +471,12 @@ function BusinessCaseTab({ projectId, businessCase, onSave }) {
   )
 }
 
-// PID Tab Component (simplified for now)
-function PIDTab({ projectId, pid, businessCaseId, onSave }) {
+// PID Tab Component
+function PIDTab({ projectId, pid, businessCaseId, onSave, navigate }) {
+  const handleCreatePID = () => {
+    navigate(`/projects/${projectId}/pid`)
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -484,9 +490,31 @@ function PIDTab({ projectId, pid, businessCaseId, onSave }) {
         </div>
       ) : (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400">
-            Project Initiation Document form will be implemented here. This requires the Business Case to be completed first.
-          </p>
+          {pid ? (
+            <div>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                Project Initiation Document exists: {pid.pid_reference || pid.pid_title}
+              </p>
+              <button
+                onClick={() => navigate(`/projects/${projectId}/pid`)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                View/Edit PID
+              </button>
+            </div>
+          ) : (
+            <div>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
+                Create the Project Initiation Document to establish solid foundations for the project.
+              </p>
+              <button
+                onClick={handleCreatePID}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              >
+                Create PID
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

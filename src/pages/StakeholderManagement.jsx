@@ -1,13 +1,47 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Search, Target, MessageSquare, BarChart3 } from 'lucide-react';
-import { getStakeholders, getStakeholderAnalysis, getStakeholderEngagement } from '../services/stakeholderService';
+import { useNavigate } from 'react-router-dom';
+import { Users, Plus, Search, Target, MessageSquare, BarChart3, FileText, Table2, ListTodo, GitBranch, Triangle, Upload, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { getStakeholders, saveStakeholderAnalysis } from '../services/stakeholderService';
 import StakeholderRegister from '../components/stakeholders/StakeholderRegister';
 import StakeholderForm from '../components/stakeholders/StakeholderForm';
 import PowerInterestMatrix from '../components/stakeholders/PowerInterestMatrix';
 import EngagementTracker from '../components/stakeholders/EngagementTracker';
+import StakeholderSEAM from '../components/stakeholders/StakeholderSEAM';
+import EngagementActions from '../components/stakeholders/EngagementActions';
+import CommunicationPlan from '../components/stakeholders/CommunicationPlan';
+import CommunicationLog from '../components/stakeholders/CommunicationLog';
+import StakeholderMonitoringDashboard from '../components/stakeholders/StakeholderMonitoringDashboard';
+import StakeholderRelationships from '../components/stakeholders/StakeholderRelationships';
+import SalienceModel from '../components/stakeholders/SalienceModel';
+import StakeholderImportModal from '../components/stakeholders/StakeholderImportModal';
 import { supabase } from '../services/supabaseClient';
+import ExportListMenu from '../components/ui/ExportListMenu';
+import { useViewMode } from '../hooks/useViewMode';
+import ViewToggle from '../components/ui/ViewToggle';
+
+const STAKEHOLDER_COLUMNS = [
+  { key: 'stakeholder_reference', label: 'Reference' },
+  { key: 'stakeholder_name', label: 'Name' },
+  { key: 'stakeholder_title', label: 'Title' },
+  { key: 'stakeholder_organization', label: 'Organization' },
+  { key: 'stakeholder_department', label: 'Department' },
+  { key: 'stakeholder_type', label: 'Type' },
+  { key: 'stakeholder_category', label: 'Category' },
+  { key: 'project_role', label: 'Project Role' },
+  { key: 'email', label: 'Email' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'organization_level', label: 'Organization Level' },
+  { key: 'is_decision_maker', label: 'Decision Maker' },
+  { key: 'is_influencer', label: 'Influencer' },
+  { key: 'stakeholder_status', label: 'Status' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'special_requirements', label: 'Special Requirements' },
+  { key: 'expectations', label: 'Expectations' },
+];
 
 export default function StakeholderManagement() {
+  const navigate = useNavigate();
   const [stakeholders, setStakeholders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -15,6 +49,9 @@ export default function StakeholderManagement() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projects, setProjects] = useState([]);
   const [activeTab, setActiveTab] = useState('register');
+  const [matrixRefreshTrigger, setMatrixRefreshTrigger] = useState(0);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [stakeholderViewMode, setStakeholderViewMode] = useViewMode('stakeholder-register', 'grid');
   const [filters, setFilters] = useState({
     project_id: '',
     stakeholder_type: '',
@@ -70,6 +107,10 @@ export default function StakeholderManagement() {
     setShowForm(true);
   };
 
+  const handleViewStakeholder = (stakeholder) => {
+    navigate(`/platform/stakeholders/register/view/${stakeholder.id}`);
+  };
+
   const handleStakeholderSaved = () => {
     setShowForm(false);
     setSelectedStakeholder(null);
@@ -89,18 +130,36 @@ export default function StakeholderManagement() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             Stakeholder Management
           </h1>
-          <button
-            onClick={handleCreateStakeholder}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Plus className="h-5 w-5" />
-            Add Stakeholder
-          </button>
+          <div className="flex gap-2">
+            <ExportListMenu columns={STAKEHOLDER_COLUMNS} data={stakeholders} baseFilename="Stakeholders" disabled={!stakeholders.length} />
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Upload className="h-5 w-5" />
+              Import
+            </button>
+            <Link
+              to="/platform/stakeholders/on-hold"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            >
+              <Clock className="h-5 w-5" />
+              Draft queue
+            </Link>
+            <button
+              onClick={handleCreateStakeholder}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Plus className="h-5 w-5" />
+              Add Stakeholder
+            </button>
+          </div>
         </div>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
           Manage stakeholder register, analysis, and engagement
@@ -132,7 +191,7 @@ export default function StakeholderManagement() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
           <button
             onClick={() => setActiveTab('register')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -165,6 +224,72 @@ export default function StakeholderManagement() {
           >
             <MessageSquare className="h-4 w-4 inline mr-2" />
             Engagement Tracking
+          </button>
+          <button
+            onClick={() => setActiveTab('seam')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'seam'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <Table2 className="h-4 w-4 inline mr-2" />
+            SEAM
+          </button>
+          <button
+            onClick={() => setActiveTab('actions')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'actions'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <ListTodo className="h-4 w-4 inline mr-2" />
+            Engagement Actions
+          </button>
+          <button
+            onClick={() => setActiveTab('communication')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'communication'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <FileText className="h-4 w-4 inline mr-2" />
+            Communication Plans
+          </button>
+          <button
+            onClick={() => setActiveTab('relationships')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'relationships'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <GitBranch className="h-4 w-4 inline mr-2" />
+            Relationships
+          </button>
+          <button
+            onClick={() => setActiveTab('salience')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'salience'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <Triangle className="h-4 w-4 inline mr-2" />
+            Salience
+          </button>
+          <button
+            onClick={() => setActiveTab('monitoring')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'monitoring'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4 inline mr-2" />
+            Monitoring
           </button>
         </nav>
       </div>
@@ -208,6 +333,11 @@ export default function StakeholderManagement() {
                 <option value="inactive">Inactive</option>
                 <option value="departed">Departed</option>
               </select>
+              <ViewToggle
+                value={stakeholderViewMode}
+                onChange={setStakeholderViewMode}
+                ariaLabel="Stakeholder register layout"
+              />
             </div>
           </div>
 
@@ -215,8 +345,9 @@ export default function StakeholderManagement() {
           <StakeholderRegister
             stakeholders={stakeholders}
             onEdit={handleEditStakeholder}
-            onView={handleEditStakeholder}
+            onView={handleViewStakeholder}
             onRefresh={fetchData}
+            viewMode={stakeholderViewMode}
           />
         </>
       )}
@@ -225,6 +356,32 @@ export default function StakeholderManagement() {
         <PowerInterestMatrix
           projectId={selectedProjectId || null}
           stakeholders={stakeholders}
+          refreshTrigger={matrixRefreshTrigger}
+          onStakeholderClick={(id) => navigate(`/platform/stakeholders/register/view/${id}`)}
+          onEditAnalysis={({ projectId: pid, stakeholderId: sid }) => navigate('/platform/stakeholders/analysis', { state: { projectId: pid, stakeholderId: sid } })}
+          onReposition={async (item, { power_level, interest_level, matrix_quadrant }) => {
+            try {
+              const payload = {
+                project_id: selectedProjectId,
+                stakeholder_id: item.stakeholder_id || item.stakeholder?.id,
+                power_level,
+                interest_level,
+                matrix_quadrant,
+                ...(item.id && {
+                  current_attitude: item.current_attitude,
+                  desired_attitude: item.desired_attitude,
+                  legitimacy_level: item.legitimacy_level,
+                  urgency_level: item.urgency_level,
+                  salience_class: item.salience_class,
+                }),
+              };
+              await saveStakeholderAnalysis(payload, item.id);
+              setMatrixRefreshTrigger((t) => t + 1);
+            } catch (e) {
+              console.error(e);
+              alert(e?.message || 'Failed to update position');
+            }
+          }}
         />
       )}
 
@@ -233,6 +390,47 @@ export default function StakeholderManagement() {
           projectId={selectedProjectId || null}
           stakeholders={stakeholders}
         />
+      )}
+
+      {activeTab === 'seam' && (
+        <StakeholderSEAM projectId={selectedProjectId || null} />
+      )}
+
+      {activeTab === 'actions' && (
+        <EngagementActions projectId={selectedProjectId || null} />
+      )}
+
+      {activeTab === 'communication' && (
+        <div className="space-y-6">
+          {!selectedProjectId && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
+              Select a project above to manage communication plans and view the communication log.
+            </div>
+          )}
+          {selectedProjectId && (
+            <>
+              <CommunicationPlan projectId={selectedProjectId} />
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Communication Log
+                </h3>
+                <CommunicationLog projectId={selectedProjectId} />
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'relationships' && (
+        <StakeholderRelationships projectId={selectedProjectId || null} />
+      )}
+
+      {activeTab === 'salience' && (
+        <SalienceModel projectId={selectedProjectId || null} />
+      )}
+
+      {activeTab === 'monitoring' && (
+        <StakeholderMonitoringDashboard projectId={selectedProjectId || null} />
       )}
 
       {/* Stakeholder Form Modal */}
@@ -244,6 +442,17 @@ export default function StakeholderManagement() {
           onCancel={() => {
             setShowForm(false);
             setSelectedStakeholder(null);
+          }}
+        />
+      )}
+
+      {showImportModal && (
+        <StakeholderImportModal
+          projectId={selectedProjectId || null}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={() => {
+            setShowImportModal(false);
+            fetchData();
           }}
         />
       )}

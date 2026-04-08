@@ -1,19 +1,55 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient'
+
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
+import { platformDb } from '../services/supabase/supabaseClient'
 import { format } from 'date-fns'
-import { ArrowLeft, Edit2, AlertTriangle, TrendingUp, User, Calendar, CheckCircle, Clock } from 'lucide-react'
-import MitigationPlan from '../components/MitigationPlan'
+import { ArrowLeft, Edit2, AlertTriangle, TrendingUp, User, Calendar, CheckCircle, Clock, MessageSquare, Paperclip, Link as LinkIcon, X, Link2 } from 'lucide-react'
+import { getRiskById } from '../services/riskService'
+import { getAssessmentHistory } from '../services/riskAssessmentService'
+import RiskResponsesPanel from '../components/risks/RiskResponsesPanel'
+import EnhancedRiskForm from '../components/risks/EnhancedRiskForm'
+import PrePostAssessmentPanel from '../components/risks/PrePostAssessmentPanel'
+import RiskAssessmentHistory from '../components/risks/RiskAssessmentHistory'
+import RiskCommentsSection from '../components/risks/RiskCommentsSection'
+import RiskAttachments from '../components/risks/RiskAttachments'
+import RiskLinksPanel from '../components/risks/RiskLinksPanel'
+import RiskReviewHistory from '../components/risks/RiskReviewHistory'
+import EscalateToIssueDialog from '../components/risks/EscalateToIssueDialog'
+import RiskScoreBadge from '../components/risks/RiskScoreBadge'
+import RiskTypeBadge from '../components/risks/RiskTypeBadge'
+import RiskStatusBadge from '../components/risks/RiskStatusBadge'
+import ProximityBadge from '../components/risks/ProximityBadge'
+import ExportRecordButtons from '../components/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+
+const RISK_EXPORT_SECTIONS = [
+  { title: 'Basic Information', fields: [
+    { key: 'risk_identifier', label: 'Identifier' },
+    { key: 'risk_title', label: 'Title' },
+    { key: 'risk_type', label: 'Type' },
+    { key: 'risk_category', label: 'Category' },
+    { key: 'status_enum', label: 'Status' },
+    { key: 'risk_level', label: 'Level' },
+    { key: 'proximity', label: 'Proximity' }
+  ]},
+  { title: 'Description', fields: [{ key: 'risk_description', label: 'Description' }] },
+  { title: 'Response', fields: [
+    { key: 'response_category', label: 'Response Category' },
+    { key: 'response_description', label: 'Response Description' }
+  ]}
+]
 
 export default function RiskDetail() {
-  const { projectId, riskId } = useParams()
+  const { riskId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [risk, setRisk] = useState(null)
-  const [mitigations, setMitigations] = useState([])
   const [assessments, setAssessments] = useState([])
-  const [monitoring, setMonitoring] = useState([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview') // 'overview', 'mitigation', 'assessment', 'monitoring'
+  const [activeTab, setActiveTab] = useState('overview')
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     if (riskId) {
@@ -25,73 +61,35 @@ export default function RiskDetail() {
     try {
       setLoading(true)
 
-      // Fetch risk
-      const { data: riskData, error: riskError } = await supabase
-        .from('risks')
-        .select(`
-          *,
-          identified_by:identified_by_user_id (id, email, full_name),
-          risk_owner:risk_owner_user_id (id, email, full_name)
-        `)
-        .eq('id', riskId)
-        .eq('is_deleted', false)
-        .single()
-
-      if (riskError) throw riskError
-      setRisk(riskData)
-
-      // Fetch mitigations
-      const { data: mitigationsData, error: mitigationsError } = await supabase
-        .from('risk_mitigations')
-        .select(`
-          *,
-          assigned_to:assigned_to_user_id (id, email, full_name)
-        `)
-        .eq('risk_id', riskId)
-        .eq('is_deleted', false)
-        .order('created_at', { ascending: false })
-
-      if (!mitigationsError) {
-        setMitigations(mitigationsData || [])
+      // Fetch risk using service
+      const riskResult = await getRiskById(riskId)
+      if (riskResult.success) {
+        setRisk(riskResult.data)
+        
+        // Fetch assessment history
+        const assessmentResult = await getAssessmentHistory(riskId)
+        if (assessmentResult.success) {
+          setAssessments(assessmentResult.data || [])
+        }
+      } else {
+        throw new Error(riskResult.error || 'Failed to load risk')
       }
-
-      // Fetch assessments
-      const { data: assessmentsData, error: assessmentsError } = await supabase
-        .from('risk_assessments')
-        .select(`
-          *,
-          assessed_by:assessed_by_user_id (id, email, full_name)
-        `)
-        .eq('risk_id', riskId)
-        .eq('is_deleted', false)
-        .order('assessment_date', { ascending: false })
-
-      if (!assessmentsError) {
-        setAssessments(assessmentsData || [])
-      }
-
-      // Fetch monitoring
-      const { data: monitoringData, error: monitoringError } = await supabase
-        .from('risk_monitoring')
-        .select(`
-          *,
-          monitored_by:monitored_by_user_id (id, email, full_name)
-        `)
-        .eq('risk_id', riskId)
-        .eq('is_deleted', false)
-        .order('monitoring_date', { ascending: false })
-        .limit(10)
-
-      if (!monitoringError) {
-        setMonitoring(monitoringData || [])
-      }
-
     } catch (error) {
       console.error('Error fetching data:', error)
       alert('Error: ' + error.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (riskId) {
+      fetchData()
+    }
+  }, [riskId, refreshKey])
+
+  const handleUpdate = () => {
+    setRefreshKey(prev => prev + 1)
   }
 
   if (loading) {
@@ -156,50 +154,59 @@ export default function RiskDetail() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
                 {risk.risk_title}
               </h1>
-              {risk.risk_code && (
+              {risk.risk_identifier && (
                 <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-sm font-mono">
-                  {risk.risk_code}
+                  {risk.risk_identifier}
                 </span>
               )}
-              <span className={`px-3 py-1 rounded text-sm font-medium ${getRiskLevelColor(risk.risk_level)}`}>
-                {risk.risk_level.toUpperCase()}
-              </span>
+              <RiskTypeBadge riskType={risk.risk_type} />
+              <RiskScoreBadge score={risk.pre_risk_score || risk.risk_level} expectedValue={risk.pre_expected_value} />
+              <RiskStatusBadge status={risk.status_enum || risk.status} />
+              {risk.proximity && (
+                <ProximityBadge proximity={risk.proximity} proximityDate={risk.proximity_date} />
+              )}
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              {risk.risk_type === 'opportunity' ? 'Opportunity' : 'Threat'} • {risk.risk_category || 'Uncategorized'}
+              {risk.risk_category ? risk.risk_category.replace('_', ' ').toUpperCase() : 'Uncategorized'}
+              {risk.response_category && ` • Response: ${risk.response_category.replace('_', ' ')}`}
             </p>
           </div>
-          <button
-            onClick={() => navigate(`/projects/${projectId}/risks?edit=${riskId}`)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-          >
-            <Edit2 className="h-4 w-4" />
-            Edit Risk
-          </button>
+          <div className="flex flex-wrap gap-2 items-center">
+            <ExportRecordButtons
+              onExportPPT={() => exportRecordToPPT(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportWord={() => exportRecordToWord(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportExcel={() => exportRecordToExcel(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportCSV={() => exportRecordToCSV(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportXML={() => exportRecordToXML(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportJSON={() => exportRecordToJSON(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportPrint={() => exportRecordToPrint(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+            />
+            {risk.status_enum !== 'closed' && risk.status_enum !== 'occurred' && (
+              <button
+                onClick={() => setShowEscalateDialog(true)}
+                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Escalate to Issue
+              </button>
+            )}
+            <button
+              onClick={() => setShowEditForm(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit Risk
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Risk Score Card */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Probability</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{risk.probability}/5</p>
+      {/* Pre-Post Assessment Panel */}
+      {risk && (
+        <div className="mb-6">
+          <PrePostAssessmentPanel risk={risk} />
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Impact</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{risk.impact}/5</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Risk Score</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{risk.risk_score}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Status</p>
-          <p className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
-            {risk.status.replace('_', ' ')}
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Tabs */}
       <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
@@ -215,14 +222,14 @@ export default function RiskDetail() {
             Overview
           </button>
           <button
-            onClick={() => setActiveTab('mitigation')}
+            onClick={() => setActiveTab('responses')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'mitigation'
+              activeTab === 'responses'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
             }`}
           >
-            Mitigation ({mitigations.length})
+            Response Actions
           </button>
           <button
             onClick={() => setActiveTab('assessment')}
@@ -234,16 +241,6 @@ export default function RiskDetail() {
           >
             Assessment History ({assessments.length})
           </button>
-          <button
-            onClick={() => setActiveTab('monitoring')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'monitoring'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-          >
-            Monitoring ({monitoring.length})
-          </button>
         </nav>
       </div>
 
@@ -253,10 +250,32 @@ export default function RiskDetail() {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Risk Details</h2>
             <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</h3>
-                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{risk.risk_description}</p>
-              </div>
+              {/* Cause-Event-Effect Structure */}
+              {risk.cause_description && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">CAUSE: Because of...</h3>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{risk.cause_description}</p>
+                </div>
+              )}
+              {risk.event_description && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-yellow-900 dark:text-yellow-300 mb-2">EVENT: There is a risk that...</h3>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{risk.event_description}</p>
+                </div>
+              )}
+              {risk.effect_description && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-red-900 dark:text-red-300 mb-2">EFFECT: Which would result in...</h3>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{risk.effect_description}</p>
+                </div>
+              )}
+              {/* Fallback to old description if new structure not available */}
+              {!risk.cause_description && !risk.event_description && !risk.effect_description && risk.risk_description && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</h3>
+                  <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{risk.risk_description}</p>
+                </div>
+              )}
               {risk.impact_description && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Impact Description</h3>
@@ -286,9 +305,9 @@ export default function RiskDetail() {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Risk Information</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Identified By:</span>
+                  <span className="text-gray-600 dark:text-gray-400">Author:</span>
                   <span className="text-gray-900 dark:text-white">
-                    {risk.identified_by?.full_name || risk.identified_by?.email || 'Unknown'}
+                    {risk.risk_author?.full_name || risk.risk_author_name || 'Unknown'}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -298,11 +317,19 @@ export default function RiskDetail() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Identified Date:</span>
+                  <span className="text-gray-600 dark:text-gray-400">Date Registered:</span>
                   <span className="text-gray-900 dark:text-white">
-                    {risk.identified_date ? format(new Date(risk.identified_date), 'MMM dd, yyyy') : 'N/A'}
+                    {risk.date_registered ? format(new Date(risk.date_registered), 'MMM dd, yyyy') : 'N/A'}
                   </span>
                 </div>
+                {risk.risk_actionee && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Actionee:</span>
+                    <span className="text-gray-900 dark:text-white">
+                      {risk.risk_actionee?.full_name || risk.risk_actionee_name || 'Unassigned'}
+                    </span>
+                  </div>
+                )}
                 {risk.target_mitigation_date && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Target Mitigation Date:</span>
@@ -341,81 +368,61 @@ export default function RiskDetail() {
         </div>
       )}
 
-      {activeTab === 'mitigation' && (
-        <MitigationPlan riskId={riskId} projectId={projectId} onUpdate={fetchData} />
+      {activeTab === 'responses' && riskId && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <RiskResponsesPanel riskId={riskId} onUpdate={handleUpdate} />
+        </div>
       )}
 
       {activeTab === 'assessment' && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Assessment History</h2>
-          {assessments.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No assessments recorded yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {assessments.map((assessment) => (
-                <div key={assessment.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {format(new Date(assessment.assessment_date), 'MMM dd, yyyy')}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {assessment.assessed_by?.full_name || assessment.assessed_by?.email}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        P: {assessment.probability} × I: {assessment.impact} = {assessment.risk_score}
-                      </p>
-                      {assessment.trend && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                          Trend: {assessment.trend}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {assessment.assessment_notes && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{assessment.assessment_notes}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <RiskAssessmentHistory assessments={assessments} />
         </div>
       )}
 
-      {activeTab === 'monitoring' && (
+      {activeTab === 'comments' && riskId && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Monitoring Records</h2>
-          {monitoring.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No monitoring records yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {monitoring.map((record) => (
-                <div key={record.id} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {format(new Date(record.monitoring_date), 'MMM dd, yyyy')}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {record.monitored_by?.full_name || record.monitored_by?.email}
-                      </p>
-                    </div>
-                    {record.current_risk_score && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Score: {record.current_risk_score}
-                      </p>
-                    )}
-                  </div>
-                  {record.monitoring_notes && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{record.monitoring_notes}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <RiskCommentsSection riskId={riskId} />
         </div>
+      )}
+
+      {activeTab === 'links' && riskId && risk && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <RiskLinksPanel riskId={riskId} projectId={projectId} />
+        </div>
+      )}
+
+      {/* Additional Sections in Overview */}
+      {activeTab === 'overview' && riskId && (
+        <div className="space-y-6 mt-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <RiskAttachments riskId={riskId} />
+          </div>
+        </div>
+      )}
+
+      {showEditForm && risk && (
+        <EnhancedRiskForm
+          risk={risk}
+          projectId={projectId}
+          riskRegisterId={risk.risk_register_id}
+          onSave={() => {
+            setShowEditForm(false)
+            handleUpdate()
+          }}
+          onCancel={() => setShowEditForm(false)}
+        />
+      )}
+
+      {showEscalateDialog && risk && (
+        <EscalateToIssueDialog
+          risk={risk}
+          onClose={() => setShowEscalateDialog(false)}
+          onSuccess={() => {
+            setShowEscalateDialog(false)
+            handleUpdate()
+          }}
+        />
       )}
     </div>
   )

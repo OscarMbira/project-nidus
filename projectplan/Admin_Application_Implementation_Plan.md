@@ -77,7 +77,7 @@ project-nidus-admin/
 
 ```
 /dashboard                    # Admin Dashboard
-/pm/*                        # PM Administration
+/platform/*                  # Platform Administration
 /simulator/*                 # Simulator Administration
 /security/*                  # Security Management
 /support/*                   # Support & Content

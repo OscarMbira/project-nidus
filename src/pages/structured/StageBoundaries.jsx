@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient';
 import { FileText, AlertTriangle, ArrowRight, Settings, AlertCircle, ArrowLeft } from 'lucide-react';
 import StageBoundaryDashboard from '../../components/structured/boundaries/StageBoundaryDashboard';
@@ -16,7 +18,7 @@ import {
 } from '../../services/stageBoundariesService';
 
 export default function StageBoundaries() {
-  const { projectId } = useParams();
+  const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
 
   const [project, setProject] = useState(null);
@@ -206,13 +208,17 @@ export default function StageBoundaries() {
           <EndStageReportList
             reports={endStageReports}
             onEdit={(report) => {
-              setSelectedReport(report);
-              setShowReportForm(true);
+              // Navigate to edit page instead of modal
+              navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/${report.id}/edit`);
+            }}
+            onView={(report) => {
+              // Navigate to view page
+              navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/${report.id}`);
             }}
             onRefresh={loadBoundaryData}
             onAdd={() => {
-              setSelectedReport(null);
-              setShowReportForm(true);
+              // Navigate to create page
+              navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/create`);
             }}
           />
         )}

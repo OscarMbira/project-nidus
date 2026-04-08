@@ -2,18 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="description" content="Multi-methodology project management system" />
-    <meta name="theme-color" content="#3B82F6" />
+    <meta name="theme-color" content="#111827" />
+    <meta name="msapplication-TileColor" content="#111827" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Project Nidus" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="/manifest-v2.json?v=20260407" />
     <title>Project Nidus</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static shell: visible before JS/CSS loads. All styles are inline so no Tailwind needed. -->
+      <div id="loading-shell" style="min-height:100vh;background-color:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;">
+        <div style="text-align:center;">
+          <div style="display:inline-block;width:2rem;height:2rem;border-radius:9999px;border:2px solid #3b82f6;border-right-color:transparent;animation:spin 0.8s linear infinite;"></div>
+          <p style="margin-top:0.75rem;font-size:0.875rem;color:#9ca3af;font-family:sans-serif;">Loading...</p>
+        </div>
+        <p id="loading-timeout-hint" style="display:none;max-width:20rem;font-size:0.75rem;color:#94a3b8;font-family:sans-serif;text-align:center;">If this doesn’t load, start the dev server: <code style="background:#1e293b;padding:0.2rem 0.4rem;border-radius:4px;">npm run dev</code></p>
+      </div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+    <script>
+      (function(){var t=setTimeout(function(){var r=document.getElementById('root');var s=document.getElementById('loading-shell');var h=document.getElementById('loading-timeout-hint');if(h&&s&&r&&r.contains(s)){h.style.display='block';}},8000);})();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

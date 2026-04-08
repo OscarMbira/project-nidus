@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, TrendingDown, Search, Filter } from 'lucide-react';
 import { getDependencyImpacts } from '../services/dependencyService';
+import SortToolbar from '../components/ui/SortToolbar';
+import { useSortableTable } from '../hooks/useSortableTable';
 
 export default function DependencyImpacts() {
   const navigate = useNavigate();
@@ -14,6 +16,23 @@ export default function DependencyImpacts() {
     impact_status: '',
     search: '',
   });
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'title', direction: 'asc' },
+    storageKey: 'nidus-dependency-impacts-sort',
+  });
+  const impactAccessors = useMemo(
+    () => ({
+      title: (i) => i.dependency?.dependency_name ?? i.impact_title ?? '',
+      impact_level: (i) => i.impact_severity ?? '',
+      impact_status: (i) => i.impact_status ?? '',
+    }),
+    []
+  );
+  const displayImpacts = useMemo(
+    () => sortedData(impacts, impactAccessors),
+    [impacts, sortedData, impactAccessors]
+  );
 
   useEffect(() => {
     fetchImpacts();
@@ -55,7 +74,7 @@ export default function DependencyImpacts() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/dependencies')}
+            onClick={() => navigate('/platform/dependencies')}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -176,6 +195,20 @@ export default function DependencyImpacts() {
         </div>
       </div>
 
+      {impacts.length > 0 && (
+        <div className="mb-4">
+          <SortToolbar
+            columns={[
+              { key: 'title', label: 'Title' },
+              { key: 'impact_level', label: 'Impact level' },
+              { key: 'impact_status', label: 'Status' },
+            ]}
+            getSortDirection={getSortDirectionForColumn}
+            onSort={handleSort}
+          />
+        </div>
+      )}
+
       {/* Impacts List */}
       {impacts.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
@@ -189,7 +222,7 @@ export default function DependencyImpacts() {
         </div>
       ) : (
         <div className="space-y-4">
-          {impacts.map((impact) => (
+          {displayImpacts.map((impact) => (
             <div
               key={impact.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

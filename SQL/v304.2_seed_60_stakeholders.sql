@@ -1,0 +1,122 @@
+-- =============================================================================
+-- v304.2: Seed 60 stakeholders (independent; no project required)
+-- Purpose: Sample data for testing Stakeholder Register list and forms.
+-- Run after: v35 (stakeholders table), v304.6 (project_id nullable).
+-- Stakeholders are inserted with project_id NULL; they can be assigned to
+-- projects later.
+-- =============================================================================
+
+INSERT INTO stakeholders (
+  project_id,
+  stakeholder_reference,
+  stakeholder_name,
+  stakeholder_title,
+  stakeholder_organization,
+  stakeholder_department,
+  stakeholder_type,
+  stakeholder_category,
+  stakeholder_role,
+  email,
+  phone,
+  mobile,
+  office_location,
+  preferred_contact_method,
+  organization_level,
+  project_role,
+  is_decision_maker,
+  is_influencer,
+  stakeholder_status,
+  notes,
+  is_deleted
+)
+SELECT
+  p.id,
+  v.ref,
+  v.name,
+  v.title,
+  v.org,
+  v.dept,
+  v.typ,
+  'individual',
+  v.role,
+  v.email,
+  v.phone,
+  v.mobile,
+  v.office,
+  v.preferred_contact,
+  v.org_level,
+  v.project_role,
+  v.is_decision_maker,
+  v.is_influencer,
+  'active',
+  v.notes,
+  false
+FROM (VALUES
+  ('SH-001', 'Alice Johnson', 'Director', 'Acme Corp', 'Executive', 'internal', 'Sponsor', 'alice.johnson@acme.com', '+1-555-0101', '+1-555-0102', 'HQ Floor 10', 'email', 'executive', 'Sponsor', true, false, 'Key sponsor'),
+  ('SH-002', 'Bob Smith', 'Project Manager', 'Acme Corp', 'Delivery', 'internal', 'Project Manager', 'bob.smith@acme.com', '+1-555-0201', '+1-555-0202', 'HQ Floor 5', 'email', 'middle-management', 'Project Manager', false, true, NULL),
+  ('SH-003', 'Carol White', 'Business Analyst', 'Acme Corp', 'Business', 'internal', 'Business Analyst', 'carol.white@acme.com', '+1-555-0301', '+1-555-0302', 'HQ Floor 4', 'email', 'staff', 'Business Analyst', false, false, NULL),
+  ('SH-004', 'David Lee', 'Technical Lead', 'Tech Solutions Ltd', 'Engineering', 'external', 'Technical Lead', 'david.lee@techsolutions.com', '+1-555-0401', '+1-555-0402', 'Remote', 'video-call', 'middle-management', 'Technical Lead', false, true, NULL),
+  ('SH-005', 'Eva Martinez', 'Product Owner', 'Acme Corp', 'Product', 'internal', 'Product Owner', 'eva.martinez@acme.com', '+1-555-0501', '+1-555-0502', 'HQ Floor 3', 'email', 'senior-management', 'Product Owner', true, true, NULL),
+  ('SH-006', 'Frank Brown', 'QA Manager', 'Quality Assurance Inc', 'QA', 'supplier', 'QA Lead', 'frank.brown@qainc.com', '+1-555-0601', '+1-555-0602', 'Building B', 'phone', 'middle-management', 'QA Lead', false, false, NULL),
+  ('SH-007', 'Grace Kim', 'Finance Director', 'Acme Corp', 'Finance', 'internal', 'Budget Holder', 'grace.kim@acme.com', '+1-555-0701', '+1-555-0702', 'HQ Floor 8', 'email', 'executive', 'Budget Holder', true, false, NULL),
+  ('SH-008', 'Henry Wilson', 'UX Designer', 'Design Studio', 'Design', 'external', 'UX Lead', 'henry.wilson@designstudio.com', '+1-555-0801', '+1-555-0802', 'Remote', 'video-call', 'staff', 'UX Lead', false, false, NULL),
+  ('SH-009', 'Ivy Chen', 'HR Partner', 'Acme Corp', 'HR', 'internal', 'HR Contact', 'ivy.chen@acme.com', '+1-555-0901', '+1-555-0902', 'HQ Floor 2', 'email', 'staff', 'HR Contact', false, false, NULL),
+  ('SH-010', 'Jack Taylor', 'Security Officer', 'Acme Corp', 'IT Security', 'internal', 'Security', 'jack.taylor@acme.com', '+1-555-1001', '+1-555-1002', 'HQ Floor 6', 'email', 'senior-management', 'Security', false, true, NULL),
+  ('SH-011', 'Kate Anderson', 'Stakeholder', 'Beta Industries', 'Procurement', 'customer', 'Customer Rep', 'kate.anderson@betaind.com', '+1-555-1101', '+1-555-1102', 'Site A', 'phone', 'middle-management', 'Customer Rep', false, false, NULL),
+  ('SH-012', 'Leo Garcia', 'Developer', 'Tech Solutions Ltd', 'Engineering', 'external', 'Developer', 'leo.garcia@techsolutions.com', '+1-555-1201', '+1-555-1202', 'Remote', 'email', 'staff', 'Developer', false, false, NULL),
+  ('SH-013', 'Mia Thompson', 'Compliance Officer', 'Acme Corp', 'Legal', 'internal', 'Compliance', 'mia.thompson@acme.com', '+1-555-1301', '+1-555-1302', 'HQ Floor 7', 'email', 'senior-management', 'Compliance', false, true, NULL),
+  ('SH-014', 'Noah Davis', 'Vendor Manager', 'Vendor Co', 'Vendor', 'supplier', 'Vendor Lead', 'noah.davis@vendorco.com', '+1-555-1401', '+1-555-1402', 'Offsite', 'phone', 'middle-management', 'Vendor Lead', false, false, NULL),
+  ('SH-015', 'Olivia Clark', 'Stakeholder', 'Gamma Ltd', 'Operations', 'customer', 'End User Rep', 'olivia.clark@gammaltd.com', '+1-555-1501', '+1-555-1502', 'Regional Office', 'email', 'staff', 'End User Rep', false, false, NULL),
+  ('SH-016', 'Paul Wright', 'Architect', 'Acme Corp', 'Architecture', 'internal', 'Solution Architect', 'paul.wright@acme.com', '+1-555-1601', '+1-555-1602', 'HQ Floor 5', 'video-call', 'senior-management', 'Solution Architect', false, true, NULL),
+  ('SH-017', 'Quinn Lewis', 'Trainer', 'Training Partners', 'Learning', 'external', 'Training', 'quinn.lewis@trainingpartners.com', '+1-555-1701', '+1-555-1702', 'Remote', 'video-call', 'staff', 'Training', false, false, NULL),
+  ('SH-018', 'Rachel Hall', 'Change Manager', 'Acme Corp', 'Change', 'internal', 'Change Manager', 'rachel.hall@acme.com', '+1-555-1801', '+1-555-1802', 'HQ Floor 4', 'email', 'middle-management', 'Change Manager', false, true, NULL),
+  ('SH-019', 'Sam Robinson', 'Regulator Contact', 'Regulatory Body', 'Compliance', 'regulator', 'Regulator', 'sam.robinson@regbody.gov', '+1-555-1901', '+1-555-1902', 'Government', 'email', 'executive', 'Regulator', true, false, NULL),
+  ('SH-020', 'Tina Young', 'Scrum Master', 'Acme Corp', 'Delivery', 'internal', 'Scrum Master', 'tina.young@acme.com', '+1-555-2001', '+1-555-2002', 'HQ Floor 5', 'email', 'staff', 'Scrum Master', false, true, NULL),
+  ('SH-021', 'Uma Patel', 'Data Analyst', 'Acme Corp', 'Data', 'internal', 'Data Analyst', 'uma.patel@acme.com', '+1-555-2101', '+1-555-2102', 'HQ Floor 4', 'email', 'staff', 'Data Analyst', false, false, NULL),
+  ('SH-022', 'Victor Nguyen', 'DevOps Lead', 'Tech Solutions Ltd', 'Engineering', 'external', 'DevOps', 'victor.nguyen@techsolutions.com', '+1-555-2201', '+1-555-2202', 'Remote', 'video-call', 'middle-management', 'DevOps', false, true, NULL),
+  ('SH-023', 'Wendy Harris', 'Procurement Lead', 'Acme Corp', 'Procurement', 'internal', 'Procurement', 'wendy.harris@acme.com', '+1-555-2301', '+1-555-2302', 'HQ Floor 3', 'email', 'senior-management', 'Procurement', false, false, NULL),
+  ('SH-024', 'Xavier King', 'Stakeholder', 'Delta Corp', 'IT', 'customer', 'IT Contact', 'xavier.king@deltacorp.com', '+1-555-2401', '+1-555-2402', 'Client Site', 'phone', 'middle-management', 'IT Contact', false, false, NULL),
+  ('SH-025', 'Yuki Tanaka', 'Consultant', 'Consulting Group', 'Strategy', 'external', 'Consultant', 'yuki.tanaka@consulting.com', '+1-555-2501', '+1-555-2502', 'Remote', 'video-call', 'senior-management', 'Consultant', false, true, NULL),
+  ('SH-026', 'Zoe Adams', 'Support Lead', 'Acme Corp', 'Support', 'internal', 'Support', 'zoe.adams@acme.com', '+1-555-2601', '+1-555-2602', 'HQ Floor 1', 'email', 'staff', 'Support', false, false, NULL),
+  ('SH-027', 'Adam Foster', 'Stakeholder', 'Epsilon Inc', 'Operations', 'partner', 'Partner Rep', 'adam.foster@epsilon.com', '+1-555-2701', '+1-555-2702', 'Partner Office', 'email', 'middle-management', 'Partner Rep', false, false, NULL),
+  ('SH-028', 'Beth Green', 'Risk Manager', 'Acme Corp', 'Risk', 'internal', 'Risk Owner', 'beth.green@acme.com', '+1-555-2801', '+1-555-2802', 'HQ Floor 6', 'email', 'senior-management', 'Risk Owner', false, true, NULL),
+  ('SH-029', 'Chris Hill', 'Infrastructure Lead', 'Infra Services', 'IT', 'supplier', 'Infrastructure', 'chris.hill@infraservices.com', '+1-555-2901', '+1-555-2902', 'Data Centre', 'phone', 'middle-management', 'Infrastructure', false, false, NULL),
+  ('SH-030', 'Diana Scott', 'Stakeholder', 'Community Board', 'Community', 'community', 'Community Rep', 'diana.scott@community.org', '+1-555-3001', '+1-555-3002', 'Local', 'in-person', 'staff', 'Community Rep', false, false, NULL),
+  ('SH-031', 'Edward Baker', 'Test Lead', 'Acme Corp', 'QA', 'internal', 'Test Lead', 'edward.baker@acme.com', '+1-555-3101', '+1-555-3102', 'HQ Floor 4', 'email', 'staff', 'Test Lead', false, false, NULL),
+  ('SH-032', 'Fiona Nelson', 'Legal Counsel', 'Acme Corp', 'Legal', 'internal', 'Legal', 'fiona.nelson@acme.com', '+1-555-3201', '+1-555-3202', 'HQ Floor 7', 'email', 'senior-management', 'Legal', false, true, NULL),
+  ('SH-033', 'George Mitchell', 'Stakeholder', 'Zeta Systems', 'IT', 'customer', 'Technical Contact', 'george.mitchell@zetasys.com', '+1-555-3301', '+1-555-3302', 'Client', 'video-call', 'middle-management', 'Technical Contact', false, false, NULL),
+  ('SH-034', 'Hannah Roberts', 'Communications', 'Acme Corp', 'Comms', 'internal', 'Comms Lead', 'hannah.roberts@acme.com', '+1-555-3401', '+1-555-3402', 'HQ Floor 2', 'email', 'staff', 'Comms Lead', false, false, NULL),
+  ('SH-035', 'Ian Turner', 'Database Admin', 'Tech Solutions Ltd', 'Engineering', 'external', 'DBA', 'ian.turner@techsolutions.com', '+1-555-3501', '+1-555-3502', 'Remote', 'email', 'staff', 'DBA', false, false, NULL),
+  ('SH-036', 'Julia Phillips', 'Stakeholder', 'Eta Logistics', 'Logistics', 'supplier', 'Logistics', 'julia.phillips@etalogistics.com', '+1-555-3601', '+1-555-3602', 'Warehouse', 'phone', 'staff', 'Logistics', false, false, NULL),
+  ('SH-037', 'Kevin Campbell', 'Release Manager', 'Acme Corp', 'Delivery', 'internal', 'Release Manager', 'kevin.campbell@acme.com', '+1-555-3701', '+1-555-3702', 'HQ Floor 5', 'email', 'middle-management', 'Release Manager', false, true, NULL),
+  ('SH-038', 'Laura Parker', 'Stakeholder', 'Theta Retail', 'Retail', 'customer', 'Business User', 'laura.parker@thetaretail.com', '+1-555-3801', '+1-555-3802', 'Store HQ', 'email', 'staff', 'Business User', false, false, NULL),
+  ('SH-039', 'Mike Evans', 'Network Engineer', 'Network Co', 'IT', 'supplier', 'Network', 'mike.evans@networkco.com', '+1-555-3901', '+1-555-3902', 'Remote', 'phone', 'staff', 'Network', false, false, NULL),
+  ('SH-040', 'Nancy Edwards', 'Documentation', 'Acme Corp', 'Delivery', 'internal', 'Technical Writer', 'nancy.edwards@acme.com', '+1-555-4001', '+1-555-4002', 'HQ Floor 4', 'email', 'staff', 'Technical Writer', false, false, NULL),
+  ('SH-041', 'Oscar Collins', 'Stakeholder', 'Iota Finance', 'Finance', 'customer', 'Finance Contact', 'oscar.collins@iotafinance.com', '+1-555-4101', '+1-555-4102', 'Client Office', 'email', 'senior-management', 'Finance Contact', true, false, NULL),
+  ('SH-042', 'Paula Stewart', 'Audit Lead', 'Acme Corp', 'Audit', 'internal', 'Audit', 'paula.stewart@acme.com', '+1-555-4201', '+1-555-4202', 'HQ Floor 8', 'email', 'senior-management', 'Audit', false, true, NULL),
+  ('SH-043', 'Ryan Sanchez', 'Frontend Dev', 'Tech Solutions Ltd', 'Engineering', 'external', 'Developer', 'ryan.sanchez@techsolutions.com', '+1-555-4301', '+1-555-4302', 'Remote', 'email', 'staff', 'Developer', false, false, NULL),
+  ('SH-044', 'Sara Morris', 'Stakeholder', 'Kappa Health', 'Healthcare', 'customer', 'Domain Expert', 'sara.morris@kappahealth.com', '+1-555-4401', '+1-555-4402', 'Hospital', 'phone', 'middle-management', 'Domain Expert', false, false, NULL),
+  ('SH-045', 'Tom Rogers', 'Backend Lead', 'Acme Corp', 'Engineering', 'internal', 'Tech Lead', 'tom.rogers@acme.com', '+1-555-4501', '+1-555-4502', 'HQ Floor 5', 'video-call', 'middle-management', 'Tech Lead', false, true, NULL),
+  ('SH-046', 'Uma Reed', 'Stakeholder', 'Lambda Energy', 'Energy', 'regulator', 'Regulatory Contact', 'uma.reed@lambdaenergy.gov', '+1-555-4601', '+1-555-4602', 'Regulatory', 'email', 'executive', 'Regulatory Contact', true, false, NULL),
+  ('SH-047', 'Vince Cook', 'Support Manager', 'Support Plus', 'Support', 'supplier', 'Support Manager', 'vince.cook@supportplus.com', '+1-555-4701', '+1-555-4702', 'Call Centre', 'phone', 'middle-management', 'Support Manager', false, false, NULL),
+  ('SH-048', 'Wanda Morgan', 'PMO Analyst', 'Acme Corp', 'PMO', 'internal', 'PMO', 'wanda.morgan@acme.com', '+1-555-4801', '+1-555-4802', 'HQ Floor 5', 'email', 'staff', 'PMO', false, false, NULL),
+  ('SH-049', 'Xander Bell', 'Stakeholder', 'Mu Consulting', 'Consulting', 'partner', 'Consulting Partner', 'xander.bell@muconsulting.com', '+1-555-4901', '+1-555-4902', 'Partner', 'video-call', 'senior-management', 'Consulting Partner', false, true, NULL),
+  ('SH-050', 'Yvonne Murphy', 'Resource Manager', 'Acme Corp', 'HR', 'internal', 'Resource Manager', 'yvonne.murphy@acme.com', '+1-555-5001', '+1-555-5002', 'HQ Floor 2', 'email', 'middle-management', 'Resource Manager', false, false, NULL),
+  ('SH-051', 'Zach Bailey', 'Stakeholder', 'Nu Industries', 'Manufacturing', 'customer', 'Operations', 'zach.bailey@nuindustries.com', '+1-555-5101', '+1-555-5102', 'Factory', 'phone', 'middle-management', 'Operations', false, false, NULL),
+  ('SH-052', 'Amy Rivera', 'Design Lead', 'Acme Corp', 'Design', 'internal', 'Design Lead', 'amy.rivera@acme.com', '+1-555-5201', '+1-555-5202', 'HQ Floor 3', 'email', 'staff', 'Design Lead', false, true, NULL),
+  ('SH-053', 'Blake Cooper', 'Stakeholder', 'Xi Logistics', 'Logistics', 'supplier', 'Supplier Rep', 'blake.cooper@xilogistics.com', '+1-555-5301', '+1-555-5302', 'Depot', 'email', 'staff', 'Supplier Rep', false, false, NULL),
+  ('SH-054', 'Cindy Richardson', 'Governance Lead', 'Acme Corp', 'Governance', 'internal', 'Governance', 'cindy.richardson@acme.com', '+1-555-5401', '+1-555-5402', 'HQ Floor 6', 'email', 'senior-management', 'Governance', false, true, NULL),
+  ('SH-055', 'Derek Cox', 'Stakeholder', 'Omicron Tech', 'Technology', 'partner', 'Tech Partner', 'derek.cox@omicrontech.com', '+1-555-5501', '+1-555-5502', 'Partner Office', 'video-call', 'middle-management', 'Tech Partner', false, false, NULL),
+  ('SH-056', 'Ella Howard', 'Admin Lead', 'Acme Corp', 'Admin', 'internal', 'Admin', 'ella.howard@acme.com', '+1-555-5601', '+1-555-5602', 'HQ Floor 1', 'email', 'staff', 'Admin', false, false, NULL),
+  ('SH-057', 'Felix Ward', 'Stakeholder', 'Pi Services', 'Services', 'customer', 'Service Owner', 'felix.ward@piservices.com', '+1-555-5701', '+1-555-5702', 'Service Centre', 'email', 'middle-management', 'Service Owner', false, false, NULL),
+  ('SH-058', 'Gina Torres', 'Portfolio Analyst', 'Acme Corp', 'PMO', 'internal', 'Portfolio', 'gina.torres@acme.com', '+1-555-5801', '+1-555-5802', 'HQ Floor 5', 'email', 'staff', 'Portfolio', false, false, NULL),
+  ('SH-059', 'Hugo Peterson', 'Stakeholder', 'Rho Energy', 'Energy', 'regulator', 'Compliance', 'hugo.peterson@rhoenergy.gov', '+1-555-5901', '+1-555-5902', 'Regulatory', 'email', 'senior-management', 'Compliance', false, true, NULL),
+  ('SH-060', 'Iris Gray', 'Benefits Manager', 'Acme Corp', 'Business', 'internal', 'Benefits Owner', 'iris.gray@acme.com', '+1-555-6001', '+1-555-6002', 'HQ Floor 4', 'email', 'middle-management', 'Benefits Owner', false, true, NULL)
+) AS v(ref, name, title, org, dept, typ, role, email, phone, mobile, office, preferred_contact, org_level, project_role, is_decision_maker, is_influencer, notes)
+CROSS JOIN (SELECT NULL::uuid AS id) p
+WHERE NOT EXISTS (
+  SELECT 1 FROM stakeholders s
+  WHERE s.stakeholder_reference = v.ref
+    AND s.project_id IS NULL
+    AND (s.is_deleted = false OR s.is_deleted IS NULL)
+);

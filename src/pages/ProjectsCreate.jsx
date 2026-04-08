@@ -1,22 +1,15 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
-import { checkOrganisationStatusByAuthId } from '../services/postLoginRouter'
-import { UserPlus, X, Loader } from 'lucide-react'
+import { Loader } from 'lucide-react'
 
 // Draft Queue Integration
 import { HoldButton } from '../components/ui/HoldButton'
 import { AutoSaveIndicator } from '../components/ui/AutoSaveIndicator'
 import { useDraftQueue } from '../hooks/useDraftQueue'
 
-// Phase 2: Import governance section components
-import GovernanceSection from '../components/project/GovernanceSection'
-import BusinessJustificationSection from '../components/project/BusinessJustificationSection'
-import LifecycleControlsSection from '../components/project/LifecycleControlsSection'
-import FinancialControlsSection from '../components/project/FinancialControlsSection'
-import RiskComplexitySection from '../components/project/RiskComplexitySection'
-import DocumentGovernanceSection from '../components/project/DocumentGovernanceSection'
 import ProjectFormTabs from '../components/project/ProjectFormTabs'
+import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
 
 // Phase 3: Import readiness validation component
 import ReadinessPanel from '../components/project/ReadinessPanel'
@@ -24,19 +17,17 @@ import ReadinessPanel from '../components/project/ReadinessPanel'
 // Phase 4: Import authorisation actions component
 import AuthorisationActions from '../components/project/AuthorisationActions'
 
-// Import SearchableSelect and SmartBudgetInput (amount shorthand: 10t, 3m, etc.)
-import SearchableSelect from '../components/ui/SearchableSelect'
-import { SmartBudgetInput } from '../components/ui/SmartAmountInput'
+import { addProjectToPortfolio } from '../services/portfolioService'
+import { addProjectToProgramme } from '../services/programmeService'
+
 import ExportRecordMenu from '../components/ui/ExportRecordMenu'
 
 // Mandate linking and loading (used when arriving from an approved mandate)
-import { linkMandateToProject, getMandateByIdOrReference } from '../services/projectMandateService'
-
-// Lazy load role assignment services only when needed
-const loadRoleServices = () => Promise.all([
-  import('../services/organisationRoleService'),
-  import('../services/projectRoleAssignmentService')
-])
+import { linkMandateToProject, getMandatePrefill } from '../services/projectMandateService'
+import { getFundingSources } from '../services/fundingSourceService'
+import { getBudgetCategories } from '../services/budgetCategoryService'
+import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
+import { saveForProject } from '../services/projectBudgetCategoryService'
 
 // Removed skeleton loader for faster initial render
 
@@ -46,12 +37,10 @@ const PROJECT_CREATE_EXPORT_SECTIONS = [
     { key: 'project_code', label: 'Project Code' },
     { key: 'project_name', label: 'Project Name' },
     { key: 'project_description', label: 'Project Description' },
-    { key: 'methodology_id', label: 'Methodology ID' },
     { key: 'project_type_id', label: 'Project Type ID' },
     { key: 'project_status_id', label: 'Initial Status ID' },
     { key: 'start_date', label: 'Start Date' },
     { key: 'end_date', label: 'End Date' },
-    { key: 'budget', label: 'Budget' },
     { key: 'intake_status', label: 'Intake Status' }
   ]},
   { title: 'Governance & Authority', fields: [
@@ -73,12 +62,15 @@ const PROJECT_CREATE_EXPORT_SECTIONS = [
     { key: 'stage_gate_enforcement', label: 'Stage Gate Enforcement' },
     { key: 'tolerance_time_days', label: 'Tolerance Time (Days)' },
     { key: 'tolerance_cost_percentage', label: 'Tolerance Cost %' },
-    { key: 'tolerance_scope_description', label: 'Tolerance Scope Description' }
+    { key: 'tolerance_scope_description', label: 'Tolerance Scope Description' },
+    { key: 'tolerance_quality_description', label: 'Quality Tolerance (Description)' },
+    { key: 'tolerance_risk_description', label: 'Risk Tolerance (Description)' },
+    { key: 'tolerance_benefits_description', label: 'Benefits Tolerance (Description)' }
   ]},
   { title: 'Financial Controls', fields: [
     { key: 'budget_currency', label: 'Budget Currency' },
     { key: 'budget_type', label: 'Budget Type' },
-    { key: 'funding_source', label: 'Funding Source' },
+    { key: 'budget_categories', label: 'Budget Categories' },
     { key: 'budget_approval_status', label: 'Budget Approval Status' }
   ]},
   { title: 'Risk & Documentation', fields: [
@@ -102,7 +94,6 @@ export default function ProjectsCreate() {
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
-  const selectedMethodology = location.state?.selectedMethodology
   const fromMandate = location.state?.fromMandate || null
   // Short URL: only projectCode (when PRJ-{mandateRef}, mandate is derived for prefill/linking)
   const projectCodeFromUrl = searchParams.get('projectCode')
@@ -125,23 +116,29 @@ export default function ProjectsCreate() {
     project_description: fromMandate?.project_description || '',
     project_type_id: '',
     project_status_id: '',
-    methodology_id: selectedMethodology?.id || '',
     start_date: '',
     end_date: '',
-    budget: '',
     project_code: projectCodeFromUrl || '',
     intake_status: 'draft',
 
     // Phase 2: Governance & Authority (Section A)
     executive_user_id: fromMandate?.executive_user_id || '',
-    executive_name: (fromMandate?.proposed_executive_name && !fromMandate?.executive_user_id) ? fromMandate.proposed_executive_name : '',
+    executive_name: (fromMandate?.proposed_executive_name && !fromMandate?.executive_user_id)
+      ? fromMandate.proposed_executive_name
+      : '',
     board_required: fromMandate ? true : null,   // default Yes when from mandate
-    funding_authority_user_id: '',
-    funding_authority_name: '',                  // text fallback for named contacts
-    approving_authority_user_id: '',
-    approving_authority_name: '',                // text fallback for named contacts
+    // Default Funding / Approving authority from the same Executive / Sponsor proposed on the mandate
+    funding_authority_user_id: fromMandate?.executive_user_id || '',
+    funding_authority_name: (!fromMandate?.executive_user_id && fromMandate?.proposed_executive_name)
+      ? fromMandate.proposed_executive_name
+      : '',
+    approving_authority_user_id: fromMandate?.executive_user_id || '',
+    approving_authority_name: (!fromMandate?.executive_user_id && fromMandate?.proposed_executive_name)
+      ? fromMandate.proposed_executive_name
+      : '',
 
     // Phase 2: Business Justification (Section B)
+    // When arriving from mandate, business_objective defaults from Project Objectives (4) as one item per line.
     business_objective: fromMandate?.business_objective || '',
     strategic_alignment: fromMandate?.strategic_alignment || '',
     expected_benefits_summary: fromMandate?.expected_benefits_summary || '',
@@ -149,18 +146,21 @@ export default function ProjectsCreate() {
     benefit_owner_name: '',                      // text fallback for named contacts
 
     // Phase 2: Lifecycle & Controls (Section C)
-    delivery_methodology: '',
+    delivery_methodology: 'Waterfall',
     lifecycle_template: '',
     stage_model: '',
     stage_gate_enforcement: 'required',
     tolerance_time_days: '',
     tolerance_cost_percentage: '',
     tolerance_scope_description: '',
+    tolerance_quality_description: '',
+    tolerance_risk_description: '',
+    tolerance_benefits_description: '',
 
     // Phase 2: Financial Controls (Section D)
     budget_currency: 'USD',
     budget_type: '',
-    funding_source: '',
+    budget_categories: [], // { category_name, amount, funding_source_id }
     budget_approval_status: '',
 
     // Phase 2: Risk & Complexity (Section E)
@@ -183,7 +183,9 @@ export default function ProjectsCreate() {
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
-  const [methodologies, setMethodologies] = useState([])
+  const [fundingSources, setFundingSources] = useState([])
+  const [budgetCategories, setBudgetCategories] = useState([])
+  const [lifecycleTemplates, setLifecycleTemplates] = useState([])
   const [loading, setLoading] = useState(false)
   const [dataLoading, setDataLoading] = useState(true)
   const [errors, setErrors] = useState({})
@@ -200,8 +202,17 @@ export default function ProjectsCreate() {
       project_name: fm.project_name ?? prev.project_name,
       project_description: fm.project_description ?? prev.project_description,
       executive_user_id: fm.executive_user_id ?? prev.executive_user_id,
-      executive_name: (fm.proposed_executive_name && !fm.executive_user_id) ? fm.proposed_executive_name : prev.executive_name,
+      executive_name: (fm.proposed_executive_name && !fm.executive_user_id)
+        ? (prev.executive_name || fm.proposed_executive_name)
+        : prev.executive_name,
       board_required: prev.board_required != null ? prev.board_required : (fm ? true : null),
+      // Only default Funding / Approving authority when fields are still empty so user edits win
+      funding_authority_user_id: prev.funding_authority_user_id || fm.executive_user_id || '',
+      funding_authority_name: prev.funding_authority_name
+        || ((!fm.executive_user_id && fm.proposed_executive_name) ? fm.proposed_executive_name : ''),
+      approving_authority_user_id: prev.approving_authority_user_id || fm.executive_user_id || '',
+      approving_authority_name: prev.approving_authority_name
+        || ((!fm.executive_user_id && fm.proposed_executive_name) ? fm.proposed_executive_name : ''),
       business_objective: fm.business_objective ?? prev.business_objective,
       strategic_alignment: fm.strategic_alignment ?? prev.strategic_alignment,
       expected_benefits_summary: fm.expected_benefits_summary ?? prev.expected_benefits_summary,
@@ -214,11 +225,22 @@ export default function ProjectsCreate() {
     () => fromMandate?.mandateReference || mandateIdFromProjectCode || fromMandateParam || null
   )
 
-  // When URL has projectCode (PRJ-xxx) or legacy fromMandate/fromMandateId, fetch mandate and apply defaults; then keep URL short (projectCode only)
+  // When URL has projectCode (PRJ-xxx) or legacy param: use fromMandate immediately (no fetch), else fetch minimal prefill.
   useEffect(() => {
     if (!mandateParamToFetch) return
+
+    // We already have prefill from navigation state — no network, apply linking only (milliseconds).
+    const fm = location.state?.fromMandate
+    if (fm && (fm.project_name || fm.mandateTitle) && (fm.project_description || fm.purpose)) {
+      mandateIdForLinkingRef.current = fm.mandateId || fm.id || null
+      setSourceMandateLabel(fm.mandateReference || mandateIdFromProjectCode || fromMandateParam || '')
+      const codeForUrl = projectCodeFromUrl || (fm.mandateReference ? `PRJ-${fm.mandateReference}` : null)
+      if (codeForUrl) setSearchParams({ projectCode: codeForUrl }, { replace: true })
+      return
+    }
+
     let cancelled = false
-    getMandateByIdOrReference(mandateParamToFetch)
+    getMandatePrefill(mandateParamToFetch)
       .then((m) => {
         if (!m || cancelled) return
         mandateIdForLinkingRef.current = m.id
@@ -235,35 +257,35 @@ export default function ProjectsCreate() {
         setFormData(prev => ({
           ...prev,
           project_name: m.mandate_title ?? prev.project_name,
-          project_description: m.background ?? prev.project_description,
+          project_description: m.purpose ?? prev.project_description,
           project_code: prev.project_code || defaultCode || prev.project_code,
           executive_user_id: m.proposed_executive_id ?? prev.executive_user_id,
-          executive_name: (m.proposed_executive_name && !m.proposed_executive_id) ? m.proposed_executive_name : prev.executive_name,
+          executive_name: (m.proposed_executive_name && !m.proposed_executive_id)
+            ? (prev.executive_name || m.proposed_executive_name)
+            : prev.executive_name,
           board_required: true,
-          business_objective: m.purpose ?? prev.business_objective,
-          strategic_alignment: objectivesText || prev.strategic_alignment,
+          funding_authority_user_id: prev.funding_authority_user_id || m.proposed_executive_id || null,
+          funding_authority_name: prev.funding_authority_name
+            || ((!m.proposed_executive_id && m.proposed_executive_name) ? m.proposed_executive_name : ''),
+          approving_authority_user_id: prev.approving_authority_user_id || m.proposed_executive_id || null,
+          approving_authority_name: prev.approving_authority_name
+            || ((!m.proposed_executive_id && m.proposed_executive_name) ? m.proposed_executive_name : ''),
+          business_objective: objectivesText || m.purpose || prev.business_objective,
+          strategic_alignment: m.outline_business_case ?? prev.strategic_alignment,
           expected_benefits_summary: m.outline_business_case ?? prev.expected_benefits_summary,
           mandate_status: 'approved',
         }))
-        // Keep URL short: only projectCode (strip any legacy fromMandate/fromMandateId)
         const codeForUrl = projectCodeFromUrl || (m.mandate_reference ? `PRJ-${m.mandate_reference}` : null)
-        if (codeForUrl) {
-          setSearchParams({ projectCode: codeForUrl }, { replace: true })
-        }
+        if (codeForUrl) setSearchParams({ projectCode: codeForUrl }, { replace: true })
       })
       .catch((err) => {
         if (!cancelled) console.error('Failed to load mandate for prefill:', err)
       })
     return () => { cancelled = true }
-  }, [mandateParamToFetch])
+  }, [mandateParamToFetch, location.state?.fromMandate, projectCodeFromUrl, mandateIdFromProjectCode, fromMandateParam])
 
-  // Role assignment state (lazy loaded)
+  // PMO admin flag (used for authorisation actions visibility)
   const [isPmoAdmin, setIsPmoAdmin] = useState(false)
-  const [organisationUsers, setOrganisationUsers] = useState([])
-  const [availableRoles, setAvailableRoles] = useState([])
-  const [roleAssignments, setRoleAssignments] = useState([])
-  const [showRoleAssignment, setShowRoleAssignment] = useState(false)
-  const [roleServicesLoaded, setRoleServicesLoaded] = useState(false)
 
   // Phase 3: Readiness validation state
   const [createdProjectId, setCreatedProjectId] = useState(null)
@@ -273,6 +295,12 @@ export default function ProjectsCreate() {
   // Phase 4: Authorisation state
   const [intakeStatus, setIntakeStatus] = useState('draft')
   const [isProcessingAuthorisation, setIsProcessingAuthorisation] = useState(false)
+
+  // Phase 5: Portfolio & Programme assignment state
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(null)
+  const [selectedPortfolio, setSelectedPortfolio] = useState(null)
+  const [selectedProgrammeId, setSelectedProgrammeId] = useState(null)
+  const [selectedProgramme, setSelectedProgramme] = useState(null)
 
   // Draft Queue Integration
   const {
@@ -287,180 +315,131 @@ export default function ProjectsCreate() {
     autoSaveEnabled: false // Manual hold only for now
   })
 
-  // Optimized: Progressive loading - show form immediately, load data in background
+  // 2-phase parallel fetch — collapses 8-10 sequential queries into 2 parallel batches
   useEffect(() => {
     let isMounted = true
-    
+
     const initializePageData = async () => {
       try {
-        // Get current user first (fast check)
+        // Auth uses cached JWT — no network round-trip
         const { data: { user } } = await supabase.auth.getUser()
+        if (!user) { navigate('/login', { replace: true }); return }
 
-        if (!user) {
-          navigate('/login', { replace: true })
-          return
-        }
+        // Show form immediately while data loads in background
+        if (isMounted) setDataLoading(false)
 
-        // Show form immediately (set loading false early for better UX)
-        if (isMounted) {
-          setDataLoading(false)
-        }
-
-        // Run all checks and data fetches IN PARALLEL with optimized queries
-        // Only select needed columns and filter at database level
-        const [orgStatus, typesResult, statusesResult, methodsResult] = await Promise.all([
-          checkOrganisationStatusByAuthId(user.id),
-          supabase
-            .from('project_types')
-            .select('id, type_name, type_code')
-            .eq('is_active', true)
-            .eq('is_deleted', false)
-            .order('type_name', { ascending: true }),
-          supabase
-            .from('project_statuses')
-            .select('id, status_name, status_code')
-            .eq('is_active', true)
-            .eq('is_deleted', false)
-            .order('status_name', { ascending: true }),
-          supabase
-            .from('methodologies')
-            .select('id, methodology_name, methodology_code')
-            .eq('is_active', true)
-            .eq('is_deleted', false)
-            .order('methodology_name', { ascending: true })
+        // ── Phase 1: core dropdown lookups fire in parallel ───────────────────
+        const [userResult, typesResult, statusesResult] = await Promise.all([
+          supabase.from('users').select('id').eq('auth_user_id', user.id).single(),
+          supabase.from('project_types').select('id, type_name, type_code').eq('is_active', true).eq('is_deleted', false).order('type_name', { ascending: true }),
+          supabase.from('project_statuses').select('id, status_name, status_code').eq('is_active', true).eq('is_deleted', false).order('status_name', { ascending: true }),
         ])
 
         if (!isMounted) return
 
-        // Check organisation status (defer to avoid blocking)
-        if (!orgStatus.exists) {
+        const internalUserId = userResult.data?.id
+        if (!internalUserId) {
           navigate('/onboarding/organisation-setup', { replace: true })
           return
         }
 
-        // Set data (already sorted by database)
+        // ── Phase 2: org check + PMO admin check — both parallel ─────────────
+        // Old code: sequential isPmoAdmin(users→user_roles) then serial getOrganisationUsers
+        // New code: org + user_roles in parallel — just 2 queries total
+        const [orgResult, userRolesResult] = await Promise.all([
+          supabase.from('accounts').select('id, organisation_verified').eq('owner_user_id', internalUserId).maybeSingle(),
+          supabase.from('user_roles').select('is_active, roles:role_id(role_name)').eq('user_id', internalUserId).eq('is_active', true),
+        ])
+
+        if (!isMounted) return
+
+        if (!orgResult.data) {
+          navigate('/onboarding/organisation-setup', { replace: true })
+          return
+        }
+
+        const isAdmin = (userRolesResult.data || []).some(ur => ur.roles?.role_name === 'pmo_admin')
+
+        // Set dropdown state (lifecycle templates loaded when user opens Delivery tab)
         const types = typesResult.data || []
         const statuses = statusesResult.data || []
-        const methods = methodsResult.data || []
-
         setProjectTypes(types)
         setProjectStatuses(statuses)
-        setMethodologies(methods)
-
-        // Set defaults in one batch update (use first item as default)
         if (statuses.length > 0 || types.length > 0) {
           setFormData(prev => ({
             ...prev,
             project_status_id: prev.project_status_id || statuses[0]?.id || '',
-            project_type_id: prev.project_type_id || types[0]?.id || ''
+            project_type_id: prev.project_type_id || types[0]?.id || '',
           }))
         }
 
-        // Eagerly load org users and project roles so Governance and Assign Roles dropdowns are populated.
-        // Use allSettled so one failure doesn't block the other; always set roleServicesLoaded for PMO admin.
-        try {
-          const orgRoleService = (await import('../services/organisationRoleService')).default
-          const roleAssignmentService = (await import('../services/projectRoleAssignmentService')).default
+        setIsPmoAdmin(isAdmin)
 
-          const isAdmin = await orgRoleService.isPmoAdmin(user.id)
-          const [usersSettled, rolesSettled] = await Promise.allSettled([
-            isAdmin ? orgRoleService.getOrganisationUsers(user.id, true) : Promise.resolve({ data: [] }),
-            roleAssignmentService.getAvailableProjectRoles()
-          ])
-
-          if (isMounted) {
-            setIsPmoAdmin(isAdmin)
-            const usersData =
-              usersSettled.status === 'fulfilled' && !usersSettled.value?.error
-                ? (usersSettled.value?.data ?? usersSettled.value ?? [])
-                : []
-            const rolesData =
-              rolesSettled.status === 'fulfilled' && !rolesSettled.value?.error
-                ? (rolesSettled.value?.data ?? rolesSettled.value ?? [])
-                : []
-            setOrganisationUsers(Array.isArray(usersData) ? usersData : [])
-            setAvailableRoles(Array.isArray(rolesData) ? rolesData : [])
-            if (isAdmin) setRoleServicesLoaded(true)
-          }
-        } catch {
-          // Non-fatal: dropdowns stay empty
-        }
-
-        // Handle errors silently for non-critical data
-        if (typesResult.error || statusesResult.error || methodsResult.error) {
-          const errorDetails = []
-          if (typesResult.error) errorDetails.push('project types')
-          if (statusesResult.error) errorDetails.push('project statuses')
-          if (methodsResult.error) errorDetails.push('methodologies')
-          
-          // Only show error if critical data is missing
-          if (typesResult.error && statusesResult.error) {
-            setErrors({
-              submit: `Failed to load required data: ${errorDetails.join(', ')}`
-            })
-          }
+        if (typesResult.error && statusesResult.error) {
+          setErrors({ submit: 'Failed to load required dropdown data.' })
         }
 
       } catch (error) {
         if (!isMounted) return
         console.error('Error initializing page:', error)
-        setErrors({
-          submit: `Failed to load page data: ${error.message || 'Unknown error'}`
-        })
+        setErrors({ submit: `Failed to load page data: ${error.message || 'Unknown error'}` })
       }
     }
 
     initializePageData()
-    
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [navigate])
 
-  // Optimized: Lazy load role assignment services only when button is clicked
-  useEffect(() => {
-    if (showRoleAssignment && !roleServicesLoaded) {
-      let isMounted = true
-      
-      const loadRoleData = async () => {
-        try {
-          const [orgRoleService, roleAssignmentService] = await loadRoleServices()
-
-          const { data: { user } } = await supabase.auth.getUser()
-          if (!user || !isMounted) return
-
-          // Check admin status first, then fetch dependent data in parallel.
-          const isAdmin = await orgRoleService.isPmoAdmin(user.id)
-          const [usersResult, rolesResult] = await Promise.all([
-            isAdmin
-              ? orgRoleService.getOrganisationUsers(user.id, true)
-              : Promise.resolve([]),
-            roleAssignmentService.getAvailableProjectRoles()
-          ])
-
-          if (!isMounted) return
-
-          setIsPmoAdmin(isAdmin)
-          setOrganisationUsers(usersResult?.data || usersResult || [])
-          setAvailableRoles(rolesResult?.data || rolesResult || [])
-          setRoleServicesLoaded(true)
-        } catch (error) {
-          if (isMounted) {
-            // Silent error handling
-          }
+  // Load funding sources and budget categories for Financial tab (PMO-managed lists)
+  const loadFinancialLookups = useCallback(() => {
+    Promise.all([
+      getFundingSources(),
+      getBudgetCategories()
+    ])
+      .then(([fundingResult, categoryResult]) => {
+        if (fundingResult?.success && Array.isArray(fundingResult.data)) {
+          setFundingSources(fundingResult.data)
         }
-      }
+        if (categoryResult?.success && Array.isArray(categoryResult.data)) {
+          setBudgetCategories(categoryResult.data)
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load financial lookups:', err)
+      })
+  }, [])
 
-      loadRoleData()
-      
-      return () => {
-        isMounted = false
-      }
-    }
-  }, [showRoleAssignment, roleServicesLoaded])
+  useEffect(() => { loadFinancialLookups() }, [loadFinancialLookups])
+
+  // Load lifecycle templates when user opens Delivery tab (avoids blocking initial load if table missing)
+  const loadLifecycleTemplates = useCallback(() => {
+    getLifecycleTemplates()
+      .then((result) => {
+        if (result?.success && Array.isArray(result.data)) setLifecycleTemplates(result.data)
+      })
+      .catch((err) => console.error('Failed to load lifecycle templates:', err))
+  }, [])
+  const prevDeliveryTabRef = useRef(false)
+  useEffect(() => {
+    const onDelivery = activeTab === 'delivery' || activeTab === 'tolerances'
+    if (onDelivery && !prevDeliveryTabRef.current) loadLifecycleTemplates()
+    prevDeliveryTabRef.current = onDelivery
+  }, [activeTab, loadLifecycleTemplates])
+
+  // Refetch when user switches to Financial tab so lists are fresh (handles late auth or first load)
+  const prevFinancialTabRef = useRef(false)
+  useEffect(() => {
+    const onFinancial = activeTab === 'financial'
+    if (onFinancial && !prevFinancialTabRef.current) loadFinancialLookups()
+    prevFinancialTabRef.current = onFinancial
+  }, [activeTab, loadFinancialLookups])
 
   // Keep formDataRef in sync so validateForm can read latest values without a dep
   formDataRef.current = formData
+
+  const handleBudgetCategoriesChange = useCallback((categories) => {
+    setFormData(prev => ({ ...prev, budget_categories: categories }))
+  }, [])
 
   // Optimized: Memoized handler without errors dependency
   const handleChange = useCallback((e) => {
@@ -487,16 +466,6 @@ export default function ProjectsCreate() {
 
   // Stable SearchableSelect onChange handlers – no captured state, so they never
   // recreate across renders and won't trigger downstream child re-renders.
-  const handleMethodologyChange = useCallback((value) => {
-    setFormData(prev => ({ ...prev, methodology_id: value }))
-    setErrors(prev => {
-      if (!prev.methodology_id) return prev
-      const next = { ...prev }
-      delete next.methodology_id
-      return next
-    })
-  }, [])
-
   const handleProjectTypeChange = useCallback((value) => {
     setFormData(prev => ({ ...prev, project_type_id: value }))
     setErrors(prev => {
@@ -507,26 +476,9 @@ export default function ProjectsCreate() {
     })
   }, [])
 
-  // Handles selection from UserSelectWithAdd for authority/owner fields.
-  // userId = system user UUID or '' if named contact; userName = display name.
-  const handleAuthorityUserChange = useCallback((uuidField, nameField) => (userId, userName) => {
-    setFormData(prev => ({
-      ...prev,
-      [uuidField]: userId || '',
-      [nameField]: userId ? '' : (userName || '')
-    }))
-  }, [])
-
-  // Adds a named contact via service and appends them to the organisationUsers list.
-  const handleAddNamedContact = useCallback(async (fullName, email) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
-    // Lazy-load role service to avoid circular dep
-    const orgRoleService = (await import('../services/organisationRoleService')).default
-    const newContact = await orgRoleService.addNamedContact(user.id, fullName, email)
-    // Append to in-memory list so it appears in all dropdowns immediately
-    setOrganisationUsers(prev => [...prev, newContact])
-    return newContact
+  // Governance authority fields (Executive, Funding, Approving) are simple text; update name and clear user_id.
+  const handleAuthorityNameChange = useCallback((nameField, idField) => (value) => {
+    setFormData(prev => ({ ...prev, [nameField]: value || '', [idField]: '' }))
   }, [])
 
   const handleProjectStatusChange = useCallback((value) => {
@@ -549,10 +501,6 @@ export default function ProjectsCreate() {
       newErrors.project_name = 'Project name is required'
     }
 
-    if (!data.methodology_id) {
-      newErrors.methodology_id = 'Please select a methodology'
-    }
-
     if (!data.project_type_id) {
       newErrors.project_type_id = 'Please select a project type'
     }
@@ -561,10 +509,27 @@ export default function ProjectsCreate() {
       newErrors.project_status_id = 'Please select a project status'
     }
 
+    if (!(data.executive_user_id || (data.executive_name && data.executive_name.trim()))) {
+      newErrors.executive_name = 'Project Executive / Sponsor is required'
+    }
+    if (!(data.funding_authority_user_id || (data.funding_authority_name && data.funding_authority_name.trim()))) {
+      newErrors.funding_authority_name = 'Funding Authority is required'
+    }
+    if (!(data.approving_authority_user_id || (data.approving_authority_name && data.approving_authority_name.trim()))) {
+      newErrors.approving_authority_name = 'Approving Authority is required'
+    }
+
     if (data.start_date && data.end_date) {
       if (new Date(data.start_date) > new Date(data.end_date)) {
         newErrors.end_date = 'End date must be after start date'
       }
+    }
+
+    // At least one tolerance (time or cost) must have at least one value
+    const timeLines = (data.tolerance_time_days || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean)
+    const costLines = (data.tolerance_cost_percentage || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean)
+    if (timeLines.length === 0 && costLines.length === 0) {
+      newErrors.tolerances = 'At least one tolerance (time or cost) must be defined for authorisation'
     }
 
     setErrors(newErrors)
@@ -603,7 +568,6 @@ export default function ProjectsCreate() {
           status_id: formData.project_status_id,
           planned_start_date: formData.start_date || null,
           planned_end_date: formData.end_date || null,
-          budget_amount: formData.budget ? parseFloat(formData.budget) : null,
           owner_user_id: user.id,
           created_by: user.id,
 
@@ -632,14 +596,22 @@ export default function ProjectsCreate() {
           lifecycle_template: formData.lifecycle_template || null,
           stage_model: formData.stage_model || null,
           stage_gate_enforcement: formData.stage_gate_enforcement || 'required',
-          tolerance_time_days: formData.tolerance_time_days ? parseInt(formData.tolerance_time_days) : null,
-          tolerance_cost_percentage: formData.tolerance_cost_percentage ? parseFloat(formData.tolerance_cost_percentage) : null,
+          tolerance_time_days: (formData.tolerance_time_days || '').trim() || null,
+          tolerance_cost_percentage: (formData.tolerance_cost_percentage || '').trim() || null,
           tolerance_scope_description: formData.tolerance_scope_description || null,
+          tolerance_quality_description: formData.tolerance_quality_description || null,
+          tolerance_risk_description: formData.tolerance_risk_description || null,
+          tolerance_benefits_description: formData.tolerance_benefits_description || null,
 
           // Phase 2: Financial Controls (Section D)
           budget_currency: formData.budget_currency || 'USD',
           budget_type: formData.budget_type || null,
-          funding_source: formData.funding_source || null,
+          budget_amount: (() => {
+            const cats = formData.budget_categories || []
+            const sum = cats.reduce((s, c) => s + (Number(c.amount) || 0), 0)
+            return sum > 0 ? sum : null
+          })(),
+          funding_source: null,
           budget_approval_status: formData.budget_approval_status || null,
 
           // Phase 2: Risk & Complexity (Section E)
@@ -698,81 +670,43 @@ export default function ProjectsCreate() {
         throw new Error('Project operation failed - no ID returned')
       }
 
-      // Link methodology and assign roles in parallel (if applicable)
-      const postCreationTasks = []
-      const postCreationErrors = []
-
-      // Add methodology link (only for new projects)
-      if (formData.methodology_id && !isUpdate) {
-        postCreationTasks.push(
-          supabase
-            .from('project_methodologies')
-            .insert({
-              project_id: project.id,
-              methodology_id: formData.methodology_id,
-              is_active: true,
-              created_by: user.id
-            })
-            .then(result => {
-              if (result.error) {
-                postCreationErrors.push(`Failed to link methodology: ${result.error.message}`)
-                throw result.error
-              }
-              return result
-            })
-            .catch(err => {
-              postCreationErrors.push(`Failed to link methodology: ${err.message || 'Unknown error'}`)
-              return Promise.reject(err)
-            })
-        )
-      }
-
-      // Add role assignments if applicable
-      if (isPmoAdmin && roleAssignments.length > 0 && roleServicesLoaded) {
+      // Save budget categories (if any)
+      const categories = formData.budget_categories || []
+      const toSave = categories
+        .filter(c => (c.category_name && (c.category_name + '').trim()) || (Number(c.amount) || 0) > 0)
+        .map(c => ({
+          category_name: (c.category_name || '').trim() || 'Unnamed',
+          budget_amount: Number(c.amount) || 0,
+          funding_source_id: c.funding_source_id || null
+        }))
+      if (toSave.length > 0) {
         try {
-          const { assignProjectRolesDuringCreation } = await import('../services/projectRoleAssignmentService')
-          postCreationTasks.push(
-            assignProjectRolesDuringCreation(
-              project.id,
-              roleAssignments.map(ra => ({
-                userId: ra.userId,
-                roleName: ra.roleName
-              })),
-              user.id,
-              true // skipAdminCheck — isPmoAdmin already verified during page load
-            )
-            .then(result => {
-              if (!result.success) {
-                postCreationErrors.push(`Failed to assign roles: ${result.error || 'Unknown error'}`)
-              }
-              return result
-            })
-            .catch(err => {
-              postCreationErrors.push(`Failed to assign roles: ${err.message || 'Unknown error'}`)
-              return Promise.reject(err)
-            })
-          )
-        } catch (importError) {
-          postCreationErrors.push(`Failed to load role assignment service: ${importError.message}`)
-        }
-      }
-
-      // Execute post-creation tasks in parallel
-      if (postCreationTasks.length > 0) {
-        try {
-          const results = await Promise.allSettled(postCreationTasks)
-          results.forEach((result) => {
-            if (result.status === 'rejected') {
-              postCreationErrors.push(`Task failed: ${result.reason?.message || 'Unknown error'}`)
-            }
-          })
-        } catch (error) {
-          // Silent error handling for post-creation tasks
+          await saveForProject(project.id, toSave)
+        } catch (err) {
+          console.error('Failed to save budget categories:', err)
         }
       }
 
       // Phase 3: Store project ID for readiness validation
       setCreatedProjectId(project.id)
+
+      // Phase 5: Link portfolio if selected (only on new project, not draft update)
+      if (!isUpdate && selectedPortfolioId) {
+        try {
+          await addProjectToPortfolio(selectedPortfolioId, project.id)
+        } catch (err) {
+          console.error('Failed to link portfolio to project:', err)
+        }
+      }
+
+      // Phase 5: Link programme if selected (only on new project, not draft update)
+      if (!isUpdate && selectedProgrammeId) {
+        try {
+          await addProjectToProgramme(selectedProgrammeId, project.id)
+        } catch (err) {
+          console.error('Failed to link programme to project:', err)
+        }
+      }
 
       // Link mandate to newly created project (if arriving from mandate view or URL param)
       const mandateIdToLink = fromMandate?.mandateId ?? mandateIdForLinkingRef.current
@@ -796,27 +730,7 @@ export default function ProjectsCreate() {
       setErrors({ submit: errorMessage })
       setLoading(false)
     }
-  }, [formData, validateForm, isPmoAdmin, roleAssignments, roleServicesLoaded, navigate, fromMandate])
-
-  const removeRoleAssignment = useCallback((index) => {
-    setRoleAssignments(prev => prev.filter((_, i) => i !== index))
-  }, [])
-
-  const addRoleAssignment = useCallback(() => {
-    const userId = document.getElementById('role_user_select').value
-    const roleName = document.getElementById('role_role_select').value
-
-    if (userId && roleName) {
-      const exists = roleAssignments.some(
-        ra => ra.userId === userId && ra.roleName === roleName
-      )
-      if (!exists) {
-        setRoleAssignments(prev => [...prev, { userId, roleName }])
-        document.getElementById('role_user_select').value = ''
-        document.getElementById('role_role_select').value = ''
-      }
-    }
-  }, [roleAssignments])
+  }, [formData, validateForm, isPmoAdmin, navigate, fromMandate])
 
   // Phase 3: Readiness validation handler
   const handleValidateReadiness = useCallback(async () => {
@@ -999,14 +913,6 @@ export default function ProjectsCreate() {
   }, [createdProjectId])
 
   // Optimized: Memoized options with stable references for SearchableSelect
-  const methodologyOptions = useMemo(() => {
-    if (!methodologies.length) return []
-    return methodologies.map((methodology) => ({
-      value: methodology.id,
-      label: methodology.methodology_name || 'Unnamed'
-    }))
-  }, [methodologies])
-
   const projectTypeOptions = useMemo(() => {
     if (!projectTypes.length) return []
     return projectTypes.map((type) => ({
@@ -1029,25 +935,64 @@ export default function ProjectsCreate() {
     project_name: formData.project_name,
     project_description: formData.project_description,
     executive_user_id: formData.executive_user_id,
+    executive_name: formData.executive_name,
     board_required: formData.board_required,
+    funding_authority_user_id: formData.funding_authority_user_id,
+    funding_authority_name: formData.funding_authority_name,
+    approving_authority_user_id: formData.approving_authority_user_id,
+    approving_authority_name: formData.approving_authority_name,
     business_objective: formData.business_objective,
     strategic_alignment: formData.strategic_alignment,
+    expected_benefits_summary: formData.expected_benefits_summary,
+    benefit_owner_user_id: formData.benefit_owner_user_id,
+    benefit_owner_name: formData.benefit_owner_name,
     delivery_methodology: formData.delivery_methodology,
     lifecycle_template: formData.lifecycle_template,
+    stage_model: formData.stage_model,
+    stage_gate_enforcement: formData.stage_gate_enforcement,
+    tolerance_time_days: formData.tolerance_time_days,
+    tolerance_cost_percentage: formData.tolerance_cost_percentage,
+    tolerance_scope_description: formData.tolerance_scope_description,
+    tolerance_quality_description: formData.tolerance_quality_description,
+    tolerance_risk_description: formData.tolerance_risk_description,
+    tolerance_benefits_description: formData.tolerance_benefits_description,
     budget_type: formData.budget_type,
-    funding_source: formData.funding_source,
+    budget_categories: formData.budget_categories,
+    budget_approval_status: formData.budget_approval_status,
     initial_risk_rating: formData.initial_risk_rating,
     complexity_rating: formData.complexity_rating,
+    delivery_complexity: formData.delivery_complexity,
+    regulatory_impact: formData.regulatory_impact,
+    data_sensitivity: formData.data_sensitivity,
+    estimated_effort: formData.estimated_effort,
+    key_skills_required: formData.key_skills_required,
+    external_vendors_required: formData.external_vendors_required,
     mandate_status: formData.mandate_status,
     business_case_status: formData.business_case_status,
+    funding_approval_status: formData.funding_approval_status,
+    rfp_reference: formData.rfp_reference,
+    document_repository_url: formData.document_repository_url,
+    portfolio_id: selectedPortfolioId,
+    programme_id: selectedProgrammeId,
   }), [
     formData.project_name, formData.project_description,
-    formData.executive_user_id, formData.board_required,
+    formData.executive_user_id, formData.executive_name, formData.board_required,
+    formData.funding_authority_user_id, formData.funding_authority_name,
+    formData.approving_authority_user_id, formData.approving_authority_name,
     formData.business_objective, formData.strategic_alignment,
+    formData.expected_benefits_summary, formData.benefit_owner_user_id, formData.benefit_owner_name,
     formData.delivery_methodology, formData.lifecycle_template,
-    formData.budget_type, formData.funding_source,
-    formData.initial_risk_rating, formData.complexity_rating,
-    formData.mandate_status, formData.business_case_status,
+    formData.stage_model, formData.stage_gate_enforcement,
+    formData.tolerance_time_days, formData.tolerance_cost_percentage,
+    formData.tolerance_scope_description, formData.tolerance_quality_description,
+    formData.tolerance_risk_description, formData.tolerance_benefits_description,
+    formData.budget_type, formData.budget_categories, formData.budget_approval_status,
+    formData.initial_risk_rating, formData.complexity_rating, formData.delivery_complexity,
+    formData.regulatory_impact, formData.data_sensitivity, formData.estimated_effort,
+    formData.key_skills_required, formData.external_vendors_required,
+    formData.mandate_status, formData.business_case_status, formData.funding_approval_status,
+    formData.rfp_reference, formData.document_repository_url,
+    selectedPortfolioId, selectedProgrammeId,
   ])
 
   return (
@@ -1111,396 +1056,28 @@ export default function ProjectsCreate() {
       />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Tab 1: Project Details */}
-        {activeTab === 'details' && (
-          <div className="space-y-6">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Project Details
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Basic project information to identify and describe your project.
-              </p>
-            </div>
-
-        {/* Project Code (Optional) - first for reference before name */}
-        <div>
-          <label htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Code (Optional)
-          </label>
-          <input
-            type="text"
-            id="project_code"
-            name="project_code"
-            value={formData.project_code}
-            onChange={handleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="e.g., PRJ-2025-001"
-            autoFocus
-          />
-        </div>
-
-        {/* Project Name */}
-        <div>
-          <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="project_name"
-            name="project_name"
-            value={formData.project_name}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.project_name ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter project name"
-            required
-          />
-          {errors.project_name && (
-            <p className="mt-1 text-sm text-red-600">{errors.project_name}</p>
-          )}
-        </div>
-
-        {/* Project Description */}
-        <div>
-          <label htmlFor="project_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Description
-          </label>
-          <textarea
-            id="project_description"
-            name="project_description"
-            value={formData.project_description}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder="Describe your project..."
-          />
-        </div>
-
-        {/* Methodology Selection */}
-        <div>
-          <label htmlFor="methodology_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Methodology <span className="text-red-500">*</span>
-          </label>
-          <SearchableSelect
-            options={methodologyOptions}
-            value={formData.methodology_id}
-            onChange={handleMethodologyChange}
-            placeholder="Select a methodology"
-            searchPlaceholder="Search methodologies..."
-            required
-            className={errors.methodology_id ? 'border-red-500' : ''}
-          />
-          {errors.methodology_id && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.methodology_id}</p>
-          )}
-          {selectedMethodology && (
-            <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
-              Pre-selected: {selectedMethodology.methodology_name}
-            </p>
-          )}
-        </div>
-
-        {/* Project Type */}
-        <div>
-          <label htmlFor="project_type_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Project Type <span className="text-red-500">*</span>
-          </label>
-          <SearchableSelect
-            options={projectTypeOptions}
-            value={formData.project_type_id}
-            onChange={handleProjectTypeChange}
-            placeholder="Select a project type"
-            searchPlaceholder="Search project types..."
-            required
-            className={errors.project_type_id ? 'border-red-500' : ''}
-          />
-          {errors.project_type_id && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_type_id}</p>
-          )}
-        </div>
-
-        {/* Project Status */}
-        <div>
-          <label htmlFor="project_status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Initial Status <span className="text-red-500">*</span>
-          </label>
-          <SearchableSelect
-            options={statusOptions}
-            value={formData.project_status_id}
-            onChange={handleProjectStatusChange}
-            placeholder="Select a status"
-            searchPlaceholder="Search statuses..."
-            required
-            className={errors.project_status_id ? 'border-red-500' : ''}
-          />
-          {errors.project_status_id && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_status_id}</p>
-          )}
-        </div>
-
-        {/* Dates and Budget */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="start_date"
-              name="start_date"
-              value={formData.start_date}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              End Date
-            </label>
-            <input
-              type="date"
-              id="end_date"
-              name="end_date"
-              value={formData.end_date}
-              onChange={handleChange}
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                errors.end_date ? 'border-red-500' : 'border-gray-300'
-              }`}
-            />
-            {errors.end_date && (
-              <p className="mt-1 text-sm text-red-600">{errors.end_date}</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="budget" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Budget
-          </label>
-          <SmartBudgetInput
-            id="budget"
-            name="budget"
-            value={formData.budget === '' || formData.budget == null ? null : (Number(formData.budget) === Number(formData.budget) ? Number(formData.budget) : null)}
-            onChange={(num) => {
-              setFormData(prev => ({ ...prev, budget: num != null ? String(num) : '' }))
-              if (errors.budget) setErrors(prev => ({ ...prev, budget: undefined }))
-            }}
-            placeholder="0.00 or e.g. 10t, 3m"
-            min={0}
-            showShorthandHelper
-            className="w-full"
-            inputClassName={`border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-              errors.budget ? 'border-red-500' : 'border-gray-300'
-            }`}
-          />
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            Use k/t = thousand, m = million, b = billion (e.g. 10t → 10,000). Press Enter to convert.
-          </p>
-          {errors.budget && (
-            <p className="mt-1 text-sm text-red-600">{errors.budget}</p>
-          )}
-        </div>
-          </div>
-        )}
-
-        {/* Tab 2: Governance & Justification */}
-        {activeTab === 'governance' && (
-          <div className="space-y-6">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Governance & Justification
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Define project authority, accountability, and business justification.
-                Fields marked with <span className="text-red-500">*</span> are required for authorisation.
-              </p>
-            </div>
-
-            {/* Section A: Governance & Authority */}
-            <GovernanceSection
-              formData={formData}
-              handleChange={handleChange}
-              errors={errors}
-              organisationUsers={organisationUsers}
-              fromMandate={fromMandate}
-              onAuthorityUserChange={handleAuthorityUserChange}
-              onAddNamedContact={handleAddNamedContact}
-            />
-
-            {/* Section B: Business Justification */}
-            <BusinessJustificationSection
-              formData={formData}
-              handleChange={handleChange}
-              errors={errors}
-              organisationUsers={organisationUsers}
-              fromMandate={fromMandate}
-              onAuthorityUserChange={handleAuthorityUserChange}
-              onAddNamedContact={handleAddNamedContact}
-            />
-          </div>
-        )}
-
-        {/* Tab 3: Delivery & Financial */}
-        {activeTab === 'delivery' && (
-          <div className="space-y-6">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Delivery & Financial Controls
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Configure delivery methodology, lifecycle controls, and financial management.
-                Fields marked with <span className="text-red-500">*</span> are required for authorisation.
-              </p>
-            </div>
-
-            {/* Section C: Lifecycle & Controls */}
-            <LifecycleControlsSection
-              formData={formData}
-              handleChange={handleChange}
-              errors={errors}
-            />
-
-            {/* Section D: Financial Controls */}
-            <FinancialControlsSection
-              formData={formData}
-              handleChange={handleChange}
-              errors={errors}
-            />
-          </div>
-        )}
-
-        {/* Tab 4: Risk & Documentation */}
-        {activeTab === 'assessment' && (
-          <div className="space-y-6">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                Risk Assessment & Documentation
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Assess project risk, complexity, and capture document governance metadata.
-                Fields marked with <span className="text-red-500">*</span> are required for authorisation.
-              </p>
-            </div>
-
-            {/* Section E: Risk & Complexity */}
-            <RiskComplexitySection
-              formData={formData}
-              handleChange={handleChange}
-              errors={errors}
-            />
-
-            {/* Section F: Document Governance */}
-            <DocumentGovernanceSection
-              formData={formData}
-              handleChange={handleChange}
-              errors={errors}
-            />
-          </div>
-        )}
-
-        {/* Role Assignment Section (lazy loaded) */}
-        {isPmoAdmin && (
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Assign Project Roles
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Assign key roles to team members for this project
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowRoleAssignment(!showRoleAssignment)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <UserPlus className="h-5 w-5" />
-                {showRoleAssignment ? 'Hide' : 'Assign Roles'}
-              </button>
-            </div>
-
-            {showRoleAssignment && (
-              <div className="space-y-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                {!roleServicesLoaded ? (
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Loading role assignment options...</div>
-                ) : (
-                  <>
-                    {roleAssignments.length > 0 && (
-                      <div className="space-y-2 mb-4">
-                        {roleAssignments.map((assignment, index) => {
-                          const user = organisationUsers.find(u => u.id === assignment.userId)
-                          const role = availableRoles.find(r => r.role_name === assignment.roleName)
-                          return (
-                            <div key={`${assignment.userId}-${assignment.roleName}-${index}`} className="flex items-center justify-between bg-white dark:bg-gray-700 p-3 rounded-lg">
-                              <div>
-                                <span className="font-medium text-gray-900 dark:text-white">
-                                  {user?.full_name || user?.email || 'Unknown User'}
-                                </span>
-                                <span className="text-gray-600 dark:text-gray-400 mx-2">→</span>
-                                <span className="text-blue-600 dark:text-blue-400">
-                                  {role?.role_display_name || assignment.roleName}
-                                </span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeRoleAssignment(index)}
-                                className="text-red-600 hover:text-red-800 dark:text-red-400"
-                              >
-                                <X className="h-5 w-5" />
-                              </button>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Select User
-                        </label>
-                        <select
-                          id="role_user_select"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          disabled={!roleServicesLoaded}
-                        >
-                          <option value="">Choose a user...</option>
-                          {organisationUsers.map(user => (
-                            <option key={user.id} value={user.id}>
-                              {user.full_name || user.email}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Select Role
-                        </label>
-                        <select
-                          id="role_role_select"
-                          onChange={addRoleAssignment}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          disabled={!roleServicesLoaded}
-                        >
-                          <option value="">Choose a role...</option>
-                          {availableRoles.map(role => (
-                            <option key={role.id} value={role.role_name}>
-                              {role.role_display_name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        <ProjectWizardPanels
+          mode="create"
+          activeTab={activeTab}
+          formData={formData}
+          errors={errors}
+          handleChange={handleChange}
+          projectTypeOptions={projectTypeOptions}
+          statusOptions={statusOptions}
+          handleProjectTypeChange={handleProjectTypeChange}
+          handleProjectStatusChange={handleProjectStatusChange}
+          handleAuthorityNameChange={handleAuthorityNameChange}
+          lifecycleTemplates={lifecycleTemplates}
+          fundingSources={fundingSources}
+          budgetCategories={budgetCategories}
+          handleBudgetCategoriesChange={handleBudgetCategoriesChange}
+          selectedPortfolioId={selectedPortfolioId}
+          selectedPortfolio={selectedPortfolio}
+          onPortfolioChange={(id, p) => { setSelectedPortfolioId(id); setSelectedPortfolio(p) }}
+          selectedProgrammeId={selectedProgrammeId}
+          selectedProgramme={selectedProgramme}
+          onProgrammeChange={(id, p) => { setSelectedProgrammeId(id); setSelectedProgramme(p) }}
+        />
 
         {/* Error Message */}
         {errors.submit && (

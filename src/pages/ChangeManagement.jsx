@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient';
 import {
   FileEdit,
@@ -14,9 +16,10 @@ import ChangeManagementDashboard from '../components/change/ChangeManagementDash
 import ChangeRequestForm from '../components/change/ChangeRequestForm';
 import ChangeRequestList from '../components/change/ChangeRequestList';
 import ChangeAssessmentForm from '../components/change/ChangeAssessmentForm';
+import { useViewMode } from '../hooks/useViewMode';
 
 export default function ChangeManagement() {
-  const { projectId } = useParams();
+  const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [project, setProject] = useState(null);
@@ -32,6 +35,7 @@ export default function ChangeManagement() {
   // Edit states
   const [editingRequest, setEditingRequest] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-management-requests', 'grid');
 
   useEffect(() => {
     if (projectId) {
@@ -115,6 +119,8 @@ export default function ChangeManagement() {
               setShowRequestForm(true);
             }}
             onSelect={handleSelectRequest}
+            viewMode={changeRequestViewMode}
+            onViewModeChange={setChangeRequestViewMode}
           />
         );
 

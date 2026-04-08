@@ -1,9 +1,31 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link2, Edit2, Trash2, AlertTriangle, FolderKanban, Target, TrendingUp, ArrowRight } from 'lucide-react';
 import { deleteInterProjectDependency } from '../../services/dependencyService';
+import { TableHeaderCell } from '../ui/Table';
+import { useSortableTable } from '../../hooks/useSortableTable';
 
-export default function DependencyList({ dependencies, onEdit, onRefresh }) {
+export default function DependencyList({ dependencies, onEdit, onRefresh, viewMode = 'grid' }) {
   const [deleting, setDeleting] = useState(null);
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'dependency_name', direction: 'asc' },
+    storageKey: 'nidus-dependency-list-sort',
+  });
+  const depAccessors = useMemo(
+    () => ({
+      dependency_name: (d) => d.dependency_name ?? '',
+      source_target: (d) =>
+        `${d.source_project?.project_name ?? ''} ${d.target_project?.project_name ?? ''}`,
+      dependency_type: (d) => d.dependency_type ?? '',
+      dependency_status: (d) => d.dependency_status ?? '',
+      dependency_criticality: (d) => d.dependency_criticality ?? '',
+    }),
+    []
+  );
+  const displayDeps = useMemo(
+    () => sortedData(dependencies || [], depAccessors),
+    [dependencies, sortedData, depAccessors]
+  );
 
   const handleDelete = async (dependency) => {
     if (!window.confirm(`Are you sure you want to delete dependency "${dependency.dependency_name}"? This action cannot be undone.`)) {
@@ -70,7 +92,7 @@ export default function DependencyList({ dependencies, onEdit, onRefresh }) {
     return labels[type] || type;
   };
 
-  if (dependencies.length === 0) {
+  if (!dependencies?.length) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
         <Link2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
@@ -84,6 +106,57 @@ export default function DependencyList({ dependencies, onEdit, onRefresh }) {
     );
   }
 
+  if (viewMode === 'grid') {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {displayDeps.map((dependency) => (
+          <div
+            key={dependency.id}
+            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[200px] flex flex-col hover:shadow-md transition-shadow"
+          >
+            <button
+              type="button"
+              className="text-left flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
+              onClick={() => onEdit?.(dependency)}
+            >
+              <div className="text-sm font-semibold text-gray-900 dark:text-white mb-2">{dependency.dependency_name}</div>
+              <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-3 flex-wrap">
+                <span className="truncate max-w-[45%]">{dependency.source_project?.project_name || '?'}</span>
+                <ArrowRight className="h-3 w-3 shrink-0" />
+                <span className="truncate max-w-[45%]">{dependency.target_project?.project_name || '?'}</span>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-2">
+                <span className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                  {getTypeLabel(dependency.dependency_type)}
+                </span>
+                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(dependency.dependency_status)}`}>
+                  {dependency.dependency_status?.replace('_', ' ') || '—'}
+                </span>
+                <span className={`px-2 py-1 text-xs rounded-full ${getCriticalityColor(dependency.dependency_criticality)}`}>
+                  {dependency.dependency_criticality || '—'}
+                </span>
+              </div>
+            </button>
+            <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+              <button type="button" onClick={() => onEdit?.(dependency)} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded" aria-label="Edit">
+                <Edit2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(dependency)}
+                disabled={deleting === dependency.id}
+                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+                aria-label="Delete"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -91,21 +164,46 @@ export default function DependencyList({ dependencies, onEdit, onRefresh }) {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <TableHeaderCell
+                  sortable
+                  sortDirection={getSortDirectionForColumn('dependency_name')}
+                  onSort={() => handleSort('dependency_name')}
+                  className="!normal-case"
+                >
                   Dependency
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                </TableHeaderCell>
+                <TableHeaderCell
+                  sortable
+                  sortDirection={getSortDirectionForColumn('source_target')}
+                  onSort={() => handleSort('source_target')}
+                  className="!normal-case"
+                >
                   Source → Target
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                </TableHeaderCell>
+                <TableHeaderCell
+                  sortable
+                  sortDirection={getSortDirectionForColumn('dependency_type')}
+                  onSort={() => handleSort('dependency_type')}
+                  className="!normal-case"
+                >
                   Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                </TableHeaderCell>
+                <TableHeaderCell
+                  sortable
+                  sortDirection={getSortDirectionForColumn('dependency_status')}
+                  onSort={() => handleSort('dependency_status')}
+                  className="!normal-case"
+                >
                   Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                </TableHeaderCell>
+                <TableHeaderCell
+                  sortable
+                  sortDirection={getSortDirectionForColumn('dependency_criticality')}
+                  onSort={() => handleSort('dependency_criticality')}
+                  className="!normal-case"
+                >
                   Criticality
-                </th>
+                </TableHeaderCell>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Context
                 </th>
@@ -115,7 +213,7 @@ export default function DependencyList({ dependencies, onEdit, onRefresh }) {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {dependencies.map((dependency) => (
+              {displayDeps.map((dependency) => (
                 <tr key={dependency.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>

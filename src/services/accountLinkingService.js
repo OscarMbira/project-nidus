@@ -6,7 +6,14 @@
  */
 
 import { appDb, supabase } from './supabase/supabaseClient';
-import { v4 as uuidv4 } from 'uuid';
+// Simple UUID v4 generator (browser-compatible)
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
 
 /**
  * Generate a verification token
@@ -306,9 +313,9 @@ export async function mergeAccounts(primaryUserId, secondaryUserId) {
       throw new Error('One or both accounts not found');
     }
 
-    // 2. Transfer PM subscriptions
+    // 2. Transfer Platform subscriptions
     await appDb
-      .from('pm_subscriptions')
+      .from('platform_subscriptions')
       .update({
         user_id: primaryUserId,
         updated_at: new Date().toISOString(),

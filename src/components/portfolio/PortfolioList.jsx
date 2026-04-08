@@ -1,13 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FolderKanban, Edit2, Trash2, TrendingUp, AlertTriangle, DollarSign, Users, Eye } from 'lucide-react';
 import { deletePortfolio } from '../../services/portfolioService';
+import SortToolbar from '../ui/SortToolbar';
+import { useSortableTable } from '../../hooks/useSortableTable';
+import { TableHeaderCell } from '../ui/Table';
 
-export default function PortfolioList({ portfolios, onRefresh }) {
+export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid' }) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'portfolio_name', direction: 'asc' },
+    storageKey: 'nidus-portfolio-list-sort',
+  });
 
   const handleDelete = async (portfolio) => {
     if (!window.confirm(`Are you sure you want to delete "${portfolio.portfolio_name}"? This action cannot be undone.`)) {
@@ -69,6 +77,21 @@ export default function PortfolioList({ portfolios, onRefresh }) {
     return matchesSearch && matchesStatus;
   });
 
+  const pfAccessors = useMemo(
+    () => ({
+      portfolio_name: (p) => p.portfolio_name ?? '',
+      portfolio_status: (p) => p.portfolio_status ?? '',
+      budget: (p) => parseFloat(p.total_budget ?? p.budget_amount ?? 0) || 0,
+      start: (p) => p.start_date ?? p.planned_start_date ?? '',
+      end: (p) => p.end_date ?? p.planned_end_date ?? '',
+    }),
+    []
+  );
+  const displayPortfolios = useMemo(
+    () => sortedData(filteredPortfolios, pfAccessors),
+    [filteredPortfolios, sortedData, pfAccessors]
+  );
+
   if (portfolios.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
@@ -119,15 +142,124 @@ export default function PortfolioList({ portfolios, onRefresh }) {
         ) : null}
       </div>
 
-      {/* Portfolio Cards */}
-      {filteredPortfolios.length === 0 ? (
+      <SortToolbar
+        columns={[
+          { key: 'portfolio_name', label: 'Name' },
+          { key: 'portfolio_status', label: 'Status' },
+          { key: 'budget', label: 'Budget' },
+          { key: 'start', label: 'Start date' },
+          { key: 'end', label: 'End date' },
+        ]}
+        getSortDirection={getSortDirectionForColumn}
+        onSort={handleSort}
+        className="mb-2"
+      />
+
+      {viewMode === 'list' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Category</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Budget</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Dates</TableHeaderCell>
+                  <TableHeaderCell
+                    sortable={false}
+                    className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700 z-[1] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                  >
+                    Actions
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {displayPortfolios.map((portfolio) => {
+                  const start = portfolio.start_date || portfolio.planned_start_date;
+                  const end = portfolio.end_date || portfolio.planned_end_date;
+                  return (
+                    <tr
+                      key={portfolio.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer group"
+                      onClick={() => navigate(`/portfolio/${portfolio.id}`)}
+                    >
+                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{portfolio.portfolio_name}</td>
+                      <td className="px-6 py-4">
+                        {portfolio.portfolio_type ? (
+                          <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(portfolio.portfolio_type)}`}>
+                            {portfolio.portfolio_type}
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(portfolio.portfolio_status)}`}>
+                          {portfolio.portfolio_status?.replace('-', ' ') || '—'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                        {portfolio.total_budget != null
+                          ? `$${Number(portfolio.total_budget).toLocaleString()}`
+                          : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {start || end ? (
+                          <span>
+                            {start ? new Date(start).toLocaleDateString() : '—'} – {end ? new Date(end).toLocaleDateString() : '—'}
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="inline-flex gap-1 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/portfolio/${portfolio.id}`)}
+                            className="p-2 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            aria-label="View portfolio"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/portfolio/${portfolio.id}/edit`)}
+                            className="p-2 rounded text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            aria-label="Edit portfolio"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(portfolio)}
+                            disabled={deleting === portfolio.id}
+                            className="p-2 rounded text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                            aria-label="Delete portfolio"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : displayPortfolios.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
           <FolderKanban className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500 dark:text-gray-400">No portfolios match your filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPortfolios.map((portfolio) => (
+          {displayPortfolios.map((portfolio) => (
             <div
               key={portfolio.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"

@@ -1,10 +1,39 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
-import { Package, Edit2, Trash2, CheckCircle, Clock, AlertCircle, User, Calendar, DollarSign, FileText } from 'lucide-react'
+import { Package, Edit2, Trash2, CheckCircle, Clock, AlertCircle, User, Calendar, DollarSign, FileText, Eye, FileText as ReportIcon } from 'lucide-react'
+import ExportListMenu from '../ui/ExportListMenu'
+import SortToolbar from '../ui/SortToolbar'
+import { useSortableTable } from '../../hooks/useSortableTable'
+
+const WP_COLUMNS = [
+  { key: 'work_package_name', label: 'Name' },
+  { key: 'wp_reference', label: 'Reference' },
+  { key: 'status', label: 'Status' }
+]
 
 export default function WorkPackageList({ workPackages, onEdit, onRefresh, projectId, stageBoundaries }) {
+  const navigate = useNavigate()
   const [deletingId, setDeletingId] = useState(null)
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'planned_start_date', direction: 'asc' },
+    storageKey: 'nidus-work-packages-sort',
+  })
+  const wpAccessors = useMemo(
+    () => ({
+      work_package_name: (w) => w.work_package_name ?? '',
+      status: (w) => w.status ?? '',
+      planned_start: (w) => w.planned_start_date ?? '',
+      planned_end: (w) => w.planned_end_date ?? '',
+    }),
+    []
+  )
+  const displayWPs = useMemo(
+    () => sortedData(workPackages || [], wpAccessors),
+    [workPackages, sortedData, wpAccessors]
+  )
 
   const handleDelete = async (workPackageId) => {
     if (!confirm('Are you sure you want to delete this work package?')) return
@@ -91,7 +120,7 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
     }
   }
 
-  if (workPackages.length === 0) {
+  if (!workPackages?.length) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
         <Package className="h-16 w-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
@@ -107,7 +136,20 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
 
   return (
     <div className="space-y-4">
-      {workPackages.map((wp) => (
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+        <SortToolbar
+          columns={[
+            { key: 'work_package_name', label: 'Title' },
+            { key: 'status', label: 'Status' },
+            { key: 'planned_start', label: 'Start date' },
+            { key: 'planned_end', label: 'End date' },
+          ]}
+          getSortDirection={getSortDirectionForColumn}
+          onSort={handleSort}
+        />
+        <ExportListMenu columns={WP_COLUMNS} data={displayWPs} baseFilename="WorkPackages" disabled={!displayWPs.length} />
+      </div>
+      {displayWPs.map((wp) => (
         <div
           key={wp.id}
           className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
@@ -115,9 +157,17 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 
+                  className="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
+                  onClick={() => navigate(`/projects/${projectId}/work-packages/${wp.id}`)}
+                >
                   {wp.work_package_name}
                 </h3>
+                {wp.wp_reference && (
+                  <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-mono">
+                    {wp.wp_reference}
+                  </span>
+                )}
                 {wp.work_package_code && (
                   <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded text-xs font-mono">
                     {wp.work_package_code}
@@ -135,6 +185,20 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
               )}
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={() => navigate(`/app/projects/${projectId}/work-packages/${wp.id}/checkpoint-reports`)}
+                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                title="Checkpoint Reports"
+              >
+                <ReportIcon className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => navigate(`/projects/${projectId}/work-packages/${wp.id}`)}
+                className="p-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
+                title="View Work Package"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
               {wp.status === 'draft' && (
                 <button
                   onClick={() => handleAuthorize(wp.id)}
@@ -146,6 +210,7 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
               <button
                 onClick={() => onEdit(wp)}
                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                title="Edit Work Package"
               >
                 <Edit2 className="h-4 w-4" />
               </button>
@@ -153,6 +218,7 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
                 onClick={() => handleDelete(wp.id)}
                 disabled={deletingId === wp.id}
                 className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+                title="Delete Work Package"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

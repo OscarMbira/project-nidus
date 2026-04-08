@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Moon, Sun } from 'lucide-react';
 
-// Import components - Hero and CTA load immediately
+// Above-fold: load immediately for fast First Contentful Paint
 import HeroSection from '../components/homepage/HeroSection';
 import CTASection from '../components/homepage/CTASection';
 import LazySection from '../components/homepage/LazySection';
 
-// Lazy-loaded sections (load only when visible)
-import BlogSection from '../components/homepage/BlogSection';
-import PricingSection from '../components/homepage/PricingSection';
-import ResourcesSection from '../components/homepage/ResourcesSection';
-import AboutSection from '../components/homepage/AboutSection';
-import ContactSection from '../components/homepage/ContactSection';
-import Footer from '../components/homepage/Footer';
+// Below-fold: separate JS chunks, only downloaded when section scrolls into view
+const BlogSection = lazy(() => import('../components/homepage/BlogSection'));
+const PricingSection = lazy(() => import('../components/homepage/PricingSection'));
+const ResourcesSection = lazy(() => import('../components/homepage/ResourcesSection'));
+const AboutSection = lazy(() => import('../components/homepage/AboutSection'));
+const ContactSection = lazy(() => import('../components/homepage/ContactSection'));
+const Footer = lazy(() => import('../components/homepage/Footer'));
 
 // Standalone theme toggle for homepage - optimized for performance
 const StandaloneThemeToggle = () => {
@@ -64,25 +64,17 @@ const StandaloneThemeToggle = () => {
 
 // Navigation items - static constant (merged Option 1 & 2, starting with Features)
 const NAV_ITEMS = [
-  { id: 'cta', label: 'Features', href: '#cta' },
-  { id: 'articles', label: 'Blog', href: '#articles' },
-  { id: 'resources', label: 'Resources', href: '#resources' },
-  { id: 'pricing', label: 'Pricing', href: '#pricing' },
-  { id: 'documentation', label: 'Documentation', href: '/documentation/pm' },
-  { id: 'about', label: 'About', href: '#about' },
-  { id: 'contact', label: 'Contact', href: '#contact' },
+  { id: 'features', label: 'Features', href: '/features' },
+  { id: 'blog', label: 'Blog', href: '/blog' },
+  { id: 'resources', label: 'Resources', href: '/resources' },
+  { id: 'pricing', label: 'Pricing', href: '/pricing' },
+  { id: 'documentation', label: 'Documentation', href: '/documentation/platform' },
+  { id: 'about', label: 'About', href: '/about' },
+  { id: 'contact', label: 'Contact', href: '/contact' },
 ];
 
 const NidusHomepage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setMobileMenuOpen(false);
-    }
-  };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -101,42 +93,26 @@ const NidusHomepage = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
-              {NAV_ITEMS.map((item) => {
-                // Handle Documentation as a route link, others as anchor links
-                if (item.id === 'documentation') {
-                  return (
-                    <Link
-                      key={item.id}
-                      to={item.href}
-                      className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                }
-                // Handle anchor links for sections
-                return (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    onClick={(e) => { e.preventDefault(); scrollToSection(item.id); }}
-                    className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.id}
+                  to={item.href}
+                  className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
 
             {/* Header Buttons */}
             <div className="flex items-center gap-3">
               <StandaloneThemeToggle />
               <Link
-                to="/pm"
+                to="/platform"
                 className="hidden sm:inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
               >
                 <span className="hidden md:inline">Platform</span>
-                <span className="md:hidden">PM</span>
+                <span className="md:hidden">PLT</span>
               </Link>
               <Link
                 to="/simulator"
@@ -160,35 +136,19 @@ const NidusHomepage = () => {
         {mobileMenuOpen && (
           <nav className="md:hidden border-t border-gray-700 bg-gray-800">
             <div className="px-4 py-4 space-y-3">
-              {NAV_ITEMS.map((item) => {
-                // Handle Documentation as a route link, others as anchor links
-                if (item.id === 'documentation') {
-                  return (
-                    <Link
-                      key={item.id}
-                      to={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block py-2 text-gray-400 hover:text-white"
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                }
-                // Handle anchor links for sections
-                return (
-                  <a
-                    key={item.id}
-                    href={item.href}
-                    onClick={(e) => { e.preventDefault(); scrollToSection(item.id); }}
-                    className="block py-2 text-gray-400 hover:text-white"
-                  >
-                    {item.label}
-                  </a>
-                );
-              })}
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.id}
+                  to={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block py-2 text-gray-400 hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              ))}
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
                 <Link
-                  to="/pm"
+                  to="/platform"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
                 >
@@ -215,32 +175,44 @@ const NidusHomepage = () => {
 
       {/* Blog Section - Lazy load when scrolling down */}
       <LazySection>
-        <BlogSection />
+        <Suspense fallback={null}>
+          <BlogSection />
+        </Suspense>
       </LazySection>
 
       {/* Pricing Section - Lazy load */}
       <LazySection>
-        <PricingSection />
+        <Suspense fallback={null}>
+          <PricingSection />
+        </Suspense>
       </LazySection>
 
       {/* Resources Section - Lazy load */}
       <LazySection>
-        <ResourcesSection />
+        <Suspense fallback={null}>
+          <ResourcesSection />
+        </Suspense>
       </LazySection>
 
       {/* About Section - Lazy load */}
       <LazySection>
-        <AboutSection />
+        <Suspense fallback={null}>
+          <AboutSection />
+        </Suspense>
       </LazySection>
 
       {/* Contact Section - Lazy load */}
       <LazySection>
-        <ContactSection />
+        <Suspense fallback={null}>
+          <ContactSection />
+        </Suspense>
       </LazySection>
 
       {/* Footer - Lazy load */}
       <LazySection>
-        <Footer scrollToSection={scrollToSection} />
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
       </LazySection>
     </div>
   );

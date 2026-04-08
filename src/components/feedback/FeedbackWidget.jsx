@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { MessageSquare, X, Send, Camera, Image as ImageIcon } from 'lucide-react'
-import { supabase } from '../../services/supabaseClient'
+import { platformDb } from '../../services/supabase/supabaseClient'
 import { submitFeedback } from '../../services/feedbackService'
 import { useToastContext } from '../../context/ToastContext'
 import Button from '../ui/Button.jsx'
 import Textarea from '../ui/Textarea.jsx'
 import Select from '../ui/Select.jsx'
+
+const SEND_TIMEOUT_MS = 20000
 
 export default function FeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false)
@@ -13,7 +15,13 @@ export default function FeedbackWidget() {
   const [screenshot, setScreenshot] = useState(null)
   const [userId, setUserId] = useState(null)
   const fileInputRef = useRef(null)
+  const isMountedRef = useRef(true)
   const toast = useToastContext()
+
+  useEffect(() => {
+    isMountedRef.current = true
+    return () => { isMountedRef.current = false }
+  }, [])
 
   const [formData, setFormData] = useState({
     feedback_type: 'general_feedback',
@@ -24,7 +32,7 @@ export default function FeedbackWidget() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await platformDb.auth.getUser()
       setUserId(user?.id || null)
     }
     getUser()
@@ -77,25 +85,20 @@ export default function FeedbackWidget() {
 
     setIsSubmitting(true)
     try {
-      const feedbackData = {
-        ...formData,
-        page_url: window.location.href,
-        browser_info: {
-          platform: navigator.platform,
-          language: navigator.language,
-          userAgent: navigator.userAgent
-        }
-      }
-
-      const result = await submitFeedback(
+      const sendPromise = submitFeedback(
         userId,
-        feedbackData.feedback_type,
-        feedbackData.feedback_text,
-        feedbackData.rating,
-        feedbackData.page_url
+        formData.feedback_type,
+        formData.feedback_text.trim(),
+        formData.rating,
+        window.location.href
       )
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), SEND_TIMEOUT_MS)
+      )
+      const result = await Promise.race([sendPromise, timeoutPromise])
 
-      if (result.success) {
+      if (!isMountedRef.current) return
+      if (result?.success) {
         toast.success('Thank you for your feedback!')
         setIsOpen(false)
         setFormData({
@@ -106,13 +109,15 @@ export default function FeedbackWidget() {
         })
         setScreenshot(null)
       } else {
-        toast.error(result.message || 'Failed to submit feedback')
+        toast.error(result?.message || 'Failed to submit feedback')
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error)
-      toast.error('Failed to submit feedback')
+      if (isMountedRef.current) {
+        console.error('Error submitting feedback:', error)
+        toast.error(error?.message || 'Failed to submit feedback')
+      }
     } finally {
-      setIsSubmitting(false)
+      if (isMountedRef.current) setIsSubmitting(false)
     }
   }
 

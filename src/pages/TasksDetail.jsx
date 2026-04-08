@@ -8,6 +8,16 @@ import TaskAttachments from '../components/TaskAttachments'
 import TaskDependencies from '../components/TaskDependencies'
 import IssueForm from '../components/IssueForm'
 import RiskForm from '../components/RiskForm'
+import ExportRecordButtons from '../components/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+
+const TASK_VIEW_SECTIONS = [
+  { title: 'Task', fields: [
+    { key: 'task_name', label: 'Name' },
+    { key: 'task_code', label: 'Code' },
+    { key: 'priority', label: 'Priority' }
+  ]}
+]
 
 export default function TasksDetail() {
   const { id } = useParams()
@@ -266,12 +276,25 @@ export default function TasksDetail() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button
-        onClick={() => navigate('/tasks')}
-        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
-      >
-        ← Back to Tasks
-      </button>
+      <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
+        <button
+          onClick={() => navigate('/tasks')}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+        >
+          ← Back to Tasks
+        </button>
+        {!editing && (
+          <ExportRecordButtons
+            onExportPPT={() => exportRecordToPPT(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+            onExportWord={() => exportRecordToWord(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+            onExportExcel={() => exportRecordToExcel(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+            onExportCSV={() => exportRecordToCSV(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+            onExportXML={() => exportRecordToXML(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+            onExportJSON={() => exportRecordToJSON(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+            onExportPrint={() => exportRecordToPrint(TASK_VIEW_SECTIONS, task, `Task_${task.task_code || id}`)}
+          />
+        )}
+      </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">

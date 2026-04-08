@@ -10,6 +10,7 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
     review_type: 'peer-review',
     review_scope: '',
     planned_date: '',
+    forecast_date: '',
     planned_duration_minutes: 60,
     review_location: '',
     review_location_type: 'virtual',
@@ -22,12 +23,18 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
     preparation_time_minutes: null,
     review_criteria: '',
     pass_threshold: 70.00,
+    sign_off_planned_date: '',
+    sign_off_forecast_date: '',
+    programme_id: '',
+    qms_method_id: '',
     notes: '',
   });
 
   const [projects, setProjects] = useState([]);
   const [qualityRegisterItems, setQualityRegisterItems] = useState([]);
   const [users, setUsers] = useState([]);
+  const [programmes, setProgrammes] = useState([]);
+  const [qmsMethods, setQmsMethods] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -38,6 +45,7 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
         review_type: review.review_type || 'peer-review',
         review_scope: review.review_scope || '',
         planned_date: review.planned_date || '',
+        forecast_date: review.forecast_date || '',
         planned_duration_minutes: review.planned_duration_minutes || 60,
         review_location: review.review_location || '',
         review_location_type: review.review_location_type || 'virtual',
@@ -50,6 +58,10 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
         preparation_time_minutes: review.preparation_time_minutes || null,
         review_criteria: review.review_criteria || '',
         pass_threshold: review.pass_threshold || 70.00,
+        sign_off_planned_date: review.sign_off_planned_date || '',
+        sign_off_forecast_date: review.sign_off_forecast_date || '',
+        programme_id: review.programme_id || '',
+        qms_method_id: review.qms_method_id || '',
         notes: review.notes || '',
       });
     }
@@ -58,7 +70,19 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
 
   const fetchLookupData = async () => {
     try {
-      const [projectsData, registerData, usersData] = await Promise.all([
+      // Get QMS ID for the project if exists
+      let qmsId = null;
+      if (projectId) {
+        const { data: qmsData } = await supabase
+          .from('quality_management_strategies')
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('is_deleted', false)
+          .single();
+        qmsId = qmsData?.id;
+      }
+
+      const [projectsData, registerData, usersData, programmesData, qmsMethodsData] = await Promise.all([
         supabase
           .from('projects')
           .select('id, project_name, project_code')
@@ -76,11 +100,26 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
           .from('users')
           .select('id, email, full_name')
           .order('full_name', { ascending: true }),
+        supabase
+          .from('programmes')
+          .select('id, programme_name, programme_code')
+          .eq('is_deleted', false)
+          .order('programme_name', { ascending: true }),
+        qmsId
+          ? supabase
+              .from('qms_quality_methods')
+              .select('id, method_name, method_code')
+              .eq('qms_id', qmsId)
+              .eq('is_active', true)
+              .order('display_order', { ascending: true })
+          : Promise.resolve({ data: [] }),
       ]);
 
       if (projectsData.data) setProjects(projectsData.data);
       if (registerData.data) setQualityRegisterItems(registerData.data);
       if (usersData.data) setUsers(usersData.data);
+      if (programmesData.data) setProgrammes(programmesData.data);
+      if (qmsMethodsData.data) setQmsMethods(qmsMethodsData.data);
     } catch (error) {
       console.error('Error fetching lookup data:', error);
     }
@@ -106,6 +145,11 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
         chair_user_id: formData.chair_user_id || null,
         secretary_user_id: formData.secretary_user_id || null,
         planned_date: formData.planned_date || null,
+        forecast_date: formData.forecast_date || null,
+        sign_off_planned_date: formData.sign_off_planned_date || null,
+        sign_off_forecast_date: formData.sign_off_forecast_date || null,
+        programme_id: formData.programme_id || null,
+        qms_method_id: formData.qms_method_id || null,
         materials_distribution_date: formData.materials_distribution_date || null,
         preparation_time_minutes: formData.preparation_time_minutes ? parseInt(formData.preparation_time_minutes) : null,
         planned_duration_minutes: formData.planned_duration_minutes ? parseInt(formData.planned_duration_minutes) : 60,
@@ -254,6 +298,45 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Forecast Date
+                </label>
+                <input
+                  type="date"
+                  name="forecast_date"
+                  value={formData.forecast_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sign-Off Planned Date
+                </label>
+                <input
+                  type="date"
+                  name="sign_off_planned_date"
+                  value={formData.sign_off_planned_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Sign-Off Forecast Date
+                </label>
+                <input
+                  type="date"
+                  name="sign_off_forecast_date"
+                  value={formData.sign_off_forecast_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Duration (minutes)
                 </label>
                 <input
@@ -368,6 +451,48 @@ export default function QualityReviewForm({ review, projectId, qualityRegisterId
                   placeholder="Define review criteria..."
                 />
               </div>
+
+              {programmes.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Programme (Optional)
+                  </label>
+                  <select
+                    name="programme_id"
+                    value={formData.programme_id}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select programme...</option>
+                    {programmes.map(prog => (
+                      <option key={prog.id} value={prog.id}>
+                        {prog.programme_name} {prog.programme_code ? `(${prog.programme_code})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {qmsMethods.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    QMS Quality Method (Optional)
+                  </label>
+                  <select
+                    name="qms_method_id"
+                    value={formData.qms_method_id}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select method...</option>
+                    {qmsMethods.map(method => (
+                      <option key={method.id} value={method.id}>
+                        {method.method_name} {method.method_code ? `(${method.method_code})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

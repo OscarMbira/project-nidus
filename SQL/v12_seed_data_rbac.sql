@@ -213,7 +213,7 @@ END $$;
 INSERT INTO roles (role_name, role_display_name, role_description, role_level, is_active, is_system_role)
 VALUES
     ('system_admin', 'System Admin', 'Full system access with all permissions', 100, true, true),
-    ('org_admin', 'Organization Admin', 'Organization-level administrator with most permissions', 80, true, false),
+    ('pmo_admin', 'PMO Admin', 'Project Management Office administrator with most permissions', 80, true, false),
     ('project_manager', 'Project Manager', 'Manages projects, teams, and tasks', 60, true, false),
     ('team_lead', 'Team Lead', 'Leads teams and manages team tasks', 40, true, false),
     ('team_member', 'Team Member', 'Basic project and task participation', 20, true, false),
@@ -267,7 +267,7 @@ BEGIN
 END $$;
 
 -- ------------------------------------------------
--- ROLE: Organization Admin
+-- ROLE: PMO Admin
 -- Permissions: Most except system-level
 -- ------------------------------------------------
 
@@ -278,7 +278,7 @@ SELECT
     true AS is_active
 FROM roles r
 CROSS JOIN permissions p
-WHERE r.role_name = 'org_admin'
+WHERE r.role_name = 'pmo_admin'
   AND p.is_deleted = FALSE
   AND p.is_active = TRUE
   AND p.permission_code NOT IN (

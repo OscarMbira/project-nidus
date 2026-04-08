@@ -17,8 +17,21 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+const isValidUrl = (url) =>
+  typeof url === 'string' &&
+  (url.startsWith('https://') || url.startsWith('http://')) &&
+  !url.includes('your_') &&
+  url.length > 20;
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables');
+  throw new Error(
+    'Missing Supabase config. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env (see .env.example).'
+  );
+}
+if (!isValidUrl(supabaseUrl)) {
+  throw new Error(
+    'Invalid VITE_SUPABASE_URL. Use your real Supabase project URL in .env. Remove or fix placeholder values in .env.development.'
+  );
 }
 
 // Singleton pattern to prevent multiple instances

@@ -9,13 +9,50 @@
 import { appDb } from './supabase/supabaseClient'
 
 /**
- * Get all roles for a project (including system templates)
+ * Get all roles for a project (including system templates and custom roles)
+ * Uses project_roles table if available, falls back to roles table for backward compatibility
  * @param {string} projectId - Project UUID
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
 export async function getProjectRoles(projectId) {
   try {
-    // Get system role templates (PM platform roles)
+    // Try to use project_roles table first (new architecture)
+    try {
+      // Get role templates (is_template = TRUE, project_id = NULL)
+      const { data: templates, error: templatesError } = await appDb
+        .from('project_roles')
+        .select('*')
+        .eq('is_template', true)
+        .eq('is_active', true)
+        .order('role_level', { ascending: false })
+
+      if (templatesError) throw templatesError
+
+      // Get custom roles for this project (is_template = FALSE, project_id = projectId)
+      const { data: customRoles, error: customError } = await appDb
+        .from('project_roles')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('is_template', false)
+        .eq('is_active', true)
+        .order('role_level', { ascending: false })
+
+      if (customError) throw customError
+
+      // Combine templates and custom roles
+      const allRoles = [...(templates || []), ...(customRoles || [])]
+
+      return {
+        success: true,
+        data: allRoles,
+        error: null,
+      }
+    } catch (projectRolesError) {
+      // Table might not exist yet, fall back to old method
+      console.log('project_roles table not available, using roles table:', projectRolesError)
+    }
+
+    // Fallback to roles table (backward compatibility)
     const { data: templates, error: templatesError } = await appDb
       .from('roles')
       .select('*')
@@ -26,29 +63,9 @@ export async function getProjectRoles(projectId) {
 
     if (templatesError) throw templatesError
 
-    // Get custom roles for this project (if project_roles table exists)
-    // For now, we'll use the existing roles table with project_id filtering
-    // Note: The plan mentions project_roles table, but we're using roles table for now
-    const { data: customRoles, error: customError } = await appDb
-      .from('roles')
-      .select('*')
-      .eq('is_active', true)
-      .eq('is_deleted', false)
-      .order('role_level', { ascending: false })
-
-    if (customError) throw customError
-
-    // Combine templates and custom roles
-    const allRoles = [...(templates || []), ...(customRoles || [])]
-
-    // Remove duplicates
-    const uniqueRoles = Array.from(
-      new Map(allRoles.map((role) => [role.id, role])).values()
-    )
-
     return {
       success: true,
-      data: uniqueRoles,
+      data: templates || [],
       error: null,
     }
   } catch (error) {
@@ -63,10 +80,33 @@ export async function getProjectRoles(projectId) {
 
 /**
  * Get default role templates
+ * Uses project_roles table if available, falls back to roles table for backward compatibility
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
 export async function getDefaultRoleTemplates() {
   try {
+    // Try to use project_roles table first (new architecture)
+    try {
+      const { data, error } = await appDb
+        .from('project_roles')
+        .select('*')
+        .eq('is_template', true)
+        .eq('is_active', true)
+        .order('role_level', { ascending: false })
+
+      if (!error && data) {
+        return {
+          success: true,
+          data: data || [],
+          error: null,
+        }
+      }
+    } catch (projectRolesError) {
+      // Table might not exist yet, fall back to old method
+      console.log('project_roles table not available, using roles table:', projectRolesError)
+    }
+
+    // Fallback to roles table (backward compatibility)
     const { data, error } = await appDb
       .from('roles')
       .select('*')
@@ -95,6 +135,7 @@ export async function getDefaultRoleTemplates() {
 
 /**
  * Create a custom role for a project
+ * Uses project_roles table if available, falls back to roles table for backward compatibility
  * @param {string} projectId - Project UUID
  * @param {object} roleData - Role information
  * @returns {Promise<{success: boolean, data: object|null, error: string|null}>}
@@ -104,6 +145,37 @@ export async function createCustomRole(projectId, roleData) {
     const { data: { user } } = await appDb.auth.getUser()
     if (!user) throw new Error('Not authenticated')
 
+    // Try to use project_roles table first (new architecture)
+    try {
+      const { data, error } = await appDb
+        .from('project_roles')
+        .insert({
+          project_id: projectId,
+          role_name: roleData.roleName,
+          role_display_name: roleData.displayName || roleData.roleName,
+          role_description: roleData.description || null,
+          role_level: roleData.roleLevel || 5,
+          is_system_default: false,
+          is_template: false, // Custom role, not template
+          permissions: roleData.permissions ? JSON.stringify(roleData.permissions) : '[]'::jsonb,
+          is_active: true,
+        })
+        .select()
+        .single()
+
+      if (!error && data) {
+        return {
+          success: true,
+          data: data,
+          error: null,
+        }
+      }
+    } catch (projectRolesError) {
+      // Table might not exist yet, fall back to old method
+      console.log('project_roles table not available, using roles table:', projectRolesError)
+    }
+
+    // Fallback to roles table (backward compatibility)
     // Get internal user ID
     const { data: userData, error: userError } = await appDb
       .from('users')
@@ -113,7 +185,7 @@ export async function createCustomRole(projectId, roleData) {
 
     if (userError) throw userError
 
-    // Create custom role
+    // Create custom role in roles table
     const { data, error } = await appDb
       .from('roles')
       .insert({

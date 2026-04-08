@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import {
   DndContext,
   DragOverlay,
@@ -150,7 +152,8 @@ function DroppableStatusColumn({ status, stories, sprintBacklogs, onStoryClick }
 }
 
 export default function SprintBoard() {
-  const { projectId, sprintId } = useParams()
+  const { sprintId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [sprint, setSprint] = useState(null)
   const [sprintBacklogs, setSprintBacklogs] = useState([])

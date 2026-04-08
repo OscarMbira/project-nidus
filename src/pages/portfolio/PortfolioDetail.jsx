@@ -3,6 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit2, Settings, FolderKanban, Users, Target, DollarSign, AlertTriangle, Activity } from 'lucide-react';
 import { getPortfolio } from '../../services/portfolioService';
 import PortfolioDashboard from '../../components/portfolio/PortfolioDashboard';
+import ExportRecordButtons from '../../components/ui/ExportRecordButtons';
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils';
+
+const PORTFOLIO_VIEW_SECTIONS = [
+  { title: 'Portfolio', fields: [
+    { key: 'portfolio_name', label: 'Name' },
+    { key: 'portfolio_code', label: 'Code' },
+    { key: 'portfolio_description', label: 'Description' }
+  ]}
+];
 
 export default function PortfolioDetail() {
   const { id } = useParams();
@@ -109,13 +119,24 @@ export default function PortfolioDetail() {
               </p>
             )}
           </div>
-          <button
-            onClick={() => navigate(`/portfolio/${id}/edit`)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-          >
-            <Edit2 className="h-4 w-4" />
-            Edit
-          </button>
+          <div className="flex items-center gap-2">
+            <ExportRecordButtons
+              onExportPPT={() => exportRecordToPPT(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportWord={() => exportRecordToWord(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportExcel={() => exportRecordToExcel(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportCSV={() => exportRecordToCSV(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportXML={() => exportRecordToXML(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportJSON={() => exportRecordToJSON(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportPrint={() => exportRecordToPrint(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+            />
+            <button
+              onClick={() => navigate(`/portfolio/${id}/edit`)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}

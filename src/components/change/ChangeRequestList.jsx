@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { FileEdit, Edit2, Trash2, Plus, Calendar, User, ArrowRight, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { deleteChangeRequest } from '../../services/changeManagementService';
+import SortToolbar from '../ui/SortToolbar';
+import { useSortableTable } from '../../hooks/useSortableTable';
+import { TableHeaderCell } from '../ui/Table';
+import ViewToggle from '../ui/ViewToggle';
 
-export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, onSelect }) {
+export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, onSelect, viewMode = 'grid', onViewModeChange }) {
   const [deleting, setDeleting] = useState(null);
   const [filter, setFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'submission_date', direction: 'desc' },
+    storageKey: 'nidus-change-requests-sort',
+  });
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this change request?')) {
@@ -93,6 +102,20 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
     return true;
   });
 
+  const crAccessors = useMemo(
+    () => ({
+      change_title: (r) => r.change_title ?? '',
+      status: (r) => r.status ?? '',
+      priority: (r) => r.priority ?? '',
+      submission_date: (r) => r.submission_date ?? '',
+    }),
+    []
+  );
+  const displayRequests = useMemo(
+    () => sortedData(filteredRequests, crAccessors),
+    [filteredRequests, sortedData, crAccessors]
+  );
+
   if (!requests || requests.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
@@ -122,16 +145,21 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
             Change Requests
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {filteredRequests.length} of {requests.length} requests
+            {displayRequests.length} of {requests.length} requests
           </p>
         </div>
-        <button
-          onClick={onAdd}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          New Request
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          {onViewModeChange && (
+            <ViewToggle value={viewMode} onChange={onViewModeChange} ariaLabel="Change requests layout" />
+          )}
+          <button
+            onClick={onAdd}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Request
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -175,9 +203,75 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
         </div>
       </div>
 
-      {/* Request List */}
+      <SortToolbar
+        columns={[
+          { key: 'change_title', label: 'Title' },
+          { key: 'status', label: 'Status' },
+          { key: 'priority', label: 'Priority' },
+          { key: 'submission_date', label: 'Date' },
+        ]}
+        getSortDirection={getSortDirectionForColumn}
+        onSort={handleSort}
+      />
+
+      {viewMode === 'list' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Category</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Date</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700 z-[1]">
+                    Actions
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {displayRequests.map((request) => (
+                  <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
+                    <td className="px-6 py-3 font-medium text-gray-900 dark:text-white max-w-xs truncate">{request.change_title}</td>
+                    <td className="px-6 py-3">
+                      <span className={`px-2 py-1 rounded text-xs capitalize ${getCategoryColor(request.change_category)}`}>
+                        {request.change_category || '—'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className={`px-2 py-1 rounded text-xs border ${getPriorityColor(request.priority)}`}>{request.priority}</span>
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(request.status)}`}>{request.status?.replace('-', ' ')}</span>
+                    </td>
+                    <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{formatDate(request.submission_date)}</td>
+                    <td
+                      className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button type="button" onClick={() => onEdit(request)} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded mr-1" aria-label="Edit">
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(request.id)}
+                        disabled={deleting === request.id}
+                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 gap-4">
-        {filteredRequests.map((request) => {
+        {displayRequests.map((request) => {
           const StatusIcon = getStatusIcon(request.status);
           return (
             <div
@@ -274,8 +368,9 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
           );
         })}
       </div>
+      )}
 
-      {filteredRequests.length === 0 && requests.length > 0 && (
+      {viewMode === 'grid' && displayRequests.length === 0 && requests.length > 0 && (
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
           <p className="text-gray-600 dark:text-gray-400">
             No requests match the selected filters

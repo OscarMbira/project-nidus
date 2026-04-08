@@ -1,15 +1,42 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { Plus, Kanban, Settings, Trash2 } from 'lucide-react'
+import SortToolbar from '../../components/ui/SortToolbar'
+import { TableHeaderCell } from '../../components/ui/Table'
+import { useSortableTable } from '../../hooks/useSortableTable'
+import { useViewMode } from '../../hooks/useViewMode'
+import ViewToggle from '../../components/ui/ViewToggle'
 
 export default function KanbanBoards() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [boards, setBoards] = useState([])
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [boardViewMode, setBoardViewMode] = useViewMode('kanban-boards', 'grid')
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'created_at', direction: 'desc' },
+    storageKey: 'nidus-kanban-boards-sort',
+  })
+
+  const boardAccessors = useMemo(
+    () => ({
+      board_name: (b) => b.board_name ?? '',
+      project: () => project?.project_name ?? '',
+      created_at: (b) => b.created_at ?? '',
+    }),
+    [project?.project_name]
+  )
+
+  const displayBoards = useMemo(
+    () => sortedData(boards, boardAccessors),
+    [boards, sortedData, boardAccessors]
+  )
 
   useEffect(() => {
     fetchData()
@@ -164,7 +191,8 @@ export default function KanbanBoards() {
               {project?.project_name}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <ViewToggle value={boardViewMode} onChange={setBoardViewMode} ariaLabel="Kanban boards layout" />
             <button
               onClick={() => navigate(`/projects/${projectId}/kanban/metrics`)}
               className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -199,8 +227,68 @@ export default function KanbanBoards() {
           </button>
         </div>
       ) : (
+        <>
+        <div className="mb-4">
+          <SortToolbar
+            columns={[
+              { key: 'board_name', label: 'Board name' },
+              { key: 'project', label: 'Project' },
+              { key: 'created_at', label: 'Created' },
+            ]}
+            getSortDirection={getSortDirectionForColumn}
+            onSort={handleSort}
+          />
+        </div>
+        {boardViewMode === 'list' ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case">Project</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Created</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case text-right">Actions</TableHeaderCell>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {displayBoards.map((board) => (
+                    <tr key={board.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-6 py-3">
+                        <button
+                          type="button"
+                          className="text-left font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                          onClick={() => navigate(`/projects/${projectId}/kanban/board/${board.id}`)}
+                        >
+                          {board.board_name}
+                        </button>
+                        {board.board_description && (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{board.board_description}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">{project?.project_name || '—'}</td>
+                      <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        {board.created_at ? new Date(board.created_at).toLocaleString() : '—'}
+                      </td>
+                      <td className="px-6 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteBoard(board.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                          aria-label="Delete board"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {boards.map((board) => (
+          {displayBoards.map((board) => (
             <div
               key={board.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -236,6 +324,8 @@ export default function KanbanBoards() {
             </div>
           ))}
         </div>
+        )}
+        </>
       )}
 
       {showCreateForm && (

@@ -9,7 +9,7 @@
 
 Your React application supports **two distinct homepages** that can be linked directly from your blog:
 
-1. **PM Homepage** - Project Management platform homepage
+1. **Platform Homepage** - Project Management platform homepage
 2. **Simulator Homepage** - Project Management Simulator homepage
 
 ---
@@ -30,17 +30,17 @@ Your application architecture **fully supports** linking from external websites:
 
 ## 🔗 Available Routes for Blog Links
 
-### **PM Homepage (Project Management)**
+### **Platform Homepage (Project Management)**
 
-You can link to the PM homepage using any of these URLs:
+You can link to the Platform homepage using any of these URLs:
 
 ```
 https://yourdomain.com/
-https://yourdomain.com/pm
+https://yourdomain.com/platform
 https://yourdomain.com/project-management
 ```
 
-**Recommended:** Use `/pm` or `/project-management` for clarity
+**Recommended:** Use `/platform` or `/project-management` for clarity
 
 ### **Simulator Homepage**
 
@@ -62,8 +62,8 @@ https://yourdomain.com/simulator-home
 Add these links to your blog posts or navigation:
 
 ```html
-<!-- Link to PM Homepage -->
-<a href="https://yourdomain.com/pm" target="_blank">
+<!-- Link to Platform Homepage -->
+<a href="https://yourdomain.com/platform" target="_blank">
   Try Project Nidus - Project Management Platform
 </a>
 
@@ -80,12 +80,12 @@ If using WordPress or similar CMS:
 1. **Create a Custom Link:**
    - Go to your navigation menu
    - Add Custom Link
-   - URL: `https://yourdomain.com/pm` or `https://yourdomain.com/simulator`
+   - URL: `https://yourdomain.com/platform` or `https://yourdomain.com/simulator`
    - Link Text: "Project Management" or "Simulator"
 
 2. **In Blog Posts:**
    - Use the link button in your editor
-   - Paste: `https://yourdomain.com/pm` or `https://yourdomain.com/simulator`
+   - Paste: `https://yourdomain.com/platform` or `https://yourdomain.com/simulator`
    - Add descriptive anchor text
 
 ### **Option 3: Call-to-Action Buttons**
@@ -93,8 +93,8 @@ If using WordPress or similar CMS:
 Create prominent CTAs in your blog:
 
 ```html
-<!-- PM CTA -->
-<a href="https://yourdomain.com/pm" 
+<!-- Platform CTA -->
+<a href="https://yourdomain.com/platform" 
    class="cta-button" 
    style="display: inline-block; padding: 12px 24px; background: #1e40af; color: white; text-decoration: none; border-radius: 6px;">
   Start Managing Projects →
@@ -201,16 +201,16 @@ export default defineConfig({
 
 | Route | Purpose | Recommended for Blog |
 |-------|---------|---------------------|
-| `/` | PM Homepage (default) | Main landing |
-| `/pm` | PM Homepage (alternative) | **✅ Use this** |
-| `/project-management` | PM Homepage (descriptive) | SEO-friendly |
+| `/` | Platform Homepage (default) | Main landing |
+| `/platform` | Platform Homepage (alternative) | **✅ Use this** |
+| `/project-management` | Platform Homepage (descriptive) | SEO-friendly |
 | `/simulator` | Simulator Homepage | **✅ Use this** |
 | `/simulator-home` | Simulator Homepage (legacy) | Backward compatibility |
 
 ### **Best Practice for Blog Links:**
 
 **Use these URLs in your blog:**
-- Platform: `https://yourdomain.com/pm`
+- Platform: `https://yourdomain.com/platform`
 - Simulator: `https://yourdomain.com/simulator`
 
 These are:
@@ -235,7 +235,7 @@ These are:
   <div class="cta-section">
     <h2>Ready to Manage Your Projects?</h2>
     <p>Try Project Nidus - A comprehensive project management platform</p>
-    <a href="https://yourdomain.com/pm" class="button-primary">
+    <a href="https://yourdomain.com/platform" class="button-primary">
       Start Managing Projects →
     </a>
   </div>
@@ -268,7 +268,7 @@ These are:
 ### **What You Can Do Right Now:**
 
 1. ✅ **Link directly** from your blog to:
-   - `https://yourdomain.com/pm` (PM Homepage)
+   - `https://yourdomain.com/platform` (Platform Homepage)
    - `https://yourdomain.com/simulator` (Simulator Homepage)
 
 2. ✅ **No code changes needed** - Routes are already configured

@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Multi-Tenant Accounts & Table Extensions
 -- Version: v84
--- Description: Creates accounts table and extends projects/pm_subscriptions for multi-tenancy
+-- Description: Creates accounts table and extends projects/platform_subscriptions for multi-tenancy
 -- Author: Development Team
 -- Date: 2025-11-27
 -- ============================================================================
@@ -9,12 +9,12 @@
 -- Prerequisites:
 -- - v03_user_access_tables.sql (users, roles, permissions, user_roles)
 -- - v04_project_core_tables.sql (projects)
--- - v82_pm_subscriptions.sql (pm_subscriptions)
+-- - v82_pm_subscriptions.sql (platform_subscriptions - renamed in v90)
 
 -- Purpose:
 -- 1. Create accounts table (organization/company entity for PM Platform)
 -- 2. Extend projects table with account_id and project_manager_user_id
--- 3. Extend pm_subscriptions table with account linking and seat limits
+-- 3. Extend platform_subscriptions table with account linking and seat limits
 -- 4. Create necessary indexes, triggers, and RLS policies
 
 -- Note: Simulator platform does NOT use accounts - it's individual-based
@@ -166,21 +166,22 @@ BEGIN
 END $$;
 
 -- ============================================================================
--- EXTEND pm_subscriptions table
+-- EXTEND platform_subscriptions table
 -- Description: Add account linking and per-project seat configuration
+-- Note: Table was renamed from pm_subscriptions to platform_subscriptions in v90
 -- ============================================================================
 
--- Add account_id column to pm_subscriptions
+-- Add account_id column to platform_subscriptions
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'pm_subscriptions' AND column_name = 'account_id'
+        WHERE table_schema = 'public' AND table_name = 'platform_subscriptions' AND column_name = 'account_id'
     ) THEN
-        ALTER TABLE pm_subscriptions ADD COLUMN account_id UUID REFERENCES accounts(id) ON DELETE RESTRICT;
-        CREATE INDEX idx_pm_subscriptions_account_id ON pm_subscriptions(account_id) WHERE account_id IS NOT NULL;
-        COMMENT ON COLUMN pm_subscriptions.account_id IS 'Account this subscription belongs to';
-        RAISE NOTICE 'Added pm_subscriptions.account_id column';
+        ALTER TABLE platform_subscriptions ADD COLUMN account_id UUID REFERENCES accounts(id) ON DELETE RESTRICT;
+        CREATE INDEX IF NOT EXISTS idx_platform_subscriptions_account_id ON platform_subscriptions(account_id) WHERE account_id IS NOT NULL;
+        COMMENT ON COLUMN platform_subscriptions.account_id IS 'Account this subscription belongs to';
+        RAISE NOTICE 'Added platform_subscriptions.account_id column';
     END IF;
 END $$;
 
@@ -189,11 +190,11 @@ DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'pm_subscriptions' AND column_name = 'base_users_per_project'
+        WHERE table_schema = 'public' AND table_name = 'platform_subscriptions' AND column_name = 'base_users_per_project'
     ) THEN
-        ALTER TABLE pm_subscriptions ADD COLUMN base_users_per_project INTEGER DEFAULT 30;
-        COMMENT ON COLUMN pm_subscriptions.base_users_per_project IS 'Base number of users included per project (default 30)';
-        RAISE NOTICE 'Added pm_subscriptions.base_users_per_project column';
+        ALTER TABLE platform_subscriptions ADD COLUMN base_users_per_project INTEGER DEFAULT 30;
+        COMMENT ON COLUMN platform_subscriptions.base_users_per_project IS 'Base number of users included per project (default 30)';
+        RAISE NOTICE 'Added platform_subscriptions.base_users_per_project column';
     END IF;
 END $$;
 
@@ -202,11 +203,11 @@ DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'pm_subscriptions' AND column_name = 'extra_user_price'
+        WHERE table_schema = 'public' AND table_name = 'platform_subscriptions' AND column_name = 'extra_user_price'
     ) THEN
-        ALTER TABLE pm_subscriptions ADD COLUMN extra_user_price DECIMAL(10,2);
-        COMMENT ON COLUMN pm_subscriptions.extra_user_price IS 'Price per additional user seat beyond base limit';
-        RAISE NOTICE 'Added pm_subscriptions.extra_user_price column';
+        ALTER TABLE platform_subscriptions ADD COLUMN extra_user_price DECIMAL(10,2);
+        COMMENT ON COLUMN platform_subscriptions.extra_user_price IS 'Price per additional user seat beyond base limit';
+        RAISE NOTICE 'Added platform_subscriptions.extra_user_price column';
     END IF;
 END $$;
 
@@ -215,11 +216,11 @@ DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'pm_subscriptions' AND column_name = 'extra_user_discount_rate'
+        WHERE table_schema = 'public' AND table_name = 'platform_subscriptions' AND column_name = 'extra_user_discount_rate'
     ) THEN
-        ALTER TABLE pm_subscriptions ADD COLUMN extra_user_discount_rate DECIMAL(5,4) DEFAULT 0.7000;
-        COMMENT ON COLUMN pm_subscriptions.extra_user_discount_rate IS 'Discount rate for extra users (0.7000 = 70% discount)';
-        RAISE NOTICE 'Added pm_subscriptions.extra_user_discount_rate column';
+        ALTER TABLE platform_subscriptions ADD COLUMN extra_user_discount_rate DECIMAL(5,4) DEFAULT 0.7000;
+        COMMENT ON COLUMN platform_subscriptions.extra_user_discount_rate IS 'Discount rate for extra users (0.7000 = 70% discount)';
+        RAISE NOTICE 'Added platform_subscriptions.extra_user_discount_rate column';
     END IF;
 END $$;
 
@@ -326,7 +327,7 @@ BEGIN
         ps.extra_user_price,
         ps.started_at,
         ps.expires_at
-    FROM pm_subscriptions ps
+    FROM platform_subscriptions ps
     WHERE ps.account_id = p_account_id
     AND (ps.is_deleted IS NULL OR ps.is_deleted = FALSE)
     ORDER BY ps.created_at DESC
@@ -471,16 +472,16 @@ BEGIN
         WHERE table_schema = 'public' AND table_name = 'projects' AND column_name = 'account_id'
     ) INTO account_id_exists;
 
-    -- Check pm_subscriptions.account_id
+    -- Check platform_subscriptions.account_id
     SELECT EXISTS (
         SELECT FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'pm_subscriptions' AND column_name = 'account_id'
+        WHERE table_schema = 'public' AND table_name = 'platform_subscriptions' AND column_name = 'account_id'
     ) INTO pm_account_id_exists;
 
-    -- Check pm_subscriptions.base_users_per_project
+    -- Check platform_subscriptions.base_users_per_project
     SELECT EXISTS (
         SELECT FROM information_schema.columns
-        WHERE table_schema = 'public' AND table_name = 'pm_subscriptions' AND column_name = 'base_users_per_project'
+        WHERE table_schema = 'public' AND table_name = 'platform_subscriptions' AND column_name = 'base_users_per_project'
     ) INTO pm_seats_exists;
 
     IF accounts_exists AND account_id_exists AND pm_account_id_exists AND pm_seats_exists THEN
@@ -492,10 +493,10 @@ BEGIN
         RAISE NOTICE 'Extended:';
         RAISE NOTICE '  - projects.account_id';
         RAISE NOTICE '  - projects.project_manager_user_id';
-        RAISE NOTICE '  - pm_subscriptions.account_id';
-        RAISE NOTICE '  - pm_subscriptions.base_users_per_project';
-        RAISE NOTICE '  - pm_subscriptions.extra_user_price';
-        RAISE NOTICE '  - pm_subscriptions.extra_user_discount_rate';
+        RAISE NOTICE '  - platform_subscriptions.account_id';
+        RAISE NOTICE '  - platform_subscriptions.base_users_per_project';
+        RAISE NOTICE '  - platform_subscriptions.extra_user_price';
+        RAISE NOTICE '  - platform_subscriptions.extra_user_discount_rate';
         RAISE NOTICE 'Functions:';
         RAISE NOTICE '  - generate_account_code()';
         RAISE NOTICE '  - get_account_subscription()';

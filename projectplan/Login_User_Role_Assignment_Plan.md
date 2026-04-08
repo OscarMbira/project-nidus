@@ -88,7 +88,7 @@ This plan outlines the comprehensive implementation of a multi-tenant login and 
 - id (UUID, PK)
 - project_id (UUID, FK → projects.id)
 - account_id (UUID, FK → accounts.id)
-- subscription_id (UUID, FK → pm_subscriptions.id)
+- subscription_id (UUID, FK → platform_subscriptions.id)
 - included_seats (INTEGER) -- Default 30
 - extra_seats_purchased (INTEGER) -- Additional seats bought
 - total_seats (INTEGER, COMPUTED) -- included + extra

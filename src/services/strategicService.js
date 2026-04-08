@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient'
+import { platformDb } from './supabase/supabaseClient'
 
 /**
  * Strategic Service - API functions for Strategic Alignment Tools module
@@ -12,7 +12,7 @@ import { supabase } from './supabaseClient'
  * Get all strategic objectives
  */
 export async function getStrategicObjectives(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('strategic_objectives')
     .select(`
       *,
@@ -68,7 +68,7 @@ export async function getStrategicObjectives(filters = {}) {
  * Get a single strategic objective by ID
  */
 export async function getStrategicObjective(objectiveId) {
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('strategic_objectives')
     .select(`
       *,
@@ -96,7 +96,7 @@ export async function getStrategicObjective(objectiveId) {
  * Create or update a strategic objective
  */
 export async function saveStrategicObjective(objectiveData, objectiveId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -105,7 +105,7 @@ export async function saveStrategicObjective(objectiveData, objectiveId = null) 
   }
 
   if (objectiveId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('strategic_objectives')
       .update(updateData)
       .eq('id', objectiveId)
@@ -119,7 +119,7 @@ export async function saveStrategicObjective(objectiveData, objectiveId = null) 
     if (!updateData.objective_owner_user_id) {
       updateData.objective_owner_user_id = user.id
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('strategic_objectives')
       .insert(updateData)
       .select()
@@ -134,10 +134,10 @@ export async function saveStrategicObjective(objectiveData, objectiveId = null) 
  * Delete a strategic objective (soft delete)
  */
 export async function deleteStrategicObjective(objectiveId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('strategic_objectives')
     .update({
       is_deleted: true,
@@ -161,7 +161,7 @@ export async function deleteStrategicObjective(objectiveId) {
  * Get objective hierarchies
  */
 export async function getObjectiveHierarchies(parentObjectiveId = null) {
-  let query = supabase
+  let query = platformDb
     .from('objective_hierarchies')
     .select(`
       *,
@@ -194,7 +194,7 @@ export async function getObjectiveHierarchies(parentObjectiveId = null) {
  * Create or update an objective hierarchy
  */
 export async function saveObjectiveHierarchy(hierarchyData, hierarchyId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -203,7 +203,7 @@ export async function saveObjectiveHierarchy(hierarchyData, hierarchyId = null) 
   }
 
   if (hierarchyId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('objective_hierarchies')
       .update(updateData)
       .eq('id', hierarchyId)
@@ -214,7 +214,7 @@ export async function saveObjectiveHierarchy(hierarchyData, hierarchyId = null) 
     return data
   } else {
     updateData.created_by = user.id
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('objective_hierarchies')
       .insert(updateData)
       .select()
@@ -229,10 +229,10 @@ export async function saveObjectiveHierarchy(hierarchyData, hierarchyId = null) 
  * Delete an objective hierarchy (soft delete)
  */
 export async function deleteObjectiveHierarchy(hierarchyId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('objective_hierarchies')
     .update({
       is_deleted: true,
@@ -256,7 +256,7 @@ export async function deleteObjectiveHierarchy(hierarchyId) {
  * Get project-objective mappings
  */
 export async function getProjectObjectiveMappings(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('project_objective_mappings')
     .select(`
       *,
@@ -264,7 +264,8 @@ export async function getProjectObjectiveMappings(filters = {}) {
         id,
         project_name,
         project_code,
-        project_status,
+        status_id,
+        project_statuses(status_name, status_code),
         methodology
       ),
       objective:objective_id (
@@ -304,7 +305,7 @@ export async function getProjectObjectiveMappings(filters = {}) {
  * Create or update a project-objective mapping
  */
 export async function saveProjectObjectiveMapping(mappingData, mappingId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -313,7 +314,7 @@ export async function saveProjectObjectiveMapping(mappingData, mappingId = null)
   }
 
   if (mappingId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('project_objective_mappings')
       .update(updateData)
       .eq('id', mappingId)
@@ -330,7 +331,7 @@ export async function saveProjectObjectiveMapping(mappingData, mappingId = null)
     if (!updateData.mapped_date) {
       updateData.mapped_date = new Date().toISOString().split('T')[0]
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('project_objective_mappings')
       .insert(updateData)
       .select()
@@ -345,10 +346,10 @@ export async function saveProjectObjectiveMapping(mappingData, mappingId = null)
  * Delete a project-objective mapping (soft delete)
  */
 export async function deleteProjectObjectiveMapping(mappingId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('project_objective_mappings')
     .update({
       is_deleted: true,
@@ -368,7 +369,7 @@ export async function deleteProjectObjectiveMapping(mappingId) {
  * Calculate alignment score for a project
  */
 export async function calculateProjectAlignmentScore(projectId) {
-  const { data, error } = await supabase.rpc('calculate_project_alignment_score', {
+  const { data, error } = await platformDb.rpc('calculate_project_alignment_score', {
     p_project_id: projectId,
   })
 
@@ -384,7 +385,7 @@ export async function calculateProjectAlignmentScore(projectId) {
  * Get strategic contributions
  */
 export async function getStrategicContributions(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('strategic_contributions')
     .select(`
       *,
@@ -392,7 +393,8 @@ export async function getStrategicContributions(filters = {}) {
         id,
         project_name,
         project_code,
-        project_status
+        status_id,
+        project_statuses(status_name, status_code)
       ),
       objective:objective_id (
         id,
@@ -431,7 +433,7 @@ export async function getStrategicContributions(filters = {}) {
  * Create or update a strategic contribution
  */
 export async function saveStrategicContribution(contributionData, contributionId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -440,7 +442,7 @@ export async function saveStrategicContribution(contributionData, contributionId
   }
 
   if (contributionId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('strategic_contributions')
       .update(updateData)
       .eq('id', contributionId)
@@ -457,7 +459,7 @@ export async function saveStrategicContribution(contributionData, contributionId
     if (!updateData.contribution_date) {
       updateData.contribution_date = new Date().toISOString().split('T')[0]
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('strategic_contributions')
       .insert(updateData)
       .select()
@@ -472,10 +474,10 @@ export async function saveStrategicContribution(contributionData, contributionId
  * Delete a strategic contribution (soft delete)
  */
 export async function deleteStrategicContribution(contributionId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('strategic_contributions')
     .update({
       is_deleted: true,
@@ -499,7 +501,7 @@ export async function deleteStrategicContribution(contributionId) {
  * Get alignment scores
  */
 export async function getAlignmentScores(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('alignment_scores')
     .select(`
       *,
@@ -512,7 +514,8 @@ export async function getAlignmentScores(filters = {}) {
         id,
         project_name,
         project_code,
-        project_status
+        status_id,
+        project_statuses(status_name, status_code)
       ),
       calculated_by:calculated_by_user_id (id, email, full_name)
     `)
@@ -541,7 +544,7 @@ export async function getAlignmentScores(filters = {}) {
  * Create or update an alignment score
  */
 export async function saveAlignmentScore(scoreData, scoreId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -550,7 +553,7 @@ export async function saveAlignmentScore(scoreData, scoreId = null) {
   }
 
   if (scoreId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('alignment_scores')
       .update(updateData)
       .eq('id', scoreId)
@@ -567,7 +570,7 @@ export async function saveAlignmentScore(scoreData, scoreId = null) {
     if (!updateData.score_date) {
       updateData.score_date = new Date().toISOString().split('T')[0]
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('alignment_scores')
       .insert(updateData)
       .select()
@@ -582,10 +585,10 @@ export async function saveAlignmentScore(scoreData, scoreId = null) {
  * Delete an alignment score (soft delete)
  */
 export async function deleteAlignmentScore(scoreId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('alignment_scores')
     .update({
       is_deleted: true,
@@ -609,7 +612,7 @@ export async function deleteAlignmentScore(scoreId) {
  * Get strategic reports
  */
 export async function getStrategicReports(filters = {}) {
-  let query = supabase
+  let query = platformDb
     .from('strategic_reports')
     .select(`
       *,
@@ -654,7 +657,7 @@ export async function getStrategicReports(filters = {}) {
  * Create or update a strategic report
  */
 export async function saveStrategicReport(reportData, reportId = null) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
   const updateData = {
@@ -663,7 +666,7 @@ export async function saveStrategicReport(reportData, reportId = null) {
   }
 
   if (reportId) {
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('strategic_reports')
       .update(updateData)
       .eq('id', reportId)
@@ -683,7 +686,7 @@ export async function saveStrategicReport(reportData, reportId = null) {
     if (!updateData.report_date) {
       updateData.report_date = new Date().toISOString().split('T')[0]
     }
-    const { data, error } = await supabase
+    const { data, error } = await platformDb
       .from('strategic_reports')
       .insert(updateData)
       .select()
@@ -698,10 +701,10 @@ export async function saveStrategicReport(reportData, reportId = null) {
  * Delete a strategic report (soft delete)
  */
 export async function deleteStrategicReport(reportId) {
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
 
-  const { data, error } = await supabase
+  const { data, error } = await platformDb
     .from('strategic_reports')
     .update({
       is_deleted: true,

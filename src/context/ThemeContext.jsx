@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 
 // Ensure React is available
 if (!React) {
@@ -35,118 +35,87 @@ function getInitialTheme() {
 }
 
 /**
- * Apply theme class to DOM - ensures it works reliably
+ * Apply theme class to DOM - optimized for performance
  */
 function applyThemeToDOM(theme) {
   const html = document.documentElement
   const body = document.body
   
-  // Remove any existing theme classes
-  html.classList.remove('dark', 'light')
-  body.classList.remove('dark', 'light')
+  // Batch DOM operations - only modify what's necessary
+  const isDark = theme === 'dark'
+  const currentlyDark = html.classList.contains('dark')
   
-  // Add the current theme class
-  if (theme === 'dark') {
-    html.classList.add('dark')
-    body.classList.add('dark')
-  } else {
-    // For light theme, ensure dark is removed
-    html.classList.remove('dark')
-    body.classList.remove('dark')
-  }
-  
-  // Force repaints to ensure browser processes the change
-  void html.offsetHeight
-  void body.offsetHeight
-  
-  // Trigger style recalculation to force Tailwind to update
-  const computed = window.getComputedStyle(html)
-  void computed.backgroundColor
-  
-  const bodyComputed = window.getComputedStyle(body)
-  void bodyComputed.backgroundColor
-  
-  // Force recalculation on root element
-  const root = document.getElementById('root')
-  if (root) {
-    const rootComputed = window.getComputedStyle(root)
-    void rootComputed.backgroundColor
-  }
-  
-  // Set data attribute for CSS selectors
-  html.setAttribute('data-theme', theme)
-  body.setAttribute('data-theme', theme)
-  
-  // Save to localStorage
-  localStorage.setItem('theme', theme)
-  
-  // Verify and fix if needed
-  const finalCheck = html.classList.contains('dark')
-  const expected = theme === 'dark'
-  
-  if (finalCheck !== expected) {
-    // Force correction
-    if (expected) {
+  // Only update if theme actually changed
+  if (isDark !== currentlyDark) {
+    if (isDark) {
       html.classList.add('dark')
       body.classList.add('dark')
     } else {
       html.classList.remove('dark')
       body.classList.remove('dark')
     }
-    void html.offsetHeight
   }
   
-  // Use requestAnimationFrame to ensure browser processes the change
-  // Tailwind v4 needs this to recognize class changes
-  requestAnimationFrame(() => {
-    // Force style recalculation on key elements
-    const bodyStyles = window.getComputedStyle(body)
-    void bodyStyles.backgroundColor
-    
-    const htmlStyles = window.getComputedStyle(html)
-    void htmlStyles.backgroundColor
-    
-    // Force a repaint by temporarily modifying and restoring a style
-    const originalDisplay = html.style.display
-    html.style.setProperty('display', 'none', 'important')
-    void html.offsetHeight
-    html.style.display = originalDisplay
-    void html.offsetHeight
-  })
+  // Set data attribute for CSS selectors
+  html.setAttribute('data-theme', theme)
+  body.setAttribute('data-theme', theme)
+  
+  // Save to localStorage (non-blocking)
+  try {
+    localStorage.setItem('theme', theme)
+  } catch (e) {
+    // Ignore localStorage errors
+  }
+  
+  // Defer any verification to next frame to avoid blocking
+  if (typeof requestAnimationFrame !== 'undefined') {
+    requestAnimationFrame(() => {
+      // Light verification only if needed
+      if (isDark !== html.classList.contains('dark')) {
+        if (isDark) {
+          html.classList.add('dark')
+          body.classList.add('dark')
+        } else {
+          html.classList.remove('dark')
+          body.classList.remove('dark')
+        }
+      }
+    })
+  }
 }
 
 export function ThemeProvider({ children }) {
-  // Initialize theme from localStorage immediately
+  const initialTheme = getInitialTheme()
   const [theme, setTheme] = useState(() => {
-    const initialTheme = getInitialTheme()
-    // Apply immediately on mount
     if (typeof window !== 'undefined') {
-      applyThemeToDOM(initialTheme)
+      const html = document.documentElement
+      const body = document.body
+      if (initialTheme === 'dark') {
+        html.classList.add('dark')
+        body.classList.add('dark')
+      } else {
+        html.classList.remove('dark')
+        body.classList.remove('dark')
+      }
+      html.setAttribute('data-theme', initialTheme)
+      body.setAttribute('data-theme', initialTheme)
     }
     return initialTheme
   })
 
-  // Apply theme to DOM whenever it changes
+  const themeRef = useRef(theme)
+  themeRef.current = theme
+
   useEffect(() => {
     applyThemeToDOM(theme)
-    
-    // Verify it was applied
-    const html = document.documentElement
-    const expectedDark = theme === 'dark'
-    const hasDark = html.classList.contains('dark')
-    
-    if (hasDark !== expectedDark) {
-      console.error('[ThemeContext] Theme not applied correctly, forcing correction...')
-      applyThemeToDOM(theme)
-    }
   }, [theme])
 
-  // Memoize toggleTheme to prevent unnecessary re-renders
+  // Apply theme to DOM immediately on click so UI updates without waiting for re-render
   const toggleTheme = useCallback(() => {
-    setTheme(prevTheme => {
-      const newTheme = prevTheme === 'dark' ? 'light' : 'dark'
-      return newTheme
-    })
+    const current = themeRef.current
+    const newTheme = current === 'dark' ? 'light' : 'dark'
+    applyThemeToDOM(newTheme)
+    setTheme(newTheme)
   }, [])
 
   // Context value

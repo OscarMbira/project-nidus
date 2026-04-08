@@ -1,13 +1,21 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, Edit2, Trash2, TrendingUp, AlertTriangle, DollarSign, Users, Eye } from 'lucide-react';
+import { TableHeaderCell } from '../ui/Table';
 import { deleteProgramme } from '../../services/programmeService';
+import SortToolbar from '../ui/SortToolbar';
+import { useSortableTable } from '../../hooks/useSortableTable';
 
-export default function ProgrammeList({ programmes, onRefresh }) {
+export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid' }) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: { column: 'programme_name', direction: 'asc' },
+    storageKey: 'nidus-programme-list-sort',
+  });
 
   const handleDelete = async (programme) => {
     if (!window.confirm(`Are you sure you want to delete "${programme.programme_name}"? This action cannot be undone.`)) {
@@ -71,6 +79,20 @@ export default function ProgrammeList({ programmes, onRefresh }) {
     return matchesSearch && matchesStatus;
   });
 
+  const pgAccessors = useMemo(
+    () => ({
+      programme_name: (p) => p.programme_name ?? '',
+      programme_status: (p) => p.programme_status ?? '',
+      start: (p) => p.start_date ?? p.planned_start_date ?? '',
+      end: (p) => p.end_date ?? p.planned_end_date ?? '',
+    }),
+    []
+  );
+  const displayProgrammes = useMemo(
+    () => sortedData(filteredProgrammes, pgAccessors),
+    [filteredProgrammes, sortedData, pgAccessors]
+  );
+
   if (programmes.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
@@ -116,9 +138,102 @@ export default function ProgrammeList({ programmes, onRefresh }) {
         </div>
       </div>
 
-      {/* Programmes Grid */}
+      <SortToolbar
+        columns={[
+          { key: 'programme_name', label: 'Name' },
+          { key: 'programme_status', label: 'Status' },
+          { key: 'start', label: 'Start date' },
+          { key: 'end', label: 'End date' },
+        ]}
+        getSortDirection={getSortDirectionForColumn}
+        onSort={handleSort}
+        className="mb-2"
+      />
+
+      {viewMode === 'list' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case">Projects</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Start</TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">End</TableHeaderCell>
+                  <TableHeaderCell
+                    sortable={false}
+                    className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700 z-[1] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                  >
+                    Actions
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {displayProgrammes.map((programme) => {
+                  const start = programme.start_date || programme.planned_start_date;
+                  const end = programme.end_date || programme.planned_end_date;
+                  return (
+                    <tr
+                      key={programme.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer group"
+                      onClick={() => navigate(`/programme/${programme.id}`)}
+                    >
+                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{programme.programme_name}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(programme.programme_status)}`}>
+                          {programme.programme_status?.replace('-', ' ') || '—'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-900 dark:text-white">{programme.total_projects_count ?? 0}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        {start ? new Date(start).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        {end ? new Date(end).toLocaleDateString() : '—'}
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="inline-flex gap-1 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/programme/${programme.id}`)}
+                            className="p-2 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            aria-label="View programme"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/programme/${programme.id}/edit`)}
+                            className="p-2 rounded text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            aria-label="Edit programme"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(programme)}
+                            disabled={deleting === programme.id}
+                            className="p-2 rounded text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                            aria-label="Delete programme"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProgrammes.map((programme) => (
+        {displayProgrammes.map((programme) => (
           <div
             key={programme.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -247,8 +362,9 @@ export default function ProgrammeList({ programmes, onRefresh }) {
           </div>
         ))}
       </div>
+      )}
 
-      {filteredProgrammes.length === 0 && programmes.length > 0 && (
+      {viewMode === 'grid' && displayProgrammes.length === 0 && programmes.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
           <p className="text-gray-500 dark:text-gray-400">
             No programmes match your search criteria

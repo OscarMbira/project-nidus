@@ -3,8 +3,9 @@ import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Edit2, Trash2, CheckCircle, Clock, AlertCircle, User, Calendar, Bug, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { TableHeaderCell } from './ui/Table'
 
-export default function IssueList({ issues, onEdit, onRefresh, projectId }) {
+export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMode = 'grid' }) {
   const navigate = useNavigate()
   const [deletingId, setDeletingId] = useState(null)
 
@@ -121,6 +122,84 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId }) {
         <p className="text-gray-500 dark:text-gray-400">
           Create your first issue to start tracking project problems and improvements
         </p>
+      </div>
+    )
+  }
+
+  if (viewMode === 'list') {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Type</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case">Assigned</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Created</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700 z-[1] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]">
+                  Actions
+                </TableHeaderCell>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {issues.map((issue) => (
+                <tr
+                  key={issue.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group"
+                >
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-gray-900 dark:text-white">{issue.issue_title}</div>
+                    {issue.issue_description && (
+                      <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{issue.issue_description}</div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 text-sm capitalize">{getTypeIcon(issue.issue_type)} {issue.issue_type || '—'}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(issue.priority)}`}>{issue.priority}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(issue.status)}`}>{issue.status?.replace('_', ' ')}</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                    {issue.assigned_to ? (issue.assigned_to.full_name || issue.assigned_to.email) : '—'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {issue.created_at ? format(new Date(issue.created_at), 'MMM dd, yyyy') : '—'}
+                  </td>
+                  <td
+                    className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="inline-flex gap-1 justify-end">
+                      <button
+                        type="button"
+                        aria-label="Edit issue"
+                        onClick={() => onEdit(issue)}
+                        className="p-2 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Delete issue"
+                        disabled={deletingId === issue.id}
+                        onClick={() => handleDelete(issue.id)}
+                        className="p-2 rounded text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     )
   }

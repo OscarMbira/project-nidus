@@ -4,7 +4,7 @@
  */
 
 import { supabase } from './supabaseClient'
-import { v4 as uuidv4 } from 'uuid'
+// No external UUID dependency needed - using crypto.getRandomValues
 
 /**
  * Generate a secure API key

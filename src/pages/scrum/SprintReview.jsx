@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { CheckCircle, XCircle, Users, MessageSquare, Star, Plus, Save } from 'lucide-react'
 import DemoChecklist from '../../components/scrum/DemoChecklist'
 
 export default function SprintReview() {
-  const { projectId, sprintId } = useParams()
+  const { sprintId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [sprint, setSprint] = useState(null)
   const [project, setProject] = useState(null)

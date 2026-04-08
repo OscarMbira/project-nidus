@@ -29,7 +29,7 @@ export async function createPMCheckoutSession(userId, planType, billingCycle = '
       body: JSON.stringify({
         userId,
         priceId,
-        platform: 'pm',
+        platform: 'platform',
         planType,
         billingCycle,
         successUrl: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,

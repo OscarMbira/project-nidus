@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
-import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, CheckSquare } from 'lucide-react'
+import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, CheckSquare, Link as LinkIcon, ExternalLink, BarChart3 } from 'lucide-react'
 import ProductForm from '../../components/structured/ProductForm'
 import QualityCriteria from '../../components/structured/QualityCriteria'
+import { getProductDeliverables, createProductDescriptionFromDeliverable } from '../../services/productDeliverableService'
+import { createPSAForProductDeliverable } from '../../services/productStatusAccountService'
 
 export default function ManagingProductDelivery() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [workPackages, setWorkPackages] = useState([])
@@ -48,20 +52,10 @@ export default function ManagingProductDelivery() {
       if (packagesError) throw packagesError
       setWorkPackages(packagesData || [])
 
-      // Fetch products
-      const { data: productsData, error: productsError } = await supabase
-        .from('product_deliverables')
-        .select(`
-          *,
-          assigned_to:assigned_to_user_id (id, email, full_name),
-          work_package:work_package_id (id, work_package_name, work_package_code)
-        `)
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
-        .order('created_at', { ascending: false })
-
-      if (productsError) throw productsError
-      setProducts(productsData || [])
+      // Fetch products with Product Description links
+      const productsResult = await getProductDeliverables(projectId)
+      if (!productsResult.success) throw new Error(productsResult.error)
+      setProducts(productsResult.data || [])
 
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -250,6 +244,33 @@ export default function ManagingProductDelivery() {
             onEdit={handleEditProduct}
             onRefresh={fetchData}
             projectId={projectId}
+            onCreateProductDescription={async (deliverableId) => {
+              try {
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) throw new Error('User not authenticated')
+                
+                // Get user ID from users table
+                const { data: userData } = await supabase
+                  .from('users')
+                  .select('id')
+                  .eq('auth_user_id', user.id)
+                  .eq('is_deleted', false)
+                  .single()
+
+                if (!userData) throw new Error('User not found')
+
+                const result = await createProductDescriptionFromDeliverable(deliverableId, userData.id)
+                if (result.success) {
+                  alert('Product Description created successfully!')
+                  fetchData()
+                } else {
+                  alert('Error creating Product Description: ' + result.error)
+                }
+              } catch (error) {
+                console.error('Error creating Product Description:', error)
+                alert('Error: ' + error.message)
+              }
+            }}
           />
         </div>
       )}
@@ -287,7 +308,7 @@ export default function ManagingProductDelivery() {
 }
 
 // Product List Component
-function ProductList({ products, onEdit, onRefresh, projectId }) {
+function ProductList({ products, onEdit, onRefresh, projectId, onCreateProductDescription }) {
   const [deletingId, setDeletingId] = useState(null)
 
   const handleDelete = async (productId) => {
@@ -379,11 +400,76 @@ function ProductList({ products, onEdit, onRefresh, projectId }) {
                   Work Package: {product.work_package.work_package_code || product.work_package.work_package_name}
                 </p>
               )}
+              {product.product_description && (
+                <div className="mt-2 flex items-center gap-2">
+                  <LinkIcon className="h-4 w-4 text-blue-500" />
+                  <span className="text-xs text-blue-600 dark:text-blue-400">
+                    Product Description: {product.product_description.pd_reference}
+                  </span>
+                  <span className={`text-xs px-2 py-0.5 rounded ${
+                    product.product_description.status === 'approved' 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                  }`}>
+                    {product.product_description.status}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="flex gap-2">
               <button
+                onClick={async () => {
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (user) {
+                      const { data: userData } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('auth_user_id', user.id)
+                        .eq('is_deleted', false)
+                        .single()
+                      
+                      if (userData) {
+                        const result = await createPSAForProductDeliverable(product.id, null, userData.id)
+                        if (result.success) {
+                          alert('Product Status Account created successfully!')
+                          window.location.href = `/app/projects/${projectId}/product-status-accounts/${result.data.id}`
+                        } else {
+                          alert('Error: ' + result.error)
+                        }
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Error creating Product Status Account:', error)
+                    alert('Error: ' + error.message)
+                  }
+                }}
+                className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded"
+                title="Create/View Product Status Account"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </button>
+              {product.product_description ? (
+                <button
+                  onClick={() => window.location.href = `/app/projects/${projectId}/product-descriptions/${product.product_description.id}`}
+                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                  title="View Product Description"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => onCreateProductDescription && onCreateProductDescription(product.id)}
+                  className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded"
+                  title="Create Product Description"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              )}
+              <button
                 onClick={() => onEdit(product)}
                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
+                title="Edit Product"
               >
                 <FileText className="h-4 w-4" />
               </button>
@@ -391,6 +477,7 @@ function ProductList({ products, onEdit, onRefresh, projectId }) {
                 onClick={() => handleDelete(product.id)}
                 disabled={deletingId === product.id}
                 className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+                title="Delete Product"
               >
                 <AlertCircle className="h-4 w-4" />
               </button>

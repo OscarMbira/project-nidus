@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { supabase } from '../../services/supabaseClient'
 import { format, subDays } from 'date-fns'
 import { FileText, Save, X, Calendar } from 'lucide-react'
+import { createHighlightReport } from '../../services/controllingStageService'
 
-export default function HighlightReport({ projectId, stageBoundaryId, onSave, onCancel }) {
+export default function HighlightReport({ projectId, stageBoundaryId, onSave, onCancel, embedded = false }) {
   const [formData, setFormData] = useState({
     reporting_period_start: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
     reporting_period_end: format(new Date(), 'yyyy-MM-dd'),
@@ -46,26 +46,15 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
     setSaving(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
-
       const submitData = {
         ...formData,
-        project_id: projectId,
-        stage_boundary_id: stageBoundaryId || null,
-        prepared_by_user_id: user.id,
-        status: 'draft',
+        report_date: formData.reporting_period_end || format(new Date(), 'yyyy-MM-dd'),
+        reporting_period_start: formData.reporting_period_start,
+        reporting_period_end: formData.reporting_period_end,
         budget_variance: formData.budget_variance ? parseFloat(formData.budget_variance) : null,
-        schedule_variance_days: formData.schedule_variance_days ? parseInt(formData.schedule_variance_days) : null,
-        created_by: user.id,
-        updated_by: user.id,
+        schedule_variance_days: formData.schedule_variance_days ? parseInt(formData.schedule_variance_days, 10) : null,
       }
-
-      const { error } = await supabase
-        .from('highlight_reports')
-        .insert(submitData)
-
-      if (error) throw error
+      await createHighlightReport(projectId, submitData, stageBoundaryId || null)
       onSave()
     } catch (error) {
       console.error('Error saving highlight report:', error)
@@ -75,23 +64,30 @@ export default function HighlightReport({ projectId, stageBoundaryId, onSave, on
     }
   }
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            Create Highlight Report
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+  const outerClass = embedded
+    ? 'max-w-5xl w-full'
+    : 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+  return (
+    <div className={outerClass}>
+      {!embedded && <div className="absolute inset-0" aria-hidden="true" />}
+      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 max-w-5xl w-full ${embedded ? '' : 'shadow-xl max-h-[90vh] overflow-y-auto relative z-10'}`}>
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <FileText className="h-6 w-6" />
+              Create Highlight Report
+            </h2>
+            {!embedded && (
+              <button
+                onClick={onCancel}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Report Period */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

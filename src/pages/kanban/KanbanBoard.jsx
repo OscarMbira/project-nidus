@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import {
   DndContext,
   DragOverlay,
@@ -194,7 +196,8 @@ function DroppableColumn({ column, cards, onCardClick, onCreateCard, wipLimit })
 }
 
 export default function KanbanBoard() {
-  const { projectId, boardId } = useParams()
+  const { boardId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [board, setBoard] = useState(null)
   const [columns, setColumns] = useState([])

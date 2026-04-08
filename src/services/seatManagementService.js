@@ -19,9 +19,9 @@ export async function getProjectSeatAllocation(projectId) {
       .from('project_seat_allocations')
       .select('*')
       .eq('project_id', projectId)
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       throw error
     }
 
@@ -40,9 +40,16 @@ export async function getProjectSeatAllocation(projectId) {
       .from('project_seat_allocations')
       .select('*')
       .eq('project_id', projectId)
-      .single()
+      .maybeSingle()
 
     if (updateError) throw updateError
+    if (!updatedData) {
+      return {
+        success: false,
+        data: null,
+        error: 'Seat allocation row missing after refresh',
+      }
+    }
 
     return {
       success: true,
@@ -85,7 +92,7 @@ async function initializeSeatAllocation(projectId) {
 
     // Get subscription details
     const { data: subscription, error: subError } = await appDb
-      .from('pm_subscriptions')
+      .from('platform_subscriptions')
       .select('id, base_users_per_project')
       .eq('account_id', project.account_id)
       .in('status', ['active', 'trialing'])
@@ -199,7 +206,7 @@ export async function purchaseExtraSeats(projectId, quantity, paymentData) {
 
     // Get subscription to get pricing
     const { data: subscription, error: subError } = await appDb
-      .from('pm_subscriptions')
+      .from('platform_subscriptions')
       .select('id, extra_user_price, extra_user_discount_rate')
       .eq('account_id', project.account_id)
       .in('status', ['active', 'trialing'])

@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+
+import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, AlertTriangle, TrendingUp, Filter, Search, BarChart3 } from 'lucide-react'
@@ -7,9 +9,11 @@ import RiskForm from '../components/RiskForm'
 import RiskHeatMap from '../components/RiskHeatMap'
 import RiskList from '../components/RiskList'
 import Pagination from '../components/Pagination'
+import SortToolbar from '../components/ui/SortToolbar'
+import { useSortableTable } from '../hooks/useSortableTable'
 
 export default function Risks() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [risks, setRisks] = useState([])
@@ -28,6 +32,22 @@ export default function Risks() {
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 20
 
+  const { handleSort, getSortDirectionForColumn, supabaseOrder } = useSortableTable({
+    defaultSort: { column: 'risk_score', direction: 'desc' },
+    storageKey: 'nidus-risks-sort',
+    serverColumnMap: {
+      risk_score: 'risk_score',
+      status: 'status',
+      risk_level: 'risk_level',
+      created_at: 'created_at',
+    },
+  })
+
+  const sortFetchKey = useMemo(
+    () => `${supabaseOrder.column}:${supabaseOrder.ascending ? '1' : '0'}`,
+    [supabaseOrder]
+  )
+
   useEffect(() => {
     if (projectId) {
       fetchData()
@@ -38,7 +58,7 @@ export default function Risks() {
     if (projectId) {
       fetchRisks()
     }
-  }, [projectId, filters, currentPage])
+  }, [projectId, filters, currentPage, sortFetchKey])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -121,7 +141,7 @@ export default function Risks() {
       const to = from + itemsPerPage - 1
       
       const { data, error } = await query
-        .order('risk_score', { ascending: false })
+        .order(supabaseOrder.column, { ascending: supabaseOrder.ascending })
         .range(from, to)
 
       if (error) throw error
@@ -348,6 +368,18 @@ export default function Risks() {
         </div>
       ) : activeView === 'list' ? (
         <>
+          <div className="mb-4">
+            <SortToolbar
+              columns={[
+                { key: 'risk_score', label: 'Risk score' },
+                { key: 'status', label: 'Status' },
+                { key: 'risk_level', label: 'Level' },
+                { key: 'created_at', label: 'Created' },
+              ]}
+              getSortDirection={getSortDirectionForColumn}
+              onSort={handleSort}
+            />
+          </div>
           <RiskList
             risks={risks}
             onEdit={handleEditRisk}

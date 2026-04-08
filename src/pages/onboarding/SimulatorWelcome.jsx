@@ -9,6 +9,8 @@ import { Gamepad2, Target, Award, TrendingUp, ArrowRight, Loader } from 'lucide-
 import { supabase } from '../../services/supabaseClient'
 import { updateOnboardingProgress } from '../../services/unifiedSubscriptionService'
 import { useToast } from '../../hooks/useToast'
+import MainHeader from '../../components/homepage/MainHeader'
+import Footer from '../../components/homepage/Footer'
 
 export default function SimulatorWelcome() {
   const navigate = useNavigate()
@@ -57,8 +59,10 @@ export default function SimulatorWelcome() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 py-12 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800 flex flex-col">
+      <MainHeader />
+      <div className="flex-grow py-12 px-4">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
@@ -175,7 +179,9 @@ export default function SimulatorWelcome() {
             )}
           </button>
         </div>
+        </div>
       </div>
+      <Footer />
     </div>
   )
 }

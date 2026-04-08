@@ -4,9 +4,20 @@ import { Plus, FolderKanban, TrendingUp, AlertTriangle, DollarSign, Search } fro
 import { getPortfolios } from '../../services/portfolioService';
 import PortfolioList from '../../components/portfolio/PortfolioList';
 import PortfolioForm from '../../components/portfolio/PortfolioForm';
+import ExportListMenu from '../../components/ui/ExportListMenu';
+import { useViewMode } from '../../hooks/useViewMode';
+import ViewToggle from '../../components/ui/ViewToggle';
+
+const PORTFOLIO_COLUMNS = [
+  { key: 'portfolio_name', label: 'Name' },
+  { key: 'portfolio_description', label: 'Description' },
+  { key: 'portfolio_status', label: 'Status' },
+  { key: 'portfolio_type', label: 'Type' }
+];
 
 export default function Portfolio() {
   const navigate = useNavigate();
+  const [portfolioViewMode, setPortfolioViewMode] = useViewMode('portfolio', 'grid');
   const [portfolios, setPortfolios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPortfolioForm, setShowPortfolioForm] = useState(false);
@@ -163,13 +174,17 @@ export default function Portfolio() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
           Portfolios ({stats.total})
         </h2>
-        <button
-          onClick={handleCreatePortfolio}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Create Portfolio
-        </button>
+        <div className="flex flex-wrap gap-2 items-center">
+          <ExportListMenu columns={PORTFOLIO_COLUMNS} data={portfolios} baseFilename="Portfolios" disabled={!portfolios.length} />
+          <ViewToggle value={portfolioViewMode} onChange={setPortfolioViewMode} ariaLabel="Portfolio list layout" />
+          <button
+            onClick={handleCreatePortfolio}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Create Portfolio
+          </button>
+        </div>
       </div>
 
       {/* Portfolios List */}
@@ -184,6 +199,7 @@ export default function Portfolio() {
         <PortfolioList
           portfolios={portfolios}
           onRefresh={fetchPortfolios}
+          viewMode={portfolioViewMode}
         />
       )}
 
