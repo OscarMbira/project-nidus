@@ -38,7 +38,20 @@ import {
   Calendar,
   ListChecks,
   Wrench,
-  FolderClosed
+  FolderClosed,
+  DollarSign,
+  Receipt,
+  ClipboardCheck,
+  TrendingUp,
+  GitBranch,
+  Pause,
+  SearchCode,
+  PackageOpen,
+  HeartPulse,
+  Sparkles,
+  Presentation,
+  RefreshCcw,
+  ShieldCheck
 } from 'lucide-react';
 
 const pmDashboardMenuConfig = [
@@ -280,14 +293,206 @@ const pmDashboardMenuConfig = [
     ]
   },
 
-  // Section 6: Project Closure
+  // Section 6: Financial Management
+  {
+    id: 'pm-financial',
+    label: 'Financial Management',
+    path: null,
+    icon: DollarSign,
+    section: 'Financial Management',
+    order: 6,
+    children: [
+      {
+        id: 'pm-fin-my-expenses',
+        label: 'My Expenses',
+        path: '/platform/expenses/my',
+        icon: Receipt,
+        order: 1
+      },
+      {
+        id: 'pm-fin-exp-approvals',
+        label: 'Expense Approvals',
+        path: '/platform/expenses/approvals',
+        icon: ClipboardCheck,
+        order: 2
+      },
+      {
+        id: 'pm-fin-reports',
+        label: 'Financial Reports',
+        path: '/platform/financial-reports',
+        icon: BarChart3,
+        order: 3
+      },
+      {
+        id: 'pm-fin-portfolio-evm',
+        label: 'Portfolio EVM',
+        path: '/platform/portfolio/evm',
+        icon: TrendingUp,
+        order: 4
+      }
+    ]
+  },
+
+  {
+    id: 'pm-itto',
+    label: 'ITTO Management',
+    path: null,
+    icon: GitBranch,
+    section: 'ITTO Management',
+    order: 6.5,
+    children: [
+      {
+        id: 'pm-itto-templates',
+        label: 'ITTO Templates',
+        path: '/pm/itto/templates',
+        icon: Layers,
+        order: 1
+      },
+      {
+        id: 'pm-itto-project',
+        label: 'Project ITTOs',
+        path: '/pm/itto/project',
+        icon: Layers,
+        order: 2
+      },
+      {
+        id: 'pm-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/pm/itto/drafts',
+        icon: Pause,
+        order: 3
+      }
+    ]
+  },
+
+  {
+    id: 'pm-delays',
+    label: 'Delays',
+    path: null,
+    icon: FileClock,
+    section: 'Delays',
+    order: 6.55,
+    children: [
+      {
+        id: 'pm-delay-register',
+        label: 'Delay Register',
+        path: '/pm/delays',
+        icon: ClipboardList,
+        order: 1
+      },
+      {
+        id: 'pm-delay-drafts',
+        label: 'Delay Drafts',
+        path: '/pm/delays/drafts',
+        icon: Pause,
+        order: 2
+      }
+    ]
+  },
+
+  {
+    id: 'pm-planning',
+    label: 'Planning Intelligence',
+    path: null,
+    icon: BarChart3,
+    section: 'Planning Intelligence',
+    order: 6.57,
+    children: [
+      {
+        id: 'pm-planning-hub',
+        label: 'Planning Hub',
+        path: '/pm/planning',
+        icon: LayoutDashboard,
+        order: 1
+      },
+      {
+        id: 'pm-planning-intelligence',
+        label: 'Plan Intelligence',
+        path: '/pm/planning/intelligence',
+        icon: SearchCode,
+        order: 2
+      },
+      {
+        id: 'pm-planning-scenarios',
+        label: 'Scenarios',
+        path: '/pm/planning/scenarios',
+        icon: GitBranch,
+        order: 3
+      },
+      {
+        id: 'pm-planning-pbs',
+        label: 'Product Plan (PBS)',
+        path: '/pm/planning/pbs',
+        icon: PackageOpen,
+        order: 4
+      },
+      {
+        id: 'pm-planning-health',
+        label: 'Plan Health',
+        path: '/pm/planning/health',
+        icon: HeartPulse,
+        order: 5
+      },
+      {
+        id: 'pm-planning-ai',
+        label: 'AI Plan Generator',
+        path: '/pm/planning/ai',
+        icon: Sparkles,
+        order: 6
+      },
+      {
+        id: 'pm-planning-executive',
+        label: 'Executive View',
+        path: '/pm/planning/executive',
+        icon: Presentation,
+        order: 7
+      },
+      {
+        id: 'pm-planning-recovery',
+        label: 'Recovery Planning',
+        path: '/pm/planning/recovery',
+        icon: RefreshCcw,
+        order: 8
+      },
+      {
+        id: 'pm-planning-confidence',
+        label: 'Confidence Forecast',
+        path: '/pm/planning/confidence',
+        icon: TrendingUp,
+        order: 9
+      },
+      {
+        id: 'pm-planning-governance',
+        label: 'Governance Gates',
+        path: '/pm/planning/governance',
+        icon: ShieldCheck,
+        order: 10
+      },
+      {
+        id: 'pm-planning-microplans',
+        label: 'Team Micro Plans',
+        path: '/pm/planning/microplans',
+        icon: ClipboardList,
+        order: 11
+      },
+      {
+        id: 'pm-planning-microplans-drafts',
+        label: 'My Draft Plans',
+        path: '/pm/planning/microplans/drafts',
+        icon: FileClock,
+        order: 12
+      }
+    ]
+  },
+
+  // Section 7: Project Closure
   {
     id: 'pm-closure',
     label: 'Project Closure',
     path: null,
     icon: FolderClosed,
     section: 'Project Closure',
-    order: 6,
+    order: 7,
     children: [
       {
         id: 'pm-closure-lessons-report',

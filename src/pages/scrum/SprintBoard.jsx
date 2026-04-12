@@ -22,6 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import BurndownChart from '../../components/charts/BurndownChart'
+import BurnupChart from '../../components/charts/BurnupChart'
 
 // Sortable Story Card Component
 function SortableStoryCard({ story, sprintBacklog, onClick }) {
@@ -389,15 +390,27 @@ export default function SprintBoard() {
             </p>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
-            Sprint Burndown
-          </h3>
-          <BurndownChart
-            sprint={sprint}
-            totalStoryPoints={totalStoryPoints}
-            completedStoryPoints={completedStoryPoints}
-          />
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+              Sprint Burndown
+            </h3>
+            <BurndownChart
+              sprint={sprint}
+              totalStoryPoints={totalStoryPoints}
+              completedStoryPoints={completedStoryPoints}
+            />
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+              Sprint Burnup
+            </h3>
+            <BurnupChart
+              sprint={sprint}
+              totalStoryPoints={totalStoryPoints}
+              completedStoryPoints={completedStoryPoints}
+            />
+          </div>
         </div>
         {sprint.sprint_goal && (
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">

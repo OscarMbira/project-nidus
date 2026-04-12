@@ -166,8 +166,9 @@ export default function SimManagerAssignments() {
     const type = tab === 'projects' ? 'project' : tab === 'programmes' ? 'programme' : 'portfolio'
     const id = row.id
     const name = row.project_name || row.programme_name || row.portfolio_name
+    const code = row.project_code || row.programme_code || row.portfolio_code
     const current = row.manager_public_user_id || null
-    setModal({ type, id, name, currentManagerId: current })
+    setModal({ type, id, name, code: code || null, currentManagerId: current })
   }
 
   const handleModalConfirm = async (userId) => {
@@ -283,6 +284,19 @@ export default function SimManagerAssignments() {
           </div>
         </div>
 
+        <AssignManagerModal
+          open={!!modal}
+          onClose={() => setModal(null)}
+          entityType={modal?.type}
+          entityName={modal?.name || ''}
+          entityCode={modal?.code}
+          currentManagerId={modal?.currentManagerId}
+          eligibleUsers={eligible}
+          workloadByUserId={workload}
+          limit={limit}
+          onConfirm={(userId) => handleModalConfirm(userId)}
+        />
+
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Loading…</p>
         ) : view === 'table' ? (
@@ -385,18 +399,6 @@ export default function SimManagerAssignments() {
           </div>
         )}
       </div>
-
-      <AssignManagerModal
-        open={!!modal}
-        onClose={() => setModal(null)}
-        entityType={modal?.type}
-        entityName={modal?.name || ''}
-        currentManagerId={modal?.currentManagerId}
-        eligibleUsers={eligible}
-        workloadByUserId={workload}
-        limit={limit}
-        onConfirm={(userId) => handleModalConfirm(userId)}
-      />
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { platformDb } from '../services/supabase/supabaseClient'
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId'
 import { platformProjectPath, looksLikeProjectUuid } from '../utils/projectRouteParam'
@@ -16,6 +16,7 @@ import { getProjectPortfolio } from '../services/portfolioService'
 import { getProjectProgramme } from '../services/programmeService'
 import ProjectFormTabs from '../components/project/ProjectFormTabs'
 import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
+import ProjectPlanningOverview from '../components/planning/ProjectPlanningOverview'
 import { mapDbProjectToWizardForm } from '../utils/projectWizardFormUtils'
 import { getByProjectId } from '../services/projectBudgetCategoryService'
 import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
@@ -448,9 +449,23 @@ export default function ProjectsDetail() {
                 </div>
               )}
             </div>
+            {project.planned_end_date &&
+              new Date(project.planned_end_date) < new Date(new Date().toDateString()) && (
+                <p className="mt-3 text-sm">
+                  <span className="text-amber-600 dark:text-amber-400">Planned end date has passed.</span>{' '}
+                  <Link
+                    to={`/pm/planning/recovery?projectId=${encodeURIComponent(projectId)}&trigger=milestone`}
+                    className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    Review recovery options
+                  </Link>
+                </p>
+              )}
           </div>
         )}
       </div>
+
+      <ProjectPlanningOverview projectId={projectId} />
 
       {wizardFormData && (
         <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
@@ -825,6 +840,39 @@ export default function ProjectsDetail() {
                 Create sprints, plan capacity, and assign stories
               </p>
             </button>
+            <button
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'scrum', 'metrics'))}
+              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Sprint metrics
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Velocity, forecast, burndown and burnup
+              </p>
+            </button>
+            <button
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'scrum', 'story-map'))}
+              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Story map
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Journeys, activities, and story nodes
+              </p>
+            </button>
+            <button
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'agile', 'metrics'))}
+              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Agile metrics hub
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Cross-methodology snapshot and forecasts
+              </p>
+            </button>
           </div>
         </div>
       )}
@@ -849,9 +897,61 @@ export default function ProjectsDetail() {
                 Create and manage Kanban boards with WIP limits
               </p>
             </button>
+            <button
+              onClick={() => navigate(platformProjectPath(urlProjectSegment, 'kanban', 'metrics'))}
+              className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Kanban metrics
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                CFD, lead and cycle time, throughput, flow efficiency
+              </p>
+            </button>
           </div>
         </div>
       )}
+
+      {project.project_methodologies &&
+        project.project_methodologies[0]?.methodologies &&
+        (project.project_methodologies[0].methodologies.methodology_code === 'scrum' ||
+          project.project_methodologies[0].methodologies.methodology_code === 'kanban') && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Agile extensions (XP / Lean)
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => navigate(platformProjectPath(urlProjectSegment, 'xp', 'dashboard'))}
+                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">XP dashboard</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Pairing, code reviews, CI, TDD tracking</p>
+              </button>
+              <button
+                onClick={() => navigate(platformProjectPath(urlProjectSegment, 'lean', 'value-stream-map'))}
+                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Lean value stream</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Value stream maps and flow metrics</p>
+              </button>
+              <button
+                onClick={() => navigate(platformProjectPath(urlProjectSegment, 'lean', 'kaizen'))}
+                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Kaizen board</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Waste identification and improvements</p>
+              </button>
+              <button
+                onClick={() => navigate(platformProjectPath(urlProjectSegment, 'scrum', 'scrum-of-scrums'))}
+                className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left"
+              >
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Scrum of Scrums</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Multi-team coordination</p>
+              </button>
+            </div>
+          </div>
+        )}
 
       {/* Tasks Section with Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">

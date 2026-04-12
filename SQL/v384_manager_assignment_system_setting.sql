@@ -24,7 +24,7 @@ VALUES (
   'number',
   '5',
   'governance',
-  false,
+  true,
   true,
   true
 )

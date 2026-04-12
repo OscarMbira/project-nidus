@@ -4,10 +4,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
-import { Plus, FileText, Calendar } from 'lucide-react'
+import { Plus, FileText, Calendar, LayoutDashboard } from 'lucide-react'
 import { useThemeContext } from '../../context/ThemeContext'
 import { getProjectPlanByProject } from '../../services/projectPlanService'
 import { getStagePlansByProject } from '../../services/stagePlanService'
@@ -70,7 +70,16 @@ export default function PlansDashboard() {
               Project plans and stage plans
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {projectId && (
+              <Link
+                to={`/pm/planning/executive?projectId=${encodeURIComponent(projectId)}`}
+                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 dark:bg-slate-600 dark:hover:bg-slate-500 rounded-lg"
+              >
+                <LayoutDashboard className="w-4 h-4 mr-2" />
+                View in Executive Mode
+              </Link>
+            )}
             {activeTab === 'project' && !projectPlan && (
               <button
                 onClick={() => navigate(`/app/projects/${projectId}/plans/project-plan/create`)}

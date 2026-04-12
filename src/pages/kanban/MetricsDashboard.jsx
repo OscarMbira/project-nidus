@@ -5,6 +5,9 @@ import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import CumulativeFlowDiagram from '../../components/kanban/CumulativeFlowDiagram'
 import ControlChart from '../../components/kanban/ControlChart'
+import LeadTimeCycleTimeChart from '../../components/kanban/LeadTimeCycleTimeChart'
+import ThroughputChart from '../../components/kanban/ThroughputChart'
+import FlowEfficiencyPanel from '../../components/kanban/FlowEfficiencyPanel'
 import { calculateFlowMetrics, calculatePercentiles } from '../../utils/flowMetricsCalculator'
 import { formatISO, subDays, format, startOfDay, endOfDay } from 'date-fns'
 import { Download, AlertTriangle, TrendingUp, TrendingDown, Minus, Calendar } from 'lucide-react'
@@ -18,7 +21,23 @@ export default function MetricsDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [columns, setColumns] = useState([])
-  
+  const [metricTab, setMetricTab] = useState(() => {
+    try {
+      return localStorage.getItem('kanbanMetricsTab') || 'flow'
+    } catch {
+      return 'flow'
+    }
+  })
+
+  const setMetricTabPersist = (tab) => {
+    setMetricTab(tab)
+    try {
+      localStorage.setItem('kanbanMetricsTab', tab)
+    } catch {
+      /* ignore */
+    }
+  }
+
   // Date range state
   const [dateRange, setDateRange] = useState('30') // '7', '30', '60', '90', 'custom'
   const [customStartDate, setCustomStartDate] = useState('')
@@ -107,7 +126,7 @@ export default function MetricsDashboard() {
 
       let query = supabase
         .from('kanban_cards')
-        .select('id, column_id, created_at, started_at, completed_at')
+        .select('id, column_id, created_at, started_at, completed_at, is_blocked')
         .eq('board_id', boardId)
         .eq('is_deleted', false)
         .gte('created_at', formatISO(fromDate))
@@ -410,12 +429,42 @@ export default function MetricsDashboard() {
         </div>
       )}
 
+      <div className="mb-6 flex flex-wrap gap-2">
+        {[
+          { id: 'flow', label: 'CFD & control' },
+          { id: 'leadCycle', label: 'Lead / cycle' },
+          { id: 'throughput', label: 'Throughput' },
+          { id: 'flowEfficiency', label: 'Flow efficiency' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setMetricTabPersist(t.id)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+              metricTab === t.id
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       {cards.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
           No card data available yet for this board. Start moving cards through your workflow to see metrics.
         </div>
       ) : (
         <div className="space-y-6">
+          {metricTab === 'leadCycle' && (
+            <LeadTimeCycleTimeChart cards={cards} />
+          )}
+          {metricTab === 'throughput' && <ThroughputChart cards={cards} />}
+          {metricTab === 'flowEfficiency' && <FlowEfficiencyPanel cards={cards} columns={columns} />}
+
+          {metricTab !== 'flow' ? null : (
+            <>
           {/* High level metrics with trend indicators */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <MetricTile
@@ -463,6 +512,8 @@ export default function MetricsDashboard() {
               percentiles={cycleTimePercentiles}
             />
           </div>
+            </>
+          )}
         </div>
       )}
     </div>

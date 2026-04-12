@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../../../context/ThemeContext'
-import SimulatorPMSidebar from './SimulatorPMSidebar'
+import Sidebar from '../../Sidebar'
+import PracticeDashboardSwitcher from '../ui/PracticeDashboardSwitcher'
 
 export default function SimulatorPMLayout({ children }) {
   const { theme, toggleTheme } = useTheme()
@@ -91,8 +92,8 @@ export default function SimulatorPMLayout({ children }) {
         </div>
       </nav>
 
-      {/* Sidebar */}
-      <SimulatorPMSidebar
+      {/* Sidebar (DB-driven via useMenu) */}
+      <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -100,7 +101,7 @@ export default function SimulatorPMLayout({ children }) {
       {/* Main Content */}
       <main
         className={`pt-16 transition-all duration-300 ${
-          sidebarOpen ? 'ml-64' : 'ml-0'
+          sidebarOpen ? 'ml-64 lg:ml-80' : 'ml-0'
         }`}
       >
         <div className="p-6">

@@ -115,6 +115,13 @@ const GanttTimeline = ({
             </div>
           ` : '';
 
+          const conf = task.confidence_pct;
+          const confidenceHtml = (conf != null && conf !== '') ? `
+            <div class="gantt-popup-confidence" style="margin-top: 8px; padding: 6px 8px; background-color: #ecfdf5; color: #065f46; border-radius: 4px; font-size: 11px;">
+              📈 Confidence: <strong>${conf}%</strong>
+            </div>
+          ` : '';
+
           return `
             <div class="gantt-popup" style="min-width: 250px;">
               <div class="gantt-popup-title" style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: #1f2937;">
@@ -143,6 +150,7 @@ const GanttTimeline = ({
               ${varianceHtml}
               ${criticalPathHtml}
               ${milestoneHtml}
+              ${confidenceHtml}
 
               <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 10px; color: #9ca3af; text-align: center;">
                 Click task for details | Drag to adjust dates
@@ -159,7 +167,7 @@ const GanttTimeline = ({
     return () => {
       ganttInstance.current = null;
     };
-  }, [tasks]); // Reinitialize when tasks change
+  }, [tasks, settings, viewMode]); // Reinitialize when tasks or display settings change
 
   // Update view mode
   useEffect(() => {

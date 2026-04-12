@@ -201,6 +201,56 @@ export const pmMenuConfig = [
     ],
   },
 
+  {
+    id: 'platform-itto',
+    label: 'ITTO Management',
+    path: '/platform/itto/templates',
+    icon: 'git-branch',
+    permission: 'itto.view',
+    children: [
+      {
+        id: 'platform-itto-templates',
+        label: 'ITTO Templates',
+        path: '/platform/itto/templates',
+        permission: 'itto.view',
+      },
+      {
+        id: 'platform-itto-project',
+        label: 'Project ITTOs',
+        path: '/platform/itto/project',
+        permission: 'itto.view',
+      },
+      {
+        id: 'platform-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/platform/itto/drafts',
+        permission: 'itto.create',
+      },
+    ],
+  },
+
+  {
+    id: 'platform-delays',
+    label: 'Delays',
+    path: '/platform/delays',
+    icon: 'clock-alert',
+    permission: 'delay.view',
+    children: [
+      {
+        id: 'platform-delays-register',
+        label: 'Delay Register',
+        path: '/platform/delays',
+        permission: 'delay.view',
+      },
+      {
+        id: 'platform-delays-drafts',
+        label: 'Delay Drafts',
+        path: '/platform/delays/drafts',
+        permission: 'delay.create',
+      },
+    ],
+  },
+
   // 5. Reports & Analytics
   {
     id: 'platform-reports',

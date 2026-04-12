@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react'
+import { AlertTriangle, TrendingUp, ArrowRight, LifeBuoy } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { getRiskSummary, getTopRisks } from '../../services/riskService'
 
@@ -130,6 +130,20 @@ export default function ProjectRiskSummary({ projectId }) {
                 }`}>
                   {risk.risk_score?.replace('_', ' ').toUpperCase() || ''}
                 </span>
+                <button
+                  type="button"
+                  title="Recovery planning"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigate(
+                      `/pm/planning/recovery?projectId=${encodeURIComponent(projectId)}&trigger=risk&sourceId=${encodeURIComponent(risk.risk_id || '')}`
+                    )
+                  }}
+                  className="flex-shrink-0 rounded p-1 text-blue-600 hover:bg-gray-200 dark:text-blue-400 dark:hover:bg-gray-600"
+                  aria-label="Open recovery planning for this risk"
+                >
+                  <LifeBuoy className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>

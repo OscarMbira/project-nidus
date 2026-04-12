@@ -22,6 +22,13 @@ import {
   Settings,
   Bot,
   BookOpen,
+  DollarSign,
+  Receipt,
+  ClipboardCheck,
+  ClockAlert,
+  PauseCircle,
+  Library,
+  List,
 } from 'lucide-react';
 
 // Icon mapping for simulator menu items
@@ -44,6 +51,13 @@ const iconMap = {
   'settings': Settings,
   'bot': Bot,
   'book-open': BookOpen,
+  'dollar-sign': DollarSign,
+  'receipt': Receipt,
+  'clipboard-check': ClipboardCheck,
+  'clock-alert': ClockAlert,
+  'pause-circle': PauseCircle,
+  'library': Library,
+  'list': List,
 };
 
 function SimulatorMenuItem({ menuItem, level = 0, theme }) {

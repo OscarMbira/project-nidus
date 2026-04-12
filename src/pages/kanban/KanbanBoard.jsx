@@ -23,6 +23,7 @@ import { supabase } from '../../services/supabaseClient'
 import { Plus, Settings, AlertCircle, Clock, BarChart3 } from 'lucide-react'
 import { format, differenceInDays } from 'date-fns'
 import { calculateFlowMetrics } from '../../utils/flowMetricsCalculator'
+import { listClassesForBoard, saveClassOfService } from '../../services/kanbanClassOfServiceService'
 
 // Sortable Card Component
 function SortableCard({ card, onClick }) {
@@ -208,6 +209,8 @@ export default function KanbanBoard() {
   const [showCardForm, setShowCardForm] = useState(false)
   const [selectedColumn, setSelectedColumn] = useState(null)
   const [metrics, setMetrics] = useState(null)
+  const [cosList, setCosList] = useState([])
+  const [cosName, setCosName] = useState('')
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -281,6 +284,13 @@ export default function KanbanBoard() {
 
       if (cardsError) throw cardsError
       setCards(cardsData || [])
+
+      try {
+        const cos = await listClassesForBoard(boardId)
+        setCosList(cos || [])
+      } catch {
+        setCosList([])
+      }
 
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -492,6 +502,49 @@ export default function KanbanBoard() {
           <p className="text-gray-600 dark:text-gray-400">{board.board_description}</p>
         </div>
       )}
+
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-4">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Classes of service</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+          Expedite, fixed date, standard — optional WIP limit per class (v350).
+        </p>
+        <div className="flex flex-wrap gap-2 mb-2">
+          <input
+            value={cosName}
+            onChange={(e) => setCosName(e.target.value)}
+            placeholder="Name (e.g. Expedite)"
+            className="flex-1 min-w-[160px] px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-sm"
+          />
+          <button
+            type="button"
+            onClick={async () => {
+              if (!cosName.trim()) return
+              try {
+                await saveClassOfService({
+                  board_id: boardId,
+                  name: cosName.trim(),
+                  sort_order: cosList.length,
+                })
+                setCosName('')
+                setCosList(await listClassesForBoard(boardId))
+              } catch (e) {
+                alert(e?.message || 'Could not save class of service')
+              }
+            }}
+            className="px-3 py-1 rounded bg-blue-600 text-white text-sm"
+          >
+            Add
+          </button>
+        </div>
+        <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
+          {cosList.map((c) => (
+            <li key={c.id}>
+              {c.name}
+              {c.wip_limit != null && <span className="text-gray-500"> (WIP {c.wip_limit})</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {/* Flow Metrics Panel */}
       {metrics && (

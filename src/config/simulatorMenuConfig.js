@@ -19,6 +19,19 @@ export const simulatorMenuConfig = [
     subscriptionTier: null, // Visible to all authenticated Simulator users
   },
   {
+    id: 'sim-financial',
+    label: 'Financial Management',
+    path: '/simulator/financial-reports',
+    icon: 'dollar-sign',
+    subscriptionTier: 'premium',
+    children: [
+      { id: 'sim-fin-reports', label: 'Financial Reports', path: '/simulator/financial-reports', subscriptionTier: 'premium' },
+      { id: 'sim-fin-portfolio-evm', label: 'Portfolio EVM', path: '/simulator/practice-portfolio/evm', subscriptionTier: 'premium' },
+      { id: 'sim-fin-my-expenses', label: 'My Expenses', path: '/simulator/expenses/my', subscriptionTier: 'premium' },
+      { id: 'sim-fin-exp-approvals', label: 'Expense Approvals', path: '/simulator/expenses/approvals', subscriptionTier: 'premium' },
+    ],
+  },
+  {
     id: 'sim-comms',
     label: 'Communications',
     path: '/simulator/comms',
@@ -53,6 +66,29 @@ export const simulatorMenuConfig = [
       { id: 'sim-template-new', label: 'New template', path: '/simulator/templates/new', subscriptionTier: null },
       { id: 'sim-template-copies', label: 'Practice copies', path: '/simulator/templates/project-copies', subscriptionTier: null },
       { id: 'sim-template-notifications', label: 'Template notifications', path: '/simulator/templates/notifications', subscriptionTier: null },
+    ],
+  },
+  {
+    id: 'sim-itto',
+    label: 'ITTO Management',
+    path: '/simulator/itto/templates',
+    icon: 'git-branch',
+    subscriptionTier: null,
+    children: [
+      { id: 'sim-itto-templates', label: 'ITTO Templates', path: '/simulator/itto/templates', subscriptionTier: null },
+      { id: 'sim-itto-project', label: 'Project ITTOs', path: '/simulator/itto/project', subscriptionTier: null },
+      { id: 'sim-itto-drafts', label: 'ITTO Drafts', path: '/simulator/itto/drafts', subscriptionTier: null },
+    ],
+  },
+  {
+    id: 'sim-delays',
+    label: 'Delays',
+    path: '/simulator/delays',
+    icon: 'clock-alert',
+    subscriptionTier: null,
+    children: [
+      { id: 'sim-delays-register', label: 'Delay Register', path: '/simulator/delays', icon: 'list', subscriptionTier: null },
+      { id: 'sim-delays-drafts', label: 'Delay Drafts', path: '/simulator/delays/drafts', icon: 'pause-circle', subscriptionTier: null },
     ],
   },
   {

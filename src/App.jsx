@@ -243,6 +243,41 @@ const FundingSources = lazy(() => import('./pages/platform-app/FundingSources'))
 const BudgetCategories = lazy(() => import('./pages/platform-app/BudgetCategories'))
 const ManagerAssignments = lazy(() => import('./pages/pmo/ManagerAssignments'))
 const ManagerAssignmentSettings = lazy(() => import('./pages/pmo/ManagerAssignmentSettings'))
+const ProjectCostManagement = lazy(() => import('./pages/platform-app/ProjectCostManagement'))
+const ProjectBudgetBaseline = lazy(() => import('./pages/platform-app/ProjectBudgetBaseline'))
+const ProjectEVMPage = lazy(() => import('./pages/platform-app/ProjectEVMPage'))
+const ProgrammeEVMPage = lazy(() => import('./pages/platform-app/ProgrammeEVMPage'))
+const PortfolioEVMPage = lazy(() => import('./pages/platform-app/PortfolioEVMPage'))
+const ProgrammeFinancialDashboard = lazy(() => import('./pages/platform-app/ProgrammeFinancialDashboard'))
+const ProjectProfitability = lazy(() => import('./pages/platform-app/ProjectProfitability'))
+const MyExpenses = lazy(() => import('./pages/platform-app/MyExpenses'))
+const ExpenseApproval = lazy(() => import('./pages/platform-app/ExpenseApproval'))
+const ExpenseApprovalThresholds = lazy(() => import('./pages/platform-app/ExpenseApprovalThresholds'))
+const FinancialReportingHub = lazy(() => import('./pages/platform-app/FinancialReportingHub'))
+const SimProjectCostManagement = lazy(() => import('./pages/simulator/SimProjectCostManagement'))
+const SimProjectBudgetBaseline = lazy(() => import('./pages/simulator/SimProjectBudgetBaseline'))
+const SimProjectEVMPage = lazy(() => import('./pages/simulator/SimProjectEVMPage'))
+const SimProgrammeEVMPage = lazy(() => import('./pages/simulator/SimProgrammeEVMPage'))
+const SimPortfolioEVMPage = lazy(() => import('./pages/simulator/SimPortfolioEVMPage'))
+const SimProgrammeFinancialDashboard = lazy(() => import('./pages/simulator/SimProgrammeFinancialDashboard'))
+const SimProjectProfitability = lazy(() => import('./pages/simulator/SimProjectProfitability'))
+const SimMyExpenses = lazy(() => import('./pages/simulator/SimMyExpenses'))
+const SimExpenseApproval = lazy(() => import('./pages/simulator/SimExpenseApproval'))
+const SimExpenseApprovalThresholds = lazy(() => import('./pages/simulator/SimExpenseApprovalThresholds'))
+const SimFinancialReportingHub = lazy(() => import('./pages/simulator/SimFinancialReportingHub'))
+const SimSprintMetricsDashboard = lazy(() => import('./pages/simulator/SimSprintMetricsDashboard'))
+const SimAgileTemplates = lazy(() => import('./pages/simulator/SimAgileTemplates'))
+const SimStoryMap = lazy(() => import('./pages/simulator/SimStoryMap'))
+const SimAgileReleases = lazy(() => import('./pages/simulator/SimAgileReleases'))
+const SimAgileReleaseDetail = lazy(() => import('./pages/simulator/SimAgileReleaseDetail'))
+const SimAgileRoadmap = lazy(() => import('./pages/simulator/SimAgileRoadmap'))
+const SimXPDashboard = lazy(() => import('./pages/simulator/SimXPDashboard'))
+const SimValueStreamMap = lazy(() => import('./pages/simulator/SimValueStreamMap'))
+const SimKaizenBoard = lazy(() => import('./pages/simulator/SimKaizenBoard'))
+const SimLeanMetrics = lazy(() => import('./pages/simulator/SimLeanMetrics'))
+const SimScrumOfScrums = lazy(() => import('./pages/simulator/SimScrumOfScrums'))
+const SimAgileMetricsHub = lazy(() => import('./pages/simulator/SimAgileMetricsHub'))
+const SimKanbanMetrics = lazy(() => import('./pages/simulator/SimKanbanMetrics'))
 const LifecycleTemplates = lazy(() => import('./pages/platform-app/LifecycleTemplates'))
 const Reports = lazy(() => import('./pages/platform-app/Reports'))
 const OrgKnowledgeHub = lazy(() => import('./pages/org-knowledge/OrgKnowledgeHub'))
@@ -252,6 +287,30 @@ const EEFDetail = lazy(() => import('./pages/eef/EEFDetail'))
 const EEFEdit = lazy(() => import('./pages/eef/EEFEdit'))
 const EEFOnHold = lazy(() => import('./pages/eef/EEFOnHold'))
 const EEFBulkUpload = lazy(() => import('./pages/eef/EEFBulkUpload'))
+const ITTOTemplateList = lazy(() => import('./pages/itto/ITTOTemplateList'))
+const ProjectITTOList = lazy(() => import('./pages/itto/ProjectITTOList'))
+const ITTODraftsQueue = lazy(() => import('./pages/itto/ITTODraftsQueue'))
+const SimITTOTemplateList = lazy(() => import('./pages/sim/itto/SimITTOTemplateList'))
+const SimProjectITTOList = lazy(() => import('./pages/sim/itto/SimProjectITTOList'))
+const SimITTODraftsQueue = lazy(() => import('./pages/sim/itto/SimITTODraftsQueue'))
+const DelayRegister = lazy(() => import('./pages/delays/DelayRegister'))
+const DelayTemplates = lazy(() => import('./pages/pmo/DelayTemplates'))
+const SimDelayRegister = lazy(() => import('./pages/sim/delays/SimDelayRegister'))
+const SimDelayTemplates = lazy(() => import('./pages/sim/pmo/SimDelayTemplates'))
+const PlanningHub = lazy(() => import('./pages/planning/PlanningHub'))
+const PlanningIntelligenceDashboard = lazy(() => import('./pages/planning/intelligence/PlanningIntelligenceDashboard'))
+const ScenarioList = lazy(() => import('./pages/planning/scenarios/ScenarioList'))
+const PBSBuilder = lazy(() => import('./pages/planning/pbs/PBSBuilder'))
+const PlanHealthDashboard = lazy(() => import('./pages/planning/health/PlanHealthDashboard'))
+const AIPlanGenerator = lazy(() => import('./pages/planning/ai/AIPlanGenerator'))
+const ExecutivePlanView = lazy(() => import('./pages/planning/executive/ExecutivePlanView'))
+const PortfolioCollisionDashboard = lazy(() => import('./pages/planning/portfolio/PortfolioCollisionDashboard'))
+const RecoveryPlanningView = lazy(() => import('./pages/planning/recovery/RecoveryPlanningView'))
+const ConfidenceForecastView = lazy(() => import('./pages/planning/confidence/ConfidenceForecastView'))
+const GovernanceGateChecklist = lazy(() => import('./pages/planning/governance/GovernanceGateChecklist'))
+const MicroPlanList = lazy(() => import('./pages/planning/microplans/MicroPlanList'))
+const MicroPlanDetail = lazy(() => import('./pages/planning/microplans/MicroPlanDetail'))
+const MicroPlanDraftQueue = lazy(() => import('./pages/planning/microplans/MicroPlanDraftQueue'))
 const OPAList = lazy(() => import('./pages/opa/OPAList'))
 const OPACreate = lazy(() => import('./pages/opa/OPACreate'))
 const OPADetail = lazy(() => import('./pages/opa/OPADetail'))
@@ -407,6 +466,18 @@ const SprintBoard = lazy(() => import('./pages/scrum/SprintBoard'))
 const DailyScrum = lazy(() => import('./pages/scrum/DailyScrum'))
 const SprintReview = lazy(() => import('./pages/scrum/SprintReview'))
 const SprintRetrospective = lazy(() => import('./pages/scrum/SprintRetrospective'))
+const SprintMetricsDashboard = lazy(() => import('./pages/scrum/SprintMetricsDashboard'))
+const AgileTemplates = lazy(() => import('./pages/scrum/AgileTemplates'))
+const StoryMap = lazy(() => import('./pages/scrum/StoryMap'))
+const AgileReleases = lazy(() => import('./pages/scrum/AgileReleases'))
+const AgileReleaseDetail = lazy(() => import('./pages/scrum/AgileReleaseDetail'))
+const AgileRoadmap = lazy(() => import('./pages/scrum/AgileRoadmap'))
+const ScrumOfScrums = lazy(() => import('./pages/scrum/ScrumOfScrums'))
+const XPDashboard = lazy(() => import('./pages/xp/XPDashboard'))
+const ValueStreamMap = lazy(() => import('./pages/lean/ValueStreamMap'))
+const KaizenBoard = lazy(() => import('./pages/lean/KaizenBoard'))
+const LeanMetrics = lazy(() => import('./pages/lean/LeanMetrics'))
+const AgileMetricsHub = lazy(() => import('./pages/agile/AgileMetricsHub'))
 const KanbanBoards = lazy(() => import('./pages/kanban/KanbanBoards'))
 const KanbanBoard = lazy(() => import('./pages/kanban/KanbanBoard'))
 const MetricsDashboard = lazy(() => import('./pages/kanban/MetricsDashboard'))
@@ -1025,6 +1096,41 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="itto/templates" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ITTOTemplateList />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="itto/project" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectITTOList />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="itto/drafts" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ITTODraftsQueue />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="delays" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <DelayRegister />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="delays/drafts" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <DelayRegister />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="opa" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -1403,6 +1509,13 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="portfolio/evm" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <PortfolioEVMPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="portfolio/reports" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -1484,6 +1597,20 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <ProgrammeReportsPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="programme/:id/evm" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProgrammeEVMPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="programme/:id/financial" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProgrammeFinancialDashboard />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -1838,6 +1965,13 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="pmo-admin/expense-thresholds" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ExpenseApprovalThresholds />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="pmo-admin/lifecycle-templates" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -1863,6 +1997,27 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <Reports />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="financial-reports" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <FinancialReportingHub />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="expenses/my" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MyExpenses />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="expenses/approvals" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ExpenseApproval />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -1911,6 +2066,34 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <ProjectMemberInvitation />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/costs" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectCostManagement />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/budget-baseline" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectBudgetBaseline />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/evm" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectEVMPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/profitability" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectProfitability />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -2691,6 +2874,125 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="projects/:projectId/scrum/sprint/:sprintId/board" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintBoard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/sprint/:sprintId/daily-scrum" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <DailyScrum />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/sprint/:sprintId/review" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintReview />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/sprint/:sprintId/retrospective" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintRetrospective />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/metrics" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <SprintMetricsDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/story-map" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <StoryMap />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/templates" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AgileTemplates />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/releases" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AgileReleases />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/releases/:releaseId" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AgileReleaseDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/roadmap" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AgileRoadmap />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/scrum/scrum-of-scrums" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ScrumOfScrums />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/xp/dashboard" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <XPDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/lean/value-stream-map" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ValueStreamMap />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/lean/kaizen" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <KaizenBoard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/lean/metrics" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <LeanMetrics />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/agile/metrics" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AgileMetricsHub />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/kanban/metrics" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MetricsDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="projects/:projectId/kanban" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3333,6 +3635,84 @@ function App() {
 
           {/* PMO Dashboard - redirect to unified platform dashboard */}
           <Route path="pmo/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="pmo/itto/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <ITTOTemplateList />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/itto/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <ITTODraftsQueue />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/planning" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <PlanningHub />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/planning/collisions" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <PortfolioCollisionDashboard />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/planning/intelligence" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <PlanningIntelligenceDashboard />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/planning/governance-config" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <GovernanceGateChecklist />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           {/* PMO Governance Routes */}
           <Route path="pmo/governance/mandate" element={
             <Suspense fallback={<LoadingFallback />}>
@@ -3610,6 +3990,32 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="pmo/oversight/delays" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <DelayRegister />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/delays/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <DelayTemplates />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           {/* PMO Reporting Routes */}
           <Route path="pmo/reporting/highlight-reports" element={
             <Suspense fallback={<LoadingFallback />}>
@@ -3759,6 +4165,241 @@ function App() {
                   <ProtectedRoute>
                     <PMLayout>
                       <PMDashboard />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/itto/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ITTOTemplateList />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/itto/project" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ProjectITTOList />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/itto/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ITTODraftsQueue />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/delays" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <DelayRegister />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/delays/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <DelayRegister />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          {/* PM Planning Intelligence */}
+          <Route path="pm/planning" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <PlanningHub />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/intelligence" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <PlanningIntelligenceDashboard />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/scenarios" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ScenarioList />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/pbs" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <PBSBuilder />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/health" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <PlanHealthDashboard />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/ai" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <AIPlanGenerator />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/executive" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ExecutivePlanView />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/recovery" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <RecoveryPlanningView />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/confidence" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ConfidenceForecastView />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/governance" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <GovernanceGateChecklist />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/microplans" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <MicroPlanList />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/microplans/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <MicroPlanDraftQueue />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/planning/microplans/:microPlanId" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <MicroPlanDetail />
                     </PMLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -4196,6 +4837,71 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <SimEEFDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/itto/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimITTOTemplateList />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/itto/project" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectITTOList />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/itto/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimITTODraftsQueue />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/delays" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimDelayRegister />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/delays/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimDelayRegister />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -5021,6 +5727,227 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <SimGanttChartPage />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/costs" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectCostManagement />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/budget-baseline" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectBudgetBaseline />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/evm" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectEVMPage />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/profitability" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectProfitability />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/metrics" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimSprintMetricsDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/story-map" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimStoryMap />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimAgileTemplates />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/releases" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimAgileReleases />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/releases/:releaseId" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimAgileReleaseDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/roadmap" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimAgileRoadmap />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/scrum/scrum-of-scrums" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimScrumOfScrums />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/xp/dashboard" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimXPDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/lean/value-stream-map" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimValueStreamMap />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/lean/kaizen" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimKaizenBoard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/lean/metrics" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimLeanMetrics />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/agile/metrics" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimAgileMetricsHub />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/kanban/metrics" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimKanbanMetrics />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -6445,6 +7372,19 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/practice-portfolio/evm" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimPortfolioEVMPage />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="simulator/practice-portfolio/reports" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -6556,6 +7496,32 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <PracticeProgrammeCreate />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-programme/:programmeId/evm" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProgrammeEVMPage />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-programme/:programmeId/financial" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProgrammeFinancialDashboard />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -6978,6 +7944,45 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/financial-reports" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimFinancialReportingHub />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/expenses/my" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimMyExpenses />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/expenses/approvals" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimExpenseApproval />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
 
           {/* Simulator PMO Dashboard Routes */}
           <Route path="simulator/pmo/dashboard" element={
@@ -7019,6 +8024,71 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/pmo/expense-thresholds" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimExpenseApprovalThresholds />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/itto/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimITTOTemplateList />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/itto/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimITTODraftsQueue />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/oversight/delays" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimDelayRegister />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/delays/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimDelayTemplates />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
 
           {/* Simulator PM Dashboard Routes */}
           <Route path="simulator/pm/dashboard" element={
@@ -7028,6 +8098,240 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <SimulatorPMLayout>
                       <SimulatorPMDashboard />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/itto/templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimITTOTemplateList />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/itto/project" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimProjectITTOList />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/itto/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimITTODraftsQueue />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/delays" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimDelayRegister />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/delays/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimDelayRegister />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <PlanningHub />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/intelligence" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <PlanningIntelligenceDashboard />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/scenarios" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <ScenarioList />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/pbs" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <PBSBuilder />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/health" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <PlanHealthDashboard />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/ai" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <AIPlanGenerator />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/executive" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <ExecutivePlanView />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/recovery" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <RecoveryPlanningView />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/confidence" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <ConfidenceForecastView />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/governance" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <GovernanceGateChecklist />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/microplans" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <MicroPlanList />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/microplans/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <MicroPlanDraftQueue />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/planning/microplans/:microPlanId" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <MicroPlanDetail />
                     </SimulatorPMLayout>
                   </ProtectedRoute>
                 </ToastProvider>

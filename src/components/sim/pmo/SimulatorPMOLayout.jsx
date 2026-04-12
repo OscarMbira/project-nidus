@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from '../../../context/ThemeContext'
-import SimulatorPMOSidebar from './SimulatorPMOSidebar'
+import Sidebar from '../../Sidebar'
+import PracticeDashboardSwitcher from '../ui/PracticeDashboardSwitcher'
 
 export default function SimulatorPMOLayout({ children }) {
   const { theme, toggleTheme } = useTheme()
@@ -91,8 +92,8 @@ export default function SimulatorPMOLayout({ children }) {
         </div>
       </nav>
 
-      {/* Sidebar */}
-      <SimulatorPMOSidebar
+      {/* Sidebar (DB-driven via useMenu) */}
+      <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -100,7 +101,7 @@ export default function SimulatorPMOLayout({ children }) {
       {/* Main Content - scrollable when form/content exceeds viewport */}
       <main
         className={`flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-16 transition-all duration-300 ${
-          sidebarOpen ? 'ml-64' : 'ml-0'
+          sidebarOpen ? 'ml-64 lg:ml-80' : 'ml-0'
         }`}
       >
         <div className="p-6">

@@ -196,6 +196,19 @@ const GanttToolbar = ({
                     />
                   </label>
 
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Confidence % in labels</span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Append forecast % to task names (left column)</p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={!!settings.showConfidenceInLabels}
+                      onChange={() => handleSettingToggle('showConfidenceInLabels')}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    />
+                  </label>
+
                   {/* Divider */}
                   <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
 

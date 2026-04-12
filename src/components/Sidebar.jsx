@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMenu } from '../hooks/useMenu'
-import { supabase } from '../services/supabaseClient'
+import { supabase, simDb } from '../services/supabaseClient'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -57,10 +57,27 @@ import {
   UserPlus,
   MessageSquare,
   Video,
+  DollarSign,
+  Receipt,
+  ClipboardCheck,
+  SlidersHorizontal,
+  FileBarChart,
+  PieChart,
+  BarChart2,
+  Bookmark,
+  ClockAlert,
+  PauseCircle,
+  Library,
+  Package,
+  Activity,
+  Calendar,
+  Wrench,
+  FolderClosed,
 } from 'lucide-react'
 import { useThemeContext } from '../context/ThemeContext'
 import { useBranding } from '../context/BrandingContext'
 import { resolveMenuRoutePath, menuPathIsActive } from '../utils/sidebarRouteUtils'
+import { useOpenPlanningFindingsCount } from '../hooks/useOpenPlanningFindingsCount'
 
 // Icon mapping for menu items
 const iconMap = {
@@ -115,9 +132,25 @@ const iconMap = {
   'user-plus': UserPlus,
   'message-square': MessageSquare,
   'video': Video,
+  'dollar-sign': DollarSign,
+  'receipt': Receipt,
+  'clipboard-check': ClipboardCheck,
+  'sliders-horizontal': SlidersHorizontal,
+  'file-bar-chart': FileBarChart,
+  'pie-chart': PieChart,
+  'bar-chart-2': BarChart2,
+  'bookmark': Bookmark,
+  'clock-alert': ClockAlert,
+  'pause-circle': PauseCircle,
+  'library': Library,
+  'package': Package,
+  'activity': Activity,
+  'calendar': Calendar,
+  'wrench': Wrench,
+  'folder-closed': FolderClosed,
 }
 
-function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null }) {
+function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null, planningOpenFindingsCount = null }) {
   const location = useLocation()
   const { branding } = useBranding()
   const hasChildren = menuItem.children && menuItem.children.length > 0
@@ -174,12 +207,12 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
         >
           <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
           <span className="flex-1">{menuItem.menu_label}</span>
-          {menuItem.badge_text && (
+          {badgeText && (
             <span
               className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
-              style={{ backgroundColor: menuItem.badge_color || '#EF4444' }}
+              style={{ backgroundColor: badgeColorResolved }}
             >
-              {menuItem.badge_text}
+              {badgeText}
             </span>
           )}
         </a>
@@ -200,12 +233,12 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
         >
           <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
           <span className="flex-1">{menuItem.menu_label}</span>
-          {menuItem.badge_text && (
+          {badgeText && (
             <span
               className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
-              style={{ backgroundColor: menuItem.badge_color || '#EF4444' }}
+              style={{ backgroundColor: badgeColorResolved }}
             >
-              {menuItem.badge_text}
+              {badgeText}
             </span>
           )}
           {hasChildren && (
@@ -232,6 +265,7 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
               level={level + 1}
               expandedMenuId={expandedMenuId}
               onToggleExpand={onToggleExpand}
+              planningOpenFindingsCount={planningOpenFindingsCount}
             />
           ))}
         </div>
@@ -248,6 +282,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
   const [expandedMenuId, setExpandedMenuId] = useState(null)
+  const planningOpenFindingsCount = useOpenPlanningFindingsCount(!location.pathname.startsWith('/simulator'))
 
   const handleToggleExpand = (id) => {
     setExpandedMenuId((prev) => (prev === id ? null : id))
@@ -257,8 +292,14 @@ export default function Sidebar({ isOpen, onClose }) {
     if (loggingOut) return
     try {
       setLoggingOut(true)
-      await supabase.auth.signOut()
-      navigate('/platform/login', { replace: true })
+      const path = location.pathname || ''
+      if (path.startsWith('/simulator')) {
+        await simDb.auth.signOut()
+        navigate('/simulator/login', { replace: true })
+      } else {
+        await supabase.auth.signOut()
+        navigate('/platform/login', { replace: true })
+      }
     } catch (err) {
       console.error('Logout error:', err)
       setLoggingOut(false)
@@ -345,11 +386,13 @@ export default function Sidebar({ isOpen, onClose }) {
                     const pathname = location.pathname || ''
                     const routePath = menuItem.route_path || ''
                     if (pathname.startsWith('/simulator')) {
-                      if (!routePath.startsWith('/simulator')) return false
+                      const isSimRoute = !routePath.trim() || routePath.startsWith('/simulator')
+                      if (!isSimRoute) return false
                     } else {
-                      // Platform context: show /platform, /pmo (PMO Admin), or parent items with no route (e.g. PMO Admin section)
+                      // Platform context: /platform, /pmo, /pm, or section parents with no route_path
                       const isPlatformRoute = routePath.startsWith('/platform') ||
                         routePath.startsWith('/pmo') ||
+                        routePath.startsWith('/pm') ||
                         !routePath.trim()
                       if (!isPlatformRoute) return false
                     }
@@ -373,6 +416,7 @@ export default function Sidebar({ isOpen, onClose }) {
                       level={0}
                       expandedMenuId={expandedMenuId}
                       onToggleExpand={handleToggleExpand}
+                      planningOpenFindingsCount={planningOpenFindingsCount}
                     />
                   ))}
               </div>

@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
+import { getConfidenceForecasts } from '../../services/planConfidenceService';
 import GanttToolbar from './GanttToolbar';
 import GanttTimeline from './GanttTimeline';
 import DependencyManager from './DependencyManager';
@@ -7,6 +9,49 @@ import MilestoneManager from './MilestoneManager';
 import * as ganttService from '../../services/ganttService';
 import { autoScheduleTasks, validateTaskDateChange, detectConflicts, generateAutoScheduleSummary } from '../../utils/autoScheduler';
 import { exportToCSV, exportToPNG, exportToPDF, printGanttChart, showExportDialog } from '../../utils/ganttExport';
+
+function stripConfidenceSuffix(name) {
+  return String(name || '').replace(/\s·\s\d{1,3}%$/, '');
+}
+
+function applyConfidenceToGanttTasks(ganttTasks, confMap, settings) {
+  if (!ganttTasks?.length) return [];
+  return ganttTasks.map((t) => {
+    const c = confMap.get(t.id);
+    const baseName = stripConfidenceSuffix(t.name);
+    return {
+      ...t,
+      name: settings.showConfidenceInLabels && c != null ? `${baseName} · ${c}%` : baseName,
+      confidence_pct: c ?? null,
+    };
+  });
+}
+
+function transformDbTasksForGantt(dbTasks, settings) {
+  return (dbTasks || []).map((task) => {
+    const dependencies =
+      task.task_dependencies?.map((dep) => dep.source_task_id).join(', ') || '';
+    let customClass = '';
+    if (task.is_critical_path && settings.showCriticalPath) {
+      customClass = 'critical-path';
+    } else if (task.progress_percentage === 100) {
+      customClass = 'completed';
+    }
+    return {
+      id: task.id,
+      name: task.task_name,
+      start: task.start_date,
+      end: task.due_date,
+      progress: task.progress_percentage || 0,
+      dependencies,
+      custom_class: customClass,
+      is_milestone: task.is_milestone || false,
+      baseline_start_date: task.baseline_start_date,
+      baseline_end_date: task.baseline_end_date,
+      assigned_to: task.assigned_to,
+    };
+  });
+}
 
 /**
  * GanttChart - Main Gantt chart container component
@@ -25,9 +70,9 @@ const GanttChart = ({
   tasks: initialTasks = null,
   viewMode: initialViewMode = 'Week',
   onTaskUpdate,
-  showCriticalPath = true
+  showCriticalPath = true,
 }) => {
-  const [tasks, setTasks] = useState(initialTasks || []);
+  const [rawDbTasks, setRawDbTasks] = useState([]);
   const [dependencies, setDependencies] = useState([]);
   const [viewMode, setViewMode] = useState(initialViewMode);
   const [loading, setLoading] = useState(false);
@@ -38,11 +83,14 @@ const GanttChart = ({
     showProgress: true,
     showResources: true,
     showMilestones: true,
-    autoSchedule: true // Enable auto-scheduling by default
+    autoSchedule: true, // Enable auto-scheduling by default
+    showConfidenceInLabels: false,
   });
   const [selectedTaskForDependencies, setSelectedTaskForDependencies] = useState(null);
   const [showMilestoneManager, setShowMilestoneManager] = useState(false);
   const ganttTimelineRef = useRef(null);
+  const [confidenceRows, setConfidenceRows] = useState([]);
+  const [showConfidenceStrip, setShowConfidenceStrip] = useState(true);
 
   // Fetch tasks and dependencies from database if not provided
   useEffect(() => {
@@ -51,6 +99,40 @@ const GanttChart = ({
       fetchDependencies();
     }
   }, [projectId, initialTasks]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await getConfidenceForecasts(projectId);
+        if (!cancelled) setConfidenceRows(rows || []);
+      } catch (e) {
+        if (!cancelled) setConfidenceRows([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  const confidenceByTaskId = useMemo(() => {
+    const m = new Map();
+    for (const r of confidenceRows || []) {
+      if (r.task_id) m.set(r.task_id, r.confidence_pct);
+    }
+    return m;
+  }, [confidenceRows]);
+
+  const baseGanttTasks = useMemo(() => {
+    if (initialTasks?.length) return initialTasks;
+    return transformDbTasksForGantt(rawDbTasks || [], settings);
+  }, [initialTasks, rawDbTasks, settings]);
+
+  const ganttTasks = useMemo(
+    () => applyConfidenceToGanttTasks(baseGanttTasks, confidenceByTaskId, settings),
+    [baseGanttTasks, confidenceByTaskId, settings]
+  );
 
   /**
    * Fetch tasks for the project
@@ -71,6 +153,8 @@ const GanttChart = ({
           is_milestone,
           is_critical_path,
           assigned_to,
+          baseline_start_date,
+          baseline_end_date,
           task_dependencies!task_dependencies_target_task_id_fkey(
             source_task_id,
             dependency_type
@@ -82,9 +166,7 @@ const GanttChart = ({
 
       if (fetchError) throw fetchError;
 
-      // Transform data to Frappe Gantt format
-      const formattedTasks = transformTasksForGantt(data || []);
-      setTasks(formattedTasks);
+      setRawDbTasks(data || []);
     } catch (err) {
       console.error('Error fetching tasks:', err);
       setError(err.message);
@@ -106,41 +188,6 @@ const GanttChart = ({
   };
 
   /**
-   * Transform database tasks to Frappe Gantt format
-   */
-  const transformTasksForGantt = (dbTasks) => {
-    return dbTasks.map(task => {
-      // Build dependencies string (comma-separated task IDs)
-      const dependencies = task.task_dependencies
-        ?.map(dep => dep.source_task_id)
-        .join(', ') || '';
-
-      // Determine custom class for styling
-      let customClass = '';
-      if (task.is_critical_path && settings.showCriticalPath) {
-        customClass = 'critical-path';
-      } else if (task.progress_percentage === 100) {
-        customClass = 'completed';
-      }
-
-      return {
-        id: task.id,
-        name: task.task_name,
-        start: task.start_date,
-        end: task.due_date,
-        progress: task.progress_percentage || 0,
-        dependencies: dependencies,
-        custom_class: customClass,
-        is_milestone: task.is_milestone || false,
-        // Additional data for enhanced tooltips
-        baseline_start_date: task.baseline_start_date,
-        baseline_end_date: task.baseline_end_date,
-        assigned_to: task.assigned_to
-      };
-    });
-  };
-
-  /**
    * Handle task date changes from drag operations with auto-scheduling
    */
   const handleTaskUpdate = async (taskId, start, end) => {
@@ -150,7 +197,7 @@ const GanttChart = ({
       const endDate = new Date(end);
 
       // Get current task data
-      const currentTask = tasks.find(t => t.id === taskId);
+      const currentTask = ganttTasks.find(t => t.id === taskId);
       if (!currentTask) {
         throw new Error('Task not found');
       }
@@ -160,7 +207,7 @@ const GanttChart = ({
         taskId,
         startDate,
         endDate,
-        tasks,
+        ganttTasks,
         dependencies
       );
 
@@ -190,7 +237,7 @@ const GanttChart = ({
           taskId,
           startDate,
           endDate,
-          tasks,
+          ganttTasks,
           dependencies
         );
 
@@ -316,7 +363,7 @@ const GanttChart = ({
 
       switch (format) {
         case 'csv':
-          exportToCSV(tasks, dependencies, projectName);
+          exportToCSV(ganttTasks, dependencies, projectName);
           break;
 
         case 'png':
@@ -389,7 +436,7 @@ const GanttChart = ({
    */
   const handleDetectConflicts = () => {
     try {
-      const conflicts = detectConflicts(tasks, dependencies);
+      const conflicts = detectConflicts(ganttTasks, dependencies);
 
       if (conflicts.length === 0) {
         alert('✅ No scheduling conflicts detected!\n\nAll tasks are properly scheduled according to their dependencies.');
@@ -530,7 +577,7 @@ const GanttChart = ({
     );
   }
 
-  if (!tasks || tasks.length === 0) {
+  if (!ganttTasks || ganttTasks.length === 0) {
     return (
       <div className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-12">
         <div className="text-center">
@@ -548,6 +595,41 @@ const GanttChart = ({
 
   return (
     <div className="gantt-chart-container">
+      {confidenceRows.length > 0 && (
+        <div className="mb-3 rounded-lg border border-gray-600 bg-gray-900/90 p-3 text-gray-100">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-medium">Schedule confidence</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowConfidenceStrip((s) => !s)}
+                className="text-xs text-blue-400 hover:text-blue-300"
+              >
+                {showConfidenceStrip ? 'Hide' : 'Show'}
+              </button>
+              <Link
+                to={`/pm/planning/confidence?projectId=${encodeURIComponent(projectId)}`}
+                className="text-xs text-blue-400 hover:text-blue-300"
+              >
+                Edit forecasts
+              </Link>
+            </div>
+          </div>
+          {showConfidenceStrip && (
+            <ul className="mt-2 max-h-28 overflow-y-auto space-y-1 text-xs text-gray-300">
+              {confidenceRows.slice(0, 8).map((r) => (
+                <li key={r.id} className="flex justify-between gap-2 border-b border-gray-700/80 pb-1">
+                  <span className="truncate">
+                    {r.task_id ? `Task` : r.milestone_id ? `Milestone` : 'Project'} ·{' '}
+                    {r.confidence_pct ?? '—'}%
+                  </span>
+                  {r.likely_date && <span className="flex-shrink-0 text-gray-500">{r.likely_date}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       {/* Toolbar */}
       <GanttToolbar
         viewMode={viewMode}
@@ -564,7 +646,7 @@ const GanttChart = ({
       {/* Timeline */}
       <div className="mt-4" ref={ganttTimelineRef}>
         <GanttTimeline
-          tasks={tasks}
+          tasks={ganttTasks}
           viewMode={viewMode}
           settings={settings}
           onTaskUpdate={handleTaskUpdate}
@@ -576,7 +658,7 @@ const GanttChart = ({
       {selectedTaskForDependencies && (
         <DependencyManager
           taskId={selectedTaskForDependencies}
-          tasks={tasks}
+          tasks={ganttTasks}
           dependencies={dependencies}
           onDependencyAdd={handleDependencyAdd}
           onDependencyUpdate={handleDependencyUpdate}
@@ -589,7 +671,7 @@ const GanttChart = ({
       {showMilestoneManager && (
         <MilestoneManager
           projectId={projectId}
-          tasks={tasks}
+          tasks={ganttTasks}
           onClose={() => setShowMilestoneManager(false)}
           onMilestoneChange={fetchTasks}
         />

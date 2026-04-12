@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import { FileText, Edit2, ArrowLeft, Package, CheckCircle, Calendar, Users, BarChart3, Settings, Target, Briefcase, FileText as FileTextIcon } from 'lucide-react'
 import { getWorkPackageById, updateWorkPackage, authorizeWorkPackage, acceptWorkPackage, completeWorkPackage, closeWorkPackage, updateProgress } from '../../services/controllingStageService'
 import { getProducts } from '../../services/wpProductsService'
@@ -26,6 +27,7 @@ import WPProgressSection from '../../components/workpackage/WPProgressSection'
 import WorkPackageForm from '../../components/structured/WorkPackageForm'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { countMicroPlansByWorkPackage, startDraftMicroPlanFromWorkPackage } from '../../services/microPlanService'
 
 const WP_VIEW_SECTIONS = [
   { title: 'Work Package', fields: [
@@ -50,6 +52,8 @@ export default function WorkPackageView() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [editing, setEditing] = useState(false)
+  const [microPlanCount, setMicroPlanCount] = useState(null)
+  const [startingDraft, setStartingDraft] = useState(false)
 
   useEffect(() => {
     if (wpId) {
@@ -105,6 +109,12 @@ export default function WorkPackageView() {
         if (reportingResult.success) setReportingArrangements(reportingResult.data || [])
         if (historyResult.success) setStatusHistory(historyResult.data || [])
         if (snapshotsResult.success) setProgressSnapshots(snapshotsResult.data || [])
+        try {
+          const n = await countMicroPlansByWorkPackage(wpData.project_id, wpId)
+          setMicroPlanCount(n)
+        } catch {
+          setMicroPlanCount(null)
+        }
       } else {
         throw new Error('Work Package project_id not found')
       }
@@ -194,6 +204,22 @@ export default function WorkPackageView() {
   const canComplete = workPackage?.status === 'in_progress'
   const canClose = workPackage?.status === 'completed'
 
+  const handleStartMicroPlanDraft = async () => {
+    if (!workPackage?.project_id || !wpId) return
+    try {
+      setStartingDraft(true)
+      const row = await startDraftMicroPlanFromWorkPackage(workPackage.project_id, wpId)
+      toast.success(`Draft micro-plan created: ${row.plan_reference || row.id}`)
+      navigate(
+        `/pm/planning/microplans?projectId=${encodeURIComponent(workPackage.project_id)}&workPackageId=${encodeURIComponent(wpId)}`
+      )
+    } catch (e) {
+      toast.error(e?.message || 'Could not create draft')
+    } finally {
+      setStartingDraft(false)
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
@@ -214,8 +240,30 @@ export default function WorkPackageView() {
             <p className="mt-2 text-gray-600 dark:text-gray-400">
               {project?.project_name} - {workPackage?.wp_reference || workPackage?.work_package_code || 'Draft'}
             </p>
+            {workPackage?.project_id && (
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Linked team micro-plans:{' '}
+                {microPlanCount == null ? '—' : microPlanCount}{' '}
+                <Link
+                  to={`/pm/planning/microplans?projectId=${encodeURIComponent(workPackage.project_id)}&workPackageId=${encodeURIComponent(wpId)}`}
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  View list
+                </Link>
+              </p>
+            )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {workPackage?.project_id && (
+              <button
+                type="button"
+                onClick={handleStartMicroPlanDraft}
+                disabled={startingDraft}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg text-sm"
+              >
+                {startingDraft ? 'Creating…' : 'Create team micro-plan (draft)'}
+              </button>
+            )}
             {workPackage && (
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(workPackage.status || 'draft')}`}>
                 {(workPackage.status || 'draft').replace('_', ' ').toUpperCase()}

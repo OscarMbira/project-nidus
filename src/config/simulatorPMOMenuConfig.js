@@ -33,7 +33,13 @@ import {
   ShoppingCart,
   FileSpreadsheet,
   FilePlus,
-  Pause
+  Pause,
+  DollarSign,
+  ClipboardCheck,
+  TrendingUp,
+  SlidersHorizontal,
+  GitBranch,
+  Layers
 } from 'lucide-react';
 
 const simulatorPMOMenuConfig = [
@@ -163,6 +169,13 @@ const simulatorPMOMenuConfig = [
         path: '/simulator/pmo/oversight/lessons-log',
         icon: GraduationCap,
         order: 4
+      },
+      {
+        id: 'sim-pmo-oversight-delays',
+        label: 'Delay Register',
+        path: '/simulator/pmo/oversight/delays',
+        icon: FileClock,
+        order: 5
       }
     ]
   },
@@ -200,14 +213,97 @@ const simulatorPMOMenuConfig = [
     ]
   },
 
-  // Section 5: Reporting & Assurance
+  {
+    id: 'sim-pmo-itto',
+    label: 'ITTO Management',
+    path: null,
+    icon: GitBranch,
+    section: 'ITTO Management',
+    order: 4.5,
+    children: [
+      {
+        id: 'sim-pmo-itto-templates',
+        label: 'ITTO Templates',
+        path: '/simulator/pmo/itto/templates',
+        icon: Layers,
+        order: 1
+      },
+      {
+        id: 'sim-pmo-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/simulator/pmo/itto/drafts',
+        icon: Pause,
+        order: 2
+      }
+    ]
+  },
+
+  {
+    id: 'sim-pmo-delay-templates',
+    label: 'Delay Management',
+    path: null,
+    icon: Layers,
+    section: 'Delay Management',
+    order: 4.52,
+    children: [
+      {
+        id: 'sim-pmo-delay-templates-crud',
+        label: 'Delay Templates',
+        path: '/simulator/pmo/delays/templates',
+        icon: Layers,
+        order: 1
+      }
+    ]
+  },
+
+  // Section 5: Financial Management
+  {
+    id: 'sim-pmo-financial',
+    label: 'Financial Management',
+    path: null,
+    icon: DollarSign,
+    section: 'Financial Management',
+    order: 5,
+    children: [
+      {
+        id: 'sim-pmo-fin-reports',
+        label: 'Financial Reports',
+        path: '/simulator/financial-reports',
+        icon: BarChart3,
+        order: 1
+      },
+      {
+        id: 'sim-pmo-fin-portfolio-evm',
+        label: 'Portfolio EVM',
+        path: '/simulator/practice-portfolio/evm',
+        icon: TrendingUp,
+        order: 2
+      },
+      {
+        id: 'sim-pmo-fin-exp-approvals',
+        label: 'Expense Approvals',
+        path: '/simulator/expenses/approvals',
+        icon: ClipboardCheck,
+        order: 3
+      },
+      {
+        id: 'sim-pmo-fin-thresholds',
+        label: 'Expense Thresholds',
+        path: '/simulator/pmo/expense-thresholds',
+        icon: SlidersHorizontal,
+        order: 4
+      }
+    ]
+  },
+
+  // Section 6: Reporting & Assurance
   {
     id: 'sim-pmo-reporting',
     label: 'Reporting & Assurance',
     path: null,
     icon: BarChart3,
     section: 'Reporting & Assurance',
-    order: 5,
+    order: 6,
     children: [
       {
         id: 'sim-pmo-report-highlight',

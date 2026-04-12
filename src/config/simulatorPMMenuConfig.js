@@ -38,7 +38,20 @@ import {
   Calendar,
   ListChecks,
   Wrench,
-  FolderClosed
+  FolderClosed,
+  DollarSign,
+  Receipt,
+  ClipboardCheck,
+  TrendingUp,
+  GitBranch,
+  Pause,
+  SearchCode,
+  PackageOpen,
+  HeartPulse,
+  Sparkles,
+  Presentation,
+  RefreshCcw,
+  ShieldCheck
 } from 'lucide-react';
 
 const simulatorPMMenuConfig = [
@@ -280,14 +293,206 @@ const simulatorPMMenuConfig = [
     ]
   },
 
-  // Section 6: Project Closure
+  // Section 6: Financial Management
+  {
+    id: 'sim-pm-financial',
+    label: 'Financial Management',
+    path: null,
+    icon: DollarSign,
+    section: 'Financial Management',
+    order: 6,
+    children: [
+      {
+        id: 'sim-pm-fin-my-expenses',
+        label: 'My Expenses',
+        path: '/simulator/expenses/my',
+        icon: Receipt,
+        order: 1
+      },
+      {
+        id: 'sim-pm-fin-exp-approvals',
+        label: 'Expense Approvals',
+        path: '/simulator/expenses/approvals',
+        icon: ClipboardCheck,
+        order: 2
+      },
+      {
+        id: 'sim-pm-fin-reports',
+        label: 'Financial Reports',
+        path: '/simulator/financial-reports',
+        icon: BarChart3,
+        order: 3
+      },
+      {
+        id: 'sim-pm-fin-portfolio-evm',
+        label: 'Portfolio EVM',
+        path: '/simulator/practice-portfolio/evm',
+        icon: TrendingUp,
+        order: 4
+      }
+    ]
+  },
+
+  {
+    id: 'sim-pm-itto',
+    label: 'ITTO Management',
+    path: null,
+    icon: GitBranch,
+    section: 'ITTO Management',
+    order: 6.5,
+    children: [
+      {
+        id: 'sim-pm-itto-templates',
+        label: 'ITTO Templates',
+        path: '/simulator/pm/itto/templates',
+        icon: Layers,
+        order: 1
+      },
+      {
+        id: 'sim-pm-itto-project',
+        label: 'Project ITTOs',
+        path: '/simulator/pm/itto/project',
+        icon: Layers,
+        order: 2
+      },
+      {
+        id: 'sim-pm-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/simulator/pm/itto/drafts',
+        icon: Pause,
+        order: 3
+      }
+    ]
+  },
+
+  {
+    id: 'sim-pm-delays',
+    label: 'Delays',
+    path: null,
+    icon: FileClock,
+    section: 'Delays',
+    order: 6.55,
+    children: [
+      {
+        id: 'sim-pm-delay-register',
+        label: 'Delay Register',
+        path: '/simulator/pm/delays',
+        icon: ClipboardList,
+        order: 1
+      },
+      {
+        id: 'sim-pm-delay-drafts',
+        label: 'Delay Drafts',
+        path: '/simulator/pm/delays/drafts',
+        icon: Pause,
+        order: 2
+      }
+    ]
+  },
+
+  {
+    id: 'sim-pm-planning',
+    label: 'Planning Intelligence',
+    path: null,
+    icon: BarChart3,
+    section: 'Planning Intelligence',
+    order: 6.57,
+    children: [
+      {
+        id: 'sim-pm-planning-hub',
+        label: 'Planning Hub',
+        path: '/simulator/pm/planning',
+        icon: LayoutDashboard,
+        order: 1
+      },
+      {
+        id: 'sim-pm-planning-intelligence',
+        label: 'Plan Intelligence',
+        path: '/simulator/pm/planning/intelligence',
+        icon: SearchCode,
+        order: 2
+      },
+      {
+        id: 'sim-pm-planning-scenarios',
+        label: 'Scenarios',
+        path: '/simulator/pm/planning/scenarios',
+        icon: GitBranch,
+        order: 3
+      },
+      {
+        id: 'sim-pm-planning-pbs',
+        label: 'Product Plan (PBS)',
+        path: '/simulator/pm/planning/pbs',
+        icon: PackageOpen,
+        order: 4
+      },
+      {
+        id: 'sim-pm-planning-health',
+        label: 'Plan Health',
+        path: '/simulator/pm/planning/health',
+        icon: HeartPulse,
+        order: 5
+      },
+      {
+        id: 'sim-pm-planning-ai',
+        label: 'AI Plan Generator',
+        path: '/simulator/pm/planning/ai',
+        icon: Sparkles,
+        order: 6
+      },
+      {
+        id: 'sim-pm-planning-executive',
+        label: 'Executive View',
+        path: '/simulator/pm/planning/executive',
+        icon: Presentation,
+        order: 7
+      },
+      {
+        id: 'sim-pm-planning-recovery',
+        label: 'Recovery Planning',
+        path: '/simulator/pm/planning/recovery',
+        icon: RefreshCcw,
+        order: 8
+      },
+      {
+        id: 'sim-pm-planning-confidence',
+        label: 'Confidence Forecast',
+        path: '/simulator/pm/planning/confidence',
+        icon: TrendingUp,
+        order: 9
+      },
+      {
+        id: 'sim-pm-planning-governance',
+        label: 'Governance Gates',
+        path: '/simulator/pm/planning/governance',
+        icon: ShieldCheck,
+        order: 10
+      },
+      {
+        id: 'sim-pm-planning-microplans',
+        label: 'Team Micro Plans',
+        path: '/simulator/pm/planning/microplans',
+        icon: ClipboardList,
+        order: 11
+      },
+      {
+        id: 'sim-pm-planning-microplans-drafts',
+        label: 'My Draft Plans',
+        path: '/simulator/pm/planning/microplans/drafts',
+        icon: FileClock,
+        order: 12
+      }
+    ]
+  },
+
+  // Section 7: Project Closure
   {
     id: 'sim-pm-closure',
     label: 'Project Closure',
     path: null,
     icon: FolderClosed,
     section: 'Project Closure',
-    order: 6,
+    order: 7,
     children: [
       {
         id: 'sim-pm-closure-lessons-report',

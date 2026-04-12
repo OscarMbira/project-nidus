@@ -187,7 +187,8 @@ export function exportToExcel(columns, rows, baseFilename, branding) {
   XLSX.writeFile(wb, filename)
 }
 
-const DEFAULT_LIST_EXPORT_FIELDS = 15
+/** Word/PPT field picker: default selection count (CLAUDE.md rule 38). */
+const DEFAULT_LIST_EXPORT_FIELDS = 5
 const MAX_LIST_EXPORT_FIELDS = 10
 
 /**

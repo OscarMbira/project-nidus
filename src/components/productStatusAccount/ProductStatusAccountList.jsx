@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Plus, Search, Filter, Calendar } from 'lucide-react'
+import { Plus, Search, Filter, Calendar, Package } from 'lucide-react'
 import { getProductStatusAccountByProject } from '../../services/productStatusAccountService'
 import ProductStatusAccountCard from './ProductStatusAccountCard'
 import ExportListMenu from '../ui/ExportListMenu'

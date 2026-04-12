@@ -166,9 +166,10 @@ export default function ManagerAssignments() {
     const type = tab === 'projects' ? 'project' : tab === 'programmes' ? 'programme' : 'portfolio'
     const id = row.id
     const name = row.project_name || row.programme_name || row.portfolio_name
+    const code = row.project_code || row.programme_code || row.portfolio_code
     const current =
       row.project_manager_user_id || row.programme_manager_user_id || row.portfolio_manager_user_id
-    setModal({ type, id, name, currentManagerId: current || null })
+    setModal({ type, id, name, code: code || null, currentManagerId: current || null })
   }
 
   const handleModalConfirm = async (userId) => {
@@ -283,6 +284,19 @@ export default function ManagerAssignments() {
             </button>
           </div>
         </div>
+
+        <AssignManagerModal
+          open={!!modal}
+          onClose={() => setModal(null)}
+          entityType={modal?.type}
+          entityName={modal?.name || ''}
+          entityCode={modal?.code}
+          currentManagerId={modal?.currentManagerId}
+          eligibleUsers={eligible}
+          workloadByUserId={workload}
+          limit={limit}
+          onConfirm={(userId) => handleModalConfirm(userId)}
+        />
 
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Loading…</p>
@@ -410,18 +424,6 @@ export default function ManagerAssignments() {
           </div>
         )}
       </div>
-
-      <AssignManagerModal
-        open={!!modal}
-        onClose={() => setModal(null)}
-        entityType={modal?.type}
-        entityName={modal?.name || ''}
-        currentManagerId={modal?.currentManagerId}
-        eligibleUsers={eligible}
-        workloadByUserId={workload}
-        limit={limit}
-        onConfirm={(userId) => handleModalConfirm(userId)}
-      />
     </div>
   )
 }
