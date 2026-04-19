@@ -103,6 +103,7 @@ const PlatformDashboard = lazy(() => import('./pages/platform-app/Dashboard'))
 const SimulatorDashboard = lazy(() => import('./pages/simulator-app/Dashboard'))
 const SimAIWorkspace = lazy(() => import('./pages/simulator/SimAIWorkspace'))
 const AIWorkspace = lazy(() => import('./pages/platform-app/AIWorkspace'))
+const SubmitFeedback = lazy(() => import('./pages/support/SubmitFeedback'))
 // PMO and PM Independent Dashboards
 const PMODashboard = lazy(() => import('./pages/pmo/PMODashboard'))
 const PMDashboard = lazy(() => import('./pages/pm/PMDashboard'))
@@ -243,6 +244,8 @@ const FundingSources = lazy(() => import('./pages/platform-app/FundingSources'))
 const BudgetCategories = lazy(() => import('./pages/platform-app/BudgetCategories'))
 const ManagerAssignments = lazy(() => import('./pages/pmo/ManagerAssignments'))
 const ManagerAssignmentSettings = lazy(() => import('./pages/pmo/ManagerAssignmentSettings'))
+const PMORoleMenuManagement = lazy(() => import('./pages/pmo/PMORoleMenuManagement'))
+const AdminRoleMenuManagement = lazy(() => import('./pages/admin/AdminRoleMenuManagement'))
 const ProjectCostManagement = lazy(() => import('./pages/platform-app/ProjectCostManagement'))
 const ProjectBudgetBaseline = lazy(() => import('./pages/platform-app/ProjectBudgetBaseline'))
 const ProjectEVMPage = lazy(() => import('./pages/platform-app/ProjectEVMPage'))
@@ -522,6 +525,7 @@ const TrialUpgrade = lazy(() => import('./pages/trial/TrialUpgrade'))
 const RoleAssignment = lazy(() => import('./pages/admin/RoleAssignment'))
 const AssignRolesToProjects = lazy(() => import('./pages/admin/AssignRolesToProjects'))
 const SendRoleInvites = lazy(() => import('./pages/admin/SendRoleInvites'))
+const ChangeLogPage = lazy(() => import('./pages/change/ChangeLogPage'))
 const ProjectMemberInvitation = lazy(() => import('./pages/projects/ProjectMemberInvitation'))
 const Settings = lazy(() => import('./pages/Settings'))
 const PWASettings = lazy(() => import('./pages/app/PWASettings'))
@@ -3535,6 +3539,27 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <SendRoleInvites />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="change-log" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ChangeLogPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="pmo/role-menu-access" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <PMORoleMenuManagement />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="admin/role-menu-access" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AdminRoleMenuManagement />
                             </ProtectedRoute>
                           </Suspense>
                         } />
