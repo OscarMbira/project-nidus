@@ -100,8 +100,8 @@ const DocumentComplianceWidget = memo(function DocumentComplianceWidget({ organi
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Document Compliance</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Document Compliance</h3>
         <div className="animate-pulse space-y-3">
           <div className="h-12 bg-gray-700 rounded"></div>
           <div className="h-12 bg-gray-700 rounded"></div>
@@ -113,9 +113,9 @@ const DocumentComplianceWidget = memo(function DocumentComplianceWidget({ organi
   const hasIssues = stats.missingMandatory > 0 || stats.pendingApprovals > 0 || stats.overdueDocuments > 0;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-100">Document Compliance</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Document Compliance</h3>
         <button
           onClick={() => navigate('/platform/document-compliance')}
           className="text-sm text-blue-400 hover:text-blue-300"

@@ -98,8 +98,8 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
   if (loading) {
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">Benefits Roll-up</h2>
-        <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Benefits Roll-up</h2>
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-lg p-6 animate-pulse">
           <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -124,11 +124,11 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-100">Benefits Roll-up</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Benefits Roll-up</h2>
         <select
           value={viewLevel}
           onChange={(e) => setViewLevel(e.target.value)}
-          className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="project">Project Level</option>
           <option value="programme">Programme Level</option>
@@ -137,7 +137,7 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
 
       {viewLevel === 'programme' ? (
         rollups.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <FolderKanban className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">No programme benefits found</p>
           </div>
@@ -151,11 +151,11 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
               return (
                 <div
                   key={rollup.programme_id}
-                  className={`bg-gray-800 rounded-lg p-6 border-l-4 ${atRisk ? 'border-red-500' : 'border-green-500'}`}
+                  className={`bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 border-l-4 ${atRisk ? 'border-l-red-500' : 'border-l-green-500'}`}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-100 mb-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                         {rollup.programme_name}
                       </h3>
                       {rollup.programme_code && (
@@ -173,13 +173,13 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-gray-700/50 rounded-lg p-4">
                       <div className="text-sm text-gray-400 mb-1">Planned</div>
-                      <div className="text-2xl font-bold text-gray-100">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         ${planned.toLocaleString()}
                       </div>
                     </div>
                     <div className="bg-gray-700/50 rounded-lg p-4">
                       <div className="text-sm text-gray-400 mb-1">Forecast</div>
-                      <div className="text-2xl font-bold text-gray-100">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         ${(parseFloat(rollup.total_forecast_benefits || 0)).toLocaleString()}
                       </div>
                     </div>
@@ -200,7 +200,7 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
         )
       ) : (
         projectBenefits.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <Target className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">No project benefits found</p>
           </div>
@@ -212,11 +212,11 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
               return (
                 <div
                   key={project.id}
-                  className={`bg-gray-800 rounded-lg p-4 border-l-4 ${atRisk ? 'border-red-500' : 'border-green-500'}`}
+                  className={`bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 border-l-4 ${atRisk ? 'border-l-red-500' : 'border-l-green-500'}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-gray-100">{project.project_name}</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">{project.project_name}</h4>
                       {project.project_code && (
                         <p className="text-sm text-gray-400">{project.project_code}</p>
                       )}
@@ -224,7 +224,7 @@ const BenefitsRollup = memo(function BenefitsRollup({ organizationId }) {
                     <div className="flex gap-4 text-sm">
                       <div>
                         <span className="text-gray-400">Planned: </span>
-                        <span className="text-gray-100">${project.planned.toLocaleString()}</span>
+                        <span className="text-gray-900 dark:text-gray-100">${project.planned.toLocaleString()}</span>
                       </div>
                       <div>
                         <span className="text-gray-400">Realised: </span>

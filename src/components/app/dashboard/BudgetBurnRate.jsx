@@ -38,8 +38,8 @@ const BudgetBurnRate = memo(function BudgetBurnRate({ organizationId, projectId 
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Budget Burn Rate</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Budget Burn Rate</h3>
         <div className="h-80 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
@@ -49,8 +49,8 @@ const BudgetBurnRate = memo(function BudgetBurnRate({ organizationId, projectId 
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Budget Burn Rate</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Budget Burn Rate</h3>
         <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
           Error loading budget burn rate: {error}
         </div>
@@ -60,8 +60,8 @@ const BudgetBurnRate = memo(function BudgetBurnRate({ organizationId, projectId 
 
   if (!burnRateData || burnRateData.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Budget Burn Rate</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Budget Burn Rate</h3>
         <div className="h-80 flex items-center justify-center text-gray-400">
           <div className="text-center">
             <DollarSign className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -87,8 +87,8 @@ const BudgetBurnRate = memo(function BudgetBurnRate({ organizationId, projectId 
       );
 
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-lg">
-          <p className="text-gray-100 font-semibold mb-2">{project?.name || label}</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-lg">
+          <p className="text-gray-900 dark:text-gray-100 font-semibold mb-2">{project?.name || label}</p>
           <div className="space-y-1 text-sm">
             <p className="text-blue-400">Budget: ${payload[0]?.value.toLocaleString()}</p>
             <p className="text-yellow-400">Planned: ${payload[1]?.value.toLocaleString()}</p>
@@ -112,15 +112,15 @@ const BudgetBurnRate = memo(function BudgetBurnRate({ organizationId, projectId 
   const totalVariance = totalActual - totalBudget;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <DollarSign className="w-5 h-5 text-green-400" />
           Budget Burn Rate
         </h3>
         <div className="text-right">
           <div className="text-sm text-gray-400">Total Budget</div>
-          <div className="text-xl font-bold text-gray-100">${totalBudget.toLocaleString()}</div>
+          <div className="text-xl font-bold text-gray-900 dark:text-gray-100">${totalBudget.toLocaleString()}</div>
         </div>
       </div>
 

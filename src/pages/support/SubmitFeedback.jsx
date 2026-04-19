@@ -1,12 +1,25 @@
 import { useState } from 'react'
 import { MessageSquare, Send, Star } from 'lucide-react'
-import { supabase } from '../../services/supabaseClient'
 import { useToastContext } from '../../context/ToastContext'
+import { submitFeedback } from '../../services/feedbackService'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Textarea } from '../../components/ui/Textarea'
 import { Select } from '../../components/ui/Select'
 import { useNavigate } from 'react-router-dom'
+
+/** Map form option values to user_feedback.feedback_type (matches FeedbackWidget / RPC). */
+function mapFeedbackType(formValue) {
+  const map = {
+    general: 'general_feedback',
+    bug_report: 'bug_report',
+    feature_request: 'feature_request',
+    usability: 'usability_issue',
+    performance: 'performance_issue',
+    compliment: 'compliment',
+  }
+  return map[formValue] || 'general_feedback'
+}
 
 export default function SubmitFeedback() {
   const navigate = useNavigate()
@@ -23,37 +36,30 @@ export default function SubmitFeedback() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!formData.feedback_text?.trim()) {
+      toast?.error('Please enter your feedback')
+      return
+    }
+
     setLoading(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        if (toast) {
-          toast.error('Please log in to submit feedback')
-        }
+      const result = await submitFeedback(
+        null,
+        mapFeedbackType(formData.feedback_type),
+        formData.feedback_text.trim(),
+        rating || null,
+        typeof window !== 'undefined' ? `${window.location.origin}${formData.page_url || ''}` : formData.page_url,
+        null
+      )
+
+      if (!result?.success) {
+        toast?.error(result?.message || 'Failed to submit feedback. Please try again.')
         return
       }
 
-      const feedbackData = {
-        ...formData,
-        user_id: user.id,
-        rating: rating || null,
-        status: 'new',
-        page_url: window.location.pathname,
-        browser_info: navigator.userAgent
-      }
+      toast?.success('Thank you for your feedback!')
 
-      const { error } = await supabase
-        .from('user_feedback')
-        .insert([feedbackData])
-
-      if (error) throw error
-
-      if (toast) {
-        toast.success('Thank you for your feedback!')
-      }
-
-      // Reset form
       setFormData({
         feedback_type: 'general',
         feedback_text: '',
@@ -62,15 +68,12 @@ export default function SubmitFeedback() {
       })
       setRating(0)
 
-      // Optionally navigate away or show success message
       setTimeout(() => {
         navigate('/help')
       }, 2000)
     } catch (error) {
       console.error('Error submitting feedback:', error)
-      if (toast) {
-        toast.error('Failed to submit feedback. Please try again.')
-      }
+      toast?.error(error?.message || 'Failed to submit feedback. Please try again.')
     } finally {
       setLoading(false)
     }

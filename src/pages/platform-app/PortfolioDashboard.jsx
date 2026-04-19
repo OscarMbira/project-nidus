@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Briefcase, TrendingUp, DollarSign, Activity, RefreshCw, AlertCircle } from 'lucide-react'
 import { getPortfolios } from '../../services/portfolioService'
 import { getAllPortfolioProjects } from '../../services/portfolioService'
+import { platformDb } from '../../services/supabase/supabaseClient'
+import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
 
 function KpiCard({ label, value, icon: Icon, colour }) {
   return (
@@ -42,6 +44,7 @@ export default function PortfolioDashboard() {
   const [projectCount, setProjectCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [organizationId, setOrganizationId] = useState(null)
 
   async function load() {
     setLoading(true)
@@ -61,6 +64,23 @@ export default function PortfolioDashboard() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const { data: { user } } = await platformDb.auth.getUser()
+        if (!user || cancelled) return
+        const { data: userRecord } = await platformDb.from('users').select('id').eq('auth_user_id', user.id).single()
+        if (!userRecord || cancelled) return
+        const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).maybeSingle()
+        if (!cancelled && account?.id) setOrganizationId(account.id)
+      } catch (e) {
+        console.warn('[PortfolioDashboard] account resolve:', e)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const activeCount   = portfolios.filter(p => p.portfolio_status === 'active').length
   const totalBudget   = portfolios.reduce((s, p) => s + (p.total_budget || 0), 0)
@@ -117,6 +137,10 @@ export default function PortfolioDashboard() {
         <KpiCard label="Total Budget"      value={fmt(totalBudget)}   icon={DollarSign}  colour="bg-blue-600" />
         <KpiCard label="Avg Health Score"  value={`${Math.round(avgHealth)}%`} icon={TrendingUp} colour="bg-orange-600" />
       </div>
+
+      {organizationId && (
+        <PmoDashboardInsightsSection organizationId={organizationId} />
+      )}
 
       {/* Portfolio Health Table */}
       <div className="bg-gray-800 dark:bg-gray-800 light:bg-white border border-gray-700 dark:border-gray-700 light:border-gray-200 rounded-lg overflow-hidden">

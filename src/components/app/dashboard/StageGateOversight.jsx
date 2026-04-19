@@ -156,8 +156,8 @@ const StageGateOversight = memo(function StageGateOversight({ organizationId }) 
   if (loading) {
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">Stage Gate Oversight</h2>
-        <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Stage Gate Oversight</h2>
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-lg p-6 animate-pulse">
           <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -190,12 +190,12 @@ const StageGateOversight = memo(function StageGateOversight({ organizationId }) 
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-100">Stage Gate Oversight</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Stage Gate Oversight</h2>
         <div className="flex gap-2">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All Gates</option>
             <option value="pending">Pending</option>
@@ -207,12 +207,12 @@ const StageGateOversight = memo(function StageGateOversight({ organizationId }) 
       </div>
 
       {filteredGates.length === 0 ? (
-        <div className="bg-gray-800 rounded-lg p-12 text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
           <Clock className="h-12 w-12 text-gray-600 mx-auto mb-4" />
           <p className="text-gray-400">No stage gates found</p>
         </div>
       ) : (
-        <div className="bg-gray-800 rounded-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-700/50">
@@ -270,7 +270,7 @@ const StageGateOversight = memo(function StageGateOversight({ organizationId }) 
                           );
                         })()}
                       </td>
-                      <td className="px-4 py-3 text-gray-100">{gate.gate_name || gate.stage_name}</td>
+                      <td className="px-4 py-3 text-gray-900 dark:text-gray-100">{gate.gate_name || gate.stage_name}</td>
                       <td className="px-4 py-3 text-gray-300">{gate.stage_name || 'N/A'}</td>
                       <td className="px-4 py-3">
                         {gate.planned_date ? (

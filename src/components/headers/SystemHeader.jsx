@@ -17,11 +17,11 @@ export default function SystemHeader({
   systemName = 'Platform', // 'Platform' or 'Simulator'
   systemIcon: SystemIcon = null, // Optional custom icon component
   logoBgColor = 'bg-blue-600', // Background color for logo
-  headerBgClass = 'bg-gray-800 dark:bg-gray-900', // Header background
-  textColor = 'text-white', // Text color
-  subtextColor = 'text-gray-400', // Subtext color
-  hoverBgClass = 'hover:bg-gray-700', // Hover background
-  borderColor = 'border-gray-700 dark:border-gray-800', // Border color
+  headerBgClass = 'bg-white dark:bg-gray-900', // Header background
+  textColor = 'text-gray-900 dark:text-white', // Text color
+  subtextColor = 'text-gray-600 dark:text-gray-400', // Subtext color
+  hoverBgClass = 'hover:bg-gray-100 dark:hover:bg-gray-700', // Hover background
+  borderColor = 'border-gray-200 dark:border-gray-800', // Border color
   dashboardPath = '/platform/dashboard', // Dashboard path
   settingsPath = '/platform/settings', // Settings path
   profilePath = '/platform/profile', // Profile path
@@ -142,7 +142,7 @@ export default function SystemHeader({
       <div className="px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Mobile Search Bar */}
         {searchOpen && (
-          <div className="md:hidden py-3 border-b border-gray-700 dark:border-gray-800">
+          <div className="md:hidden py-3 border-b border-gray-200 dark:border-gray-800">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -204,7 +204,7 @@ export default function SystemHeader({
                 <div>
                   <h1 className="text-base sm:text-lg font-bold leading-tight">
                     {branding?.app_display_name ? (
-                      <span className="text-white">{branding.app_display_name}</span>
+                      <span className="text-gray-900 dark:text-white">{branding.app_display_name}</span>
                     ) : (
                       <>
                         <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
@@ -259,23 +259,13 @@ export default function SystemHeader({
                       to={link.path}
                       className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                         isActive
-                          ? `text-white bg-white bg-opacity-25 backdrop-blur-sm shadow-md font-semibold`
-                          : `text-gray-300 hover:text-white hover:bg-white hover:bg-opacity-10`
+                          ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
+                          : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
                       }`}
-                      style={isActive ? {
-                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                        color: '#ffffff',
-                        fontWeight: '600'
-                      } : {}}
                     >
                       {link.label}
                       {isActive && (
-                        <span 
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full"
-                          style={{ 
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.2)'
-                          }}
-                        ></span>
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-white rounded-full shadow-sm" />
                       )}
                     </Link>
                   )
@@ -389,7 +379,7 @@ export default function SystemHeader({
                       setUserMenuOpen(false)
                       handleLogout()
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:text-red-300 ${hoverBgClass} transition-colors text-left`}
+                    className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 ${hoverBgClass} transition-colors text-left`}
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
@@ -402,7 +392,7 @@ export default function SystemHeader({
 
         {/* Mobile Navigation Menu */}
         {mobileNavOpen && navLinks && navLinks.length > 0 && (
-          <div className="mobile-nav-container md:hidden border-t border-gray-700 dark:border-gray-800 bg-gray-800 dark:bg-gray-900">
+          <div className="mobile-nav-container md:hidden border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
             <nav className="px-4 py-3 space-y-1">
               {navLinks.map((link, index) => {
                 const isActive = isActiveLink(link.path)
@@ -413,8 +403,8 @@ export default function SystemHeader({
                     onClick={() => setMobileNavOpen(false)}
                     className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       isActive
-                        ? 'text-white bg-white bg-opacity-25 backdrop-blur-sm shadow-md font-semibold'
-                        : 'text-gray-300 hover:text-white hover:bg-white hover:bg-opacity-10'
+                        ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
                     }`}
                   >
                     {link.label}

@@ -7,91 +7,30 @@
  * - Lazy loading for all components (code splitting)
  * - Suspense boundaries for progressive loading
  * - Memoization to prevent unnecessary re-renders
- * - Deferred loading for below-the-fold components
- * - Parallel data loading
- * - Error boundaries
+ * - Overview: Executive Summary → AI Insights → Executive alerts (risk / resources / activity rail only on Portfolio / Programmes / Projects tabs)
+ * - Analytics: wave 1 = getExecutiveSummary + getKPIs (paint Overview quickly); wave 2 = getPmoExtendedMetrics (background)
+ * - Tab switches wrapped in startTransition (PMODashboardScopeTabs)
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense, memo } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { platformDb } from '../../services/supabase/supabaseClient';
+import { getExecutiveSummary, getKPIs, getPmoExtendedMetrics } from '../../services/dashboardService';
 import { Shield } from 'lucide-react';
+import PMODashboardScopeTabs from '../../components/app/dashboard/PMODashboardScopeTabs';
 
 // Lazy load all dashboard components for code splitting
 const ExecutiveSummary = lazy(() => import('../../components/app/dashboard/ExecutiveSummary'));
-const QuickActions = lazy(() => import('../../components/app/dashboard/QuickActions'));
-const ActivityFeed = lazy(() => import('../../components/app/dashboard/ActivityFeed'));
-const KPICards = lazy(() => import('../../components/app/dashboard/KPICards'));
-const ProjectHealthChart = lazy(() => import('../../components/app/dashboard/ProjectHealthChart'));
-const BudgetBurnRate = lazy(() => import('../../components/app/dashboard/BudgetBurnRate'));
-const RiskHeatMap = lazy(() => import('../../components/app/dashboard/RiskHeatMap'));
-const ResourceAllocationChart = lazy(() => import('../../components/app/dashboard/ResourceAllocationChart'));
-const PMOControlStrip = lazy(() => import('../../components/app/dashboard/PMOControlStrip'));
-const ProgrammeOverview = lazy(() => import('../../components/app/dashboard/ProgrammeOverview'));
-const PMCapacityWidget = lazy(() => import('../../components/app/dashboard/PMCapacityWidget'));
-const StageGateOversight = lazy(() => import('../../components/app/dashboard/StageGateOversight'));
-const ExceptionManagement = lazy(() => import('../../components/app/dashboard/ExceptionManagement'));
-const BenefitsRollup = lazy(() => import('../../components/app/dashboard/BenefitsRollup'));
-const DocumentComplianceWidget = lazy(() => import('../../components/app/dashboard/DocumentComplianceWidget'));
 const AIInsightsPanel = lazy(() => import('../../components/ai/AIInsightsPanel'));
+const PMOExecutiveAlertsPanel = lazy(() => import('../../components/app/dashboard/PMOExecutiveAlertsPanel'));
 
 // Loading fallback component
 const ComponentLoader = memo(() => (
-  <div className="flex items-center justify-center p-8 bg-gray-800 rounded-lg border border-gray-700">
+  <div className="flex items-center justify-center p-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
   </div>
 ));
 ComponentLoader.displayName = 'ComponentLoader';
-
-// Deferred component for below-the-fold content using Intersection Observer
-const DeferredActivityFeed = memo(function DeferredActivityFeed({ organizationId }) {
-  const [shouldLoad, setShouldLoad] = useState(false);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Use Intersection Observer for modern browsers (better performance than requestIdleCallback)
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setShouldLoad(true);
-          observer.disconnect();
-        }
-      },
-      {
-        rootMargin: '200px', // Start loading 200px before element enters viewport
-        threshold: 0.01
-      }
-    );
-
-    observer.observe(container);
-
-    // Fallback: Load after 2 seconds if Intersection Observer doesn't fire
-    const timeout = setTimeout(() => {
-      setShouldLoad(true);
-      observer.disconnect();
-    }, 2000);
-
-    return () => {
-      observer.disconnect();
-      clearTimeout(timeout);
-    };
-  }, []);
-
-  return (
-    <div ref={containerRef} className="mb-8">
-      {shouldLoad ? (
-        <Suspense fallback={<ComponentLoader />}>
-          <ActivityFeed organizationId={organizationId} limit={15} />
-        </Suspense>
-      ) : (
-        <ComponentLoader />
-      )}
-    </div>
-  );
-});
 
 const PlatformDashboard = memo(function PlatformDashboard() {
   const [loading, setLoading] = useState(true);
@@ -249,17 +188,17 @@ const PlatformDashboard = memo(function PlatformDashboard() {
     <div className="mb-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-100">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             Platform Dashboard
           </h1>
-          <p className="mt-2 text-gray-400">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Welcome back, {userName || 'User'}
           </p>
         </div>
         {isOrgAdmin && (
-          <div className="flex items-center gap-2 px-3 py-1 bg-blue-900/30 rounded-lg border border-blue-500/30">
-            <Shield className="h-5 w-5 text-blue-400" />
-            <span className="text-sm font-medium text-blue-200">
+          <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-500/30">
+            <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
               PMO Admin
             </span>
           </div>
@@ -271,12 +210,76 @@ const PlatformDashboard = memo(function PlatformDashboard() {
   // Memoize organizationId to prevent unnecessary prop changes
   const memoizedOrgId = useMemo(() => organizationId, [organizationId]);
 
+  /** Wave 1: executive + KPIs (fast). Wave 2: extended metrics in background — avoids blocking on EVM/CP/risk + heavy joins. */
+  const [pmoAnalyticsBundle, setPmoAnalyticsBundle] = useState(null);
+  const [pmoAnalyticsStatus, setPmoAnalyticsStatus] = useState('idle'); // idle | loading | ok | error
+  const [extendedMetricsLoading, setExtendedMetricsLoading] = useState(false);
+  const [pmoExtendedLoadError, setPmoExtendedLoadError] = useState(null);
+
+  useEffect(() => {
+    if (!memoizedOrgId) {
+      setPmoAnalyticsBundle(null);
+      setPmoAnalyticsStatus('idle');
+      setExtendedMetricsLoading(false);
+      setPmoExtendedLoadError(null);
+      return;
+    }
+    let cancelled = false;
+    setPmoAnalyticsStatus('loading');
+    setPmoExtendedLoadError(null);
+    setExtendedMetricsLoading(false);
+
+    (async () => {
+      const [e, k] = await Promise.all([
+        getExecutiveSummary(memoizedOrgId),
+        getKPIs(memoizedOrgId),
+      ]);
+      if (cancelled) return;
+      if (!e.success || !k.success) {
+        setPmoAnalyticsBundle(null);
+        setPmoAnalyticsStatus('error');
+        return;
+      }
+
+      setPmoAnalyticsBundle({
+        executive: e.data,
+        kpis: k.data,
+        extended: null,
+      });
+      setPmoAnalyticsStatus('ok');
+      setExtendedMetricsLoading(true);
+
+      try {
+        const x = await getPmoExtendedMetrics(memoizedOrgId);
+        if (cancelled) return;
+        if (x.success) {
+          setPmoAnalyticsBundle((prev) =>
+            prev ? { ...prev, extended: x.data } : null
+          );
+          setPmoExtendedLoadError(null);
+        } else {
+          setPmoExtendedLoadError(x.error || 'Extended metrics could not be loaded.');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setPmoExtendedLoadError(err?.message || 'Extended metrics could not be loaded.');
+        }
+      } finally {
+        if (!cancelled) setExtendedMetricsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [memoizedOrgId]);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -284,143 +287,75 @@ const PlatformDashboard = memo(function PlatformDashboard() {
 
   if (!organizationId) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-gray-400">No organization found. Please complete your profile setup.</p>
+          <p className="text-gray-600 dark:text-gray-400">No organization found. Please complete your profile setup.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header - Memoized */}
         {headerContent}
 
-        {/* PMO Control Strip - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <PMOControlStrip organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
+        <PMODashboardScopeTabs
+          organizationId={memoizedOrgId}
+          analyticsBundle={pmoAnalyticsStatus === 'ok' ? pmoAnalyticsBundle : null}
+          analyticsStatus={pmoAnalyticsStatus}
+          extendedAnalyticsLoading={extendedMetricsLoading}
+          isOrgAdmin={isOrgAdmin}
+        >
+          <>
+            {/* Executive Summary — header + Portfolios / Programmes / Projects / Tasks / Teams cards */}
+            <div className="mb-8">
+              {pmoAnalyticsStatus === 'loading' || pmoAnalyticsStatus === 'idle' ? (
+                <ComponentLoader />
+              ) : (
+                <Suspense fallback={<ComponentLoader />}>
+                  <ExecutiveSummary
+                    organizationId={memoizedOrgId}
+                    initialSummary={pmoAnalyticsStatus === 'ok' ? pmoAnalyticsBundle?.executive : null}
+                  />
+                </Suspense>
+              )}
+            </div>
 
-        {/* Document Compliance Widget - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <DocumentComplianceWidget organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
+            {/* Today's AI Insights — between Executive Summary and Executive alerts */}
+            <div className="mb-8">
+              <Suspense fallback={<ComponentLoader />}>
+                <AIInsightsPanel orgId={memoizedOrgId} />
+              </Suspense>
+              {isOrgAdmin && (
+                <p className="text-xs text-gray-600 dark:text-gray-500 mt-2">
+                  Org-wide: Manage proactive insights and AI settings in{' '}
+                  <button type="button" onClick={() => navigate('/platform/organization-admin')} className="text-purple-600 dark:text-purple-400 hover:underline">
+                    Organization Settings
+                  </button>
+                  .
+                </p>
+              )}
+            </div>
 
-        {/* Executive Summary - Critical, load first */}
-        <div className="mb-8">
-          <Suspense fallback={<ComponentLoader />}>
-            <ExecutiveSummary organizationId={memoizedOrgId} />
-          </Suspense>
-        </div>
-
-        {/* Phase 6.3: Today's Insights — rule-based, "Ask about this" opens widget */}
-        <div className="mb-8">
-          <Suspense fallback={<ComponentLoader />}>
-            <AIInsightsPanel orgId={memoizedOrgId} />
-          </Suspense>
-          {/* Phase 6.4: PMO Admin — org-wide AI health/settings link */}
-          {isOrgAdmin && (
-            <p className="text-xs text-gray-500 mt-2">
-              Org-wide: Manage proactive insights and AI settings in{' '}
-              <button type="button" onClick={() => navigate('/platform/organization-admin')} className="text-purple-400 hover:underline">
-                Organization Settings
-              </button>
-              .
-            </p>
-          )}
-        </div>
-
-        {/* Programme Overview - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <ProgrammeOverview organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
-
-        {/* PM Capacity Widget - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <PMCapacityWidget organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
-
-        {/* Stage Gate Oversight - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <StageGateOversight organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
-
-        {/* Exception Management - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <ExceptionManagement organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
-
-        {/* Benefits Roll-up - Only visible to PMO Admins */}
-        {isOrgAdmin && (
-          <div className="mb-8">
-            <Suspense fallback={<ComponentLoader />}>
-              <BenefitsRollup organizationId={memoizedOrgId} />
-            </Suspense>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <Suspense fallback={<ComponentLoader />}>
-            <QuickActions isOrgAdmin={isOrgAdmin} />
-          </Suspense>
-        </div>
-
-        {/* KPI Cards */}
-        <div className="mb-8">
-          <Suspense fallback={<ComponentLoader />}>
-            <KPICards organizationId={memoizedOrgId} />
-          </Suspense>
-        </div>
-
-        {/* Charts Grid - Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Suspense fallback={<ComponentLoader />}>
-            <ProjectHealthChart organizationId={memoizedOrgId} />
-          </Suspense>
-          <Suspense fallback={<ComponentLoader />}>
-            <BudgetBurnRate organizationId={memoizedOrgId} />
-          </Suspense>
-        </div>
-
-        {/* Charts Grid - Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Suspense fallback={<ComponentLoader />}>
-            <RiskHeatMap organizationId={memoizedOrgId} />
-          </Suspense>
-          <Suspense fallback={<ComponentLoader />}>
-            <ResourceAllocationChart organizationId={memoizedOrgId} />
-          </Suspense>
-        </div>
-
-        {/* Activity Feed - Defer loading until after initial render */}
-        <DeferredActivityFeed organizationId={memoizedOrgId} />
+            <div className="mb-8">
+              <Suspense fallback={<ComponentLoader />}>
+                <PMOExecutiveAlertsPanel
+                  loading={
+                    pmoAnalyticsStatus === 'loading' ||
+                    pmoAnalyticsStatus === 'idle' ||
+                    extendedMetricsLoading
+                  }
+                  alertsPayload={pmoAnalyticsStatus === 'ok' ? pmoAnalyticsBundle?.extended?.alerts : null}
+                  extendedLoadError={
+                    pmoAnalyticsStatus === 'ok' && !extendedMetricsLoading ? pmoExtendedLoadError : null
+                  }
+                />
+              </Suspense>
+            </div>
+          </>
+        </PMODashboardScopeTabs>
       </div>
     </div>
   );

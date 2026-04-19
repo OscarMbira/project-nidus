@@ -118,11 +118,11 @@ const ProgrammeOverview = memo(function ProgrammeOverview({ organizationId }) {
     return (
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-100">Programmes</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Programmes</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-gray-800 rounded-lg p-6 animate-pulse">
+            <div key={i} className="bg-gray-200 dark:bg-gray-800 rounded-lg p-6 animate-pulse">
               <div className="h-4 bg-gray-700 rounded w-3/4 mb-4"></div>
               <div className="h-8 bg-gray-700 rounded w-1/2"></div>
             </div>
@@ -146,7 +146,7 @@ const ProgrammeOverview = memo(function ProgrammeOverview({ organizationId }) {
     <>
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-100">Programmes</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Programmes</h2>
           <button
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -157,7 +157,7 @@ const ProgrammeOverview = memo(function ProgrammeOverview({ organizationId }) {
         </div>
 
         {programmes.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <FolderKanban className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 mb-4">No programmes found</p>
             <button
@@ -177,11 +177,11 @@ const ProgrammeOverview = memo(function ProgrammeOverview({ organizationId }) {
                 <div
                   key={programme.id}
                   onClick={() => setSelectedProgramme(programme)}
-                  className="bg-gray-800 rounded-lg p-6 hover:bg-gray-750 cursor-pointer transition-colors border border-gray-700 hover:border-gray-600"
+                  className="bg-white dark:bg-gray-800 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-700/80 cursor-pointer transition-colors border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-100 mb-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                         {programme.programme_name}
                       </h3>
                       {programme.programme_code && (

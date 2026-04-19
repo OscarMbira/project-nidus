@@ -6,6 +6,22 @@
 import { platformDb } from './supabase/supabaseClient';
 
 /**
+ * Supabase / fetch may surface aborts as DOMException, a plain Error, or PostgREST-shaped objects
+ * where `name` is not always `"AbortError"` (e.g. message "signal is aborted without reason").
+ */
+export function isAbortLike(error) {
+  if (error == null) return false;
+  if (typeof error === 'object') {
+    if (error.name === 'AbortError') return true;
+    if (error.code === 20) return true;
+    const msg = String(error.message || error.details || error.hint || '');
+    if (/abort|aborted|signal is aborted/i.test(msg)) return true;
+  }
+  if (typeof error === 'string' && /abort/i.test(error)) return true;
+  return false;
+}
+
+/**
  * Strip characters that break or widen PostgREST `ilike` filters.
  * @param {string} raw
  * @returns {string}
@@ -17,55 +33,72 @@ export function sanitizeProjectSearchTerm(raw) {
 
 /**
  * Get user's projects (projects they're assigned to)
- * Single round-trip via user_projects → projects embed (no N+1).
- * @param {string} userId - User ID
+ * Two-step query: membership ids, then `projects` — avoids PostgREST `user_projects → projects!inner`
+ * embed RLS edge cases (403 / permission errors when expanding nested rows).
+ * @param {string} userId - User ID (public.users.id)
  * @param {Object} filters - Filter options (status_id; search is applied client-side when set)
  * @param {{ signal?: AbortSignal }} [options]
  * @returns {Promise<Object>} Projects data
  */
 export async function getMyProjects(userId, filters = {}, options = {}) {
   try {
-    let query = platformDb
+    let upQuery = platformDb
       .from('user_projects')
-      .select(`
-        projects!inner (
-          id,
-          project_name,
-          project_code,
-          project_description,
-          status_id,
-          project_statuses (status_name, status_color),
-          planned_start_date,
-          planned_end_date,
-          actual_start_date,
-          actual_end_date,
-          health_status,
-          percentage_complete,
-          created_at,
-          is_deleted
-        )
-      `)
+      .select('project_id')
       .eq('user_id', userId)
-      .eq('is_deleted', false)
-      .eq('projects.is_deleted', false);
+      .eq('is_deleted', false);
 
     if (options.signal) {
-      query = query.abortSignal(options.signal);
+      upQuery = upQuery.abortSignal(options.signal);
     }
 
-    const { data: rows, error } = await query;
-
-    if (error) throw error;
-
-    const seen = new Map();
-    for (const row of rows || []) {
-      const p = row.projects;
-      if (p?.id && !seen.has(p.id)) {
-        seen.set(p.id, p);
+    const { data: upRows, error: upError } = await upQuery;
+    if (upError) {
+      if (isAbortLike(upError)) {
+        return { success: false, aborted: true, error: upError.message || '' };
       }
+      throw upError;
     }
 
-    let projects = Array.from(seen.values());
+    const ids = [...new Set((upRows || []).map((r) => r.project_id).filter(Boolean))];
+    if (ids.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    let projQuery = platformDb
+      .from('projects')
+      .select(`
+        id,
+        project_name,
+        project_code,
+        project_description,
+        status_id,
+        project_statuses (status_name, status_color),
+        planned_start_date,
+        planned_end_date,
+        actual_start_date,
+        actual_end_date,
+        health_status,
+        percentage_complete,
+        created_at,
+        is_deleted
+      `)
+      .in('id', ids)
+      .eq('is_deleted', false);
+
+    if (options.signal) {
+      projQuery = projQuery.abortSignal(options.signal);
+    }
+
+    const { data: rows, error } = await projQuery;
+    if (error) {
+      if (isAbortLike(error)) {
+        return { success: false, aborted: true, error: error.message || '' };
+      }
+      throw error;
+    }
+
+    let projects = rows || [];
     projects.sort((a, b) => {
       const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
       const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -90,11 +123,13 @@ export async function getMyProjects(userId, filters = {}, options = {}) {
 
     return { success: true, data: projects };
   } catch (error) {
-    if (error?.name === 'AbortError') {
-      return { success: false, aborted: true, error: error.message };
+    if (isAbortLike(error)) {
+      return { success: false, aborted: true, error: error?.message || '' };
     }
-    console.error('Error getting my projects:', error);
-    return { success: false, error: error.message };
+    const msg =
+      error?.message || error?.details || error?.hint || (typeof error === 'string' ? error : 'Unknown error');
+    console.error('Error getting my projects:', msg, error?.code != null ? { code: error.code } : '');
+    return { success: false, error: msg };
   }
 }
 
@@ -155,12 +190,17 @@ export async function getAllProjects(organizationId, filters = {}, options = {})
 
     const { data: projects, error } = await query;
 
-    if (error) throw error;
+    if (error) {
+      if (isAbortLike(error)) {
+        return { success: false, aborted: true, error: error.message || '' };
+      }
+      throw error;
+    }
 
     return { success: true, data: projects || [] };
   } catch (error) {
-    if (error?.name === 'AbortError') {
-      return { success: false, aborted: true, error: error.message };
+    if (isAbortLike(error)) {
+      return { success: false, aborted: true, error: error?.message || '' };
     }
     console.error('Error getting all projects:', error);
     return { success: false, error: error.message };

@@ -9,7 +9,7 @@ import { EntityHoldQueue } from '../../components/ui/EntityHoldQueue';
 
 export function PracticeStakeholdersOnHold() {
   return (
-    <div className="min-h-screen bg-gray-900 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6">
           <div className="flex items-center justify-between">

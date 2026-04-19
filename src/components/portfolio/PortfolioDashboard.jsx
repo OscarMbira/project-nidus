@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FolderKanban, Users, Target, TrendingUp, AlertTriangle, DollarSign, Calendar, Activity } from 'lucide-react';
 import { 
   getPortfolio, 
@@ -14,6 +14,7 @@ import BudgetUtilizationChart from './BudgetUtilizationChart';
 import RiskExposureIndicator from './RiskExposureIndicator';
 import TimelineView from './TimelineView';
 import StrategicAlignmentScore from './StrategicAlignmentScore';
+import PmoDashboardInsightsSection from '../app/dashboard/PmoDashboardInsightsSection';
 
 export default function PortfolioDashboard({ portfolioId }) {
   const [portfolio, setPortfolio] = useState(null);
@@ -88,6 +89,15 @@ export default function PortfolioDashboard({ portfolioId }) {
     budgetUtilization: metrics?.budget_utilization_percentage || 0,
     resourceUtilization: metrics?.resource_utilization_percentage || 0,
   };
+
+  const organizationId = useMemo(
+    () => projects[0]?.project?.account_id || null,
+    [projects]
+  );
+  const portfolioProjectIds = useMemo(
+    () => projects.map((r) => r.project?.id).filter(Boolean),
+    [projects]
+  );
 
   const statCards = [
     {
@@ -240,6 +250,13 @@ export default function PortfolioDashboard({ portfolioId }) {
           );
         })}
       </div>
+
+      {organizationId && portfolioProjectIds.length > 0 && (
+        <PmoDashboardInsightsSection
+          organizationId={organizationId}
+          filterProjectIds={portfolioProjectIds}
+        />
+      )}
 
       {/* Projects Summary */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">

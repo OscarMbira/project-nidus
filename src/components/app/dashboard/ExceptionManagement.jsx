@@ -140,8 +140,8 @@ const ExceptionManagement = memo(function ExceptionManagement({ organizationId }
   if (loading) {
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">Exception Management</h2>
-        <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Exception Management</h2>
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-lg p-6 animate-pulse">
           <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -167,7 +167,7 @@ const ExceptionManagement = memo(function ExceptionManagement({ organizationId }
     <>
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-100">Exception Management</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Exception Management</h2>
           <div className="flex gap-2">
             <button
               onClick={() => setShowRaiseModal(true)}
@@ -179,7 +179,7 @@ const ExceptionManagement = memo(function ExceptionManagement({ organizationId }
             <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1.5 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">Active</option>
               <option value="all">All</option>
@@ -190,7 +190,7 @@ const ExceptionManagement = memo(function ExceptionManagement({ organizationId }
         </div>
 
         {exceptions.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <p className="text-gray-400">No exceptions found</p>
           </div>
@@ -199,18 +199,18 @@ const ExceptionManagement = memo(function ExceptionManagement({ organizationId }
             {exceptions.map(exception => (
               <div
                 key={exception.id}
-                className={`bg-gray-800 rounded-lg p-4 border-l-4 ${
-                  exception.exception_level === 'CRITICAL' ? 'border-red-500' :
-                  exception.exception_level === 'HIGH' ? 'border-orange-500' :
-                  exception.exception_level === 'MEDIUM' ? 'border-yellow-500' :
-                  'border-blue-500'
+                className={`bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 border-l-4 ${
+                  exception.exception_level === 'CRITICAL' ? 'border-l-red-500' :
+                  exception.exception_level === 'HIGH' ? 'border-l-orange-500' :
+                  exception.exception_level === 'MEDIUM' ? 'border-l-yellow-500' :
+                  'border-l-blue-500'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       {getLevelIcon(exception.exception_level)}
-                      <h3 className="font-semibold text-gray-100">{exception.exception_title}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{exception.exception_title}</h3>
                       <div className={`px-2 py-1 rounded text-xs border ${getLevelColor(exception.exception_level)}`}>
                         {exception.exception_level}
                       </div>

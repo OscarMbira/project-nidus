@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { MessageSquare, X, Send, Camera, Image as ImageIcon } from 'lucide-react'
+import { MessageSquare, X, Send, Camera } from 'lucide-react'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { submitFeedback } from '../../services/feedbackService'
 import { useToastContext } from '../../context/ToastContext'
@@ -7,7 +7,53 @@ import Button from '../ui/Button.jsx'
 import Textarea from '../ui/Textarea.jsx'
 import Select from '../ui/Select.jsx'
 
-const SEND_TIMEOUT_MS = 20000
+const SEND_TIMEOUT_MS = 18000
+
+/** Shrink large data-URL images so the payload fits DB limits and avoids stalled uploads. */
+function compressImageDataUrl(dataUrl, maxSide = 1280, maxBytes = 450000) {
+  return new Promise((resolve) => {
+    if (!dataUrl?.startsWith('data:image')) {
+      resolve(null)
+      return
+    }
+    const img = new Image()
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        let w = img.naturalWidth || img.width
+        let h = img.naturalHeight || img.height
+        if (w > maxSide || h > maxSide) {
+          if (w > h) {
+            h = Math.round((h * maxSide) / w)
+            w = maxSide
+          } else {
+            w = Math.round((w * maxSide) / h)
+            h = maxSide
+          }
+        }
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          resolve(null)
+          return
+        }
+        ctx.drawImage(img, 0, 0, w, h)
+        let q = 0.82
+        let out = canvas.toDataURL('image/jpeg', q)
+        while (out.length > maxBytes && q > 0.38) {
+          q -= 0.07
+          out = canvas.toDataURL('image/jpeg', q)
+        }
+        resolve(out.length > maxBytes ? null : out)
+      } catch {
+        resolve(null)
+      }
+    }
+    img.onerror = () => resolve(null)
+    img.src = dataUrl
+  })
+}
 
 export default function FeedbackWidget() {
   const [isOpen, setIsOpen] = useState(false)
@@ -78,19 +124,34 @@ export default function FeedbackWidget() {
       return
     }
 
-    if (!userId) {
+    const { data: { user: sessionUser } } = await platformDb.auth.getUser()
+    if (!sessionUser?.id) {
       toast.error('You must be logged in to submit feedback')
       return
     }
+    if (sessionUser.id !== userId) {
+      setUserId(sessionUser.id)
+    }
 
     setIsSubmitting(true)
+    const safetyRelease = setTimeout(() => setIsSubmitting(false), SEND_TIMEOUT_MS + 12000)
     try {
+      let screenshotPayload = null
+      if (screenshot) {
+        screenshotPayload = await compressImageDataUrl(screenshot)
+        if (screenshot && !screenshotPayload) {
+          toast.error('Screenshot is too large after compression. Remove it or use a smaller image.')
+          return
+        }
+      }
+
       const sendPromise = submitFeedback(
-        userId,
+        sessionUser.id,
         formData.feedback_type,
         formData.feedback_text.trim(),
         formData.rating,
-        window.location.href
+        window.location.href,
+        screenshotPayload
       )
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Request timed out. Please check your connection and try again.')), SEND_TIMEOUT_MS)
@@ -117,7 +178,8 @@ export default function FeedbackWidget() {
         toast.error(error?.message || 'Failed to submit feedback')
       }
     } finally {
-      if (isMountedRef.current) setIsSubmitting(false)
+      clearTimeout(safetyRelease)
+      setIsSubmitting(false)
     }
   }
 

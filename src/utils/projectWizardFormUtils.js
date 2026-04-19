@@ -134,6 +134,59 @@ export function mapDbProjectToWizardForm(projectRow, methodologyId, budgetCatego
   }
 }
 
+/**
+ * Columns added in SQL v264 / v266 — older DBs may lack them; PostgREST then errors on UPDATE.
+ * See SQL/v484_projects_wizard_columns_if_missing.sql
+ */
+export const OPTIONAL_PROJECT_WIZARD_DB_COLUMNS = [
+  'executive_name',
+  'funding_authority_name',
+  'approving_authority_name',
+  'benefit_owner_name',
+  'tolerance_quality_description',
+  'tolerance_risk_description',
+  'tolerance_benefits_description',
+]
+
+/** Strip optional columns for retry when schema cache has no such columns. */
+export function omitOptionalProjectWizardColumns(payload) {
+  if (!payload || typeof payload !== 'object') return payload
+  const out = { ...payload }
+  for (const k of OPTIONAL_PROJECT_WIZARD_DB_COLUMNS) {
+    delete out[k]
+  }
+  return out
+}
+
+/**
+ * PostgREST / Supabase: unknown column or schema cache out of date.
+ * Error shape varies (message/details/hint/code or nested); stringify defensively.
+ */
+export function isSchemaCacheColumnError(err) {
+  if (err == null) return false
+  let m = ''
+  if (typeof err === 'string') m = err
+  else if (typeof err === 'object') {
+    m = [err.message, err.details, err.hint, err.code, err.status, err.statusText]
+      .filter(Boolean)
+      .join(' ')
+    try {
+      m += ' ' + JSON.stringify(err)
+    } catch {
+      /* ignore */
+    }
+  } else {
+    m = String(err)
+  }
+  return (
+    /schema cache/i.test(m) ||
+    /could not find the/i.test(m) ||
+    /unknown column|column.*does not exist|no such column/i.test(m) ||
+    /PGRST204|PGRST202/i.test(m) ||
+    /executive_name|funding_authority_name|approving_authority_name|benefit_owner_name/i.test(m)
+  )
+}
+
 /** Build supabase update payload from wizard form (matches ProjectsCreate projectData). */
 export function wizardFormToProjectUpdatePayload(formData, userId) {
   const cats = formData.budget_categories || []

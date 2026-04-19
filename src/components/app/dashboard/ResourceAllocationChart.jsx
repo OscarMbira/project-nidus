@@ -10,14 +10,16 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { Users, AlertTriangle } from 'lucide-react';
 import { getResourceAllocationData } from '../../../services/dashboardService';
 
-const ResourceAllocationChart = memo(function ResourceAllocationChart({ organizationId }) {
+const ResourceAllocationChart = memo(function ResourceAllocationChart({ organizationId, filterProjectIds = null }) {
   const [allocationData, setAllocationData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const filterKey = filterProjectIds?.length ? filterProjectIds.join(',') : '';
+
   useEffect(() => {
     loadAllocationData();
-  }, [organizationId]);
+  }, [organizationId, filterKey]);
 
   const loadAllocationData = async () => {
     if (!organizationId) return;
@@ -25,7 +27,11 @@ const ResourceAllocationChart = memo(function ResourceAllocationChart({ organiza
     setLoading(true);
     setError(null);
 
-    const result = await getResourceAllocationData(organizationId);
+    const opts =
+      Array.isArray(filterProjectIds) && filterProjectIds.length
+        ? { projectIds: filterProjectIds }
+        : {};
+    const result = await getResourceAllocationData(organizationId, opts);
 
     if (result.success) {
       setAllocationData(result.data);
@@ -38,8 +44,8 @@ const ResourceAllocationChart = memo(function ResourceAllocationChart({ organiza
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Resource Allocation</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Resource Allocation</h3>
         <div className="h-80 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
@@ -49,8 +55,8 @@ const ResourceAllocationChart = memo(function ResourceAllocationChart({ organiza
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Resource Allocation</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Resource Allocation</h3>
         <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
           Error loading resource allocation: {error}
         </div>
@@ -60,8 +66,8 @@ const ResourceAllocationChart = memo(function ResourceAllocationChart({ organiza
 
   if (!allocationData || allocationData.length === 0) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Resource Allocation</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Resource Allocation</h3>
         <div className="h-80 flex items-center justify-center text-gray-400">
           <div className="text-center">
             <Users className="w-12 h-12 mx-auto mb-2 opacity-50" />
@@ -97,8 +103,8 @@ const ResourceAllocationChart = memo(function ResourceAllocationChart({ organiza
       );
 
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 shadow-lg max-w-xs">
-          <p className="text-gray-100 font-semibold mb-2">{resource?.name || label}</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-lg max-w-xs">
+          <p className="text-gray-900 dark:text-gray-100 font-semibold mb-2">{resource?.name || label}</p>
           <div className="space-y-1 text-sm">
             <p className="text-gray-300">
               Total Allocation: <span className="font-semibold">{payload[0]?.value}%</span>
@@ -129,13 +135,13 @@ const ResourceAllocationChart = memo(function ResourceAllocationChart({ organiza
   const underUtilized = allocationData.filter(r => r.totalAllocation < 50).length;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <Users className="w-5 h-5 text-blue-400" />
           Resource Allocation
         </h3>
-        <div className="text-2xl font-bold text-gray-100">{allocationData.length} Resources</div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{allocationData.length} Resources</div>
       </div>
 
       {/* Summary Cards */}

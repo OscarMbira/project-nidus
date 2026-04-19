@@ -118,7 +118,7 @@ export default function QuickActions({ isOrgAdmin = false }) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-100">Quick Actions</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quick Actions</h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {actions.map((action) => (

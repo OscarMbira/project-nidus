@@ -22,6 +22,7 @@ import { getByProjectId } from '../services/projectBudgetCategoryService'
 import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
 import { getFundingSources } from '../services/fundingSourceService'
 import { getBudgetCategories } from '../services/budgetCategoryService'
+import PmoDashboardInsightsSection from '../components/app/dashboard/PmoDashboardInsightsSection'
 
 const PROJECT_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -314,7 +315,7 @@ export default function ProjectsDetail() {
       : (loadError?.message || 'Something went wrong while loading. You can return to the project list and try again.')
 
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center rounded-xl border border-gray-700 bg-gray-800/80 p-8">
             <h1 className="text-xl font-semibold text-gray-100 mb-3">{title}</h1>
@@ -464,6 +465,15 @@ export default function ProjectsDetail() {
           </div>
         )}
       </div>
+
+      {project.account_id && (
+        <div className="mb-6">
+          <PmoDashboardInsightsSection
+            organizationId={project.account_id}
+            filterProjectIds={[projectId]}
+          />
+        </div>
+      )}
 
       <ProjectPlanningOverview projectId={projectId} />
 

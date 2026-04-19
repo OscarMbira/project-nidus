@@ -44,8 +44,8 @@ const ProjectHealthChart = memo(function ProjectHealthChart({ organizationId }) 
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Project Health Distribution</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Project Health Distribution</h3>
         <div className="h-80 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
@@ -55,8 +55,8 @@ const ProjectHealthChart = memo(function ProjectHealthChart({ organizationId }) 
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Project Health Distribution</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Project Health Distribution</h3>
         <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
           Error loading project health data: {error}
         </div>
@@ -77,8 +77,8 @@ const ProjectHealthChart = memo(function ProjectHealthChart({ organizationId }) 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg">
-          <p className="text-gray-100 font-semibold">{payload[0].name}</p>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg">
+          <p className="text-gray-900 dark:text-gray-100 font-semibold">{payload[0].name}</p>
           <p className="text-gray-300">
             {payload[0].value} projects ({Math.round((payload[0].value / totalProjects) * 100)}%)
           </p>
@@ -89,13 +89,13 @@ const ProjectHealthChart = memo(function ProjectHealthChart({ organizationId }) 
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <Heart className="w-5 h-5 text-red-400" />
           Project Health Distribution
         </h3>
-        <div className="text-2xl font-bold text-gray-100">{totalProjects} Projects</div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalProjects} Projects</div>
       </div>
 
       {totalProjects === 0 ? (

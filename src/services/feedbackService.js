@@ -6,41 +6,122 @@
 
 import { platformDb } from './supabase/supabaseClient'
 
+function buildBrowserInfo() {
+  if (typeof navigator === 'undefined') return {}
+  return {
+    platform: navigator.platform,
+    language: navigator.language,
+    cookieEnabled: navigator.cookieEnabled,
+  }
+}
+
+function isRpcUnavailableError(error) {
+  const code = error?.code
+  const msg = String(error?.message || error?.details || '')
+  if (code === 'PGRST202') return true
+  if (/could not find the function|function public\.submit_user_feedback does not exist/i.test(msg)) return true
+  return false
+}
+
+/**
+ * Direct REST insert — may fail with 403 if RLS blocks public.users or user_feedback (see SQL v467/v468).
+ */
+/** REST insert — no screenshot column required (screenshots only via RPC v468). */
+async function submitFeedbackViaRest(feedbackType, feedbackText, rating, pageUrl) {
+  const { data: { user } } = await platformDb.auth.getUser()
+  if (!user) {
+    return { success: false, message: 'You must be logged in to submit feedback' }
+  }
+
+  const { data: profile, error: profileError } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+
+  if (profileError) {
+    console.error('[feedback] resolve users.id:', profileError)
+    return { success: false, message: profileError.message || 'Could not load your user profile.' }
+  }
+  if (!profile?.id) {
+    return {
+      success: false,
+      message: 'Your account profile was not found. Complete onboarding or contact support.',
+    }
+  }
+
+  const { data, error } = await platformDb
+    .from('user_feedback')
+    .insert({
+      user_id: profile.id,
+      feedback_type: feedbackType,
+      feedback_text: feedbackText,
+      rating,
+      page_url: pageUrl || (typeof window !== 'undefined' ? window.location.href : null),
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      browser_info: buildBrowserInfo(),
+      status: 'new',
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+
+  return { success: true, data }
+}
+
 /**
  * Submit user feedback.
- * Uses the current session's user id for the insert so RLS (auth.uid() = user_id) passes.
+ * Prefer DB RPC `submit_user_feedback` (SQL v468) — avoids client 403 on users SELECT / insert when RLS is tight.
+ * Falls back to REST insert when the RPC is not deployed yet.
  */
-export async function submitFeedback(userId, feedbackType, feedbackText, rating = null, pageUrl = null) {
+export async function submitFeedback(
+  _userId,
+  feedbackType,
+  feedbackText,
+  rating = null,
+  pageUrl = null,
+  screenshotData = null
+) {
   try {
     const { data: { user } } = await platformDb.auth.getUser()
     if (!user) {
       return { success: false, message: 'You must be logged in to submit feedback' }
     }
-    // Use session user id so RLS policy (auth.uid() = user_id) is satisfied
-    const insertUserId = user.id
 
-    const { data, error } = await platformDb
-      .from('user_feedback')
-      .insert({
-        user_id: insertUserId,
-        feedback_type: feedbackType,
-        feedback_text: feedbackText,
-        rating: rating,
-        page_url: pageUrl || (typeof window !== 'undefined' ? window.location.href : null),
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
-        browser_info: {
-          platform: typeof navigator !== 'undefined' ? navigator.platform : null,
-          language: typeof navigator !== 'undefined' ? navigator.language : null,
-          cookieEnabled: typeof navigator !== 'undefined' ? navigator.cookieEnabled : null
-        },
-        status: 'new'
-      })
-      .select()
-      .single()
+    const browserInfo = buildBrowserInfo()
 
-    if (error) throw error
+    const { data: rpcId, error: rpcError } = await platformDb.rpc('submit_user_feedback', {
+      p_feedback_type: feedbackType,
+      p_feedback_text: feedbackText,
+      p_rating: rating,
+      p_page_url: pageUrl || (typeof window !== 'undefined' ? window.location.href : null),
+      p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      p_browser_info: browserInfo,
+      p_screenshot_data: screenshotData || null,
+    })
 
-    return { success: true, data }
+    if (!rpcError && rpcId) {
+      return { success: true, data: { id: rpcId } }
+    }
+
+    if (rpcError && !isRpcUnavailableError(rpcError)) {
+      const msg =
+        rpcError.message ||
+        rpcError.details ||
+        'Could not submit feedback. Try again or contact support.'
+      console.error('[feedback] submit_user_feedback RPC:', rpcError)
+      return { success: false, message: msg }
+    }
+
+    if (rpcError) {
+      console.warn('[feedback] RPC not available, falling back to REST insert:', rpcError.message)
+    }
+
+    if (screenshotData) {
+      console.warn('[feedback] Screenshot dropped: apply SQL v468 (submit_user_feedback RPC) to store attachments.')
+    }
+    return await submitFeedbackViaRest(feedbackType, feedbackText, rating, pageUrl)
   } catch (error) {
     console.error('Error submitting feedback:', error)
     return { success: false, message: error?.message || 'Failed to submit feedback' }

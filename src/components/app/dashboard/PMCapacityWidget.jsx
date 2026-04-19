@@ -174,8 +174,8 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
   if (loading) {
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">PM Capacity</h2>
-        <div className="bg-gray-800 rounded-lg p-6 animate-pulse">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">PM Capacity</h2>
+        <div className="bg-gray-200 dark:bg-gray-800 rounded-lg p-6 animate-pulse">
           <div className="h-4 bg-gray-700 rounded w-1/4 mb-4"></div>
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -204,7 +204,7 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
     <>
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-100">PM Capacity</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">PM Capacity</h2>
           {breachedPMs.length > 0 && (
             <div className="flex items-center gap-2 px-3 py-1 bg-red-900/20 border border-red-500/50 rounded-lg">
               <AlertTriangle className="h-4 w-4 text-red-400" />
@@ -216,12 +216,12 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
         </div>
 
         {pmData.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-12 text-center border border-gray-200 dark:border-gray-700">
             <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400">No Project Managers found</p>
           </div>
         ) : (
-          <div className="bg-gray-800 rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-700/50">
@@ -240,7 +240,7 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-400" />
                           <div>
-                            <div className="text-gray-100 font-medium">{pm.pm_name}</div>
+                            <div className="text-gray-900 dark:text-gray-100 font-medium">{pm.pm_name}</div>
                             {pm.pm_email && (
                               <div className="text-xs text-gray-400">{pm.pm_email}</div>
                             )}
@@ -248,7 +248,7 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-gray-100 font-semibold">
+                        <span className="text-gray-900 dark:text-gray-100 font-semibold">
                           {pm.active_projects_count || 0}
                         </span>
                       </td>

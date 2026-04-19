@@ -39,6 +39,7 @@ export default function AIChatWidget() {
 
   const messagesEndRef = useRef(null)
   const inputRef       = useRef(null)
+  const initPromiseRef = useRef(null)
   const navigate       = useNavigate()
   const messagePairCount = Math.floor(messages.filter((m) => m.role === 'assistant').length)
 
@@ -87,56 +88,78 @@ export default function AIChatWidget() {
         ? 'Querying your data…'
         : statusText
 
+  /**
+   * Loads auth, projects, and active conversation. Returns { user, conversationId } for callers
+   * that need IDs before React state updates (e.g. send before state flush). In-flight calls share one promise.
+   */
   const initWidget = async () => {
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
-    if (authError || !authUser) {
-      setError('Not authenticated. Please log in and try again.')
-      return
+    if (initPromiseRef.current) {
+      return initPromiseRef.current
     }
-    setUser(authUser)
-
-    const [userData, projs, conv, resolvedOrgId] = await Promise.all([
-      platformDb.from('users').select('full_name').eq('auth_user_id', authUser.id).maybeSingle(),
-      platformDb.from('projects').select('id, project_name, project_code')
-        .eq('is_deleted', false).order('project_name').limit(20),
-      getActiveConversation(authUser.id),
-      getOrgIdForUser(authUser.id),
-    ])
-    setOrgId(resolvedOrgId || null)
-    if (resolvedOrgId) {
-      getOrgAiSettings(resolvedOrgId).then((s) => setAiDataMode(s?.data_answer_mode || 'template'))
-    }
-
-    setUserInfo({ userName: userData?.data?.full_name || authUser.email, orgName: 'Organisation', role: 'Project Manager' })
-    setProjects(projs.data || [])
-
-    if (conv) {
-      setConversationId(conv.id)
-      setSelectedProject(conv.project_id || null)
-      // Load messages + conversation list in parallel
-      const [msgs, convList] = await Promise.all([
-        loadMessages(conv.id),
-        listConversations(authUser.id),
-      ])
-      setMessages(msgs)
-      setConversations(convList)
-    } else {
-      const { id: newId, error: convErr } = await createConversation(authUser.id, null)
-      if (!newId) {
-        const detail = convErr ? ` DB error ${convErr.code}: ${convErr.message}` : ' (unknown error)'
-        setError(`AI session could not be created.${detail} — Run SQL/v326_ai_diagnostic.sql in Supabase to fix.`)
-        return
+    const run = (async () => {
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      if (authError || !authUser) {
+        setError('Not authenticated. Please log in and try again.')
+        return null
       }
-      setConversationId(newId)
-      setMessages([])
-      listConversations(authUser.id).then(setConversations)
+      setUser(authUser)
+
+      const [userData, projs, conv, resolvedOrgId] = await Promise.all([
+        platformDb.from('users').select('full_name').eq('auth_user_id', authUser.id).maybeSingle(),
+        platformDb.from('projects').select('id, project_name, project_code')
+          .eq('is_deleted', false).order('project_name').limit(20),
+        getActiveConversation(authUser.id),
+        getOrgIdForUser(authUser.id),
+      ])
+      setOrgId(resolvedOrgId || null)
+      if (resolvedOrgId) {
+        getOrgAiSettings(resolvedOrgId).then((s) => setAiDataMode(s?.data_answer_mode || 'template'))
+      }
+
+      setUserInfo({ userName: userData?.data?.full_name || authUser.email, orgName: 'Organisation', role: 'Project Manager' })
+      setProjects(projs.data || [])
+
+      let finalConversationId = null
+
+      if (conv) {
+        finalConversationId = conv.id
+        setConversationId(conv.id)
+        setSelectedProject(conv.project_id || null)
+        const [msgs, convList] = await Promise.all([
+          loadMessages(conv.id),
+          listConversations(authUser.id),
+        ])
+        setMessages(msgs)
+        setConversations(convList)
+      } else {
+        const { id: newId, error: convErr } = await createConversation(authUser.id, null)
+        if (!newId) {
+          const detail = convErr ? ` DB error ${convErr.code}: ${convErr.message}` : ' (unknown error)'
+          setError(`AI session could not be created.${detail} — Run SQL/v326_ai_diagnostic.sql in Supabase to fix.`)
+          return null
+        }
+        finalConversationId = newId
+        setConversationId(newId)
+        setMessages([])
+        listConversations(authUser.id).then(setConversations)
+      }
+
+      return { user: authUser, conversationId: finalConversationId }
+    })()
+
+    initPromiseRef.current = run
+    try {
+      return await run
+    } finally {
+      initPromiseRef.current = null
     }
   }
 
   // ── New conversation ──────────────────────────────────────────────────────
   const handleNewConversation = async () => {
     if (!user) return
-    const newId = await createConversation(user.id, selectedProject)
+    const { id: newId } = await createConversation(user.id, selectedProject)
+    if (!newId) return
     setConversationId(newId)
     setMessages([])
     setStreamingText('')
@@ -161,8 +184,17 @@ export default function AIChatWidget() {
   const handleSend = async (questionOverride) => {
     const question = (questionOverride || inputValue).trim()
     if (!question || isLoading) return
-    if (!user || !conversationId) {
-      setError('AI Assistant is not ready. Please refresh the page and try again.')
+
+    let effectiveUser = user
+    let effectiveConversationId = conversationId
+    if (!effectiveUser || !effectiveConversationId) {
+      setError('')
+      const session = await initWidget()
+      effectiveUser = session?.user ?? user
+      effectiveConversationId = session?.conversationId ?? conversationId
+    }
+    if (!effectiveUser || !effectiveConversationId) {
+      setError((prev) => prev || 'AI Assistant is not ready. Please refresh the page and try again.')
       return
     }
 
@@ -177,11 +209,11 @@ export default function AIChatWidget() {
     setMessages((prev) => [...prev, userMsg])
 
     // Persist user message fire-and-forget (don't block AI call)
-    saveMessage(conversationId, 'user', question).then((savedId) => {
+    saveMessage(effectiveConversationId, 'user', question).then((savedId) => {
       if (savedId) setMessages((prev) => prev.map((m) => m.id === tmpId ? { ...m, id: savedId } : m))
     })
     // Phase 5.2: auto-title from first message (truncate to 50 chars)
-    if (messages.length === 0) updateConversationTitle(conversationId, question)
+    if (messages.length === 0) updateConversationTitle(effectiveConversationId, question)
 
     // History snapshot (before new message) — last 10 for context (Phase 5.1)
     const history = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }))
@@ -190,8 +222,8 @@ export default function AIChatWidget() {
       let finalContent = ''
       const result = await sendMessage({
         question,
-        conversationId,
-        userId:    user.id,
+        conversationId: effectiveConversationId,
+        userId:    effectiveUser.id,
         projectId: selectedProject,
         orgId:     orgId ?? null,
         userInfo,
@@ -218,7 +250,7 @@ export default function AIChatWidget() {
       setStatusText('')
 
       // Update conversation title lazily (non-blocking)
-      listConversations(user.id).then(setConversations)
+      listConversations(effectiveUser.id).then(setConversations)
     } catch (err) {
       const raw = err?.message ?? ''
       const friendly = /bodystreambuffer|aborted|timeout/i.test(raw)

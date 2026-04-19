@@ -28,14 +28,16 @@ const activityColors = {
   default: 'text-gray-400',
 };
 
-const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10 }) {
+const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10, filterProjectIds = null }) {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const filterKey = filterProjectIds?.length ? filterProjectIds.join(',') : '';
+
   useEffect(() => {
     loadActivities();
-  }, [organizationId, limit]);
+  }, [organizationId, limit, filterKey]);
 
   const loadActivities = async () => {
     if (!organizationId) return;
@@ -43,7 +45,11 @@ const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10 }) 
     setLoading(true);
     setError(null);
 
-    const result = await getRecentActivity(organizationId, limit);
+    const opts =
+      Array.isArray(filterProjectIds) && filterProjectIds.length
+        ? { projectIds: filterProjectIds }
+        : {};
+    const result = await getRecentActivity(organizationId, limit, opts);
 
     if (result.success) {
       setActivities(result.data);
@@ -65,8 +71,8 @@ const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10 }) 
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Recent Activity</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Recent Activity</h3>
         <div className="space-y-4">
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
@@ -84,8 +90,8 @@ const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10 }) 
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Recent Activity</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Recent Activity</h3>
         <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
           Error loading activity feed: {error}
         </div>
@@ -94,9 +100,9 @@ const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10 }) 
   }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <Activity className="w-5 h-5" />
           Recent Activity
         </h3>
@@ -126,7 +132,7 @@ const ActivityFeed = memo(function ActivityFeed({ organizationId, limit = 10 }) 
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-200">
+                  <p className="text-sm text-gray-800 dark:text-gray-200">
                     <span className="font-semibold">{activity.user?.full_name || 'Unknown'}</span>
                     {' '}
                     <span className={colorClass}>{activity.action}</span>

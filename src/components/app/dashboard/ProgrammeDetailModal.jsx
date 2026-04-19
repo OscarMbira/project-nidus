@@ -182,13 +182,13 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div className="flex items-center gap-3">
             <FolderKanban className="h-6 w-6 text-blue-400" />
             <div>
-              <h3 className="text-xl font-semibold text-gray-100">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {programme.programme_name}
               </h3>
               {programme.programme_code && (
@@ -198,7 +198,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-100"
+            className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <X className="h-6 w-6" />
           </button>
@@ -211,7 +211,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div className="bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm text-gray-400 mb-1">Status</div>
-                <div className="text-lg font-semibold text-gray-100">
+                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {programme.programme_status || 'Unknown'}
                 </div>
               </div>
@@ -219,14 +219,14 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
                 <div className="text-sm text-gray-400 mb-1">RAG Status</div>
                 <div className="flex items-center gap-2">
                   <div className={`w-3 h-3 rounded-full ${getRAGColor(rollup?.programme_rag_status || programme.rag_status)}`} />
-                  <span className="text-lg font-semibold text-gray-100">
+                  <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     {(rollup?.programme_rag_status || programme.rag_status || 'green').toUpperCase()}
                   </span>
                 </div>
               </div>
               <div className="bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm text-gray-400 mb-1">Total Projects</div>
-                <div className="text-lg font-semibold text-gray-100">
+                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {rollup?.total_projects || projects.length || 0}
                 </div>
               </div>
@@ -236,12 +236,12 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
           {/* Roll-up Metrics */}
           {rollup && (
             <div className="mb-6">
-              <h4 className="text-lg font-semibold text-gray-100 mb-4">Roll-up Metrics</h4>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Roll-up Metrics</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <FolderKanban className="h-5 w-5 text-blue-400" />
-                    <span className="font-medium text-gray-100">Projects</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">Projects</span>
                   </div>
                   <div className="text-sm text-gray-300">
                     Active: {rollup.active_projects || 0} | 
@@ -264,7 +264,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className="h-5 w-5 text-green-400" />
-                    <span className="font-medium text-gray-100">Budget</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">Budget</span>
                   </div>
                   <div className="text-sm text-gray-300">
                     Total: ${(rollup.total_budget || 0).toLocaleString()}
@@ -278,7 +278,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Target className="h-5 w-5 text-purple-400" />
-                    <span className="font-medium text-gray-100">Benefits</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">Benefits</span>
                   </div>
                   <div className="text-sm text-gray-300">
                     Planned: ${(rollup.total_planned_benefits || 0).toLocaleString()}
@@ -291,7 +291,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
                 <div className="bg-gray-700/50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertCircle className="h-5 w-5 text-red-400" />
-                    <span className="font-medium text-gray-100">Risks & Exceptions</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">Risks & Exceptions</span>
                   </div>
                   <div className="text-sm text-gray-300">
                     Active Risks: {rollup.active_risks_count || 0}
@@ -307,7 +307,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
           {/* Projects List */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="text-lg font-semibold text-gray-100">Assigned Projects</h4>
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Assigned Projects</h4>
               <button
                 onClick={() => {
                   setShowAssignProject(true);
@@ -325,7 +325,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
                 <select
                   value={selectedProjectId}
                   onChange={(e) => setSelectedProjectId(e.target.value)}
-                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 mb-3"
+                  className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 mb-3"
                 >
                   <option value="">Select a project...</option>
                   {availableProjects.map(project => (
@@ -367,7 +367,7 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
                     className="bg-gray-700/50 rounded-lg p-4 flex items-center justify-between hover:bg-gray-700 transition-colors"
                   >
                     <div className="flex-1">
-                      <div className="font-medium text-gray-100">{project.project_name}</div>
+                      <div className="font-medium text-gray-900 dark:text-gray-100">{project.project_name}</div>
                       {project.project_code && (
                         <div className="text-sm text-gray-400">{project.project_code}</div>
                       )}

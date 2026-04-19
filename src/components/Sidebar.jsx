@@ -148,6 +148,7 @@ const iconMap = {
   'calendar': Calendar,
   'wrench': Wrench,
   'folder-closed': FolderClosed,
+  'menu': Menu,
 }
 
 function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null, planningOpenFindingsCount = null }) {
@@ -177,6 +178,23 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
   // Brand active colour (item-level override > brand colour > blue fallback)
   const brandActiveColor = menuItem.menu_color || branding?.sidebar_active_color || '#3B82F6'
   const brandTextColor   = branding?.sidebar_text_color || null
+
+  const routePath = menuItem.route_path || ''
+  const isPlanIntelligenceNav =
+    menuItem.menu_code === 'planning_intelligence' ||
+    menuItem.menu_code === 'pmo_intel_rules' ||
+    /planning\/intelligence/i.test(routePath)
+
+  let badgeText = menuItem.badge_text?.trim?.() ? menuItem.badge_text.trim() : null
+  let badgeColorResolved = menuItem.badge_color || '#EF4444'
+  if (
+    isPlanIntelligenceNav &&
+    typeof planningOpenFindingsCount === 'number' &&
+    planningOpenFindingsCount > 0
+  ) {
+    badgeText = planningOpenFindingsCount > 99 ? '99+' : String(planningOpenFindingsCount)
+    badgeColorResolved = menuItem.badge_color || '#D97706'
+  }
 
   const handleClick = (e) => {
     if (hasChildren) {
@@ -333,6 +351,7 @@ export default function Sidebar({ isOpen, onClose }) {
           fixed top-14 sm:top-16 left-0 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] w-64 sm:w-72 shadow-lg z-40
           transform transition-transform duration-300 ease-in-out
           lg:translate-x-0 lg:h-[calc(100vh-4rem)] lg:w-80
+          ${!branding?.sidebar_bg_color ? 'bg-white dark:bg-gray-900' : ''}
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
         style={branding?.sidebar_bg_color

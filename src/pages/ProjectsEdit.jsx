@@ -13,6 +13,8 @@ import {
   getEmptyWizardFormData,
   mapDbProjectToWizardForm,
   wizardFormToProjectUpdatePayload,
+  omitOptionalProjectWizardColumns,
+  isSchemaCacheColumnError,
 } from '../utils/projectWizardFormUtils'
 import {
   getProjectPortfolio,
@@ -24,15 +26,49 @@ import {
   addProjectToProgramme,
   removeProjectFromProgramme,
 } from '../services/programmeService'
+import { useToastContext } from '../context/ToastContext'
+
+/** Prevent hung Supabase / auth calls from leaving the UI stuck on "Saving…" */
+const REQUEST_MS = {
+  appProfile: 30000,
+  projectUpdate: 45000,
+  methodology: 30000,
+  budgetSave: 95000,
+  portfolioOp: 30000,
+  /** Hard cap for the whole save pipeline (auth → DB → assignments) */
+  saveTotal: 120000,
+}
+
+/** Prefer local session (fast); only call getUser() if no session. */
+async function resolveAuthenticatedUser(client) {
+  const { data: { session }, error: sessionErr } = await client.auth.getSession()
+  if (sessionErr) throw sessionErr
+  if (session?.user) return session.user
+
+  const { data: { user }, error: userErr } = await client.auth.getUser()
+  if (userErr) throw userErr
+  return user ?? null
+}
+
+function withTimeout(promise, ms, message) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms)
+    }),
+  ])
+}
 
 export default function ProjectsEdit() {
   const { projectId, routeKey, loading: routeResolving, error: routeError } = usePlatformProjectId()
   const navigate = useNavigate()
+  const toast = useToastContext()
   const [project, setProject] = useState(null)
   const [activeTab, setActiveTab] = useState('details')
   const [formData, setFormData] = useState(() => getEmptyWizardFormData())
   const formDataRef = useRef(formData)
   formDataRef.current = formData
+  const saveFailsafeRef = useRef(null)
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
@@ -243,6 +279,7 @@ export default function ProjectsEdit() {
     setFormData((prev) => ({ ...prev, [nameField]: value || '', [idField]: '' }))
   }, [])
 
+  /** Core fields required to persist an edit. Governance/tolerances can be completed in other tabs. */
   const validateForm = useCallback(() => {
     const data = formDataRef.current
     const newErrors = {}
@@ -260,35 +297,29 @@ export default function ProjectsEdit() {
       newErrors.methodology_id = 'Please select a methodology'
     }
 
-    if (!(data.executive_user_id || (data.executive_name && data.executive_name.trim()))) {
-      newErrors.executive_name = 'Project Executive / Sponsor is required'
-    }
-    if (!(data.funding_authority_user_id || (data.funding_authority_name && data.funding_authority_name.trim()))) {
-      newErrors.funding_authority_name = 'Funding Authority is required'
-    }
-    if (!(data.approving_authority_user_id || (data.approving_authority_name && data.approving_authority_name.trim()))) {
-      newErrors.approving_authority_name = 'Approving Authority is required'
-    }
-
     if (data.start_date && data.end_date) {
       if (new Date(data.start_date) > new Date(data.end_date)) {
         newErrors.end_date = 'End date must be after start date'
       }
     }
 
-    const timeLines = (data.tolerance_time_days || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
-    const costLines = (data.tolerance_cost_percentage || '').split(/\r?\n/).map((s) => s.trim()).filter(Boolean)
-    if (timeLines.length === 0 && costLines.length === 0) {
-      newErrors.tolerances = 'At least one tolerance (time or cost) must be defined for authorisation'
-    }
-
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    const messages = Object.values(newErrors).filter(Boolean)
+    return { ok: messages.length === 0, messages }
   }, [methodologies.length])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!validateForm()) return
+    const validation = validateForm()
+    if (!validation.ok) {
+      toast.error(validation.messages[0] || 'Please fix the highlighted fields before saving.')
+      return
+    }
+
+    if (saveFailsafeRef.current) {
+      clearTimeout(saveFailsafeRef.current)
+      saveFailsafeRef.current = null
+    }
 
     try {
       setSaving(true)
@@ -298,32 +329,69 @@ export default function ProjectsEdit() {
         return next
       })
 
-      const authResult = await Promise.race([
-        platformDb.auth.getUser(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Sign-in check timed out. Please refresh and try again.')), 20000),
-        ),
-      ])
-      const {
-        data: { user },
-        error: authError,
-      } = authResult
-      if (authError) throw authError
+      // Last-resort UI reset if anything hangs without rejecting (should be extremely rare)
+      saveFailsafeRef.current = window.setTimeout(() => {
+        saveFailsafeRef.current = null
+        setSaving(false)
+        toast.error('Save timed out. Please check your connection and try again.')
+      }, REQUEST_MS.saveTotal + 10000)
+
+      await withTimeout(
+        (async () => {
+      const user = await resolveAuthenticatedUser(platformDb)
       if (!user) throw new Error('User not authenticated')
 
-      const fd = formDataRef.current
-      const updatePayload = wizardFormToProjectUpdatePayload(fd, user.id)
+      const { data: appUserRow, error: profileErr } = await withTimeout(
+        platformDb.from('users').select('id').eq('auth_user_id', user.id).maybeSingle(),
+        REQUEST_MS.appProfile,
+        'Could not load your user profile (timed out). Try again.',
+      )
+      if (profileErr) throw profileErr
+      if (!appUserRow?.id) {
+        throw new Error('Your user profile was not found. Complete onboarding or contact support.')
+      }
 
-      const { error: projectErr } = await platformDb.from('projects').update(updatePayload).eq('id', projectId)
+      const fd = formDataRef.current
+      // projects.updated_by references public.users(id), not auth.users(id)
+      const updatePayload = wizardFormToProjectUpdatePayload(fd, appUserRow.id)
+
+      const runProjectRowUpdate = (payload) =>
+        withTimeout(
+          platformDb.from('projects').update(payload).eq('id', projectId),
+          REQUEST_MS.projectUpdate,
+          'Saving project details timed out. Check your connection and try again.',
+        )
+
+      let { error: projectErr } = await runProjectRowUpdate(updatePayload)
+      // If the DB never got v264/v266/v484 columns, PostgREST rejects optional fields — retry without them
+      // (do not depend on error shape; Supabase may nest messages differently in the schema cache).
+      if (projectErr) {
+        const slimPayload = omitOptionalProjectWizardColumns(updatePayload)
+        const { error: errSlim } = await runProjectRowUpdate(slimPayload)
+        if (!errSlim) {
+          projectErr = null
+          toast.warning(
+            'Project saved. Named-contact text and extra tolerance descriptions need SQL/v484_projects_wizard_columns_if_missing.sql applied in Supabase to persist fully.',
+            { duration: 14000 },
+          )
+        } else {
+          // Prefer the original error when it is more specific (e.g. RLS); slim retry usually repeats RLS too
+          projectErr = isSchemaCacheColumnError(projectErr) ? errSlim : projectErr
+        }
+      }
 
       if (projectErr) throw projectErr
 
       if (methodologies.length > 0 && fd.methodology_id) {
-        const { data: pmRows, error: pmSelectErr } = await platformDb
-          .from('project_methodologies')
-          .select('id, methodology_id, is_deleted')
-          .eq('project_id', projectId)
-          .limit(1)
+        const { data: pmRows, error: pmSelectErr } = await withTimeout(
+          platformDb
+            .from('project_methodologies')
+            .select('id, methodology_id, is_deleted')
+            .eq('project_id', projectId)
+            .limit(1),
+          REQUEST_MS.methodology,
+          'Loading methodology settings timed out.',
+        )
 
         if (pmSelectErr) throw pmSelectErr
 
@@ -333,21 +401,29 @@ export default function ProjectsEdit() {
 
         if (!methodologyUnchanged) {
           if (pmRow?.id) {
-            const { error: pmUpErr } = await platformDb
-              .from('project_methodologies')
-              .update({
-                methodology_id: fd.methodology_id,
-                is_deleted: false,
-                deleted_at: null,
-              })
-              .eq('id', pmRow.id)
+            const { error: pmUpErr } = await withTimeout(
+              platformDb
+                .from('project_methodologies')
+                .update({
+                  methodology_id: fd.methodology_id,
+                  is_deleted: false,
+                  deleted_at: null,
+                })
+                .eq('id', pmRow.id),
+              REQUEST_MS.methodology,
+              'Updating methodology timed out.',
+            )
 
             if (pmUpErr) throw pmUpErr
           } else {
-            const { error: pmInsErr } = await platformDb.from('project_methodologies').insert({
-              project_id: projectId,
-              methodology_id: fd.methodology_id,
-            })
+            const { error: pmInsErr } = await withTimeout(
+              platformDb.from('project_methodologies').insert({
+                project_id: projectId,
+                methodology_id: fd.methodology_id,
+              }),
+              REQUEST_MS.methodology,
+              'Saving methodology timed out.',
+            )
 
             if (pmInsErr) throw pmInsErr
           }
@@ -366,7 +442,10 @@ export default function ProjectsEdit() {
       const saveCatRes = await Promise.race([
         saveForProject(projectId, toSave),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Saving budget lines timed out. Check your network and try again.')), 60000),
+          setTimeout(
+            () => reject(new Error('Saving budget lines timed out. Check your network and try again.')),
+            REQUEST_MS.budgetSave,
+          ),
         ),
       ])
       if (!saveCatRes.success) {
@@ -382,10 +461,18 @@ export default function ProjectsEdit() {
       const newP = selectedPortfolioId
       try {
         if (oldP && oldP !== newP) {
-          await removeProjectFromPortfolio(oldP, projectId)
+          await withTimeout(
+            removeProjectFromPortfolio(oldP, projectId),
+            REQUEST_MS.portfolioOp,
+            'Updating portfolio assignment timed out.',
+          )
         }
         if (newP && newP !== oldP) {
-          await addProjectToPortfolio(newP, projectId)
+          await withTimeout(
+            addProjectToPortfolio(newP, projectId),
+            REQUEST_MS.portfolioOp,
+            'Updating portfolio assignment timed out.',
+          )
         }
       } catch (portErr) {
         console.error('Portfolio sync error:', portErr)
@@ -401,10 +488,18 @@ export default function ProjectsEdit() {
       const newG = selectedProgrammeId
       try {
         if (oldG && oldG !== newG) {
-          await removeProjectFromProgramme(oldG, projectId)
+          await withTimeout(
+            removeProjectFromProgramme(oldG, projectId),
+            REQUEST_MS.portfolioOp,
+            'Updating programme assignment timed out.',
+          )
         }
         if (newG && newG !== oldG) {
-          await addProjectToProgramme(newG, projectId)
+          await withTimeout(
+            addProjectToProgramme(newG, projectId),
+            REQUEST_MS.portfolioOp,
+            'Updating programme assignment timed out.',
+          )
         }
       } catch (progErr) {
         console.error('Programme sync error:', progErr)
@@ -418,8 +513,14 @@ export default function ProjectsEdit() {
 
       setAssignmentSnapshot({ portfolioId: newP ?? null, programmeId: newG ?? null })
 
+      toast.success('Project saved successfully.')
+
       const nextSeg = (fd.project_code || '').trim() || project.id
       navigate(platformProjectPath(nextSeg))
+        })(),
+        REQUEST_MS.saveTotal,
+        'Saving took too long. Check your connection and try again.',
+      )
     } catch (error) {
       console.error('Error updating project:', error)
       const msg =
@@ -429,6 +530,10 @@ export default function ProjectsEdit() {
         'Failed to update project'
       setErrors({ submit: msg })
     } finally {
+      if (saveFailsafeRef.current) {
+        clearTimeout(saveFailsafeRef.current)
+        saveFailsafeRef.current = null
+      }
       setSaving(false)
     }
   }
@@ -616,10 +721,6 @@ export default function ProjectsEdit() {
           methodologies={methodologies}
         />
 
-        {errors.tolerances && (
-          <p className="text-sm text-red-600 dark:text-red-400">{errors.tolerances}</p>
-        )}
-
         {errors.submit && (
           <div className="rounded border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
             {errors.submit}
@@ -637,7 +738,7 @@ export default function ProjectsEdit() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </button>

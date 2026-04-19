@@ -33,7 +33,7 @@ export default function BenefitDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4" />
           <p className="text-gray-400">Loading benefit...</p>
@@ -44,7 +44,7 @@ export default function BenefitDetailPage() {
 
   if (error || !benefit) {
     return (
-      <div className="min-h-screen bg-gray-900 p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
         <div className="max-w-2xl mx-auto">
           <p className="text-red-400 mb-4">{error || 'Benefit not found.'}</p>
           <button
@@ -61,7 +61,7 @@ export default function BenefitDetailPage() {
 
   if (isEditRoute) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <BenefitForm
             benefit={benefit}
@@ -75,7 +75,7 @@ export default function BenefitDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex items-center justify-between">
           <button

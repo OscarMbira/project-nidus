@@ -101,7 +101,7 @@ const OrganisationVerificationNotice = () => {
   }, [organisationId, resending]);
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Suspense fallback={<div className="h-16 bg-gray-900" />}>
         <PlatformHeader />
       </Suspense>

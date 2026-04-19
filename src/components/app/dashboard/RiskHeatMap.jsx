@@ -24,14 +24,16 @@ const getRiskBgColor = (score) => {
   return 'bg-green-900/40';
 };
 
-const RiskHeatMap = memo(function RiskHeatMap({ organizationId }) {
+const RiskHeatMap = memo(function RiskHeatMap({ organizationId, filterProjectIds = null }) {
   const [riskData, setRiskData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const filterKey = filterProjectIds?.length ? filterProjectIds.join(',') : '';
+
   useEffect(() => {
     loadRiskData();
-  }, [organizationId]);
+  }, [organizationId, filterKey]);
 
   const loadRiskData = async () => {
     if (!organizationId) return;
@@ -39,7 +41,11 @@ const RiskHeatMap = memo(function RiskHeatMap({ organizationId }) {
     setLoading(true);
     setError(null);
 
-    const result = await getRiskHeatMapData(organizationId);
+    const opts =
+      Array.isArray(filterProjectIds) && filterProjectIds.length
+        ? { projectIds: filterProjectIds }
+        : {};
+    const result = await getRiskHeatMapData(organizationId, opts);
 
     if (result.success) {
       setRiskData(result.data);
@@ -52,8 +58,8 @@ const RiskHeatMap = memo(function RiskHeatMap({ organizationId }) {
 
   if (loading) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Risk Heat Map</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Risk Heat Map</h3>
         <div className="h-80 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
         </div>
@@ -63,8 +69,8 @@ const RiskHeatMap = memo(function RiskHeatMap({ organizationId }) {
 
   if (error) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-100 mb-4">Risk Heat Map</h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Risk Heat Map</h3>
         <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4 text-red-400">
           Error loading risk heat map: {error}
         </div>
@@ -93,13 +99,13 @@ const RiskHeatMap = memo(function RiskHeatMap({ organizationId }) {
   const totalRisks = riskData.risks.length;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-100 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-yellow-400" />
           Risk Heat Map
         </h3>
-        <div className="text-2xl font-bold text-gray-100">{totalRisks} Risks</div>
+        <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalRisks} Risks</div>
       </div>
 
       {totalRisks === 0 ? (

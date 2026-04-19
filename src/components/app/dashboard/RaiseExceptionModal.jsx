@@ -106,16 +106,16 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-red-400" />
-            <h3 className="text-xl font-semibold text-gray-100">Raise Exception</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Raise Exception</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-100"
+            className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <X className="h-6 w-6" />
           </button>
@@ -140,7 +140,7 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
                 value={formData.project_id}
                 onChange={handleChange}
                 required
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select a project...</option>
                 {loadingProjects ? (
@@ -166,7 +166,7 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
                 value={formData.exception_title}
                 onChange={handleChange}
                 required
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Brief title for the exception"
               />
             </div>
@@ -181,7 +181,7 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
                 value={formData.exception_level}
                 onChange={handleChange}
                 required
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="LOW">Low</option>
                 <option value="MEDIUM">Medium</option>
@@ -199,7 +199,7 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
                 name="exception_category"
                 value={formData.exception_category}
                 onChange={handleChange}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="PERFORMANCE">Performance</option>
                 <option value="BUDGET">Budget</option>
@@ -223,7 +223,7 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
                 onChange={handleChange}
                 required
                 rows={4}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Describe the exception reason..."
               />
             </div>
@@ -238,7 +238,7 @@ const RaiseExceptionModal = memo(function RaiseExceptionModal({
                 value={formData.exception_description}
                 onChange={handleChange}
                 rows={3}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Additional context or details..."
               />
             </div>

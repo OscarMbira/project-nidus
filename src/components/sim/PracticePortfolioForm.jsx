@@ -636,7 +636,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-gray-900 rounded-xl border border-gray-700 w-full overflow-hidden">
           {header}

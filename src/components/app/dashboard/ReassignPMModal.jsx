@@ -139,18 +139,18 @@ const ReassignPMModal = memo(function ReassignPMModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-700">
           <div>
-            <h3 className="text-xl font-semibold text-gray-100">Reassign PM</h3>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Reassign PM</h3>
             <p className="text-sm text-gray-400 mt-1">
               Reassigning from: <span className="font-medium">{pm.pm_name}</span>
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-100"
+            className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <X className="h-6 w-6" />
           </button>
@@ -175,7 +175,7 @@ const ReassignPMModal = memo(function ReassignPMModal({
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
                 required
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select a project...</option>
                 {projects.map(project => (
@@ -195,7 +195,7 @@ const ReassignPMModal = memo(function ReassignPMModal({
                 value={newPMId}
                 onChange={(e) => setNewPMId(e.target.value)}
                 required
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">Select a PM...</option>
                 {loadingPMs ? (
@@ -239,7 +239,7 @@ const ReassignPMModal = memo(function ReassignPMModal({
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={3}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter reason for reassignment..."
               />
             </div>

@@ -165,6 +165,7 @@ export async function getPortfolioProjects(portfolioId, filters = {}) {
       *,
       project:project_id (
         id,
+        account_id,
         project_name,
         project_code,
         status_id,

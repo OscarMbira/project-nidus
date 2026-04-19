@@ -280,7 +280,7 @@ const PMOControlStrip = memo(function PMOControlStrip({ organizationId }) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="bg-gray-800 rounded-lg p-4 animate-pulse">
+          <div key={i} className="bg-gray-200 dark:bg-gray-800 rounded-lg p-4 animate-pulse">
             <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
             <div className="h-8 bg-gray-700 rounded w-1/2"></div>
           </div>
@@ -304,7 +304,7 @@ const PMOControlStrip = memo(function PMOControlStrip({ organizationId }) {
   return (
     <>
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-100 mb-4">PMO Control Strip</h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">PMO Control Strip</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {signals.map(signalType => {
             const config = getSignalConfig(signalType);
@@ -339,9 +339,9 @@ const PMOControlStrip = memo(function PMOControlStrip({ organizationId }) {
       {/* Drill-down Modal */}
       {selectedSignal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-xl font-semibold text-gray-100">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                 {getSignalConfig(selectedSignal).label}
               </h3>
               <button
@@ -349,7 +349,7 @@ const PMOControlStrip = memo(function PMOControlStrip({ organizationId }) {
                   setSelectedSignal(null);
                   setDrillDownProjects([]);
                 }}
-                className="text-gray-400 hover:text-gray-100"
+                className="text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -378,7 +378,7 @@ const PMOControlStrip = memo(function PMOControlStrip({ organizationId }) {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="font-medium text-gray-100">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">
                             {project.project_name || 'Unknown Project'}
                           </div>
                           {project.project_code && (

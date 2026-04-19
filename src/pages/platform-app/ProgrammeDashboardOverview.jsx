@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch, DollarSign } from 'lucide-react'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { getProgrammeRollupsForDashboard } from '../../services/programmeService'
+import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
 
 function MetricCard({ title, value, subtitle, icon: Icon, iconBg, iconColor }) {
   return (
@@ -102,7 +103,7 @@ export default function ProgrammeDashboardOverview() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4" />
           <p className="text-gray-400">Loading programme dashboard...</p>
@@ -112,7 +113,7 @@ export default function ProgrammeDashboardOverview() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
@@ -181,6 +182,12 @@ export default function ProgrammeDashboardOverview() {
             iconColor="text-gray-300"
           />
         </div>
+
+        {accountId && (
+          <div className="mb-8">
+            <PmoDashboardInsightsSection organizationId={accountId} />
+          </div>
+        )}
 
         {/* Loading state for rollups only */}
         {loading ? (
