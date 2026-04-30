@@ -1,5 +1,5 @@
 -- ============================================================================
--- v357: Requirements register + traceability matrix (PMBOK 5.3)
+-- v357: Requirements register + traceability matrix (Process Guide 5.3)
 -- Prerequisites: projects, users, stakeholders
 -- ============================================================================
 

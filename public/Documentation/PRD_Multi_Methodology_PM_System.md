@@ -2685,7 +2685,7 @@ All tables must be registered in `database_tables` table as per system requireme
 - Kanban University materials
 
 **Project Management:**
-- PMBOK Guide (PMI)
+- Structured Project Management Guide
 - Agile Practice Guide
 - APM Body of Knowledge
 

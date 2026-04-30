@@ -19,6 +19,94 @@ export const simulatorMenuConfig = [
     subscriptionTier: null, // Visible to all authenticated Simulator users
   },
   {
+    id: 'sim-forms-practice',
+    label: 'Process Group Practice',
+    path: '/simulator/pm/projects/:projectId/forms',
+    icon: 'file-text',
+    permissionsAny: ['form.view', 'form.view_all'],
+    subscriptionTier: null,
+    children: [
+      {
+        id: 'sim-forms-practice-initiating',
+        label: 'Initiating',
+        path: '/simulator/pm/projects/:projectId/forms?group=Initiating',
+        permission: 'form.view',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-planning',
+        label: 'Planning',
+        path: '/simulator/pm/projects/:projectId/forms?group=Planning',
+        permission: 'form.view',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-executing',
+        label: 'Executing',
+        path: '/simulator/pm/projects/:projectId/forms?group=Executing',
+        permission: 'form.view',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-monitoring',
+        label: 'Monitoring & Controlling',
+        path: '/simulator/pm/projects/:projectId/forms?group=Monitoring',
+        permission: 'form.view',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-closing',
+        label: 'Closing',
+        path: '/simulator/pm/projects/:projectId/forms?group=Closing',
+        permission: 'form.view',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-agile',
+        label: 'Agile',
+        path: '/simulator/pm/projects/:projectId/forms?group=Agile',
+        permission: 'form.view',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-drafts',
+        label: 'My Drafts',
+        path: '/simulator/pm/projects/:projectId/forms/drafts',
+        permissionsAny: ['form.view', 'team_member.view', 'qa.view', 'procurement.view', 'finance.view'],
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-forms-practice-approvals',
+        label: 'Pending Approvals',
+        path: '/simulator/pm/projects/:projectId/forms?status=in_review',
+        permission: 'form.approve',
+        subscriptionTier: null,
+      },
+    ],
+  },
+  {
+    id: 'sim-testing-centre',
+    label: 'Testing and QA',
+    path: '/simulator/testing-centre',
+    icon: 'flask-conical',
+    permission: 'testing_centre.view',
+    subscriptionTier: null,
+    children: [
+      { id: 'sim-tc-dash', label: 'Testing Dashboard', path: '/simulator/testing-centre', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-cases', label: 'Test Case Library', path: '/simulator/testing-centre/cases', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-drafts', label: 'Test Case Drafts', path: '/simulator/testing-centre/cases/drafts', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-suites', label: 'Test Suites', path: '/simulator/testing-centre/suites', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-runs', label: 'Test Runs', path: '/simulator/testing-centre/runs', permission: 'testing_centre.run', subscriptionTier: null },
+      { id: 'sim-tc-scripts', label: 'Automated Scripts', path: '/simulator/testing-centre/scripts', permission: 'testing_centre.configure', subscriptionTier: null },
+      { id: 'sim-tc-evidence', label: 'Screenshot Evidence', path: '/simulator/testing-centre/evidence', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-diag', label: 'Diagnostic Centre', path: '/simulator/testing-centre/diagnostics', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-defects', label: 'Defect & Issue Links', path: '/simulator/testing-centre/defects', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-data', label: 'Test Data Manager', path: '/simulator/testing-centre/data', permission: 'testing_centre.configure', subscriptionTier: null },
+      { id: 'sim-tc-reports', label: 'Reports', path: '/simulator/testing-centre/reports', permission: 'testing_centre.view', subscriptionTier: null },
+      { id: 'sim-tc-settings', label: 'Settings', path: '/simulator/testing-centre/settings', permission: 'testing_centre.configure', subscriptionTier: null },
+    ],
+  },
+  {
     id: 'sim-financial',
     label: 'Financial Management',
     path: '/simulator/financial-reports',
@@ -796,6 +884,14 @@ export const simulatorMenuConfig = [
  * @returns {boolean}
  */
 export function isSimMenuItemVisible(menuItem, userSubscriptionTier = 'free') {
+  if (Array.isArray(menuItem.permissionsAny) && menuItem.permissionsAny.length > 0) {
+    return true
+  }
+
+  if (menuItem.permission) {
+    return true
+  }
+
   // If no subscription tier required, always visible
   if (!menuItem.subscriptionTier) {
     return true

@@ -526,6 +526,21 @@ const RoleAssignment = lazy(() => import('./pages/admin/RoleAssignment'))
 const AssignRolesToProjects = lazy(() => import('./pages/admin/AssignRolesToProjects'))
 const SendRoleInvites = lazy(() => import('./pages/admin/SendRoleInvites'))
 const ChangeLogPage = lazy(() => import('./pages/change/ChangeLogPage'))
+const WorkAuthorisationListPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationListPage'))
+const WorkAuthorisationDraftsPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationDraftsPage'))
+const WorkAuthorisationCreatePage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationCreatePage'))
+const WorkAuthorisationDetailPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationDetailPage'))
+const TestingCentreRoutesPlatform = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesPlatform })))
+const TestingCentreRoutesPm = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesPm })))
+const TestingCentreRoutesPmo = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesPmo })))
+const TestingCentreRoutesSim = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSim })))
+const TestingCentreRoutesSimPm = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSimPm })))
+const TestingCentreRoutesSimPmo = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSimPmo })))
+const FormsGallery = lazy(() => import('./pages/forms/FormsGallery'))
+const FormNew = lazy(() => import('./pages/forms/FormNew'))
+const FormEdit = lazy(() => import('./pages/forms/FormEdit'))
+const FormView = lazy(() => import('./pages/forms/FormView'))
+const FormTemplateAdmin = lazy(() => import('./pages/forms/FormTemplateAdmin'))
 const ProjectMemberInvitation = lazy(() => import('./pages/projects/ProjectMemberInvitation'))
 const Settings = lazy(() => import('./pages/Settings'))
 const PWASettings = lazy(() => import('./pages/app/PWASettings'))
@@ -771,6 +786,7 @@ const SimulatorPMControlsIssueRegister = lazy(() => import('./pages/simulator/pm
 const SimulatorPMControlsQualityRegister = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsQualityRegister'))
 const SimulatorPMControlsConfigItems = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsConfigItems'))
 const SimulatorPMControlsLessonsLog = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsLessonsLog'))
+const SimulatorPMControlsWorkAuthorisation = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsWorkAuthorisation'))
 const SimulatorPMReportingCheckpoint = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingCheckpoint'))
 const SimulatorPMReportingHighlight = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingHighlight'))
 const SimulatorPMReportingIssueReports = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingIssueReports'))
@@ -3549,6 +3565,53 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="work-authorisations" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <WorkAuthorisationListPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="work-authorisations/drafts" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <WorkAuthorisationDraftsPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="work-authorisations/new" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <WorkAuthorisationCreatePage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="work-authorisations/:id/edit" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <WorkAuthorisationCreatePage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="work-authorisations/:id" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <WorkAuthorisationDetailPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="testing-centre/*" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <TestingCentreRoutesPlatform />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/forms" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormsGallery mode="platform" basePath="/platform/projects" /></ProtectedRoute></Suspense>} />
+                        <Route path="projects/:projectId/forms/:templateCode/new" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormNew mode="platform" basePath="/platform/projects" /></ProtectedRoute></Suspense>} />
+                        <Route path="projects/:projectId/forms/:formInstanceId/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormEdit mode="platform" /></ProtectedRoute></Suspense>} />
+                        <Route path="projects/:projectId/forms/:formInstanceId/view" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormView mode="platform" /></ProtectedRoute></Suspense>} />
+                        <Route path="admin/form-templates" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormTemplateAdmin mode="platform" /></ProtectedRoute></Suspense>} />
                         <Route path="pmo/role-menu-access" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3660,6 +3723,19 @@ function App() {
 
           {/* PMO Dashboard - redirect to unified platform dashboard */}
           <Route path="pmo/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
+          <Route path="pmo/testing-centre/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <TestingCentreRoutesPmo />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="pmo/itto/templates" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -4181,6 +4257,19 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="pmo/forms" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <FormTemplateAdmin mode="platform" />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
 
           {/* PM Dashboard Routes */}
           <Route path="pm/dashboard" element={
@@ -4190,6 +4279,71 @@ function App() {
                   <ProtectedRoute>
                     <PMLayout>
                       <PMDashboard />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/forms" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <FormsGallery mode="platform" basePath="/pm/projects" />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/forms/:templateCode/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <FormNew mode="platform" basePath="/pm/projects" />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/forms/:formInstanceId/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <FormEdit mode="platform" />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/forms/:formInstanceId/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <FormView mode="platform" />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/testing-centre/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <TestingCentreRoutesPm />
                     </PMLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -4784,6 +4938,19 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <SimulatorDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/testing-centre/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <TestingCentreRoutesSim />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -8023,6 +8190,32 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/pmo/forms" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <FormTemplateAdmin mode="sim" />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/testing-centre/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <TestingCentreRoutesSimPmo />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="simulator/pmo/manager-assignments" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -8129,6 +8322,23 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/pm/testing-centre/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <TestingCentreRoutesSimPm />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/projects/:projectId/forms" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormsGallery mode="sim" basePath="/simulator/pm/projects" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+          <Route path="simulator/pm/projects/:projectId/forms/:templateCode/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormNew mode="sim" basePath="/simulator/pm/projects" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+          <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/edit" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormEdit mode="sim" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+          <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/view" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormView mode="sim" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
           <Route path="simulator/pm/itto/templates" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -8917,6 +9127,71 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <SimulatorPMLayout>
                       <SimulatorPMControlsLessonsLog />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/controls/work-authorisations/drafts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <WorkAuthorisationDraftsPage />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/controls/work-authorisations/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <WorkAuthorisationCreatePage />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/controls/work-authorisations/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <WorkAuthorisationCreatePage />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/controls/work-authorisations/:id" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <WorkAuthorisationDetailPage />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/controls/work-authorisations" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimulatorPMControlsWorkAuthorisation />
                     </SimulatorPMLayout>
                   </ProtectedRoute>
                 </ToastProvider>

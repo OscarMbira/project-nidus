@@ -98,10 +98,32 @@ export const pmMenuConfig = [
         path: null, // Dynamic path based on selected project
         permission: 'project.view',
       },
+      { id: 'forms-reg-risks', label: 'Risk Register', path: '/platform/projects/:projectId/registers/risks', permission: 'form.view' },
+      { id: 'forms-reg-issues', label: 'Issue Log', path: '/platform/projects/:projectId/registers/issues', permission: 'form.view' },
+      { id: 'forms-reg-changes', label: 'Change Log', path: '/platform/projects/:projectId/registers/changes', permission: 'form.view' },
+      { id: 'forms-reg-reqs', label: 'Requirements Register', path: '/platform/projects/:projectId/registers/requirements', permission: 'form.view' },
+      { id: 'forms-status-report', label: 'Status Reports', path: '/platform/projects/:projectId/reports/status', permission: 'form.view' },
     ],
   },
 
   // Personal section - My Daily Log Entries
+  {
+    id: 'platform-forms',
+    label: 'Process Group Forms',
+    path: '/platform/projects/:projectId/forms',
+    icon: 'file-text',
+    permission: 'form.view',
+    children: [
+      { id: 'forms-initiating', label: 'Initiating', path: '/platform/projects/:projectId/forms?group=Initiating', permission: 'form.view' },
+      { id: 'forms-planning', label: 'Planning', path: '/platform/projects/:projectId/forms?group=Planning', permission: 'form.view' },
+      { id: 'forms-executing', label: 'Executing', path: '/platform/projects/:projectId/forms?group=Executing', permission: 'form.view' },
+      { id: 'forms-monitoring', label: 'Monitoring & Controlling', path: '/platform/projects/:projectId/forms?group=Monitoring', permission: 'form.view' },
+      { id: 'forms-closing', label: 'Closing', path: '/platform/projects/:projectId/forms?group=Closing', permission: 'form.view' },
+      { id: 'forms-agile', label: 'Agile', path: '/platform/projects/:projectId/forms?group=Agile', permission: 'form.view' },
+      { id: 'forms-drafts', label: 'My Drafts', path: '/platform/projects/:projectId/forms/drafts', permission: 'form.view' },
+      { id: 'forms-approvals', label: 'Pending Approvals', path: '/platform/projects/:projectId/forms?status=in_review', permission: 'form.approve' },
+    ],
+  },
   {
     id: 'platform-daily-log-my-entries',
     label: 'My Daily Log Entries',
@@ -344,6 +366,18 @@ export const pmMenuConfig = [
         permission: 'governance.view',
       },
       {
+        id: 'platform-work-authorisations',
+        label: 'Work Authorisations',
+        path: '/platform/work-authorisations',
+        permission: 'work_authorisation.view',
+      },
+      {
+        id: 'platform-work-authorisation-drafts',
+        label: 'Work Authorisation Drafts',
+        path: '/platform/work-authorisations/drafts',
+        permission: 'work_authorisation.request',
+      },
+      {
         id: 'platform-governance-audit',
         label: 'Audit Trail',
         path: '/platform/governance/audit',
@@ -400,6 +434,30 @@ export const pmMenuConfig = [
         path: '/pmo/governance/risk-strategy',
         permission: 'pmo.admin',
       },
+    ],
+  },
+
+  // Testing (PMIS centre + legacy bulk import) — keep aligned with v500 SQL menu
+  {
+    id: 'platform-testing-centre',
+    label: 'Testing and QA',
+    path: '/platform/testing-centre',
+    icon: 'flask-conical',
+    permission: 'testing_centre.view',
+    children: [
+      { id: 'tc-dashboard', label: 'Testing dashboard', path: '/platform/testing-centre', permission: 'testing_centre.view' },
+      { id: 'tc-cases', label: 'Test case library', path: '/platform/testing-centre/cases', permission: 'testing_centre.view' },
+      { id: 'tc-drafts', label: 'Test case drafts', path: '/platform/testing-centre/cases/drafts', permission: 'testing_centre.view' },
+      { id: 'tc-suites', label: 'Test suites', path: '/platform/testing-centre/suites', permission: 'testing_centre.view' },
+      { id: 'tc-runs', label: 'Test runs', path: '/platform/testing-centre/runs', permission: 'testing_centre.run' },
+      { id: 'tc-bulk-import', label: 'Bulk import', path: '/platform/testing/import', permission: 'testing_centre.view' },
+      { id: 'tc-scripts', label: 'Automated scripts', path: '/platform/testing-centre/scripts', permission: 'testing_centre.configure' },
+      { id: 'tc-evidence', label: 'Screenshot evidence', path: '/platform/testing-centre/evidence', permission: 'testing_centre.view' },
+      { id: 'tc-diagnostics', label: 'Diagnostic centre', path: '/platform/testing-centre/diagnostics', permission: 'testing_centre.view' },
+      { id: 'tc-defects', label: 'Defects & issue links', path: '/platform/testing-centre/defects', permission: 'testing_centre.view' },
+      { id: 'tc-reports', label: 'Reports', path: '/platform/testing-centre/reports', permission: 'testing_centre.view' },
+      { id: 'tc-data', label: 'Test data manager', path: '/platform/testing-centre/data', permission: 'testing_centre.configure' },
+      { id: 'tc-settings', label: 'Settings', path: '/platform/testing-centre/settings', permission: 'testing_centre.configure' },
     ],
   },
 
@@ -694,24 +752,6 @@ export const pmMenuConfig = [
         path: '/platform/stakeholders/monitoring',
         permission: 'stakeholder.view',
       },
-    ],
-  },
-
-  // Testing & QA
-  {
-    id: 'platform-testing-qa',
-    label: 'Testing & QA',
-    path: '/platform/testing',
-    icon: 'test-tube',
-    permission: null,
-    children: [
-      { id: 'platform-testing-dashboard', label: 'Dashboard', path: '/platform/testing', permission: null },
-      { id: 'platform-testing-suites', label: 'Test Suites', path: '/platform/testing/suites', permission: null },
-      { id: 'platform-testing-cases', label: 'Test Cases', path: '/platform/testing/cases', permission: null },
-      { id: 'platform-testing-runs', label: 'Test Runs', path: '/platform/testing/runs', permission: null },
-      { id: 'platform-testing-import', label: 'Bulk Import', path: '/platform/testing/import', permission: null },
-      { id: 'platform-testing-defects', label: 'Defects', path: '/platform/testing/defects', permission: null },
-      { id: 'platform-testing-defect-reports', label: 'Defect Reports', path: '/platform/testing/defects/dashboard', permission: null },
     ],
   },
 
@@ -1040,6 +1080,10 @@ export const pmMenuConfig = [
  * @returns {boolean}
  */
 export function isMenuItemVisible(menuItem, userPermissions = []) {
+  if (Array.isArray(menuItem.permissionsAny) && menuItem.permissionsAny.length > 0) {
+    return menuItem.permissionsAny.some((permission) => userPermissions.includes(permission))
+  }
+
   // If no permission required, always visible
   if (!menuItem.permission) {
     return true

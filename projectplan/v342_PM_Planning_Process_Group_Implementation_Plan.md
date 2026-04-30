@@ -7,7 +7,7 @@
 
 ## Overview
 
-The image `PM Planning Process Group v1.png` maps directly to PMBOK 5th edition Knowledge Areas 5.1–5.24 across the Planning Process Group.
+The image `PM Planning Process Group v1.png` maps directly to Process Guide 5th edition Knowledge Areas 5.1–5.24 across the Planning Process Group.
 
 After a full codebase audit, the following features are **already fully implemented**:
 

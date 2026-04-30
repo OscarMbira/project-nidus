@@ -1,7 +1,7 @@
 -- ============================================================================
 -- v315: Stakeholder expectations field (Platform + Simulator)
 -- Purpose: Add explicit expectations field to Stakeholder Register
---          for PMBOK compliance (separate from requirements/notes).
+--          for process guide compliance (separate from requirements/notes).
 -- Schemas: public.stakeholders, sim.practice_stakeholder_register
 -- Safe to re-run: uses ADD COLUMN IF NOT EXISTS
 -- ============================================================================

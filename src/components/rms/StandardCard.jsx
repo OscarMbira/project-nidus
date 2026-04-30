@@ -8,7 +8,7 @@ import { Edit2, Trash2, Shield } from 'lucide-react'
 export default function StandardCard({ standard, onEdit, onDelete, readOnly = false }) {
   const standardTypeLabels = {
     iso_31000: 'ISO 31000',
-    pmbok: 'PMBOK Guide',
+    pmbok: 'Process Guide',
     prince2: 'PRINCE2',
     m_o_r: 'M_o_R (Management of Risk)',
     corporate: 'Corporate Standard',

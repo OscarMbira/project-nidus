@@ -126,7 +126,7 @@ export default function ScopeManagementPlan() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Scope management plan</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Plan scope management (PMBOK 5.2).</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Plan scope management (Process Guide 5.2).</p>
         </div>
         <ExportRecordButtons
           onExportPPT={() => exportRecordToPPT(SECTIONS, exportPayload, `ScopeMgmtPlan_${projectId}`)}

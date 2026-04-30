@@ -163,6 +163,39 @@ export async function deleteDefectAttachment(attachmentId) {
   if (error) throw error
 }
 
+/** Defects raised from the Testing & Diagnostics Centre (test runs / diagnostics). */
+export async function getTestingCentreDefects(filters = {}) {
+  let query = platformDb
+    .from('defects')
+    .select('*')
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+  if (filters.projectId) query = query.eq('project_id', filters.projectId)
+  if (filters.status) query = query.eq('status', filters.status)
+  if (filters.search) {
+    const s = filters.search.trim()
+    query = query.or(`title.ilike.%${s}%,defect_ref.ilike.%${s}%`)
+  }
+  const { data, error } = await query
+  if (error) throw error
+  const rows = (data || []).filter(
+    (d) => d.source === 'test_run' || d.source === 'diagnostic' || d.linked_tc_test_run_id != null
+  )
+  return rows
+}
+
+export async function createDefectFromTestResult(_testRunResultId, _defectData) {
+  throw new Error('createDefectFromTestResult: use createDefect with source + linked columns after v496 SQL')
+}
+
+export async function createDefectFromDiagnostic(_sessionId, _defectData) {
+  throw new Error('createDefectFromDiagnostic: use createDefect with source + linked columns after v496 SQL')
+}
+
+export async function generateAndSaveCursorPrompt(defectId, promptText) {
+  return updateDefect(defectId, { cursor_prompt_generated: true, cursor_prompt_text: promptText })
+}
+
 export async function getDefectStats(projectId) {
   const { data, error } = await platformDb
     .from('defects')
@@ -196,4 +229,8 @@ export default {
   uploadDefectAttachment,
   deleteDefectAttachment,
   getDefectStats,
+  getTestingCentreDefects,
+  createDefectFromTestResult,
+  createDefectFromDiagnostic,
+  generateAndSaveCursorPrompt,
 }

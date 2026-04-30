@@ -11,6 +11,7 @@ export default function MobileNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
   const { menuItems, loading } = useMenu()
+  const isSimulatorContext = (location.pathname || '').startsWith('/simulator')
 
   useEffect(() => {
     // Show bottom navigation on mobile (screen width < 768px)
@@ -84,7 +85,32 @@ export default function MobileNavigation() {
   ]
 
   // Top-level menu items for mobile menu
-  const topLevelItems = menuItems?.filter(item => !item.parent_menu_id) || []
+  const routeMatchesContext = (routePath) => {
+    const route = (routePath || '').trim()
+    if (!route) return true
+    if (isSimulatorContext) return route.startsWith('/simulator')
+    return !route.startsWith('/simulator')
+  }
+
+  const pruneMenuTreeByContext = (items = []) =>
+    items
+      .map((item) => {
+        const nestedChildren = Array.isArray(item.children)
+          ? pruneMenuTreeByContext(item.children)
+          : []
+        const hasChildren = nestedChildren.length > 0
+        const ownRouteOk = routeMatchesContext(item.route_path)
+        if (!String(item.route_path || '').trim() && !hasChildren) return null
+        if (String(item.route_path || '').trim() && !ownRouteOk) {
+          if (!hasChildren) return null
+          return { ...item, route_path: null, children: nestedChildren }
+        }
+        return { ...item, children: hasChildren ? nestedChildren : item.children }
+      })
+      .filter(Boolean)
+
+  const contextMenuItems = pruneMenuTreeByContext(menuItems || [])
+  const topLevelItems = contextMenuItems?.filter((item) => !item.parent_menu_id) || []
 
   if (loading) {
     return null
@@ -141,7 +167,7 @@ export default function MobileNavigation() {
                       <MobileMenuItem
                         key={item.id}
                         item={item}
-                        menuItems={menuItems}
+                        menuItems={contextMenuItems}
                         onClick={handleMenuItemClick}
                         level={0}
                       />
@@ -213,7 +239,9 @@ export default function MobileNavigation() {
 
 function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
   const location = useLocation()
-  const children = menuItems?.filter(child => child.parent_menu_id === item.id) || []
+  const children = (Array.isArray(item.children) && item.children.length > 0)
+    ? item.children
+    : (menuItems?.filter(child => child.parent_menu_id === item.id) || [])
   const hasChildren = children.length > 0
   const resolved = resolveMenuRoutePath(item.route_path, location.pathname)
   const linkTo = !item.route_path ? '#' : (resolved === '/' ? '/platform/dashboard' : resolved)

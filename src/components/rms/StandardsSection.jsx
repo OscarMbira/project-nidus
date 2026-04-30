@@ -139,7 +139,7 @@ export default function StandardsSection({ rmsId, readOnly = false, onUpdate }) 
             Risk Management Standards
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Define risk management standards to be applied (ISO 31000, PMBOK, PRINCE2, M_o_R, etc.)
+            Define risk management standards to be applied (ISO 31000, Process Guide, PRINCE2, M_o_R, etc.)
           </p>
         </div>
         {!readOnly && !showForm && (

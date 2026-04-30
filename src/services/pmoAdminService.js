@@ -144,71 +144,18 @@ export async function getAssignableRolesForPMOAdmin() {
 }
 
 /**
- * Get project roles for a specific project
- * @param {string} projectId - Project UUID
+ * Get assignable roles for the PMO "Assign roles to projects" form.
+ *
+ * Important: `user_roles.role_id` references `public.roles(id)` only (v03 FK). Rows from
+ * `project_roles` are not valid FK targets for inserts into `user_roles`, and RLS often blocks
+ * `project_roles` for org-wide PMO admins who are not in every project's membership. We therefore
+ * return the same global role list as {@link getAssignableRolesForPMOAdmin} (projectId ignored).
+ *
+ * @param {string} _projectId - Reserved for future project-scoped filtering
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
-export async function getProjectRoles(projectId) {
-  try {
-    // Try project_roles table first
-    const { data: projectRoles, error: projectRolesError } = await supabase
-      .from('project_roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('project_id', projectId)
-      .eq('is_active', true)
-      .eq('is_template', false)
-      .neq('role_name', 'team_manager')
-      .neq('role_name', 'team_member')
-      .neq('role_name', 'pm_team_manager')
-      .neq('role_name', 'pm_team_member')
-
-    if (!projectRolesError && projectRoles) {
-      // Also get template roles
-      const { data: templates } = await supabase
-        .from('project_roles')
-        .select('id, role_name, role_display_name, role_description, role_level')
-        .eq('is_template', true)
-        .eq('is_active', true)
-        .neq('role_name', 'team_manager')
-        .neq('role_name', 'team_member')
-        .neq('role_name', 'pm_team_manager')
-        .neq('role_name', 'pm_team_member')
-
-      return {
-        success: true,
-        data: [...(projectRoles || []), ...(templates || [])],
-        error: null
-      }
-    }
-
-    // Fallback to roles table
-    const { data: roles, error: rolesError } = await supabase
-      .from('roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('is_active', true)
-      .eq('is_deleted', false)
-      .neq('role_name', 'team_manager')
-      .neq('role_name', 'team_member')
-      .neq('role_name', 'pm_team_manager')
-      .neq('role_name', 'pm_team_member')
-      .neq('role_name', 'system_admin')
-      .neq('role_name', 'pmo_admin')
-
-    if (rolesError) throw rolesError
-
-    return {
-      success: true,
-      data: roles || [],
-      error: null
-    }
-  } catch (error) {
-    console.error('Error fetching project roles:', error)
-    return {
-      success: false,
-      data: [],
-      error: error.message || 'Failed to fetch project roles'
-    }
-  }
+export async function getProjectRoles(_projectId) {
+  return getAssignableRolesForPMOAdmin()
 }
 
 /**
@@ -530,6 +477,65 @@ export async function getOrganizationUsers() {
       const u = row.users
       if (u?.id && u.is_active !== false) userMap.set(u.id, u)
     })
+
+    // 3) user_projects — legacy / alternate membership; often populated when project_memberships is empty
+    const { data: upRows, error: upErr } = await supabase
+      .from('user_projects')
+      .select('user_id')
+      .in('project_id', projectIds)
+      .eq('is_deleted', false)
+
+    if (upErr) {
+      console.warn('[pmoAdmin] getOrganizationUsers: user_projects query:', upErr.message || upErr)
+    } else {
+      const upUserIds = [...new Set((upRows || []).map((r) => r.user_id).filter(Boolean))]
+      if (upUserIds.length > 0) {
+        const { data: upUsers, error: upUsersErr } = await supabase
+          .from('users')
+          .select('id, full_name, email, is_active')
+          .in('id', upUserIds)
+          .eq('is_deleted', false)
+        if (upUsersErr) {
+          console.warn('[pmoAdmin] getOrganizationUsers: users from user_projects:', upUsersErr.message || upUsersErr)
+        } else {
+          ;(upUsers || []).forEach((u) => {
+            if (u?.id && u.is_active !== false) userMap.set(u.id, u)
+          })
+        }
+      }
+    }
+
+    // 4) Project owner + project manager rows on projects (always relevant for assignment)
+    const { data: projLeadRows, error: plErr } = await supabase
+      .from('projects')
+      .select('owner_user_id, project_manager_user_id')
+      .in('id', projectIds)
+      .eq('is_deleted', false)
+
+    if (plErr) {
+      console.warn('[pmoAdmin] getOrganizationUsers: projects lead query:', plErr.message || plErr)
+    } else {
+      const leadIds = new Set()
+      ;(projLeadRows || []).forEach((p) => {
+        if (p.owner_user_id) leadIds.add(p.owner_user_id)
+        if (p.project_manager_user_id) leadIds.add(p.project_manager_user_id)
+      })
+      if (leadIds.size > 0) {
+        const { data: leadUsers, error: luErr } = await supabase
+          .from('users')
+          .select('id, full_name, email, is_active')
+          .in('id', [...leadIds])
+          .eq('is_deleted', false)
+
+        if (luErr) {
+          console.warn('[pmoAdmin] getOrganizationUsers: users by lead ids:', luErr.message || luErr)
+        } else {
+          ;(leadUsers || []).forEach((u) => {
+            if (u?.id && u.is_active !== false) userMap.set(u.id, u)
+          })
+        }
+      }
+    }
 
     const users = Array.from(userMap.values()).sort((a, b) =>
       (a.full_name || '').localeCompare(b.full_name || '')

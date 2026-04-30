@@ -51,463 +51,122 @@ import {
   Sparkles,
   Presentation,
   RefreshCcw,
-  ShieldCheck
+  ShieldCheck,
+  FlaskConical
 } from 'lucide-react';
 
 const simulatorPMMenuConfig = [
-  // Dashboard
+  { id: 'sim-pm-dashboard', label: 'Dashboard', path: '/simulator/pm/dashboard', icon: LayoutDashboard, section: null, order: 0 },
   {
-    id: 'sim-pm-dashboard',
-    label: 'Dashboard',
-    path: '/simulator/pm/dashboard',
-    icon: LayoutDashboard,
-    section: null,
-    order: 0
-  },
-
-  // Section 1: Governance Reference & Tailoring
-  {
-    id: 'sim-pm-governance',
-    label: 'Governance Reference',
+    id: 'sim-pm-my-work',
+    label: 'My Practice Work',
     path: null,
-    icon: Shield,
-    section: 'Governance Reference',
+    icon: ClipboardCheck,
+    section: 'My Practice Work',
     order: 1,
     children: [
-      {
-        id: 'sim-pm-gov-mandate',
-        label: 'Practice Project Mandate',
-        path: '/simulator/pm/governance/mandate',
-        icon: FileText,
-        order: 1
-      },
-      {
-        id: 'sim-pm-gov-communication-strategy',
-        label: 'Practice Communication Management Strategy',
-        path: '/simulator/pm/governance/communication-strategy',
-        icon: Megaphone,
-        order: 2
-      },
-      {
-        id: 'sim-pm-gov-configuration-strategy',
-        label: 'Practice Configuration Management Strategy',
-        path: '/simulator/pm/governance/configuration-strategy',
-        icon: Settings2,
-        order: 3
-      },
-      {
-        id: 'sim-pm-gov-quality-strategy',
-        label: 'Practice Quality Management Strategy',
-        path: '/simulator/pm/governance/quality-strategy',
-        icon: CheckSquare,
-        order: 4
-      },
-      {
-        id: 'sim-pm-gov-risk-strategy',
-        label: 'Practice Risk Management Strategy',
-        path: '/simulator/pm/governance/risk-strategy',
-        icon: AlertTriangle,
-        order: 5
-      }
+      { id: 'sim-pm-my-work-tasks', label: 'My Tasks', path: '/simulator/practice-tasks', icon: ClipboardList, order: 1 },
+      { id: 'sim-pm-my-work-projects', label: 'My Practice Projects', path: '/simulator/practice-projects', icon: Briefcase, order: 2 },
+      { id: 'sim-pm-my-work-drafts', label: 'My Draft Forms', path: '/simulator/pm/projects/:projectId/forms/drafts', icon: FileClock, order: 3 },
     ]
   },
-
-  // Section 2: Initiation & Business Justification
   {
-    id: 'sim-pm-initiation',
-    label: 'Initiation & Business Justification',
-    path: null,
+    id: 'sim-pm-projects',
+    label: 'Practice Projects',
+    path: '/simulator/practice-projects',
     icon: Briefcase,
-    section: 'Initiation & Business Justification',
+    section: 'Practice Projects',
     order: 2,
     children: [
-      {
-        id: 'sim-pm-init-business-case',
-        label: 'Practice Business Case',
-        path: '/simulator/pm/initiation/business-case',
-        icon: Briefcase,
-        order: 1
-      },
-      {
-        id: 'sim-pm-init-project-brief',
-        label: 'Practice Project Brief',
-        path: '/simulator/pm/initiation/project-brief',
-        icon: FileText,
-        order: 2
-      },
-      {
-        id: 'sim-pm-init-pid',
-        label: 'Practice Project Initiation Document (PID)',
-        path: '/simulator/pm/initiation/pid',
-        icon: FileBox,
-        order: 3
-      },
-      {
-        id: 'sim-pm-init-benefits-review-plan',
-        label: 'Practice Benefits Review Plan',
-        path: '/simulator/pm/initiation/benefits-review-plan',
-        icon: BookOpen,
-        order: 4
-      }
+      { id: 'sim-pm-projects-list', label: 'My Practice Projects', path: '/simulator/practice-projects', icon: Briefcase, order: 1 },
+      { id: 'sim-pm-projects-create', label: 'Create Practice Project', path: '/simulator/practice-projects/create', icon: FileText, order: 2 },
+      { id: 'sim-pm-projects-members', label: 'Manage Members', path: '/simulator/practice-project-members', icon: Shield, order: 3 },
     ]
   },
-
-  // Section 3: Delivery Management
-  {
-    id: 'sim-pm-delivery',
-    label: 'Delivery Management',
-    path: null,
-    icon: Package,
-    section: 'Delivery Management',
-    order: 3,
-    children: [
-      {
-        id: 'sim-pm-delivery-work-packages',
-        label: 'Practice Work Packages',
-        path: '/simulator/pm/delivery/work-packages',
-        icon: Layers,
-        order: 1
-      },
-      {
-        id: 'sim-pm-delivery-product-description',
-        label: 'Practice Product Description',
-        path: '/simulator/pm/delivery/product-description',
-        icon: FileText,
-        order: 2
-      },
-      {
-        id: 'sim-pm-delivery-project-product-description',
-        label: 'Practice Project Product Description',
-        path: '/simulator/pm/delivery/project-product-description',
-        icon: ClipboardList,
-        order: 3
-      },
-      {
-        id: 'sim-pm-delivery-product-status-account',
-        label: 'Practice Product Status Account',
-        path: '/simulator/pm/delivery/product-status-account',
-        icon: Activity,
-        order: 4
-      },
-      {
-        id: 'sim-pm-delivery-daily-log',
-        label: 'Practice Daily Log',
-        path: '/simulator/pm/delivery/daily-log',
-        icon: Calendar,
-        order: 5
-      }
-    ]
-  },
-
-  // Section 4: Controls & Registers
   {
     id: 'sim-pm-controls',
     label: 'Controls & Registers',
     path: null,
     icon: ListChecks,
     section: 'Controls & Registers',
-    order: 4,
+    order: 3,
     children: [
-      {
-        id: 'sim-pm-controls-risk-register',
-        label: 'Practice Risk Register',
-        path: '/simulator/pm/controls/risk-register',
-        icon: AlertTriangle,
-        order: 1
-      },
-      {
-        id: 'sim-pm-controls-issue-register',
-        label: 'Practice Issue Register',
-        path: '/simulator/pm/controls/issue-register',
-        icon: AlertCircle,
-        order: 2
-      },
-      {
-        id: 'sim-pm-controls-quality-register',
-        label: 'Practice Quality Register',
-        path: '/simulator/pm/controls/quality-register',
-        icon: CheckSquare,
-        order: 3
-      },
-      {
-        id: 'sim-pm-controls-configuration-items',
-        label: 'Practice Configuration Item Records',
-        path: '/simulator/pm/controls/configuration-items',
-        icon: Wrench,
-        order: 4
-      },
-      {
-        id: 'sim-pm-controls-lessons-log',
-        label: 'Practice Lessons Log',
-        path: '/simulator/pm/controls/lessons-log',
-        icon: GraduationCap,
-        order: 5
-      }
+      { id: 'sim-pm-controls-risk-register', label: 'Practice Risk Register', path: '/simulator/pm/controls/risk-register', icon: AlertTriangle, order: 1 },
+      { id: 'sim-pm-controls-issue-register', label: 'Practice Issue Register', path: '/simulator/pm/controls/issue-register', icon: AlertCircle, order: 2 },
+      { id: 'sim-pm-controls-quality-register', label: 'Practice Quality Register', path: '/simulator/pm/controls/quality-register', icon: CheckSquare, order: 3 },
+      { id: 'sim-pm-controls-work-authorisations', label: 'Practice Work Authorisations', path: '/simulator/pm/controls/work-authorisations', icon: Shield, order: 4 },
     ]
   },
-
-  // Section 5: Reporting
+  {
+    id: 'sim-pm-planning-delivery',
+    label: 'Planning & Delivery',
+    path: null,
+    icon: Package,
+    section: 'Planning & Delivery',
+    order: 4,
+    children: [
+      { id: 'sim-pm-delivery-work-packages', label: 'Practice Work Packages', path: '/simulator/pm/delivery/work-packages', icon: Layers, order: 1 },
+      { id: 'sim-pm-planning-hub', label: 'Planning Hub', path: '/simulator/pm/planning', icon: LayoutDashboard, order: 2 },
+      { id: 'sim-pm-planning-intelligence', label: 'Plan Intelligence', path: '/simulator/pm/planning/intelligence', icon: SearchCode, order: 3 },
+      { id: 'sim-pm-itto-templates', label: 'ITTO Templates', path: '/simulator/pm/itto/templates', icon: GitBranch, order: 4 },
+      { id: 'sim-pm-delay-register', label: 'Delay Register', path: '/simulator/pm/delays', icon: FileClock, order: 5 },
+    ]
+  },
+  {
+    id: 'sim-pm-forms',
+    label: 'Process Group Forms',
+    path: '/simulator/pm/projects/:projectId/forms',
+    icon: FileText,
+    section: 'Process Group Forms',
+    order: 5,
+    children: [
+      { id: 'sim-pm-forms-initiating', label: 'Initiating', path: '/simulator/pm/projects/:projectId/forms?group=Initiating', icon: FileText, order: 1, permission: 'form.view' },
+      { id: 'sim-pm-forms-planning', label: 'Planning', path: '/simulator/pm/projects/:projectId/forms?group=Planning', icon: FileText, order: 2, permission: 'form.view' },
+      { id: 'sim-pm-forms-executing', label: 'Executing', path: '/simulator/pm/projects/:projectId/forms?group=Executing', icon: FileText, order: 3, permission: 'form.view' },
+      { id: 'sim-pm-forms-monitoring', label: 'Monitoring & Controlling', path: '/simulator/pm/projects/:projectId/forms?group=Monitoring', icon: FileText, order: 4, permission: 'form.view' },
+      { id: 'sim-pm-forms-closing', label: 'Closing', path: '/simulator/pm/projects/:projectId/forms?group=Closing', icon: FileText, order: 5, permission: 'form.view' },
+      { id: 'sim-pm-forms-agile', label: 'Agile', path: '/simulator/pm/projects/:projectId/forms?group=Agile', icon: FileText, order: 6, permission: 'form.view' },
+    ]
+  },
+  {
+    id: 'sim-pm-testing-centre',
+    label: 'Quality & Testing',
+    path: null,
+    icon: FlaskConical,
+    section: 'Quality & Testing',
+    order: 6,
+    children: [
+      { id: 'sim-pm-tc-dash', label: 'Testing Dashboard', path: '/simulator/pm/testing-centre', icon: LayoutDashboard, order: 1, permission: 'testing_centre.view' },
+      { id: 'sim-pm-tc-cases', label: 'Test Case Library', path: '/simulator/pm/testing-centre/cases', icon: ClipboardList, order: 2, permission: 'testing_centre.view' },
+      { id: 'sim-pm-tc-suites', label: 'Test Suites', path: '/simulator/pm/testing-centre/suites', icon: Layers, order: 3, permission: 'testing_centre.view' },
+      { id: 'sim-pm-tc-runs', label: 'Test Runs', path: '/simulator/pm/testing-centre/runs', icon: Activity, order: 4, permission: 'testing_centre.run' },
+      { id: 'sim-pm-tc-defects', label: 'Defect & Issue Links', path: '/simulator/pm/testing-centre/defects', icon: AlertTriangle, order: 5, permission: 'testing_centre.view' },
+    ]
+  },
+  {
+    id: 'sim-pm-people-stakeholders',
+    label: 'People & Stakeholders',
+    path: null,
+    icon: Briefcase,
+    section: 'People & Stakeholders',
+    order: 7,
+    children: [
+      { id: 'sim-pm-people-teams', label: 'Practice Teams', path: '/simulator/practice-teams', icon: Briefcase, order: 1 },
+      { id: 'sim-pm-people-stakeholders', label: 'Stakeholders', path: '/simulator/practice-stakeholders', icon: AlertCircle, order: 2 },
+    ]
+  },
   {
     id: 'sim-pm-reporting',
     label: 'Reporting',
     path: null,
     icon: BarChart3,
     section: 'Reporting',
-    order: 5,
+    order: 8,
     children: [
-      {
-        id: 'sim-pm-report-checkpoint',
-        label: 'Practice Checkpoint Reports',
-        path: '/simulator/pm/reporting/checkpoint-reports',
-        icon: Flag,
-        order: 1
-      },
-      {
-        id: 'sim-pm-report-highlight',
-        label: 'Practice Highlight Reports',
-        path: '/simulator/pm/reporting/highlight-reports',
-        icon: Flag,
-        order: 2
-      },
-      {
-        id: 'sim-pm-report-issue-reports',
-        label: 'Practice Issue Reports',
-        path: '/simulator/pm/reporting/issue-reports',
-        icon: AlertCircle,
-        order: 3
-      },
-      {
-        id: 'sim-pm-report-exception',
-        label: 'Practice Exception Reports',
-        path: '/simulator/pm/reporting/exception-reports',
-        icon: FileWarning,
-        order: 4
-      },
-      {
-        id: 'sim-pm-report-end-stage',
-        label: 'Practice End Stage Report',
-        path: '/simulator/pm/reporting/end-stage-reports',
-        icon: FileClock,
-        order: 5
-      }
-    ]
-  },
-
-  // Section 6: Financial Management
-  {
-    id: 'sim-pm-financial',
-    label: 'Financial Management',
-    path: null,
-    icon: DollarSign,
-    section: 'Financial Management',
-    order: 6,
-    children: [
-      {
-        id: 'sim-pm-fin-my-expenses',
-        label: 'My Expenses',
-        path: '/simulator/expenses/my',
-        icon: Receipt,
-        order: 1
-      },
-      {
-        id: 'sim-pm-fin-exp-approvals',
-        label: 'Expense Approvals',
-        path: '/simulator/expenses/approvals',
-        icon: ClipboardCheck,
-        order: 2
-      },
-      {
-        id: 'sim-pm-fin-reports',
-        label: 'Financial Reports',
-        path: '/simulator/financial-reports',
-        icon: BarChart3,
-        order: 3
-      },
-      {
-        id: 'sim-pm-fin-portfolio-evm',
-        label: 'Portfolio EVM',
-        path: '/simulator/practice-portfolio/evm',
-        icon: TrendingUp,
-        order: 4
-      }
-    ]
-  },
-
-  {
-    id: 'sim-pm-itto',
-    label: 'ITTO Management',
-    path: null,
-    icon: GitBranch,
-    section: 'ITTO Management',
-    order: 6.5,
-    children: [
-      {
-        id: 'sim-pm-itto-templates',
-        label: 'ITTO Templates',
-        path: '/simulator/pm/itto/templates',
-        icon: Layers,
-        order: 1
-      },
-      {
-        id: 'sim-pm-itto-project',
-        label: 'Project ITTOs',
-        path: '/simulator/pm/itto/project',
-        icon: Layers,
-        order: 2
-      },
-      {
-        id: 'sim-pm-itto-drafts',
-        label: 'ITTO Drafts',
-        path: '/simulator/pm/itto/drafts',
-        icon: Pause,
-        order: 3
-      }
-    ]
-  },
-
-  {
-    id: 'sim-pm-delays',
-    label: 'Delays',
-    path: null,
-    icon: FileClock,
-    section: 'Delays',
-    order: 6.55,
-    children: [
-      {
-        id: 'sim-pm-delay-register',
-        label: 'Delay Register',
-        path: '/simulator/pm/delays',
-        icon: ClipboardList,
-        order: 1
-      },
-      {
-        id: 'sim-pm-delay-drafts',
-        label: 'Delay Drafts',
-        path: '/simulator/pm/delays/drafts',
-        icon: Pause,
-        order: 2
-      }
-    ]
-  },
-
-  {
-    id: 'sim-pm-planning',
-    label: 'Planning Intelligence',
-    path: null,
-    icon: BarChart3,
-    section: 'Planning Intelligence',
-    order: 6.57,
-    children: [
-      {
-        id: 'sim-pm-planning-hub',
-        label: 'Planning Hub',
-        path: '/simulator/pm/planning',
-        icon: LayoutDashboard,
-        order: 1
-      },
-      {
-        id: 'sim-pm-planning-intelligence',
-        label: 'Plan Intelligence',
-        path: '/simulator/pm/planning/intelligence',
-        icon: SearchCode,
-        order: 2
-      },
-      {
-        id: 'sim-pm-planning-scenarios',
-        label: 'Scenarios',
-        path: '/simulator/pm/planning/scenarios',
-        icon: GitBranch,
-        order: 3
-      },
-      {
-        id: 'sim-pm-planning-pbs',
-        label: 'Product Plan (PBS)',
-        path: '/simulator/pm/planning/pbs',
-        icon: PackageOpen,
-        order: 4
-      },
-      {
-        id: 'sim-pm-planning-health',
-        label: 'Plan Health',
-        path: '/simulator/pm/planning/health',
-        icon: HeartPulse,
-        order: 5
-      },
-      {
-        id: 'sim-pm-planning-ai',
-        label: 'AI Plan Generator',
-        path: '/simulator/pm/planning/ai',
-        icon: Sparkles,
-        order: 6
-      },
-      {
-        id: 'sim-pm-planning-executive',
-        label: 'Executive View',
-        path: '/simulator/pm/planning/executive',
-        icon: Presentation,
-        order: 7
-      },
-      {
-        id: 'sim-pm-planning-recovery',
-        label: 'Recovery Planning',
-        path: '/simulator/pm/planning/recovery',
-        icon: RefreshCcw,
-        order: 8
-      },
-      {
-        id: 'sim-pm-planning-confidence',
-        label: 'Confidence Forecast',
-        path: '/simulator/pm/planning/confidence',
-        icon: TrendingUp,
-        order: 9
-      },
-      {
-        id: 'sim-pm-planning-governance',
-        label: 'Governance Gates',
-        path: '/simulator/pm/planning/governance',
-        icon: ShieldCheck,
-        order: 10
-      },
-      {
-        id: 'sim-pm-planning-microplans',
-        label: 'Team Micro Plans',
-        path: '/simulator/pm/planning/microplans',
-        icon: ClipboardList,
-        order: 11
-      },
-      {
-        id: 'sim-pm-planning-microplans-drafts',
-        label: 'My Draft Plans',
-        path: '/simulator/pm/planning/microplans/drafts',
-        icon: FileClock,
-        order: 12
-      }
-    ]
-  },
-
-  // Section 7: Project Closure
-  {
-    id: 'sim-pm-closure',
-    label: 'Project Closure',
-    path: null,
-    icon: FolderClosed,
-    section: 'Project Closure',
-    order: 7,
-    children: [
-      {
-        id: 'sim-pm-closure-lessons-report',
-        label: 'Practice Lessons Report',
-        path: '/simulator/pm/closure/lessons-report',
-        icon: GraduationCap,
-        order: 1
-      },
-      {
-        id: 'sim-pm-closure-end-project-report',
-        label: 'Practice End Project Report',
-        path: '/simulator/pm/closure/end-project-report',
-        icon: FileCheck,
-        order: 2
-      }
+      { id: 'sim-pm-report-highlight', label: 'Practice Highlight Reports', path: '/simulator/pm/reporting/highlight-reports', icon: Flag, order: 1 },
+      { id: 'sim-pm-report-exception', label: 'Practice Exception Reports', path: '/simulator/pm/reporting/exception-reports', icon: FileWarning, order: 2 },
+      { id: 'sim-pm-report-end-stage', label: 'Practice End Stage Report', path: '/simulator/pm/reporting/end-stage-reports', icon: FileClock, order: 3 },
+      { id: 'sim-pm-fin-reports', label: 'Financial Reports', path: '/simulator/financial-reports', icon: DollarSign, order: 4 },
     ]
   }
 ];

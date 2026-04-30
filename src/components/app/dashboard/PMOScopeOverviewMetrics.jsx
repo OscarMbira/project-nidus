@@ -11,6 +11,11 @@ import {
 } from '../../../services/dashboardService';
 import RagStatusBadge from '../../ui/RagStatusBadge';
 import {
+  PortfolioLifecycleCharts,
+  ProgrammesLifecycleCharts,
+  ProjectsLifecycleCharts,
+} from './PmoScopeOverviewCharts';
+import {
   worstRagFromList,
   ragPctHigherIsBetter,
   ragCountPositiveWarning,
@@ -423,6 +428,7 @@ const PMOScopeOverviewMetrics = memo(function PMOScopeOverviewMetrics({
               rag={po.benefitsRealizationPct != null ? ragPctHigherIsBetter(po.benefitsRealizationPct) : undefined}
             />
           </div>
+          <PortfolioLifecycleCharts po={po} />
           {po.evm && (
             <div className="mt-4 rounded-lg border border-emerald-800/40 bg-emerald-950/20 px-3 py-3 dark:bg-emerald-950/30">
               <div className="text-xs font-semibold uppercase tracking-wide text-emerald-200/90 mb-2">
@@ -577,6 +583,7 @@ const PMOScopeOverviewMetrics = memo(function PMOScopeOverviewMetrics({
               rag={pr.resourceConflictCount != null ? ragCountPositiveWarning(pr.resourceConflictCount) : undefined}
             />
           </div>
+          <ProgrammesLifecycleCharts pr={pr} />
           {pr.evm != null && (
             <div className="mt-4 rounded-lg border border-sky-800/40 bg-sky-950/20 px-3 py-3 dark:bg-sky-950/30">
               <div className="text-xs font-semibold uppercase tracking-wide text-sky-200/90 mb-2">
@@ -623,6 +630,7 @@ const PMOScopeOverviewMetrics = memo(function PMOScopeOverviewMetrics({
           <p className={`text-xs mb-4 ${SECTION_THEME.projects.blurb}`}>
             Delivery health, schedule, budget, and governance linkage for the project portfolio.
           </p>
+          <ProjectsLifecycleCharts pj={pj} />
           <div className="space-y-4">
             <div className={`rounded-xl border p-3 sm:p-4 ${PROJECTS_SUBSECTION.volume}`}>
               <ProjectsSubsectionLabel tone="slate">Volume &amp; lifecycle</ProjectsSubsectionLabel>

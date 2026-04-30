@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMenu } from '../hooks/useMenu'
 import { supabase, simDb } from '../services/supabaseClient'
@@ -301,6 +301,37 @@ export default function Sidebar({ isOpen, onClose }) {
   const [loggingOut, setLoggingOut] = useState(false)
   const [expandedMenuId, setExpandedMenuId] = useState(null)
   const planningOpenFindingsCount = useOpenPlanningFindingsCount(!location.pathname.startsWith('/simulator'))
+  const isSimulatorContext = (location.pathname || '').startsWith('/simulator')
+
+  const routeMatchesContext = (routePath) => {
+    const route = (routePath || '').trim()
+    if (!route) return true
+    if (isSimulatorContext) return route.startsWith('/simulator')
+    // Keep all non-simulator routes in platform context.
+    // Some valid DB routes are absolute paths that do not start with /platform|/pmo|/pm.
+    return !route.startsWith('/simulator')
+  }
+
+  const pruneMenuTreeByContext = (items = []) => {
+    return items
+      .map((item) => {
+        const children = Array.isArray(item.children) ? pruneMenuTreeByContext(item.children) : []
+        const hasChildren = children.length > 0
+        const ownRouteOk = routeMatchesContext(item.route_path)
+        // Keep section headers only when at least one child is valid in current context.
+        if (!String(item.route_path || '').trim() && !hasChildren) return null
+        if (String(item.route_path || '').trim() && !ownRouteOk) {
+          if (!hasChildren) return null
+          return { ...item, route_path: null, children }
+        }
+        return { ...item, children: hasChildren ? children : item.children }
+      })
+      .filter(Boolean)
+  }
+  const prunedMenuItems = useMemo(
+    () => pruneMenuTreeByContext(menuItems || []),
+    [menuItems, isSimulatorContext]
+  )
 
   const handleToggleExpand = (id) => {
     setExpandedMenuId((prev) => (prev === id ? null : id))
@@ -399,35 +430,7 @@ export default function Sidebar({ isOpen, onClose }) {
               </div>
             ) : menuItems && menuItems.length > 0 ? (
               <div className="space-y-1">
-                {menuItems
-                  .filter((menuItem) => {
-                    // Show only menu items for current app context (Platform vs Simulator)
-                    const pathname = location.pathname || ''
-                    const routePath = menuItem.route_path || ''
-                    if (pathname.startsWith('/simulator')) {
-                      const isSimRoute = !routePath.trim() || routePath.startsWith('/simulator')
-                      if (!isSimRoute) return false
-                    } else {
-                      // Platform context: /platform, /pmo, /pm, or section parents with no route_path
-                      const isPlatformRoute = routePath.startsWith('/platform') ||
-                        routePath.startsWith('/pmo') ||
-                        routePath.startsWith('/pm') ||
-                        !routePath.trim()
-                      if (!isPlatformRoute) return false
-                    }
-                    // Filter out red-circled sections: Administration (but NOT PMO Admin), Settings, Help, Support
-                    const label = menuItem.menu_label?.toLowerCase() || ''
-                    const code = menuItem.menu_code?.toLowerCase() || ''
-                    if (label === 'pmo admin' || code === 'pmo_admin_section') {
-                      return true
-                    }
-                    return !(
-                      (label === 'administration' || code === 'administration') ||
-                      (label === 'settings' || code === 'settings') ||
-                      (label === 'help' || code === 'help') ||
-                      (label === 'support' || code === 'support')
-                    )
-                  })
+                {prunedMenuItems
                   .map((menuItem) => (
                     <SidebarMenuItem
                       key={menuItem.id}

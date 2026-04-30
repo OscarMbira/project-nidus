@@ -70,13 +70,30 @@ export async function resolveProjectIdFromRouteSegment(segment) {
   if (!key) return null;
   if (looksLikeProjectUuid(key)) return key;
 
-  const { data, error } = await platformDb
-    .from('projects')
-    .select('id')
-    .eq('project_code', key)
-    .eq('is_deleted', false)
-    .maybeSingle();
+  const tryRow = async (builder) => {
+    const { data, error } = await builder.maybeSingle();
+    if (error && error.code !== 'PGRST116') {
+      console.warn('resolveProjectIdFromRouteSegment:', error.message);
+    }
+    return data?.id || null;
+  };
 
-  if (error || !data?.id) return null;
-  return data.id;
+  let id = await tryRow(
+    platformDb
+      .from('projects')
+      .select('id')
+      .eq('project_code', key)
+      .eq('is_deleted', false),
+  );
+  if (id) return id;
+
+  // Case-insensitive match (DB collation / client casing can differ)
+  id = await tryRow(
+    platformDb
+      .from('projects')
+      .select('id')
+      .ilike('project_code', key)
+      .eq('is_deleted', false),
+  );
+  return id;
 }

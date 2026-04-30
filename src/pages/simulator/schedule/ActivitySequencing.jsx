@@ -97,7 +97,7 @@ export default function ActivitySequencing() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Activity sequencing</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Predecessors and successors (PMBOK 5.8).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Predecessors and successors (Process Guide 5.8).</p>
         </div>
         <ExportListMenu columns={COLS} data={tableData} baseFilename={`ActivityDeps_${projectId}`} />
       </div>

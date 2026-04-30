@@ -133,7 +133,7 @@ export default function ActivityList() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Activity list</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Define activities and durations (PMBOK 5.7, 5.9).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Define activities and durations (Process Guide 5.7, 5.9).</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ExportListMenu columns={EXPORT_COLS} data={filtered} baseFilename={`Activities_${projectId}`} />

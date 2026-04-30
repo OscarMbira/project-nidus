@@ -9,12 +9,16 @@ describe('buildPmoOverviewMetricsFromSummaries', () => {
         active: 2,
         planning: 1,
         onHold: 0,
+        completed: 0,
+        cancelled: 1,
       },
       programmes: {
         total: 10,
         active: 5,
         planning: 2,
         onHold: 1,
+        completed: 1,
+        cancelled: 0,
         linkedToPortfolios: 7,
         unlinkedNoPortfolio: 3,
       },
@@ -26,6 +30,8 @@ describe('buildPmoOverviewMetricsFromSummaries', () => {
         onHold: 2,
         linkedToProgrammes: 12,
         linkedToBothProgrammeAndPortfolio: 5,
+        linkedToProgrammesOnly: 4,
+        linkedToPortfoliosOnly: 3,
         unlinkedNoProgrammeOrPortfolio: 3,
       },
     };
@@ -45,6 +51,11 @@ describe('buildPmoOverviewMetricsFromSummaries', () => {
     expect(out.projects.budgetVariancePct).toBe(-5);
     expect(out.projects.totalBudget).toBe(100000);
     expect(out.projects.unlinkedNoProgrammeOrPortfolio).toBe(3);
+    expect(out.projects.linkedToProgrammesOnly).toBe(4);
+    expect(out.projects.linkedToPortfoliosOnly).toBe(3);
+    expect(out.portfolio.completed).toBe(0);
+    expect(out.portfolio.cancelled).toBe(1);
+    expect(out.programmes.completed).toBe(1);
   });
 
   it('returns empty-ish objects when summary is null', () => {

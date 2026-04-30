@@ -177,7 +177,7 @@ export async function getExecutiveSummary(organizationId) {
     const programmeRows = pmScope.programmeRows
 
     // Tasks, teams, and project link counts (programme_projects / portfolio_projects)
-    const [tasksData, teamsData, progProjLinks, portProjLinks] = await Promise.all([
+    const [tasksDataRaw, teamsData, progProjLinks, portProjLinks] = await Promise.all([
       projectIds.length > 0 ? platformDb
         .from('tasks')
         .select('status_id, task_statuses(status_code, status_name)', { count: 'exact' })
@@ -203,6 +203,23 @@ export async function getExecutiveSummary(organizationId) {
         .in('project_id', projectIds)
         .eq('is_deleted', false) : { data: [], error: null },
     ]);
+
+    /** If FK embed fails (e.g. no SELECT on task_statuses), retry without embed — breakdown uses status_id + lookup batch below. */
+    let tasksData = tasksDataRaw
+    if (tasksDataRaw?.error && projectIds.length > 0) {
+      const errMsg = String(tasksDataRaw.error.message || tasksDataRaw.error || '')
+      if (/task_statuses|permission denied for table task_statuses/i.test(errMsg)) {
+        const plain = await platformDb
+          .from('tasks')
+          .select('status_id', { count: 'exact' })
+          .in('project_id', projectIds)
+          .eq('is_deleted', false)
+          .limit(10000)
+        if (!plain.error) {
+          tasksData = plain
+        }
+      }
+    }
 
     if (progProjLinks.error) {
       console.warn('[dashboard] programme_projects link counts:', progProjLinks.error.message || progProjLinks.error)
@@ -250,12 +267,21 @@ export async function getExecutiveSummary(organizationId) {
 
     // PostgREST can return count with an empty body in some cases; re-fetch rows for breakdown.
     if (!tasksData.error && taskCount > 0 && taskRows.length === 0 && projectIds.length > 0) {
-      const retry = await platformDb
+      let retry = await platformDb
         .from('tasks')
         .select('status_id, task_statuses(status_code, status_name)')
         .in('project_id', projectIds)
         .eq('is_deleted', false)
         .limit(10000)
+      const retryErr = String(retry.error?.message || retry.error || '')
+      if (retry.error && /task_statuses|permission denied for table task_statuses/i.test(retryErr)) {
+        retry = await platformDb
+          .from('tasks')
+          .select('status_id')
+          .in('project_id', projectIds)
+          .eq('is_deleted', false)
+          .limit(10000)
+      }
       if (!retry.error && retry.data?.length) {
         taskRows = retry.data
       }
@@ -275,7 +301,9 @@ export async function getExecutiveSummary(organizationId) {
         .from('task_statuses')
         .select('id, status_code, status_name')
         .in('id', missingStatusIds)
-      if (!stErr && stRows) {
+      if (stErr) {
+        console.warn('[dashboard] task_statuses lookup:', stErr.message || stErr)
+      } else if (stRows) {
         statusLookupById = stRows.reduce((acc, row) => {
           acc[row.id] = row
           return acc
@@ -603,6 +631,8 @@ export function buildPmoOverviewMetricsFromSummaries(summary, kpis, extended) {
       active: p.active ?? 0,
       planning: p.planning ?? 0,
       onHold: p.onHold ?? 0,
+      completed: p.completed ?? 0,
+      cancelled: p.cancelled ?? 0,
       programmesWithPortfolioParent: linkedToPort,
       programmesWithoutPortfolio: g.unlinkedNoPortfolio ?? 0,
       coveragePercent,
@@ -617,6 +647,8 @@ export function buildPmoOverviewMetricsFromSummaries(summary, kpis, extended) {
       active: g.active ?? 0,
       planning: g.planning ?? 0,
       onHold: g.onHold ?? 0,
+      completed: g.completed ?? 0,
+      cancelled: g.cancelled ?? 0,
       linkedToPortfolio: linkedToPort,
       unlinkedNoPortfolio: g.unlinkedNoPortfolio ?? 0,
       distinctProjectsOnProgrammes: j.linkedToProgrammes ?? 0,
@@ -648,6 +680,8 @@ export function buildPmoOverviewMetricsFromSummaries(summary, kpis, extended) {
       totalSpent: bv.totalSpent ?? 0,
       unlinkedNoProgrammeOrPortfolio: j.unlinkedNoProgrammeOrPortfolio ?? 0,
       linkedToBothProgrammeAndPortfolio: j.linkedToBothProgrammeAndPortfolio ?? 0,
+      linkedToProgrammesOnly: j.linkedToProgrammesOnly ?? 0,
+      linkedToPortfoliosOnly: j.linkedToPortfoliosOnly ?? 0,
       scheduleRag: xj.scheduleRag ?? null,
       openRisksHighCritical: xj.openRisksHighCritical ?? null,
       openIssues: xj.openIssues ?? null,
@@ -924,18 +958,20 @@ export async function getCriticalPathSummary(organizationId) {
     const projectIds = (projects || []).map((p) => p.id);
     if (!projectIds.length) return { success: true, data: zero };
 
-    const { data: tasks, error: te } = await platformDb
+    /** Only critical-path tasks (plus predecessors for dependency checks) — not full org task list. */
+    const { data: cpTasksRaw, error: te } = await platformDb
       .from('tasks')
       .select(
         'id, project_id, planned_end_date, due_date, percentage_complete, is_blocked, is_milestone, is_critical_path'
       )
       .in('project_id', projectIds)
-      .eq('is_deleted', false);
+      .eq('is_deleted', false)
+      .eq('is_critical_path', true);
     if (te) throw te;
-    const taskRows = tasks || [];
-    const cpTasks = taskRows.filter((t) => t.is_critical_path === true);
+    const cpTasks = cpTasksRaw || [];
     const cpIds = new Set(cpTasks.map((t) => t.id));
-    const taskById = Object.fromEntries(taskRows.map((t) => [t.id, t]));
+
+    let taskById = Object.fromEntries(cpTasks.map((t) => [t.id, t]));
 
     const today = todayISODate();
     const isIncomplete = (t) => Number(t.percentage_complete) < 100;
@@ -967,7 +1003,23 @@ export async function getCriticalPathSummary(organizationId) {
         .select('predecessor_task_id, successor_task_id')
         .in('successor_task_id', succIds)
         .eq('is_deleted', false);
-      if (!de && deps) {
+      if (!de && deps && deps.length) {
+        const predIds = [...new Set(deps.map((d) => d.predecessor_task_id).filter(Boolean))];
+        const missingPredIds = predIds.filter((id) => !taskById[id]);
+        if (missingPredIds.length) {
+          const { data: predRows, error: pe2 } = await platformDb
+            .from('tasks')
+            .select(
+              'id, project_id, planned_end_date, due_date, percentage_complete, is_blocked, is_milestone, is_critical_path'
+            )
+            .in('id', missingPredIds)
+            .eq('is_deleted', false);
+          if (!pe2 && predRows) {
+            predRows.forEach((t) => {
+              taskById[t.id] = t;
+            });
+          }
+        }
         deps.forEach((d) => {
           if (!cpIds.has(d.successor_task_id)) return;
           const pred = taskById[d.predecessor_task_id];
@@ -1230,6 +1282,68 @@ export async function getRiskIssueSummary(organizationId) {
 }
 
 /**
+ * Task rollups for PMO extended metrics — uses pmo_dashboard_task_rollup RPC (v488) when available;
+ * falls back to a bounded legacy scan so dev DBs without the migration still work.
+ */
+async function loadPmoTaskRollupMetrics(projectIds) {
+  const empty = { milestoneAch: null, avgTaskPct: null, overdueTasks: 0 };
+  if (!projectIds.length) return empty;
+
+  const { data: rpcRows, error: rpcErr } = await platformDb.rpc('pmo_dashboard_task_rollup', {
+    p_project_ids: projectIds,
+  });
+
+  if (!rpcErr && rpcRows != null && rpcRows.length) {
+    const r = rpcRows[0];
+    const avgRaw = r.avg_percentage_complete;
+    const avgTaskPct =
+      avgRaw != null && !Number.isNaN(Number(avgRaw))
+        ? Math.round(Number(avgRaw) * 10) / 10
+        : null;
+    const mt = Number(r.milestone_total) || 0;
+    const md = Number(r.milestone_done) || 0;
+    let milestoneAch = null;
+    if (mt > 0) milestoneAch = Math.round((md / mt) * 1000) / 10;
+    const overdueTasks = Number(r.overdue_incomplete) || 0;
+    return { milestoneAch, avgTaskPct, overdueTasks };
+  }
+
+  if (rpcErr) {
+    console.warn(
+      '[dashboard] pmo_dashboard_task_rollup RPC failed, using legacy task scan:',
+      rpcErr.message || rpcErr
+    );
+  }
+
+  const { data: tr, error: taskErr } = await platformDb
+    .from('tasks')
+    .select('percentage_complete, planned_end_date, due_date, is_milestone')
+    .in('project_id', projectIds)
+    .eq('is_deleted', false)
+    .limit(50000);
+  if (taskErr) throw taskErr;
+  const today = todayISODate();
+  const rows = tr || [];
+  const milestones = rows.filter((t) => t.is_milestone);
+  let milestoneAch = null;
+  if (milestones.length) {
+    const done = milestones.filter((t) => Number(t.percentage_complete) >= 100).length;
+    milestoneAch = Math.round((done / milestones.length) * 1000) / 10;
+  }
+  const pcts = rows.map((t) => Number(t.percentage_complete)).filter((n) => !Number.isNaN(n));
+  const avgTaskPct = pcts.length
+    ? Math.round((pcts.reduce((a, b) => a + b, 0) / pcts.length) * 10) / 10
+    : null;
+  let overdueTasks = 0;
+  rows.forEach((t) => {
+    if (Number(t.percentage_complete) >= 100) return;
+    const end = t.planned_end_date || t.due_date;
+    if (end && String(end) < today) overdueTasks += 1;
+  });
+  return { milestoneAch, avgTaskPct, overdueTasks };
+}
+
+/**
  * Executive alert counts for PMO dashboard (v475).
  */
 export async function getExecutiveAlerts(organizationId) {
@@ -1248,14 +1362,19 @@ export async function getExecutiveAlerts(organizationId) {
  */
 export async function getPmoExtendedMetrics(organizationId) {
   try {
-    const [
-      evmRes,
-      cpRes,
-      riRes,
-    ] = await Promise.all([
+    const projSelect = platformDb
+      .from('projects')
+      .select(
+        'id, status_id, planned_end_date, budget_amount, actual_cost, updated_at, health_status, percentage_complete'
+      )
+      .eq('account_id', organizationId)
+      .eq('is_deleted', false);
+
+    const [evmRes, cpRes, riRes, projFetch] = await Promise.all([
       getAggregatedEvmMetrics(organizationId),
       getCriticalPathSummary(organizationId),
       getRiskIssueSummary(organizationId),
+      projSelect,
     ]);
 
     if (!evmRes.success) return evmRes;
@@ -1266,13 +1385,7 @@ export async function getPmoExtendedMetrics(organizationId) {
     const criticalPath = cpRes.data;
     const riskIssue = riRes.data;
 
-    const { data: projRows, error: perr } = await platformDb
-      .from('projects')
-      .select(
-        'id, status_id, planned_end_date, budget_amount, actual_cost, updated_at, health_status, percentage_complete'
-      )
-      .eq('account_id', organizationId)
-      .eq('is_deleted', false);
+    const { data: projRows, error: perr } = projFetch;
     if (perr) throw perr;
 
     const projectList = projRows || [];
@@ -1318,15 +1431,7 @@ export async function getPmoExtendedMetrics(organizationId) {
         }
       };
 
-      const [
-        stRes,
-        blRes,
-        progRes,
-        portRes,
-        compRes,
-        taskRes,
-        allocData,
-      ] = await Promise.all([
+      const [stRes, blRes, progRes, portRes, compRes, taskRollup, allocData] = await Promise.all([
         statusIds.length
           ? platformDb
               .from('project_statuses')
@@ -1353,12 +1458,7 @@ export async function getPmoExtendedMetrics(organizationId) {
           .from('pmo_document_compliance_view')
           .select('project_id, missing_mandatory_docs, compliance_percentage')
           .in('project_id', projectIds),
-        platformDb
-          .from('tasks')
-          .select('percentage_complete, planned_end_date, due_date, is_milestone')
-          .in('project_id', projectIds)
-          .eq('is_deleted', false)
-          .limit(50000),
+        loadPmoTaskRollupMetrics(projectIds),
         fetchAllocationsSafe(),
       ]);
 
@@ -1367,7 +1467,6 @@ export async function getPmoExtendedMetrics(organizationId) {
       if (progRes.error) throw progRes.error;
       if (portRes.error) throw portRes.error;
       if (compRes.error) throw compRes.error;
-      if (taskRes.error) throw taskRes.error;
 
       statusMap = Object.fromEntries((stRes.data || []).map((s) => [s.id, s]));
 
@@ -1388,19 +1487,9 @@ export async function getPmoExtendedMetrics(organizationId) {
         govPct = Math.round((compVals.reduce((a, b) => a + b, 0) / compVals.length) * 10) / 10;
       }
 
-      const tr = taskRes.data || [];
-      const milestones = tr.filter((t) => t.is_milestone);
-      if (milestones.length) {
-        const done = milestones.filter((t) => Number(t.percentage_complete) >= 100).length;
-        milestoneAch = Math.round((done / milestones.length) * 1000) / 10;
-      }
-      const pcts = tr.map((t) => Number(t.percentage_complete)).filter((n) => !Number.isNaN(n));
-      if (pcts.length) avgTaskPct = Math.round((pcts.reduce((a, b) => a + b, 0) / pcts.length) * 10) / 10;
-      tr.forEach((t) => {
-        if (Number(t.percentage_complete) >= 100) return;
-        const end = t.planned_end_date || t.due_date;
-        if (end && String(end) < today) overdueTasks += 1;
-      });
+      milestoneAch = taskRollup.milestoneAch;
+      avgTaskPct = taskRollup.avgTaskPct;
+      overdueTasks = taskRollup.overdueTasks;
 
       const byRes = {};
       (allocData || []).forEach((a) => {

@@ -8,9 +8,9 @@
 
 ## Audit Summary
 
-The audit compared the current Stakeholder module against PMBOK Guide 6th Edition standards
+The audit compared the current Stakeholder module against Process Guide 6th Edition standards
 (images PMO Stakeholder v2 / v3) and industry best practice.  The current module is well-
-structured but has **15 identified gaps** ranging from missing mandatory PMBOK fields to
+structured but has **15 identified gaps** ranging from missing mandatory process guide fields to
 missing UI integration of existing but hidden components.
 
 ---
@@ -18,16 +18,16 @@ missing UI integration of existing but hidden components.
 ## Audit Findings – Gap Analysis
 
 ### GAP-01 · CRITICAL · Missing "Expectations" Field
-**Standard:** PMBOK explicitly requires a *"List of stakeholder's expectations"* as a distinct
+**Standard:** The process guide explicitly requires a *"List of stakeholder's expectations"* as a distinct
 field in the Stakeholder Register (separate from requirements).
 **Current state:** Only `special_requirements` and `notes` exist. No dedicated Expectations
 field.
-**Impact:** Non-compliant with PMBOK Stakeholder Register definition.
+**Impact:** Non-compliant with process guide Stakeholder Register definition.
 
 ---
 
 ### GAP-02 · HIGH · Communication Plans & Monitoring Dashboard Not Surfaced in Main Page
-**Standard:** Communication planning and monitoring are core PMBOK processes.
+**Standard:** Communication planning and monitoring are core process guide processes.
 **Current state:** `CommunicationPlan.jsx`, `CommunicationPlanForm.jsx`,
 `CommunicationLog.jsx`, and `StakeholderMonitoringDashboard.jsx` components exist but
 `StakeholderManagement.jsx` only has 3 tabs (Register / Matrix / Engagement).
@@ -36,7 +36,7 @@ field.
 ---
 
 ### GAP-03 · HIGH · Stakeholder Engagement Assessment Matrix (SEAM) Missing
-**Standard:** PMBOK 6 Chapter 13 requires a Stakeholder Engagement Assessment Matrix showing
+**Standard:** Process Guide 6 Chapter 13 requires a Stakeholder Engagement Assessment Matrix showing
 **C** (Current) and **D** (Desired) engagement levels for each stakeholder on the 5-point
 scale: Unaware → Resistant → Neutral → Supportive → Leading.
 **Current state:** Attitude tracking (champion/supporter/neutral/critic/blocker) exists but
@@ -74,7 +74,7 @@ printable/exportable register.
 ---
 
 ### GAP-07 · MEDIUM · Stakeholder Identification Source Missing
-**Standard:** PMBOK states the register "receives information from" the project charter and
+**Standard:** The process guide states the register "receives information from" the project charter and
 procurement documents.
 **Current state:** No field indicating how/when/from which document the stakeholder was
 identified.
@@ -108,7 +108,7 @@ editing of power/interest scores.
 ---
 
 ### GAP-11 · MEDIUM · Salience Model Analysis Missing
-**Standard:** The Salience Model (Power + Legitimacy + Urgency) is a PMBOK-acknowledged
+**Standard:** The Salience Model (Power + Legitimacy + Urgency) is a process guide acknowledged
 advanced stakeholder classification tool producing 7 stakeholder categories.
 **Current state:** Only Power/Interest analysis exists.
 **Impact:** No support for Salience-based prioritisation.
@@ -151,7 +151,7 @@ Gaps are grouped into **4 phases** ordered by priority.
 
 ---
 
-### PHASE 1 – Critical & High Priority Fixes (Core PMBOK Compliance)
+### PHASE 1 – Critical & High Priority Fixes (Core process guide Compliance)
 
 #### TODO-1.1 · Add "Expectations" field to Stakeholder Register
 - [x] Create `SQL/v315_stakeholder_expectations_field.sql`

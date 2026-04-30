@@ -66,7 +66,7 @@ export default function WBSBuilder() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Work breakdown structure</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Hierarchical scope decomposition (PMBOK 5.5).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Hierarchical scope decomposition (Process Guide 5.5).</p>
         </div>
         {canEdit && (
           <button

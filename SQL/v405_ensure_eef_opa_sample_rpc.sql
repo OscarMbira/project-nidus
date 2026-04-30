@@ -67,7 +67,7 @@ BEGIN
         'Organisational culture, structure, and governance',
         'Shared values, norms, reporting lines, and decision-making style that shape how projects are authorised, staffed, and governed.',
         v_cat_culture, 'internal', 'high', 'neutral',
-        'PMBOK — Enterprise Environmental Factors',
+        'Process Guide — Enterprise Environmental Factors',
         'active',
         'Treat as baseline context for stakeholder engagement and escalation paths.',
         FALSE, p_account_id, v_creator

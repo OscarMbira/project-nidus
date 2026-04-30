@@ -1,5 +1,5 @@
 -- ============================================================================
--- v359: Scope statements (PMBOK 5.4)
+-- v359: Scope statements (Process Guide 5.4)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS scope_statements (

@@ -51,7 +51,8 @@ import {
   Sparkles,
   Presentation,
   RefreshCcw,
-  ShieldCheck
+  ShieldCheck,
+  FlaskConical
 } from 'lucide-react';
 
 const pmDashboardMenuConfig = [
@@ -195,6 +196,34 @@ const pmDashboardMenuConfig = [
         path: '/pm/delivery/daily-log',
         icon: Calendar,
         order: 5
+      },
+      {
+        id: 'pm-delivery-itto-templates',
+        label: 'ITTO Templates',
+        path: '/pm/itto/templates',
+        icon: GitBranch,
+        order: 6
+      },
+      {
+        id: 'pm-delivery-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/pm/itto/drafts',
+        icon: Pause,
+        order: 7
+      },
+      {
+        id: 'pm-delivery-delay-register',
+        label: 'Delay Register',
+        path: '/pm/delays',
+        icon: FileClock,
+        order: 8
+      },
+      {
+        id: 'pm-delivery-delay-drafts',
+        label: 'Delay Drafts',
+        path: '/pm/delays/drafts',
+        icon: Pause,
+        order: 9
       }
     ]
   },
@@ -246,157 +275,14 @@ const pmDashboardMenuConfig = [
     ]
   },
 
-  // Section 5: Reporting
-  {
-    id: 'pm-reporting',
-    label: 'Reporting',
-    path: null,
-    icon: BarChart3,
-    section: 'Reporting',
-    order: 5,
-    children: [
-      {
-        id: 'pm-report-checkpoint',
-        label: 'Checkpoint Reports',
-        path: '/pm/reporting/checkpoint-reports',
-        icon: Flag,
-        order: 1
-      },
-      {
-        id: 'pm-report-highlight',
-        label: 'Highlight Reports',
-        path: '/pm/reporting/highlight-reports',
-        icon: Flag,
-        order: 2
-      },
-      {
-        id: 'pm-report-issue-reports',
-        label: 'Issue Reports',
-        path: '/pm/reporting/issue-reports',
-        icon: AlertCircle,
-        order: 3
-      },
-      {
-        id: 'pm-report-exception',
-        label: 'Exception Reports',
-        path: '/pm/reporting/exception-reports',
-        icon: FileWarning,
-        order: 4
-      },
-      {
-        id: 'pm-report-end-stage',
-        label: 'End Stage Report',
-        path: '/pm/reporting/end-stage-reports',
-        icon: FileClock,
-        order: 5
-      }
-    ]
-  },
-
-  // Section 6: Financial Management
-  {
-    id: 'pm-financial',
-    label: 'Financial Management',
-    path: null,
-    icon: DollarSign,
-    section: 'Financial Management',
-    order: 6,
-    children: [
-      {
-        id: 'pm-fin-my-expenses',
-        label: 'My Expenses',
-        path: '/platform/expenses/my',
-        icon: Receipt,
-        order: 1
-      },
-      {
-        id: 'pm-fin-exp-approvals',
-        label: 'Expense Approvals',
-        path: '/platform/expenses/approvals',
-        icon: ClipboardCheck,
-        order: 2
-      },
-      {
-        id: 'pm-fin-reports',
-        label: 'Financial Reports',
-        path: '/platform/financial-reports',
-        icon: BarChart3,
-        order: 3
-      },
-      {
-        id: 'pm-fin-portfolio-evm',
-        label: 'Portfolio EVM',
-        path: '/platform/portfolio/evm',
-        icon: TrendingUp,
-        order: 4
-      }
-    ]
-  },
-
-  {
-    id: 'pm-itto',
-    label: 'ITTO Management',
-    path: null,
-    icon: GitBranch,
-    section: 'ITTO Management',
-    order: 6.5,
-    children: [
-      {
-        id: 'pm-itto-templates',
-        label: 'ITTO Templates',
-        path: '/pm/itto/templates',
-        icon: Layers,
-        order: 1
-      },
-      {
-        id: 'pm-itto-project',
-        label: 'Project ITTOs',
-        path: '/pm/itto/project',
-        icon: Layers,
-        order: 2
-      },
-      {
-        id: 'pm-itto-drafts',
-        label: 'ITTO Drafts',
-        path: '/pm/itto/drafts',
-        icon: Pause,
-        order: 3
-      }
-    ]
-  },
-
-  {
-    id: 'pm-delays',
-    label: 'Delays',
-    path: null,
-    icon: FileClock,
-    section: 'Delays',
-    order: 6.55,
-    children: [
-      {
-        id: 'pm-delay-register',
-        label: 'Delay Register',
-        path: '/pm/delays',
-        icon: ClipboardList,
-        order: 1
-      },
-      {
-        id: 'pm-delay-drafts',
-        label: 'Delay Drafts',
-        path: '/pm/delays/drafts',
-        icon: Pause,
-        order: 2
-      }
-    ]
-  },
-
+  // Section 5: Planning Intelligence
   {
     id: 'pm-planning',
     label: 'Planning Intelligence',
     path: null,
     icon: BarChart3,
     section: 'Planning Intelligence',
-    order: 6.57,
+    order: 5,
     children: [
       {
         id: 'pm-planning-hub',
@@ -434,79 +320,126 @@ const pmDashboardMenuConfig = [
         order: 5
       },
       {
-        id: 'pm-planning-ai',
-        label: 'AI Plan Generator',
-        path: '/pm/planning/ai',
-        icon: Sparkles,
-        order: 6
-      },
-      {
         id: 'pm-planning-executive',
         label: 'Executive View',
         path: '/pm/planning/executive',
         icon: Presentation,
-        order: 7
+        order: 6
       },
       {
         id: 'pm-planning-recovery',
         label: 'Recovery Planning',
         path: '/pm/planning/recovery',
         icon: RefreshCcw,
-        order: 8
-      },
-      {
-        id: 'pm-planning-confidence',
-        label: 'Confidence Forecast',
-        path: '/pm/planning/confidence',
-        icon: TrendingUp,
-        order: 9
+        order: 7
       },
       {
         id: 'pm-planning-governance',
         label: 'Governance Gates',
         path: '/pm/planning/governance',
         icon: ShieldCheck,
-        order: 10
+        order: 8
       },
       {
-        id: 'pm-planning-microplans',
-        label: 'Team Micro Plans',
-        path: '/pm/planning/microplans',
-        icon: ClipboardList,
-        order: 11
-      },
-      {
-        id: 'pm-planning-microplans-drafts',
-        label: 'My Draft Plans',
-        path: '/pm/planning/microplans/drafts',
-        icon: FileClock,
-        order: 12
+        id: 'pm-planning-ai-group',
+        label: 'AI & Intelligence',
+        path: null,
+        icon: Sparkles,
+        order: 9,
+        children: [
+          {
+            id: 'pm-planning-ai',
+            label: 'AI Plan Generator',
+            path: '/pm/planning/ai',
+            icon: Sparkles,
+            order: 1
+          },
+          {
+            id: 'pm-planning-confidence',
+            label: 'Confidence Forecast',
+            path: '/pm/planning/confidence',
+            icon: TrendingUp,
+            order: 2
+          }
+        ]
       }
     ]
   },
 
-  // Section 7: Project Closure
+  // Section 6: Process Group Forms
   {
-    id: 'pm-closure',
-    label: 'Project Closure',
+    id: 'pm-forms',
+    label: 'Process Group Forms',
+    path: '/pm/projects/:projectId/forms',
+    icon: FileText,
+    section: 'Process Group Forms',
+    order: 6,
+    children: [
+      { id: 'pm-forms-initiating', label: 'Initiating', path: '/pm/projects/:projectId/forms?group=Initiating', icon: FileText, order: 1 },
+      { id: 'pm-forms-planning', label: 'Planning', path: '/pm/projects/:projectId/forms?group=Planning', icon: FileText, order: 2 },
+      { id: 'pm-forms-executing', label: 'Executing', path: '/pm/projects/:projectId/forms?group=Executing', icon: FileText, order: 3 },
+      { id: 'pm-forms-monitoring', label: 'Monitoring & Controlling', path: '/pm/projects/:projectId/forms?group=Monitoring', icon: FileText, order: 4 },
+      { id: 'pm-forms-closing', label: 'Closing', path: '/pm/projects/:projectId/forms?group=Closing', icon: FileText, order: 5 },
+      { id: 'pm-forms-agile', label: 'Agile', path: '/pm/projects/:projectId/forms?group=Agile', icon: FileText, order: 6 },
+      { id: 'pm-forms-drafts', label: 'My Drafts', path: '/pm/projects/:projectId/forms/drafts', icon: FileClock, order: 7 },
+      { id: 'pm-forms-approvals', label: 'Pending Approvals', path: '/pm/projects/:projectId/forms?status=in_review', icon: ClipboardCheck, order: 8 },
+    ]
+  },
+
+  {
+    id: 'pm-testing-centre',
+    label: 'Quality & Testing',
     path: null,
-    icon: FolderClosed,
-    section: 'Project Closure',
+    icon: FlaskConical,
+    section: 'Quality & Testing',
     order: 7,
     children: [
+      { id: 'pm-tc-dash', label: 'Testing Dashboard', path: '/pm/testing-centre', icon: LayoutDashboard, order: 1, permission: 'testing_centre.view' },
+      { id: 'pm-tc-cases', label: 'Test Case Library', path: '/pm/testing-centre/cases', icon: ClipboardList, order: 2, permission: 'testing_centre.view' },
+      { id: 'pm-tc-drafts', label: 'Test Case Drafts', path: '/pm/testing-centre/cases/drafts', icon: FileClock, order: 3, permission: 'testing_centre.view' },
+      { id: 'pm-tc-suites', label: 'Test Suites', path: '/pm/testing-centre/suites', icon: Layers, order: 4, permission: 'testing_centre.view' },
+      { id: 'pm-tc-runs', label: 'Test Runs', path: '/pm/testing-centre/runs', icon: Activity, order: 5, permission: 'testing_centre.run' },
+      { id: 'pm-tc-scripts', label: 'Automated Scripts', path: '/pm/testing-centre/scripts', icon: Wrench, order: 6, permission: 'testing_centre.configure' },
+      { id: 'pm-tc-evidence', label: 'Screenshot Evidence', path: '/pm/testing-centre/evidence', icon: FileBox, order: 7, permission: 'testing_centre.view' },
+      { id: 'pm-tc-diag', label: 'Diagnostic Centre', path: '/pm/testing-centre/diagnostics', icon: SearchCode, order: 8, permission: 'testing_centre.view' },
+      { id: 'pm-tc-defects', label: 'Defect & Issue Links', path: '/pm/testing-centre/defects', icon: AlertTriangle, order: 9, permission: 'testing_centre.view' },
+      { id: 'pm-tc-data', label: 'Test Data Manager', path: '/pm/testing-centre/data', icon: FileText, order: 10, permission: 'testing_centre.configure' },
+      { id: 'pm-tc-reports', label: 'Reports', path: '/pm/testing-centre/reports', icon: BarChart3, order: 11, permission: 'testing_centre.view' },
+      { id: 'pm-tc-settings', label: 'Settings', path: '/pm/testing-centre/settings', icon: Settings2, order: 12, permission: 'testing_centre.configure' },
+    ]
+  },
+
+  // Section 8: Reporting & Closure (merged)
+  {
+    id: 'pm-reporting-closure',
+    label: 'Reporting & Closure',
+    path: null,
+    icon: BarChart3,
+    section: 'Reporting & Closure',
+    order: 8,
+    children: [
+      { id: 'pm-report-checkpoint', label: 'Checkpoint Reports', path: '/pm/reporting/checkpoint-reports', icon: Flag, order: 1 },
+      { id: 'pm-report-highlight', label: 'Highlight Reports', path: '/pm/reporting/highlight-reports', icon: Flag, order: 2 },
+      { id: 'pm-report-issue-reports', label: 'Issue Reports', path: '/pm/reporting/issue-reports', icon: AlertCircle, order: 3 },
+      { id: 'pm-report-exception', label: 'Exception Reports', path: '/pm/reporting/exception-reports', icon: FileWarning, order: 4 },
+      { id: 'pm-report-end-stage', label: 'End Stage Report', path: '/pm/reporting/end-stage-reports', icon: FileClock, order: 5 },
+      { id: 'pm-fin-my-expenses', label: 'My Expenses', path: '/platform/expenses/my', icon: Receipt, order: 6 },
+      { id: 'pm-fin-exp-approvals', label: 'Expense Approvals', path: '/platform/expenses/approvals', icon: ClipboardCheck, order: 7 },
+      { id: 'pm-fin-reports', label: 'Financial Reports', path: '/platform/financial-reports', icon: DollarSign, order: 8 },
+      { id: 'pm-fin-portfolio-evm', label: 'Portfolio EVM', path: '/platform/portfolio/evm', icon: TrendingUp, order: 9 },
       {
         id: 'pm-closure-lessons-report',
         label: 'Lessons Report',
         path: '/pm/closure/lessons-report',
         icon: GraduationCap,
-        order: 1
+        order: 10
       },
       {
         id: 'pm-closure-end-project-report',
         label: 'End Project Report',
         path: '/pm/closure/end-project-report',
         icon: FileCheck,
-        order: 2
+        order: 11
       }
     ]
   }

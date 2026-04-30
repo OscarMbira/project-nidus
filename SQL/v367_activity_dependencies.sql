@@ -1,5 +1,5 @@
 -- ============================================================================
--- v367: Activity dependencies / sequencing (PMBOK 5.8)
+-- v367: Activity dependencies / sequencing (Process Guide 5.8)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS activity_dependencies (

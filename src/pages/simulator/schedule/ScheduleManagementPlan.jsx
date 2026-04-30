@@ -138,7 +138,7 @@ export default function ScheduleManagementPlan() {
       <div className="mb-6 flex flex-wrap justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Schedule management plan</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Plan schedule management (PMBOK 5.6).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Plan schedule management (Process Guide 5.6).</p>
         </div>
         <ExportRecordButtons
           onExportPPT={() => exportRecordToPPT(SECTIONS, exportPayload, `ScheduleMgmtPlan_${projectId}`)}

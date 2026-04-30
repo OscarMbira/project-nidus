@@ -151,7 +151,7 @@ export default function RequirementsRegister() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Requirements register</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Collect requirements (PMBOK 5.3).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Collect requirements (Process Guide 5.3).</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <ExportListMenu columns={EXPORT_COLS} data={filtered} baseFilename={`Requirements_${projectId}`} />

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Sidebar from '../Sidebar'
+import PMSidebar from './PMSidebar'
 import SystemHeader from '../headers/SystemHeader'
 
 export default function PMLayout({ children }) {
@@ -30,8 +30,8 @@ export default function PMLayout({ children }) {
         onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
-      {/* Sidebar (DB-driven via useMenu) */}
-      <Sidebar
+      {/* PM Sidebar */}
+      <PMSidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />

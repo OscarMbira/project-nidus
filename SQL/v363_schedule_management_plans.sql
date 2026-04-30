@@ -1,5 +1,5 @@
 -- ============================================================================
--- v363: Schedule management plans (PMBOK 5.6)
+-- v363: Schedule management plans (Process Guide 5.6)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS schedule_management_plans (

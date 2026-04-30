@@ -1,5 +1,5 @@
 -- ============================================================================
--- v365: Activity list + duration estimation (PMBOK 5.7, 5.9)
+-- v365: Activity list + duration estimation (Process Guide 5.7, 5.9)
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS activity_list (

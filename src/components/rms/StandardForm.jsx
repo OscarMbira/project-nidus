@@ -12,7 +12,7 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
 
   const standardTypes = [
     { value: 'iso_31000', label: 'ISO 31000' },
-    { value: 'pmbok', label: 'PMBOK Guide' },
+    { value: 'pmbok', label: 'Process Guide' },
     { value: 'prince2', label: 'PRINCE2' },
     { value: 'm_o_r', label: 'M_o_R (Management of Risk)' },
     { value: 'corporate', label: 'Corporate Standard' },
@@ -44,7 +44,7 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
             value={standardData.standard_code || ''}
             onChange={(e) => handleChange('standard_code', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="e.g., ISO-31000, PMBOK-6"
+            placeholder="e.g., ISO-31000, Process-Guide-6"
           />
         </div>
 
@@ -77,7 +77,7 @@ export default function StandardForm({ standardData = {}, onChange, onCancel, on
           value={standardData.standard_name || ''}
           onChange={(e) => handleChange('standard_name', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-          placeholder="e.g., ISO 31000:2018, PMBOK Guide 7th Edition"
+          placeholder="e.g., ISO 31000:2018, Process Guide 7th Edition"
           required
         />
       </div>

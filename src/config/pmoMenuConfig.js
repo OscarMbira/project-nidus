@@ -45,7 +45,9 @@ import {
   Sparkles,
   Presentation,
   RefreshCcw,
-  ShieldCheck
+  ShieldCheck,
+  FlaskConical,
+  Users
 } from 'lucide-react';
 
 const pmoMenuConfig = [
@@ -59,14 +61,34 @@ const pmoMenuConfig = [
     order: 0
   },
 
+  // Section 1: Portfolio & Programme
+  {
+    id: 'pmo-portfolio-programme',
+    label: 'Portfolio & Programme',
+    path: null,
+    icon: Briefcase,
+    section: 'Portfolio & Programme',
+    order: 1,
+    children: [
+      { id: 'pmo-pp-all-projects', label: 'All Projects', path: '/platform/projects/all', icon: Briefcase, order: 1 },
+      { id: 'pmo-pp-create-project', label: 'Create Project', path: '/platform/projects/create', icon: FilePlus, order: 2 },
+      { id: 'pmo-pp-project-templates', label: 'Project Templates', path: '/platform/projects/templates', icon: Layers, order: 3 },
+      { id: 'pmo-pp-on-hold', label: 'On Hold', path: '/app/projects/on-hold', icon: Pause, order: 4 },
+      { id: 'pmo-pp-programme', label: 'Programme Management', path: '/platform/programme', icon: Layers, order: 5 },
+      { id: 'pmo-pp-benefits', label: 'Benefits Management', path: '/platform/benefits', icon: TrendingUp, order: 6 },
+      { id: 'pmo-pp-dependencies', label: 'Dependencies', path: '/platform/dependencies', icon: GitBranch, order: 7 },
+      { id: 'pmo-pp-collisions', label: 'Portfolio Collisions', path: '/pmo/planning/collisions', icon: AlertTriangle, order: 8 },
+    ],
+  },
+
   // Section 1: PMO Governance (Baselines)
   {
     id: 'pmo-governance',
-    label: 'PMO Governance',
+    label: 'Governance & Standards',
     path: null,
     icon: Shield,
-    section: 'PMO Governance',
-    order: 1,
+    section: 'Governance & Standards',
+    order: 2,
     children: [
       {
         id: 'pmo-gov-mandate',
@@ -109,6 +131,20 @@ const pmoMenuConfig = [
         path: '/pmo/governance/risk-strategy',
         icon: AlertTriangle,
         order: 6
+      },
+      {
+        id: 'pmo-gov-itto-templates',
+        label: 'ITTO Templates',
+        path: '/pmo/itto/templates',
+        icon: GitBranch,
+        order: 7
+      },
+      {
+        id: 'pmo-gov-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/pmo/itto/drafts',
+        icon: Pause,
+        order: 8
       }
     ]
   },
@@ -120,7 +156,7 @@ const pmoMenuConfig = [
     path: null,
     icon: Briefcase,
     section: 'Initiation & Business Justification',
-    order: 2,
+    order: 3,
     children: [
       {
         id: 'pmo-init-business-case',
@@ -153,7 +189,7 @@ const pmoMenuConfig = [
     path: null,
     icon: Eye,
     section: 'Project Oversight',
-    order: 3,
+    order: 4,
     children: [
       {
         id: 'pmo-oversight-risk-register',
@@ -189,6 +225,34 @@ const pmoMenuConfig = [
         path: '/pmo/oversight/delays',
         icon: FileClock,
         order: 5
+      },
+      {
+        id: 'pmo-oversight-delay-templates',
+        label: 'Delay Templates',
+        path: '/pmo/delays/templates',
+        icon: Layers,
+        order: 6
+      },
+      {
+        id: 'pmo-oversight-scope',
+        label: 'Scope Oversight',
+        path: '/pmo/oversight/scope',
+        icon: ClipboardList,
+        order: 7
+      },
+      {
+        id: 'pmo-oversight-schedules',
+        label: 'Schedule Oversight',
+        path: '/pmo/oversight/schedules',
+        icon: FileClock,
+        order: 8
+      },
+      {
+        id: 'pmo-oversight-changes',
+        label: 'Change Register (All)',
+        path: '/pmo/registers/changes',
+        icon: RefreshCcw,
+        order: 9
       }
     ]
   },
@@ -200,7 +264,7 @@ const pmoMenuConfig = [
     path: null,
     icon: BarChart3,
     section: 'Reporting & Assurance',
-    order: 4,
+    order: 9,
     children: [
       {
         id: 'pmo-report-highlight',
@@ -229,6 +293,20 @@ const pmoMenuConfig = [
         path: '/pmo/reporting/end-project-reports',
         icon: FileCheck,
         order: 4
+      },
+      {
+        id: 'pmo-report-library',
+        label: 'Report Library',
+        path: '/platform/reports',
+        icon: FileText,
+        order: 5
+      },
+      {
+        id: 'pmo-report-analytics',
+        label: 'Analytics',
+        path: '/platform/reports/analytics',
+        icon: BarChart3,
+        order: 6
       }
     ]
   },
@@ -239,8 +317,8 @@ const pmoMenuConfig = [
     label: 'Procurement',
     path: null,
     icon: ShoppingCart,
-    section: 'Procurement',
-    order: 5,
+    section: 'Administration',
+    order: 8,
     children: [
       {
         id: 'pmo-proc-rfp',
@@ -255,7 +333,7 @@ const pmoMenuConfig = [
         path: '/pmo/rfp/create',
         icon: FilePlus,
         order: 2,
-        permission: 'pmo_admin'
+        permission: 'pmo.admin'
       },
       {
         id: 'pmo-proc-rfp-on-hold',
@@ -263,50 +341,7 @@ const pmoMenuConfig = [
         path: '/pmo/rfp/on-hold',
         icon: Pause,
         order: 3,
-        permission: 'pmo_admin'
-      }
-    ]
-  },
-
-  {
-    id: 'pmo-itto',
-    label: 'ITTO Management',
-    path: null,
-    icon: GitBranch,
-    section: 'ITTO Management',
-    order: 5.5,
-    children: [
-      {
-        id: 'pmo-itto-templates',
-        label: 'ITTO Templates',
-        path: '/pmo/itto/templates',
-        icon: Layers,
-        order: 1
-      },
-      {
-        id: 'pmo-itto-drafts',
-        label: 'ITTO Drafts',
-        path: '/pmo/itto/drafts',
-        icon: Pause,
-        order: 2
-      }
-    ]
-  },
-
-  {
-    id: 'pmo-delay-templates',
-    label: 'Delay Management',
-    path: null,
-    icon: Layers,
-    section: 'Delay Management',
-    order: 5.52,
-    children: [
-      {
-        id: 'pmo-delay-templates-crud',
-        label: 'Delay Templates',
-        path: '/pmo/delays/templates',
-        icon: Layers,
-        order: 1
+        permission: 'pmo.admin'
       }
     ]
   },
@@ -317,7 +352,7 @@ const pmoMenuConfig = [
     path: null,
     icon: BarChart3,
     section: 'Planning Intelligence',
-    order: 5.5,
+    order: 5,
     children: [
       {
         id: 'pmo-planning-hub',
@@ -356,7 +391,7 @@ const pmoMenuConfig = [
     path: null,
     icon: DollarSign,
     section: 'Financial Management',
-    order: 6,
+    order: 7,
     children: [
       {
         id: 'pmo-fin-reports',
@@ -387,7 +422,86 @@ const pmoMenuConfig = [
         order: 4
       }
     ]
-  }
+  },
+
+  {
+    id: 'pmo-pmbok-forms',
+    label: 'Process Group Forms',
+    path: '/pmo/forms',
+    icon: FileText,
+    section: 'Process Group Forms',
+    order: 6,
+    permission: 'form.view_all',
+    children: [
+      { id: 'pmo-forms-initiating', label: 'Initiating', path: '/pmo/forms?group=Initiating', icon: FileText, order: 1, permission: 'form.view_all' },
+      { id: 'pmo-forms-planning', label: 'Planning', path: '/pmo/forms?group=Planning', icon: FileText, order: 2, permission: 'form.view_all' },
+      { id: 'pmo-forms-executing', label: 'Executing', path: '/pmo/forms?group=Executing', icon: FileText, order: 3, permission: 'form.view_all' },
+      { id: 'pmo-forms-monitoring', label: 'Monitoring & Controlling', path: '/pmo/forms?group=Monitoring', icon: FileText, order: 4, permission: 'form.view_all' },
+      { id: 'pmo-forms-closing', label: 'Closing', path: '/pmo/forms?group=Closing', icon: FileText, order: 5, permission: 'form.view_all' },
+      { id: 'pmo-forms-agile', label: 'Agile', path: '/pmo/forms?group=Agile', icon: FileText, order: 6, permission: 'form.view_all' },
+      { id: 'pmo-forms-drafts', label: 'My Drafts', path: '/pmo/forms?status=draft', icon: FileClock, order: 7, permission: 'form.view_all' },
+      { id: 'pmo-forms-approvals', label: 'Pending Approvals', path: '/pmo/forms?status=in_review', icon: FileCheck, order: 8, permission: 'form.approve' },
+    ]
+  },
+  {
+    id: 'pmo-testing-centre',
+    label: 'Quality & Testing',
+    path: null,
+    icon: FlaskConical,
+    section: 'Quality & Testing',
+    order: 8,
+    children: [
+      { id: 'pmo-tc-dash', label: 'Testing Dashboard', path: '/pmo/testing-centre', icon: FlaskConical, order: 1, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-cases', label: 'Test Case Library', path: '/pmo/testing-centre/cases', icon: FlaskConical, order: 2, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-drafts', label: 'Test Case Drafts', path: '/pmo/testing-centre/cases/drafts', icon: FlaskConical, order: 3, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-suites', label: 'Test Suites', path: '/pmo/testing-centre/suites', icon: FlaskConical, order: 4, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-runs', label: 'Test Runs', path: '/pmo/testing-centre/runs', icon: FlaskConical, order: 5, permission: 'testing_centre.run' },
+      { id: 'pmo-tc-scripts', label: 'Automated Scripts', path: '/pmo/testing-centre/scripts', icon: FlaskConical, order: 6, permission: 'testing_centre.configure' },
+      { id: 'pmo-tc-evidence', label: 'Screenshot Evidence', path: '/pmo/testing-centre/evidence', icon: FlaskConical, order: 7, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-diag', label: 'Diagnostic Centre', path: '/pmo/testing-centre/diagnostics', icon: FlaskConical, order: 8, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-defects', label: 'Defect & Issue Links', path: '/pmo/testing-centre/defects', icon: FlaskConical, order: 9, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-data', label: 'Test Data Manager', path: '/pmo/testing-centre/data', icon: FlaskConical, order: 10, permission: 'testing_centre.configure' },
+      { id: 'pmo-tc-reports', label: 'Reports', path: '/pmo/testing-centre/reports', icon: FlaskConical, order: 11, permission: 'testing_centre.view' },
+      { id: 'pmo-tc-settings', label: 'Settings', path: '/pmo/testing-centre/settings', icon: FlaskConical, order: 12, permission: 'testing_centre.configure' },
+      { id: 'pmo-testing-quality-register', label: 'Quality Register (All)', path: '/pmo/oversight/quality-register', icon: ClipboardList, order: 13, permission: 'testing_centre.view' },
+    ]
+  },
+  {
+    id: 'pmo-administration',
+    label: 'Administration',
+    path: null,
+    icon: Settings2,
+    section: 'Administration',
+    order: 10,
+    children: [
+      { id: 'pmo-admin-form-templates', label: 'Form Templates', path: '/platform/admin/form-templates', icon: FileText, order: 1, permission: 'form_template.manage' },
+      { id: 'pmo-admin-org-settings', label: 'Organisation Settings', path: '/platform/pmo-admin/settings', icon: Settings2, order: 2, permission: 'pmo.admin' },
+      { id: 'pmo-admin-users', label: 'User Management', path: '/platform/pmo-admin/users', icon: Shield, order: 3, permission: 'pmo.admin' },
+      { id: 'pmo-admin-role-menu-access', label: 'Role Menu Access', path: '/platform/pmo/role-menu-access', icon: ShieldCheck, order: 4, permission: 'pmo.admin' },
+      { id: 'pmo-admin-project-types', label: 'Project Types', path: '/platform/pmo-admin/project-types', icon: Layers, order: 5, permission: 'pmo.admin' },
+      { id: 'pmo-admin-funding-sources', label: 'Funding Sources', path: '/platform/pmo-admin/funding-sources', icon: DollarSign, order: 6, permission: 'pmo.admin' },
+      { id: 'pmo-admin-budget-categories', label: 'Budget Categories', path: '/platform/pmo-admin/budget-categories', icon: DollarSign, order: 7, permission: 'pmo.admin' },
+      { id: 'pmo-admin-rfp', label: 'RFP Register', path: '/pmo/procurement/rfp', icon: ShoppingCart, order: 8, permission: 'pmo.admin' },
+      { id: 'pmo-admin-rfp-load', label: 'Load RFP', path: '/pmo/rfp/create', icon: FilePlus, order: 9, permission: 'pmo.admin' },
+      { id: 'pmo-admin-rfp-drafts', label: 'RFP Drafts', path: '/pmo/rfp/on-hold', icon: Pause, order: 10, permission: 'pmo.admin' },
+      { id: 'pmo-admin-subscription', label: 'Subscription', path: '/platform/pmo-admin/subscription', icon: Settings2, order: 11, permission: 'system.admin' },
+      { id: 'pmo-admin-branding', label: 'Branding', path: '/platform/pmo-admin/branding', icon: Settings2, order: 12, permission: 'system.admin' },
+    ]
+  },
+  {
+    id: 'pmo-people-resources',
+    label: 'People & Resources',
+    path: null,
+    icon: Users,
+    section: 'People & Resources',
+    order: 10,
+    children: [
+      { id: 'pmo-people-manager-assignments', label: 'Manager Assignments', path: '/platform/pmo-admin/manager-assignments', icon: Users, order: 1, permission: 'pmo.admin' },
+      { id: 'pmo-people-assignment-settings', label: 'Assignment Settings', path: '/platform/pmo-admin/manager-assignment-settings', icon: Settings2, order: 2, permission: 'pmo.admin' },
+      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 3, permission: 'pmo.admin' },
+      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 4, permission: 'pmo.admin' },
+    ],
+  },
 ];
 
 export default pmoMenuConfig;

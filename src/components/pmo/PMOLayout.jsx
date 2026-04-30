@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Sidebar from '../Sidebar'
+import PMOSidebar from './PMOSidebar'
 import PlatformAppHeader from '../headers/PlatformAppHeader'
 
 export default function PMOLayout({ children }) {
@@ -10,8 +10,8 @@ export default function PMOLayout({ children }) {
       {/* Platform App Header (same as /platform/* routes) */}
       <PlatformAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-      {/* Platform Sidebar (DB-driven, same as /platform/* routes) */}
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {/* PMO Sidebar */}
+      <PMOSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content - scrollable when form/content exceeds viewport */}
       <main id="main-content" className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:ml-80 pt-14 sm:pt-16">

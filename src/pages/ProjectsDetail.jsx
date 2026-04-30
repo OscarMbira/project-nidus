@@ -17,7 +17,7 @@ import { getProjectProgramme } from '../services/programmeService'
 import ProjectFormTabs from '../components/project/ProjectFormTabs'
 import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
 import ProjectPlanningOverview from '../components/planning/ProjectPlanningOverview'
-import { mapDbProjectToWizardForm } from '../utils/projectWizardFormUtils'
+import { mapDbProjectToWizardForm, normalizeEmbeddedList } from '../utils/projectWizardFormUtils'
 import { getByProjectId } from '../services/projectBudgetCategoryService'
 import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
 import { getFundingSources } from '../services/fundingSourceService'
@@ -174,15 +174,15 @@ export default function ProjectsDetail() {
         .single()
 
       if (error) throw error
-      setProject(data)
 
-      const code = data?.project_code?.trim()
-      if (code && routeKey && looksLikeProjectUuid(routeKey)) {
-        navigate(platformProjectPath(code), { replace: true })
-      }
+      const normalized =
+        data != null
+          ? { ...data, project_methodologies: normalizeEmbeddedList(data.project_methodologies) }
+          : data
+      setProject(normalized)
 
       // Fetch QMS and RMS status
-      if (data) {
+      if (normalized) {
         const [qmsResult, rmsResult, portfolioResult, programmeResult] = await Promise.all([
           getQMSByProject(projectId),
           getRMSByProject(projectId),
@@ -193,6 +193,11 @@ export default function ProjectsDetail() {
         if (rmsResult?.success) setRms(rmsResult.data ?? null)
         setPortfolioAssignment(portfolioResult || null)
         setProgrammeAssignment(programmeResult || null)
+
+        const code = normalized?.project_code?.trim()
+        if (code && routeKey && looksLikeProjectUuid(routeKey)) {
+          navigate(platformProjectPath(code), { replace: true })
+        }
       }
     } catch (error) {
       console.error('Error fetching project:', error)
@@ -204,14 +209,19 @@ export default function ProjectsDetail() {
   }
 
   useEffect(() => {
-    if (!project || !projectId) {
+    if (!project) {
       setWizardFormData(null)
+      return
+    }
+    // During UUID → project_code URL replace, projectId can briefly be null while project is loaded.
+    // Do not clear the wizard in that window; wait until we can load budget rows.
+    if (!projectId) {
       return
     }
     let cancelled = false
     ;(async () => {
       try {
-        const pmRow = project.project_methodologies?.[0]
+        const pmRow = normalizeEmbeddedList(project.project_methodologies)[0]
         const methodologyId = pmRow?.methodology_id || ''
         const legacyBudget = project.budget_amount ?? project.budget
         const catRes = await getByProjectId(projectId)

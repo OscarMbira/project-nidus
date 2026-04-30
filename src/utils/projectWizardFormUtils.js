@@ -9,6 +9,15 @@ export function formatProjectDate(value) {
   }
 }
 
+/**
+ * PostgREST may return a nested one-to-many row as a single object instead of a one-element array.
+ * Always treat as an array before .find / .map.
+ */
+export function normalizeEmbeddedList(v) {
+  if (v == null) return []
+  return Array.isArray(v) ? v : [v]
+}
+
 /** Full wizard form shape aligned with ProjectsCreate / projects table columns */
 export function getEmptyWizardFormData() {
   return {

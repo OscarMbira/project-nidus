@@ -12,6 +12,7 @@ import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
 import {
   getEmptyWizardFormData,
   mapDbProjectToWizardForm,
+  normalizeEmbeddedList,
   wizardFormToProjectUpdatePayload,
   omitOptionalProjectWizardColumns,
   isSchemaCacheColumnError,
@@ -167,23 +168,23 @@ export default function ProjectsEdit() {
         .single()
 
       if (error) throw error
-      setProject(data)
 
-      const code = data?.project_code?.trim()
-      if (code && routeKey && looksLikeProjectUuid(routeKey)) {
-        navigate(platformProjectPath(code), { replace: true })
-      }
+      const normalized =
+        data != null
+          ? { ...data, project_methodologies: normalizeEmbeddedList(data.project_methodologies) }
+          : data
+      setProject(normalized)
 
-      if (data) {
-        const pmList = data.project_methodologies || []
+      if (normalized) {
+        const pmList = normalized.project_methodologies
         const activePm = pmList.find((m) => m.is_deleted === false) || pmList[0]
         const methodologyId = activePm?.methodology_id || ''
-        const legacyBudget = data.budget_amount ?? data.budget
+        const legacyBudget = normalized.budget_amount ?? normalized.budget
 
         const catRes = await getByProjectId(projectId)
         const rows = catRes?.success && Array.isArray(catRes.data) ? catRes.data : []
 
-        const mapped = mapDbProjectToWizardForm(data, methodologyId, rows, legacyBudget)
+        const mapped = mapDbProjectToWizardForm(normalized, methodologyId, rows, legacyBudget)
         setFormData(mapped)
 
         const [portRes, progRes] = await Promise.all([
@@ -197,6 +198,13 @@ export default function ProjectsEdit() {
         setSelectedProgrammeId(gId)
         setSelectedProgramme(progRes?.programmes ?? null)
         setAssignmentSnapshot({ portfolioId: pId, programmeId: gId })
+
+        // Replace UUID URLs with human-readable project_code only after form state is set.
+        // Doing this earlier caused a route transition before setFormData, leaving the edit form empty.
+        const code = normalized?.project_code?.trim()
+        if (code && routeKey && looksLikeProjectUuid(routeKey)) {
+          navigate(platformProjectPath(code, 'edit'), { replace: true })
+        }
       }
     } catch (error) {
       console.error('Error fetching project:', error)

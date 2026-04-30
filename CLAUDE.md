@@ -44,6 +44,8 @@
 39) Always make sure to implement the Progressive Web App (PWA) functionality which will be used by users to access the system, especially through their mobile devices. This has to be done for ALL NEW/Amended/Updated funtionalities/Features added in the system(both Platform and Simulation).
 40) For any NEW table/list, add clickable, sortable column headers to every table and list view across the Platform and Simulator systems. Clicking a column heading cycles through: **unsorted → ascending → descending → unsorted**. Visual indicators (↑ ↓ ⇅) show the current sort state. This applies consistently to both HTML `<table>` pages and card/list-view pages (via a sort toolbar).
 41) For NEW tables/lists, add a consistent **Card ⊞ / Table-List ≡ view toggle** to every table and list page across the Platform and Simulator systems(show all CRUD operation button for each record). Both views always include a **search bar**. The user's last-chosen view is remembered per page via `localStorage`.
+42) Do NOT bypass RLS policies as a workaround.
+43) Run the retest suite after each fix to confirm no regressions
 
 ## Simulator Module Architecture Rules
 

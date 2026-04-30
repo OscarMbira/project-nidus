@@ -37,7 +37,7 @@ export default function GanttChartPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gantt chart</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Timeline from planned dates (PMBOK 5.10).</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Timeline from planned dates (Process Guide 5.10).</p>
         </div>
         <div className="flex gap-2">
           <button

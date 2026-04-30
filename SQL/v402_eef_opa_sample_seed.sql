@@ -2,7 +2,7 @@
 -- v402: Sample EEF & OPA seed data (Platform + Simulator)
 -- Prerequisites: v400_eef_opa_tables.sql (tables + global categories + permissions)
 -- Description: Inserts realistic Enterprise Environment Factors and Organisational
---              Process Assets aligned with common PM practice (PMBOK-style naming).
+--              Process Assets aligned with common PM practice (process guide naming).
 --              Idempotent: skips if the target org already has any EEF or OPA rows.
 --              Only seeds the oldest account (created_at ASC). For every account, use
 --              v404_eef_opa_sample_seed_all_accounts.sql instead.
@@ -80,7 +80,7 @@ BEGIN
         'Organisational culture, structure, and governance',
         'Shared values, norms, reporting lines, and decision-making style that shape how projects are authorised, staffed, and governed.',
         v_cat_culture, 'internal', 'high', 'neutral',
-        'PMBOK — Enterprise Environmental Factors',
+        'Process Guide — Enterprise Environmental Factors',
         'active',
         'Treat as baseline context for stakeholder engagement and escalation paths.',
         FALSE, v_org_id, v_creator

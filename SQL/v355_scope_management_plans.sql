@@ -1,5 +1,5 @@
 -- ============================================================================
--- v355: Scope Management Plans (PMBOK 5.2) + portfolio_manager role template
+-- v355: Scope Management Plans (Process Guide 5.2) + portfolio_manager role template
 -- Prerequisites: projects, users, project_roles, stakeholders (optional)
 -- Date: 2026-03-31
 -- ============================================================================

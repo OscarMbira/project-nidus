@@ -96,6 +96,8 @@ function MenuItem({ menuItem, level = 0 }) {
 
 export default function DynamicMenu() {
   const { menuItems, loading, error } = useMenu()
+  const location = useLocation()
+  const isSimulatorContext = (location.pathname || '').startsWith('/simulator')
 
   if (loading) {
     return (
@@ -157,9 +159,33 @@ export default function DynamicMenu() {
     )
   }
 
+  const routeMatchesContext = (routePath) => {
+    const route = (routePath || '').trim()
+    if (!route) return true
+    if (isSimulatorContext) return route.startsWith('/simulator')
+    return !route.startsWith('/simulator')
+  }
+
+  const pruneMenuTreeByContext = (items = []) =>
+    items
+      .map((item) => {
+        const children = Array.isArray(item.children) ? pruneMenuTreeByContext(item.children) : []
+        const hasChildren = children.length > 0
+        const ownRouteOk = routeMatchesContext(item.route_path)
+        if (!String(item.route_path || '').trim() && !hasChildren) return null
+        if (String(item.route_path || '').trim() && !ownRouteOk) {
+          if (!hasChildren) return null
+          return { ...item, route_path: null, children }
+        }
+        return { ...item, children: hasChildren ? children : item.children }
+      })
+      .filter(Boolean)
+
+  const contextMenuItems = pruneMenuTreeByContext(menuItems)
+
   return (
     <nav className="flex flex-wrap items-center gap-1">
-      {menuItems.map((menuItem) => (
+      {contextMenuItems.map((menuItem) => (
         <MenuItem key={menuItem.id} menuItem={menuItem} />
       ))}
     </nav>

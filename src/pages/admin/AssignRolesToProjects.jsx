@@ -147,9 +147,12 @@ export default function AssignRolesToProjects() {
         setError(errorMsg)
       }
 
-      // Handle users result (non-critical - don't show error if it fails)
       if (usersResult.status === 'fulfilled' && usersResult.value.success) {
         setUsers(usersResult.value.data || [])
+      } else if (usersResult.status === 'fulfilled' && usersResult.value && !usersResult.value.success) {
+        setError(usersResult.value.error || 'Failed to load users for assignment')
+      } else if (usersResult.status === 'rejected') {
+        setError(usersResult.reason?.message || 'Failed to load users')
       }
     } catch (err) {
       setError(err.message || 'Failed to load data. Please refresh the page.')
