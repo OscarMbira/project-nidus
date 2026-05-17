@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Eye, Pencil, PauseCircle } from 'lucide-react'
 import { listOPAs } from '../../../services/sim/simOPAService'
+import { listSimulationRunsForPicker } from '../../../services/sim/simProjectOPATailoringService'
 import { ensureEefOpaSampleForAccount } from '../../../services/eefService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 import ExportListMenu from '../../../components/ui/ExportListMenu'
@@ -21,6 +22,8 @@ const COLS = [
 
 export default function SimOPAList() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const templateOnly = searchParams.get('type') === 'template'
   const [accountId, setAccountId] = useState(null)
   const [contextReady, setContextReady] = useState(false)
   const [rows, setRows] = useState([])
@@ -32,6 +35,9 @@ export default function SimOPAList() {
   const [search, setSearch] = useState('')
   const [deb, setDeb] = useState('')
   const [viewMode, setViewMode] = useViewMode('sim-opa-list', 'list')
+  const [practiceProjects, setPracticeProjects] = useState([])
+  const [pickOpaId, setPickOpaId] = useState(null)
+  const [pickProjectId, setPickProjectId] = useState('')
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'updated_at', direction: 'desc' },
     storageKey: 'nidus-sim-opa-sort',
@@ -78,7 +84,10 @@ export default function SimOPAList() {
       setLoading(true)
       setErr(null)
       setSeedErr(null)
-      const { data, error } = await listOPAs(accountId, { search: deb })
+      const { data, error } = await listOPAs(accountId, {
+        search: deb,
+        opaType: templateOnly ? 'template' : null,
+      })
       if (c) return
       if (error) {
         setErr(error.message || 'Failed to load OPA list.')
@@ -92,7 +101,20 @@ export default function SimOPAList() {
     return () => {
       c = true
     }
-  }, [contextReady, accountId, deb, listVersion])
+  }, [contextReady, accountId, deb, listVersion, templateOnly])
+
+  useEffect(() => {
+    if (!templateOnly) return
+    ;(async () => {
+      const { data } = await listSimulationRunsForPicker()
+      setPracticeProjects(
+        (data || []).map((r) => ({
+          id: r.id,
+          project_name: r.scenario_id ? `Practice run ${r.id.slice(0, 8)}` : r.id.slice(0, 8),
+        }))
+      )
+    })()
+  }, [templateOnly])
 
   async function handleLoadSampleData() {
     if (!accountId) return
@@ -113,6 +135,17 @@ export default function SimOPAList() {
 
   const base = '/simulator/opa'
 
+  function openUseInProject(opaId) {
+    setPickOpaId(opaId)
+    setPickProjectId('')
+  }
+
+  function confirmUseInProject() {
+    if (!pickProjectId || !pickOpaId) return
+    navigate(`/simulator/practice-projects/${pickProjectId}/opa-templates/new?from_opa=${pickOpaId}`)
+    setPickOpaId(null)
+  }
+
   if (!contextReady) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12 text-center text-gray-600 dark:text-gray-400">
@@ -132,18 +165,24 @@ export default function SimOPAList() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-wrap justify-between gap-2 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Simulator — Process Assets</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {templateOnly ? 'Simulator — OPA Templates' : 'Simulator — Process Assets'}
+        </h1>
         <div className="flex gap-2">
           <ExportListMenu columns={COLS} data={ex} baseFilename="Sim_OPA" disabled={!ex.length} />
-          <Link to={`${base}/on-hold`} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 min-h-[44px] inline-flex items-center gap-1">
-            <PauseCircle className="h-4 w-4" /> Drafts
-          </Link>
-          <Link to={`${base}/bulk-upload`} className="px-4 py-2 rounded-lg border min-h-[44px]">
-            Bulk
-          </Link>
-          <Link to={`${base}/new`} className="px-4 py-2 rounded-lg bg-sky-600 text-white inline-flex items-center gap-1">
-            <Plus className="h-5 w-5" /> Add
-          </Link>
+          {!templateOnly && (
+            <>
+              <Link to={`${base}/on-hold`} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 min-h-[44px] inline-flex items-center gap-1">
+                <PauseCircle className="h-4 w-4" /> Drafts
+              </Link>
+              <Link to={`${base}/bulk-upload`} className="px-4 py-2 rounded-lg border min-h-[44px]">
+                Bulk
+              </Link>
+              <Link to={`${base}/new`} className="px-4 py-2 rounded-lg bg-sky-600 text-white inline-flex items-center gap-1">
+                <Plus className="h-5 w-5" /> Add
+              </Link>
+            </>
+          )}
         </div>
       </div>
       <div className="flex gap-2 mb-4">
@@ -168,9 +207,16 @@ export default function SimOPAList() {
                 <button type="button" className="text-sky-600" onClick={() => navigate(`${base}/${r.id}`)}>
                   <Eye className="inline h-4 w-4" /> View
                 </button>
-                <button type="button" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                  <Pencil className="inline h-4 w-4" /> Edit
-                </button>
+                {!templateOnly && (
+                  <button type="button" onClick={() => navigate(`${base}/${r.id}/edit`)}>
+                    <Pencil className="inline h-4 w-4" /> Edit
+                  </button>
+                )}
+                {templateOnly && (
+                  <button type="button" className="text-violet-600" onClick={() => openUseInProject(r.id)}>
+                    Use in project →
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -202,9 +248,16 @@ export default function SimOPAList() {
                     <button type="button" className="text-sky-600 text-sm" onClick={() => navigate(`${base}/${r.id}`)}>
                       View
                     </button>
-                    <button type="button" className="text-sm" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                      Edit
-                    </button>
+                    {!templateOnly && (
+                      <button type="button" className="text-sm" onClick={() => navigate(`${base}/${r.id}/edit`)}>
+                        Edit
+                      </button>
+                    )}
+                    {templateOnly && (
+                      <button type="button" className="text-sm text-violet-600" onClick={() => openUseInProject(r.id)}>
+                        Use in project →
+                      </button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -212,6 +265,34 @@ export default function SimOPAList() {
           </Table>
         </div>
       )}
+      {pickOpaId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
+            <h2 className="text-lg font-semibold mb-2">Use template in practice project</h2>
+            <select
+              value={pickProjectId}
+              onChange={(e) => setPickProjectId(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2 mb-4 min-h-[44px]"
+            >
+              <option value="">Select practice project</option>
+              {practiceProjects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.project_name}
+                </option>
+              ))}
+            </select>
+            <div className="flex justify-end gap-2">
+              <button type="button" className="px-4 py-2 border rounded-lg" onClick={() => setPickOpaId(null)}>
+                Cancel
+              </button>
+              <button type="button" className="px-4 py-2 bg-sky-600 text-white rounded-lg" onClick={confirmUseInProject} disabled={!pickProjectId}>
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!loading && !seedLoading && !displayRows.length && (
         <div className="text-center text-gray-500 dark:text-gray-400 py-12 space-y-4 max-w-lg mx-auto">
           <p>No OPA records yet. Add your own or load the starter sample (adds both EEF and OPA in sim).</p>

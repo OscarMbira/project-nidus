@@ -63,8 +63,12 @@ export default function ProtectedRoute({
           return
         }
 
+        // Invited team members (PMs, etc.) don't own an org and haven't gone through
+        // the subscription flow. Skip the registration/access modal for them.
+        const isInvitedMember = orgStatus?.isInvitedMember === true
+
         // Step 3: Run registration + subscription checks in PARALLEL (saves ~200ms)
-        if (needsPlatformCheck) {
+        if (needsPlatformCheck && !isInvitedMember) {
           try {
             const [hasRegistered, hasAccess] = await Promise.all([
               hasRegisteredForPlatform(user.id, requiredPlatform),

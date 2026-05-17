@@ -5,6 +5,20 @@
 
 export const simulatorMenuConfig = [
   {
+    id: 'sim-live-simulation',
+    label: 'Live Simulation',
+    path: '/simulator/run/active/dashboard',
+    icon: 'play',
+    subscriptionTier: null,
+    children: [
+      { id: 'sim-live-start', label: 'Start New Run', path: '/simulator/run/setup', icon: 'play-circle', subscriptionTier: null },
+      { id: 'sim-live-dash', label: 'Active Run Dashboard', path: '/simulator/run/active/dashboard', icon: 'layout-dashboard', subscriptionTier: null },
+      { id: 'sim-live-inbox', label: 'Event Inbox', path: '/simulator/run/active/inbox', icon: 'inbox', subscriptionTier: null },
+      { id: 'sim-live-evm', label: 'EVM Dashboard', path: '/simulator/run/active/evm', icon: 'trending-up', subscriptionTier: null },
+      { id: 'sim-live-history', label: 'My Run History', path: '/simulator/runs', icon: 'history', subscriptionTier: null },
+    ],
+  },
+  {
     id: 'sim-dashboard',
     label: 'Dashboard',
     path: '/simulator/dashboard',
@@ -874,6 +888,14 @@ export const simulatorMenuConfig = [
     path: '/simulator/settings',
     icon: 'settings',
     subscriptionTier: null,
+  },
+  {
+    id: 'sim-local-data-extensions',
+    label: 'Local Data Extensions',
+    path: '/simulator/local-data-extensions',
+    icon: 'layers',
+    subscriptionTier: null,
+    permission: 'pmo.admin',
   },
 ]
 

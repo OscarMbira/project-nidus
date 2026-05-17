@@ -4,20 +4,35 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../../services/supabaseClient'
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { appDb as supabase } from '../../services/supabase/supabaseClient'
 import { validateInvitationToken, getInvitationByToken } from '../../services/invitationService'
-import { acceptInvitation } from '../../services/projectMembershipService'
-import { Mail, Lock, AlertCircle, Loader, CheckCircle, UserPlus } from 'lucide-react'
+import { acceptInvitation, declineInvitationByToken } from '../../services/projectMembershipService'
+import { normalizeSupabaseAuthError } from '../../utils/authErrorMessage'
+import {
+  Mail,
+  Lock,
+  AlertCircle,
+  Loader,
+  CheckCircle,
+  UserPlus,
+  XCircle,
+} from 'lucide-react'
 
 export default function InvitationAccept() {
-  const { token } = useParams()
+  const { token: pathToken } = useParams()
+  const [searchParams] = useSearchParams()
+  const token = pathToken || searchParams.get('token') || ''
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [invitation, setInvitation] = useState(null)
+  const [invitationId, setInvitationId] = useState(null)
   const [isExistingUser, setIsExistingUser] = useState(false)
   const [accepting, setAccepting] = useState(false)
+  const [declining, setDeclining] = useState(false)
+  const [declined, setDeclined] = useState(false)
+  const [declineConfirmOpen, setDeclineConfirmOpen] = useState(false)
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
@@ -25,12 +40,24 @@ export default function InvitationAccept() {
     loadInvitation()
   }, [token])
 
+  useEffect(() => {
+    if (
+      searchParams.get('action') === 'decline' &&
+      !loading &&
+      invitation &&
+      !declined &&
+      !declineConfirmOpen
+    ) {
+      setDeclineConfirmOpen(true)
+      setError(null)
+    }
+  }, [searchParams, loading, invitation, declined, declineConfirmOpen])
+
   const loadInvitation = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Validate invitation token
       const result = await validateInvitationToken(token)
       if (!result.success) {
         setError(result.error || 'Invalid invitation')
@@ -39,13 +66,20 @@ export default function InvitationAccept() {
       }
 
       setInvitation(result.data)
+      let invId = result.data?.invitation_id ?? null
 
-      // Check if user is already logged in
-      const { data: { user } } = await supabase.auth.getUser()
+      const detail = await getInvitationByToken(token)
+      if (detail.success && detail.data?.id) {
+        invId = detail.data.id
+      }
+      setInvitationId(invId)
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (user) {
         setIsExistingUser(true)
       } else {
-        // Check if user exists with this email
         const { data: existingUser } = await supabase
           .from('users')
           .select('id, email')
@@ -62,12 +96,30 @@ export default function InvitationAccept() {
     }
   }
 
+  const handleConfirmDecline = async () => {
+    setError(null)
+    setDeclining(true)
+    try {
+      const res = await declineInvitationByToken(token)
+      if (!res.success) {
+        setError(res.error || 'Failed to decline invitation')
+        return
+      }
+      setDeclined(true)
+      setDeclineConfirmOpen(false)
+    } catch (err) {
+      console.error('Error declining invitation:', err)
+      setError(normalizeSupabaseAuthError(err, 'Failed to decline invitation.'))
+    } finally {
+      setDeclining(false)
+    }
+  }
+
   const handleAccept = async (e) => {
     e.preventDefault()
     setError(null)
 
     if (!isExistingUser) {
-      // New user - validate password
       if (password !== confirmPassword) {
         setError('Passwords do not match')
         return
@@ -82,54 +134,64 @@ export default function InvitationAccept() {
     setAccepting(true)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
       if (!user) {
-        // New user - need to create account first
         if (!isExistingUser) {
-          // Sign up
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email: invitation.invited_email,
-            password: password,
-          })
-
-          if (signUpError) throw signUpError
-
-          if (!signUpData.user) {
-            throw new Error('Failed to create account')
-          }
-
-          // Create user record
-          await supabase.from('users').insert([
+          // ── Edge Function: creates auth user + users row + accepts invite ────────
+          // Returns tokens so the browser can call setSession() without any
+          // GoTrue network call (setSession is local when the token is fresh).
+          const { data: fnData, error: fnError } = await supabase.functions.invoke(
+            'accept-invitation',
             {
-              auth_user_id: signUpData.user.id,
-              email: invitation.invited_email,
-              full_name: invitation.invited_email.split('@')[0], // Default name
-              is_active: true,
-              is_verified: false,
+              body: {
+                invitation_token: token,
+                password,
+                email: invitation.invited_email,
+                project_id: invitation.project_id ?? null,
+              },
             },
-          ])
+          )
 
-          // Get internal user ID
-          const { data: userData } = await supabase
-            .from('users')
-            .select('id')
-            .eq('auth_user_id', signUpData.user.id)
-            .single()
-
-          // Accept invitation
-          const acceptResult = await acceptInvitation(token, userData.id)
-          if (!acceptResult.success) {
-            throw new Error(acceptResult.error)
+          // Extract actual error body from FunctionsHttpError
+          let fnBody = fnData
+          if (fnError?.context?.json) {
+            try { fnBody = await fnError.context.json() } catch (_) {}
+          } else if (fnError?.context?.text) {
+            try {
+              const t = await fnError.context.text()
+              try { fnBody = JSON.parse(t) } catch (_) { fnBody = { error: t } }
+            } catch (_) {}
           }
 
-          // Auto-login and redirect
-          navigate(`/app/projects/${invitation.project_id}`, { replace: true })
+          if (fnError || !fnBody?.success) {
+            const code = fnBody?.code || ''
+            const msg  = fnBody?.error || fnError?.message || 'Failed to create account'
+            if (code === 'SEAT_LIMIT_EXCEEDED' || msg.includes('No available seats')) {
+              throw new Error('No available seats in this project')
+            }
+            throw new Error(msg)
+          }
+
+          // ── Set browser session from tokens returned by the Edge Function ─────
+          // setSession() saves tokens locally without calling GoTrue when fresh.
+          if (fnBody.session?.access_token) {
+            await supabase.auth.setSession({
+              access_token: fnBody.session.access_token,
+              refresh_token: fnBody.session.refresh_token,
+            })
+            navigate(`/app/projects/${invitation.project_id}`, { replace: true })
+          } else {
+            // Edge Function succeeded but couldn't establish session (rare).
+            // Account + invitation are done — send user to login.
+            navigate('/login?notice=account-created', { replace: true })
+          }
         } else {
           setError('Please log in first to accept the invitation')
         }
       } else {
-        // Existing user - accept invitation
         const { data: userData } = await supabase
           .from('users')
           .select('id')
@@ -145,12 +207,11 @@ export default function InvitationAccept() {
           throw new Error(acceptResult.error)
         }
 
-        // Redirect to project
         navigate(`/app/projects/${invitation.project_id}`, { replace: true })
       }
     } catch (err) {
       console.error('Error accepting invitation:', err)
-      setError(err.message || 'Failed to accept invitation')
+      setError(normalizeSupabaseAuthError(err, 'Failed to accept invitation.'))
     } finally {
       setAccepting(false)
     }
@@ -179,6 +240,45 @@ export default function InvitationAccept() {
           >
             Go to Login
           </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (declined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="p-3 rounded-full bg-gray-200 dark:bg-gray-700">
+              <XCircle className="h-10 w-10 text-red-600 dark:text-red-400" aria-hidden />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Invitation declined</h2>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              You have declined this project invitation. Your account was not added to the project.
+            </p>
+            {invitationId ? (
+              <p className="mt-3 text-xs text-gray-500 dark:text-gray-500">
+                Invitation ID: {invitationId}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/login"
+              className="inline-flex justify-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium"
+            >
+              Go to login
+            </Link>
+            <Link
+              to="/"
+              className="inline-flex justify-center px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium"
+            >
+              Home
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -226,7 +326,7 @@ export default function InvitationAccept() {
             {error && (
               <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
                 <div className="flex">
-                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
                   <div className="ml-3">
                     <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
                   </div>
@@ -234,25 +334,77 @@ export default function InvitationAccept() {
               </div>
             )}
 
-            {isExistingUser ? (
+            {declineConfirmOpen ? (
+              <div className="space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Decline this invitation? You will not be added to{' '}
+                  <span className="font-medium">{invitation.project_name}</span>. You can ask the
+                  sender for a new invite later if you change your mind.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeclineConfirmOpen(false)
+                      setError(null)
+                    }}
+                    disabled={declining}
+                    className="w-full sm:flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleConfirmDecline()}
+                    disabled={declining}
+                    className="w-full sm:flex-1 px-4 py-2 rounded-lg border border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 text-sm font-medium disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  >
+                    {declining ? (
+                      <>
+                        <Loader className="h-4 w-4 animate-spin" />
+                        Declining…
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4" />
+                        Confirm decline
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ) : isExistingUser ? (
               <form onSubmit={handleAccept} className="space-y-4">
-                <button
-                  type="submit"
-                  disabled={accepting}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {accepting ? (
-                    <>
-                      <Loader className="h-5 w-5 animate-spin mr-2" />
-                      Accepting...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-5 w-5 mr-2" />
-                      Accept Invitation
-                    </>
-                  )}
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeclineConfirmOpen(true)
+                      setError(null)
+                    }}
+                    disabled={accepting}
+                    className="w-full sm:flex-1 px-4 py-2 rounded-lg border border-red-600 text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/30 text-sm font-medium disabled:opacity-50"
+                  >
+                    Decline Invitation
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={accepting}
+                    className="w-full sm:flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    {accepting ? (
+                      <>
+                        <Loader className="h-5 w-5 animate-spin" />
+                        Accepting...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-5 w-5" />
+                        Accept Invitation
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             ) : (
               <form onSubmit={handleAccept} className="space-y-4">
@@ -290,23 +442,36 @@ export default function InvitationAccept() {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={accepting}
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {accepting ? (
-                    <>
-                      <Loader className="h-5 w-5 animate-spin mr-2" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-5 w-5 mr-2" />
-                      Accept & Create Account
-                    </>
-                  )}
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeclineConfirmOpen(true)
+                      setError(null)
+                    }}
+                    disabled={accepting}
+                    className="w-full sm:flex-1 px-4 py-2 rounded-lg border border-red-600 text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-950/30 text-sm font-medium disabled:opacity-50"
+                  >
+                    Decline Invitation
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={accepting}
+                    className="w-full sm:flex-1 flex justify-center items-center gap-2 py-2 px-4 rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    {accepting ? (
+                      <>
+                        <Loader className="h-5 w-5 animate-spin" />
+                        Creating Account...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-5 w-5" />
+                        Accept & Create Account
+                      </>
+                    )}
+                  </button>
+                </div>
               </form>
             )}
 
@@ -324,4 +489,3 @@ export default function InvitationAccept() {
     </div>
   )
 }
-

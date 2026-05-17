@@ -47,7 +47,12 @@ import {
   RefreshCcw,
   ShieldCheck,
   FlaskConical,
-  Users
+  Users,
+  FolderKanban,
+  Database,
+  Mail,
+  Clock,
+  AtSign,
 } from 'lucide-react';
 
 const pmoMenuConfig = [
@@ -61,34 +66,127 @@ const pmoMenuConfig = [
     order: 0
   },
 
-  // Section 1: Portfolio & Programme
+  // Section 1a: Portfolio
   {
-    id: 'pmo-portfolio-programme',
-    label: 'Portfolio & Programme',
+    id: 'pmo-portfolio',
+    label: 'Portfolio',
     path: null,
     icon: Briefcase,
-    section: 'Portfolio & Programme',
+    section: 'Portfolio',
     order: 1,
     children: [
-      { id: 'pmo-pp-all-projects', label: 'All Projects', path: '/platform/projects/all', icon: Briefcase, order: 1 },
-      { id: 'pmo-pp-create-project', label: 'Create Project', path: '/platform/projects/create', icon: FilePlus, order: 2 },
-      { id: 'pmo-pp-project-templates', label: 'Project Templates', path: '/platform/projects/templates', icon: Layers, order: 3 },
-      { id: 'pmo-pp-on-hold', label: 'On Hold', path: '/app/projects/on-hold', icon: Pause, order: 4 },
-      { id: 'pmo-pp-programme', label: 'Programme Management', path: '/platform/programme', icon: Layers, order: 5 },
-      { id: 'pmo-pp-benefits', label: 'Benefits Management', path: '/platform/benefits', icon: TrendingUp, order: 6 },
-      { id: 'pmo-pp-dependencies', label: 'Dependencies', path: '/platform/dependencies', icon: GitBranch, order: 7 },
-      { id: 'pmo-pp-collisions', label: 'Portfolio Collisions', path: '/pmo/planning/collisions', icon: AlertTriangle, order: 8 },
+      { id: 'pmo-pp-dependencies', label: 'Dependencies', path: '/platform/dependencies', icon: GitBranch, order: 1 },
+      { id: 'pmo-pp-collisions', label: 'Portfolio Collisions', path: '/pmo/planning/collisions', icon: AlertTriangle, order: 2 },
     ],
   },
 
-  // Section 1: PMO Governance (Baselines)
+  // Section 1b: Programme
+  {
+    id: 'pmo-programme',
+    label: 'Programme',
+    path: null,
+    icon: Layers,
+    section: 'Programme',
+    order: 2,
+    children: [
+      { id: 'pmo-pp-programme', label: 'Programme Management', path: '/platform/programme', icon: Layers, order: 1 },
+      { id: 'pmo-pp-benefits', label: 'Benefits Management', path: '/platform/benefits', icon: TrendingUp, order: 2 },
+    ],
+  },
+
+  // Section 1c: Projects (delivery hub)
+  {
+    id: 'pmo-projects',
+    label: 'Projects',
+    path: null,
+    icon: FolderKanban,
+    section: 'Projects',
+    order: 3,
+    children: [
+      {
+        id: 'pmo-pr-project-dashboard',
+        label: 'Project dashboard',
+        path: '/platform/dashboard?tab=projects',
+        icon: LayoutDashboard,
+        order: 1,
+      },
+      { id: 'pmo-pr-my-projects', label: 'My Projects', path: '/platform/projects', icon: FolderKanban, order: 2 },
+      {
+        id: 'pmo-pp-project-list',
+        label: 'Project list (browse & edit)',
+        path: '/platform/projects/all',
+        icon: Briefcase,
+        order: 3,
+      },
+      {
+        id: 'pmo-pp-create-project',
+        label: 'Create project',
+        path: '/platform/projects/create',
+        icon: FilePlus,
+        order: 4,
+      },
+      {
+        id: 'pmo-pr-quick-create',
+        label: 'Quick create (new wizard)',
+        path: '/platform/projects/new',
+        icon: FilePlus,
+        order: 5,
+      },
+      {
+        id: 'pmo-pp-archives',
+        label: 'Archived projects',
+        path: '/platform/projects/archives',
+        icon: PackageOpen,
+        order: 6,
+      },
+      { id: 'pmo-pp-on-hold', label: 'On hold / drafts', path: '/app/projects/on-hold', icon: Pause, order: 7 },
+      {
+        id: 'pmo-pr-members-roles',
+        label: 'Members & roles (invite / assign)',
+        path: '/app/project-members',
+        icon: Users,
+        order: 8,
+      },
+      { id: 'pmo-pp-project-templates', label: 'Templates', path: '/platform/templates', icon: Layers, order: 10 },
+      {
+        id: 'pmo-industry-templates',
+        label: 'Industry Templates',
+        path: '/pmo/industry-templates',
+        icon: Layers,
+        order: 11,
+      },
+      {
+        id: 'pmo-industry-templates-new',
+        label: 'Add Industry Template',
+        path: '/pmo/industry-templates/new',
+        icon: Layers,
+        order: 12,
+      },
+      {
+        id: 'pmo-industry-templates-on-hold',
+        label: 'Template Drafts',
+        path: '/pmo/industry-templates/on-hold',
+        icon: Layers,
+        order: 13,
+      },
+      {
+        id: 'pmo-pr-my-daily-log',
+        label: 'My daily log entries',
+        path: '/app/daily-log/my-entries',
+        icon: BookOpen,
+        order: 11,
+      },
+    ],
+  },
+
+  // Section 2: PMO Governance (Baselines)
   {
     id: 'pmo-governance',
     label: 'Governance & Standards',
     path: null,
     icon: Shield,
     section: 'Governance & Standards',
-    order: 2,
+    order: 4,
     children: [
       {
         id: 'pmo-gov-mandate',
@@ -149,14 +247,14 @@ const pmoMenuConfig = [
     ]
   },
 
-  // Section 2: Initiation & Business Justification
+  // Section 3: Initiation & Business Justification
   {
     id: 'pmo-initiation',
     label: 'Initiation & Business Justification',
     path: null,
     icon: Briefcase,
     section: 'Initiation & Business Justification',
-    order: 3,
+    order: 5,
     children: [
       {
         id: 'pmo-init-business-case',
@@ -182,14 +280,14 @@ const pmoMenuConfig = [
     ]
   },
 
-  // Section 3: Project Oversight (Read-Only)
+  // Section 4: Project Oversight (Read-Only)
   {
     id: 'pmo-oversight',
     label: 'Project Oversight',
     path: null,
     icon: Eye,
     section: 'Project Oversight',
-    order: 4,
+    order: 6,
     children: [
       {
         id: 'pmo-oversight-risk-register',
@@ -257,14 +355,14 @@ const pmoMenuConfig = [
     ]
   },
 
-  // Section 4: Reporting & Assurance
+  // Section 5: Reporting & Assurance
   {
     id: 'pmo-reporting',
     label: 'Reporting & Assurance',
     path: null,
     icon: BarChart3,
     section: 'Reporting & Assurance',
-    order: 9,
+    order: 12,
     children: [
       {
         id: 'pmo-report-highlight',
@@ -311,14 +409,14 @@ const pmoMenuConfig = [
     ]
   },
 
-  // Section 5: Procurement
+  // Section 6: Procurement
   {
     id: 'pmo-procurement',
     label: 'Procurement',
     path: null,
     icon: ShoppingCart,
     section: 'Administration',
-    order: 8,
+    order: 10,
     children: [
       {
         id: 'pmo-proc-rfp',
@@ -352,7 +450,7 @@ const pmoMenuConfig = [
     path: null,
     icon: BarChart3,
     section: 'Planning Intelligence',
-    order: 5,
+    order: 7,
     children: [
       {
         id: 'pmo-planning-hub',
@@ -391,7 +489,7 @@ const pmoMenuConfig = [
     path: null,
     icon: DollarSign,
     section: 'Financial Management',
-    order: 7,
+    order: 9,
     children: [
       {
         id: 'pmo-fin-reports',
@@ -430,7 +528,7 @@ const pmoMenuConfig = [
     path: '/pmo/forms',
     icon: FileText,
     section: 'Process Group Forms',
-    order: 6,
+    order: 8,
     permission: 'form.view_all',
     children: [
       { id: 'pmo-forms-initiating', label: 'Initiating', path: '/pmo/forms?group=Initiating', icon: FileText, order: 1, permission: 'form.view_all' },
@@ -449,7 +547,7 @@ const pmoMenuConfig = [
     path: null,
     icon: FlaskConical,
     section: 'Quality & Testing',
-    order: 8,
+    order: 11,
     children: [
       { id: 'pmo-tc-dash', label: 'Testing Dashboard', path: '/pmo/testing-centre', icon: FlaskConical, order: 1, permission: 'testing_centre.view' },
       { id: 'pmo-tc-cases', label: 'Test Case Library', path: '/pmo/testing-centre/cases', icon: FlaskConical, order: 2, permission: 'testing_centre.view' },
@@ -472,8 +570,9 @@ const pmoMenuConfig = [
     path: null,
     icon: Settings2,
     section: 'Administration',
-    order: 10,
+    order: 13,
     children: [
+      { id: 'pmo-admin-local-data-extensions', label: 'Local Data Extensions', path: '/app/local-data-extensions', icon: Database, order: 0, permission: 'pmo.admin' },
       { id: 'pmo-admin-form-templates', label: 'Form Templates', path: '/platform/admin/form-templates', icon: FileText, order: 1, permission: 'form_template.manage' },
       { id: 'pmo-admin-org-settings', label: 'Organisation Settings', path: '/platform/pmo-admin/settings', icon: Settings2, order: 2, permission: 'pmo.admin' },
       { id: 'pmo-admin-users', label: 'User Management', path: '/platform/pmo-admin/users', icon: Shield, order: 3, permission: 'pmo.admin' },
@@ -489,17 +588,31 @@ const pmoMenuConfig = [
     ]
   },
   {
+    id: 'pmo-email-notifications',
+    label: 'Email & Notifications',
+    path: null,
+    icon: Mail,
+    section: 'Email & Notifications',
+    order: 15,
+    children: [
+      { id: 'pmo-email-settings', label: 'Email Settings', path: '/platform/admin/email-settings', icon: Mail, order: 1, permission: 'pmo.admin' },
+      { id: 'pmo-email-sender-profiles', label: 'Sender Profiles', path: '/platform/admin/email-sender-profiles', icon: AtSign, order: 2, permission: 'pmo.admin' },
+      { id: 'pmo-email-invitation-templates', label: 'Invitation Templates', path: '/app/settings/invitation-templates', icon: FileText, order: 3, permission: 'pmo.admin' },
+      { id: 'pmo-email-invitation-expiry', label: 'Invitation Expiry', path: '/platform/admin/invitation-settings', icon: Clock, order: 4, permission: 'pmo.admin' },
+    ],
+  },
+  {
     id: 'pmo-people-resources',
     label: 'People & Resources',
     path: null,
     icon: Users,
     section: 'People & Resources',
-    order: 10,
+    order: 14,
     children: [
       { id: 'pmo-people-manager-assignments', label: 'Manager Assignments', path: '/platform/pmo-admin/manager-assignments', icon: Users, order: 1, permission: 'pmo.admin' },
       { id: 'pmo-people-assignment-settings', label: 'Assignment Settings', path: '/platform/pmo-admin/manager-assignment-settings', icon: Settings2, order: 2, permission: 'pmo.admin' },
-      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 3, permission: 'pmo.admin' },
-      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 4, permission: 'pmo.admin' },
+      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 4, permission: 'pmo.admin' },
+      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 5, permission: 'pmo.admin' },
     ],
   },
 ];

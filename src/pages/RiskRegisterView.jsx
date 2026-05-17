@@ -3,8 +3,8 @@
  * Main page for viewing and managing risk register
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useOfflineQueue } from '../hooks/useOfflineQueue';
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
@@ -26,6 +26,9 @@ import RiskExportMenu from '../components/risks/RiskExportMenu';
 import RiskReviewHistory from '../components/risks/RiskReviewHistory';
 import RiskPrintView from '../components/risks/RiskPrintView';
 import ExportListMenu from '../components/ui/ExportListMenu';
+import { platformDb } from '../services/supabase/supabaseClient';
+import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
+import { platformRiskPath } from '../utils/projectRouteParam';
 
 const RISK_COLUMNS = [
   { key: 'risk_identifier', label: 'ID' },
@@ -53,6 +56,9 @@ export default function RiskRegisterView() {
   const [selectedRisk, setSelectedRisk] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list', 'matrix', 'analytics', 'reviews'
   const [showPrintView, setShowPrintView] = useState(false)
+  const [riskOrgAccountId, setRiskOrgAccountId] = useState(null);
+  const [riskCfCols, setRiskCfCols] = useState([]);
+  const [riskCfMatrix, setRiskCfMatrix] = useState({});
   const [filters, setFilters] = useState({
     search: '',
     risk_category: '',
@@ -73,6 +79,56 @@ export default function RiskRegisterView() {
       fetchRisks();
     }
   }, [projectId, filters]);
+
+  useEffect(() => {
+    if (!projectId) {
+      setRiskOrgAccountId(null);
+      return;
+    }
+    let cancelled = false;
+    platformDb
+      .from('projects')
+      .select('account_id')
+      .eq('id', projectId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setRiskOrgAccountId(data?.account_id || null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!riskOrgAccountId || !risks?.length) {
+      setRiskCfCols([]);
+      setRiskCfMatrix({});
+      return;
+    }
+    let cancelled = false;
+    const ids = risks.map((r) => r.id).filter(Boolean);
+    (async () => {
+      const { columns, matrix } = await fetchBatchExportForEntities(platformDb, {
+        accountId: riskOrgAccountId,
+        entityType: 'risk',
+        entityIds: ids,
+        screenCode: 'risk_detail',
+      });
+      if (!cancelled) {
+        setRiskCfCols(columns || []);
+        setRiskCfMatrix(matrix || {});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [riskOrgAccountId, risks]);
+
+  const riskExportColumns = useMemo(() => [...RISK_COLUMNS, ...riskCfCols], [riskCfCols]);
+  const riskExportRows = useMemo(
+    () => risks.map((r) => ({ ...r, ...(riskCfMatrix[r.id] || {}) })),
+    [risks, riskCfMatrix]
+  );
 
   const fetchData = async () => {
     try {
@@ -180,7 +236,8 @@ export default function RiskRegisterView() {
   };
 
   const handleViewDetails = (risk) => {
-    navigate(`/app/projects/${projectId}/risks/${risk.id}`);
+    const pk = routeKey || projectId;
+    navigate(platformRiskPath(pk, (risk.risk_code && String(risk.risk_code).trim()) || risk.id));
   };
 
   if (loading) {
@@ -218,7 +275,7 @@ export default function RiskRegisterView() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <ExportListMenu columns={RISK_COLUMNS} data={risks} baseFilename="RiskRegister" disabled={!risks?.length} />
+          <ExportListMenu columns={riskExportColumns} data={riskExportRows} baseFilename="RiskRegister" disabled={!risks?.length} />
           <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
             <button
               onClick={() => setViewMode('list')}

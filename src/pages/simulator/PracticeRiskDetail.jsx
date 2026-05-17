@@ -5,9 +5,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Edit } from 'lucide-react'
-import { getPracticeRiskById, updatePracticeRisk } from '../../services/sim/practiceRiskService'
+import { getPracticeRiskById } from '../../services/sim/practiceRiskService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer'
+import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge'
+import { platformDb, simDb } from '../../services/supabase/supabaseClient'
+import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
 
 const PRACTICE_RISK_VIEW_SECTIONS = [
   { title: 'Risk', fields: [
@@ -17,6 +21,28 @@ const PRACTICE_RISK_VIEW_SECTIONS = [
   ]}
 ]
 
+async function buildPracticeRiskExport(riskRow, accountId) {
+  const base = riskRow
+  const pid = riskRow?.practice_project_id
+  if (!simDb || !accountId || !pid || !riskRow?.id) {
+    return { sections: PRACTICE_RISK_VIEW_SECTIONS, record: base }
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      simDb,
+      accountId,
+      'risk',
+      riskRow.id,
+      undefined,
+      pid
+    )
+    const sections = section ? [...PRACTICE_RISK_VIEW_SECTIONS, section] : PRACTICE_RISK_VIEW_SECTIONS
+    return { sections, record: { ...base, ...mergedRecord } }
+  } catch {
+    return { sections: PRACTICE_RISK_VIEW_SECTIONS, record: base }
+  }
+}
+
 export default function PracticeRiskDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -24,6 +50,17 @@ export default function PracticeRiskDetail() {
   const projectId = searchParams.get('projectId')
   const [risk, setRisk] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [ldeAccountId, setLdeAccountId] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    resolveLdeAccountForCurrentUser().then(({ accountId: aid }) => {
+      if (!cancelled) setLdeAccountId(aid)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (id) loadRisk()
@@ -53,13 +90,34 @@ export default function PracticeRiskDetail() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{risk.risk_title}</h1>
         <div className="flex gap-2">
           <ExportRecordButtons
-            onExportPPT={() => exportRecordToPPT(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
-            onExportWord={() => exportRecordToWord(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
-            onExportExcel={() => exportRecordToExcel(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
-            onExportCSV={() => exportRecordToCSV(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
-            onExportXML={() => exportRecordToXML(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
-            onExportJSON={() => exportRecordToJSON(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
-            onExportPrint={() => exportRecordToPrint(PRACTICE_RISK_VIEW_SECTIONS, risk, `PracticeRisk_${risk.risk_reference || id}`)}
+            onExportPPT={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToPPT(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
+            onExportWord={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToWord(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
+            onExportExcel={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToExcel(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
+            onExportCSV={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToCSV(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
+            onExportXML={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToXML(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
+            onExportJSON={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToJSON(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
+            onExportPrint={async () => {
+              const { sections, record } = await buildPracticeRiskExport(risk, ldeAccountId)
+              exportRecordToPrint(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
+            }}
           />
           <button onClick={() => navigate(`/simulator/practice-risk-register/${id}/edit?projectId=${projectId}`)} className="inline-flex items-center px-4 py-2 border rounded-lg">
             <Edit className="h-4 w-4 mr-2" /> Edit
@@ -93,6 +151,15 @@ export default function PracticeRiskDetail() {
           <h3 className="font-medium mb-2">Response Strategy</h3>
           <p className="text-gray-600 dark:text-gray-400">{risk.response_strategy || 'Not defined'}</p>
         </div>
+        <CustomFieldRenderer
+          platformDb={simDb}
+          userLookupDb={platformDb}
+          accountId={ldeAccountId}
+          practiceProjectId={risk.practice_project_id}
+          entityType="risk"
+          entityId={risk.id}
+          screenCode="risk_detail"
+        />
       </div>
     </div>
   )

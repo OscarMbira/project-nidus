@@ -38,9 +38,10 @@ async function getUserId(authUserId) {
 }
 
 /**
- * Check if user has an organisation
+ * Check if user has an organisation, or is an invited project member.
+ * Invited PMs/team members never own an org but are legitimate platform users.
  * @param {string} userId - Internal users.id
- * @returns {Promise<{exists: boolean, verified: boolean, orgId: string|null}>}
+ * @returns {Promise<{exists: boolean, verified: boolean, orgId: string|null, isInvitedMember: boolean}>}
  */
 async function checkOrganisationStatus(userId) {
   try {
@@ -52,21 +53,35 @@ async function checkOrganisationStatus(userId) {
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error checking organisation:', error);
-      return { exists: false, verified: false, orgId: null };
+      return { exists: false, verified: false, orgId: null, isInvitedMember: false };
     }
 
-    if (!org) {
-      return { exists: false, verified: false, orgId: null };
+    if (org) {
+      return {
+        exists: true,
+        verified: org.organisation_verified || false,
+        orgId: org.id,
+        isInvitedMember: false,
+      };
     }
 
-    return {
-      exists: true,
-      verified: org.organisation_verified || false,
-      orgId: org.id
-    };
+    // No org ownership — check if this user is an invited project member.
+    // Invited PMs/team members don't own an org but have legitimate platform access.
+    const { data: membership } = await platformDb
+      .from('project_memberships')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .limit(1);
+
+    if (membership && membership.length > 0) {
+      return { exists: true, verified: true, orgId: null, isInvitedMember: true };
+    }
+
+    return { exists: false, verified: false, orgId: null, isInvitedMember: false };
   } catch (error) {
     console.error('Exception checking organisation:', error);
-    return { exists: false, verified: false, orgId: null };
+    return { exists: false, verified: false, orgId: null, isInvitedMember: false };
   }
 }
 

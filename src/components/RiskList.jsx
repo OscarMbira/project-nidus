@@ -3,8 +3,9 @@ import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Edit2, Trash2, AlertTriangle, TrendingUp, User, Calendar, Eye } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { platformRiskPath } from '../utils/projectRouteParam'
 
-export default function RiskList({ risks, onEdit, onRefresh, projectId }) {
+export default function RiskList({ risks, onEdit, onRefresh, projectId, routeProjectKey }) {
   const navigate = useNavigate()
   const [deletingId, setDeletingId] = useState(null)
 
@@ -171,7 +172,14 @@ export default function RiskList({ risks, onEdit, onRefresh, projectId }) {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => navigate(`/projects/${projectId}/risks/${risk.id}`)}
+                onClick={() =>
+                  navigate(
+                    platformRiskPath(
+                      String(routeProjectKey || projectId || '').trim(),
+                      (risk.risk_code && String(risk.risk_code).trim()) || risk.id,
+                    ),
+                  )
+                }
                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                 title="View Details"
               >

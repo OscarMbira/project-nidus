@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { Link2, Plus, Trash2, ArrowRight, AlertTriangle, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { platformRiskPath } from '../../utils/projectRouteParam'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { getLinksByRisk, createLink, deleteLink } from '../../services/riskLinkService'
 import { getRisksByProject } from '../../services/riskService'
@@ -99,7 +100,9 @@ export default function RiskLinksPanel({ riskId, projectId }) {
 
   const handleRiskClick = (targetRiskId) => {
     if (projectId) {
-      navigate(`/app/projects/${projectId}/risks/${targetRiskId}`)
+      const hit = availableRisks.find((r) => r.id === targetRiskId)
+      const rSeg = (hit?.risk_code && String(hit.risk_code).trim()) || targetRiskId
+      navigate(platformRiskPath(projectId, rSeg))
     }
   }
 

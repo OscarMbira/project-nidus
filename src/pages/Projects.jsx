@@ -11,6 +11,7 @@ import { platformDb } from '../services/supabase/supabaseClient';
 import { getMyProjects, getAllProjects, deleteProject } from '../services/projectService';
 import { platformProjectPath } from '../utils/projectRouteParam';
 import ExportListMenu from '../components/ui/ExportListMenu';
+import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
 import { TableHeaderCell } from '../components/ui/Table';
 import { ProjectGridCard, ProjectListRow } from '../components/project/ProjectsListViews';
 import { useSortableTable } from '../hooks/useSortableTable';
@@ -67,6 +68,8 @@ export default function Projects() {
   const loadGenRef = useRef(0);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const [deletingId, setDeletingId] = useState(null);
+  const [cfExportCols, setCfExportCols] = useState([]);
+  const [cfMatrix, setCfMatrix] = useState({});
 
   const {
     handleSort,
@@ -232,13 +235,41 @@ export default function Projects() {
     return sortedData(filteredProjects, projectSortAccessors);
   }, [activeView, filteredProjects, sortedData, projectSortAccessors]);
 
+  useEffect(() => {
+    if (!organizationId || !displayProjects.length) {
+      setCfExportCols([]);
+      setCfMatrix({});
+      return;
+    }
+    let cancelled = false;
+    const ids = displayProjects.map((p) => p.id).filter(Boolean);
+    (async () => {
+      const { columns, matrix } = await fetchBatchExportForEntities(platformDb, {
+        accountId: organizationId,
+        entityType: 'project',
+        entityIds: ids,
+        screenCode: 'project_detail',
+      });
+      if (!cancelled) {
+        setCfExportCols(columns || []);
+        setCfMatrix(matrix || {});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [organizationId, displayProjects]);
+
+  const exportColumns = useMemo(() => [...PROJECT_COLUMNS, ...cfExportCols], [cfExportCols]);
+
   const exportRows = useMemo(
     () =>
       displayProjects.map((p) => ({
         ...p,
-        status_name: p.project_statuses?.status_name ?? ''
+        status_name: p.project_statuses?.status_name ?? '',
+        ...(cfMatrix[p.id] || {}),
       })),
-    [displayProjects]
+    [displayProjects, cfMatrix]
   );
 
   const goToProject = useCallback(
@@ -359,7 +390,7 @@ export default function Projects() {
 
           <div className="flex flex-wrap items-center gap-4">
             <ExportListMenu
-              columns={PROJECT_COLUMNS}
+              columns={exportColumns}
               data={exportRows}
               baseFilename="Projects"
               disabled={displayProjects.length === 0}

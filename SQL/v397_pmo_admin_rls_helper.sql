@@ -24,9 +24,18 @@ AS $$
     INNER JOIN roles r ON r.id = ur.role_id
     INNER JOIN users u ON u.id = ur.user_id
     WHERE u.auth_user_id = p_auth_uuid
-      AND r.role_name = 'pmo_admin'
       AND ur.is_active = TRUE
       AND COALESCE(ur.is_deleted, FALSE) = FALSE
+      AND COALESCE(r.is_deleted, FALSE) = FALSE
+      AND COALESCE(r.is_active, TRUE) = TRUE
+      AND lower(
+        regexp_replace(
+          regexp_replace(trim(COALESCE(r.role_name, '')), '[[:space:]]+', '_', 'g'),
+          '-',
+          '_',
+          'g'
+        )
+      ) IN ('pmo_admin', 'org_admin', 'system_admin', 'super_admin')
   );
 $$;
 
@@ -35,7 +44,7 @@ GRANT EXECUTE ON FUNCTION public.is_user_pmo_admin(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.is_user_pmo_admin(uuid) TO service_role;
 
 COMMENT ON FUNCTION public.is_user_pmo_admin(uuid) IS
-  'Returns true when the given auth.users id has an active pmo_admin user_roles row. Used by RLS policies.';
+  'Returns true when the given auth.users id has an active suite admin role (pmo_admin, org_admin, system_admin, super_admin; name normalized). Matches app pmoSuiteRoleAccess. Apply v551 on DBs created before this definition.';
 
 -- ---------------------------------------------------------------------------
 -- project_invitations

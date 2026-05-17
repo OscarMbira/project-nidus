@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
+import { platformIssuePath, platformRiskPath, platformProjectPath } from '../utils/projectRouteParam'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { AlertTriangle, TrendingUp, FileText, Link2, Filter, Search, BarChart3, Download } from 'lucide-react'
@@ -273,7 +274,7 @@ export default function RAIDLog() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}`)}
+        onClick={() => navigate(platformProjectPath(routeKey || projectId))}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Project
@@ -445,11 +446,11 @@ export default function RAIDLog() {
                           type="button"
                           onClick={() => {
                             if (item.raid_type === 'risk') {
-                              navigate(`/projects/${projectId}/risks/${item.id}`)
+                              navigate(platformRiskPath(routeKey || projectId, item.code || item.id))
                             } else if (item.raid_type === 'issue') {
-                              navigate(`/projects/${projectId}/issues`)
+                              navigate(platformIssuePath(routeKey || projectId, item.code || item.id))
                             } else {
-                              navigate(`/projects/${projectId}/risks`)
+                              navigate(platformProjectPath(routeKey || projectId || '', 'risks'))
                             }
                           }}
                           className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded"
@@ -509,12 +510,11 @@ export default function RAIDLog() {
                 <button
                   onClick={() => {
                     if (item.raid_type === 'risk') {
-                      navigate(`/projects/${projectId}/risks/${item.id}`)
+                      navigate(platformRiskPath(routeKey || projectId, item.code || item.id))
                     } else if (item.raid_type === 'issue') {
-                      navigate(`/projects/${projectId}/issues`)
+                      navigate(platformIssuePath(routeKey || projectId, item.code || item.id))
                     } else {
-                      // For assumptions and dependencies, navigate to risks page for now
-                      navigate(`/projects/${projectId}/risks`)
+                      navigate(platformProjectPath(routeKey || projectId || '', 'risks'))
                     }
                   }}
                   className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm"

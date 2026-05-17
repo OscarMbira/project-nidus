@@ -10,6 +10,76 @@ import { supabase } from './supabaseClient'
 import { assignProjectRole } from './roleService'
 import { inviteUserToProject } from './projectMembershipService'
 import { sendProjectInvitation } from './invitationService'
+import { loadInvitationProjectContext } from './invitationProjectContextService'
+import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess'
+
+/**
+ * @param {string} authUserId - Supabase auth user id
+ * @returns {Promise<boolean>}
+ */
+async function fetchPMOAdminFlagForAuthUserId(authUserId) {
+  try {
+    // Two-step query (same pattern as useMenu.js): embedding user_roles from users can hit
+    // PostgREST "more than one relationship" and return empty relations, falsely denying access.
+    const { data: userRow, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle()
+
+    if (userError || !userRow?.id) {
+      return false
+    }
+
+    const { data: assignments, error: urError } = await supabase
+      .from('user_roles')
+      .select(
+        `
+        is_active,
+        is_deleted,
+        roles:role_id (
+          role_name
+        )
+      `,
+      )
+      .eq('user_id', userRow.id)
+      .eq('is_active', true)
+
+    if (urError || !assignments?.length) {
+      return false
+    }
+
+    return assignments.some((assignment) => {
+      if (!assignment.is_active || assignment.is_deleted) return false
+      const embedded = assignment.roles
+      const roleRow = Array.isArray(embedded) ? embedded[0] : embedded
+      return matchesPmoSuiteAdminRole(roleRow?.role_name)
+    })
+  } catch (error) {
+    console.error('Error checking PMO Admin role:', error)
+    return false
+  }
+}
+
+/**
+ * Single `auth.getUser()` plus PMO flag — avoids duplicate session fetches when a page already needs both.
+ * @returns {Promise<{ user: object | null, isPMOAdmin: boolean, authError: Error | null }>}
+ */
+export async function getSessionPMOAdminStatus() {
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+    if (error || !user) {
+      return { user: null, isPMOAdmin: false, authError: error || null }
+    }
+    const isAdmin = await fetchPMOAdminFlagForAuthUserId(user.id)
+    return { user, isPMOAdmin: isAdmin, authError: null }
+  } catch (e) {
+    return { user: null, isPMOAdmin: false, authError: e }
+  }
+}
 
 /**
  * Check if user is PMO Admin
@@ -18,50 +88,13 @@ import { sendProjectInvitation } from './invitationService'
  */
 export async function isPMOAdmin(authUserId) {
   try {
-    // Get current authenticated user
-    const { data: { user: currentUser } } = await supabase.auth.getUser()
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser()
     if (!currentUser || currentUser.id !== authUserId) {
       return false
     }
-
-    // Get user record from users table
-    const { data: userRecord, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUserId)
-      .single()
-
-    if (userError || !userRecord) {
-      console.error('Error fetching user record:', userError)
-      return false
-    }
-
-    // Check for pmo_admin role
-    const { data: userRoles, error: rolesError } = await supabase
-      .from('user_roles')
-      .select(`
-        roles:role_id (
-          role_name
-        )
-      `)
-      .eq('user_id', userRecord.id)
-      .eq('is_active', true)
-      .eq('is_deleted', false)
-
-    if (rolesError) {
-      console.error('Error fetching user roles:', rolesError)
-      return false
-    }
-
-    if (!userRoles || userRoles.length === 0) {
-      return false
-    }
-
-    const hasPMOAdminRole = userRoles.some(
-      assignment => assignment.roles?.role_name === 'pmo_admin'
-    )
-
-    return hasPMOAdminRole
+    return fetchPMOAdminFlagForAuthUserId(authUserId)
   } catch (error) {
     console.error('Error checking PMO Admin role:', error)
     return false
@@ -108,11 +141,23 @@ export async function getAllProjects() {
   }
 }
 
+let _assignableRolesCache = null
+let _assignableRolesCacheAt = 0
+const ASSIGNABLE_ROLES_TTL_MS = 60_000
+
+let _projectsPicklistCache = null
+let _projectsPicklistCacheAt = 0
+const PROJECTS_PICKLIST_TTL_MS = 60_000
+
 /**
  * Get available roles for assignment (excluding Team Manager and Team Member)
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
 export async function getAssignableRolesForPMOAdmin() {
+  const now = Date.now()
+  if (_assignableRolesCache && now - _assignableRolesCacheAt < ASSIGNABLE_ROLES_TTL_MS) {
+    return _assignableRolesCache
+  }
   try {
     const { data, error } = await supabase
       .from('roles')
@@ -128,17 +173,56 @@ export async function getAssignableRolesForPMOAdmin() {
 
     if (error) throw error
 
-    return {
+    const result = {
       success: true,
       data: data || [],
       error: null
     }
+    _assignableRolesCache = result
+    _assignableRolesCacheAt = Date.now()
+    return result
   } catch (error) {
     console.error('Error fetching assignable roles:', error)
     return {
       success: false,
       data: [],
       error: error.message || 'Failed to fetch roles'
+    }
+  }
+}
+
+/**
+ * Minimal project rows for invite/assign dropdowns (smaller payload than {@link getAllProjects}).
+ * @returns {Promise<{success: boolean, data: array, error: string|null}>}
+ */
+export async function getProjectsPicklistForPMOAdmin() {
+  const now = Date.now()
+  if (_projectsPicklistCache && now - _projectsPicklistCacheAt < PROJECTS_PICKLIST_TTL_MS) {
+    return _projectsPicklistCache
+  }
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id, project_name, project_code')
+      .eq('is_deleted', false)
+      .order('project_name', { ascending: true })
+
+    if (error) throw error
+
+    const result = {
+      success: true,
+      data: data || [],
+      error: null,
+    }
+    _projectsPicklistCache = result
+    _projectsPicklistCacheAt = Date.now()
+    return result
+  } catch (error) {
+    console.error('Error fetching projects picklist:', error)
+    return {
+      success: false,
+      data: [],
+      error: error.message || 'Failed to fetch projects',
     }
   }
 }
@@ -298,105 +382,81 @@ export async function assignRoleToProject(projectId, userId, roleId) {
  * @param {string} email - Recipient email
  * @param {string} roleId - Role UUID
  * @param {string} message - Optional invitation message
+ * @param {number|null|undefined} expiryDays - Optional override (1–365); omit to use account default
+ * @param {{ skipPmoRecheck?: boolean, projectContext?: object }} [options]
  * @returns {Promise<{success: boolean, error: string|null}>}
  */
-export async function sendRoleInvitation(projectId, email, roleId, message = null) {
+export async function sendRoleInvitation(
+  projectId,
+  email,
+  roleId,
+  message = null,
+  expiryDays = undefined,
+  options = {},
+) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) throw new Error('Not authenticated')
 
-    // Verify user is pmo_admin
-    const isAdmin = await isPMOAdmin(user.id)
-    if (!isAdmin) {
-      return {
-        success: false,
-        error: 'Only PMO Admin can send invitations'
+    if (!options.skipPmoRecheck) {
+      let isAdmin = false
+      const { data: rpcAdminResult, error: rpcAdminErr } = await supabase.rpc('is_user_pmo_admin', {
+        p_auth_uuid: user.id,
+      })
+      if (
+        rpcAdminErr &&
+        (rpcAdminErr.code === 'PGRST202' || /does not exist|not found/i.test(rpcAdminErr.message || ''))
+      ) {
+        isAdmin = await isPMOAdmin(user.id)
+      } else if (!rpcAdminErr) {
+        isAdmin = rpcAdminResult === true
+      }
+
+      if (!isAdmin) {
+        return { success: false, error: 'Only PMO Admin can send invitations' }
       }
     }
 
-    // Verify role is not Team Manager or Team Member
-    const { data: role, error: roleError } = await supabase
-      .from('roles')
-      .select('role_name')
-      .eq('id', roleId)
-      .single()
+    const [roleResult, projectResult, inviterResult, projectContext] = await Promise.all([
+      supabase.from('roles').select('role_name, role_display_name').eq('id', roleId).maybeSingle(),
+      supabase.from('projects').select('project_name, project_code, project_type_id, accounts(account_display_name, account_name, company_name)').eq('id', projectId).maybeSingle(),
+      supabase.from('users').select('full_name, email').eq('auth_user_id', user.id).maybeSingle(),
+      options.projectContext
+        ? Promise.resolve(options.projectContext)
+        : loadInvitationProjectContext(projectId),
+    ])
 
-    if (!roleError && role) {
+    const role = roleResult.data
+    if (role) {
       const restrictedRoles = ['team_manager', 'team_member', 'pm_team_manager', 'pm_team_member']
       if (restrictedRoles.includes(role.role_name)) {
         return {
           success: false,
-          error: 'Team Manager and Team Member invitations are reserved for Project Managers'
+          error: 'Team Manager and Team Member invitations are reserved for Project Managers',
         }
       }
     }
 
-    // Check project_roles table
-    const { data: projectRole } = await supabase
-      .from('project_roles')
-      .select('role_name')
-      .eq('id', roleId)
-      .single()
+    const roleDisplayName = role?.role_display_name || role?.role_name || 'Role'
+    const project = projectResult.data
+    const inviterUser = inviterResult.data
 
-    if (projectRole) {
-      const restrictedRoles = ['team_manager', 'team_member', 'pm_team_manager', 'pm_team_member']
-      if (restrictedRoles.includes(projectRole.role_name)) {
-        return {
-          success: false,
-          error: 'Team Manager and Team Member invitations are reserved for Project Managers'
-        }
-      }
-    }
-
-    // Get project and role details for email
-    const { data: project } = await supabase
-      .from('projects')
-      .select('project_name, project_code')
-      .eq('id', projectId)
-      .single()
-
-    // Get role display name
-    let roleDisplayName = 'Role'
-    const roleData = role || projectRole
-    if (roleData) {
-      const { data: roleDetails } = await supabase
-        .from('roles')
-        .select('role_display_name, role_name')
-        .eq('id', roleId)
-        .single()
-
-      if (roleDetails) {
-        roleDisplayName = roleDetails.role_display_name || roleDetails.role_name
-      } else {
-        // Try project_roles table
-        const { data: projectRoleDetails } = await supabase
-          .from('project_roles')
-          .select('role_display_name, role_name')
-          .eq('id', roleId)
-          .single()
-
-        if (projectRoleDetails) {
-          roleDisplayName = projectRoleDetails.role_display_name || projectRoleDetails.role_name
-        }
-      }
-    }
-
-    // Get current user's name for invitation
-    const { data: inviterUser } = await supabase
-      .from('users')
-      .select('full_name, email')
-      .eq('auth_user_id', user.id)
-      .single()
-
-    // Send email invitation (this will create the invitation record and send email)
     const result = await sendProjectInvitation(email, {
       projectId,
       projectName: project?.project_name || 'Project',
       projectCode: project?.project_code || null,
+      projectTypeId: project?.project_type_id || null,
+      organisationName:
+        project?.accounts?.account_display_name ||
+        project?.accounts?.account_name ||
+        project?.accounts?.company_name ||
+        '',
       roleId,
       roleName: roleDisplayName,
       inviterName: inviterUser?.full_name || inviterUser?.email || 'PMO Admin',
-      message
+      message,
+      expiryDays,
+      projectContext: projectContext || null,
     })
 
     return result
@@ -404,7 +464,7 @@ export async function sendRoleInvitation(projectId, email, roleId, message = nul
     console.error('Error sending role invitation:', error)
     return {
       success: false,
-      error: error.message || 'Failed to send invitation'
+      error: error.message || 'Failed to send invitation',
     }
   }
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
 import { lazy, Suspense, useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -39,6 +39,14 @@ function LoadingFallbackWithTimeout() {
   )
 }
 
+/** Template library lives under `/platform/templates`, not `projects/:id`. */
+function RedirectProjectsTemplatesToLibrary() {
+  const { '*': rest } = useParams()
+  const { search, hash } = useLocation()
+  const suffix = rest ? `/${rest}` : ''
+  return <Navigate to={{ pathname: `/platform/templates${suffix}`, search, hash }} replace />
+}
+
 // Lazy load landing page so initial bundle is minimal and "/" loads in milliseconds
 const NidusHomepage = lazy(() => import('./pages/NidusHomepage'))
 
@@ -72,6 +80,8 @@ const SimulatorRequestDemoPage = lazy(() => import('./pages/SimulatorRequestDemo
 const Projects = lazy(() => import('./pages/Projects'))
 const ProjectsCreate = lazy(() => import('./pages/ProjectsCreate'))
 const ProjectsDetail = lazy(() => import('./pages/ProjectsDetail'))
+const LocalDataExtensionsRoutes = lazy(() => import('./features/local-data-extensions/pages/LocalDataExtensionsRoutes'))
+const SimulatorLocalDataExtensionsRoutes = lazy(() => import('./features/local-data-extensions/pages/SimulatorLocalDataExtensionsRoutes'))
 const ProjectsEdit = lazy(() => import('./pages/ProjectsEdit'))
 const ScopeManagementPlanPage = lazy(() => import('./pages/scope/ScopeManagementPlan'))
 const ScopeStatementPage = lazy(() => import('./pages/scope/ScopeStatement'))
@@ -101,6 +111,15 @@ const MethodologySelection = lazy(() => import('./pages/MethodologySelection'))
 // Platform and Simulator Dashboards (new structure)
 const PlatformDashboard = lazy(() => import('./pages/platform-app/Dashboard'))
 const SimulatorDashboard = lazy(() => import('./pages/simulator-app/Dashboard'))
+const SimulationSetup = lazy(() => import('./pages/simulator/SimulationSetup'))
+const SimulationRunDashboard = lazy(() => import('./pages/simulator/SimulationRunDashboard'))
+const SimEventInbox = lazy(() => import('./pages/simulator/SimEventInbox'))
+const SimStageGateReview = lazy(() => import('./pages/simulator/SimStageGateReview'))
+const SimExceptionReportFlow = lazy(() => import('./pages/simulator/SimExceptionReportFlow'))
+const SimEVMDashboard = lazy(() => import('./pages/simulator/SimEVMDashboard'))
+const SimulationRunHistory = lazy(() => import('./pages/simulator/SimulationRunHistory'))
+const SimulationDebrief = lazy(() => import('./pages/simulator/SimulationDebrief'))
+const SimLiveRunRedirect = lazy(() => import('./pages/simulator/SimLiveRunRedirect'))
 const SimAIWorkspace = lazy(() => import('./pages/simulator/SimAIWorkspace'))
 const AIWorkspace = lazy(() => import('./pages/platform-app/AIWorkspace'))
 const SubmitFeedback = lazy(() => import('./pages/support/SubmitFeedback'))
@@ -293,6 +312,16 @@ const EEFBulkUpload = lazy(() => import('./pages/eef/EEFBulkUpload'))
 const ITTOTemplateList = lazy(() => import('./pages/itto/ITTOTemplateList'))
 const ProjectITTOList = lazy(() => import('./pages/itto/ProjectITTOList'))
 const ITTODraftsQueue = lazy(() => import('./pages/itto/ITTODraftsQueue'))
+const IndustryTemplateList = lazy(() => import('./pages/pmo/IndustryTemplateList'))
+const IndustryTemplateForm = lazy(() => import('./pages/pmo/IndustryTemplateForm'))
+const IndustryTemplateDetail = lazy(() => import('./pages/pmo/IndustryTemplateDetail'))
+const IndustryTemplateOnHold = lazy(() => import('./pages/pmo/IndustryTemplateOnHold'))
+const IndustryTemplateBrowser = lazy(() => import('./pages/app/IndustryTemplateBrowser'))
+const IndustryPlanCopyWizard = lazy(() => import('./pages/app/IndustryPlanCopyWizard'))
+const ProjectIndustryPlanView = lazy(() => import('./pages/app/ProjectIndustryPlanView'))
+const SimIndustryTemplateBrowser = lazy(() => import('./pages/simulator/IndustryTemplateBrowser'))
+const SimIndustryPlanCopy = lazy(() => import('./pages/simulator/IndustryPlanCopy'))
+const SimPracticeIndustryPlan = lazy(() => import('./pages/simulator/PracticeIndustryPlan'))
 const SimITTOTemplateList = lazy(() => import('./pages/sim/itto/SimITTOTemplateList'))
 const SimProjectITTOList = lazy(() => import('./pages/sim/itto/SimProjectITTOList'))
 const SimITTODraftsQueue = lazy(() => import('./pages/sim/itto/SimITTODraftsQueue'))
@@ -346,6 +375,9 @@ const ProjectTemplateCopyCreate = lazy(() => import('./pages/templates/ProjectTe
 const ProjectTemplateCopyEdit = lazy(() => import('./pages/templates/ProjectTemplateCopyEdit'))
 const ProjectTemplateCopyDetail = lazy(() => import('./pages/templates/ProjectTemplateCopyDetail'))
 const ProjectTemplateCopyVersionHistory = lazy(() => import('./pages/templates/ProjectTemplateCopyVersionHistory'))
+const ProjectOPATemplates = lazy(() => import('./pages/app/ProjectOPATemplates'))
+const ProjectOPACopy = lazy(() => import('./pages/app/ProjectOPACopy'))
+const ProjectOPACustomisationDetail = lazy(() => import('./pages/app/ProjectOPACustomisationDetail'))
 const TemplateOnHold = lazy(() => import('./pages/templates/TemplateOnHold'))
 const SimTemplateLibraryList = lazy(() => import('./pages/simulator/templates/SimTemplateLibraryList'))
 const SimTemplateLibraryManage = lazy(() => import('./pages/simulator/templates/SimTemplateLibraryManage'))
@@ -511,6 +543,7 @@ const Register = lazy(() => import('./pages/auth/Register'))
 const PlatformRegister = lazy(() => import('./pages/auth/PlatformRegister'))
 const SimulatorRegister = lazy(() => import('./pages/auth/SimulatorRegister'))
 const EmailConfirmation = lazy(() => import('./pages/auth/EmailConfirmation'))
+const InvitationAccept = lazy(() => import('./pages/auth/InvitationAccept'))
 const RoleSelection = lazy(() => import('./pages/onboarding/RoleSelection'))
 const PlatformAccountSetup = lazy(() => import('./pages/onboarding/PlatformAccountSetup'))
 const PlatformChoice = lazy(() => import('./pages/onboarding/PlatformChoice'))
@@ -525,6 +558,9 @@ const TrialUpgrade = lazy(() => import('./pages/trial/TrialUpgrade'))
 const RoleAssignment = lazy(() => import('./pages/admin/RoleAssignment'))
 const AssignRolesToProjects = lazy(() => import('./pages/admin/AssignRolesToProjects'))
 const SendRoleInvites = lazy(() => import('./pages/admin/SendRoleInvites'))
+const InvitationExpirySettingsPage = lazy(() => import('./pages/admin/InvitationExpirySettingsPage'))
+const EmailSettings = lazy(() => import('./pages/platform-app/EmailSettings'))
+const EmailSenderProfiles = lazy(() => import('./pages/platform-app/EmailSenderProfiles'))
 const ChangeLogPage = lazy(() => import('./pages/change/ChangeLogPage'))
 const WorkAuthorisationListPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationListPage'))
 const WorkAuthorisationDraftsPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationDraftsPage'))
@@ -579,6 +615,9 @@ const SimGanttChartPage = lazy(() => import('./pages/simulator/schedule/GanttCha
 const PracticeProjects = lazy(() => import('./pages/simulator/PracticeProjects'))
 const SimProjectMembers = lazy(() => import('./pages/simulator/SimProjectMembers'))
 const ProjectUsers = lazy(() => import('./pages/app/ProjectUsers'))
+const InvitationTemplatesPage = lazy(() =>
+  import('./features/invitation-templates/pages/InvitationTemplatesPage'),
+)
 const PracticeProjectCreate = lazy(() => import('./pages/simulator/PracticeProjectCreate'))
 const PracticeProjectDetail = lazy(() => import('./pages/simulator/PracticeProjectDetail'))
 const PracticeTasks = lazy(() => import('./pages/simulator/PracticeTasks'))
@@ -622,6 +661,10 @@ const PracticePlanList = lazy(() => import('./pages/simulator/PracticePlanList')
 const PracticePlanCreate = lazy(() => import('./pages/simulator/PracticePlanCreate'))
 const PracticePlanView = lazy(() => import('./pages/simulator/PracticePlanView'))
 const PracticePlanEdit = lazy(() => import('./pages/simulator/PracticePlanEdit'))
+const SimPlansDashboard = lazy(() => import('./pages/simulator/plans/SimPlansDashboard'))
+const SimProjectPlanView = lazy(() => import('./pages/simulator/plans/SimProjectPlanView'))
+const SimProjectPlanCreate = lazy(() => import('./pages/simulator/plans/SimProjectPlanCreate'))
+const SimStagePlanCreate = lazy(() => import('./pages/simulator/plans/SimStagePlanCreate'))
 // Practice Daily Log
 const PracticeDailyLog = lazy(() => import('./pages/simulator/PracticeDailyLog'))
 const PracticeDailyLogEntry = lazy(() => import('./pages/simulator/PracticeDailyLogEntry'))
@@ -995,6 +1038,20 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="/simulator/resources/capacity" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ResourceCapacity />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="/simulator/resources/conflicts" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ResourceConflicts />
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="/pricing" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -1134,6 +1191,34 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <ITTODraftsQueue />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="industry-templates" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <IndustryTemplateBrowser />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/industry-plan" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectIndustryPlanView />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/industry-plan/new" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <IndustryPlanCopyWizard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/industry-plan/edit" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <IndustryPlanCopyWizard />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -2068,6 +2153,7 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="projects/templates/*" element={<RedirectProjectsTemplatesToLibrary />} />
                         <Route path="projects/:id" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -2304,6 +2390,34 @@ function App() {
                           </Suspense>
                         } />
                         {/* Product Description routes */}
+                        <Route path="projects/:projectId/opa-templates" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectOPATemplates />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/opa-templates/new" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectOPACopy />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/opa-templates/:customisationId/edit" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectOPACopy />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/:projectId/opa-templates/:customisationId" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectOPACustomisationDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="projects/:projectId/product-descriptions" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3558,6 +3672,27 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="admin/invitation-settings" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <InvitationExpirySettingsPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="admin/email-settings" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <EmailSettings />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="admin/email-sender-profiles" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <EmailSenderProfiles />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="change-log" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3674,6 +3809,42 @@ function App() {
             </Suspense>
           } />
 
+          <Route path="app/settings/invitation-templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Layout>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <ProtectedRoute>
+                          <InvitationTemplatesPage />
+                        </ProtectedRoute>
+                      </Suspense>
+                    </Layout>
+                  </Suspense>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+
+          <Route path="app/local-data-extensions/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Layout>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <ProtectedRoute>
+                          <LocalDataExtensionsRoutes />
+                        </ProtectedRoute>
+                      </Suspense>
+                    </Layout>
+                  </Suspense>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+
           {/* Backward Compatibility: Redirect other old /app/* paths to /platform/* */}
           <Route path="app/*" element={<AppToPlatformRedirect />} />
 
@@ -3756,6 +3927,71 @@ function App() {
                   <ProtectedRoute>
                     <PMOLayout>
                       <ITTODraftsQueue />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/industry-templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <IndustryTemplateList />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/industry-templates/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <IndustryTemplateForm />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/industry-templates/on-hold" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <IndustryTemplateOnHold />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/industry-templates/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <IndustryTemplateForm />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/industry-templates/:id" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <IndustryTemplateDetail />
                     </PMOLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -4279,6 +4515,71 @@ function App() {
                   <ProtectedRoute>
                     <PMLayout>
                       <PMDashboard />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/team-members" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ProjectUsers />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/industry-templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <IndustryTemplateBrowser />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/industry-plan" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ProjectIndustryPlanView />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/industry-plan/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <IndustryPlanCopyWizard />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/projects/:projectId/industry-plan/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <IndustryPlanCopyWizard />
                     </PMLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -4938,6 +5239,164 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <SimulatorDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/setup" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimulationSetup />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/active/dashboard" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimLiveRunRedirect suffix="dashboard" />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/active/inbox" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimLiveRunRedirect suffix="inbox" />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/active/evm" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimLiveRunRedirect suffix="evm" />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/:runId/dashboard" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimulationRunDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/:runId/inbox" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimEventInbox />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/:runId/stage-gate/:stageName" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimStageGateReview />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/:runId/exception" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimExceptionReportFlow />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/:runId/evm" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimEVMDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/run/:runId/debrief" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimulationDebrief />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/runs" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimulationRunHistory />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/local-data-extensions/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <SimulatorLocalDataExtensionsRoutes />
+                      </Suspense>
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -5756,6 +6215,58 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/industry-templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimIndustryTemplateBrowser />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/industry-plan" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimPracticeIndustryPlan />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/industry-plan/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimIndustryPlanCopy />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/industry-plan/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimIndustryPlanCopy />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="simulator/practice-projects/:projectId/scope/management-plan" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -5919,6 +6430,58 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <SimGanttChartPage />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/opa-templates" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <ProjectOPATemplates />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/opa-templates/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <ProjectOPACopy />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/opa-templates/:customisationId/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <ProjectOPACopy />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/opa-templates/:customisationId" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <ProjectOPACustomisationDetail />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -6140,6 +6703,58 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
                       <SimKanbanMetrics />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/plans/stage-plan/create" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimStagePlanCreate />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/plans/project-plan/create" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectPlanCreate />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/plans/project-plan" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimProjectPlanView />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-projects/:projectId/plans" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <SimPlansDashboard />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -9298,6 +9913,20 @@ function App() {
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
                 <EmailConfirmation />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="auth/invitation/:projectSlug/:roleSlug/:token" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <InvitationAccept />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="auth/invitation/:projectSlug/:roleSlug" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <InvitationAccept />
               </ThemeProvider>
             </Suspense>
           } />

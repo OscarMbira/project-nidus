@@ -31,14 +31,34 @@ async function getProjectManagerTemplateRoleId() {
   return _pmTemplateRoleId
 }
 
+/** Listing then workload calls this twice per page load — reuse briefly; rare admin edits tolerate staleness. */
+let _nonFinalStatusIdsCache = null
+let _nonFinalStatusIdsCacheAt = 0
+let _nonFinalStatusIdsInflight = null
+const NON_FINAL_STATUS_IDS_TTL_MS = 45_000
+
 async function getNonFinalProjectStatusIds() {
-  const { data, error } = await platformDb
-    .from('project_statuses')
-    .select('id')
-    .eq('is_final_status', false)
-    .eq('is_deleted', false)
-  if (error) throw error
-  return (data || []).map((r) => r.id).filter(Boolean)
+  const now = Date.now()
+  if (_nonFinalStatusIdsCache && now - _nonFinalStatusIdsCacheAt < NON_FINAL_STATUS_IDS_TTL_MS) {
+    return _nonFinalStatusIdsCache
+  }
+  if (!_nonFinalStatusIdsInflight) {
+    _nonFinalStatusIdsInflight = (async () => {
+      const { data, error } = await platformDb
+        .from('project_statuses')
+        .select('id')
+        .eq('is_final_status', false)
+        .eq('is_deleted', false)
+      if (error) throw error
+      return (data || []).map((r) => r.id).filter(Boolean)
+    })().finally(() => {
+      _nonFinalStatusIdsInflight = null
+    })
+  }
+  const ids = await _nonFinalStatusIdsInflight
+  _nonFinalStatusIdsCache = ids
+  _nonFinalStatusIdsCacheAt = Date.now()
+  return ids
 }
 
 /**
@@ -173,17 +193,79 @@ export async function getEligibleManagers() {
 }
 
 /**
+ * Active assignment counts for many users in one round-trip per entity type (platform),
+ * plus batched simulator counts when available.
+ *
  * @param {string[]} userIds
  * @returns {Promise<Record<string, number>>}
  */
 export async function getActiveAssignmentCountsForUsers(userIds = []) {
   const unique = [...new Set(userIds.filter(Boolean))]
+  if (unique.length === 0) return {}
+
+  const statusIds = await getNonFinalProjectStatusIds()
+  const base = Object.fromEntries(unique.map((id) => [id, 0]))
+
+  const [pRes, progRes, portRes] = await Promise.all([
+    statusIds.length
+      ? platformDb
+          .from('projects')
+          .select('project_manager_user_id')
+          .eq('is_deleted', false)
+          .in('status_id', statusIds)
+          .in('project_manager_user_id', unique)
+      : Promise.resolve({ data: [], error: null }),
+    platformDb
+      .from('programmes')
+      .select('programme_manager_user_id')
+      .eq('is_deleted', false)
+      .in('programme_status', ACTIVE_PROGRAMME_STATUSES)
+      .in('programme_manager_user_id', unique),
+    platformDb
+      .from('portfolios')
+      .select('portfolio_manager_user_id')
+      .eq('is_deleted', false)
+      .in('portfolio_status', ACTIVE_PORTFOLIO_STATUSES)
+      .in('portfolio_manager_user_id', unique),
+  ])
+
+  if (pRes.error) throw pRes.error
+  if (progRes.error) throw progRes.error
+  if (portRes.error) throw portRes.error
+
+  for (const row of pRes.data || []) {
+    const uid = row.project_manager_user_id
+    if (uid != null && Object.prototype.hasOwnProperty.call(base, uid)) base[uid] += 1
+  }
+  for (const row of progRes.data || []) {
+    const uid = row.programme_manager_user_id
+    if (uid != null && Object.prototype.hasOwnProperty.call(base, uid)) base[uid] += 1
+  }
+  for (const row of portRes.data || []) {
+    const uid = row.portfolio_manager_user_id
+    if (uid != null && Object.prototype.hasOwnProperty.call(base, uid)) base[uid] += 1
+  }
+
+  let simByUser = {}
+  try {
+    const mod = await import('./sim/simManagerAssignmentService.js')
+    if (typeof mod.getSimActiveAssignmentCountsForUsers === 'function') {
+      simByUser = await mod.getSimActiveAssignmentCountsForUsers(unique)
+    } else if (typeof mod.getSimActiveAssignmentCountOnly === 'function') {
+      await Promise.all(
+        unique.map(async (uid) => {
+          simByUser[uid] = await mod.getSimActiveAssignmentCountOnly(uid)
+        })
+      )
+    }
+  } catch (e) {
+    console.warn('Sim manager assignment counts skipped:', e?.message || e)
+  }
+
   const out = {}
-  await Promise.all(
-    unique.map(async (uid) => {
-      out[uid] = await getUserActiveAssignmentCount(uid)
-    })
-  )
+  for (const uid of unique) {
+    out[uid] = base[uid] + (simByUser[uid] || 0)
+  }
   return out
 }
 

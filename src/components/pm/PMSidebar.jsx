@@ -3,19 +3,25 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { ChevronRight, ChevronDown, LogOut, X, Briefcase } from 'lucide-react'
 import pmDashboardMenuConfig from '../../config/pmDashboardMenuConfig'
+import { resolveMenuRoutePath, menuPathIsActive } from '../../utils/sidebarRouteUtils'
 
 function PMSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null }) {
   const location = useLocation()
+  const resolvedPath = menuItem.path?.includes('?')
+    ? menuItem.path
+    : resolveMenuRoutePath(menuItem.path, location.pathname)
   const [isExpandedLocal, setIsExpandedLocal] = useState(false)
   const hasChildren = menuItem.children && menuItem.children.length > 0
-  const isActive = menuItem.path && (
-    location.pathname === menuItem.path ||
-    location.pathname.startsWith(menuItem.path + '/')
-  )
+  const isActive =
+    !!menuItem.path && menuPathIsActive(location.pathname, resolvedPath, location.search)
 
-  const isChildActive = hasChildren && menuItem.children.some(
-    child => location.pathname === child.path || location.pathname.startsWith(child.path + '/')
-  )
+  const isChildActive =
+    hasChildren &&
+    menuItem.children.some((child) => {
+      if (!child.path) return false
+      const r = child.path?.includes('?') ? child.path : resolveMenuRoutePath(child.path, location.pathname)
+      return menuPathIsActive(location.pathname, r, location.search)
+    })
 
   const isTopLevel = level === 0
   const expandedByParent = isTopLevel && hasChildren && onToggleExpand != null
@@ -38,7 +44,7 @@ function PMSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggl
   return (
     <div>
       <Link
-        to={menuItem.path || '#'}
+        to={!menuItem.path ? '#' : resolvedPath === '/' ? '/pm/dashboard' : resolvedPath}
         onClick={handleClick}
         className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
           isActive

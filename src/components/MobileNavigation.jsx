@@ -248,15 +248,15 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
   const childActive = children.some((ch) => {
     if (!ch.route_path) return false
     const r = resolveMenuRoutePath(ch.route_path, location.pathname)
-    return menuPathIsActive(location.pathname, r)
+    return menuPathIsActive(location.pathname, r, location.search)
   })
   const [isExpanded, setIsExpanded] = useState(childActive)
   useEffect(() => {
     if (childActive) setIsExpanded(true)
-  }, [location.pathname, childActive])
+  }, [location.pathname, location.search, childActive])
 
   const isActive = item.route_path
-    ? menuPathIsActive(location.pathname, resolved)
+    ? menuPathIsActive(location.pathname, resolved, location.search)
     : childActive
 
   const handleClick = (e) => {

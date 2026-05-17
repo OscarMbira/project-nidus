@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit2, FileText, Clock, User, DollarSign, Calendar, Package } from 'lucide-react';
 import { fetchChangeRequest } from '../../services/changeManagementService';
+import { platformDb } from '../../services/supabase/supabaseClient';
 import ChangeRequestForm from '../../components/change/ChangeRequestForm';
 import ChangeAssessmentForm from '../../components/change/ChangeAssessmentForm';
 import ChangeImpactAnalysis from '../../components/change/ChangeImpactAnalysis';
 import ChangeLog from '../../components/change/ChangeLog';
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils';
+import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer';
+import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge';
 
 const CHANGE_REQUEST_VIEW_SECTIONS = [
   { title: 'Change Request', fields: [
@@ -17,10 +20,32 @@ const CHANGE_REQUEST_VIEW_SECTIONS = [
   ]}
 ];
 
+async function buildChangeRequestExport(platformDbClient, reqRow, crAccountId) {
+  const base = reqRow;
+  const pid = reqRow?.project_id;
+  if (!platformDbClient || !crAccountId || !pid || !reqRow?.id) {
+    return { sections: CHANGE_REQUEST_VIEW_SECTIONS, record: base };
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      platformDbClient,
+      crAccountId,
+      'change_request',
+      reqRow.id,
+      pid
+    );
+    const sections = section ? [...CHANGE_REQUEST_VIEW_SECTIONS, section] : CHANGE_REQUEST_VIEW_SECTIONS;
+    return { sections, record: { ...base, ...mergedRecord } };
+  } catch {
+    return { sections: CHANGE_REQUEST_VIEW_SECTIONS, record: base };
+  }
+}
+
 export default function ChangeRequestDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [request, setRequest] = useState(null);
+  const [crAccountId, setCrAccountId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
   const [showEditForm, setShowEditForm] = useState(false);
@@ -31,6 +56,25 @@ export default function ChangeRequestDetail() {
       loadRequest();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!request?.project_id) {
+      setCrAccountId(null);
+      return;
+    }
+    let cancelled = false;
+    platformDb
+      .from('projects')
+      .select('account_id')
+      .eq('id', request.project_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setCrAccountId(data?.account_id || null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [request?.project_id]);
 
   const loadRequest = async () => {
     try {
@@ -134,13 +178,34 @@ export default function ChangeRequestDetail() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
-              onExportWord={() => exportRecordToWord(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
-              onExportExcel={() => exportRecordToExcel(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
-              onExportCSV={() => exportRecordToCSV(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
-              onExportXML={() => exportRecordToXML(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
-              onExportJSON={() => exportRecordToJSON(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
-              onExportPrint={() => exportRecordToPrint(CHANGE_REQUEST_VIEW_SECTIONS, request, `ChangeRequest_${request.change_reference || id}`)}
+              onExportPPT={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToPPT(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
+              onExportWord={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToWord(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
+              onExportExcel={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToExcel(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
+              onExportCSV={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToCSV(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
+              onExportXML={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToXML(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
+              onExportJSON={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToJSON(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
+              onExportPrint={async () => {
+                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
+                exportRecordToPrint(sections, record, `ChangeRequest_${request.change_reference || id}`);
+              }}
             />
             <button
               onClick={() => setShowEditForm(true)}
@@ -241,6 +306,17 @@ export default function ChangeRequestDetail() {
                 )}
               </div>
             </div>
+
+            {crAccountId && request.project_id && request.id && (
+              <CustomFieldRenderer
+                platformDb={platformDb}
+                accountId={crAccountId}
+                projectId={request.project_id}
+                entityType="change_request"
+                entityId={request.id}
+                screenCode="change_request_detail"
+              />
+            )}
           </div>
         )}
 

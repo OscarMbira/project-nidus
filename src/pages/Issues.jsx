@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '../utils/projectRouteParam'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, AlertCircle, Bug, Zap, CheckCircle, Clock, XCircle, Filter, Search } from 'lucide-react'
@@ -204,7 +205,7 @@ export default function Issues() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}`)}
+        onClick={() => navigate(platformProjectPath(routeKey || projectId))}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Project

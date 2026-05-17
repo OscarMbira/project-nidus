@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEntityId } from '../../hooks/useEntityId';
 import { ArrowLeft, Edit2, Settings, FolderKanban, Users, Target, DollarSign, AlertTriangle, Activity } from 'lucide-react';
 import { getPortfolio } from '../../services/portfolioService';
 import PortfolioDashboard from '../../components/portfolio/PortfolioDashboard';
@@ -16,23 +17,19 @@ const PORTFOLIO_VIEW_SECTIONS = [
 
 export default function PortfolioDetail() {
   const { id } = useParams();
+  const { uuid: portfolioUuid, loading: idResolving, error: idResolveError } = useEntityId(id || '', 'portfolio');
   const navigate = useNavigate();
   const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'projects', 'resources', 'financial', 'risks', 'reports'
 
-  useEffect(() => {
-    if (id) {
-      fetchPortfolio();
-    }
-  }, [id]);
-
-  const fetchPortfolio = async () => {
+  const fetchPortfolio = useCallback(async () => {
+    if (!portfolioUuid) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await getPortfolio(id);
+      const data = await getPortfolio(portfolioUuid);
       setPortfolio(data);
     } catch (err) {
       console.error('Error fetching portfolio:', err);
@@ -40,9 +37,20 @@ export default function PortfolioDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [portfolioUuid]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!id) return;
+    if (idResolving) return;
+    if (!portfolioUuid || idResolveError === 'not_found') {
+      setLoading(false);
+      if (idResolveError === 'not_found') setError('Portfolio not found');
+      return;
+    }
+    fetchPortfolio();
+  }, [id, portfolioUuid, idResolving, idResolveError, fetchPortfolio]);
+
+  if (loading || idResolving) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center h-64">
@@ -121,16 +129,20 @@ export default function PortfolioDetail() {
           </div>
           <div className="flex items-center gap-2">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
-              onExportWord={() => exportRecordToWord(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
-              onExportExcel={() => exportRecordToExcel(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
-              onExportCSV={() => exportRecordToCSV(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
-              onExportXML={() => exportRecordToXML(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
-              onExportJSON={() => exportRecordToJSON(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
-              onExportPrint={() => exportRecordToPrint(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || id}`)}
+              onExportPPT={() => exportRecordToPPT(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportWord={() => exportRecordToWord(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportExcel={() => exportRecordToExcel(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportCSV={() => exportRecordToCSV(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportXML={() => exportRecordToXML(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportJSON={() => exportRecordToJSON(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportPrint={() => exportRecordToPrint(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
             />
             <button
-              onClick={() => navigate(`/portfolio/${id}/edit`)}
+              onClick={() =>
+                navigate(
+                  `/portfolio/${encodeURIComponent(portfolio.portfolio_code?.trim() || portfolioUuid)}/edit`,
+                )
+              }
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
             >
               <Edit2 className="h-4 w-4" />
@@ -166,7 +178,7 @@ export default function PortfolioDetail() {
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === 'dashboard' && (
-          <PortfolioDashboard portfolioId={id} />
+          <PortfolioDashboard portfolioId={portfolioUuid} />
         )}
         {activeTab === 'projects' && (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">

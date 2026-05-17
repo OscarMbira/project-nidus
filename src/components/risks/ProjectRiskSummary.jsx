@@ -6,9 +6,10 @@
 import { useState, useEffect } from 'react'
 import { AlertTriangle, TrendingUp, ArrowRight, LifeBuoy } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { platformProjectPath, platformRiskPath } from '../../utils/projectRouteParam'
 import { getRiskSummary, getTopRisks } from '../../services/riskService'
 
-export default function ProjectRiskSummary({ projectId }) {
+export default function ProjectRiskSummary({ projectId, routeKey }) {
   const [summary, setSummary] = useState(null)
   const [topRisks, setTopRisks] = useState([])
   const [loading, setLoading] = useState(false)
@@ -54,6 +55,8 @@ export default function ProjectRiskSummary({ projectId }) {
     return null
   }
 
+  const projectRouteKey = String(routeKey || projectId || '').trim()
+
   const totalRisks = summary.total_risks || 0
   const activeRisks = summary.active_risks || 0
   const highRisks = summary.high_risks || 0
@@ -69,7 +72,8 @@ export default function ProjectRiskSummary({ projectId }) {
           </h3>
         </div>
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/risks`)}
+          type="button"
+          onClick={() => navigate(platformProjectPath(projectId || '', 'risks'))}
           className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
         >
           View Register
@@ -109,7 +113,11 @@ export default function ProjectRiskSummary({ projectId }) {
             {topRisks.map((risk, index) => (
               <div
                 key={risk.risk_id || index}
-                onClick={() => navigate(`/app/projects/${projectId}/risks/${risk.risk_id}`)}
+                onClick={() =>
+                  navigate(
+                    platformRiskPath(projectRouteKey, risk.risk_code || risk.risk_id),
+                  )
+                }
                 className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
               >
                 {risk.risk_type === 'threat' ? (
@@ -156,7 +164,7 @@ export default function ProjectRiskSummary({ projectId }) {
             No risks registered yet
           </p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/risks`)}
+            onClick={() => navigate(platformProjectPath(projectRouteKey, 'risks'))}
             className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Add First Risk →

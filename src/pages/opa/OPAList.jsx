@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Eye, Pencil, PauseCircle } from 'lucide-react'
-import { listOPAs } from '../../services/opaService'
+import { listOPAs, listProjectsForOrganisation } from '../../services/opaService'
 import { ensureEefOpaSampleForAccount } from '../../services/eefService'
 import { getCurrentUserAccountId } from '../../utils/accountResolution'
 import ExportListMenu from '../../components/ui/ExportListMenu'
@@ -21,6 +21,8 @@ const EXPORT_COLS = [
 
 export default function OPAList() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const templateOnly = searchParams.get('type') === 'template'
   const [accountId, setAccountId] = useState(null)
   const [contextReady, setContextReady] = useState(false)
   const [rows, setRows] = useState([])
@@ -32,6 +34,9 @@ export default function OPAList() {
   const [search, setSearch] = useState('')
   const [debounced, setDebounced] = useState('')
   const [viewMode, setViewMode] = useViewMode('platform-opa-list', 'list')
+  const [projects, setProjects] = useState([])
+  const [pickOpaId, setPickOpaId] = useState(null)
+  const [pickProjectId, setPickProjectId] = useState('')
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'updated_at', direction: 'desc' },
@@ -91,7 +96,10 @@ export default function OPAList() {
       setLoading(true)
       setErr(null)
       setSeedErr(null)
-      const { data, error } = await listOPAs(accountId, { search: debounced })
+      const { data, error } = await listOPAs(accountId, {
+        search: debounced,
+        opaType: templateOnly ? 'template' : null,
+      })
       if (cancelled) return
       if (error) setErr(error.message)
       setRows(data || [])
@@ -100,7 +108,26 @@ export default function OPAList() {
     return () => {
       cancelled = true
     }
-  }, [contextReady, accountId, debounced, listVersion])
+  }, [contextReady, accountId, debounced, listVersion, templateOnly])
+
+  useEffect(() => {
+    if (!templateOnly || !accountId) return
+    ;(async () => {
+      const { data } = await listProjectsForOrganisation(accountId)
+      setProjects(data || [])
+    })()
+  }, [templateOnly, accountId])
+
+  function openUseInProject(opaId) {
+    setPickOpaId(opaId)
+    setPickProjectId('')
+  }
+
+  function confirmUseInProject() {
+    if (!pickProjectId || !pickOpaId) return
+    navigate(`/platform/projects/${pickProjectId}/opa-templates/new?from_opa=${pickOpaId}`)
+    setPickOpaId(null)
+  }
 
   async function handleLoadSampleData() {
     if (!accountId) return
@@ -139,8 +166,14 @@ export default function OPAList() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Organisational Process Assets</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Templates, policies, procedures, and knowledge.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {templateOnly ? 'OPA Templates' : 'Organisational Process Assets'}
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {templateOnly
+              ? 'PMO templates you can copy and tailor for your project.'
+              : 'Templates, policies, procedures, and knowledge.'}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ExportListMenu columns={EXPORT_COLS} data={exportRows} baseFilename="OPA_Register" disabled={!exportRows.length} />
@@ -156,12 +189,14 @@ export default function OPAList() {
           >
             Bulk upload
           </Link>
-          <Link
-            to="/platform/opa/new"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 min-h-[44px]"
-          >
-            <Plus className="h-5 w-5" /> Add OPA
-          </Link>
+          {!templateOnly && (
+            <Link
+              to="/platform/opa/new"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 text-white text-sm font-medium hover:bg-sky-700 min-h-[44px]"
+            >
+              <Plus className="h-5 w-5" /> Add OPA
+            </Link>
+          )}
         </div>
       </div>
 
@@ -213,9 +248,16 @@ export default function OPAList() {
                 <button type="button" onClick={() => navigate(`/platform/opa/${r.id}`)} className="inline-flex items-center gap-1 text-sm text-sky-600 dark:text-sky-400">
                   <Eye className="h-4 w-4" /> View
                 </button>
-                <button type="button" onClick={() => navigate(`/platform/opa/${r.id}/edit`)} className="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-                  <Pencil className="h-4 w-4" /> Edit
-                </button>
+                {!templateOnly && (
+                  <button type="button" onClick={() => navigate(`/platform/opa/${r.id}/edit`)} className="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+                    <Pencil className="h-4 w-4" /> Edit
+                  </button>
+                )}
+                {templateOnly && (
+                  <button type="button" onClick={() => openUseInProject(r.id)} className="inline-flex items-center gap-1 text-sm text-violet-600 dark:text-violet-400">
+                    Use in project →
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -259,9 +301,16 @@ export default function OPAList() {
                     <button type="button" className="text-sky-600 dark:text-sky-400 text-sm" onClick={() => navigate(`/platform/opa/${r.id}`)}>
                       View
                     </button>
-                    <button type="button" className="text-gray-700 dark:text-gray-300 text-sm" onClick={() => navigate(`/platform/opa/${r.id}/edit`)}>
-                      Edit
-                    </button>
+                    {!templateOnly && (
+                      <button type="button" className="text-gray-700 dark:text-gray-300 text-sm" onClick={() => navigate(`/platform/opa/${r.id}/edit`)}>
+                        Edit
+                      </button>
+                    )}
+                    {templateOnly && (
+                      <button type="button" className="text-violet-600 text-sm" onClick={() => openUseInProject(r.id)}>
+                        Use in project →
+                      </button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -270,9 +319,44 @@ export default function OPAList() {
         </div>
       ) : null}
 
+      {pickOpaId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-modal="true">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Use template in project</h2>
+            <label className="block mb-4">
+              <span className="text-sm">Project</span>
+              <select
+                value={pickProjectId}
+                onChange={(e) => setPickProjectId(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 min-h-[44px]"
+              >
+                <option value="">Select project</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.project_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex justify-end gap-2">
+              <button type="button" className="px-4 py-2 rounded-lg border" onClick={() => setPickOpaId(null)}>
+                Cancel
+              </button>
+              <button type="button" className="px-4 py-2 rounded-lg bg-sky-600 text-white" onClick={confirmUseInProject} disabled={!pickProjectId}>
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!loading && !seedLoading && !displayRows.length && (
         <div className="text-center text-gray-500 dark:text-gray-400 py-12 space-y-4 max-w-lg mx-auto">
-          <p>No OPA records yet. Create one, import from CSV, or load the starter sample (adds both EEF and OPA).</p>
+          <p>
+            {templateOnly
+              ? 'No OPA templates yet. Ask your PMO to publish templates or load sample data.'
+              : 'No OPA records yet. Create one, import from CSV, or load the starter sample (adds both EEF and OPA).'}
+          </p>
           <button
             type="button"
             onClick={handleLoadSampleData}

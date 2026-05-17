@@ -61,6 +61,28 @@ export function platformProjectPath(routeKeyDecoded, ...extraSegments) {
 }
 
 /**
+ * @param {string} projectKeyDecoded — project id (UUID) or project_code
+ * @param {string} riskKeyDecoded — risk id or risk_code
+ */
+export function platformRiskPath(projectKeyDecoded, riskKeyDecoded) {
+  const pk = String(projectKeyDecoded || '').trim();
+  const rk = String(riskKeyDecoded || '').trim();
+  if (!pk || !rk) return '/platform/projects';
+  return `${platformProjectPath(pk, 'risks', encodeURIComponent(rk))}`;
+}
+
+/**
+ * @param {string} projectKeyDecoded
+ * @param {string} issueKeyDecoded — issue id or issue_code
+ */
+export function platformIssuePath(projectKeyDecoded, issueKeyDecoded) {
+  const pk = String(projectKeyDecoded || '').trim();
+  const ik = String(issueKeyDecoded || '').trim();
+  if (!pk || !ik) return '/platform/projects';
+  return `${platformProjectPath(pk, 'issues', encodeURIComponent(ik))}`;
+}
+
+/**
  * Resolve URL segment to projects.id (UUID).
  * @param {string} segment — decoded project code or uuid
  * @returns {Promise<string | null>}

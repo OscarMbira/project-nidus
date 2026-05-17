@@ -18,9 +18,10 @@ Requires Supabase anon key or service role key in the Authorization header.
   "subject": "Verify Your Organisation",
   "html": "<html>...</html>",
   "text": "Plain text version (optional)",
-  "from": "noreply@projectnidus.com",
+  "from": "noreply@updates.projectastute.com",
   "from_name": "Project Nidus",
-  "template_id": "uuid (optional)"
+  "template_id": "uuid (optional)",
+  "project_type_id": "uuid (optional — resolves sender profile)"
 }
 ```
 
@@ -52,9 +53,24 @@ Requires Supabase anon key or service role key in the Authorization header.
 
 The function automatically retrieves the active email configuration from the `email_configurations` table. It supports:
 
-- **Resend**: Requires `api_key` in configuration
+- **Resend** (recommended): `service_provider = 'resend'`, `api_key` set in **Platform → Admin → Email Settings**
 - **SendGrid**: Requires `api_key` in configuration
-- **SMTP**: Requires server-side implementation (not yet supported)
+- **SMTP**: `smtp_config` JSON (host, port, username, password, tls)
+
+Verified sending domain for Project Astute: `updates.projectastute.com`  
+Default from address: `noreply@updates.projectastute.com`
+
+## Sender profiles
+
+When `project_type_id` is provided (or omitted), the function looks up `email_sender_profiles`:
+
+1. Match `project_type_id` for the active `email_configurations` row
+2. Else match `is_default = true`
+3. Else use `email_configurations.from_email` / `from_name`
+
+Omit `from` / `from_name` in the request body to use profile resolution. Explicit `from` values override profiles.
+
+Configure profiles in **Platform → Admin → Sender Profiles**.
 
 ## Deployment
 

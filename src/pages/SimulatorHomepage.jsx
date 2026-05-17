@@ -286,6 +286,9 @@ const SimulatorHomepage = () => {
                 <Button size="lg" asChild className="bg-green-600 hover:bg-green-700 text-white">
                   <Link to="/simulator">Start free simulation</Link>
                 </Button>
+                <Button size="lg" asChild className="bg-emerald-700 hover:bg-emerald-600 text-white shadow-md">
+                  <Link to="/simulator/run/setup">NPC live simulation (v505)</Link>
+                </Button>
                 <Button size="lg" variant="outline" asChild className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20">
                   <Link to="/simulator/tutorial">
                     Watch how it works <ArrowRight className="ml-2 h-4 w-4" />

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useEntityId } from '../../hooks/useEntityId';
 import { ArrowLeft, Edit2, Target, TrendingUp, AlertTriangle, Activity, Calendar, CheckCircle, Link2 } from 'lucide-react';
 import {
   getProgramme,
@@ -336,6 +337,7 @@ function ProgrammeReportsTab({ programmeId }) {
 
 export default function ProgrammeDetail() {
   const { id } = useParams();
+  const { uuid: programmeUuid, loading: idResolving, error: idResolveError } = useEntityId(id || '', 'programme');
   const navigate = useNavigate();
   const location = useLocation();
   const isPlatformContext = location.pathname.startsWith('/platform');
@@ -347,17 +349,12 @@ export default function ProgrammeDetail() {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => {
-    if (id) {
-      fetchProgramme();
-    }
-  }, [id]);
-
-  const fetchProgramme = async () => {
+  const fetchProgramme = useCallback(async () => {
+    if (!programmeUuid) return;
     try {
       setLoading(true);
       setError(null);
-      const data = await getProgramme(id);
+      const data = await getProgramme(programmeUuid);
       setProgramme(data);
     } catch (err) {
       console.error('Error fetching programme:', err);
@@ -365,12 +362,24 @@ export default function ProgrammeDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [programmeUuid]);
+
+  useEffect(() => {
+    if (!id) return;
+    if (idResolving) return;
+    if (!programmeUuid || idResolveError === 'not_found') {
+      setLoading(false);
+      if (idResolveError === 'not_found') setError('Programme not found');
+      return;
+    }
+    fetchProgramme();
+  }, [id, programmeUuid, idResolving, idResolveError, fetchProgramme]);
 
   const handleDelete = async () => {
     try {
-      await deleteProgramme(id);
-      navigate(basePath, { replace: true, state: { toast: { type: 'success', message: `Programme "${programme?.programme_name}" (${programme?.programme_code || id}) deleted successfully.` } } });
+      if (!programmeUuid) return;
+      await deleteProgramme(programmeUuid);
+      navigate(basePath, { replace: true, state: { toast: { type: 'success', message: `Programme "${programme?.programme_name}" (${programme?.programme_code || programmeUuid}) deleted successfully.` } } });
     } catch (error) {
       console.error('Error deleting programme:', error);
       alert('Error deleting programme: ' + error.message);
@@ -382,7 +391,7 @@ export default function ProgrammeDetail() {
     fetchProgramme();
   };
 
-  if (loading) {
+  if (loading || idResolving) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center h-64">
@@ -460,13 +469,13 @@ export default function ProgrammeDetail() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
-              onExportWord={() => exportRecordToWord(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
-              onExportExcel={() => exportRecordToExcel(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
-              onExportCSV={() => exportRecordToCSV(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
-              onExportXML={() => exportRecordToXML(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
-              onExportJSON={() => exportRecordToJSON(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
-              onExportPrint={() => exportRecordToPrint(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || id}`)}
+              onExportPPT={() => exportRecordToPPT(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
+              onExportWord={() => exportRecordToWord(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
+              onExportExcel={() => exportRecordToExcel(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
+              onExportCSV={() => exportRecordToCSV(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
+              onExportXML={() => exportRecordToXML(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
+              onExportJSON={() => exportRecordToJSON(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
+              onExportPrint={() => exportRecordToPrint(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
             />
             <button
               onClick={() => setShowForm(true)}
@@ -508,27 +517,27 @@ export default function ProgrammeDetail() {
       {/* Tab Content */}
       <div>
         {activeTab === 'dashboard' && (
-          <ProgrammeDashboard programmeId={id} />
+          <ProgrammeDashboard programmeId={programmeUuid} />
         )}
 
         {activeTab === 'projects' && (
-          <ProgrammeProjectsTab programmeId={id} />
+          <ProgrammeProjectsTab programmeId={programmeUuid} />
         )}
 
         {activeTab === 'dependencies' && (
-          <ProgrammeDependenciesTab programmeId={id} />
+          <ProgrammeDependenciesTab programmeId={programmeUuid} />
         )}
 
         {activeTab === 'benefits' && (
-          <ProgrammeBenefitsTab programmeId={id} />
+          <ProgrammeBenefitsTab programmeId={programmeUuid} />
         )}
 
         {activeTab === 'timeline' && (
-          <ProgrammeTimelineTab programmeId={id} programme={programme} />
+          <ProgrammeTimelineTab programmeId={programmeUuid} programme={programme} />
         )}
 
         {activeTab === 'reports' && (
-          <ProgrammeReportsTab programmeId={id} />
+          <ProgrammeReportsTab programmeId={programmeUuid} />
         )}
       </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Loader } from 'lucide-react'
@@ -11,16 +11,12 @@ import { useDraftQueue } from '../hooks/useDraftQueue'
 import ProjectFormTabs from '../components/project/ProjectFormTabs'
 import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
 
-// Phase 3: Import readiness validation component
-import ReadinessPanel from '../components/project/ReadinessPanel'
-
-// Phase 4: Import authorisation actions component
-import AuthorisationActions from '../components/project/AuthorisationActions'
+const ExportRecordMenu = lazy(() => import('../components/ui/ExportRecordMenu'))
+const ReadinessPanel = lazy(() => import('../components/project/ReadinessPanel'))
+const AuthorisationActions = lazy(() => import('../components/project/AuthorisationActions'))
 
 import { addProjectToPortfolio } from '../services/portfolioService'
 import { addProjectToProgramme } from '../services/programmeService'
-
-import ExportRecordMenu from '../components/ui/ExportRecordMenu'
 
 // Mandate linking and loading (used when arriving from an approved mandate)
 import { linkMandateToProject, getMandatePrefill } from '../services/projectMandateService'
@@ -187,7 +183,6 @@ export default function ProjectsCreate() {
   const [budgetCategories, setBudgetCategories] = useState([])
   const [lifecycleTemplates, setLifecycleTemplates] = useState([])
   const [loading, setLoading] = useState(false)
-  const [dataLoading, setDataLoading] = useState(true)
   const [errors, setErrors] = useState({})
 
   // Phase 2: Tab navigation state
@@ -321,12 +316,10 @@ export default function ProjectsCreate() {
 
     const initializePageData = async () => {
       try {
-        // Auth uses cached JWT — no network round-trip
-        const { data: { user } } = await supabase.auth.getUser()
+        // Prefer session (local/cache) over getUser() network validation for faster first paint
+        const { data: { session } } = await supabase.auth.getSession()
+        const user = session?.user
         if (!user) { navigate('/login', { replace: true }); return }
-
-        // Show form immediately while data loads in background
-        if (isMounted) setDataLoading(false)
 
         // ── Phase 1: core dropdown lookups fire in parallel ───────────────────
         const [userResult, typesResult, statusesResult] = await Promise.all([
@@ -409,7 +402,7 @@ export default function ProjectsCreate() {
       })
   }, [])
 
-  useEffect(() => { loadFinancialLookups() }, [loadFinancialLookups])
+  // Financial lookups load only when user opens Financial tab (see tab effect below) — avoids 2 API calls on every /projects/new visit
 
   // Load lifecycle templates when user opens Delivery tab (avoids blocking initial load if table missing)
   const loadLifecycleTemplates = useCallback(() => {
@@ -1013,12 +1006,14 @@ export default function ProjectsCreate() {
               Fill in the details to create your new project
             </p>
           </div>
-          <ExportRecordMenu
-            sections={PROJECT_CREATE_EXPORT_SECTIONS}
-            record={formData}
-            baseFilename={formData.project_code || formData.project_name ? `Project_Draft_${(formData.project_code || formData.project_name || '').replace(/\s+/g, '_').slice(0, 40)}` : 'NewProject_Draft'}
-            disabled={false}
-          />
+          <Suspense fallback={<div className="h-10 w-36 shrink-0 animate-pulse rounded-lg bg-gray-200 dark:bg-gray-700" aria-hidden />}>
+            <ExportRecordMenu
+              sections={PROJECT_CREATE_EXPORT_SECTIONS}
+              record={formData}
+              baseFilename={formData.project_code || formData.project_name ? `Project_Draft_${(formData.project_code || formData.project_name || '').replace(/\s+/g, '_').slice(0, 40)}` : 'NewProject_Draft'}
+              disabled={false}
+            />
+          </Suspense>
         </div>
       </div>
 
@@ -1089,28 +1084,32 @@ export default function ProjectsCreate() {
         {/* Phase 3: Readiness Validation Panel */}
         {createdProjectId && (
           <div className="mt-6">
-            <ReadinessPanel
-              readinessData={readinessData}
-              onValidate={handleValidateReadiness}
-              isValidating={isValidatingReadiness}
-              projectId={createdProjectId}
-            />
+            <Suspense fallback={<div className="h-24 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800/80" aria-busy />}>
+              <ReadinessPanel
+                readinessData={readinessData}
+                onValidate={handleValidateReadiness}
+                isValidating={isValidatingReadiness}
+                projectId={createdProjectId}
+              />
+            </Suspense>
           </div>
         )}
 
         {/* Phase 4: Authorisation Actions */}
         {createdProjectId && isPmoAdmin && (
           <div className="mt-6">
-            <AuthorisationActions
-              projectId={createdProjectId}
-              readinessStatus={readinessData?.readiness_status}
-              isPmoAdmin={isPmoAdmin}
-              intakeStatus={intakeStatus}
-              onAuthorise={handleAuthoriseProject}
-              onReject={handleRejectProject}
-              onSuspend={handleSuspendProject}
-              isProcessing={isProcessingAuthorisation}
-            />
+            <Suspense fallback={<div className="h-20 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800/80" aria-busy />}>
+              <AuthorisationActions
+                projectId={createdProjectId}
+                readinessStatus={readinessData?.readiness_status}
+                isPmoAdmin={isPmoAdmin}
+                intakeStatus={intakeStatus}
+                onAuthorise={handleAuthoriseProject}
+                onReject={handleRejectProject}
+                onSuspend={handleSuspendProject}
+                isProcessing={isProcessingAuthorisation}
+              />
+            </Suspense>
           </div>
         )}
 

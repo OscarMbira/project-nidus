@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Settings, Users, Database, Building2, Key, Bell, FileText } from 'lucide-react';
+import { Shield, Settings, Users, Database, Building2, Key, Bell, FileText, UserCheck } from 'lucide-react';
 import { platformDb } from '../../services/supabase/supabaseClient';
 import { getAccountById } from '../../services/accountService';
 
@@ -165,7 +165,20 @@ export default function PMOAdmin() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+                <UserCheck className="h-8 w-8 text-purple-400 mb-3" />
+                <h3 className="text-lg font-semibold text-gray-100 mb-2">Manager assignments</h3>
+                <p className="text-gray-400 text-sm mb-4">Assign portfolio, programme, and project managers</p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/platform/pmo-admin/manager-assignments')}
+                  className="text-purple-400 hover:text-purple-300 text-sm font-medium"
+                >
+                  Open assignments →
+                </button>
+              </div>
+
               <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
                 <Users className="h-8 w-8 text-purple-400 mb-3" />
                 <h3 className="text-lg font-semibold text-gray-100 mb-2">User Management</h3>

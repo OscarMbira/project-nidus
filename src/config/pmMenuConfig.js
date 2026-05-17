@@ -52,7 +52,7 @@ export const pmMenuConfig = [
       {
         id: 'platform-projects-templates',
         label: 'Templates',
-        path: '/platform/projects/templates',
+        path: '/platform/templates',
         permission: 'project.view',
       },
       {
@@ -73,6 +73,18 @@ export const pmMenuConfig = [
         label: 'Manage Members',
         path: '/app/project-members',
         permission: 'user.invite',
+      },
+      {
+        id: 'platform-projects-invitation-templates',
+        label: 'Invitation Templates',
+        path: '/app/settings/invitation-templates',
+        permission: 'project.view',
+      },
+      {
+        id: 'platform-projects-local-data-extensions',
+        label: 'Local Data Extensions',
+        path: '/app/local-data-extensions',
+        permission: 'project.view',
       },
       {
         id: 'platform-projects-daily-log',
@@ -903,6 +915,12 @@ export const pmMenuConfig = [
         id: 'platform-org-admin-analytics',
         label: 'Analytics',
         path: '/platform/pmo-admin/analytics',
+        permission: 'pmo.admin',
+      },
+      {
+        id: 'platform-local-data-extensions',
+        label: 'Local Data Extensions',
+        path: '/app/local-data-extensions',
         permission: 'pmo.admin',
       },
       {

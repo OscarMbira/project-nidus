@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
+import { normalizeSupabaseAuthError } from '../../utils/authErrorMessage'
 import { Mail, Lock, User, AlertCircle, Loader, UserPlus, Gamepad2, CheckCircle2 } from 'lucide-react'
 import { registerForPlatform, PLATFORMS } from '../../services/unifiedSubscriptionService'
 import MainHeader from '../../components/homepage/MainHeader'
@@ -149,7 +150,9 @@ export default function SimulatorRegister() {
       }
     } catch (error) {
       console.error('Registration error:', error)
-      setError(error.message || 'An error occurred during registration')
+      setError(
+        normalizeSupabaseAuthError(error, 'An error occurred during registration.')
+      )
     } finally {
       setLoading(false)
     }
@@ -173,14 +176,21 @@ export default function SimulatorRegister() {
       })
 
       if (resendError) {
-        setError(resendError.message || 'Failed to resend confirmation email')
+        setError(
+          normalizeSupabaseAuthError(resendError, 'Failed to resend confirmation email.')
+        )
       } else {
         setError(null)
         alert('Confirmation email has been resent. Please check your inbox.')
       }
     } catch (err) {
       console.error('Resend confirmation error:', err)
-      setError(err.message || 'An error occurred while resending the confirmation email')
+      setError(
+        normalizeSupabaseAuthError(
+          err,
+          'An error occurred while resending the confirmation email.'
+        )
+      )
     }
   }
 
@@ -249,7 +259,7 @@ export default function SimulatorRegister() {
                         <AlertCircle className="h-5 w-5 text-red-400" />
                       </div>
                       <div className="ml-3">
-                        <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                        <h3 className="text-sm font-medium text-red-800 dark:text-red-200 whitespace-pre-wrap break-words">
                           {error}
                         </h3>
                       </div>

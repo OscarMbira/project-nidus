@@ -1,0 +1,106 @@
+-- ============================================================================
+-- v554 RECOVERY: invitation RPC only (use after v553 stopped early)
+-- ============================================================================
+-- Symptom: POST …/rpc/insert_project_invitation_as_pmo_admin → 404
+--
+-- If SQL/v553_bundle_pmo_invitation_rpc_complete.sql failed partway through (e.g.
+-- on a policy statement), `is_user_pmo_admin` may already exist while the RPC was
+-- never created. Run THIS file once — it only (re)creates the RPC + grants +
+-- schema reload.
+--
+-- Prerequisite: public.is_user_pmo_admin(uuid) must exist (run v551 or the first
+-- section of v553 if needed).
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.insert_project_invitation_as_pmo_admin(
+  p_project_id uuid,
+  p_invited_email text,
+  p_role_id uuid,
+  p_invitation_message text,
+  p_invitation_expires_at timestamptz
+)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+SET row_security = off
+AS $$
+DECLARE
+  v_auth uuid := auth.uid();
+  v_inviter_id uuid;
+  v_existing_invitee uuid;
+  v_row public.project_invitations%ROWTYPE;
+BEGIN
+  IF v_auth IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated' USING ERRCODE = '28000';
+  END IF;
+
+  IF NOT (
+    public.is_user_pmo_admin(v_auth)
+    OR EXISTS (
+      SELECT 1
+      FROM public.user_roles ur
+      INNER JOIN public.users u ON u.id = ur.user_id
+      WHERE u.auth_user_id = v_auth
+        AND ur.project_id = p_project_id
+        AND ur.is_active = TRUE
+        AND COALESCE(ur.is_deleted, FALSE) = FALSE
+    )
+  ) THEN
+    RAISE EXCEPTION 'Forbidden: PMO suite admin or active project membership required'
+      USING ERRCODE = '42501';
+  END IF;
+
+  SELECT id INTO v_inviter_id FROM public.users WHERE auth_user_id = v_auth LIMIT 1;
+  IF v_inviter_id IS NULL THEN
+    RAISE EXCEPTION 'Inviter user profile not found' USING ERRCODE = '42501';
+  END IF;
+
+  SELECT id INTO v_existing_invitee
+  FROM public.users
+  WHERE lower(trim(email)) = lower(trim(p_invited_email))
+  LIMIT 1;
+
+  INSERT INTO public.project_invitations (
+    project_id,
+    invited_email,
+    invited_user_id,
+    role_id,
+    invited_by_user_id,
+    invitation_message,
+    invitation_expires_at
+  )
+  VALUES (
+    p_project_id,
+    trim(p_invited_email),
+    v_existing_invitee,
+    p_role_id,
+    v_inviter_id,
+    NULLIF(trim(p_invitation_message), ''),
+    p_invitation_expires_at
+  )
+  RETURNING * INTO v_row;
+
+  RETURN json_build_object(
+    'id', v_row.id,
+    'invitation_token', v_row.invitation_token,
+    'invitation_expires_at', v_row.invitation_expires_at,
+    'invitation_status', v_row.invitation_status,
+    'project_id', v_row.project_id,
+    'invited_email', v_row.invited_email,
+    'role_id', v_row.role_id,
+    'created_at', v_row.created_at
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.insert_project_invitation_as_pmo_admin(uuid, text, uuid, text, timestamptz) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.insert_project_invitation_as_pmo_admin(uuid, text, uuid, text, timestamptz) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.insert_project_invitation_as_pmo_admin(uuid, text, uuid, text, timestamptz) TO service_role;
+
+COMMENT ON FUNCTION public.insert_project_invitation_as_pmo_admin(uuid, text, uuid, text, timestamptz) IS
+  'Inserts project_invitation when caller is suite PMO admin OR active project member. Bypasses RLS.';
+
+NOTIFY pgrst, 'reload schema';
+
+DO $$ BEGIN RAISE NOTICE 'v554_pmo_invitation_rpc_only_recovery.sql applied — hard-refresh the web app'; END $$;

@@ -5,6 +5,7 @@
  * Mirrors Platform PMO structure but for practice/simulation context
  *
  * Sections:
+ * 0. Live Simulation (v505 — mirrors simulatorMenuConfig)
  * 1. PMO Governance (Practice Baselines)
  * 2. Initiation & Business Justification
  * 3. Practice Project Oversight (Read-Only)
@@ -12,6 +13,10 @@
  */
 
 import {
+  Play,
+  PlayCircle,
+  Inbox,
+  History,
   LayoutDashboard,
   Shield,
   FileText,
@@ -41,23 +46,60 @@ import {
   GitBranch,
   Layers,
   FlaskConical,
-  Users
+  Users,
+  FolderKanban,
+  Clock,
 } from 'lucide-react';
 
 const simulatorPMOMenuConfig = [
   {
-    id: 'sim-pmo-portfolio-programme',
+    id: 'sim-pmo-live-simulation',
+    label: 'Live Simulation',
+    path: null,
+    icon: Play,
+    section: 'Live Simulation',
+    order: 0,
+    children: [
+      { id: 'sim-pmo-live-start', label: 'Start New Run', path: '/simulator/run/setup', icon: PlayCircle, order: 1 },
+      { id: 'sim-pmo-live-dash', label: 'Active Run Dashboard', path: '/simulator/run/active/dashboard', icon: LayoutDashboard, order: 2 },
+      { id: 'sim-pmo-live-inbox', label: 'Event Inbox', path: '/simulator/run/active/inbox', icon: Inbox, order: 3 },
+      { id: 'sim-pmo-live-evm', label: 'EVM Dashboard', path: '/simulator/run/active/evm', icon: TrendingUp, order: 4 },
+      { id: 'sim-pmo-live-history', label: 'My Run History', path: '/simulator/runs', icon: History, order: 5 },
+    ],
+  },
+  {
+    id: 'sim-pmo-portfolio',
     label: 'Practice Portfolio',
     path: null,
     icon: Briefcase,
     section: 'Practice Portfolio',
     order: 1,
     children: [
-      { id: 'sim-pmo-pp-projects', label: 'All Practice Projects', path: '/simulator/practice-projects', icon: Briefcase, order: 1 },
-      { id: 'sim-pmo-pp-programme', label: 'Programme Management', path: '/simulator/practice-programme', icon: Layers, order: 2 },
-      { id: 'sim-pmo-pp-benefits', label: 'Benefits Management', path: '/simulator/benefits', icon: TrendingUp, order: 3 },
-      { id: 'sim-pmo-pp-dependencies', label: 'Dependencies', path: '/simulator/practice-dependencies', icon: GitBranch, order: 4 },
-      { id: 'sim-pmo-pp-collisions', label: 'Portfolio Collisions', path: '/simulator/pmo/planning/collisions', icon: AlertTriangle, order: 5 },
+      { id: 'sim-pmo-pp-dependencies', label: 'Dependencies', path: '/simulator/practice-dependencies', icon: GitBranch, order: 1 },
+      { id: 'sim-pmo-pp-collisions', label: 'Portfolio Collisions', path: '/simulator/pmo/planning/collisions', icon: AlertTriangle, order: 2 },
+    ]
+  },
+  {
+    id: 'sim-pmo-programme',
+    label: 'Practice Programme',
+    path: null,
+    icon: Layers,
+    section: 'Practice Programme',
+    order: 2,
+    children: [
+      { id: 'sim-pmo-pp-programme', label: 'Programme Management', path: '/simulator/practice-programme', icon: Layers, order: 1 },
+      { id: 'sim-pmo-pp-benefits', label: 'Benefits Management', path: '/simulator/benefits', icon: TrendingUp, order: 2 },
+    ]
+  },
+  {
+    id: 'sim-pmo-projects',
+    label: 'Practice Projects',
+    path: null,
+    icon: FolderKanban,
+    section: 'Practice Projects',
+    order: 3,
+    children: [
+      { id: 'sim-pmo-pp-projects', label: 'All Practice Projects', path: '/simulator/practice-projects', icon: FolderKanban, order: 1 },
     ]
   },
 
@@ -78,7 +120,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: Shield,
     section: 'Governance & Standards',
-    order: 2,
+    order: 4,
     children: [
       {
         id: 'sim-pmo-gov-mandate',
@@ -139,7 +181,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: Briefcase,
     section: 'Initiation & Business Justification',
-    order: 3,
+    order: 5,
     children: [
       {
         id: 'sim-pmo-init-business-case',
@@ -172,7 +214,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: Eye,
     section: 'Practice Project Oversight',
-    order: 4,
+    order: 6,
     children: [
       {
         id: 'sim-pmo-oversight-risk-register',
@@ -240,7 +282,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: ShoppingCart,
     section: 'Procurement',
-    order: 8,
+    order: 10,
     children: [
       {
         id: 'sim-pmo-proc-rfp',
@@ -273,7 +315,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: DollarSign,
     section: 'Financial Management',
-    order: 7,
+    order: 9,
     children: [
       {
         id: 'sim-pmo-fin-reports',
@@ -312,7 +354,7 @@ const simulatorPMOMenuConfig = [
     path: '/simulator/pmo/forms',
     icon: FileText,
     section: 'Process Group Forms',
-    order: 6,
+    order: 8,
     permission: 'form.view_all',
     children: [
       { id: 'sim-pmo-forms-initiating', label: 'Initiating', path: '/simulator/pmo/forms?group=Initiating', icon: FileText, order: 1, permission: 'form.view_all' },
@@ -331,7 +373,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: FlaskConical,
     section: 'Quality & Testing',
-    order: 9,
+    order: 11,
     children: [
       { id: 'sim-pmo-tc-dash', label: 'Testing Dashboard', path: '/simulator/pmo/testing-centre', icon: FlaskConical, order: 1, permission: 'testing_centre.view' },
       { id: 'sim-pmo-tc-cases', label: 'Test Case Library', path: '/simulator/pmo/testing-centre/cases', icon: FlaskConical, order: 2, permission: 'testing_centre.view' },
@@ -355,7 +397,7 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: BarChart3,
     section: 'Reporting & Assurance',
-    order: 11,
+    order: 13,
     children: [
       {
         id: 'sim-pmo-report-highlight',
@@ -407,12 +449,13 @@ const simulatorPMOMenuConfig = [
     path: null,
     icon: Users,
     section: 'People & Resources',
-    order: 10,
+    order: 12,
     children: [
       { id: 'sim-pmo-people-manager-assignments', label: 'Manager Assignments', path: '/simulator/pmo/manager-assignments', icon: Users, order: 1 },
       { id: 'sim-pmo-people-assignment-settings', label: 'Assignment Settings', path: '/simulator/pmo/manager-assignment-settings', icon: Settings2, order: 2 },
-      { id: 'sim-pmo-people-resource-directory', label: 'Resource Directory', path: '/simulator/practice-teams', icon: Users, order: 3 },
-      { id: 'sim-pmo-people-team-capacity', label: 'Team Capacity', path: '/simulator/practice-teams', icon: BarChart3, order: 4 },
+      { id: 'sim-pmo-people-invitation-expiry', label: 'Invitation expiry', path: '/platform/admin/invitation-settings', icon: Clock, order: 3 },
+      { id: 'sim-pmo-people-resource-directory', label: 'Resource Directory', path: '/simulator/practice-teams', icon: Users, order: 4 },
+      { id: 'sim-pmo-people-team-capacity', label: 'Team Capacity', path: '/simulator/practice-teams', icon: BarChart3, order: 5 },
     ]
   }
 ];

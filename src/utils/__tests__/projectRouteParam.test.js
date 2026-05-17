@@ -4,6 +4,8 @@ import {
   decodeProjectRouteSegment,
   projectPathSegmentFromProject,
   platformProjectPath,
+  platformRiskPath,
+  platformIssuePath,
 } from '../projectRouteParam.js';
 
 describe('projectRouteParam', () => {
@@ -39,4 +41,17 @@ describe('projectRouteParam', () => {
     expect(platformProjectPath('SEED334-PRJ-02', 'edit')).toBe('/platform/projects/SEED334-PRJ-02/edit');
     expect(platformProjectPath('')).toBe('/platform/projects');
   });
+
+  it('platformRiskPath nests risks under project segment', () => {
+    expect(platformRiskPath('PRJ-0001', 'RISK-0002')).toBe(
+      '/platform/projects/PRJ-0001/risks/RISK-0002',
+    )
+  })
+
+  it('platformIssuePath nests issues under project segment', () => {
+    expect(platformIssuePath('PRJ-0001', 'ISS-0003')).toBe(
+      '/platform/projects/PRJ-0001/issues/ISS-0003',
+    )
+  })
 });
+

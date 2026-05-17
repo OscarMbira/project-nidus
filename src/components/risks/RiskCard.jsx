@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { platformRiskPath } from '../../utils/projectRouteParam';
 import { Calendar, User, Tag, Package, AlertTriangle, TrendingUp, ArrowRight } from 'lucide-react';
 import RiskTypeBadge from './RiskTypeBadge';
 import RiskStatusBadge from './RiskStatusBadge';
@@ -16,7 +17,11 @@ export default function RiskCard({ risk, onEdit, onDelete, onEscalate }) {
   const [expanded, setExpanded] = useState(false);
 
   const handleViewDetails = () => {
-    navigate(`/app/projects/${risk.project_id}/risks/${risk.id}`);
+    const pSeg =
+      (risk.project?.project_code && String(risk.project.project_code).trim()) ||
+      risk.project_id;
+    const rSeg = (risk.risk_code && String(risk.risk_code).trim()) || risk.id;
+    navigate(platformRiskPath(pSeg, rSeg));
   };
 
   return (

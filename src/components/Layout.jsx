@@ -21,8 +21,15 @@ const Layout = ({ children }) => {
                      location.pathname.startsWith('/onboarding')
 
   // Determine which header to show based on route
-  const isPlatformApp = location.pathname.startsWith('/platform/')
-  const isSimulatorApp = location.pathname.startsWith('/simulator/')
+  const path = location.pathname
+  const isPlatformApp =
+    path.startsWith('/platform/') ||
+    // First-class Platform URLs under /app/* (registered before app/* redirect in App.jsx)
+    path.startsWith('/app/project-members') ||
+    path.startsWith('/app/project-users') ||
+    path.startsWith('/app/local-data-extensions') ||
+    path.startsWith('/app/settings/invitation-templates')
+  const isSimulatorApp = path.startsWith('/simulator/')
 
   return (
     <BrandingProvider>

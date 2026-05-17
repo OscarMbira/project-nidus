@@ -4,9 +4,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '../utils/projectRouteParam'
 import { BookOpen, Plus, Search, Filter, Calendar, List, Clock, AlertCircle, CheckCircle, Download, Grid, History } from 'lucide-react';
 import { getDailyLogByProject, getSummary } from '../services/dailyLogService';
 import { getEntries, addEntry, updateEntry, deleteEntry, completeEntry } from '../services/dailyLogEntryService';
@@ -662,7 +663,11 @@ export default function DailyLogView() {
                   </button>
                 )}
                 <button
-                  onClick={() => navigate(`/app/projects/${projectId}/daily-log/entry/${entry.id}`)}
+                  onClick={() =>
+                    navigate(
+                      platformProjectPath(routeKey || projectId, 'daily-log', 'entry', entry.id),
+                    )
+                  }
                   className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                 >
                   View Details

@@ -22,7 +22,7 @@ export async function listOPACategories(organisationId) {
   return { data: data || [], error: null }
 }
 
-export async function listOPAs(organisationId, { search = '', onHoldOnly = false } = {}) {
+export async function listOPAs(organisationId, { search = '', onHoldOnly = false, opaType = null } = {}) {
   if (!organisationId) return { data: [], error: new Error('Organisation required') }
   let q = platformDb
     .from(TABLE)
@@ -36,6 +36,7 @@ export async function listOPAs(organisationId, { search = '', onHoldOnly = false
     .order('updated_at', { ascending: false })
 
   if (onHoldOnly) q = q.eq('is_on_hold', true)
+  if (opaType) q = q.eq('opa_type', opaType)
 
   const { data, error } = await q
   if (error) return { data: [], error }

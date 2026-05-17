@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RefreshCw, Plus, Search } from 'lucide-react';
 import { fetchChangeRequests } from '../../services/changeManagementService';
@@ -6,6 +6,8 @@ import ChangeRequestList from '../../components/change/ChangeRequestList';
 import ChangeRequestForm from '../../components/change/ChangeRequestForm';
 import ExportListMenu from '../../components/ui/ExportListMenu';
 import { useViewMode } from '../../hooks/useViewMode';
+import { platformDb } from '../../services/supabase/supabaseClient';
+import { fetchBatchExportForEntities } from '../../features/local-data-extensions/api/customFieldValuesApi';
 
 const CHANGE_REQUEST_COLUMNS = [
   { key: 'title', label: 'Title' },
@@ -26,6 +28,8 @@ export default function ChangeRequests() {
     priority: '',
     search: '',
   });
+  const [crCfCols, setCrCfCols] = useState([]);
+  const [crCfMatrix, setCrCfMatrix] = useState({});
 
   useEffect(() => {
     loadRequests();
@@ -43,6 +47,60 @@ export default function ChangeRequests() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!requests?.length) {
+      setCrCfCols([]);
+      setCrCfMatrix({});
+      return;
+    }
+    let cancelled = false;
+    const byAccount = new Map();
+    for (const r of requests) {
+      const aid = r.project?.account_id;
+      if (!aid || !r.id || !r.project_id) continue;
+      if (!byAccount.has(aid)) byAccount.set(aid, []);
+      byAccount.get(aid).push(r.id);
+    }
+    if (!byAccount.size) {
+      setCrCfCols([]);
+      setCrCfMatrix({});
+      return;
+    }
+    (async () => {
+      const colKeys = new Set();
+      const columns = [];
+      const matrix = {};
+      for (const [accountId, entityIds] of byAccount) {
+        const { columns: cols, matrix: mx } = await fetchBatchExportForEntities(platformDb, {
+          accountId,
+          entityType: 'change_request',
+          entityIds,
+          screenCode: 'change_request_detail',
+        });
+        for (const c of cols || []) {
+          if (!colKeys.has(c.key)) {
+            colKeys.add(c.key);
+            columns.push(c);
+          }
+        }
+        Object.assign(matrix, mx || {});
+      }
+      if (!cancelled) {
+        setCrCfCols(columns);
+        setCrCfMatrix(matrix);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [requests]);
+
+  const crExportColumns = useMemo(() => [...CHANGE_REQUEST_COLUMNS, ...crCfCols], [crCfCols]);
+  const crExportRows = useMemo(
+    () => requests.map((r) => ({ ...r, ...(crCfMatrix[r.id] || {}) })),
+    [requests, crCfMatrix]
+  );
 
   const handleCreate = () => {
     setEditingRequest(null);
@@ -82,7 +140,7 @@ export default function ChangeRequests() {
             Change Requests
           </h1>
           <div className="flex gap-2">
-            <ExportListMenu columns={CHANGE_REQUEST_COLUMNS} data={requests} baseFilename="ChangeRequests" disabled={!requests.length} />
+            <ExportListMenu columns={crExportColumns} data={crExportRows} baseFilename="ChangeRequests" disabled={!requests.length} />
             <button
               onClick={handleCreate}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"

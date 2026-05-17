@@ -8,6 +8,10 @@ import { ArrowLeft, Edit } from 'lucide-react'
 import { getPracticeIssueById } from '../../services/sim/practiceIssueService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer'
+import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge'
+import { platformDb, simDb } from '../../services/supabase/supabaseClient'
+import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
 
 const PRACTICE_ISSUE_VIEW_SECTIONS = [
   { title: 'Issue', fields: [
@@ -17,6 +21,28 @@ const PRACTICE_ISSUE_VIEW_SECTIONS = [
   ]}
 ]
 
+async function buildPracticeIssueExport(issueRow, accountId) {
+  const base = issueRow
+  const pid = issueRow?.practice_project_id
+  if (!simDb || !accountId || !pid || !issueRow?.id) {
+    return { sections: PRACTICE_ISSUE_VIEW_SECTIONS, record: base }
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      simDb,
+      accountId,
+      'issue',
+      issueRow.id,
+      undefined,
+      pid
+    )
+    const sections = section ? [...PRACTICE_ISSUE_VIEW_SECTIONS, section] : PRACTICE_ISSUE_VIEW_SECTIONS
+    return { sections, record: { ...base, ...mergedRecord } }
+  } catch {
+    return { sections: PRACTICE_ISSUE_VIEW_SECTIONS, record: base }
+  }
+}
+
 export default function PracticeIssueDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -24,6 +50,17 @@ export default function PracticeIssueDetail() {
   const projectId = searchParams.get('projectId')
   const [issue, setIssue] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [ldeAccountId, setLdeAccountId] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    resolveLdeAccountForCurrentUser().then(({ accountId: aid }) => {
+      if (!cancelled) setLdeAccountId(aid)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (id) loadIssue()
@@ -53,13 +90,34 @@ export default function PracticeIssueDetail() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{issue.issue_title}</h1>
         <div className="flex gap-2">
           <ExportRecordButtons
-            onExportPPT={() => exportRecordToPPT(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
-            onExportWord={() => exportRecordToWord(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
-            onExportExcel={() => exportRecordToExcel(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
-            onExportCSV={() => exportRecordToCSV(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
-            onExportXML={() => exportRecordToXML(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
-            onExportJSON={() => exportRecordToJSON(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
-            onExportPrint={() => exportRecordToPrint(PRACTICE_ISSUE_VIEW_SECTIONS, issue, `PracticeIssue_${issue.issue_reference || id}`)}
+            onExportPPT={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToPPT(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
+            onExportWord={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToWord(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
+            onExportExcel={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToExcel(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
+            onExportCSV={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToCSV(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
+            onExportXML={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToXML(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
+            onExportJSON={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToJSON(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
+            onExportPrint={async () => {
+              const { sections, record } = await buildPracticeIssueExport(issue, ldeAccountId)
+              exportRecordToPrint(sections, record, `PracticeIssue_${issue.issue_reference || id}`)
+            }}
           />
           <button onClick={() => navigate(`/simulator/practice-issue-register/${id}/edit?projectId=${projectId}`)} className="inline-flex items-center px-4 py-2 border rounded-lg">
             <Edit className="h-4 w-4 mr-2" /> Edit
@@ -89,6 +147,15 @@ export default function PracticeIssueDetail() {
             <p className="text-gray-900 dark:text-white">{issue.issue_type}</p>
           </div>
         </div>
+        <CustomFieldRenderer
+          platformDb={simDb}
+          userLookupDb={platformDb}
+          accountId={ldeAccountId}
+          practiceProjectId={issue.practice_project_id}
+          entityType="issue"
+          entityId={issue.id}
+          screenCode="issue_detail"
+        />
       </div>
     </div>
   )

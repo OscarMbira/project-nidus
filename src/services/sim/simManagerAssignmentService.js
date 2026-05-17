@@ -85,6 +85,81 @@ export async function getSimActiveAssignmentCountOnly(publicUserId) {
   return (pRes.count || 0) + (progRes.count || 0) + (portRes.count || 0)
 }
 
+/**
+ * Batch variant of {@link getSimActiveAssignmentCountOnly} — same totals, fewer round trips.
+ * Keys are `public.users.id` (same as platform manager pickers).
+ *
+ * @param {string[]} publicUserIds
+ * @returns {Promise<Record<string, number>>}
+ */
+export async function getSimActiveAssignmentCountsForUsers(publicUserIds = []) {
+  const unique = [...new Set(publicUserIds.filter(Boolean))]
+  if (!unique.length) return {}
+
+  const statusIds = await getActivePracticeProjectStatusIds()
+  const out = Object.fromEntries(unique.map((id) => [id, 0]))
+
+  const { data: userRows, error: uErr } = await platformDb
+    .from('users')
+    .select('id, auth_user_id')
+    .in('id', unique)
+  if (uErr) throw uErr
+
+  const publicByAuth = new Map()
+  for (const u of userRows || []) {
+    if (u.auth_user_id) publicByAuth.set(u.auth_user_id, u.id)
+  }
+  const authIds = [...new Set([...(publicByAuth.keys())])]
+
+  const [pRes, progRes, portRes] = await Promise.all([
+    statusIds.length
+      ? simDb
+          .from('practice_projects')
+          .select('project_manager_user_id')
+          .eq('is_deleted', false)
+          .in('status_id', statusIds)
+          .in('project_manager_user_id', unique)
+      : Promise.resolve({ data: [], error: null }),
+    authIds.length
+      ? simDb
+          .from('practice_programmes')
+          .select('programme_manager_user_id')
+          .eq('is_deleted', false)
+          .in('programme_status', ACTIVE_PROGRAMME_STATUSES)
+          .in('programme_manager_user_id', authIds)
+      : Promise.resolve({ data: [], error: null }),
+    authIds.length
+      ? simDb
+          .from('practice_portfolios')
+          .select('portfolio_manager_user_id')
+          .eq('is_deleted', false)
+          .in('portfolio_status', ACTIVE_PORTFOLIO_STATUSES)
+          .in('portfolio_manager_user_id', authIds)
+      : Promise.resolve({ data: [], error: null }),
+  ])
+
+  if (pRes.error) throw pRes.error
+  if (progRes.error) throw progRes.error
+  if (portRes.error) throw portRes.error
+
+  for (const row of pRes.data || []) {
+    const uid = row.project_manager_user_id
+    if (uid != null && Object.prototype.hasOwnProperty.call(out, uid)) out[uid] += 1
+  }
+  for (const row of progRes.data || []) {
+    const aid = row.programme_manager_user_id
+    const pid = aid ? publicByAuth.get(aid) : null
+    if (pid != null && Object.prototype.hasOwnProperty.call(out, pid)) out[pid] += 1
+  }
+  for (const row of portRes.data || []) {
+    const aid = row.portfolio_manager_user_id
+    const pid = aid ? publicByAuth.get(aid) : null
+    if (pid != null && Object.prototype.hasOwnProperty.call(out, pid)) out[pid] += 1
+  }
+
+  return out
+}
+
 export { getSystemAssignmentLimit, updateSystemAssignmentLimit, getEligibleManagers, checkAssignmentLimit }
 
 async function fetchUsersByIds(publicIds = []) {

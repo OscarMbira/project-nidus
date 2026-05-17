@@ -159,7 +159,7 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
   const isChildActive = hasChildren && menuItem.children.some((child) => {
     if (!child.route_path) return false
     const r = resolveMenuRoutePath(child.route_path, location.pathname)
-    return menuPathIsActive(location.pathname, r)
+    return menuPathIsActive(location.pathname, r, location.search)
   })
   const [isExpandedLocal, setIsExpandedLocal] = useState(isChildActive)
   const isTopLevel = level === 0
@@ -171,7 +171,7 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
     : (isExpandedLocal || isChildActive)
   // Treat a menu item as active ONLY when its route_path matches exactly.
   // This prevents all siblings in a section from appearing active at once.
-  const isActive = !!menuItem.route_path && menuPathIsActive(location.pathname, resolvedPath)
+  const isActive = !!menuItem.route_path && menuPathIsActive(location.pathname, resolvedPath, location.search)
 
   const Icon = iconMap[menuItem.menu_icon] || LayoutDashboard
 
@@ -224,7 +224,10 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
           style={{ ...activeStyle, ...textStyle }}
         >
           <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-          <span className="flex-1">{menuItem.menu_label}</span>
+          <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
+          {menuItem.canUse === false && (
+            <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
+          )}
           {badgeText && (
             <span
               className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
@@ -250,7 +253,10 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
           style={{ ...activeStyle, ...textStyle }}
         >
           <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-          <span className="flex-1">{menuItem.menu_label}</span>
+          <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
+          {menuItem.canUse === false && (
+            <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
+          )}
           {badgeText && (
             <span
               className="px-2 py-0.5 text-xs rounded-full font-medium text-white"

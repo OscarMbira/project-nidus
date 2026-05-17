@@ -7,6 +7,7 @@ export default function PMLayout({ children }) {
 
   const pmNavLinks = [
     { label: 'Dashboard', path: '/pm/dashboard' },
+    { label: 'Team', path: '/pm/team-members' },
     { label: 'Delivery', path: '/pm/delivery/work-packages' },
     { label: 'Controls', path: '/pm/controls/risk-register' },
     { label: 'Reports', path: '/pm/reporting/checkpoint-reports' },

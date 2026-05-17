@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, memo, Suspense, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, LayoutGrid, List, Search, Settings, UserMinus, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
-import AssignManagerModal from '../../components/pmo/AssignManagerModal'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+
+const AssignManagerModal = lazy(() => import('../../components/pmo/AssignManagerModal'))
 import {
   getAllAssignmentsSummary,
   getEligibleManagers,
@@ -26,7 +27,7 @@ function cycleDir(d) {
   return null
 }
 
-function SortBtn({ label, sortKey, activeKey, dir, onClick }) {
+const SortBtn = memo(function SortBtn({ label, sortKey, activeKey, dir, onClick }) {
   const active = activeKey === sortKey && dir
   let icon = '⇅'
   if (active && dir === 'asc') icon = '↑'
@@ -40,7 +41,93 @@ function SortBtn({ label, sortKey, activeKey, dir, onClick }) {
       {label} <span className="text-xs tabular-nums opacity-70">{icon}</span>
     </button>
   )
-}
+})
+
+const TAB_OPTIONS = [
+  ['portfolios', 'Portfolios'],
+  ['programmes', 'Programmes'],
+  ['projects', 'Projects'],
+]
+
+const AssignmentTableRow = memo(function AssignmentTableRow({
+  row,
+  codeField,
+  nameField,
+  limit,
+  workload,
+  onAssign,
+  onRemove,
+}) {
+  const mid =
+    row.project_manager_user_id || row.programme_manager_user_id || row.portfolio_manager_user_id
+  const w = mid ? workload[mid] ?? 0 : null
+  return (
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+      <td className="px-4 py-2 font-mono text-xs text-gray-600 dark:text-gray-300">{row[codeField]}</td>
+      <td className="px-4 py-2 text-gray-900 dark:text-white">{row[nameField]}</td>
+      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">
+        {row.manager?.full_name || row.manager?.email || '—'}
+      </td>
+      <td className="px-4 py-2 tabular-nums text-gray-600 dark:text-gray-400">
+        {mid != null ? `${w} / ${limit}` : '—'}
+      </td>
+      <td className="px-4 py-2 text-right space-x-2">
+        <button
+          type="button"
+          onClick={() => onAssign(row)}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          {mid ? 'Change' : 'Assign'}
+        </button>
+        {mid ? (
+          <button
+            type="button"
+            onClick={() => onRemove(row)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-300 dark:border-red-800 text-xs text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+          >
+            <UserMinus className="h-3.5 w-3.5" />
+            Remove
+          </button>
+        ) : null}
+      </td>
+    </tr>
+  )
+})
+
+const AssignmentCard = memo(function AssignmentCard({ row, codeField, nameField, limit, workload, onAssign, onRemove }) {
+  const mid =
+    row.project_manager_user_id || row.programme_manager_user_id || row.portfolio_manager_user_id
+  const w = mid ? workload[mid] ?? 0 : null
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm flex flex-col gap-2">
+      <div className="text-xs font-mono text-gray-500">{row[codeField]}</div>
+      <div className="font-semibold text-gray-900 dark:text-white">{row[nameField]}</div>
+      <div className="text-sm text-gray-600 dark:text-gray-300">
+        Manager: {row.manager?.full_name || row.manager?.email || '—'}
+      </div>
+      <div className="text-xs text-gray-500">Workload: {mid != null ? `${w} / ${limit}` : '—'}</div>
+      <div className="flex gap-2 mt-2">
+        <button
+          type="button"
+          onClick={() => onAssign(row)}
+          className="flex-1 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+        >
+          {mid ? 'Change' : 'Assign'}
+        </button>
+        {mid ? (
+          <button
+            type="button"
+            onClick={() => onRemove(row)}
+            className="px-3 py-2 rounded-lg border border-red-300 dark:border-red-800 text-sm text-red-600 dark:text-red-400"
+          >
+            Remove
+          </button>
+        ) : null}
+      </div>
+    </div>
+  )
+})
 
 export default function ManagerAssignments() {
   const [tab, setTab] = useState('portfolios')
@@ -50,10 +137,12 @@ export default function ManagerAssignments() {
   const [limit, setLimit] = useState(5)
   const [workload, setWorkload] = useState({})
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
   const [view, setView] = useState(() => localStorage.getItem(VIEW_KEY) || 'table')
   const [sortDir, setSortDir] = useState({ key: 'name', dir: null })
 
   const [modal, setModal] = useState(null)
+  const closeModal = useCallback(() => setModal(null), [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -108,7 +197,7 @@ export default function ManagerAssignments() {
         : tab === 'programmes'
           ? summary.programmes
           : summary.portfolios
-    const term = search.trim().toLowerCase()
+    const term = deferredSearch.trim().toLowerCase()
     if (term) {
       list = list.filter((r) => {
         const name = (r.project_name || r.programme_name || r.portfolio_name || '').toLowerCase()
@@ -128,15 +217,15 @@ export default function ManagerAssignments() {
       if (sk === 'manager') return mult * getMgr(a).localeCompare(getMgr(b), undefined, { sensitivity: 'base' })
       return 0
     })
-  }, [summary, tab, search, sortDir])
+  }, [summary, tab, deferredSearch, sortDir])
 
-  const handleSortClick = (key) => {
+  const handleSortClick = useCallback((key) => {
     setSortDir((prev) => {
       if (prev.key !== key) return { key, dir: 'asc' }
       const next = cycleDir(prev.dir)
       return { key, dir: next }
     })
-  }
+  }, [])
 
   const exportColumns = useMemo(() => {
     const name = tab === 'projects' ? 'project_name' : tab === 'programmes' ? 'programme_name' : 'portfolio_name'
@@ -160,9 +249,9 @@ export default function ManagerAssignments() {
         workload_label: mid ? `${w} / ${limit}` : '—',
       }
     })
-  }, [rows, workload, limit, tab])
+  }, [rows, workload, limit])
 
-  const openAssign = (row) => {
+  const openAssign = useCallback((row) => {
     const type = tab === 'projects' ? 'project' : tab === 'programmes' ? 'programme' : 'portfolio'
     const id = row.id
     const name = row.project_name || row.programme_name || row.portfolio_name
@@ -170,29 +259,35 @@ export default function ManagerAssignments() {
     const current =
       row.project_manager_user_id || row.programme_manager_user_id || row.portfolio_manager_user_id
     setModal({ type, id, name, code: code || null, currentManagerId: current || null })
-  }
+  }, [tab])
 
-  const handleModalConfirm = async (userId) => {
-    if (!modal) return
-    if (modal.type === 'project') await assignProjectManager(modal.id, userId)
-    if (modal.type === 'programme') await assignProgrammeManager(modal.id, userId)
-    if (modal.type === 'portfolio') await assignPortfolioManager(modal.id, userId)
-    toast.success('Manager assigned')
-    await load()
-  }
-
-  const handleRemove = async (row) => {
-    if (!confirm('Remove manager assignment for this record?')) return
-    try {
-      if (tab === 'projects') await removeProjectManager(row.id)
-      if (tab === 'programmes') await removeProgrammeManager(row.id)
-      if (tab === 'portfolios') await removePortfolioManager(row.id)
-      toast.success('Manager removed')
+  const handleModalConfirm = useCallback(
+    async (userId) => {
+      if (!modal) return
+      if (modal.type === 'project') await assignProjectManager(modal.id, userId)
+      if (modal.type === 'programme') await assignProgrammeManager(modal.id, userId)
+      if (modal.type === 'portfolio') await assignPortfolioManager(modal.id, userId)
+      toast.success('Manager assigned')
       await load()
-    } catch (e) {
-      toast.error(e?.message || 'Remove failed')
-    }
-  }
+    },
+    [modal, load]
+  )
+
+  const handleRemove = useCallback(
+    async (row) => {
+      if (!confirm('Remove manager assignment for this record?')) return
+      try {
+        if (tab === 'projects') await removeProjectManager(row.id)
+        if (tab === 'programmes') await removeProgrammeManager(row.id)
+        if (tab === 'portfolios') await removePortfolioManager(row.id)
+        toast.success('Manager removed')
+        await load()
+      } catch (e) {
+        toast.error(e?.message || 'Remove failed')
+      }
+    },
+    [tab, load]
+  )
 
   const nameField = tab === 'projects' ? 'project_name' : tab === 'programmes' ? 'programme_name' : 'portfolio_name'
   const codeField = tab === 'projects' ? 'project_code' : tab === 'programmes' ? 'programme_code' : 'portfolio_code'
@@ -233,11 +328,7 @@ export default function ManagerAssignments() {
         </div>
 
         <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
-          {[
-            ['portfolios', 'Portfolios'],
-            ['programmes', 'Programmes'],
-            ['projects', 'Projects'],
-          ].map(([id, label]) => (
+          {TAB_OPTIONS.map(([id, label]) => (
             <button
               key={id}
               type="button"
@@ -285,18 +376,20 @@ export default function ManagerAssignments() {
           </div>
         </div>
 
-        <AssignManagerModal
-          open={!!modal}
-          onClose={() => setModal(null)}
-          entityType={modal?.type}
-          entityName={modal?.name || ''}
-          entityCode={modal?.code}
-          currentManagerId={modal?.currentManagerId}
-          eligibleUsers={eligible}
-          workloadByUserId={workload}
-          limit={limit}
-          onConfirm={(userId) => handleModalConfirm(userId)}
-        />
+        <Suspense fallback={null}>
+          <AssignManagerModal
+            open={!!modal}
+            onClose={closeModal}
+            entityType={modal?.type}
+            entityName={modal?.name || ''}
+            entityCode={modal?.code}
+            currentManagerId={modal?.currentManagerId}
+            eligibleUsers={eligible}
+            workloadByUserId={workload}
+            limit={limit}
+            onConfirm={handleModalConfirm}
+          />
+        </Suspense>
 
         {loading ? (
           <p className="text-gray-500 dark:text-gray-400">Loading…</p>
@@ -337,43 +430,18 @@ export default function ManagerAssignments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {rows.map((r) => {
-                  const mid =
-                    r.project_manager_user_id || r.programme_manager_user_id || r.portfolio_manager_user_id
-                  const w = mid ? workload[mid] ?? 0 : null
-                  return (
-                    <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-4 py-2 font-mono text-xs text-gray-600 dark:text-gray-300">{r[codeField]}</td>
-                      <td className="px-4 py-2 text-gray-900 dark:text-white">{r[nameField]}</td>
-                      <td className="px-4 py-2 text-gray-700 dark:text-gray-300">
-                        {r.manager?.full_name || r.manager?.email || '—'}
-                      </td>
-                      <td className="px-4 py-2 tabular-nums text-gray-600 dark:text-gray-400">
-                        {mid != null ? `${w} / ${limit}` : '—'}
-                      </td>
-                      <td className="px-4 py-2 text-right space-x-2">
-                        <button
-                          type="button"
-                          onClick={() => openAssign(r)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                          <UserPlus className="h-3.5 w-3.5" />
-                          {mid ? 'Change' : 'Assign'}
-                        </button>
-                        {mid && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(r)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-300 dark:border-red-800 text-xs text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
-                          >
-                            <UserMinus className="h-3.5 w-3.5" />
-                            Remove
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
+                {rows.map((r) => (
+                  <AssignmentTableRow
+                    key={r.id}
+                    row={r}
+                    codeField={codeField}
+                    nameField={nameField}
+                    limit={limit}
+                    workload={workload}
+                    onAssign={openAssign}
+                    onRemove={handleRemove}
+                  />
+                ))}
               </tbody>
             </table>
             {rows.length === 0 && (
@@ -382,42 +450,18 @@ export default function ManagerAssignments() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rows.map((r) => {
-              const mid =
-                r.project_manager_user_id || r.programme_manager_user_id || r.portfolio_manager_user_id
-              const w = mid ? workload[mid] ?? 0 : null
-              return (
-                <div
-                  key={r.id}
-                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm flex flex-col gap-2"
-                >
-                  <div className="text-xs font-mono text-gray-500">{r[codeField]}</div>
-                  <div className="font-semibold text-gray-900 dark:text-white">{r[nameField]}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    Manager: {r.manager?.full_name || r.manager?.email || '—'}
-                  </div>
-                  <div className="text-xs text-gray-500">Workload: {mid != null ? `${w} / ${limit}` : '—'}</div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      type="button"
-                      onClick={() => openAssign(r)}
-                      className="flex-1 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
-                    >
-                      {mid ? 'Change' : 'Assign'}
-                    </button>
-                    {mid && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemove(r)}
-                        className="px-3 py-2 rounded-lg border border-red-300 dark:border-red-800 text-sm text-red-600 dark:text-red-400"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+            {rows.map((r) => (
+              <AssignmentCard
+                key={r.id}
+                row={r}
+                codeField={codeField}
+                nameField={nameField}
+                limit={limit}
+                workload={workload}
+                onAssign={openAssign}
+                onRemove={handleRemove}
+              />
+            ))}
             {rows.length === 0 && (
               <p className="col-span-full text-center text-gray-500 dark:text-gray-400 py-8">No records match your filters.</p>
             )}

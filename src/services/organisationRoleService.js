@@ -11,7 +11,13 @@
 
 import { platformDb } from './supabase/supabaseClient';
 import { assignSystemRole, getUserSystemRoles } from './roleService';
+import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess';
 import { sendEmail } from './emailIntegrationService';
+import {
+  escapeHtml,
+  formatInvitationPersonalMessageHtml,
+  wrapInvitationMessageCard,
+} from '../utils/invitationMessageEmailFormat';
 
 /**
  * Get available roles that PMO Admin can assign
@@ -63,11 +69,11 @@ export async function isPmoAdmin(authUserId) {
       return false;
     }
 
-    const isAdmin = rolesResult.data.some(
-      assignment => assignment.roles?.role_name === 'pmo_admin'
-    );
+    const isAdmin = rolesResult.data.some((assignment) =>
+      matchesPmoSuiteAdminRole(assignment.roles?.role_name),
+    )
 
-    return isAdmin;
+    return isAdmin
   } catch (error) {
     console.error('Error checking PMO Admin role:', error);
     return false;
@@ -716,9 +722,15 @@ function generateRoleInvitationEmail(email, roleName, organisationName, inviterN
       <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
         <p>Hello,</p>
         
-        <p><strong>${inviterName}</strong> has invited you to join <strong>${organisationName}</strong> as a <strong>${roleName}</strong>.</p>
+        <p><strong>${escapeHtml(inviterName)}</strong> has invited you to join <strong>${escapeHtml(organisationName)}</strong> as a <strong>${escapeHtml(roleName)}</strong>.</p>
         
-        ${message ? `<p style="background: #e8f4f8; padding: 15px; border-left: 4px solid #667eea; margin: 20px 0;">${message}</p>` : ''}
+        ${
+          message
+            ? wrapInvitationMessageCard(
+                formatInvitationPersonalMessageHtml(message, { skipRedundantIntro: false })
+              )
+            : ''
+        }
         
         <p>To accept this invitation, please:</p>
         <ol style="margin: 20px 0; padding-left: 20px;">

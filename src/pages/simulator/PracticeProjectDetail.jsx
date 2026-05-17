@@ -9,6 +9,10 @@ import { Edit2, Trash2, ArrowLeft } from 'lucide-react'
 import { getPracticeProjectById, deletePracticeProject } from '../../services/sim/practiceProjectService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer'
+import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge'
+import { platformDb, simDb } from '../../services/supabase/supabaseClient'
+import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
 
 const PRACTICE_PROJECT_VIEW_SECTIONS = [
   { title: 'Project', fields: [
@@ -17,12 +21,44 @@ const PRACTICE_PROJECT_VIEW_SECTIONS = [
   ]}
 ]
 
+async function buildPracticeProjectExport(projectRow, accountId) {
+  const base = projectRow
+  if (!simDb || !accountId || !projectRow?.id) {
+    return { sections: PRACTICE_PROJECT_VIEW_SECTIONS, record: base }
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      simDb,
+      accountId,
+      'project',
+      projectRow.id,
+      undefined,
+      projectRow.id
+    )
+    const sections = section ? [...PRACTICE_PROJECT_VIEW_SECTIONS, section] : PRACTICE_PROJECT_VIEW_SECTIONS
+    return { sections, record: { ...base, ...mergedRecord } }
+  } catch {
+    return { sections: PRACTICE_PROJECT_VIEW_SECTIONS, record: base }
+  }
+}
+
 export default function PracticeProjectDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [ldeAccountId, setLdeAccountId] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    resolveLdeAccountForCurrentUser().then(({ accountId: aid }) => {
+      if (!cancelled) setLdeAccountId(aid)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (id) fetchProject()
@@ -82,13 +118,34 @@ export default function PracticeProjectDetail() {
           </div>
           <div className="flex gap-2 flex-wrap">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
-              onExportWord={() => exportRecordToWord(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
-              onExportExcel={() => exportRecordToExcel(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
-              onExportCSV={() => exportRecordToCSV(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
-              onExportXML={() => exportRecordToXML(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
-              onExportJSON={() => exportRecordToJSON(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
-              onExportPrint={() => exportRecordToPrint(PRACTICE_PROJECT_VIEW_SECTIONS, project, `PracticeProject_${project.project_code || id}`)}
+              onExportPPT={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToPPT(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
+              onExportWord={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToWord(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
+              onExportExcel={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToExcel(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
+              onExportCSV={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToCSV(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
+              onExportXML={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToXML(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
+              onExportJSON={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToJSON(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
+              onExportPrint={async () => {
+                const { sections, record } = await buildPracticeProjectExport(project, ldeAccountId)
+                exportRecordToPrint(sections, record, `PracticeProject_${project.project_code || id}`)
+              }}
             />
             <button
               onClick={() => navigate(`/simulator/practice-projects/${id}/edit`)}
@@ -152,6 +209,15 @@ export default function PracticeProjectDetail() {
                   <p className="text-gray-900 dark:text-white">{project.budget_currency} {project.budget_amount || 0}</p>
                 </div>
               </div>
+              <CustomFieldRenderer
+                platformDb={simDb}
+                userLookupDb={platformDb}
+                accountId={ldeAccountId}
+                practiceProjectId={id}
+                entityType="project"
+                entityId={id}
+                screenCode="project_detail"
+              />
             </div>
           )}
           {activeTab === 'tasks' && <div className="text-center py-8 text-gray-500">Tasks coming soon</div>}

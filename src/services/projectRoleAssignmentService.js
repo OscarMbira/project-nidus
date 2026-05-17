@@ -243,6 +243,37 @@ export async function getAvailableProjectRoles() {
  * Get roles that Project Managers can assign (Team Manager, Team Member)
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
+/**
+ * All active template project_roles (PMO / sponsors / leads / delivery team).
+ * Used when inviting or editing memberships with governance roles — not limited to team roles.
+ */
+export async function getPmoMembershipAssignableRoles() {
+  try {
+    const { data, error } = await platformDb
+      .from('project_roles')
+      .select('id, role_name, role_display_name, role_description, role_level')
+      .eq('is_active', true)
+      .eq('is_template', true)
+      .is('project_id', null)
+      .order('role_level', { ascending: false })
+
+    if (error) throw error
+
+    return {
+      success: true,
+      data: data || [],
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error fetching PMO membership roles:', error)
+    return {
+      success: false,
+      data: [],
+      error: error.message || 'Failed to fetch project roles',
+    }
+  }
+}
+
 export async function getProjectManagerAssignableRoles() {
   try {
     const { data, error } = await platformDb
@@ -281,6 +312,7 @@ export default {
   isProjectManager,
   assignProjectRolesDuringCreation,
   getAvailableProjectRoles,
+  getPmoMembershipAssignableRoles,
   getProjectManagerAssignableRoles
 };
 

@@ -234,7 +234,13 @@ export default function Teams() {
                 {filteredTeams.map(team => (
                   <div
                     key={team.id}
-                    onClick={() => navigate(`/platform/teams/${team.id}`)}
+                    onClick={() =>
+                      navigate(
+                        `/platform/teams/${encodeURIComponent(
+                          (team.team_code && String(team.team_code).trim()) || team.id,
+                        )}`,
+                      )
+                    }
                     className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-purple-500 transition-colors cursor-pointer"
                   >
                     <div className="flex items-start justify-between mb-4">

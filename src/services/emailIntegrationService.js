@@ -6,18 +6,41 @@
 import { supabase } from './supabaseClient'
 
 /**
- * Send email via configured email service or Supabase Edge Function
- * This function handles the actual email sending
+ * Resolve project_type_id for sender profile lookup.
  */
-async function sendEmailViaSupabase(to, subject, htmlBody, fromEmail, fromName, config) {
+async function resolveProjectTypeId(projectId) {
+  if (!projectId) return null
   try {
-    // PRIMARY METHOD: Use Supabase Edge Function (recommended)
-    // This is the preferred method as it handles email service configuration server-side
+    const { data } = await supabase
+      .from('projects')
+      .select('project_type_id')
+      .eq('id', projectId)
+      .maybeSingle()
+    return data?.project_type_id || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Send email via Supabase Edge Function (sender profiles resolved server-side).
+ */
+async function sendEmailViaSupabase(to, subject, htmlBody, config, { projectTypeId, templateId = null } = {}) {
+  try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.location.origin.replace(/\/$/, '')
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
     
     if (supabaseUrl && anonKey) {
       try {
+        const payload = {
+          to,
+          subject,
+          html: htmlBody,
+          text: htmlBody.replace(/<[^>]*>/g, ''),
+          template_id: templateId,
+        }
+        if (projectTypeId) payload.project_type_id = projectTypeId
+
         const response = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
           method: 'POST',
           headers: {
@@ -25,15 +48,7 @@ async function sendEmailViaSupabase(to, subject, htmlBody, fromEmail, fromName, 
             'Authorization': `Bearer ${anonKey}`,
             'apikey': anonKey
           },
-          body: JSON.stringify({
-            to,
-            subject,
-            html: htmlBody,
-            text: htmlBody.replace(/<[^>]*>/g, ''), // Plain text version
-            from: fromEmail,
-            from_name: fromName,
-            template_id: null
-          })
+          body: JSON.stringify(payload),
         })
 
         if (response.ok) {
@@ -59,6 +74,9 @@ async function sendEmailViaSupabase(to, subject, htmlBody, fromEmail, fromName, 
 
     // FALLBACK: Direct email service calls (if edge function unavailable)
     // These methods are kept as fallback only
+    const fromEmail = config?.from_email || 'noreply@updates.projectastute.com'
+    const fromName = config?.from_name || 'Project Nidus'
+
     if (config && config.service_provider) {
       switch (config.service_provider.toLowerCase()) {
         case 'resend':
@@ -311,9 +329,42 @@ export async function testEmailConfiguration(configId) {
 }
 
 /**
- * Send email
+ * Send email (positional or options object).
+ *
+ * Options object: { to_email, subject, body_html, template_id, project_id, project_type_id }
+ * Sender profiles: pass project_type_id or project_id; omit explicit from headers.
  */
-export async function sendEmail(to, subject, body, templateId = null) {
+export async function sendEmail(toOrOptions, subject, body, templateId = null, sendOptions = {}) {
+  let to
+  let subj
+  let html
+  let tid
+  let projectTypeId = sendOptions.projectTypeId ?? sendOptions.project_type_id ?? null
+  let projectId = sendOptions.projectId ?? sendOptions.project_id ?? null
+
+  if (toOrOptions && typeof toOrOptions === 'object' && !Array.isArray(toOrOptions)) {
+    const o = toOrOptions
+    to = o.to_email || o.to
+    subj = o.subject
+    html = o.body_html || o.body
+    tid = o.template_id ?? o.templateId ?? null
+    projectTypeId = o.project_type_id ?? o.projectTypeId ?? null
+    projectId = o.project_id ?? o.projectId ?? null
+  } else {
+    to = toOrOptions
+    subj = subject
+    html = body
+    tid = templateId
+  }
+
+  if (!to || !subj || !html) {
+    return { success: false, message: 'Missing required email fields (to, subject, body).' }
+  }
+
+  if (!projectTypeId && projectId) {
+    projectTypeId = await resolveProjectTypeId(projectId)
+  }
+
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
@@ -330,7 +381,7 @@ export async function sendEmail(to, subject, body, templateId = null) {
     // In production, this should be configured
     if (configError || !config) {
       console.warn('No active email configuration found. Email will be logged but not sent.');
-      console.log('Email Details:', { to, subject, templateId });
+      console.log('Email Details:', { to, subject, templateId: tid });
       
       // Still log the email attempt for tracking
       try {
@@ -338,10 +389,10 @@ export async function sendEmail(to, subject, body, templateId = null) {
         if (user) {
           await supabase.from('email_logs').insert({
             to_email: to,
-            subject: subject,
-            body_html: body, // Use body_html instead of body
-            body_text: body.replace(/<[^>]*>/g, ''), // Extract plain text
-            template_id: templateId,
+            subject: subj,
+            body_html: html,
+            body_text: html.replace(/<[^>]*>/g, ''),
+            template_id: tid,
             delivery_status: 'pending',
             error_message: 'No active email configuration found',
             created_by: user.id
@@ -384,14 +435,10 @@ export async function sendEmail(to, subject, body, templateId = null) {
       if (logError) throw logError
 
       // Now actually send the email using the configured email service
-      const emailResult = await sendEmailViaSupabase(
-        to,
-        subject,
-        body,
-        config.from_email || 'noreply@projectnidus.com',
-        config.from_name || 'Project Nidus',
-        config
-      )
+      const emailResult = await sendEmailViaSupabase(to, subj, html, config, {
+        projectTypeId,
+        templateId: tid,
+      })
 
       // Update email log with result
       if (emailResult.success) {
@@ -438,7 +485,7 @@ export async function sendEmail(to, subject, body, templateId = null) {
       if (user) {
         await supabase.from('email_logs').insert({
           to_email: to,
-          subject: subject,
+          subject: subj,
           delivery_status: 'failed',
           error_message: error.message,
           created_by: user.id

@@ -33,6 +33,7 @@ import {
   FileClock,
   Package,
   Layers,
+  Map,
   FileBox,
   Activity,
   Calendar,
@@ -52,7 +53,11 @@ import {
   Presentation,
   RefreshCcw,
   ShieldCheck,
-  FlaskConical
+  FlaskConical,
+  Users,
+  UserPlus,
+  UserCheck,
+  Mail,
 } from 'lucide-react';
 
 const pmDashboardMenuConfig = [
@@ -64,6 +69,46 @@ const pmDashboardMenuConfig = [
     icon: LayoutDashboard,
     section: null,
     order: 0
+  },
+
+  // Team & Members — invite Team Manager/Lead and Team Members (v399, PM dashboard shell)
+  {
+    id: 'pm-team-members',
+    label: 'Team & Members',
+    path: null,
+    icon: Users,
+    section: 'Team & Members',
+    order: 1,
+    children: [
+      {
+        id: 'pm-manage-members',
+        label: 'Manage Members',
+        path: '/pm/team-members',
+        icon: Users,
+        order: 1,
+      },
+      {
+        id: 'pm-invite-team-manager',
+        label: 'Invite Team Manager / Lead',
+        path: '/pm/team-members?action=invite&role=team_manager',
+        icon: UserCheck,
+        order: 2,
+      },
+      {
+        id: 'pm-invite-team-member',
+        label: 'Invite Project Team Member',
+        path: '/pm/team-members?action=invite',
+        icon: UserPlus,
+        order: 3,
+      },
+      {
+        id: 'pm-pending-invitations',
+        label: 'Pending Invitations',
+        path: '/pm/team-members?tab=pending',
+        icon: Mail,
+        order: 4,
+      },
+    ],
   },
 
   // Section 1: Governance Reference & Tailoring
@@ -407,6 +452,32 @@ const pmDashboardMenuConfig = [
       { id: 'pm-tc-reports', label: 'Reports', path: '/pm/testing-centre/reports', icon: BarChart3, order: 11, permission: 'testing_centre.view' },
       { id: 'pm-tc-settings', label: 'Settings', path: '/pm/testing-centre/settings', icon: Settings2, order: 12, permission: 'testing_centre.configure' },
     ]
+  },
+
+  // Knowledge & Resources (industry plan templates — v575)
+  {
+    id: 'pm-knowledge-resources',
+    label: 'Knowledge & Resources',
+    path: null,
+    icon: BookOpen,
+    section: 'Knowledge & Resources',
+    order: 7.5,
+    children: [
+      {
+        id: 'pm-industry-templates-browse',
+        label: 'Industry Templates',
+        path: '/pm/industry-templates',
+        icon: Layers,
+        order: 1,
+      },
+      {
+        id: 'pm-industry-plan',
+        label: 'My Industry Plan',
+        path: '/pm/projects/:projectId/industry-plan',
+        icon: Map,
+        order: 2,
+      },
+    ],
   },
 
   // Section 8: Reporting & Closure (merged)

@@ -32,6 +32,7 @@ export async function getAllTeams(organizationId) {
       .from('teams')
       .select(`
         id,
+        team_code,
         team_name,
         team_description,
         team_type,

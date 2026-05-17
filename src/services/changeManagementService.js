@@ -194,24 +194,58 @@ export async function removeChangeBoardMember(memberId) {
 // ===========================
 
 /**
- * Fetch change requests for a project
- * @param {string} projectId - Project ID
+ * Fetch change requests for a project, or with filter object (org list / board dashboard).
+ * @param {string|object} projectIdOrFilters - Project UUID string, or `{ project_id?, status?, category?, priority?, search?, board_id? }`
  * @returns {Promise<Array>} Array of change requests
  */
-export async function fetchChangeRequests(projectId) {
+export async function fetchChangeRequests(projectIdOrFilters) {
   try {
-    const { data, error } = await supabase
+    const filters =
+      projectIdOrFilters != null && typeof projectIdOrFilters === 'object'
+        ? projectIdOrFilters
+        : { project_id: projectIdOrFilters };
+
+    let query = supabase
       .from('change_requests')
       .select(`
         *,
-        project:projects(id, project_name, project_code),
+        project:projects(id, project_name, project_code, account_id),
         change_board:change_board(id, board_name),
         submitted_by_user:users!change_requests_submitted_by_fkey(full_name, email),
         current_approver:users!change_requests_current_approver_user_id_fkey(full_name, email)
       `)
-      .eq('project_id', projectId)
       .eq('is_deleted', false)
       .order('submission_date', { ascending: false });
+
+    if (filters.project_id) {
+      query = query.eq('project_id', filters.project_id);
+    }
+
+    const boardId = filters.board_id ?? filters.change_board_id;
+    if (boardId) {
+      query = query.eq('change_board_id', boardId);
+    }
+
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    const category = filters.category ?? filters.change_category;
+    if (category) {
+      query = query.eq('change_category', category);
+    }
+
+    if (filters.priority) {
+      query = query.eq('priority', filters.priority);
+    }
+
+    const search = typeof filters.search === 'string' ? filters.search.trim().replace(/,/g, ' ') : '';
+    if (search) {
+      const pat = `%${search}%`;
+      query = query.or(`change_title.ilike.${pat},change_reference.ilike.${pat}`);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 

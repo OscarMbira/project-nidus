@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
@@ -12,6 +12,9 @@ import IssueForm from '../components/IssueForm'
 import IssueList from '../components/IssueList'
 import IssueExportMenu from '../components/issues/IssueExportMenu'
 import ExportListMenu from '../components/ui/ExportListMenu'
+import { platformDb } from '../services/supabase/supabaseClient'
+import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi'
+import { platformProjectPath } from '../utils/projectRouteParam'
 import IssuesByTypeChart from '../components/issues/IssuesByTypeChart'
 
 const ISSUE_COLUMNS = [
@@ -50,6 +53,8 @@ export default function IssueRegisterView() {
     search: '',
   })
   const [summary, setSummary] = useState(null)
+  const [issueCfCols, setIssueCfCols] = useState([])
+  const [issueCfMatrix, setIssueCfMatrix] = useState({})
 
   useEffect(() => {
     if (projectId) {
@@ -64,6 +69,38 @@ export default function IssueRegisterView() {
     }
   }, [issueRegister, activeTab, filters])
 
+  useEffect(() => {
+    const aid = project?.account_id
+    if (!aid || !issues?.length) {
+      setIssueCfCols([])
+      setIssueCfMatrix({})
+      return
+    }
+    let cancelled = false
+    const ids = issues.map((i) => i.id).filter(Boolean)
+    ;(async () => {
+      const { columns, matrix } = await fetchBatchExportForEntities(platformDb, {
+        accountId: aid,
+        entityType: 'issue',
+        entityIds: ids,
+        screenCode: 'issue_detail',
+      })
+      if (!cancelled) {
+        setIssueCfCols(columns || [])
+        setIssueCfMatrix(matrix || {})
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [project?.account_id, issues])
+
+  const issueExportColumns = useMemo(() => [...ISSUE_COLUMNS, ...issueCfCols], [issueCfCols])
+  const issueExportRows = useMemo(
+    () => issues.map((i) => ({ ...i, ...(issueCfMatrix[i.id] || {}) })),
+    [issues, issueCfMatrix]
+  )
+
   const fetchData = async () => {
     try {
       setLoading(true)
@@ -71,7 +108,7 @@ export default function IssueRegisterView() {
       // Fetch project
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('id, project_name, project_code')
+        .select('id, project_name, project_code, account_id')
         .eq('id', projectId)
         .eq('is_deleted', false)
         .single()
@@ -177,7 +214,7 @@ export default function IssueRegisterView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}`)}
+        onClick={() => navigate(platformProjectPath(routeKey || projectId))}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Project
@@ -195,7 +232,7 @@ export default function IssueRegisterView() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <ExportListMenu columns={ISSUE_COLUMNS} data={issues} baseFilename="IssueRegister" disabled={!issues?.length} />
+            <ExportListMenu columns={issueExportColumns} data={issueExportRows} baseFilename="IssueRegister" disabled={!issues?.length} />
             <IssueExportMenu 
               issues={issues} 
               register={issueRegister}

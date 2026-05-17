@@ -2,7 +2,7 @@
  * Project Users — members, invitations, seats (Platform)
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   getProjectMembers,
@@ -10,12 +10,15 @@ import {
   getProjectInviteContext,
   resendInvitation,
   cancelInvitation,
-  updateMemberRole,
-  removeMemberFromProject,
+  updatePlatformProjectMemberRole,
+  removePlatformProjectMember,
   listProjectsForMemberManagement,
 } from '../../services/projectMembershipService'
 import { getProjectSeatAllocation } from '../../services/seatManagementService'
-import { getProjectManagerAssignableRoles } from '../../services/projectRoleAssignmentService'
+import {
+  getProjectManagerAssignableRoles,
+  getPmoMembershipAssignableRoles,
+} from '../../services/projectRoleAssignmentService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import InviteUserForm from '../../components/app/InviteUserForm'
 import EditMemberRoleModal from '../../components/app/EditMemberRoleModal'
@@ -25,6 +28,9 @@ import ViewToggle from '../../components/ui/ViewToggle'
 import { useSortableTable } from '../../hooks/useSortableTable'
 import { useViewMode } from '../../hooks/useViewMode'
 import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { useEntityId } from '../../hooks/useEntityId'
+import { projectQueryParam } from '../../utils/entityUrlUtils'
+import { isLikelyDatabaseUuid } from '../../utils/isUuid'
 import {
   Users,
   UserPlus,
@@ -34,11 +40,14 @@ import {
   Loader,
   RefreshCw,
 } from 'lucide-react'
-import { useToast } from '../../hooks/useToast'
+import { useToastContext } from '../../context/ToastContext'
 import PermissionGate from '../../components/auth/PermissionGate'
+import { hasPermission } from '../../utils/permissionChecker'
 import { isPmoAdmin } from '../../services/organisationRoleService'
 
 const STORAGE_SORT = 'nidus-platform-project-users-sort'
+const LOAD_MEMBERS_TIMEOUT_MS = 25000
+
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },
@@ -50,8 +59,21 @@ const EXPORT_COLS = [
 export default function ProjectUsers() {
   const { projectId: routeProjectId } = usePlatformProjectId()
   const [searchParams, setSearchParams] = useSearchParams()
-  const qpProject = searchParams.get('project')
-  const { showToast } = useToast()
+  const qpProjectRaw = searchParams.get('project')
+  const qpProject = qpProjectRaw?.trim() ? qpProjectRaw.trim() : null
+  const qpAction = searchParams.get('action') || ''    // 'invite' → auto-scroll to invite form
+  const qpTab    = searchParams.get('tab')    || ''    // 'pending' → scroll to pending invitations
+  const qpRole   = searchParams.get('role')   || ''    // role_name to pre-select in invite form
+  const qpEntity = useEntityId(qpProject || '', 'project')
+  const { error: toastError, success: toastSuccess } = useToastContext()
+
+  const loadMembersSeq = useRef(0)
+
+  useEffect(() => {
+    return () => {
+      loadMembersSeq.current += 1
+    }
+  }, [])
 
   const [loading, setLoading] = useState(true)
   const [sessionUser, setSessionUser] = useState({ internalId: null, authId: null })
@@ -60,20 +82,37 @@ export default function ProjectUsers() {
   const [members, setMembers] = useState([])
   const [invitations, setInvitations] = useState([])
   const [seatAllocation, setSeatAllocation] = useState(null)
-  const [showInviteSection, setShowInviteSection] = useState(false)
   const [assignableRoles, setAssignableRoles] = useState([])
   const [editMember, setEditMember] = useState(null)
   const [search, setSearch] = useState('')
   const [successBanner, setSuccessBanner] = useState(null)
   const [viewMode, setViewMode] = useViewMode('platform-project-users', 'list')
   const [isPmoAdminUser, setIsPmoAdminUser] = useState(false)
+  /** PMO can always add members; others need user.invite. Resolved per-project to avoid a flash where PMO incorrectly uses PermissionGate only. */
+  const [memberAddEligibility, setMemberAddEligibility] = useState({
+    loading: true,
+    canAdd: false,
+  })
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'name', direction: 'asc' },
     storageKey: STORAGE_SORT,
   })
 
-  const effectiveProjectId = routeProjectId || selectedProjectId || qpProject || ''
+  const qpResolvedUuid = useMemo(() => {
+    if (!qpProject) return ''
+    if (isLikelyDatabaseUuid(qpProject)) return qpProject
+    return qpEntity.uuid || ''
+  }, [qpProject, qpEntity.uuid])
+
+  const effectiveProjectId = useMemo(
+    () => routeProjectId || selectedProjectId || qpResolvedUuid || '',
+    [routeProjectId, selectedProjectId, qpResolvedUuid],
+  )
+
+  const scrollToAddMemberForm = useCallback(() => {
+    document.getElementById('add-project-member')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
 
   const resolveSession = useCallback(async () => {
     const { data: { user } } = await platformDb.auth.getUser()
@@ -89,16 +128,35 @@ export default function ProjectUsers() {
   useEffect(() => {
     if (!sessionUser.authId) {
       setIsPmoAdminUser(false)
+      setMemberAddEligibility({ loading: false, canAdd: false })
+      return
+    }
+    if (!effectiveProjectId) {
+      setMemberAddEligibility({ loading: false, canAdd: false })
       return
     }
     let cancelled = false
-    isPmoAdmin(sessionUser.authId).then((v) => {
-      if (!cancelled) setIsPmoAdminUser(!!v)
-    })
+    setMemberAddEligibility({ loading: true, canAdd: false })
+    ;(async () => {
+      try {
+        const pmo = await isPmoAdmin(sessionUser.authId)
+        if (cancelled) return
+        setIsPmoAdminUser(!!pmo)
+        if (pmo) {
+          setMemberAddEligibility({ loading: false, canAdd: true })
+          return
+        }
+        const inviteOk = await hasPermission(sessionUser.authId, effectiveProjectId, 'user.invite')
+        if (!cancelled) setMemberAddEligibility({ loading: false, canAdd: !!inviteOk })
+      } catch (e) {
+        console.error('ProjectUsers: member add eligibility', e)
+        if (!cancelled) setMemberAddEligibility({ loading: false, canAdd: false })
+      }
+    })()
     return () => {
       cancelled = true
     }
-  }, [sessionUser.authId])
+  }, [sessionUser.authId, effectiveProjectId])
 
   useEffect(() => {
     if (!sessionUser.internalId || !sessionUser.authId) return
@@ -107,14 +165,24 @@ export default function ProjectUsers() {
       if (res.success) setProjectList(res.data || [])
       else {
         setProjectList([])
-        showToast('error', res.error || 'Failed to load project list')
+        toastError(res.error || 'Failed to load project list')
       }
     })()
-  }, [sessionUser, showToast])
+  }, [sessionUser, toastError])
+
+  useEffect(() => {
+    if (routeProjectId || qpProject) return
+    if (projectList.length !== 1 || selectedProjectId) return
+    setSelectedProjectId(projectList[0].id)
+  }, [routeProjectId, qpProject, projectList, selectedProjectId])
 
   useEffect(() => {
     if (!qpProject || routeProjectId || projectList.length === 0) return
-    const exists = projectList.some((p) => p.id === qpProject)
+    const exists = projectList.some(
+      (p) =>
+        String(p.id).toLowerCase() === qpProject.toLowerCase() ||
+        (p.project_code && p.project_code.toLowerCase() === qpProject.toLowerCase()),
+    )
     if (!exists) {
       setSearchParams({})
       setSelectedProjectId('')
@@ -122,41 +190,69 @@ export default function ProjectUsers() {
   }, [qpProject, routeProjectId, projectList, setSearchParams])
 
   useEffect(() => {
-    if (qpProject && !routeProjectId) setSelectedProjectId(qpProject)
-  }, [qpProject, routeProjectId])
+    if (qpProject && !routeProjectId && qpResolvedUuid) setSelectedProjectId(qpResolvedUuid)
+  }, [qpProject, routeProjectId, qpResolvedUuid])
+
+  useEffect(() => {
+    if (!qpProject || routeProjectId) return
+    if (!isLikelyDatabaseUuid(qpProject)) return
+    if (!qpEntity.code || qpEntity.loading || qpEntity.error) return
+    if (qpEntity.code === qpProject) return
+    setSearchParams({ project: qpEntity.code }, { replace: true })
+  }, [qpProject, qpEntity.code, qpEntity.loading, qpEntity.error, routeProjectId, setSearchParams])
 
   useEffect(() => {
     if (routeProjectId) setSelectedProjectId(routeProjectId)
   }, [routeProjectId])
 
-  useEffect(() => {
-    setShowInviteSection(false)
-  }, [effectiveProjectId])
-
   const loadData = useCallback(async () => {
+    const seq = ++loadMembersSeq.current
+
+    const releaseLoading = () => {
+      if (loadMembersSeq.current === seq) setLoading(false)
+    }
+
     if (!effectiveProjectId) {
       setMembers([])
       setInvitations([])
       setSeatAllocation(null)
-      setLoading(false)
+      releaseLoading()
       return
     }
 
     // If project picker is active, only load details for projects user can actually access.
-    if (!routeProjectId && projectList.length > 0 && !projectList.some((p) => p.id === effectiveProjectId)) {
+    const projectKnown =
+      projectList.length > 0 &&
+      projectList.some(
+        (p) =>
+          String(p.id).toLowerCase() === String(effectiveProjectId).toLowerCase()
+      )
+    if (!routeProjectId && projectList.length > 0 && !projectKnown) {
       setMembers([])
       setInvitations([])
       setSeatAllocation(null)
-      setLoading(false)
+      releaseLoading()
       return
     }
 
     try {
+      if (loadMembersSeq.current !== seq) return
       setLoading(true)
-      const [membersResult, rolesResult] = await Promise.all([
+      const batch = Promise.all([
         getProjectMembers(effectiveProjectId),
-        getProjectManagerAssignableRoles(),
+        isPmoAdminUser ? getPmoMembershipAssignableRoles() : getProjectManagerAssignableRoles(),
       ])
+      const timed = await Promise.race([
+        batch,
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Loading members timed out. Check your connection and try again.')),
+            LOAD_MEMBERS_TIMEOUT_MS
+          )
+        ),
+      ])
+      const [membersResult, rolesResult] = timed
+      if (loadMembersSeq.current !== seq) return
       if (membersResult.success) setMembers(membersResult.data || [])
       else setMembers([])
       // Invitations and seat allocation are loaded lazily to avoid noisy RLS failures on page load.
@@ -166,11 +262,15 @@ export default function ProjectUsers() {
       else setAssignableRoles([])
     } catch (e) {
       console.error(e)
-      showToast('error', 'Failed to load project users')
+      if (loadMembersSeq.current === seq) {
+        toastError(e?.message || 'Failed to load project users')
+        setMembers([])
+        setAssignableRoles([])
+      }
     } finally {
-      setLoading(false)
+      releaseLoading()
     }
-  }, [effectiveProjectId, routeProjectId, projectList, showToast])
+  }, [effectiveProjectId, routeProjectId, projectList, toastError, isPmoAdminUser])
 
   const loadInviteContext = useCallback(async () => {
     if (!effectiveProjectId) return
@@ -249,6 +349,17 @@ export default function ProjectUsers() {
     [displayRows]
   )
 
+  const editModalRoleId = useMemo(() => {
+    if (!editMember) return ''
+    if (editMember.project_role_id) return editMember.project_role_id
+    const rn = editMember.role?.role_name
+    if (rn) {
+      const hit = assignableRoles.find((r) => r.role_name === rn)
+      if (hit) return hit.id
+    }
+    return ''
+  }, [editMember, assignableRoles])
+
   const sortIndicator = (col) => {
     const d = getSortDirectionForColumn(col)
     if (d === 'asc') return '↑'
@@ -256,27 +367,36 @@ export default function ProjectUsers() {
     return '⇅'
   }
 
-  const handleInviteSuccess = () => {
-    setShowInviteSection(false)
+  const handleInviteSuccess = (payload) => {
     loadData()
     loadInviteContext()
-    setSuccessBanner({ action: 'Invitation sent', detail: projectName })
-    showToast('success', 'Invitation sent successfully')
+    const isDirect = payload?.mode === 'direct'
+    setSuccessBanner({
+      action: isDirect ? 'Member added' : 'Invitation sent',
+      detail: isDirect ? `${projectName} — active immediately` : projectName,
+    })
+    toastSuccess(isDirect ? 'Member added to the project.' : 'Invitation sent successfully.')
   }
 
   const onChangeProject = (id) => {
     setSelectedProjectId(id)
-    if (id) setSearchParams({ project: id })
-    else setSearchParams({})
+    if (!id) {
+      setSearchParams({})
+      return
+    }
+    ;(async () => {
+      const param = await projectQueryParam(id)
+      setSearchParams({ project: param || id })
+    })()
   }
 
   const onResend = async (inv) => {
     const res = await resendInvitation(inv.id)
     if (res.success) {
       setSuccessBanner({ action: 'Invitation reminder recorded', detail: inv.invited_email })
-      showToast('success', 'Reminder updated')
+      toastSuccess('Reminder updated')
       loadInviteContext()
-    } else showToast('error', res.error || 'Failed')
+    } else toastError(res.error || 'Failed')
   }
 
   const onCancelInvite = async (inv) => {
@@ -285,32 +405,32 @@ export default function ProjectUsers() {
     if (res.success) {
       setSuccessBanner({ action: 'Invitation cancelled', detail: inv.invited_email })
       loadInviteContext()
-    } else showToast('error', res.error || 'Failed')
+    } else toastError(res.error || 'Failed')
   }
 
   const onRemoveMember = async (m) => {
     const name = m.user?.full_name || m.user?.email || 'Member'
     if (!window.confirm(`Remove ${name} from ${projectName}? This revokes their access.`)) return
-    const res = await removeMemberFromProject(m.id)
+    const res = await removePlatformProjectMember(m.id)
     if (res.success) {
       setSuccessBanner({ action: 'Member removed', detail: `${name} (membership ${m.id})` })
-      showToast('success', 'Member removed')
+      toastSuccess('Member removed')
       loadData()
-    } else showToast('error', res.error || 'Failed to remove')
+    } else toastError(res.error || 'Failed to remove')
   }
 
   const onEditSave = async (newRoleId) => {
     if (!editMember) return
-    const res = await updateMemberRole(editMember.id, newRoleId)
+    const res = await updatePlatformProjectMemberRole(editMember.id, newRoleId)
     if (res.success) {
       setSuccessBanner({
         action: 'Role updated',
         detail: `${editMember.user?.email || ''} → ${res.data?.role?.role_display_name || ''}`,
       })
-      showToast('success', 'Role updated')
+      toastSuccess('Role updated')
       setEditMember(null)
       loadData()
-    } else showToast('error', res.error || 'Failed to update role')
+    } else toastError(res.error || 'Failed to update role')
   }
 
   useEffect(() => {
@@ -318,38 +438,64 @@ export default function ProjectUsers() {
     loadInviteContext()
   }, [effectiveProjectId, loadInviteContext])
 
+  // Auto-scroll when arriving via sidebar shortcut links (?action=invite / ?tab=pending)
+  useEffect(() => {
+    if (loading || !effectiveProjectId) return
+    if (qpAction === 'invite') {
+      setTimeout(() => {
+        document.getElementById('add-project-member')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
+    } else if (qpTab === 'pending') {
+      setTimeout(() => {
+        document.getElementById('pending-invitations-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
+    }
+  // Only fire when loading resolves or qpAction/qpTab change — not on every re-render
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, effectiveProjectId, qpAction, qpTab])
+
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6 bg-gray-50 dark:bg-gray-950 min-h-screen text-gray-900 dark:text-white">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 min-w-0">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold">Project members</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Invite users, change roles, and manage seats for your project.
+            {isPmoAdminUser && (
+              <span className="block mt-1 text-blue-700 dark:text-blue-300">
+                PMO: pick any template role (sponsor / executive, programme manager, project manager,
+                assurance, delivery team). Use All Projects or Create Project from the sidebar to add or amend
+                projects.
+              </span>
+            )}
           </p>
         </div>
-        {isPmoAdminUser ? (
-          <button
-            type="button"
-            disabled={!effectiveProjectId}
-            onClick={() => setShowInviteSection(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Invite member
-          </button>
-        ) : (
-          <PermissionGate permission="user.invite" projectId={effectiveProjectId || undefined}>
-            <button
-              type="button"
-              disabled={!effectiveProjectId}
-              onClick={() => setShowInviteSection(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Invite member
-            </button>
-          </PermissionGate>
-        )}
+        <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
+          {sessionUser.authId && effectiveProjectId ? (
+            <>
+              <button
+                type="button"
+                onClick={scrollToAddMemberForm}
+                className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm w-full sm:w-auto min-h-[44px]"
+              >
+                <UserPlus className="h-4 w-4 mr-2 shrink-0" aria-hidden />
+                Add member
+              </button>
+              {memberAddEligibility.loading ? (
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-right">Checking permissions…</p>
+              ) : !memberAddEligibility.canAdd ? (
+                <p className="text-xs text-amber-700 dark:text-amber-300 text-right max-w-xs">
+                  You may not have invite permission on this project — the form below may still be useful; the
+                  server will reject if not allowed.
+                </p>
+              ) : isPmoAdminUser ? (
+                <span className="text-xs text-gray-500 dark:text-gray-400 text-right hidden sm:block">
+                  Form below: invite by email or add an existing user (PMO).
+                </span>
+              ) : null}
+            </>
+          ) : null}
+        </div>
       </div>
 
       {!routeProjectId && (
@@ -383,19 +529,26 @@ export default function ProjectUsers() {
         </div>
       )}
 
-      {showInviteSection && effectiveProjectId && (
+      {effectiveProjectId && sessionUser.authId ? (
         <InviteUserForm
+          key={effectiveProjectId}
           projectId={effectiveProjectId}
           onSuccess={handleInviteSuccess}
-          onCancel={() => setShowInviteSection(false)}
+          allowLeadershipRoles={isPmoAdminUser}
+          defaultRole={qpRole || null}
+          permissionNote={
+            !memberAddEligibility.loading && !memberAddEligibility.canAdd
+              ? 'If submit fails with a permission error, ask a PMO administrator to grant project invite access or use a PMO account.'
+              : null
+          }
         />
-      )}
+      ) : null}
 
       {effectiveProjectId && seatAllocation && (
         <SeatUsageWidget
           projectId={effectiveProjectId}
           seatAllocation={seatAllocation}
-          onPurchase={() => setShowInviteSection(true)}
+          onPurchase={scrollToAddMemberForm}
         />
       )}
 
@@ -414,6 +567,28 @@ export default function ProjectUsers() {
                 Active members ({displayRows.length})
               </h2>
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    loadData()
+                    loadInviteContext()
+                  }}
+                  className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  aria-label="Refresh members and invitations"
+                  title="Refresh"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </button>
+                {sessionUser.authId && (
+                  <button
+                    type="button"
+                    onClick={scrollToAddMemberForm}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 shrink-0"
+                  >
+                    <UserPlus className="h-4 w-4 shrink-0" aria-hidden />
+                    Add member
+                  </button>
+                )}
                 <input
                   type="search"
                   value={search}
@@ -428,6 +603,24 @@ export default function ProjectUsers() {
 
             {viewMode === 'grid' ? (
               <div className="p-4 grid sm:grid-cols-2 gap-4">
+                {displayRows.length === 0 && (
+                  <div className="sm:col-span-2 text-center py-10 text-gray-500 dark:text-gray-400">
+                    <p className="font-medium text-gray-700 dark:text-gray-300">No active members yet</p>
+                    <p className="text-sm mt-2 max-w-md mx-auto">
+                      {isPmoAdminUser
+                        ? 'Open Add member: invite by email, or use “Add existing user now” if they already have a login.'
+                        : 'Use Add member above to send an invitation; people appear here after they accept.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={scrollToAddMemberForm}
+                      className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2 shrink-0" />
+                      Go to add member form
+                    </button>
+                  </div>
+                )}
                 {displayRows.map((member) => (
                   <div
                     key={member.id}
@@ -446,7 +639,7 @@ export default function ProjectUsers() {
                         </p>
                       </div>
                     </div>
-                    <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
+                    {isPmoAdminUser ? (
                       <div className="flex gap-2 mt-2">
                         <button
                           type="button"
@@ -455,17 +648,36 @@ export default function ProjectUsers() {
                         >
                           <Edit className="w-4 h-4" /> Edit role
                         </button>
-                        <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                        <button
+                          type="button"
+                          onClick={() => onRemoveMember(member)}
+                          className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
+                        >
+                          <Trash2 className="w-4 h-4" /> Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
+                        <div className="flex gap-2 mt-2">
                           <button
                             type="button"
-                            onClick={() => onRemoveMember(member)}
-                            className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
+                            onClick={() => setEditMember(member)}
+                            className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
                           >
-                            <Trash2 className="w-4 h-4" /> Remove
+                            <Edit className="w-4 h-4" /> Edit role
                           </button>
-                        </PermissionGate>
-                      </div>
-                    </PermissionGate>
+                          <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                            <button
+                              type="button"
+                              onClick={() => onRemoveMember(member)}
+                              className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
+                            >
+                              <Trash2 className="w-4 h-4" /> Remove
+                            </button>
+                          </PermissionGate>
+                        </div>
+                      </PermissionGate>
+                    )}
                   </div>
                 ))}
               </div>
@@ -499,6 +711,26 @@ export default function ProjectUsers() {
                     </tr>
                   </thead>
                   <tbody>
+                    {displayRows.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                          <p className="font-medium text-gray-700 dark:text-gray-300">No active members yet</p>
+                          <p className="text-sm mt-2 max-w-md mx-auto">
+                            {isPmoAdminUser
+                              ? 'Use Add member: send an invitation, or choose “Add existing user now” if they already have a platform login.'
+                              : 'Use Add member above to send an invitation; they appear here after they accept.'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={scrollToAddMemberForm}
+                            className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          >
+                            <UserPlus className="h-4 w-4 mr-2 shrink-0" />
+                            Go to add member form
+                          </button>
+                        </td>
+                      </tr>
+                    )}
                     {displayRows.map((member) => (
                       <tr key={member.id} className="border-t border-gray-200 dark:border-gray-800">
                         <td className="px-4 py-3">{member.name}</td>
@@ -509,16 +741,16 @@ export default function ProjectUsers() {
                           {member.joined ? new Date(member.joined).toLocaleDateString() : '—'}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
-                            <button
-                              type="button"
-                              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
-                              onClick={() => setEditMember(member)}
-                              aria-label="Edit role"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                          {isPmoAdminUser ? (
+                            <>
+                              <button
+                                type="button"
+                                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
+                                onClick={() => setEditMember(member)}
+                                aria-label="Edit role"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
                               <button
                                 type="button"
                                 className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
@@ -527,8 +759,29 @@ export default function ProjectUsers() {
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
+                            </>
+                          ) : (
+                            <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
+                              <button
+                                type="button"
+                                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
+                                onClick={() => setEditMember(member)}
+                                aria-label="Edit role"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                                <button
+                                  type="button"
+                                  className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
+                                  onClick={() => onRemoveMember(member)}
+                                  aria-label="Remove member"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </PermissionGate>
                             </PermissionGate>
-                          </PermissionGate>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -539,7 +792,7 @@ export default function ProjectUsers() {
           </div>
 
           {invitations.length > 0 && (
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-800">
+            <div id="pending-invitations-section" className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-800">
               <div className="p-4 border-b border-gray-200 dark:border-gray-800">
                 <h2 className="text-lg font-semibold flex items-center">
                   <Mail className="h-5 w-5 mr-2" />
@@ -588,7 +841,7 @@ export default function ProjectUsers() {
         onClose={() => setEditMember(null)}
         memberLabel={editMember ? `${editMember.user?.full_name || editMember.user?.email || ''}` : ''}
         roles={assignableRoles}
-        currentRoleId={editMember?.project_role_id || editMember?.role?.id}
+        currentRoleId={editModalRoleId || editMember?.project_role_id || editMember?.role?.id}
         onConfirm={onEditSave}
       />
     </div>

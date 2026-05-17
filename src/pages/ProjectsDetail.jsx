@@ -12,6 +12,8 @@ import OpenIssuesWidget from '../components/issues/OpenIssuesWidget'
 import LessonsSummaryWidget from '../components/lessonsLog/LessonsSummaryWidget'
 import ExportRecordButtons from '../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+import CustomFieldRenderer from '../features/local-data-extensions/components/CustomFieldRenderer'
+import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
 import { getProjectPortfolio } from '../services/portfolioService'
 import { getProjectProgramme } from '../services/programmeService'
 import ProjectFormTabs from '../components/project/ProjectFormTabs'
@@ -37,6 +39,26 @@ const PROJECT_EXPORT_SECTIONS = [
     { key: 'percentage_complete', label: '% Complete' }
   ]}
 ]
+
+async function buildProjectExportSectionsAndRecord(platformDb, project, projectId) {
+  const base = { ...project, status_name: project.project_statuses?.status_name }
+  if (!platformDb || !project?.account_id || !projectId) {
+    return { sections: PROJECT_EXPORT_SECTIONS, record: base }
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      platformDb,
+      project.account_id,
+      'project',
+      projectId,
+      projectId
+    )
+    const sections = section ? [...PROJECT_EXPORT_SECTIONS, section] : PROJECT_EXPORT_SECTIONS
+    return { sections, record: { ...base, ...mergedRecord } }
+  } catch {
+    return { sections: PROJECT_EXPORT_SECTIONS, record: base }
+  }
+}
 
 export default function ProjectsDetail() {
   const { projectId, routeKey, loading: routeResolving, error: routeError } = usePlatformProjectId()
@@ -364,13 +386,34 @@ export default function ProjectsDetail() {
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
-              onExportWord={() => exportRecordToWord(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
-              onExportExcel={() => exportRecordToExcel(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
-              onExportCSV={() => exportRecordToCSV(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
-              onExportXML={() => exportRecordToXML(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
-              onExportJSON={() => exportRecordToJSON(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
-              onExportPrint={() => exportRecordToPrint(PROJECT_EXPORT_SECTIONS, { ...project, status_name: project.project_statuses?.status_name }, `Project_${project.project_code || project.id}`)}
+              onExportPPT={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToPPT(sections, record, `Project_${project.project_code || project.id}`)
+              }}
+              onExportWord={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToWord(sections, record, `Project_${project.project_code || project.id}`)
+              }}
+              onExportExcel={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToExcel(sections, record, `Project_${project.project_code || project.id}`)
+              }}
+              onExportCSV={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToCSV(sections, record, `Project_${project.project_code || project.id}`)
+              }}
+              onExportXML={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToXML(sections, record, `Project_${project.project_code || project.id}`)
+              }}
+              onExportJSON={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToJSON(sections, record, `Project_${project.project_code || project.id}`)
+              }}
+              onExportPrint={async () => {
+                const { sections, record } = await buildProjectExportSectionsAndRecord(platformDb, project, projectId)
+                exportRecordToPrint(sections, record, `Project_${project.project_code || project.id}`)
+              }}
             />
             {project.project_statuses && (
               <span
@@ -476,6 +519,17 @@ export default function ProjectsDetail() {
         )}
       </div>
 
+      {project.account_id && projectId && (
+        <CustomFieldRenderer
+          platformDb={platformDb}
+          accountId={project.account_id}
+          projectId={projectId}
+          entityType="project"
+          entityId={projectId}
+          screenCode="project_detail"
+        />
+      )}
+
       {project.account_id && (
         <div className="mb-6">
           <PmoDashboardInsightsSection
@@ -544,7 +598,7 @@ export default function ProjectsDetail() {
 
       {/* Risk Summary Widget */}
       <div className="mb-6">
-        <ProjectRiskSummary projectId={projectId} />
+        <ProjectRiskSummary projectId={projectId} routeKey={routeKey} />
       </div>
 
       {/* Issue Summary Widget */}

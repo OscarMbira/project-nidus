@@ -351,9 +351,10 @@ export async function assignRoleToProject(projectId, userId, roleId) {
  * @param {string} email - Recipient email
  * @param {string} roleId - Role UUID
  * @param {string} message - Optional invitation message
+ * @param {number|null|undefined} expiryDays - Optional override (1–365); omit for account default
  * @returns {Promise<{success: boolean, error: string|null}>}
  */
-export async function sendRoleInvitation(projectId, email, roleId, message = null) {
+export async function sendRoleInvitation(projectId, email, roleId, message = null, expiryDays = undefined) {
   try {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error('Not authenticated')
@@ -404,7 +405,7 @@ export async function sendRoleInvitation(projectId, email, roleId, message = nul
     // Get project and role details for email
     const { data: project } = await supabase
       .from('projects')
-      .select('project_name, project_code')
+      .select('project_name, project_code, project_type_id, accounts(account_display_name, account_name, company_name)')
       .eq('id', projectId)
       .single()
 
@@ -446,10 +447,17 @@ export async function sendRoleInvitation(projectId, email, roleId, message = nul
       projectId,
       projectName: project?.project_name || 'Project',
       projectCode: project?.project_code || null,
+      projectTypeId: project?.project_type_id || null,
+      organisationName:
+        project?.accounts?.account_display_name ||
+        project?.accounts?.account_name ||
+        project?.accounts?.company_name ||
+        '',
       roleId,
       roleName: roleDisplayName,
       inviterName: inviterUser?.full_name || inviterUser?.email || 'Organization Admin',
-      message
+      message,
+      expiryDays,
     })
 
     return result

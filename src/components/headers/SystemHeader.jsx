@@ -11,6 +11,7 @@ import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone 
 import { supabase } from '../../services/supabaseClient'
 import ThemeToggle from '../ThemeToggle'
 import { getUnreadCount } from '../../utils/notificationUtils'
+import { normalizeDashboardTab } from '../../utils/pmoDashboardTabs'
 import { useBranding } from '../../context/BrandingContext'
 
 export default function SystemHeader({
@@ -115,10 +116,16 @@ export default function SystemHeader({
     // Normalize paths for comparison
     const currentPath = location.pathname
     const normalizedPath = path.replace(/\/$/, '') // Remove trailing slash
-    
+    const dashNorm = dashboardPath.replace(/\/$/, '')
+
     // For dashboard, check exact match or if we're at the base path
     if (path === dashboardPath || path.includes('/dashboard')) {
-      return currentPath === path || 
+      // PMO unified dashboard: top-nav "Dashboard" highlights only Overview (?tab omitted / overview).
+      if (path === dashboardPath && currentPath === dashNorm) {
+        const tab = normalizeDashboardTab(new URLSearchParams(location.search.replace(/^\?/, '')).get('tab'))
+        return tab === 'overview'
+      }
+      return currentPath === path ||
              currentPath === normalizedPath ||
              currentPath === path.replace('/dashboard', '') ||
              (currentPath.startsWith('/platform') && path === '/platform/dashboard' && currentPath === '/platform') ||

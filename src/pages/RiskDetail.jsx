@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
+import { useEntityId } from '../hooks/useEntityId'
+import { platformProjectPath } from '../utils/projectRouteParam'
 import { platformDb } from '../services/supabase/supabaseClient'
 import { format } from 'date-fns'
 import { ArrowLeft, Edit2, AlertTriangle, TrendingUp, User, Calendar, CheckCircle, Clock, MessageSquare, Paperclip, Link as LinkIcon, X, Link2 } from 'lucide-react'
@@ -22,6 +24,8 @@ import RiskStatusBadge from '../components/risks/RiskStatusBadge'
 import ProximityBadge from '../components/risks/ProximityBadge'
 import ExportRecordButtons from '../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+import CustomFieldRenderer from '../features/local-data-extensions/components/CustomFieldRenderer'
+import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
 
 const RISK_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -40,11 +44,37 @@ const RISK_EXPORT_SECTIONS = [
   ]}
 ]
 
+async function buildRiskExport(platformDb, risk, riskAccountId, projectId) {
+  const base = risk
+  if (!platformDb || !riskAccountId || !projectId || !risk?.id) {
+    return { sections: RISK_EXPORT_SECTIONS, record: base }
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      platformDb,
+      riskAccountId,
+      'risk',
+      risk.id,
+      projectId
+    )
+    const sections = section ? [...RISK_EXPORT_SECTIONS, section] : RISK_EXPORT_SECTIONS
+    return { sections, record: { ...base, ...mergedRecord } }
+  } catch {
+    return { sections: RISK_EXPORT_SECTIONS, record: base }
+  }
+}
+
 export default function RiskDetail() {
   const { riskId } = useParams()
-  const { projectId, routeKey } = usePlatformProjectId()
+  const { projectId, routeKey, loading: projectRouteLoading } = usePlatformProjectId()
+  const { uuid: riskUuid, loading: riskEntityLoading, error: riskResolveError } = useEntityId(
+    riskId && projectId ? riskId : '',
+    'risk',
+    projectId,
+  )
   const navigate = useNavigate()
   const [risk, setRisk] = useState(null)
+  const [riskAccountId, setRiskAccountId] = useState(null)
   const [assessments, setAssessments] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
@@ -52,22 +82,34 @@ export default function RiskDetail() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    if (riskId) {
-      fetchData()
+    if (!risk?.project_id) {
+      setRiskAccountId(null)
+      return
     }
-  }, [riskId])
+    let cancelled = false
+    platformDb
+      .from('projects')
+      .select('account_id')
+      .eq('id', risk.project_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setRiskAccountId(data?.account_id || null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [risk?.project_id])
 
   const fetchData = async () => {
+    if (!riskUuid) return
     try {
       setLoading(true)
 
-      // Fetch risk using service
-      const riskResult = await getRiskById(riskId)
+      const riskResult = await getRiskById(riskUuid)
       if (riskResult.success) {
         setRisk(riskResult.data)
-        
-        // Fetch assessment history
-        const assessmentResult = await getAssessmentHistory(riskId)
+
+        const assessmentResult = await getAssessmentHistory(riskUuid)
         if (assessmentResult.success) {
           setAssessments(assessmentResult.data || [])
         }
@@ -83,21 +125,40 @@ export default function RiskDetail() {
   }
 
   useEffect(() => {
-    if (riskId) {
+    if (riskUuid) {
       fetchData()
     }
-  }, [riskId, refreshKey])
+  }, [riskUuid, refreshKey])
 
   const handleUpdate = () => {
     setRefreshKey(prev => prev + 1)
   }
 
-  if (loading) {
+  const risksListPath = platformProjectPath(routeKey || projectId || '', 'risks')
+
+  if (projectRouteLoading || riskEntityLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Risk Details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (riskResolveError === 'not_found' || !riskUuid) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">Risk not found</p>
+          <button
+            type="button"
+            onClick={() => navigate(risksListPath)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            Back to Risks
+          </button>
         </div>
       </div>
     )
@@ -109,7 +170,8 @@ export default function RiskDetail() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Risk not found</p>
           <button
-            onClick={() => navigate(`/projects/${projectId}/risks`)}
+            type="button"
+            onClick={() => navigate(risksListPath)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Risks
@@ -135,7 +197,8 @@ export default function RiskDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}/risks`)}
+        type="button"
+        onClick={() => navigate(risksListPath)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -173,13 +236,34 @@ export default function RiskDetail() {
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
-              onExportWord={() => exportRecordToWord(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
-              onExportExcel={() => exportRecordToExcel(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
-              onExportCSV={() => exportRecordToCSV(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
-              onExportXML={() => exportRecordToXML(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
-              onExportJSON={() => exportRecordToJSON(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
-              onExportPrint={() => exportRecordToPrint(RISK_EXPORT_SECTIONS, risk, `Risk_${risk.risk_identifier || risk.id}`)}
+              onExportPPT={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToPPT(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
+              onExportWord={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToWord(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
+              onExportExcel={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToExcel(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
+              onExportCSV={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToCSV(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
+              onExportXML={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToXML(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
+              onExportJSON={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToJSON(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
+              onExportPrint={async () => {
+                const { sections, record } = await buildRiskExport(platformDb, risk, riskAccountId, projectId)
+                exportRecordToPrint(sections, record, `Risk_${risk.risk_identifier || risk.id}`)
+              }}
             />
             {risk.status_enum !== 'closed' && risk.status_enum !== 'occurred' && (
               <button
@@ -365,12 +449,23 @@ export default function RiskDetail() {
               </div>
             )}
           </div>
+
+          {riskAccountId && projectId && risk?.id && (
+            <CustomFieldRenderer
+              platformDb={platformDb}
+              accountId={riskAccountId}
+              projectId={projectId}
+              entityType="risk"
+              entityId={risk.id}
+              screenCode="risk_detail"
+            />
+          )}
         </div>
       )}
 
-      {activeTab === 'responses' && riskId && (
+      {activeTab === 'responses' && riskUuid && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <RiskResponsesPanel riskId={riskId} onUpdate={handleUpdate} />
+          <RiskResponsesPanel riskId={riskUuid} onUpdate={handleUpdate} />
         </div>
       )}
 
@@ -380,23 +475,23 @@ export default function RiskDetail() {
         </div>
       )}
 
-      {activeTab === 'comments' && riskId && (
+      {activeTab === 'comments' && riskUuid && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <RiskCommentsSection riskId={riskId} />
+          <RiskCommentsSection riskId={riskUuid} />
         </div>
       )}
 
-      {activeTab === 'links' && riskId && risk && (
+      {activeTab === 'links' && riskUuid && risk && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <RiskLinksPanel riskId={riskId} projectId={projectId} />
+          <RiskLinksPanel riskId={riskUuid} projectId={projectId} />
         </div>
       )}
 
       {/* Additional Sections in Overview */}
-      {activeTab === 'overview' && riskId && (
+      {activeTab === 'overview' && riskUuid && (
         <div className="space-y-6 mt-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <RiskAttachments riskId={riskId} />
+            <RiskAttachments riskId={riskUuid} />
           </div>
         </div>
       )}

@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
+import { useEntityId } from '../hooks/useEntityId'
+import { platformProjectPath } from '../utils/projectRouteParam'
 import { supabase } from '../services/supabaseClient'
+import { platformDb } from '../services/supabase/supabaseClient'
 import { format } from 'date-fns'
 import { ArrowLeft, Edit2, Trash2, CheckCircle, XCircle, Clock, AlertTriangle, FileText, Package, User, Calendar, MessageSquare, History, Link2, Eye, EyeOff } from 'lucide-react'
 import { getIssueById, updateStatus, closeIssue, reopenIssue } from '../services/issueService'
@@ -24,9 +27,12 @@ import CreateChangeRequestDialog from '../components/issues/CreateChangeRequestD
 import IssueLinksPanel from '../components/issues/IssueLinksPanel'
 import IssueWatchersPanel from '../components/issues/IssueWatchersPanel'
 import IssueExportMenu from '../components/issues/IssueExportMenu'
+import IssueReportQuickView from '../components/issues/IssueReportQuickView'
 import CreateIssueReportButton from '../components/issues/CreateIssueReportButton'
 import ExportRecordButtons from '../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+import CustomFieldRenderer from '../features/local-data-extensions/components/CustomFieldRenderer'
+import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
 
 const ISSUE_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -39,13 +45,38 @@ const ISSUE_EXPORT_SECTIONS = [
   ]},
   { title: 'Description', fields: [{ key: 'issue_description', label: 'Description' }] }
 ]
-import IssueReportQuickView from '../components/issues/IssueReportQuickView'
+
+async function buildIssueExport(platformDbClient, issueRow, issueAccountId, projectUuid) {
+  const base = issueRow
+  if (!platformDbClient || !issueAccountId || !projectUuid || !issueRow?.id) {
+    return { sections: ISSUE_EXPORT_SECTIONS, record: base }
+  }
+  try {
+    const { section, mergedRecord } = await buildCustomFieldExportParts(
+      platformDbClient,
+      issueAccountId,
+      'issue',
+      issueRow.id,
+      projectUuid
+    )
+    const sections = section ? [...ISSUE_EXPORT_SECTIONS, section] : ISSUE_EXPORT_SECTIONS
+    return { sections, record: { ...base, ...mergedRecord } }
+  } catch {
+    return { sections: ISSUE_EXPORT_SECTIONS, record: base }
+  }
+}
 
 export default function IssueDetailView() {
   const { issueId } = useParams()
-  const { projectId, routeKey } = usePlatformProjectId()
+  const { projectId, routeKey, loading: projectRouteLoading } = usePlatformProjectId()
+  const { uuid: issueUuid, loading: issueEntityLoading, error: issueResolveError } = useEntityId(
+    issueId && projectId ? issueId : '',
+    'issue',
+    projectId,
+  )
   const navigate = useNavigate()
   const [issue, setIssue] = useState(null)
+  const [issueAccountId, setIssueAccountId] = useState(null)
   const [actions, setActions] = useState([])
   const [decisions, setDecisions] = useState([])
   const [statusHistory, setStatusHistory] = useState([])
@@ -57,25 +88,24 @@ export default function IssueDetailView() {
   const [showChangeRequestDialog, setShowChangeRequestDialog] = useState(false)
 
   useEffect(() => {
-    if (issueId) {
+    if (issueUuid) {
       fetchData()
     }
-  }, [issueId])
+  }, [issueUuid])
 
   const fetchData = async () => {
+    if (!issueUuid) return
     try {
       setLoading(true)
 
-      // Fetch issue
-      const issueData = await getIssueById(issueId)
+      const issueData = await getIssueById(issueUuid)
       setIssue(issueData)
 
-      // Fetch related data
       const [actionsData, decisionsData, historyData, commentsData] = await Promise.all([
-        getActions(issueId),
-        getDecisions(issueId),
-        getStatusHistory(issueId),
-        fetchComments(issueId)
+        getActions(issueUuid),
+        getDecisions(issueUuid),
+        getStatusHistory(issueUuid),
+        fetchComments(issueUuid),
       ])
 
       setActions(actionsData)
@@ -115,15 +145,15 @@ export default function IssueDetailView() {
       if (newStatus === 'closed') {
         const resolution = prompt('Enter resolution description:')
         if (resolution) {
-          await closeIssue(issueId, resolution)
+          await closeIssue(issueUuid, resolution)
         }
       } else if (newStatus === 'raised' && issue.status === 'closed') {
         const reason = prompt('Enter reason for reopening:')
         if (reason) {
-          await reopenIssue(issueId, reason)
+          await reopenIssue(issueUuid, reason)
         }
       } else {
-        await updateStatus(issueId, newStatus)
+        await updateStatus(issueUuid, newStatus)
       }
       fetchData()
     } catch (error) {
@@ -147,22 +177,42 @@ export default function IssueDetailView() {
           deleted_at: new Date().toISOString(),
           updated_by: user.id
         })
-        .eq('id', issueId)
+        .eq('id', issueUuid)
 
       if (error) throw error
-      navigate(`/projects/${projectId}/issues/register`)
+      navigate(platformProjectPath(routeKey || projectId || '', 'issues/register'))
     } catch (error) {
       console.error('Error deleting issue:', error)
       alert('Error deleting issue: ' + error.message)
     }
   }
 
-  if (loading) {
+  const issuesRegisterPath = platformProjectPath(routeKey || projectId || '', 'issues/register')
+  const risksListPath = platformProjectPath(routeKey || projectId || '', 'risks')
+
+  if (projectRouteLoading || issueEntityLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Issue Details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (issueResolveError === 'not_found' || !issueUuid) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <p className="text-gray-500 dark:text-gray-400 mb-4">Issue not found</p>
+          <button
+            type="button"
+            onClick={() => navigate(issuesRegisterPath)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          >
+            Back to Issue Register
+          </button>
         </div>
       </div>
     )
@@ -174,7 +224,8 @@ export default function IssueDetailView() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Issue not found</p>
           <button
-            onClick={() => navigate(`/projects/${projectId}/issues/register`)}
+            type="button"
+            onClick={() => navigate(issuesRegisterPath)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Issue Register
@@ -191,7 +242,8 @@ export default function IssueDetailView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}/issues/register`)}
+        type="button"
+        onClick={() => navigate(issuesRegisterPath)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -239,13 +291,34 @@ export default function IssueDetailView() {
           </div>
           <div className="flex gap-2 flex-wrap">
             <ExportRecordButtons
-              onExportPPT={() => exportRecordToPPT(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
-              onExportWord={() => exportRecordToWord(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
-              onExportExcel={() => exportRecordToExcel(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
-              onExportCSV={() => exportRecordToCSV(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
-              onExportXML={() => exportRecordToXML(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
-              onExportJSON={() => exportRecordToJSON(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
-              onExportPrint={() => exportRecordToPrint(ISSUE_EXPORT_SECTIONS, issue, `Issue_${issue.issue_identifier || issue.id}`)}
+              onExportPPT={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToPPT(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
+              onExportWord={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToWord(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
+              onExportExcel={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToExcel(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
+              onExportCSV={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToCSV(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
+              onExportXML={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToXML(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
+              onExportJSON={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToJSON(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
+              onExportPrint={async () => {
+                const { sections, record } = await buildIssueExport(platformDb, issue, issueAccountId, projectId)
+                exportRecordToPrint(sections, record, `Issue_${issue.issue_identifier || issue.id}`)
+              }}
             />
             <IssueExportMenu 
               issues={[issue]} 
@@ -254,7 +327,7 @@ export default function IssueDetailView() {
             />
             {issue.status !== 'closed' && issue.status !== 'cancelled' && (
               <>
-                <CreateIssueReportButton issueId={issueId} projectId={projectId} />
+                <CreateIssueReportButton issueId={issueUuid} projectId={projectId} />
                 <button
                   onClick={() => setShowEditForm(true)}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
@@ -390,7 +463,7 @@ export default function IssueDetailView() {
               )}
 
               {/* Issue Report Quick View */}
-              <IssueReportQuickView issueId={issueId} projectId={projectId} />
+              <IssueReportQuickView issueId={issueUuid} projectId={projectId} />
 
               {/* Impact Analysis */}
               <div>
@@ -558,12 +631,23 @@ export default function IssueDetailView() {
 
               {/* Watchers */}
               <IssueWatchersPanel issue={issue} projectId={projectId} />
+
+              {issueAccountId && projectId && issue?.id && (
+                <CustomFieldRenderer
+                  platformDb={platformDb}
+                  accountId={issueAccountId}
+                  projectId={projectId}
+                  entityType="issue"
+                  entityId={issue.id}
+                  screenCode="issue_detail"
+                />
+              )}
             </div>
           )}
 
           {activeTab === 'actions' && (
             <IssueActionsPanel
-              issueId={issueId}
+              issueId={issueUuid}
               actions={actions}
               onRefresh={fetchData}
             />
@@ -571,7 +655,7 @@ export default function IssueDetailView() {
 
           {activeTab === 'decisions' && (
             <IssueDecisionsPanel
-              issueId={issueId}
+              issueId={issueUuid}
               issue={issue}
               decisions={decisions}
               onRefresh={fetchData}
@@ -580,14 +664,14 @@ export default function IssueDetailView() {
 
           {activeTab === 'comments' && (
             <IssueCommentsSection
-              issueId={issueId}
+              issueId={issueUuid}
               comments={comments}
               onRefresh={fetchData}
             />
           )}
 
-          {activeTab === 'attachments' && issueId && (
-            <IssueAttachments issueId={issueId} />
+          {activeTab === 'attachments' && issueUuid && (
+            <IssueAttachments issueId={issueUuid} />
           )}
 
           {activeTab === 'history' && (
@@ -618,7 +702,7 @@ export default function IssueDetailView() {
           onClose={() => setShowTransferDialog(false)}
           onSuccess={() => {
             setShowTransferDialog(false)
-            navigate(`/projects/${projectId}/risks`)
+            navigate(risksListPath)
           }}
         />
       )}
