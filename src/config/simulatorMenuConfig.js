@@ -500,9 +500,9 @@ export const simulatorMenuConfig = [
         subscriptionTier: null,
       },
       {
-        id: 'sim-practice-stakeholders-seam',
-        label: 'SEAM',
-        path: '/simulator/practice-stakeholders/seam',
+        id: 'sim-practice-stakeholders-assessment-matrix',
+        label: 'Stakeholder Assessment Matrix',
+        path: '/simulator/practice-stakeholders/assessment-matrix',
         subscriptionTier: null,
       },
       {

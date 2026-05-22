@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { supabase } from '../../services/supabaseClient'
 import { ChevronRight, ChevronDown, LogOut, X, Briefcase } from 'lucide-react'
+import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
 import pmDashboardMenuConfig from '../../config/pmDashboardMenuConfig'
 import { resolveMenuRoutePath, menuPathIsActive } from '../../utils/sidebarRouteUtils'
 
@@ -79,15 +79,22 @@ function PMSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggl
 
 export default function PMSidebar({ isOpen, onClose }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [expandedMenuId, setExpandedMenuId] = useState(null)
+  const [loggingOut, setLoggingOut] = useState(false)
   const handleToggleExpand = (id) => setExpandedMenuId((prev) => (prev === id ? null : id))
 
   const handleLogout = async () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+    onClose?.()
     try {
-      await supabase.auth.signOut()
-      navigate('/platform/login', { replace: true })
+      await performLogout({ simulator: false })
     } catch (error) {
       console.error('Logout error:', error)
+    } finally {
+      navigate(getLogoutRedirectPath(location.pathname), { replace: true })
+      setLoggingOut(false)
     }
   }
 
@@ -112,7 +119,7 @@ export default function PMSidebar({ isOpen, onClose }) {
         `}
         aria-label="PM Dashboard navigation"
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-2">
@@ -129,7 +136,7 @@ export default function PMSidebar({ isOpen, onClose }) {
           </div>
 
           {/* Menu Items */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3">
+          <nav className="flex-1 min-h-0 overflow-y-auto py-4 px-3">
             <div className="space-y-1">
               {pmDashboardMenuConfig.map((menuItem) => (
                 <PMSidebarMenuItem key={menuItem.id} menuItem={menuItem} level={0} expandedMenuId={expandedMenuId} onToggleExpand={handleToggleExpand} />
@@ -138,13 +145,16 @@ export default function PMSidebar({ isOpen, onClose }) {
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4">
             <button
+              type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              disabled={loggingOut}
+              aria-busy={loggingOut}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <LogOut className={`h-5 w-5 flex-shrink-0 ${loggingOut ? 'animate-pulse' : ''}`} />
+              <span>{loggingOut ? 'Signing out…' : 'Logout'}</span>
             </button>
           </div>
         </div>

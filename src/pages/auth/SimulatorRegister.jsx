@@ -18,7 +18,8 @@ export default function SimulatorRegister() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [fullName, setFullName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
@@ -65,7 +66,9 @@ export default function SimulatorRegister() {
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm-email`,
           data: {
-            full_name: fullName,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
             selected_platforms: { platform: false, simulator: true },
           },
         },
@@ -98,7 +101,9 @@ export default function SimulatorRegister() {
               {
                 auth_user_id: data.user.id,
                 email: email,
-                full_name: fullName,
+                first_name: firstName.trim(),
+                last_name: lastName.trim(),
+                full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
                 is_active: true,
                 is_verified: false,
               },
@@ -294,25 +299,45 @@ export default function SimulatorRegister() {
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Full Name
-                    </label>
-                    <div className="mt-1 relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <User className="h-5 w-5 text-gray-400" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        First Name
+                      </label>
+                      <div className="mt-1 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <User className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          id="firstName"
+                          name="firstName"
+                          type="text"
+                          autoComplete="given-name"
+                          required
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                          placeholder="John"
+                        />
                       </div>
-                      <input
-                        id="fullName"
-                        name="fullName"
-                        type="text"
-                        autoComplete="name"
-                        required
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white sm:text-sm"
-                        placeholder="John Doe"
-                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Last Name
+                      </label>
+                      <div className="mt-1 relative">
+                        <input
+                          id="lastName"
+                          name="lastName"
+                          type="text"
+                          autoComplete="family-name"
+                          required
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                          placeholder="Doe"
+                        />
+                      </div>
                     </div>
                   </div>
 

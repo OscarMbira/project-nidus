@@ -28,10 +28,12 @@ function sortRows(rows, key, dir) {
   })
 }
 
-export default function MicroPlanList() {
+export default function MicroPlanList({ scope }) {
   const isSim = useLocation().pathname.includes('/simulator/')
   const [searchParams] = useSearchParams()
   const workPackageFilter = searchParams.get('workPackageId')
+  // scope can be 'individual' (My Plans) or 'team' (Team Workstream Plans)
+  const scopeParam = scope || searchParams.get('scope')
   const projectId = usePlanningProjectId()
   const base = isSim ? '/simulator/pm/planning' : '/pm/planning'
   const q = projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''
@@ -60,13 +62,16 @@ export default function MicroPlanList() {
     if (!projectId) return
     ;(async () => {
       try {
-        const data = isSim ? await simApi.getMicroPlans(projectId) : await api.getMicroPlans(projectId)
+        const filters = {}
+        if (scopeParam === 'individual') filters.plan_type = 'individual'
+        if (scopeParam === 'team') filters.plan_type = 'team_delivery'
+        const data = isSim ? await simApi.getMicroPlans(projectId) : await api.getMicroPlans(projectId, filters)
         setRows(data || [])
       } catch (e) {
         toast.error(e?.message || 'Failed to load micro-plans')
       }
     })()
-  }, [projectId, isSim])
+  }, [projectId, isSim, scopeParam])
 
   const filtered = useMemo(() => {
     let list = workPackageFilter ? rows.filter((p) => p.linked_work_package_id === workPackageFilter) : rows
@@ -122,7 +127,9 @@ export default function MicroPlanList() {
     <div className="min-h-screen bg-gray-950 text-gray-100 px-4 py-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-          <h1 className="text-xl font-semibold text-white">Team micro-plans</h1>
+          <h1 className="text-xl font-semibold text-white">
+            {scopeParam === 'individual' ? 'My Plans' : scopeParam === 'team' ? 'Team Workstream Plans' : 'Team Micro-Plans'}
+          </h1>
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex rounded-lg border border-gray-600 p-0.5">
               <button

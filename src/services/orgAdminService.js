@@ -10,6 +10,7 @@ import { supabase } from './supabaseClient'
 import { assignProjectRole } from './roleService'
 import { inviteUserToProject } from './projectMembershipService'
 import { sendProjectInvitation } from './invitationService'
+import { resolveInviterDisplayNameFromUser } from '../utils/invitationInviteeFormat'
 
 /**
  * Check if user is Organization Admin
@@ -438,7 +439,7 @@ export async function sendRoleInvitation(projectId, email, roleId, message = nul
     // Get current user's name for invitation
     const { data: inviterUser } = await supabase
       .from('users')
-      .select('full_name, email')
+      .select('full_name, first_name, last_name, email')
       .eq('auth_user_id', user.id)
       .single()
 
@@ -455,7 +456,9 @@ export async function sendRoleInvitation(projectId, email, roleId, message = nul
         '',
       roleId,
       roleName: roleDisplayName,
-      inviterName: inviterUser?.full_name || inviterUser?.email || 'Organization Admin',
+      inviterName:
+        resolveInviterDisplayNameFromUser(inviterUser || {}, user?.email) ||
+        'Organization Admin',
       message,
       expiryDays,
     })

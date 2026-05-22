@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMenu } from '../hooks/useMenu'
-import { supabase, simDb } from '../services/supabaseClient'
+import { performLogout, getLogoutRedirectPath } from '../services/authLogoutService'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -156,11 +156,15 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
   const { branding } = useBranding()
   const hasChildren = menuItem.children && menuItem.children.length > 0
   const resolvedPath = resolveMenuRoutePath(menuItem.route_path, location.pathname)
-  const isChildActive = hasChildren && menuItem.children.some((child) => {
-    if (!child.route_path) return false
-    const r = resolveMenuRoutePath(child.route_path, location.pathname)
-    return menuPathIsActive(location.pathname, r, location.search)
-  })
+  const isNodeOrDescendantActive = (node) => {
+    if (!node) return false
+    if (node.route_path) {
+      const r = resolveMenuRoutePath(node.route_path, location.pathname)
+      if (menuPathIsActive(location.pathname, r, location.search)) return true
+    }
+    return (node.children || []).some(isNodeOrDescendantActive)
+  }
+  const isChildActive = hasChildren && menuItem.children.some(isNodeOrDescendantActive)
   const [isExpandedLocal, setIsExpandedLocal] = useState(isChildActive)
   const isTopLevel = level === 0
   const expandedByParent = isTopLevel && hasChildren && onToggleExpand != null
@@ -345,18 +349,15 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const handleLogout = async () => {
     if (loggingOut) return
+    setLoggingOut(true)
+    const path = location.pathname || ''
+    const simulator = path.startsWith('/simulator')
     try {
-      setLoggingOut(true)
-      const path = location.pathname || ''
-      if (path.startsWith('/simulator')) {
-        await simDb.auth.signOut()
-        navigate('/simulator/login', { replace: true })
-      } else {
-        await supabase.auth.signOut()
-        navigate('/platform/login', { replace: true })
-      }
+      await performLogout({ simulator })
     } catch (err) {
       console.error('Logout error:', err)
+    } finally {
+      navigate(getLogoutRedirectPath(path), { replace: true })
       setLoggingOut(false)
     }
   }
@@ -456,8 +457,9 @@ export default function Sidebar({ isOpen, onClose }) {
           </nav>
 
           {/* Footer - Logout */}
-          <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4">
             <button
+              type="button"
               onClick={handleLogout}
               disabled={loggingOut}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"

@@ -4,7 +4,11 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Mail, User, AlertCircle, Loader, CheckCircle } from 'lucide-react'
-import { inviteUserToProject, pmoAddExistingUserToProject } from '../../services/projectMembershipService'
+import {
+  inviteUserToProject,
+  pmoAddExistingUserToProject,
+  resolveInvitationRoleIdForInsert,
+} from '../../services/projectMembershipService'
 import { dispatchProjectInvitationEmail } from '../../services/invitationService'
 import { checkSeatAvailability } from '../../services/seatManagementService'
 import {
@@ -16,19 +20,32 @@ import { useInvitationTemplates } from '../../features/invitation-templates/hook
 import { resolveInvitationTemplatePlaceholders } from '../../features/invitation-templates/utils/resolveInvitationTemplatePlaceholders'
 import { normalizeInvitationMessageOrganisation } from '../../utils/invitationMessageEmailFormat'
 import {
+  personalizeInvitationMessage,
+  resolveInviterDisplayNameFromUser,
+} from '../../utils/invitationInviteeFormat'
+import {
   clampInvitationExpiryDays,
   fetchDefaultInvitationExpiryDaysForProject,
 } from '../../services/invitationExpiryService'
 import { loadInvitationProjectContext } from '../../services/invitationProjectContextService'
+import { INVITE_HARD_LIMIT_MS } from '../../services/inviteTransport'
+import TeamMemberAppointmentForm, { TEAM_MEMBER_APPOINTMENT_EMPTY } from '../pm/TeamMemberAppointmentForm'
+import { createTeamMemberAppointment } from '../../services/teamMemberAppointmentService'
+import { isTeamMemberAppointmentRole, isManagerAppointmentRole } from '../../utils/appointmentRoleUtils'
+import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../pm/ManagerAppointmentForm'
+import { createManagerAppointment } from '../../services/managerAppointmentService'
 
 const MODE_INVITE = 'invite'
+const INVITE_UI_FAILSAFE_MS = INVITE_HARD_LIMIT_MS + 4_000
 const MODE_DIRECT = 'direct'
+const INTERNAL_USER_CACHE_PREFIX = 'nidus-internal-user-id'
 
 export default function InviteUserForm({
   projectId,
   onSuccess,
   onCancel,
   allowLeadershipRoles = false,
+  callerIsPmoAdmin = false,
   permissionNote = null,
   defaultRole = null,  // role_name string to pre-select (e.g. 'team_manager')
 }) {
@@ -36,6 +53,8 @@ export default function InviteUserForm({
   const [loading, setLoading] = useState(false)
   const [checkingSeats, setCheckingSeats] = useState(false)
   const [email, setEmail] = useState('')
+  const [inviteeFirstName, setInviteeFirstName] = useState('')
+  const [inviteeLastName, setInviteeLastName] = useState('')
   const [roleId, setRoleId] = useState('')
   const [message, setMessage] = useState('')
   const [roles, setRoles] = useState([])
@@ -45,16 +64,28 @@ export default function InviteUserForm({
   const [projectCode, setProjectCode] = useState('')
   const [organisationName, setOrganisationName] = useState('')
   const [inviterName, setInviterName] = useState('')
+  const [inviterJobTitle, setInviterJobTitle] = useState('')
   const [invitationExpiryDays, setInvitationExpiryDays] = useState(7)
   const [accountId, setAccountId] = useState(null)
+  const [authUserId, setAuthUserId] = useState(null)
   const [projectContext, setProjectContext] = useState(null)
   const [showRestorePrompt, setShowRestorePrompt] = useState(false)
   const [pendingResolvedMessage, setPendingResolvedMessage] = useState('')
   const prevRoleIdRef = useRef('')
   const lastAutoFilledRef = useRef(null)
   const messageRef = useRef('')
+  const inviterUserIdRef = useRef(null)
+  const prefetchedInvitationRoleIdRef = useRef(null)
+  const [teamAppointmentTerms, setTeamAppointmentTerms] = useState(TEAM_MEMBER_APPOINTMENT_EMPTY)
+  const [managerAppointmentTerms, setManagerAppointmentTerms] = useState(MANAGER_APPOINTMENT_EMPTY)
+  const [reportingCandidates, setReportingCandidates] = useState([])
+  const [inviterInternalUserId, setInviterInternalUserId] = useState(null)
 
-  const { getTemplateForRole, templates } = useInvitationTemplates({ accountId })
+  const { getTemplateForRole, templates } = useInvitationTemplates({
+    accountId,
+    authUserId,
+    prefetchEnsure: callerIsPmoAdmin && Boolean(accountId && authUserId),
+  })
 
   useEffect(() => {
     messageRef.current = message
@@ -75,6 +106,8 @@ export default function InviteUserForm({
   useEffect(() => {
     if (!projectId) return
     setEmail('')
+    setInviteeFirstName('')
+    setInviteeLastName('')
     setRoleId('')
     setMessage('')
     setError(null)
@@ -85,7 +118,10 @@ export default function InviteUserForm({
     if (!allowLeadershipRoles) setPmoMode(MODE_INVITE)
     loadRoles()
     checkSeats()
+    setTeamAppointmentTerms(TEAM_MEMBER_APPOINTMENT_EMPTY)
+    setManagerAppointmentTerms(MANAGER_APPOINTMENT_EMPTY)
   }, [projectId, allowLeadershipRoles])
+
 
   useEffect(() => {
     if (!projectId) return
@@ -109,9 +145,19 @@ export default function InviteUserForm({
         setProjectName(proj.project_name || '')
         setProjectCode(proj.project_code?.trim() || '')
         setAccountId(proj.account_id || null)
+
+        // Try embedded join first; fall back to a direct accounts query if PostgREST join returns nothing
+        let org = ''
         const acc = proj.accounts
-        const org =
-          (acc && (acc.account_display_name || acc.account_name || acc.company_name)) || ''
+        org = (acc && (acc.account_display_name || acc.account_name || acc.company_name)) || ''
+        if (!org && proj.account_id) {
+          const { data: accRow } = await platformDb
+            .from('accounts')
+            .select('account_display_name, account_name, company_name')
+            .eq('id', proj.account_id)
+            .maybeSingle()
+          org = (accRow && (accRow.account_display_name || accRow.account_name || accRow.company_name)) || ''
+        }
         setOrganisationName(org)
       } catch (e) {
         console.error('InviteUserForm project context', e)
@@ -153,14 +199,37 @@ export default function InviteUserForm({
     let cancelled = false
     ;(async () => {
       try {
-        const { data: { user } } = await platformDb.auth.getUser()
-        if (!user?.id || cancelled) return
-        const { data: urow } = await platformDb
-          .from('users')
-          .select('full_name')
-          .eq('auth_user_id', user.id)
-          .maybeSingle()
-        if (!cancelled) setInviterName(urow?.full_name || user.email || '')
+        const { data: { session } } = await platformDb.auth.getSession()
+        const authId = session?.user?.id
+        if (!authId || cancelled) return
+        setAuthUserId(authId)
+
+        // Use SECURITY DEFINER RPC — links auth_user_id and returns profile, bypassing RLS
+        const { data: rows, error: rpcErr } = await platformDb.rpc('get_my_display_name')
+        if (rpcErr) console.warn('[InviteUserForm] get_my_display_name:', rpcErr.message)
+
+        const rawRow = Array.isArray(rows) && rows.length > 0 ? rows[0] : null
+        // Normalise: RPC returns user_id, components expect id
+        const urow = rawRow ? { ...rawRow, id: rawRow.user_id } : null
+
+        if (cancelled) return
+
+        if (urow?.id) {
+          inviterUserIdRef.current = urow.id
+          try {
+            sessionStorage.setItem(`${INTERNAL_USER_CACHE_PREFIX}:${authId}`, urow.id)
+          } catch {
+            /* ignore */
+          }
+          setInviterInternalUserId(urow.id)
+          setReportingCandidates([{ id: urow.id, full_name: urow.full_name, email: urow.email }])
+        }
+
+        const meta = session?.user?.user_metadata || {}
+        const resolvedName = resolveInviterDisplayNameFromUser(urow || {}, session?.user?.email || '', meta) || 'Your project contact'
+        setInviterName(resolvedName)
+        setInviterJobTitle(urow?.job_title || '')
+        setInviterName(resolvedName)
       } catch (e) {
         console.error('InviteUserForm inviter', e)
       }
@@ -169,6 +238,23 @@ export default function InviteUserForm({
       cancelled = true
     }
   }, [projectId])
+
+  useEffect(() => {
+    if (!roleId || pmoMode !== MODE_INVITE) {
+      prefetchedInvitationRoleIdRef.current = null
+      return
+    }
+    let cancelled = false
+    prefetchedInvitationRoleIdRef.current = null
+    resolveInvitationRoleIdForInsert(roleId).then((res) => {
+      if (!cancelled && res.success && res.invitationRoleId) {
+        prefetchedInvitationRoleIdRef.current = res.invitationRoleId
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [roleId, pmoMode])
 
   const loadRoles = async () => {
     try {
@@ -211,6 +297,8 @@ export default function InviteUserForm({
       organisationName,
       invitationExpiryDays,
       projectContext,
+      inviteeFirstName,
+      inviteeLastName,
     }
 
     if (!tmpl?.message_body) {
@@ -218,25 +306,33 @@ export default function InviteUserForm({
       return
     }
 
-    const resolved = resolveInvitationTemplatePlaceholders(tmpl.message_body, ctx)
+    const resolvedBase = resolveInvitationTemplatePlaceholders(tmpl.message_body, ctx)
+    const personalized = personalizeInvitationMessage(resolvedBase, {
+      inviteeFirstName,
+      inviteeLastName,
+    }).trim()
+    const baseTrim = resolvedBase.trim()
     const cur = messageRef.current.trim()
     const last = (lastAutoFilledRef.current || '').trim()
 
     if (!roleChanged) {
-      if (cur === '' && lastAutoFilledRef.current === null) {
-        setMessage(resolved)
-        lastAutoFilledRef.current = resolved
+      if (last && (cur === last || cur === baseTrim)) {
+        setMessage(personalized)
+        lastAutoFilledRef.current = personalized
+      } else if (cur === '' && lastAutoFilledRef.current === null) {
+        setMessage(personalized)
+        lastAutoFilledRef.current = personalized
       }
       return
     }
 
-    if (cur === '' || cur === last) {
-      setMessage(resolved)
-      lastAutoFilledRef.current = resolved
+    if (cur === '' || cur === last || cur === baseTrim) {
+      setMessage(personalized)
+      lastAutoFilledRef.current = personalized
       setShowRestorePrompt(false)
       setPendingResolvedMessage('')
     } else {
-      setPendingResolvedMessage(resolved)
+      setPendingResolvedMessage(personalized)
       setShowRestorePrompt(true)
     }
   }, [
@@ -249,6 +345,8 @@ export default function InviteUserForm({
     organisationName,
     invitationExpiryDays,
     projectContext,
+    inviteeFirstName,
+    inviteeLastName,
     getTemplateForRole,
   ])
 
@@ -275,30 +373,132 @@ export default function InviteUserForm({
       return
     }
 
+    const useDirect = allowLeadershipRoles && pmoMode === MODE_DIRECT
+
+    let messageToSend = message || null
+    let firstTrim = ''
+    let lastTrim = ''
+    if (!useDirect) {
+      firstTrim = inviteeFirstName.trim()
+      lastTrim = inviteeLastName.trim()
+      if (!firstTrim || !lastTrim) {
+        setError('Please enter the invitee first name and surname')
+        return
+      }
+      messageToSend = personalizeInvitationMessage(message || null, {
+        inviteeFirstName: firstTrim,
+        inviteeLastName: lastTrim,
+      })
+    }
+
     setLoading(true)
+    // Ensure auth_user_id is linked before the invitation RPC permission check
+    try { await platformDb.rpc('link_auth_account') } catch { /* ignore */ }
+    const failsafe = setTimeout(() => {
+      setLoading(false)
+      setError((prev) =>
+        prev ||
+          'Invitation timed out. Run SQL/v597_invite_rpc_pm_permissions_and_names.sql in Supabase, then hard-refresh and retry.',
+      )
+    }, INVITE_UI_FAILSAFE_MS)
     try {
-      const useDirect = allowLeadershipRoles && pmoMode === MODE_DIRECT
       const result = useDirect
         ? await pmoAddExistingUserToProject(projectId, email, roleId)
-        : await inviteUserToProject(projectId, {
-            email,
-            roleId,
-            message: message || null,
-            expiryDays: clampInvitationExpiryDays(invitationExpiryDays),
-          })
+        : await inviteUserToProject(
+            projectId,
+            {
+              email,
+              roleId,
+              message: messageToSend || null,
+              expiryDays: clampInvitationExpiryDays(invitationExpiryDays),
+              inviteeFirstName: firstTrim,
+              inviteeLastName: lastTrim,
+            },
+            {
+              skipSeatCheck: true,
+              invitationRoleId: prefetchedInvitationRoleIdRef.current || undefined,
+              inviterUserId: inviterUserIdRef.current || undefined,
+              isPmoAdmin: callerIsPmoAdmin,
+            },
+          )
 
       if (result.success) {
+        const role = roles.find((r) => r.id === roleId)
+        if (
+          !useDirect &&
+          role &&
+          isTeamMemberAppointmentRole(role.role_name) &&
+          result.data?.id
+        ) {
+          const { data: inviteeUser } = await platformDb
+            .from('users')
+            .select('id')
+            .ilike('email', email.trim())
+            .maybeSingle()
+          if (inviteeUser?.id) {
+            void createTeamMemberAppointment({
+              projectId,
+              appointeeUserId: inviteeUser.id,
+              roleId,
+              memberRoleName: role.role_name,
+              invitationId: result.data.id,
+              roleTitle: teamAppointmentTerms.roleTitle,
+              reportingToUserId: teamAppointmentTerms.reportingToUserId || inviterUserIdRef.current,
+              assignmentStartDate: teamAppointmentTerms.assignmentStartDate || null,
+              assignmentEndDate: teamAppointmentTerms.assignmentEndDate || null,
+              timeCommitmentPct: teamAppointmentTerms.timeCommitmentPct,
+              primaryResponsibilities: teamAppointmentTerms.primaryResponsibilities,
+              requiredSkills: teamAppointmentTerms.requiredSkills,
+              workingArrangement: teamAppointmentTerms.workingArrangement,
+              workLocation: teamAppointmentTerms.workLocation,
+              appointmentMessage: teamAppointmentTerms.appointmentMessage || messageToSend,
+            }).catch((e) => console.warn('[invite] team appt creation failed:', e?.message))
+          }
+        }
+        if (
+          !useDirect &&
+          role &&
+          isManagerAppointmentRole(role.role_name) &&
+          result.data?.id
+        ) {
+          const { data: inviteeUser } = await platformDb
+            .from('users')
+            .select('id')
+            .ilike('email', email.trim())
+            .maybeSingle()
+          if (inviteeUser?.id) {
+            void createManagerAppointment({
+              entityType: 'project',
+              projectId,
+              appointeeUserId: inviteeUser.id,
+              managerRoleName: role.role_name,
+              invitationId: result.data.id,
+              reportingToUserId: managerAppointmentTerms.reportingToUserId || inviterUserIdRef.current,
+              assignmentStartDate: managerAppointmentTerms.assignmentStartDate || null,
+              assignmentEndDate: managerAppointmentTerms.assignmentEndDate || null,
+              timeCommitmentPct: managerAppointmentTerms.timeCommitmentPct,
+              budgetAuthorityLimit: managerAppointmentTerms.budgetAuthorityLimit,
+              authorityNotes: managerAppointmentTerms.authorityNotes,
+              reportingFrequency: managerAppointmentTerms.reportingFrequency,
+              knownConstraints: managerAppointmentTerms.knownConstraints,
+              referenceDocument: managerAppointmentTerms.referenceDocument,
+              appointmentMessage: managerAppointmentTerms.appointmentMessage || messageToSend,
+            }).catch((e) => console.warn('[invite] manager appt creation failed:', e?.message))
+          }
+        }
         if (!useDirect && result.data?.invitation_token) {
-          const role = roles.find((r) => r.id === roleId)
           void dispatchProjectInvitationEmail(email, {
             projectId,
             projectCode,
             projectName,
             roleName: role?.role_display_name || role?.role_name || 'team member',
             inviterName,
+            inviterJobTitle,
             organisationName,
-            message: message || null,
+            message: messageToSend || null,
             expiryDays: clampInvitationExpiryDays(invitationExpiryDays),
+            inviteeFirstName: firstTrim || null,
+            inviteeLastName: lastTrim || null,
             invitationToken: result.data.invitation_token,
             projectContext,
           }).catch((err) => {
@@ -318,6 +518,7 @@ export default function InviteUserForm({
       console.error('Error submitting member form:', err)
       setError(err.message || 'Request failed')
     } finally {
+      clearTimeout(failsafe)
       setLoading(false)
     }
   }
@@ -327,14 +528,19 @@ export default function InviteUserForm({
   const selectedRole = roles.find((r) => r.id === roleId)
   const selectedTemplate = selectedRole ? getTemplateForRole(selectedRole.role_name) : null
   const resolvedDefault = selectedTemplate?.message_body
-    ? resolveInvitationTemplatePlaceholders(selectedTemplate.message_body, {
-        projectName,
-        roleDisplayName: selectedRole?.role_display_name || selectedRole?.role_name,
-        inviterName,
-        organisationName,
-        invitationExpiryDays,
-        projectContext,
-      }).trim()
+    ? personalizeInvitationMessage(
+        resolveInvitationTemplatePlaceholders(selectedTemplate.message_body, {
+          projectName,
+          roleDisplayName: selectedRole?.role_display_name || selectedRole?.role_name,
+          inviterName,
+          organisationName,
+          invitationExpiryDays,
+          projectContext,
+          inviteeFirstName,
+          inviteeLastName,
+        }),
+        { inviteeFirstName, inviteeLastName },
+      ).trim()
     : ''
   const usingDefault =
     pmoMode === MODE_INVITE &&
@@ -351,8 +557,14 @@ export default function InviteUserForm({
       organisationName,
       invitationExpiryDays,
       projectContext,
+      inviteeFirstName,
+      inviteeLastName,
     }
-    const resolved = resolveInvitationTemplatePlaceholders(selectedTemplate.message_body, ctx)
+    const resolvedBase = resolveInvitationTemplatePlaceholders(selectedTemplate.message_body, ctx)
+    const resolved = personalizeInvitationMessage(resolvedBase, {
+      inviteeFirstName,
+      inviteeLastName,
+    }).trim()
     setMessage(resolved)
     lastAutoFilledRef.current = resolved
     setShowRestorePrompt(false)
@@ -509,6 +721,42 @@ export default function InviteUserForm({
           </div>
         )}
 
+        {pmoMode === MODE_INVITE && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Invitee first name *
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  required
+                  value={inviteeFirstName}
+                  onChange={(e) => setInviteeFirstName(e.target.value)}
+                  className="pl-10 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                  placeholder="First name"
+                  autoComplete="given-name"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Invitee surname *
+              </label>
+              <input
+                type="text"
+                required
+                value={inviteeLastName}
+                onChange={(e) => setInviteeLastName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                placeholder="Surname"
+                autoComplete="family-name"
+              />
+            </div>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Email address *
@@ -550,6 +798,26 @@ export default function InviteUserForm({
             </select>
           </div>
         </div>
+
+        {selectedRole && isTeamMemberAppointmentRole(selectedRole.role_name) && pmoMode === MODE_INVITE ? (
+          <TeamMemberAppointmentForm
+            value={teamAppointmentTerms}
+            onChange={setTeamAppointmentTerms}
+            eligibleUsers={reportingCandidates}
+            storageKey={`nidus-team-appt-invite-${projectId}`}
+            defaultReportingToUserId={inviterInternalUserId}
+          />
+        ) : null}
+
+        {selectedRole && isManagerAppointmentRole(selectedRole.role_name) && pmoMode === MODE_INVITE ? (
+          <ManagerAppointmentForm
+            value={managerAppointmentTerms}
+            onChange={setManagerAppointmentTerms}
+            eligibleUsers={reportingCandidates}
+            storageKey={`nidus-mgr-appt-invite-${projectId}`}
+            defaultReportingToUserId={inviterInternalUserId}
+          />
+        ) : null}
 
         {pmoMode === MODE_INVITE && (
           <div>
@@ -615,7 +883,8 @@ export default function InviteUserForm({
             disabled={
               loading ||
               checkingSeats ||
-              (pmoMode === MODE_INVITE && isAtLimit)
+              (pmoMode === MODE_INVITE &&
+                (isAtLimit || !inviteeFirstName.trim() || !inviteeLastName.trim()))
             }
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
           >

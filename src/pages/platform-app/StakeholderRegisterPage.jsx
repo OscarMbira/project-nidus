@@ -11,6 +11,8 @@ import { getStakeholders } from '../../services/stakeholderService'
 import StakeholderRegister from '../../components/stakeholders/StakeholderRegister'
 import StakeholderImportModal from '../../components/stakeholders/StakeholderImportModal'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import ViewToggle from '../../components/ui/ViewToggle'
+import { useViewMode } from '../../hooks/useViewMode'
 import { platformDb } from '../../services/supabase/supabaseClient'
 
 const EXPORT_COLUMNS = [
@@ -35,6 +37,7 @@ export default function StakeholderRegisterPage() {
   const [loadError, setLoadError] = useState(null)
   const [toast, setToast] = useState(null)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [viewMode, setViewMode] = useViewMode('platform-stakeholder-register', 'grid')
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -181,14 +184,14 @@ export default function StakeholderRegisterPage() {
         </div>
       )}
 
-      <div className="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl">
-        <div>
+      <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
+        <div className="flex-1 min-w-[200px] max-w-md">
           <label htmlFor="stakeholder-register-project" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
           <select
             id="stakeholder-register-project"
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[44px]"
           >
             <option value="">Select project</option>
             {projects.map(p => (
@@ -196,9 +199,9 @@ export default function StakeholderRegisterPage() {
             ))}
           </select>
         </div>
-        <div>
+        <div className="flex-1 min-w-[200px] max-w-md">
           <label htmlFor="stakeholder-register-search" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search register</label>
-          <div className="relative max-w-md">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" aria-hidden />
             <input
               id="stakeholder-register-search"
@@ -207,10 +210,18 @@ export default function StakeholderRegisterPage() {
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Name, reference, or organization…"
               autoComplete="off"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
               aria-label="Search stakeholders by name, reference, or organization"
             />
           </div>
+        </div>
+        <div className="flex items-center gap-2 lg:ml-auto shrink-0 pb-0.5">
+          <span className="text-sm text-gray-500 dark:text-gray-400">View</span>
+          <ViewToggle
+            value={viewMode}
+            onChange={setViewMode}
+            ariaLabel="Stakeholder register layout"
+          />
         </div>
       </div>
 
@@ -234,6 +245,7 @@ export default function StakeholderRegisterPage() {
           <StakeholderRegister
             stakeholders={stakeholders}
             loadError={loadError}
+            viewMode={viewMode}
             onEdit={(s) => navigate(`/platform/stakeholders/register/edit/${s.id}`, { state: { projectId: projectId || s.project_id } })}
             onView={(s) => navigate(`/platform/stakeholders/register/view/${s.id}`)}
             onRefresh={projectId ? loadStakeholders : loadFirst50Stakeholders}

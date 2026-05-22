@@ -148,6 +148,8 @@ export default function EmailConfirmation() {
             p_auth_user_id: session.user.id,
             p_email: session.user.email || '',
             p_full_name: session.user.user_metadata?.full_name || null,
+            p_first_name: session.user.user_metadata?.first_name || null,
+            p_last_name: session.user.user_metadata?.last_name || null,
             p_is_verified: true
           })
 
@@ -304,6 +306,8 @@ export default function EmailConfirmation() {
             p_auth_user_id: verifyData.user.id,
             p_email: verifyData.user.email || emailParam || '',
             p_full_name: verifyData.user.user_metadata?.full_name || null,
+            p_first_name: verifyData.user.user_metadata?.first_name || null,
+            p_last_name: verifyData.user.user_metadata?.last_name || null,
             p_is_verified: true
           })
 
@@ -466,6 +470,8 @@ export default function EmailConfirmation() {
           p_auth_user_id: user.id,
           p_email: user.email || '',
           p_full_name: user.user_metadata?.full_name || null,
+          p_first_name: user.user_metadata?.first_name || null,
+          p_last_name: user.user_metadata?.last_name || null,
           p_is_verified: true
         })
 

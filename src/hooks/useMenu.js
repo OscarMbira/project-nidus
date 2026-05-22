@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { platformDb } from '../services/supabaseClient'
 
 const MENU_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v6_'
+const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v17_'
 const LEGACY_MENU_CACHE_KEY_PREFIX = 'nidus_menu_'
 
 function getCacheKey(userId) {
@@ -12,6 +12,10 @@ function getCacheKey(userId) {
 function getCacheKeys(userId) {
   return [
     `${MENU_CACHE_KEY_PREFIX}${userId}`,
+    `nidus_menu_v16_${userId}`,
+    `nidus_menu_v15_${userId}`,
+    `nidus_menu_v14_${userId}`,
+    `nidus_menu_v13_${userId}`,
     `nidus_menu_v5_${userId}`,
     `nidus_menu_v4_${userId}`,
     `nidus_menu_v3_${userId}`,
@@ -175,6 +179,320 @@ function ensureIndustryPlanMenusForPm(menuItems = []) {
   return clone
 }
 
+/** Merge legacy split invite links into Send Role Invitation (v596). */
+function ensurePmSendRoleInvitationMenu(menuItems = []) {
+  const roots = Array.isArray(menuItems) ? menuItems : []
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  const legacyCodes = new Set([
+    'pm_invite_team_manager',
+    'pm_invite_team_member',
+    'pm_invite_project_member',
+  ])
+
+  const stripLegacy = (nodes) =>
+    (nodes || [])
+      .filter((n) => !legacyCodes.has(norm(n.menu_code)))
+      .map((n) => ({ ...n, children: stripLegacy(n.children) }))
+
+  const hasSendRole = (nodes) => {
+    for (const n of nodes) {
+      if (norm(n.menu_code) === 'pm_send_role_invitation') return true
+      if (/action=send-invite/.test(String(n.route_path || ''))) return true
+      if (n.children?.length && hasSendRole(n.children)) return true
+    }
+    return false
+  }
+
+  const cleaned = stripLegacy(roots)
+  if (hasSendRole(cleaned)) return cleaned
+
+  const sendItem = {
+    id: 'virtual-pm-send-role-invitation',
+    menu_code: 'pm_send_role_invitation',
+    menu_label: 'Send Role Invitation',
+    menu_description: 'Invite one user (choose role) or upload a bulk invite file',
+    parent_menu_id: null,
+    menu_level: 2,
+    sort_order: 20,
+    route_path: '/app/project-members?action=send-invite',
+    external_url: null,
+    menu_icon: 'mail',
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: [],
+  }
+
+  const attachToTeamMembers = (nodes) => {
+    for (const n of nodes) {
+      if (
+        norm(n.menu_code) === 'pm_team_members_section' ||
+        norm(n.menu_label) === 'team & members'
+      ) {
+        const children = stripLegacy(n.children || [])
+        if (!children.some((c) => norm(c.menu_code) === 'pm_send_role_invitation')) {
+          children.push(sendItem)
+        }
+        n.children = children.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+        return true
+      }
+      if (n.children?.length && attachToTeamMembers(n.children)) return true
+    }
+    return false
+  }
+
+  const clone = cleaned.map((n) => ({ ...n, children: [...(n.children || [])] }))
+  attachToTeamMembers(clone)
+  return clone
+}
+
+/** Inject Invitation Status under Team & Members when DB seed (v595) was not applied. */
+function ensurePmInvitationTrackerMenu(menuItems = []) {
+  const roots = Array.isArray(menuItems) ? menuItems : []
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  const hasTracker = (nodes) => {
+    for (const n of nodes) {
+      if (norm(n.menu_code) === 'pm_invitation_tracker') return true
+      if (/\/app\/invitation-tracker\b/.test(String(n.route_path || ''))) return true
+      if (n.children?.length && hasTracker(n.children)) return true
+    }
+    return false
+  }
+  if (hasTracker(roots)) return roots
+
+  const trackerItem = {
+    id: 'virtual-pm-invitation-tracker',
+    menu_code: 'pm_invitation_tracker',
+    menu_label: 'Invitation Status',
+    menu_description: 'Track all project invitations you have sent',
+    parent_menu_id: null,
+    menu_level: 2,
+    sort_order: 35,
+    route_path: '/app/invitation-tracker',
+    external_url: null,
+    menu_icon: 'mail-check',
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: [],
+  }
+
+  const attachToTeamMembers = (nodes) => {
+    for (const n of nodes) {
+      if (
+        norm(n.menu_code) === 'pm_team_members_section' ||
+        norm(n.menu_label) === 'team & members'
+      ) {
+        const children = [...(n.children || [])]
+        if (!children.some((c) => norm(c.menu_code) === 'pm_invitation_tracker')) {
+          children.push(trackerItem)
+        }
+        n.children = children.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+        return true
+      }
+      if (n.children?.length && attachToTeamMembers(n.children)) return true
+    }
+    return false
+  }
+
+  const clone = roots.map((n) => ({ ...n, children: [...(n.children || [])] }))
+  if (!attachToTeamMembers(clone)) {
+    clone.push({
+      ...trackerItem,
+      menu_level: 1,
+      sort_order: 51,
+      children: [],
+    })
+  }
+  return clone
+}
+
+/** Detect team-member context: no PMO, no PM signals, menu codes are all tm_ prefixed */
+function isTeamMemberContext(baseline = []) {
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  const hasTeamMemberCode = baseline.some(n => norm(n.menu_code).startsWith('tm_'))
+  const hasPMSignal = baseline.some(n => {
+    const s = `${norm(n.menu_code)} ${norm(n.route_path)}`
+    return s.includes('action=send-invite') || s.includes('/pm/planning') || s.includes('pm_planning')
+  })
+  return hasTeamMemberCode || (!hasPMSignal && baseline.some(n => {
+    const s = norm(n.menu_label)
+    return s === 'my work' || s === 'timesheets' || s === 'communications'
+  }))
+}
+
+/** Detect team lead/manager: has workstream plans or charter edit access */
+function isTeamLeadContext(baseline = []) {
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  return baseline.some(n => {
+    const code = norm(n.menu_code)
+    const route = norm(n.route_path || '')
+    return (
+      code === 'tm_team_workstream_plans' ||
+      code === 'tm_team_charter_edit' ||
+      code === 'tm_team_timesheets' ||
+      route.includes('/platform/plans/team-workstreams') ||
+      route.includes('/team-charter/edit') ||
+      route.includes('/timesheets/team')
+    )
+  })
+}
+
+function makeVirtual(id, code, label, description, route, icon, canUse = true, sortOrder = 0, parentId = null) {
+  return {
+    id,
+    menu_code: code,
+    menu_label: label,
+    menu_description: description,
+    parent_menu_id: parentId,
+    menu_level: parentId ? 2 : 1,
+    sort_order: sortOrder,
+    route_path: route,
+    external_url: null,
+    menu_icon: icon,
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse,
+    children: [],
+  }
+}
+
+/** Build the full team-member virtual sidebar when DB seed hasn't been applied yet */
+function ensureTeamMemberMenus(menuItems = [], isLead = false) {
+  const norm = (v) => String(v || '').trim().toLowerCase()
+
+  const hasTmSection = (nodes) =>
+    nodes.some(n => norm(n.menu_code).startsWith('tm_section_'))
+
+  if (hasTmSection(menuItems)) return menuItems
+
+  const section = (id, code, label, icon, sort, route = null) =>
+    makeVirtual(id, code, label, label, route, icon, true, sort)
+
+  const leaf = (id, code, label, route, icon, sort, parentId, canUse = true) =>
+    makeVirtual(id, code, label, label, route, icon, canUse, sort, parentId)
+
+  const sectionDashboard    = section('vtm-s-dash',    'tm_section_dashboard',      'Dashboard',             'layout-dashboard',  10, '/platform/dashboard')
+  const sectionMyWork       = section('vtm-s-mw',      'tm_section_my_work',        'My Work',               'user-check',        20)
+  const sectionMyProjects   = section('vtm-s-mp',      'tm_section_my_projects',    'My Projects',           'folder-kanban',     30)
+  const sectionPlans        = section('vtm-s-pl',      'tm_section_plans',          'Plans',                 'git-branch',        40)
+  const sectionControls     = section('vtm-s-cr',      'tm_section_controls',       'Controls & Registers',  'list-checks',       50)
+  const sectionForms        = section('vtm-s-fm',      'tm_section_forms',          'Process Group Forms',   'file-text',         60)
+  const sectionCharter      = section('vtm-s-ch',      'tm_section_team_charter',   'Team Charter',          'shield-check',      70)
+  const sectionComms        = section('vtm-s-co',      'tm_section_communications', 'Communications',        'message-square',    80)
+  const sectionTeam         = section('vtm-s-tm',      'tm_section_team',           'Team & Collaboration',  'users',             90)
+  const sectionStakeholders = section('vtm-s-sh',      'tm_section_stakeholders',   'Stakeholders',          'network',           100)
+  const sectionReporting    = section('vtm-s-rp',      'tm_section_reporting',      'Reporting & Status',    'bar-chart-2',       110)
+  const sectionTimesheets   = section('vtm-s-ts',      'tm_section_timesheets',     'Timesheets',            'clock',             120)
+  const sectionKnowledge    = section('vtm-s-kn',      'tm_section_knowledge',      'Knowledge & Resources', 'book-open',         130)
+  const sectionAppointment  = section('vtm-s-ap',      'tm_section_appointment',    'Appointment Status',    'mail-check',        140, '/app/invitation-tracker')
+  const sectionSettings     = section('vtm-s-st',      'tm_section_settings',       'Profile / Settings',    'settings',          150, '/platform/settings')
+
+  sectionMyWork.children = [
+    leaf('vtm-tasks',     'tm_my_tasks',       'My Tasks',           '/platform/tasks',             'check-square', 10, 'vtm-s-mw'),
+    leaf('vtm-board',     'tm_task_board',     'Task Board',         '/platform/tasks/board',       'layout',       20, 'vtm-s-mw'),
+    leaf('vtm-cal',       'tm_task_calendar',  'Task Calendar',      '/platform/tasks/calendar',    'calendar',     30, 'vtm-s-mw', false),
+    leaf('vtm-dlog',      'tm_daily_log',      'Daily Log',          '/app/daily-log/my-entries',   'notebook-pen', 40, 'vtm-s-mw'),
+    leaf('vtm-lesson',    'tm_lesson_actions', 'My Lesson Actions',  '/app/lessons/my-actions',     'lightbulb',    50, 'vtm-s-mw'),
+    leaf('vtm-issue',     'tm_issue_actions',  'My Issue Actions',   '/app/issues/my-actions',      'alert-triangle', 60, 'vtm-s-mw'),
+  ]
+
+  sectionMyProjects.children = [
+    leaf('vtm-proj',    'tm_projects_list',   'My Projects',      '/platform/projects',   'folder',      10, 'vtm-s-mp', false),
+    leaf('vtm-members', 'tm_proj_members',    'Project Members',  '/app/project-members', 'users',       20, 'vtm-s-mp', false),
+  ]
+
+  sectionPlans.children = [
+    leaf('vtm-myplans', 'tm_my_plans',       'My Plans',        '/platform/plans/my-plans',   'user-square', 10, 'vtm-s-pl'),
+    ...(isLead ? [leaf('vtm-twp', 'tm_team_workstream_plans', 'Team Workstream Plans', '/platform/plans/team-workstreams', 'network', 20, 'vtm-s-pl')] : []),
+    leaf('vtm-planov',  'tm_plans_overview', 'Plans Overview',  '/platform/projects/__PROJECT__/plans', 'layout-grid', 30, 'vtm-s-pl', false),
+    leaf('vtm-projplan','tm_project_plan',   'Project Plan',    '/platform/projects/__PROJECT__/plans/project-plan', 'git-branch', 40, 'vtm-s-pl', false),
+    leaf('vtm-stage',   'tm_stage_plans',    'Stage Plans',     '/platform/projects/__PROJECT__/plans/stage-plan', 'milestone', 50, 'vtm-s-pl', false),
+  ]
+
+  sectionControls.children = [
+    leaf('vtm-risk',    'tm_risk_register',   'Risk Register',    '/pmo/oversight/risk-register',              'shield-alert',    10, 'vtm-s-cr'),
+    leaf('vtm-issues',  'tm_issue_log',       'Issue Log',        '/pmo/oversight/issue-register',             'alert-circle',    20, 'vtm-s-cr'),
+    leaf('vtm-change',  'tm_change_log',      'Change Log',       '/platform/projects/:id/registers/changes',  'git-pull-request',30, 'vtm-s-cr'),
+    leaf('vtm-delay',   'tm_delay_log',       'Delay Log',        '/platform/delays',                          'clock-4',         40, 'vtm-s-cr'),
+    leaf('vtm-defect',  'tm_defect_register', 'Defect Register',  '/platform/testing/defects',                 'bug',             50, 'vtm-s-cr'),
+    leaf('vtm-decision','tm_decision_log',    'Decision Log',     '/platform/governance/decisions',            'gavel',           60, 'vtm-s-cr'),
+  ]
+
+  sectionForms.children = [
+    leaf('vtm-finit',  'tm_form_initiating', 'Initiating',           '/platform/projects/:projectId/forms?group=Initiating', 'play-circle',  10, 'vtm-s-fm', false),
+    leaf('vtm-fplan',  'tm_form_planning',   'Planning',             '/platform/projects/:projectId/forms?group=Planning',   'map',          20, 'vtm-s-fm', false),
+    leaf('vtm-fexec',  'tm_form_executing',  'Executing',            '/platform/projects/:projectId/forms?group=Executing',  'zap',          30, 'vtm-s-fm', false),
+    leaf('vtm-fmon',   'tm_form_monitoring', 'Monitoring & Control', '/platform/projects/:projectId/forms?group=Monitoring', 'activity',     40, 'vtm-s-fm', false),
+    leaf('vtm-fclose', 'tm_form_closing',    'Closing',              '/platform/projects/:projectId/forms?group=Closing',    'check-circle', 50, 'vtm-s-fm', false),
+    leaf('vtm-fdraft', 'tm_draft_forms',     'My Draft Forms',       '/platform/projects/:projectId/forms/drafts',           'file-clock',   60, 'vtm-s-fm'),
+  ]
+
+  sectionCharter.children = [
+    leaf('vtm-charter-view', 'tm_team_charter_view', 'Team Charter', '/platform/projects/__PROJECT__/team-charter', 'shield-check', 10, 'vtm-s-ch', false),
+    ...(isLead ? [leaf('vtm-charter-edit', 'tm_team_charter_edit', 'Edit Team Charter', '/platform/projects/__PROJECT__/team-charter/edit', 'file-edit', 20, 'vtm-s-ch')] : []),
+  ]
+
+  sectionComms.children = [
+    leaf('vtm-chat',  'tm_team_chat',   'Team Chat',   '/platform/communications/chat',        'message-circle', 10, 'vtm-s-co'),
+    leaf('vtm-video', 'tm_video_calls', 'Video Calls', '/platform/communications/video-calls', 'video',          20, 'vtm-s-co'),
+    leaf('vtm-voice', 'tm_voice_calls', 'Voice Calls', '/platform/communications/voice-calls', 'phone',          30, 'vtm-s-co'),
+  ]
+
+  sectionTeam.children = [
+    leaf('vtm-myteam', 'tm_my_team',        'My Team',       '/platform/teams/my-team', 'users',       10, 'vtm-s-tm', false),
+    leaf('vtm-teamdir','tm_team_directory', 'Team Directory', '/platform/teams',         'address-book',20, 'vtm-s-tm', false),
+  ]
+
+  sectionStakeholders.children = [
+    leaf('vtm-sreg', 'tm_stakeholder_register', 'Stakeholder Register', '/platform/stakeholders/register', 'network',   10, 'vtm-s-sh', false),
+    leaf('vtm-sana', 'tm_stakeholder_analysis', 'Stakeholder Analysis', '/platform/stakeholders/analysis', 'pie-chart', 20, 'vtm-s-sh', false),
+  ]
+
+  sectionReporting.children = [
+    leaf('vtm-highlight',   'tm_highlight_reports',  'Highlight Reports',   '/pm/reporting/highlight-reports',  'bar-chart-2',  10, 'vtm-s-rp', false),
+    leaf('vtm-checkpoint',  'tm_checkpoint_reports', 'Checkpoint Reports',  '/pm/reporting/checkpoint-reports', 'check-square', 20, 'vtm-s-rp', false),
+    leaf('vtm-replib',      'tm_reports_library',    'Reports Library',     '/platform/reports',                'library',      30, 'vtm-s-rp', false),
+  ]
+
+  sectionTimesheets.children = [
+    leaf('vtm-mytime', 'tm_my_timesheets',   'My Timesheets',   '/platform/timesheets',      'clock',       10, 'vtm-s-ts'),
+    leaf('vtm-logtime','tm_log_time',        'Log Time',         '/platform/timesheets/new',  'plus-circle', 20, 'vtm-s-ts'),
+    ...(isLead ? [leaf('vtm-teamtime', 'tm_team_timesheets', 'Team Timesheets', '/platform/timesheets/team', 'users-round', 30, 'vtm-s-ts')] : []),
+  ]
+
+  sectionKnowledge.children = [
+    leaf('vtm-indtemp', 'tm_industry_templates', 'Industry Templates', '/platform/industry-templates', 'layers', 10, 'vtm-s-kn', false),
+  ]
+
+  return [
+    sectionDashboard,
+    sectionMyWork,
+    sectionMyProjects,
+    sectionPlans,
+    sectionControls,
+    sectionForms,
+    sectionCharter,
+    sectionComms,
+    sectionTeam,
+    sectionStakeholders,
+    sectionReporting,
+    sectionTimesheets,
+    sectionKnowledge,
+    sectionAppointment,
+    sectionSettings,
+  ]
+}
+
 function applyRoleSidebarRevamp(menuItems = []) {
   const roots = Array.isArray(menuItems) ? menuItems : []
   const norm = (value) => String(value || '').trim().toLowerCase()
@@ -231,7 +549,16 @@ function applyRoleSidebarRevamp(menuItems = []) {
     )
   })
 
-  if (!hasPMOContext) return ensureIndustryPlanMenusForPm(baseline)
+  if (!hasPMOContext) {
+    const isTM = isTeamMemberContext(baseline)
+    if (isTM) {
+      const isLead = isTeamLeadContext(baseline)
+      return ensureTeamMemberMenus(baseline, isLead)
+    }
+    return ensurePmInvitationTrackerMenu(
+      ensurePmSendRoleInvitationMenu(ensureIndustryPlanMenusForPm(baseline)),
+    )
+  }
 
   const pmOnlyLabels = new Set([
     'delivery management',
@@ -401,6 +728,11 @@ function applyRoleSidebarRevamp(menuItems = []) {
    * fully unpacked in one pass.
    */
   const categoryHeaderLabels = new Set([
+    'delivery management',
+    'portfolio',
+    'programme',
+    'projects',
+    'project oversight',
     'delivery controls',
     'financial & commercial management',
     'risk, issues & quality',
@@ -408,6 +740,8 @@ function applyRoleSidebarRevamp(menuItems = []) {
     'reporting & intelligence',
     'workflows & approvals',
     'people & stakeholders',
+    'teams',
+    'stakeholders',
     'knowledge & assets',
     'audit trail & compliance',
     'pmo administration',
@@ -444,26 +778,32 @@ function applyRoleSidebarRevamp(menuItems = []) {
     flattenProjectsSectionRoots(flattenPortfolioProgrammeSectionRoots(pmoBase))
   )
 
+  /** Nested under "Delivery Management" (not top-level sidebar rows). */
+  const deliveryManagementSubDefs = [
+    { id: 'pmo-cat-portfolio', label: 'Portfolio', order: 1 },
+    { id: 'pmo-cat-programme', label: 'Programme', order: 2 },
+    { id: 'pmo-cat-projects', label: 'Projects', order: 3 },
+    { id: 'pmo-cat-project-oversight', label: 'Project Oversight', order: 4 },
+    { id: 'pmo-cat-delivery-controls', label: 'Delivery Controls', order: 5 },
+  ]
+
   const categoryDefs = [
     { id: 'pmo-cat-exec', label: 'Executive Overview', order: 1 },
-    { id: 'pmo-cat-portfolio', label: 'Portfolio', order: 2 },
-    { id: 'pmo-cat-programme', label: 'Programme', order: 3 },
-    { id: 'pmo-cat-projects', label: 'Projects', order: 4 },
-    { id: 'pmo-cat-project-oversight', label: 'Project Oversight', order: 5 },
-    { id: 'pmo-cat-delivery-controls', label: 'Delivery Controls', order: 6 },
-    { id: 'pmo-cat-financial-commercial', label: 'Financial & Commercial Management', order: 7 },
-    { id: 'pmo-cat-risk-issues-quality', label: 'Risk, Issues & Quality', order: 8 },
-    { id: 'pmo-cat-governance-standards', label: 'Governance & Standards', order: 9 },
-    { id: 'pmo-cat-reporting-intelligence', label: 'Reporting & Intelligence', order: 10 },
-    { id: 'pmo-cat-workflows-approvals', label: 'Workflows & Approvals', order: 11 },
-    { id: 'pmo-cat-people-stakeholders', label: 'People & Stakeholders', order: 12 },
-    { id: 'pmo-cat-knowledge-assets', label: 'Knowledge & Assets', order: 13 },
-    { id: 'pmo-cat-audit-compliance', label: 'Audit Trail & Compliance', order: 14 },
-    { id: 'pmo-cat-email-notifications', label: 'Email & Notifications', order: 15 },
-    { id: 'pmo-cat-admin', label: 'PMO Administration', order: 16 },
-    { id: 'pmo-cat-system-admin', label: 'System Administration', order: 17 },
-    { id: 'pmo-cat-help', label: 'Help', order: 18 },
-    { id: 'pmo-cat-support', label: 'Support', order: 19 },
+    { id: 'pmo-cat-delivery-management', label: 'Delivery Management', order: 2, isDeliveryManagementParent: true },
+    { id: 'pmo-cat-financial-commercial', label: 'Financial & Commercial Management', order: 3 },
+    { id: 'pmo-cat-risk-issues-quality', label: 'Risk, Issues & Quality', order: 4 },
+    { id: 'pmo-cat-governance-standards', label: 'Governance & Standards', order: 5 },
+    { id: 'pmo-cat-reporting-intelligence', label: 'Reporting & Intelligence', order: 6 },
+    { id: 'pmo-cat-workflows-approvals', label: 'Workflows & Approvals', order: 7 },
+    { id: 'pmo-cat-teams', label: 'Teams', order: 8 },
+    { id: 'pmo-cat-stakeholders', label: 'Stakeholders', order: 9 },
+    { id: 'pmo-cat-knowledge-assets', label: 'Knowledge & Assets', order: 10 },
+    { id: 'pmo-cat-audit-compliance', label: 'Audit Trail & Compliance', order: 11 },
+    { id: 'pmo-cat-email-notifications', label: 'Email & Notifications', order: 12 },
+    { id: 'pmo-cat-admin', label: 'PMO Administration', order: 13 },
+    { id: 'pmo-cat-system-admin', label: 'System Administration', order: 14 },
+    { id: 'pmo-cat-help', label: 'Help', order: 15 },
+    { id: 'pmo-cat-support', label: 'Support', order: 16 },
   ]
 
   const categoryFallbacks = {
@@ -478,7 +818,8 @@ function applyRoleSidebarRevamp(menuItems = []) {
     'pmo-cat-governance-standards': { label: 'Governance View', path: '/pmo/governance/mandate' },
     'pmo-cat-reporting-intelligence': { label: 'Reporting View', path: '/platform/reports' },
     'pmo-cat-workflows-approvals': { label: 'Pending Approvals', path: '/pmo/forms?status=in_review' },
-    'pmo-cat-people-stakeholders': { label: 'People & Resources', path: '/platform/pmo-admin/manager-assignments' },
+    'pmo-cat-teams': { label: 'Manager assignments', path: '/platform/pmo-admin/manager-assignments' },
+    'pmo-cat-stakeholders': { label: 'Stakeholder Register', path: '/platform/stakeholders/register' },
     'pmo-cat-knowledge-assets': { label: 'Org Knowledge Hub', path: '/platform/org-knowledge' },
     'pmo-cat-audit-compliance': { label: 'Compliance View', path: '/platform/reports' },
     'pmo-cat-email-notifications': { label: 'Email Settings', path: '/platform/admin/email-settings' },
@@ -534,14 +875,54 @@ function applyRoleSidebarRevamp(menuItems = []) {
     // Routes live under /platform/pmo-admin/ but belong with people — the generic `admin` rule below
     // matches the substring "admin" in "pmo-admin", so these must be detected first.
     if (
+      /send role invitation|send-role-invitation|pm_send_role_invitation|action=send-invite|send-role-invites/.test(
+        s
+      )
+    ) {
+      return 'pmo-cat-teams'
+    }
+    if (
+      /assign.roles.to.projects|assign-roles-to-projects|pmo_admin_assign_roles/.test(s)
+    ) {
+      return 'pmo-cat-teams'
+    }
+    if (
+      /invitation tracker|invitation-tracker|invitation status|pm_invitation_tracker|pmo_admin_invitation_tracker/.test(
+        s
+      )
+    ) {
+      return 'pmo-cat-teams'
+    }
+    if (
       /manager-assignments|manager-assignment-settings|pmo_assign_managers|pmo_assignment_settings|pmo_manager_assignments|\bassign managers\b/.test(
         s
       )
     ) {
-      return 'pmo-cat-people-stakeholders'
+      return 'pmo-cat-teams'
     }
-    // "\bteams?\b" catches "Teams" and "Team" section headers.
-    if (/resource|stakeholder|role|accountability|communications overview|team capacity|\bteams?\b|engagement|manager assignments?/.test(s)) return 'pmo-cat-people-stakeholders'
+    if (
+      /appointment.tracker|pmo-admin\/appointments|pmo_appointment_tracker/.test(s)
+    ) {
+      return 'pmo-cat-teams'
+    }
+    if (
+      /\/platform\/teams|\/teams\/|teams_all|teams_my|teams_directory|teams_workload|teams_my_team|resource directory|skill matrix|team directory|workload view|\bmy team\b|project-members|project-users|add users to project/.test(
+        s
+      )
+    ) {
+      return 'pmo-cat-teams'
+    }
+    if (/\bteams\b/.test(s) && !/stakeholder/.test(s)) return 'pmo-cat-teams'
+    if (
+      /stakeholder|\/platform\/stakeholders|assessment matrix|assessment-matrix|engagement planning|communication plans|power.interest|stakeholder analysis|stakeholder monitoring|seam/.test(
+        s
+      )
+    ) {
+      return 'pmo-cat-stakeholders'
+    }
+    if (/accountability|communications overview/.test(s) && /stakeholder/.test(s)) {
+      return 'pmo-cat-stakeholders'
+    }
     if (/template library|templates|playbook|reusable|best practice|knowledge base|lessons learned|forms & documents|org knowledge/.test(s)) return 'pmo-cat-knowledge-assets'
     if (/activity logs|change history|approval history|document version history|compliance evidence|access logs|audit/.test(s)) return 'pmo-cat-audit-compliance'
     if (/email settings|sender profiles|invitation templates|invitation expiry|email-sender-profiles|invitation-settings|email notifications/.test(s)) {
@@ -558,10 +939,25 @@ function applyRoleSidebarRevamp(menuItems = []) {
     return null
   }
 
-  const grouped = new Map(categoryDefs.map((c) => [c.id, []]))
+  const groupedCategoryIds = [
+    ...categoryDefs.map((c) => c.id),
+    ...deliveryManagementSubDefs.map((s) => s.id),
+  ]
+  const grouped = new Map(groupedCategoryIds.map((id) => [id, []]))
+
+  const pushToCategory = (categoryId, item) => {
+    const bucketId = categoryId || 'pmo-cat-admin'
+    if (!grouped.has(bucketId)) grouped.set(bucketId, [])
+    grouped.get(bucketId).push(item)
+  }
+
   for (const item of pmoRootsForGrouping) {
+    const code = norm(item?.menu_code || '')
+    if (code === 'platform_stakeholders' || code === 'platform_people_stakeholders') {
+      continue
+    }
     const categoryId = matchCategory(item) || 'pmo-cat-admin'
-    grouped.get(categoryId).push(item)
+    pushToCategory(categoryId, item)
   }
 
   /** Collect route paths from a menu subtree (virtual fillers must not duplicate these). */
@@ -693,20 +1089,27 @@ function applyRoleSidebarRevamp(menuItems = []) {
   ensureEmailNotificationsItem('Invitation Templates', '/app/settings/invitation-templates', 'file-text')
   ensureEmailNotificationsItem('Invitation Expiry', '/platform/admin/invitation-settings', 'clock')
 
-  const ensurePeopleStakeholdersItem = (labelText, path, icon = 'users') => {
-    const peopleItems = grouped.get('pmo-cat-people-stakeholders')
-    const exists = peopleItems.some(
-      (i) => norm(i.menu_label) === norm(labelText) || norm(i.route_path) === norm(path)
-    )
+  const pushVirtualToCategory = (categoryId, labelText, path, icon = 'users', sortOrder = 1000) => {
+    const bucketId = categoryId || 'pmo-cat-admin'
+    if (!grouped.has(bucketId)) grouped.set(bucketId, [])
+    const bucket = grouped.get(bucketId)
+    // A DB group node that has no route_path of its own should not block a virtual
+    // item that carries the correct direct-navigation path.
+    const exists = bucket.some((i) => {
+      const iPath = norm(i.route_path)
+      if (iPath && iPath === norm(path)) return true   // same path → duplicate
+      if (!iPath) return false                          // null-path group node → let virtual through
+      return norm(i.menu_label) === norm(labelText)    // same label, non-null path → duplicate
+    })
     if (!exists) {
-      peopleItems.push({
-        id: `virtual-people-${norm(labelText).replace(/[^a-z0-9]+/g, '-')}`,
-        menu_code: `virtual_people_${norm(labelText).replace(/[^a-z0-9]+/g, '_')}`,
+      bucket.push({
+        id: `virtual-${categoryId}-${norm(labelText).replace(/[^a-z0-9]+/g, '-')}`,
+        menu_code: `virtual_${categoryId}_${norm(labelText).replace(/[^a-z0-9]+/g, '_')}`,
         menu_label: labelText,
         menu_description: labelText,
         parent_menu_id: null,
         menu_level: 1,
-        sort_order: -30 + peopleItems.length,
+        sort_order: sortOrder,
         route_path: path,
         external_url: null,
         menu_icon: icon,
@@ -721,12 +1124,227 @@ function applyRoleSidebarRevamp(menuItems = []) {
     }
   }
 
-  ensurePeopleStakeholdersItem('Manager assignments', '/platform/pmo-admin/manager-assignments', 'user-check')
-  ensurePeopleStakeholdersItem('Assignment settings', '/platform/pmo-admin/manager-assignment-settings', 'settings')
-  ensurePeopleStakeholdersItem('Invitation expiry', '/platform/admin/invitation-settings', 'clock')
+  pushVirtualToCategory('pmo-cat-teams', 'Manager assignments', '/platform/pmo-admin/manager-assignments', 'user-check', 10)
+  pushVirtualToCategory(
+    'pmo-cat-teams',
+    'Assignment settings',
+    '/platform/pmo-admin/manager-assignment-settings',
+    'settings',
+    20
+  )
+  pushVirtualToCategory(
+    'pmo-cat-teams',
+    'Assign Roles to Projects',
+    '/platform/admin/assign-roles-to-projects',
+    'shield',
+    30
+  )
+  pushVirtualToCategory(
+    'pmo-cat-teams',
+    'Send Role Invitations',
+    '/platform/admin/send-role-invites',
+    'mail',
+    40
+  )
+  pushVirtualToCategory(
+    'pmo-cat-teams',
+    'Invitation Tracker',
+    '/platform/admin/invitation-tracker',
+    'mail-check',
+    50
+  )
+  pushVirtualToCategory(
+    'pmo-cat-teams',
+    'Appointment Tracker',
+    '/platform/pmo-admin/appointments',
+    'clipboard-check',
+    60
+  )
+  pushVirtualToCategory('pmo-cat-teams', 'All Teams', '/platform/teams', 'users', 110)
+  pushVirtualToCategory('pmo-cat-teams', 'My Teams', '/platform/teams/my', 'users', 120)
+  pushVirtualToCategory('pmo-cat-teams', 'Team Directory', '/platform/teams/directory', 'address-book', 130)
+  pushVirtualToCategory('pmo-cat-teams', 'Workload View', '/platform/teams/workload', 'chart-mixed', 140)
+  pushVirtualToCategory('pmo-cat-teams', 'My Team', '/platform/teams/my-team', 'users', 150)
+
+  pushVirtualToCategory(
+    'pmo-cat-stakeholders',
+    'Stakeholder Register',
+    '/platform/stakeholders/register',
+    'users',
+    10
+  )
+  pushVirtualToCategory(
+    'pmo-cat-stakeholders',
+    'Stakeholder Analysis',
+    '/platform/stakeholders/analysis',
+    'target',
+    20
+  )
+  pushVirtualToCategory(
+    'pmo-cat-stakeholders',
+    'Stakeholder Assessment Matrix',
+    '/platform/stakeholders/assessment-matrix',
+    'table-2',
+    25
+  )
+  pushVirtualToCategory(
+    'pmo-cat-stakeholders',
+    'Engagement Planning',
+    '/platform/stakeholders/engagement',
+    'handshake',
+    30
+  )
+  pushVirtualToCategory(
+    'pmo-cat-stakeholders',
+    'Communication Plans',
+    '/platform/stakeholders/communications',
+    'megaphone',
+    40
+  )
+  pushVirtualToCategory(
+    'pmo-cat-stakeholders',
+    'Monitoring',
+    '/platform/stakeholders/monitoring',
+    'chart-bar',
+    50
+  )
+
+  const teamsAdminSortKey = (item) => {
+    const s = signal(item)
+    if (/manager.?assignments?/.test(s)) return 10
+    if (/assignment settings/.test(s)) return 20
+    if (/assign roles/.test(s)) return 30
+    if (/send role/.test(s)) return 40
+    if (/invitation tracker|invitation status/.test(s)) return 50
+    if (/appointment tracker/.test(s)) return 60
+    return 200
+  }
+
+  const isTeamsHubNode = (item) => {
+    const lbl = label(item)
+    const code = norm(item?.menu_code || '')
+    const kids = item?.children
+    return (
+      (code === 'teams' || lbl === 'teams') &&
+      Array.isArray(kids) &&
+      kids.length > 0
+    )
+  }
+
+  const isTeamsNavLeaf = (item) => {
+    const s = signal(item)
+    const lbl = label(item)
+    if (isTeamsHubNode(item)) return false
+    if (teamsAdminSortKey(item) < 200) return false
+    return (
+      /\/platform\/teams|\/teams\//.test(s) ||
+      ['all teams', 'my teams', 'team directory', 'workload view', 'my team', 'resource directory', 'skill matrix'].includes(
+        lbl
+      )
+    )
+  }
+
+  const organizeTeamsCategoryItems = (items = []) => {
+    const adminOps = []
+    const teamNavLeaves = []
+    let hub = null
+    for (const item of items) {
+      if (isTeamsHubNode(item)) {
+        hub = { ...item, children: [...(item.children || [])] }
+        continue
+      }
+      if (isTeamsNavLeaf(item)) {
+        teamNavLeaves.push(item)
+        continue
+      }
+      adminOps.push(item)
+    }
+    adminOps.sort((a, b) => teamsAdminSortKey(a) - teamsAdminSortKey(b) || (a.sort_order || 0) - (b.sort_order || 0))
+    const mergedNav = dedupeByLabelAndRoute([
+      ...(hub?.children || []),
+      ...teamNavLeaves,
+    ]).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    if (mergedNav.length === 0 && !hub) return adminOps
+    const teamsHub = hub || {
+      id: 'virtual-teams-hub',
+      menu_code: 'teams',
+      menu_label: 'Teams',
+      menu_description: 'Team directory, workload, and membership',
+      parent_menu_id: null,
+      menu_level: 1,
+      sort_order: 100,
+      route_path: '/platform/teams',
+      external_url: null,
+      menu_icon: 'users',
+      menu_color: null,
+      badge_text: null,
+      badge_color: null,
+      is_visible: true,
+      is_active: true,
+      canUse: true,
+      children: [],
+    }
+    teamsHub.children = mergedNav
+    return [...adminOps, teamsHub]
+  }
+
+  const isStakeholderHubNode = (item) => {
+    const lbl = label(item)
+    const code = norm(item?.menu_code || '')
+    const kids = item?.children
+    return (
+      (code === 'stakeholders' ||
+        code === 'pm_section_stakeholders' ||
+        lbl === 'stakeholders') &&
+      Array.isArray(kids) &&
+      kids.length > 0
+    )
+  }
+
+  const isStakeholderNavLeaf = (item) => {
+    const s = signal(item)
+    if (isStakeholderHubNode(item)) return false
+    return /stakeholder|\/platform\/stakeholders/.test(s)
+  }
+
+  /** Category header is already "Stakeholders" — do not nest a second Stakeholders hub. */
+  const isRedundantStakeholderSectionHeader = (item) => {
+    const lbl = label(item)
+    const code = norm(item?.menu_code || '')
+    if (code === 'platform_stakeholders' || code === 'platform_people_stakeholders') return true
+    if (
+      (code === 'stakeholders' || code === 'pm_section_stakeholders' || lbl === 'stakeholders') &&
+      !String(item?.route_path || '').trim() &&
+      !(item?.children?.length > 0)
+    ) {
+      return true
+    }
+    return false
+  }
+
+  const organizeStakeholdersCategoryItems = (items = []) => {
+    const collected = []
+    for (const item of items) {
+      if (isRedundantStakeholderSectionHeader(item)) continue
+      if (isStakeholderHubNode(item)) {
+        collected.push(...(item.children || []))
+        continue
+      }
+      if (isStakeholderNavLeaf(item)) {
+        collected.push(item)
+        continue
+      }
+      collected.push(item)
+    }
+    return dedupeByLabelAndRoute(collected).sort(
+      (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+    )
+  }
 
   const toCategoryNode = (def) => {
-    let items = dedupeByLabelAndRoute(grouped.get(def.id))
+    let items = dedupeByLabelAndRoute(grouped.get(def.id) || [])
+    if (def.id === 'pmo-cat-teams') items = organizeTeamsCategoryItems(items)
+    if (def.id === 'pmo-cat-stakeholders') items = organizeStakeholdersCategoryItems(items)
     if (items.length === 0) {
       const fallback = categoryFallbacks[def.id]
       if (fallback) {
@@ -773,25 +1391,61 @@ function applyRoleSidebarRevamp(menuItems = []) {
   }
 
   return categoryDefs
-    .map(toCategoryNode)
+    .map((def) => {
+      if (def.isDeliveryManagementParent) {
+        return {
+          id: def.id,
+          menu_code: def.id,
+          menu_label: def.label,
+          menu_description: def.label,
+          parent_menu_id: null,
+          menu_level: 1,
+          sort_order: def.order,
+          route_path: null,
+          external_url: null,
+          menu_icon: 'layers',
+          menu_color: null,
+          badge_text: null,
+          badge_color: null,
+          is_visible: true,
+          is_active: true,
+          canUse: true,
+          children: deliveryManagementSubDefs
+            .map((sub) => toCategoryNode(sub))
+            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+        }
+      }
+      return toCategoryNode(def)
+    })
     .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 }
 
 // Pure DB fetch — returns { items, error }. No fallback; menu data is from DB only.
 // Use two separate queries to avoid PostgREST "more than one relationship" embed error between users and user_roles.
 async function fetchMenuFromDB(user) {
-  const { data: userRow, error: userError } = await platformDb
+  let { data: userRow, error: userError } = await platformDb
     .from('users')
     .select('id')
     .eq('auth_user_id', user.id)
     .maybeSingle()
 
   if (userError || !userRow?.id) {
-    const msg = userError?.message || 'User record not found'
-    const isNetwork = /failed to fetch|network|load failed/i.test(String(msg))
-    const friendly = isNetwork ? 'Connection problem. Check your network and try again.' : msg
-    console.warn('useMenu: failed to load user:', msg)
-    return { items: null, error: `Menu unavailable: ${friendly}` }
+    // auth_user_id not linked yet (invited user) — attempt repair then retry once
+    await platformDb.rpc('link_auth_account').catch(() => {})
+    const { data: retriedRow } = await platformDb
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .maybeSingle()
+    if (!retriedRow?.id) {
+      const msg = userError?.message || 'User record not found'
+      const isNetwork = /failed to fetch|network|load failed/i.test(String(msg))
+      const friendly = isNetwork ? 'Connection problem. Check your network and try again.' : msg
+      console.warn('useMenu: failed to load user:', msg)
+      return { items: null, error: `Menu unavailable: ${friendly}` }
+    }
+    // Repair succeeded — continue with the found row
+    userRow = retriedRow
   }
 
   const { data: roleRows, error: rolesError } = await platformDb

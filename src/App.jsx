@@ -228,6 +228,8 @@ const StakeholderAnalysisPage = lazy(() => import('./pages/platform-app/Stakehol
 const StakeholderEngagementPage = lazy(() => import('./pages/platform-app/StakeholderEngagementPage'))
 const CommunicationPlanPage = lazy(() => import('./pages/platform-app/CommunicationPlanPage'))
 const StakeholderMonitoringPage = lazy(() => import('./pages/platform-app/StakeholderMonitoringPage'))
+const StakeholderAssessmentMatrixPage = lazy(() => import('./pages/platform-app/StakeholderAssessmentMatrixPage'))
+const StakeholdersAssessmentMatrixOnHold = lazy(() => import('./pages/platform-app/StakeholdersAssessmentMatrixOnHold'))
 const TestDashboard = lazy(() => import('./pages/testing/TestDashboard'))
 const TestSuites = lazy(() => import('./pages/testing/TestSuites'))
 const TestSuiteDetail = lazy(() => import('./pages/testing/TestSuiteDetail'))
@@ -262,6 +264,16 @@ const ProjectStatuses = lazy(() => import('./pages/platform-app/ProjectStatuses'
 const FundingSources = lazy(() => import('./pages/platform-app/FundingSources'))
 const BudgetCategories = lazy(() => import('./pages/platform-app/BudgetCategories'))
 const ManagerAssignments = lazy(() => import('./pages/pmo/ManagerAssignments'))
+const AppointmentDashboard = lazy(() => import('./pages/pmo/AppointmentDashboard'))
+const MyAppointments = lazy(() => import('./pages/app/MyAppointments'))
+const TeamAppointmentDashboard = lazy(() => import('./pages/app/TeamAppointmentDashboard'))
+const MyTeamAppointments = lazy(() => import('./pages/app/MyTeamAppointments'))
+const SimAppointmentDashboard = lazy(() => import('./pages/sim/pmo/SimAppointmentDashboard'))
+const SimMyAppointments = lazy(() => import('./pages/sim/app/SimMyAppointments'))
+const SimTeamAppointmentDashboard = lazy(() => import('./pages/sim/app/SimTeamAppointmentDashboard'))
+const SimMyTeamAppointments = lazy(() => import('./pages/sim/app/SimMyTeamAppointments'))
+const PortfolioManagerAssignments = lazy(() => import('./pages/portfolio-manager/PortfolioManagerAssignments'))
+const ProgrammeManagerAssignments = lazy(() => import('./pages/programme-manager/ProgrammeManagerAssignments'))
 const ManagerAssignmentSettings = lazy(() => import('./pages/pmo/ManagerAssignmentSettings'))
 const PMORoleMenuManagement = lazy(() => import('./pages/pmo/PMORoleMenuManagement'))
 const AdminRoleMenuManagement = lazy(() => import('./pages/admin/AdminRoleMenuManagement'))
@@ -313,6 +325,9 @@ const ITTOTemplateList = lazy(() => import('./pages/itto/ITTOTemplateList'))
 const ProjectITTOList = lazy(() => import('./pages/itto/ProjectITTOList'))
 const ITTODraftsQueue = lazy(() => import('./pages/itto/ITTODraftsQueue'))
 const IndustryTemplateList = lazy(() => import('./pages/pmo/IndustryTemplateList'))
+const PMOInvitationTracker = lazy(() => import('./pages/pmo/InvitationTracker'))
+const PMInvitationTracker = lazy(() => import('./pages/pm/InvitationTracker'))
+const InvitationDetailPage = lazy(() => import('./components/invitations/InvitationDetailPage'))
 const IndustryTemplateForm = lazy(() => import('./pages/pmo/IndustryTemplateForm'))
 const IndustryTemplateDetail = lazy(() => import('./pages/pmo/IndustryTemplateDetail'))
 const IndustryTemplateOnHold = lazy(() => import('./pages/pmo/IndustryTemplateOnHold'))
@@ -343,6 +358,18 @@ const GovernanceGateChecklist = lazy(() => import('./pages/planning/governance/G
 const MicroPlanList = lazy(() => import('./pages/planning/microplans/MicroPlanList'))
 const MicroPlanDetail = lazy(() => import('./pages/planning/microplans/MicroPlanDetail'))
 const MicroPlanDraftQueue = lazy(() => import('./pages/planning/microplans/MicroPlanDraftQueue'))
+const TeamCharterPage = lazy(() => import('./pages/platform-app/TeamCharterPage'))
+const TeamCharterEditPage = lazy(() => import('./pages/platform-app/TeamCharterEditPage'))
+const DecisionLogPage = lazy(() => import('./pages/platform-app/DecisionLogPage'))
+const DecisionLogForm = lazy(() => import('./pages/platform-app/DecisionLogForm'))
+const DecisionLogDetail = lazy(() => import('./pages/platform-app/DecisionLogDetail'))
+const MyTimesheetsPage = lazy(() => import('./pages/platform-app/timesheets/MyTimesheetsPage'))
+const TimesheetEntryForm = lazy(() => import('./pages/platform-app/timesheets/TimesheetEntryForm'))
+const TimesheetEntryDetail = lazy(() => import('./pages/platform-app/timesheets/TimesheetEntryDetail'))
+const TeamTimesheetsPage = lazy(() => import('./pages/platform-app/timesheets/TeamTimesheetsPage'))
+const TeamChatPage = lazy(() => import('./pages/platform-app/communications/TeamChatPage'))
+const VideoCallsPage = lazy(() => import('./pages/platform-app/communications/VideoCallsPage'))
+const VoiceCallsPage = lazy(() => import('./pages/platform-app/communications/VoiceCallsPage'))
 const OPAList = lazy(() => import('./pages/opa/OPAList'))
 const OPACreate = lazy(() => import('./pages/opa/OPACreate'))
 const OPADetail = lazy(() => import('./pages/opa/OPADetail'))
@@ -764,6 +791,8 @@ const PracticeEngagementPlanning = lazy(() => import('./pages/simulator/Practice
 const PracticeCommunicationPlans = lazy(() => import('./pages/simulator/PracticeCommunicationPlans'))
 const PracticeStakeholderMonitoring = lazy(() => import('./pages/simulator/PracticeStakeholderMonitoring'))
 const PracticeStakeholderSEAM = lazy(() => import('./pages/simulator/PracticeStakeholderSEAM'))
+const PracticeStakeholderAssessmentMatrixPage = lazy(() => import('./pages/simulator/PracticeStakeholderAssessmentMatrixPage'))
+const PracticeStakeholdersAssessmentMatrixOnHold = lazy(() => import('./pages/simulator/PracticeStakeholdersAssessmentMatrixOnHold'))
 const PracticeEngagementActionsPage = lazy(() => import('./pages/simulator/PracticeEngagementActionsPage'))
 const PracticeSaliencePage = lazy(() => import('./pages/simulator/PracticeSaliencePage'))
 const PracticeStakeholdersOnHold = lazy(() => import('./pages/simulator/PracticeStakeholdersOnHold'))
@@ -781,10 +810,17 @@ const SimPortfolioGovernance = lazy(() => import('./pages/simulator/SimPortfolio
 // Simulator PMO and PM Dashboards
 const SimulatorPMODashboard = lazy(() => import('./pages/simulator/pmo/SimulatorPMODashboard'))
 const SimManagerAssignments = lazy(() => import('./pages/sim/pmo/SimManagerAssignments'))
+const SimPortfolioManagerAssignments = lazy(() => import('./pages/sim/portfolio-manager/SimPortfolioManagerAssignments'))
+const SimProgrammeManagerAssignments = lazy(() => import('./pages/sim/programme-manager/SimProgrammeManagerAssignments'))
 const SimManagerAssignmentSettings = lazy(() => import('./pages/sim/pmo/SimManagerAssignmentSettings'))
 const SimulatorPMDashboard = lazy(() => import('./pages/simulator/pm/SimulatorPMDashboard'))
 const SimulatorPMOLayout = lazy(() => import('./components/sim/pmo/SimulatorPMOLayout'))
+const SimulatorPMOInvitationTracker = lazy(() => import('./pages/simulator/pmo/SimulatorPMOInvitationTracker'))
 const SimulatorPMLayout = lazy(() => import('./components/sim/pm/SimulatorPMLayout'))
+const SimulatorTMLayout = lazy(() => import('./components/sim/tm/SimulatorTMLayout'))
+const SimulatorTMDashboard = lazy(() => import('./pages/simulator/tm/SimulatorTMDashboard'))
+const SimVoiceCallsPage = lazy(() => import('./pages/simulator/tm/communications/SimVoiceCallsPage'))
+const SimulatorPMInvitationTracker = lazy(() => import('./pages/simulator/pm/SimulatorPMInvitationTracker'))
 // Simulator PMO Page Wrappers
 const SimulatorPMOGovernanceMandateTemplate = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceMandateTemplate'))
 const SimulatorPMOGovernanceCMS = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceCMS'))
@@ -1866,6 +1902,20 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="stakeholders/assessment-matrix" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <StakeholderAssessmentMatrixPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="stakeholders/assessment-matrix/on-hold" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <StakeholdersAssessmentMatrixOnHold />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="stakeholders/engagement" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -2060,6 +2110,34 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <ManagerAssignments />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="pmo-admin/appointments" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <AppointmentDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="my-appointments" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MyAppointments />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="app/team-appointments" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <TeamAppointmentDashboard />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="my-team-appointments" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <MyTeamAppointments />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -2527,6 +2605,13 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <TasksDetail />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="profile" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <Settings />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -3672,6 +3757,20 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="admin/invitation-tracker" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <PMOInvitationTracker />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="admin/invitation-tracker/view" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <InvitationDetailPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="admin/invitation-settings" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3783,6 +3882,40 @@ function App() {
                       <Suspense fallback={<LoadingFallback />}>
                         <ProtectedRoute>
                           <ProjectUsers />
+                        </ProtectedRoute>
+                      </Suspense>
+                    </Layout>
+                  </Suspense>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="app/invitation-tracker" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Layout>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <ProtectedRoute>
+                          <PMInvitationTracker />
+                        </ProtectedRoute>
+                      </Suspense>
+                    </Layout>
+                  </Suspense>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="app/invitation-tracker/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Layout>
+                      <Suspense fallback={<LoadingFallback />}>
+                        <ProtectedRoute>
+                          <InvitationDetailPage />
                         </ProtectedRoute>
                       </Suspense>
                     </Layout>
@@ -3940,6 +4073,32 @@ function App() {
                   <ProtectedRoute>
                     <PMOLayout>
                       <IndustryTemplateList />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/invitation-tracker" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <PMOInvitationTracker />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/invitation-tracker/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <InvitationDetailPage />
                     </PMOLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -4534,6 +4693,71 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="pm/invitation-tracker" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <PMInvitationTracker />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/invitation-tracker/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <InvitationDetailPage />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/profile" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <Settings />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/portfolio-manager/assignments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <PortfolioManagerAssignments />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/programme-manager/assignments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ProgrammeManagerAssignments />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="pm/industry-templates" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -4886,6 +5110,256 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          {/* ── Team Member Plans Routes ──────────────────────────────── */}
+          <Route path="platform/plans/my-plans" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><MicroPlanList scope="individual" /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/plans/team-workstreams" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><MicroPlanList scope="team" /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+
+          {/* ── Team Charter Routes ───────────────────────────────────── */}
+          <Route path="platform/projects/:projectId/team-charter" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TeamCharterPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/projects/:projectId/team-charter/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TeamCharterEditPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+
+          {/* ── Decision Log Routes ───────────────────────────────────── */}
+          <Route path="platform/governance/decisions" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><DecisionLogPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/governance/decisions/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><DecisionLogForm /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/governance/decisions/:id" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><DecisionLogDetail /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/governance/decisions/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><DecisionLogForm /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+
+          {/* ── Timesheets Routes ─────────────────────────────────────── */}
+          <Route path="platform/timesheets" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><MyTimesheetsPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/timesheets/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TimesheetEntryForm /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/timesheets/team" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TeamTimesheetsPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/timesheets/:id" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TimesheetEntryDetail /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/timesheets/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TimesheetEntryForm /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+
+          {/* ── Communications Routes ─────────────────────────────────── */}
+          <Route path="platform/communications/chat" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TeamChatPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/communications/video-calls" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><VideoCallsPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/communications/voice-calls" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><VoiceCallsPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+
+          {/* Simulator Team Member Routes */}
+          <Route path="simulator/tm/dashboard" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><SimulatorTMDashboard /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/plans/my-plans" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><MicroPlanList scope="individual" /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/decisions" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><DecisionLogPage /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/decisions/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><DecisionLogForm /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/decisions/:id" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><DecisionLogDetail /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/decisions/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><DecisionLogForm /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/timesheets" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><MyTimesheetsPage /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/timesheets/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><TimesheetEntryForm /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/timesheets/:id" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><TimesheetEntryDetail /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/timesheets/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><TimesheetEntryForm /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/team-charter" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><TeamCharterPage /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/communications/chat" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><TeamChatPage /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/communications/video-calls" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><VideoCallsPage /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/communications/voice-calls" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><SimVoiceCallsPage /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+
           {/* PM Governance Routes */}
           <Route path="pm/governance/mandate" element={
             <Suspense fallback={<LoadingFallback />}>
@@ -8662,11 +9136,29 @@ function App() {
           } />
           <Route path="simulator/practice-stakeholders/seam" element={
             <Suspense fallback={<LoadingFallback />}>
+              <Navigate to="/simulator/practice-stakeholders/assessment-matrix" replace />
+            </Suspense>
+          } />
+          <Route path="simulator/practice-stakeholders/assessment-matrix" element={
+            <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
                 <ToastProvider>
                   <ProtectedRoute requiredPlatform="simulator">
                     <Layout>
-                      <PracticeStakeholderSEAM />
+                      <PracticeStakeholderAssessmentMatrixPage />
+                    </Layout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/practice-stakeholders/assessment-matrix/on-hold" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <Layout>
+                      <PracticeStakeholdersAssessmentMatrixOnHold />
                     </Layout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -8805,6 +9297,32 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/pmo/invitation-tracker" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimulatorPMOInvitationTracker />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/invitation-tracker/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <InvitationDetailPage />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="simulator/pmo/forms" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -8839,6 +9357,58 @@ function App() {
                     <SimulatorPMOLayout>
                       <SimManagerAssignments />
                     </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/appointments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimAppointmentDashboard />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/my-appointments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimMyAppointments />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/app/team-appointments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimTeamAppointmentDashboard />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/my-team-appointments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimMyTeamAppointments />
+                    </SimulatorPMLayout>
                   </ProtectedRoute>
                 </ToastProvider>
               </ThemeProvider>
@@ -8931,6 +9501,58 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <SimulatorPMLayout>
                       <SimulatorPMDashboard />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/invitation-tracker" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimulatorPMInvitationTracker />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/invitation-tracker/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <InvitationDetailPage />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/portfolio-manager/assignments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimPortfolioManagerAssignments />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/programme-manager/assignments" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <SimProgrammeManagerAssignments />
                     </SimulatorPMLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -9916,6 +10538,15 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          {/* Short clean URL for new invitation emails: /i/{token} */}
+          <Route path="i/:token" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <InvitationAccept />
+              </ThemeProvider>
+            </Suspense>
+          } />
+          {/* Legacy routes kept for older invitation emails */}
           <Route path="auth/invitation/:projectSlug/:roleSlug/:token" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>

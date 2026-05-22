@@ -2,6 +2,23 @@
  * PostgREST helpers for project invitation RPC (`insert_project_invitation_as_pmo_admin`).
  */
 
+/** PostgREST may return json scalar as object or string depending on driver/version */
+export function parseInvitationRpcPayload(raw) {
+  if (raw == null) return null
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw)
+    } catch {
+      return null
+    }
+  }
+  return typeof raw === 'object' ? raw : null
+}
+
+export function isValidInvitationRow(row) {
+  return !!(row && row.id)
+}
+
 /**
  * Build RPC args so `JSON.stringify` never drops keys (`undefined` values are omitted by JSON,
  * which can prevent PostgREST from matching the DB function overload).
@@ -20,12 +37,21 @@ export function buildInvitationRpcPayload(
   const rawMsg = invitationData?.message
   const trimmedMsg =
     rawMsg != null && String(rawMsg).trim() !== '' ? String(rawMsg) : null
+  const first = invitationData?.inviteeFirstName ?? invitationData?.invited_first_name
+  const last = invitationData?.inviteeLastName ?? invitationData?.invited_last_name
+  const trimmedFirst =
+    first != null && String(first).trim() !== '' ? String(first).trim() : null
+  const trimmedLast =
+    last != null && String(last).trim() !== '' ? String(last).trim() : null
+
   return {
     p_project_id: String(projectId),
     p_invited_email: String(invitationData?.email ?? '').trim(),
     p_role_id: String(invitationRoleId),
     p_invitation_message: trimmedMsg,
     p_invitation_expires_at: invitationExpiresAtIso,
+    p_invited_first_name: trimmedFirst,
+    p_invited_last_name: trimmedLast,
   }
 }
 

@@ -4,6 +4,7 @@ import {
   ensureTemplatesForAccount,
 } from '../api/invitationTemplatesApi'
 import { DEFAULT_INVITATION_MESSAGES_BY_ROLE } from '../constants/defaultInvitationMessages'
+import { resolveTemplateRoleName } from '../utils/resolveTemplateRoleName'
 
 const TTL_MS = 5 * 60 * 1000
 
@@ -76,13 +77,18 @@ export function useInvitationTemplates({ accountId, authUserId = null, prefetchE
       if (prefetchEnsure && authUserId) {
         await ensureTemplatesForAccount(accountId, authUserId)
       }
-      const res = await getTemplatesForAccount(accountId)
+      let res = await getTemplatesForAccount(accountId)
       if (!res.success) {
         setError(res.error || 'Failed to load templates')
         setTemplates([])
         return
       }
-      const list = res.data || []
+      let list = res.data || []
+      if (list.length === 0 && authUserId) {
+        await ensureTemplatesForAccount(accountId, authUserId)
+        res = await getTemplatesForAccount(accountId)
+        if (res.success) list = res.data || []
+      }
       setTemplates(list)
       if (list.length > 0) writeCache(accountId, list)
     } catch (e) {
@@ -104,7 +110,7 @@ export function useInvitationTemplates({ accountId, authUserId = null, prefetchE
 
   const getTemplateForRole = useCallback(
     (roleName) => {
-      const key = String(roleName || '').trim()
+      const key = resolveTemplateRoleName(roleName)
       if (!key) return null
       const activeRow = templates.find((t) => t.role_name === key && t.is_active !== false)
       if (activeRow?.message_body?.trim()) return activeRow

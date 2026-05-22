@@ -22,6 +22,11 @@ import {
 } from '../utils/invitationEmailBlocks'
 import { loadInvitationProjectContext } from './invitationProjectContextService'
 import { resolveInvitationTemplatePlaceholders } from '../features/invitation-templates/utils/resolveInvitationTemplatePlaceholders'
+import {
+  personalizeInvitationMessage,
+  resolveInviteeNamesForInvitation,
+  resolveInviterDisplayNameFromUser,
+} from '../utils/invitationInviteeFormat.js'
 
 export { buildProjectInvitationUrls } from '../utils/invitationUrlUtils'
 
@@ -48,17 +53,61 @@ async function resolveProjectCodeForInvitation(projectId, projectCode) {
   return proj?.project_code?.trim() || ''
 }
 
-async function resolveOrganisationNameForProject(projectId, organisationName) {
+export async function resolveOrganisationNameForProject(projectId, organisationName) {
   const trimmed = String(organisationName ?? '').trim()
   if (trimmed) return trimmed
   if (!projectId) return ''
+  // Embedded join first; if that returns nothing, fall back to a direct accounts query
   const { data: proj } = await appDb
     .from('projects')
-    .select('accounts(account_display_name, account_name, company_name)')
+    .select('account_id, accounts(account_display_name, account_name, company_name)')
     .eq('id', projectId)
     .maybeSingle()
   const acc = proj?.accounts
-  return (acc && (acc.account_display_name || acc.account_name || acc.company_name)) || ''
+  let org = (acc && (acc.account_display_name || acc.account_name || acc.company_name)) || ''
+  if (!org && proj?.account_id) {
+    const { data: accRow } = await appDb
+      .from('accounts')
+      .select('account_display_name, account_name, company_name')
+      .eq('id', proj.account_id)
+      .maybeSingle()
+    org = (accRow && (accRow.account_display_name || accRow.account_name || accRow.company_name)) || ''
+  }
+  return org
+}
+
+/**
+ * Planned dates for invitation accept UI (anon-safe via SECURITY DEFINER RPC).
+ * @param {string} projectId
+ * @param {{ planned_start_date?: string|null, planned_end_date?: string|null }} existing
+ */
+export async function resolveProjectPlannedDatesForProject(projectId, existing = {}) {
+  const start = existing.planned_start_date ?? null
+  const end = existing.planned_end_date ?? null
+  if (start && end) {
+    return { planned_start_date: start, planned_end_date: end }
+  }
+  if (!projectId) {
+    return { planned_start_date: start, planned_end_date: end }
+  }
+
+  try {
+    const { data, error } = await appDb.rpc('get_invitation_project_dates', {
+      p_project_id: projectId,
+    })
+    if (error) {
+      console.warn('[resolveProjectPlannedDatesForProject]', error.message)
+      return { planned_start_date: start, planned_end_date: end }
+    }
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      planned_start_date: start || row?.planned_start_date || null,
+      planned_end_date: end || row?.planned_end_date || null,
+    }
+  } catch (err) {
+    console.warn('[resolveProjectPlannedDatesForProject]', err?.message)
+    return { planned_start_date: start, planned_end_date: end }
+  }
 }
 
 /**
@@ -96,11 +145,18 @@ export async function generateInvitationToken() {
  */
 export async function sendProjectInvitation(email, invitationData) {
   try {
+    const personalizedMessage = personalizeInvitationMessage(invitationData.message, {
+      inviteeFirstName: invitationData.inviteeFirstName,
+      inviteeLastName: invitationData.inviteeLastName,
+    })
+
     const result = await inviteUserToProject(invitationData.projectId, {
       email: email,
       roleId: invitationData.roleId,
-      message: invitationData.message || null,
+      message: personalizedMessage || null,
       expiryDays: invitationData.expiryDays,
+      inviteeFirstName: invitationData.inviteeFirstName || null,
+      inviteeLastName: invitationData.inviteeLastName || null,
     })
 
     if (!result.success) {
@@ -111,7 +167,9 @@ export async function sendProjectInvitation(email, invitationData) {
     // Invitation row is persisted — do not block UI on email edge function / context fetches.
     void dispatchProjectInvitationEmail(email, {
       ...invitationData,
+      message: personalizedMessage || invitationData.message || null,
       invitationToken,
+      appointmentTerms: invitationData.appointmentTerms || null,
     }).catch((err) => {
       console.warn('[sendProjectInvitation] Email dispatch failed:', err?.message)
     })
@@ -134,6 +192,7 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
   const projectName = invitationData.projectName || 'a project'
   const roleName = invitationData.roleName || 'team member'
   const inviterName = invitationData.inviterName || 'A team member'
+  const inviterJobTitle = String(invitationData.inviterJobTitle ?? '').trim()
   const expiryDays = invitationData.expiryDays || 14
   const projectId = invitationData.projectId
 
@@ -169,22 +228,34 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
   })
 
   let personalMessage = invitationData.message || ''
-  if (personalMessage && projectContext) {
+  if (personalMessage) {
     personalMessage = resolveInvitationTemplatePlaceholders(personalMessage, {
       projectName,
       roleDisplayName: roleName,
       inviterName,
       organisationName,
       invitationExpiryDays: expiryDays,
-      projectContext,
+      projectContext: projectContext || null,
+      inviteeFirstName: invitationData.inviteeFirstName,
+      inviteeLastName: invitationData.inviteeLastName,
     })
+    // Project context is rendered as its own email section (see formatProjectContextBlockHtml).
+    personalMessage = personalMessage.replace(/\{\{project_context_block\}\}\s*/gi, '').trim()
   }
+  personalMessage = personalizeInvitationMessage(personalMessage, {
+    inviteeFirstName: invitationData.inviteeFirstName,
+    inviteeLastName: invitationData.inviteeLastName,
+  })
   personalMessage = personalMessage
     ? normalizeInvitationMessageOrganisation(personalMessage, organisationName)
     : null
 
   const projectContextHtml = formatProjectContextBlockHtml(projectContext)
   const projectContextPlain = formatProjectContextBlockPlain(projectContext)
+
+  const apptTerms = invitationData.appointmentTerms || null
+  const appointmentTermsHtml = buildAppointmentTermsHtml(apptTerms)
+  const appointmentTermsText = buildAppointmentTermsText(apptTerms)
 
   const projectTypeId =
     invitationData.projectTypeId ||
@@ -201,9 +272,11 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
         projectName,
         roleName,
         inviterName,
+        inviterJobTitle,
         organisationName,
         personalMessage,
         projectContextHtml,
+        appointmentTermsHtml,
         invitationUrl: acceptUrl,
         declineUrl,
         expiryDays,
@@ -213,9 +286,11 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
         projectName,
         roleName,
         inviterName,
+        inviterJobTitle,
         organisationName,
         personalMessage,
         projectContextPlain,
+        appointmentTermsText,
         invitationUrl: acceptUrl,
         declineUrl,
         expiryDays,
@@ -239,14 +314,157 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
   }
 }
 
+const APPT_FREQ_LABELS = {
+  weekly: 'Weekly',
+  fortnightly: 'Fortnightly',
+  monthly: 'Monthly',
+  as_required: 'As required',
+}
+
+function _fmtDate(d) {
+  if (!d) return ''
+  try {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  } catch {
+    return d
+  }
+}
+
+function _fmtAmount(n) {
+  if (n == null || n === '') return ''
+  const num = Number(n)
+  if (isNaN(num)) return ''
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function buildAppointmentTermsHtml(terms) {
+  if (!terms) return ''
+  const {
+    assignmentStartDate,
+    assignmentEndDate,
+    timeCommitmentPct,
+    reportingToName,
+    budgetAuthorityLimit,
+    reportingFrequency,
+    authorityNotes,
+    knownConstraints,
+    referenceDocument,
+  } = terms
+
+  const hasAny =
+    assignmentStartDate ||
+    assignmentEndDate ||
+    timeCommitmentPct ||
+    reportingToName ||
+    budgetAuthorityLimit ||
+    reportingFrequency ||
+    authorityNotes ||
+    knownConstraints ||
+    referenceDocument
+  if (!hasAny) return ''
+
+  const tdLabel =
+    'padding:8px 12px;color:#6b7280;font-size:13px;white-space:nowrap;vertical-align:top;width:170px;border-bottom:1px solid #dbeafe;'
+  const tdValue =
+    'padding:8px 12px;color:#1e293b;font-size:13px;font-weight:500;vertical-align:top;border-bottom:1px solid #dbeafe;'
+
+  const row = (label, value) => {
+    if (value === null || value === undefined || value === '') return ''
+    const displayVal = escapeHtml(String(value)).replace(/\n/g, '<br>')
+    return `<tr>
+      <td style="${tdLabel}">${escapeHtml(label)}</td>
+      <td style="${tdValue}">${displayVal}</td>
+    </tr>`
+  }
+
+  const rows = [
+    row('Assignment start', _fmtDate(assignmentStartDate)),
+    row('Assignment end', _fmtDate(assignmentEndDate)),
+    row('Time commitment', timeCommitmentPct != null ? `${timeCommitmentPct}%` : ''),
+    row('Reporting to', reportingToName),
+    row('Reporting frequency', APPT_FREQ_LABELS[reportingFrequency] || reportingFrequency || ''),
+    row('Budget authority limit', _fmtAmount(budgetAuthorityLimit)),
+    row('Authority notes', authorityNotes),
+    row('Known constraints', knownConstraints),
+    row('Reference document', referenceDocument),
+  ]
+    .filter(Boolean)
+    .join('')
+
+  if (!rows) return ''
+
+  return `
+  <div style="margin:28px 0;border:1px solid #bfdbfe;border-radius:8px;overflow:hidden;">
+    <div style="background:#1e40af;padding:12px 20px;">
+      <p style="margin:0;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">
+        Formal Appointment Terms
+      </p>
+      <p style="margin:4px 0 0;color:#bfdbfe;font-size:11px;">
+        Please review these terms before accepting or declining.
+      </p>
+    </div>
+    <div style="background:#eff6ff;">
+      <table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;">
+        ${rows}
+      </table>
+    </div>
+  </div>`
+}
+
+function buildAppointmentTermsText(terms) {
+  if (!terms) return ''
+  const {
+    assignmentStartDate,
+    assignmentEndDate,
+    timeCommitmentPct,
+    reportingToName,
+    budgetAuthorityLimit,
+    reportingFrequency,
+    authorityNotes,
+    knownConstraints,
+    referenceDocument,
+  } = terms
+
+  const lines = []
+  const add = (label, value) => {
+    if (value === null || value === undefined || value === '') return
+    lines.push(`${label}: ${value}`)
+  }
+
+  add('Assignment start', _fmtDate(assignmentStartDate))
+  add('Assignment end', _fmtDate(assignmentEndDate))
+  add('Time commitment', timeCommitmentPct != null ? `${timeCommitmentPct}%` : '')
+  add('Reporting to', reportingToName)
+  add('Reporting frequency', APPT_FREQ_LABELS[reportingFrequency] || reportingFrequency || '')
+  add('Budget authority limit', _fmtAmount(budgetAuthorityLimit))
+  add('Authority notes', authorityNotes)
+  add('Known constraints', knownConstraints)
+  add('Reference document', referenceDocument)
+
+  if (!lines.length) return ''
+
+  return [
+    '─── Formal Appointment Terms ───',
+    'Please review these terms before accepting or declining.',
+    ...lines,
+    '────────────────────────────────',
+  ].join('\n')
+}
+
 function buildInvitationEmailHtml({
   email,
   projectName,
   roleName,
   inviterName,
+  inviterJobTitle = '',
   organisationName,
   personalMessage,
   projectContextHtml = '',
+  appointmentTermsHtml = '',
   invitationUrl,
   expiryDays,
   declineUrl = null,
@@ -274,8 +492,8 @@ function buildInvitationEmailHtml({
            </tr>
          </table>
        </div>
-       <p style="color:#6b7280;font-size:13px;text-align:center;margin:16px 0 0;">
-         Or copy this link to accept: <a href="${invitationUrl}" style="color:#2563eb;">${invitationUrl}</a>
+       <p style="color:#9ca3af;font-size:12px;text-align:center;margin:12px 0 0;">
+         Button not working? <a href="${invitationUrl}" style="color:#2563eb;text-decoration:underline;font-weight:500;">Click here to accept your invitation</a>
        </p>`
       : invitationUrl
         ? `<div style="text-align:center;margin:32px 0;">
@@ -294,7 +512,15 @@ function buildInvitationEmailHtml({
       })
     : ''
   const messageBlock = messageInner ? wrapInvitationMessageCard(messageInner) : ''
+  const apptBlock = appointmentTermsHtml || ''
   const contextBlock = projectContextHtml || ''
+
+  const jobTitleRow = inviterJobTitle
+    ? `<tr>
+         <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">Job Title</td>
+         <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:500;">${escapeHtml(inviterJobTitle)}</td>
+       </tr>`
+    : ''
 
   const orgRow = organisationName
     ? `<tr>
@@ -311,6 +537,7 @@ function buildInvitationEmailHtml({
           <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">Name</td>
           <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:600;">${escapeHtml(inviterName)}</td>
         </tr>
+        ${jobTitleRow}
         ${orgRow}
         <tr>
           <td style="padding:4px 0;color:#6b7280;font-size:13px;">Project</td>
@@ -339,6 +566,7 @@ function buildInvitationEmailHtml({
             <strong>${escapeHtml(projectName)}</strong> as a <strong>${escapeHtml(roleName)}</strong>.
           </p>
           ${messageBlock}
+          ${apptBlock}
           ${contextBlock}
           ${actionBlock}
           <hr style="border:none;border-top:1px solid #e5e7eb;margin:32px 0;">
@@ -366,9 +594,11 @@ function buildInvitationEmailText({
   projectName,
   roleName,
   inviterName,
+  inviterJobTitle = '',
   organisationName,
   personalMessage,
   projectContextPlain = '',
+  appointmentTermsText = '',
   invitationUrl,
   declineUrl = null,
   expiryDays,
@@ -387,6 +617,9 @@ function buildInvitationEmailText({
       lines.push('', formatted)
     }
   }
+  if (appointmentTermsText) {
+    lines.push('', appointmentTermsText)
+  }
   if (projectContextPlain) {
     lines.push('', projectContextPlain)
   }
@@ -403,6 +636,7 @@ function buildInvitationEmailText({
     'Invitation sent by',
     `Name:         ${inviterName}`,
   )
+  if (inviterJobTitle) lines.push(`Job Title:    ${inviterJobTitle}`)
   if (organisationName) lines.push(`Organisation: ${organisationName}`)
   lines.push(`Project:      ${projectName}`)
   lines.push('─────────────────────────────')
@@ -423,7 +657,12 @@ export async function sendInvitationReminder(invitationId) {
         *,
         project:projects(id, project_name, project_code),
         role:roles(role_display_name, role_name),
-        invited_by:users!project_invitations_invited_by_user_id_fkey(full_name)
+        invited_by:users!project_invitations_invited_by_user_id_fkey(
+          full_name,
+          first_name,
+          last_name,
+          email
+        )
       `)
       .eq('id', invitationId)
       .single()
@@ -459,7 +698,8 @@ export async function sendInvitationReminder(invitationId) {
       projectName: invitation.project?.project_name || 'a project',
       roleName:
         invitation.role?.role_display_name || invitation.role?.role_name || 'team member',
-      inviterName: invitation.invited_by?.full_name || 'A team member',
+      inviterName:
+        resolveInviterDisplayNameFromUser(invitation.invited_by || {}) || 'A team member',
       message: invitation.invitation_message || null,
       expiryDays,
       invitationToken: invitation.invitation_token,
@@ -609,6 +849,96 @@ export async function getInvitationByToken(token) {
   }
 }
 
+/**
+ * Enrich validate_invitation_token row for accept/decline display (names, org, dates).
+ * @param {object} row
+ */
+async function enrichInvitationAcceptRow(row) {
+  let organisationName = String(row.organisation_name ?? '').trim()
+
+  if (!organisationName && row.project_id) {
+    organisationName = await resolveOrganisationNameForProject(row.project_id, '')
+  }
+
+  const plannedDates = await resolveProjectPlannedDatesForProject(row.project_id, {
+    planned_start_date: row.planned_start_date,
+    planned_end_date: row.planned_end_date,
+  })
+
+  const inviterDisplayName =
+    String(row.inviter_display_name ?? '').trim() ||
+    String(row.invited_by_name ?? '').trim() ||
+    ''
+
+  let mergedRow = { ...row, organisation_name: organisationName, inviter_display_name: inviterDisplayName }
+
+  const hasDbNames =
+    String(mergedRow.invited_first_name ?? '').trim() ||
+    String(mergedRow.invited_last_name ?? '').trim()
+  if (!hasDbNames && mergedRow.invitation_id) {
+    try {
+      const { data: nameRow } = await appDb
+        .from('project_invitations')
+        .select('invited_first_name, invited_last_name, invitation_message')
+        .eq('id', mergedRow.invitation_id)
+        .maybeSingle()
+      if (nameRow) {
+        mergedRow = {
+          ...mergedRow,
+          invited_first_name: nameRow.invited_first_name ?? mergedRow.invited_first_name,
+          invited_last_name: nameRow.invited_last_name ?? mergedRow.invited_last_name,
+          invitation_message: nameRow.invitation_message ?? mergedRow.invitation_message,
+        }
+      }
+    } catch (e) {
+      console.warn('[enrichInvitationAcceptRow] invitee name fallback', e?.message)
+    }
+  }
+
+  const inviteeNames = resolveInviteeNamesForInvitation(mergedRow)
+  if (inviteeNames.first) mergedRow.invited_first_name = inviteeNames.first
+  if (inviteeNames.last) mergedRow.invited_last_name = inviteeNames.last
+
+  return {
+    ...mergedRow,
+    planned_start_date: plannedDates.planned_start_date,
+    planned_end_date: plannedDates.planned_end_date,
+  }
+}
+
+/**
+ * Load invitation accept/decline page payload (token validation + organisation for trust display).
+ * Returns display data even when the invitation is declined or expired so the details card can render.
+ * @param {string} token
+ */
+export async function getInvitationAcceptContext(token) {
+  const validation = await validateInvitationToken(token)
+  const row = validation.data
+  if (!row) {
+    return {
+      success: false,
+      data: null,
+      error: validation.error || 'Invalid invitation token',
+    }
+  }
+
+  const enriched = await enrichInvitationAcceptRow(row)
+
+  if (!validation.success) {
+    return {
+      success: false,
+      data: enriched,
+      error: validation.error || 'Invitation is no longer valid',
+    }
+  }
+
+  return {
+    success: true,
+    data: enriched,
+    error: null,
+  }
+}
+
 export default {
   generateInvitationToken,
   sendProjectInvitation,
@@ -618,5 +948,8 @@ export default {
   sendInvitationAccepted,
   validateInvitationToken,
   getInvitationByToken,
+  getInvitationAcceptContext,
+  resolveOrganisationNameForProject,
+  resolveProjectPlannedDatesForProject,
 }
 

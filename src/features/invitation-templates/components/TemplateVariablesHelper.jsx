@@ -2,6 +2,9 @@ import { useState } from 'react'
 import { ChevronDown, ChevronRight, Copy, Info } from 'lucide-react'
 
 const VARS = [
+  { key: '{{invitee_name}}', desc: 'Invitee full name in the “Dear …,” line (falls back to “colleague”)' },
+  { key: '{{invitee_first_name}}', desc: 'Invitee given name' },
+  { key: '{{invitee_last_name}}', desc: 'Invitee surname' },
   { key: '{{project_name}}', desc: 'The project the invite applies to' },
   { key: '{{role_name}}', desc: 'Human-readable role label' },
   { key: '{{inviter_name}}', desc: 'Name of the person sending the invite' },
@@ -32,9 +35,12 @@ const VARS = [
   { key: '{{hierarchy_block}}', desc: 'All hierarchy lines (plain text)' },
   {
     key: '{{project_context_block}}',
-    desc: 'Full project context + hierarchy block (also appended automatically to every email)',
+    desc: 'Optional in template text; every invite email still includes the Project context card automatically',
   },
 ]
+
+const EMAIL_LAYOUT_NOTE =
+  'Every invitation email also includes: Project Nidus header, invite summary, project context (description, type, methodology, timeline, hierarchy), Accept/Decline buttons, accept link, expiry reminder, and Invitation sent by details.'
 
 export default function TemplateVariablesHelper() {
   const [open, setOpen] = useState(false)
@@ -57,7 +63,9 @@ export default function TemplateVariablesHelper() {
         Template variables
       </button>
       {open && (
-        <ul className="px-3 pb-3 space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
+        <div className="px-3 pb-3 border-t border-gray-200 dark:border-gray-700 pt-2 space-y-3">
+          <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{EMAIL_LAYOUT_NOTE}</p>
+          <ul className="space-y-2">
           {VARS.map((v) => (
             <li key={v.key} className="flex flex-wrap items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
               <code className="shrink-0 font-mono text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-900 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-600">
@@ -74,7 +82,8 @@ export default function TemplateVariablesHelper() {
               </button>
             </li>
           ))}
-        </ul>
+          </ul>
+        </div>
       )}
     </div>
   )

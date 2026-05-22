@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
+import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
 import ThemeToggle from '../ThemeToggle'
 import { getUnreadCount } from '../../utils/notificationUtils'
 import { normalizeDashboardTab } from '../../utils/pmoDashboardTabs'
@@ -104,11 +105,12 @@ export default function SystemHeader({
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
-      // Navigate directly to platform login (bypasses the intermediate /login redirect)
-      navigate('/platform/login', { replace: true })
+      const simulator = (location.pathname || '').startsWith('/simulator')
+      await performLogout({ simulator })
     } catch (error) {
       console.error('Error logging out:', error)
+    } finally {
+      navigate(getLogoutRedirectPath(location.pathname), { replace: true })
     }
   }
 

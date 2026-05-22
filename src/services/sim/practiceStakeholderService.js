@@ -4,6 +4,7 @@
  */
 
 import { simDb } from '../supabase/supabaseClient'
+import { buildGapSummary } from '../../utils/stakeholderSEAMUtils'
 
 async function getCurrentUserId() {
   const { data: { user: authUser } } = await simDb.auth.getUser()
@@ -277,6 +278,86 @@ export async function deletePracticeEngagementAction(actionId) {
   }
 }
 
+// ========== Practice Stakeholder Assessment Matrix ==========
+export async function getPracticeStakeholderAssessmentMatrix(filters = {}) {
+  try {
+    let query = simDb
+      .from('practice_stakeholder_assessment_matrix')
+      .select('*, practice_stakeholder:practice_stakeholder_id(id, stakeholder_name, stakeholder_reference)')
+      .eq('is_deleted', false)
+    if (filters.practice_project_id) query = query.eq('practice_project_id', filters.practice_project_id)
+    if (filters.practice_stakeholder_id) query = query.eq('practice_stakeholder_id', filters.practice_stakeholder_id)
+    const { data, error } = await query.order('assessment_date', { ascending: false })
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function savePracticeStakeholderAssessmentMatrix(payload, matrixId = null) {
+  try {
+    const userId = await getCurrentUserId()
+    const row = {
+      practice_project_id: payload.practice_project_id,
+      practice_stakeholder_id: payload.practice_stakeholder_id,
+      assessment_date: payload.assessment_date || new Date().toISOString().split('T')[0],
+      current_level: payload.current_level || 'neutral',
+      desired_level: payload.desired_level || 'supportive',
+      gap_summary: payload.gap_summary || buildGapSummary(payload.current_level, payload.desired_level),
+      notes: payload.notes || null,
+      updated_by: userId,
+      user_id: userId,
+    }
+    if (matrixId) {
+      const { data, error } = await simDb
+        .from('practice_stakeholder_assessment_matrix')
+        .update(row)
+        .eq('id', matrixId)
+        .select()
+        .single()
+      if (error) throw error
+      return { success: true, data }
+    }
+    const { data: existing } = await simDb
+      .from('practice_stakeholder_assessment_matrix')
+      .select('id')
+      .eq('practice_project_id', row.practice_project_id)
+      .eq('practice_stakeholder_id', row.practice_stakeholder_id)
+      .eq('is_deleted', false)
+      .maybeSingle()
+    if (existing?.id) {
+      return savePracticeStakeholderAssessmentMatrix(payload, existing.id)
+    }
+    row.created_by = userId
+    const { data, error } = await simDb
+      .from('practice_stakeholder_assessment_matrix')
+      .insert(row)
+      .select()
+      .single()
+    if (error) throw error
+    return { success: true, data }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deletePracticeStakeholderAssessmentMatrix(matrixId) {
+  try {
+    const userId = await getCurrentUserId()
+    const { data, error } = await simDb
+      .from('practice_stakeholder_assessment_matrix')
+      .update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: userId, updated_by: userId })
+      .eq('id', matrixId)
+      .select()
+      .single()
+    if (error) throw error
+    return { success: true, data }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
 // ========== Practice Stakeholder Stats ==========
 export async function getPracticeStakeholderStats(projectId) {
   try {
@@ -323,5 +404,8 @@ export default {
   getPracticeEngagementActions,
   savePracticeEngagementAction,
   deletePracticeEngagementAction,
+  getPracticeStakeholderAssessmentMatrix,
+  savePracticeStakeholderAssessmentMatrix,
+  deletePracticeStakeholderAssessmentMatrix,
   getPracticeStakeholderStats,
 }

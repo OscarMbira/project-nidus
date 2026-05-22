@@ -511,3 +511,150 @@ export async function removePortfolioManager(portfolioId) {
     .eq('id', portfolioId)
   if (error) throw error
 }
+
+/**
+ * Current user's public.users.id
+ * @returns {Promise<string>}
+ */
+export async function getCurrentPlatformUserId() {
+  const {
+    data: { user },
+    error,
+  } = await platformDb.auth.getUser()
+  if (error) throw error
+  if (!user?.id) throw new Error('Not authenticated')
+  const { data: row, error: uErr } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', user.id)
+    .maybeSingle()
+  if (uErr) throw uErr
+  if (!row?.id) throw new Error('User profile not found')
+  return row.id
+}
+
+/**
+ * Programmes in portfolios where user is portfolio manager.
+ * @param {string} userId — public.users.id
+ */
+export async function listProgrammesForPortfolioManager(userId) {
+  if (!userId) return []
+  const { data: portfolios, error: pErr } = await platformDb
+    .from('portfolios')
+    .select('id')
+    .eq('portfolio_manager_user_id', userId)
+    .eq('is_deleted', false)
+    .in('portfolio_status', ACTIVE_PORTFOLIO_STATUSES)
+  if (pErr) throw pErr
+  const portfolioIds = (portfolios || []).map((p) => p.id).filter(Boolean)
+  if (!portfolioIds.length) return []
+
+  const { data, error } = await platformDb
+    .from('programmes')
+    .select(
+      `
+      id,
+      programme_code,
+      programme_name,
+      programme_status,
+      portfolio_id,
+      programme_manager_user_id,
+      portfolio:portfolio_id (id, portfolio_name, portfolio_code),
+      manager:programme_manager_user_id (id, full_name, email)
+    `
+    )
+    .in('portfolio_id', portfolioIds)
+    .eq('is_deleted', false)
+    .in('programme_status', ACTIVE_PROGRAMME_STATUSES)
+    .order('programme_name', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Projects in programmes under portfolios the user manages.
+ * @param {string} userId — public.users.id
+ */
+export async function listProjectsForPortfolioManager(userId) {
+  if (!userId) return []
+  const programmes = await listProgrammesForPortfolioManager(userId)
+  const programmeIds = programmes.map((p) => p.id).filter(Boolean)
+  if (!programmeIds.length) return []
+
+  const { data: links, error: lErr } = await platformDb
+    .from('programme_projects')
+    .select('project_id, programme_id')
+    .in('programme_id', programmeIds)
+    .or('is_deleted.eq.false,is_deleted.is.null')
+  if (lErr) throw lErr
+  const projectIds = [...new Set((links || []).map((l) => l.project_id).filter(Boolean))]
+  if (!projectIds.length) return []
+
+  const statusIds = await getNonFinalProjectStatusIds()
+  let query = platformDb
+    .from('projects')
+    .select(
+      `
+      id,
+      project_code,
+      project_name,
+      project_manager_user_id,
+      status_id,
+      project_statuses:status_id (status_code, status_name),
+      manager:project_manager_user_id (id, full_name, email)
+    `
+    )
+    .in('id', projectIds)
+    .eq('is_deleted', false)
+  if (statusIds.length) query = query.in('status_id', statusIds)
+  const { data, error } = await query.order('project_name', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Projects in programmes where user is programme manager.
+ * @param {string} userId — public.users.id
+ */
+export async function listProjectsForProgrammeManager(userId) {
+  if (!userId) return []
+  const { data: programmes, error: progErr } = await platformDb
+    .from('programmes')
+    .select('id')
+    .eq('programme_manager_user_id', userId)
+    .eq('is_deleted', false)
+    .in('programme_status', ACTIVE_PROGRAMME_STATUSES)
+  if (progErr) throw progErr
+  const programmeIds = (programmes || []).map((p) => p.id).filter(Boolean)
+  if (!programmeIds.length) return []
+
+  const { data: links, error: lErr } = await platformDb
+    .from('programme_projects')
+    .select('project_id')
+    .in('programme_id', programmeIds)
+    .or('is_deleted.eq.false,is_deleted.is.null')
+  if (lErr) throw lErr
+  const projectIds = [...new Set((links || []).map((l) => l.project_id).filter(Boolean))]
+  if (!projectIds.length) return []
+
+  const statusIds = await getNonFinalProjectStatusIds()
+  let query = platformDb
+    .from('projects')
+    .select(
+      `
+      id,
+      project_code,
+      project_name,
+      project_manager_user_id,
+      status_id,
+      project_statuses:status_id (status_code, status_name),
+      manager:project_manager_user_id (id, full_name, email)
+    `
+    )
+    .in('id', projectIds)
+    .eq('is_deleted', false)
+  if (statusIds.length) query = query.in('status_id', statusIds)
+  const { data, error } = await query.order('project_name', { ascending: true })
+  if (error) throw error
+  return data || []
+}

@@ -14,6 +14,60 @@ export function stripMarkdownBold(text) {
   return String(text ?? '').replace(/\*\*([^*]+)\*\*/g, '$1')
 }
 
+/**
+ * Split text into plain / bold segments for React rendering.
+ * @param {string} text
+ * @returns {{ type: 'text' | 'bold', value: string }[]}
+ */
+export function splitMarkdownBoldParts(text) {
+  const s = String(text ?? '')
+  const parts = []
+  const re = /\*\*([^*]+)\*\*/g
+  let last = 0
+  let match
+  while ((match = re.exec(s)) !== null) {
+    if (match.index > last) {
+      parts.push({ type: 'text', value: s.slice(last, match.index) })
+    }
+    parts.push({ type: 'bold', value: match[1] })
+    last = match.index + match[0].length
+  }
+  if (last < s.length) {
+    parts.push({ type: 'text', value: s.slice(last) })
+  }
+  return parts.length ? parts : [{ type: 'text', value: s }]
+}
+
+/**
+ * Insert paragraph breaks before expiry / sign-off when stored as one line.
+ * @param {string} message
+ */
+export function normalizeInvitationMessageLineBreaks(message) {
+  let s = String(message ?? '').trim()
+  if (!s) return s
+  s = s.replace(/\s+(Please accept within\b)/gi, '\n\n$1')
+  s = s.replace(/\s+(Kind regards,?)/gi, '\n\n$1')
+  return s
+}
+
+/**
+ * Parse invitation message for in-app display (accept page, previews).
+ * @param {string} message
+ * @param {{ organisationName?: string, skipRedundantIntro?: boolean }} [options]
+ */
+export function prepareInvitationMessageForDisplay(message, options = {}) {
+  const { organisationName = '', skipRedundantIntro = true } = options
+  let normalized = String(message ?? '').trim()
+  if (!normalized) {
+    return { body: [], expiry: null, signOff: null }
+  }
+  if (organisationName) {
+    normalized = normalizeInvitationMessageOrganisation(normalized, organisationName)
+  }
+  normalized = normalizeInvitationMessageLineBreaks(normalized)
+  return parseInvitationMessageBlocks(normalized, { skipRedundantIntro })
+}
+
 export function applyMarkdownBold(htmlEscaped) {
   return String(htmlEscaped).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
 }

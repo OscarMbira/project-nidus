@@ -32,6 +32,14 @@ describe('resolveInvitationTemplatePlaceholders', () => {
     expect(out).toContain('not currently assigned to a programme')
   })
 
+  it('resolves invitee salutation placeholders', () => {
+    const out = resolveInvitationTemplatePlaceholders(
+      'Dear {{invitee_name}}, welcome to {{project_name}}.',
+      { ...baseCtx, inviteeFirstName: 'Thomas', inviteeLastName: 'Mboko' },
+    )
+    expect(out).toContain('Dear Thomas Mboko,')
+  })
+
   it('resolves hierarchy and full context block tokens', () => {
     const out = resolveInvitationTemplatePlaceholders(
       '{{hierarchy_block}}\n---\n{{project_context_block}}',

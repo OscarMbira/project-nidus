@@ -447,6 +447,19 @@ export const PLATFORM_ENTITY_TYPES = {
     defaultExpiryDays: 14,
     menuParent: 'stakeholders',
     roles: ['pmo_admin', 'project_manager', 'team_member']
+  },
+  stakeholder_assessment_matrix: {
+    label: 'Stakeholder Assessment',
+    labelPlural: 'Stakeholder Assessments',
+    icon: Users,
+    createRoute: '/platform/stakeholders/assessment-matrix',
+    editRoute: '/platform/stakeholders/assessment-matrix',
+    holdQueueRoute: '/platform/stakeholders/assessment-matrix/on-hold',
+    titleField: 'stakeholder_id',
+    requiredFields: ['stakeholder_id', 'current_level', 'desired_level'],
+    defaultExpiryDays: 14,
+    menuParent: 'stakeholders',
+    roles: ['pmo_admin', 'project_manager', 'team_member']
   }
 };
 
@@ -523,6 +536,19 @@ export const SIMULATOR_ENTITY_TYPES = {
     defaultExpiryDays: 14,
     menuParent: 'practice_stakeholders',
     roles: ['simulator_user']
+  },
+  practice_stakeholder_assessment_matrix: {
+    label: 'Practice Assessment',
+    labelPlural: 'Practice Assessments',
+    icon: Users,
+    createRoute: '/simulator/practice-stakeholders/assessment-matrix',
+    editRoute: '/simulator/practice-stakeholders/assessment-matrix',
+    holdQueueRoute: '/simulator/practice-stakeholders/assessment-matrix/on-hold',
+    titleField: 'practice_stakeholder_id',
+    requiredFields: ['practice_stakeholder_id', 'current_level', 'desired_level'],
+    defaultExpiryDays: 14,
+    menuParent: 'practice_stakeholders',
+    roles: ['simulator_user']
   }
 };
 
@@ -555,8 +581,8 @@ export const ENTITY_CATEGORIES = {
     'issue_report',
     'lessons_report'
   ],
-  simulator: ['sim_project', 'sim_benefit', 'sim_issue', 'sim_risk', 'practice_stakeholder'],
-  stakeholders: ['stakeholder']
+  simulator: ['sim_project', 'sim_benefit', 'sim_issue', 'sim_risk', 'practice_stakeholder', 'practice_stakeholder_assessment_matrix'],
+  stakeholders: ['stakeholder', 'stakeholder_assessment_matrix']
 };
 
 // ============================================================================

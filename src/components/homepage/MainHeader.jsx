@@ -14,7 +14,18 @@ const NAV_ITEMS = [
   { id: 'contact', label: 'Contact', href: '/contact' },
 ];
 
-const MainHeader = ({ hidePlatformButton = false, hideSimulatorButton = false }) => {
+const platformBtnClass =
+  'inline-flex items-center justify-center px-4 py-2 rounded-md font-medium transition-colors text-white';
+const platformBtnEnabled = `${platformBtnClass} bg-blue-600 hover:bg-blue-700`;
+const platformBtnDisabled = `${platformBtnClass} bg-blue-600 opacity-50 cursor-not-allowed`;
+const simulatorBtnEnabled = `${platformBtnClass} bg-green-600 hover:bg-green-700`;
+const simulatorBtnDisabled = `${platformBtnClass} bg-green-600 opacity-50 cursor-not-allowed`;
+
+const MainHeader = ({
+  hidePlatformButton = false,
+  hideSimulatorButton = false,
+  disablePlatformSimulatorButtons = false,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -54,24 +65,42 @@ const MainHeader = ({ hidePlatformButton = false, hideSimulatorButton = false })
           {/* Header Buttons */}
           <div className="flex items-center gap-3">
             <ThemeToggle />
-            {!hidePlatformButton && (
-              <Link
-                to="/platform"
-                className="hidden sm:inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
-              >
-                <span className="hidden md:inline">Platform</span>
-                <span className="md:hidden">PLT</span>
-              </Link>
-            )}
-            {!hideSimulatorButton && (
-              <Link
-                to="/simulator"
-                className="hidden sm:inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
-              >
-                <span className="hidden md:inline">Simulator</span>
-                <span className="md:hidden">SIM</span>
-              </Link>
-            )}
+            {!hidePlatformButton &&
+              (disablePlatformSimulatorButtons ? (
+                <button
+                  type="button"
+                  disabled
+                  title="Available after you accept your invitation"
+                  aria-label="Platform (available after accepting your invitation)"
+                  className={`hidden sm:inline-flex ${platformBtnDisabled}`}
+                >
+                  <span className="hidden md:inline">Platform</span>
+                  <span className="md:hidden">PLT</span>
+                </button>
+              ) : (
+                <Link to="/platform" className={`hidden sm:inline-flex ${platformBtnEnabled}`}>
+                  <span className="hidden md:inline">Platform</span>
+                  <span className="md:hidden">PLT</span>
+                </Link>
+              ))}
+            {!hideSimulatorButton &&
+              (disablePlatformSimulatorButtons ? (
+                <button
+                  type="button"
+                  disabled
+                  title="Available after you accept your invitation"
+                  aria-label="Simulator (available after accepting your invitation)"
+                  className={`hidden sm:inline-flex ${simulatorBtnDisabled}`}
+                >
+                  <span className="hidden md:inline">Simulator</span>
+                  <span className="md:hidden">SIM</span>
+                </button>
+              ) : (
+                <Link to="/simulator" className={`hidden sm:inline-flex ${simulatorBtnEnabled}`}>
+                  <span className="hidden md:inline">Simulator</span>
+                  <span className="md:hidden">SIM</span>
+                </Link>
+              ))}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="md:hidden p-2 rounded-lg border border-gray-600 bg-transparent hover:bg-gray-700 text-gray-300"
@@ -104,24 +133,46 @@ const MainHeader = ({ hidePlatformButton = false, hideSimulatorButton = false })
                 </Link>
               ))}
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                {!hidePlatformButton && (
-                  <Link
-                    to="/platform"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md font-medium bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                  >
-                    Platform
-                  </Link>
-                )}
-                {!hideSimulatorButton && (
-                  <Link
-                    to="/simulator"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="w-full h-10 px-4 py-2 inline-flex items-center justify-center rounded-md font-medium bg-green-600 hover:bg-green-700 text-white transition-colors"
-                  >
-                    Simulator
-                  </Link>
-                )}
+                {!hidePlatformButton &&
+                  (disablePlatformSimulatorButtons ? (
+                    <button
+                      type="button"
+                      disabled
+                      title="Available after you accept your invitation"
+                      aria-label="Platform (available after accepting your invitation)"
+                      className={`w-full h-10 px-4 py-2 ${platformBtnDisabled}`}
+                    >
+                      Platform
+                    </button>
+                  ) : (
+                    <Link
+                      to="/platform"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`w-full h-10 px-4 py-2 ${platformBtnEnabled}`}
+                    >
+                      Platform
+                    </Link>
+                  ))}
+                {!hideSimulatorButton &&
+                  (disablePlatformSimulatorButtons ? (
+                    <button
+                      type="button"
+                      disabled
+                      title="Available after you accept your invitation"
+                      aria-label="Simulator (available after accepting your invitation)"
+                      className={`w-full h-10 px-4 py-2 ${simulatorBtnDisabled}`}
+                    >
+                      Simulator
+                    </button>
+                  ) : (
+                    <Link
+                      to="/simulator"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`w-full h-10 px-4 py-2 ${simulatorBtnEnabled}`}
+                    >
+                      Simulator
+                    </Link>
+                  ))}
               </div>
             </div>
           </nav>

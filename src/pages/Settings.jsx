@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../services/supabaseClient'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { platformDb } from '../services/supabaseClient'
+import { updateUserProfile } from '../services/userProfileService'
 import { 
   User, 
   Bell, 
@@ -24,6 +25,15 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const profileOnly = useMemo(
+    () => /\/profile\/?$/.test(location.pathname),
+    [location.pathname]
+  )
+  const settingsPath = location.pathname.startsWith('/simulator/')
+    ? '/platform/settings'
+    : '/platform/settings'
 
   // Profile settings
   const [profileData, setProfileData] = useState({
@@ -54,10 +64,14 @@ export default function Settings() {
     loadUserData()
   }, [])
 
+  useEffect(() => {
+    if (profileOnly) setActiveTab('profile')
+  }, [profileOnly])
+
   const loadUserData = async () => {
     try {
       setLoading(true)
-      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+      const { data: { user: authUser }, error: authError } = await platformDb.auth.getUser()
       
       if (authError || !authUser) {
         navigate('/login')
@@ -65,24 +79,27 @@ export default function Settings() {
       }
 
       setUser(authUser)
+
+      const { data: userRecord, error: userError } = await platformDb
+        .from('users')
+        .select('id, full_name, email, phone_number, job_title, bio')
+        .eq('auth_user_id', authUser.id)
+        .maybeSingle()
+
+      if (userError) {
+        console.error('Error loading user record:', userError)
+      }
+
       setProfileData({
-        full_name: authUser.user_metadata?.full_name || '',
-        email: authUser.email || '',
-        phone: authUser.user_metadata?.phone || '',
-        job_title: authUser.user_metadata?.job_title || '',
-        bio: authUser.user_metadata?.bio || ''
+        full_name: userRecord?.full_name || authUser.user_metadata?.full_name || '',
+        email: userRecord?.email || authUser.email || '',
+        phone: userRecord?.phone_number || authUser.user_metadata?.phone || '',
+        job_title: userRecord?.job_title || authUser.user_metadata?.job_title || '',
+        bio: userRecord?.bio || authUser.user_metadata?.bio || '',
       })
 
-      // Load user record from users table
-      const { data: userRecord, error: userError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', authUser.id)
-        .single()
-
-      if (!userError && userRecord) {
-        // Load organisation
-        const { data: org, error: orgError } = await supabase
+      if (userRecord?.id) {
+        const { data: org, error: orgError } = await platformDb
           .from('accounts')
           .select('id, account_name, account_code')
           .eq('owner_user_id', userRecord.id)
@@ -103,41 +120,29 @@ export default function Settings() {
   const handleSaveProfile = async () => {
     try {
       setSaving(true)
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          full_name: profileData.full_name,
-          phone: profileData.phone,
-          job_title: profileData.job_title,
-          bio: profileData.bio
-        }
+      const updated = await updateUserProfile({
+        full_name: profileData.full_name,
+        phone: profileData.phone,
+        job_title: profileData.job_title,
+        bio: profileData.bio,
       })
 
-      if (error) throw error
-
-      // Also update users table
-      const { data: userRecord } = await supabase
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', user?.id)
-        .single()
-
-      if (userRecord) {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({
-            full_name: profileData.full_name,
-            phone: profileData.phone,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', userRecord.id)
-
-        if (updateError) throw updateError
-      }
+      setProfileData((prev) => ({
+        ...prev,
+        full_name: updated.full_name ?? prev.full_name,
+        phone: updated.phone_number ?? '',
+        job_title: updated.job_title ?? '',
+        bio: updated.bio ?? '',
+      }))
 
       toast.success('Profile updated successfully')
     } catch (error) {
       console.error('Error updating profile:', error)
-      toast.error('Failed to update profile')
+      const message = error?.message || 'Failed to update profile'
+      if (message.includes('Session expired')) {
+        navigate('/login')
+      }
+      toast.error(message)
     } finally {
       setSaving(false)
     }
@@ -156,7 +161,7 @@ export default function Settings() {
 
     try {
       setSaving(true)
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await platformDb.auth.updateUser({
         password: passwordData.new_password
       })
 
@@ -180,7 +185,7 @@ export default function Settings() {
     try {
       setSaving(true)
       // Save notification preferences to user metadata or a separate table
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await platformDb.auth.updateUser({
         data: {
           notification_settings: notificationSettings
         }
@@ -218,39 +223,54 @@ export default function Settings() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          {profileOnly ? 'My Profile' : 'Settings'}
+        </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Manage your account settings and preferences
+          {profileOnly
+            ? 'View and update your personal information'
+            : 'Manage your account settings and preferences'}
         </p>
+        {profileOnly && (
+          <p className="mt-2 text-sm">
+            <Link
+              to={settingsPath}
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Open all settings (notifications, security, organisation)
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-        {/* Tabs */}
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8 px-6" aria-label="Tabs">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm
-                    ${activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                    }
-                  `}
-                >
-                  <Icon className="h-5 w-5" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </nav>
-        </div>
+        {!profileOnly && (
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="flex flex-wrap gap-x-8 px-6" aria-label="Tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`
+                      flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm
+                      ${activeTab === tab.id
+                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                      }
+                    `}
+                  >
+                    <Icon className="h-5 w-5" />
+                    {tab.label}
+                  </button>
+                )
+              })}
+            </nav>
+          </div>
+        )}
 
-        {/* Tab Content */}
         <div className="p-6">
           {/* Profile Tab */}
           {activeTab === 'profile' && (
@@ -321,6 +341,7 @@ export default function Settings() {
                 </div>
                 <div className="mt-6 flex justify-end">
                   <button
+                    type="button"
                     onClick={handleSaveProfile}
                     disabled={saving}
                     className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

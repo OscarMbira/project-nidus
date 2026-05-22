@@ -11,6 +11,7 @@ import { assignProjectRole } from './roleService'
 import { inviteUserToProject } from './projectMembershipService'
 import { sendProjectInvitation } from './invitationService'
 import { loadInvitationProjectContext } from './invitationProjectContextService'
+import { resolveInviterDisplayNameFromUser } from '../utils/invitationInviteeFormat'
 import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess'
 
 /**
@@ -417,10 +418,11 @@ export async function sendRoleInvitation(
       }
     }
 
-    const [roleResult, projectResult, inviterResult, projectContext] = await Promise.all([
+    // SECURITY DEFINER RPC — links auth_user_id and returns inviter profile, bypasses RLS
+    const [roleResult, projectResult, myProfileResult, projectContext] = await Promise.all([
       supabase.from('roles').select('role_name, role_display_name').eq('id', roleId).maybeSingle(),
       supabase.from('projects').select('project_name, project_code, project_type_id, accounts(account_display_name, account_name, company_name)').eq('id', projectId).maybeSingle(),
-      supabase.from('users').select('full_name, email').eq('auth_user_id', user.id).maybeSingle(),
+      supabase.rpc('get_my_display_name'),
       options.projectContext
         ? Promise.resolve(options.projectContext)
         : loadInvitationProjectContext(projectId),
@@ -439,24 +441,43 @@ export async function sendRoleInvitation(
 
     const roleDisplayName = role?.role_display_name || role?.role_name || 'Role'
     const project = projectResult.data
-    const inviterUser = inviterResult.data
+    const myProfileRows = myProfileResult.data
+    const rawProfile = Array.isArray(myProfileRows) && myProfileRows.length > 0 ? myProfileRows[0] : null
+    const inviterUser = rawProfile ? { ...rawProfile, id: rawProfile.user_id } : null
+
+    const resolvedInviterName =
+      resolveInviterDisplayNameFromUser(
+        inviterUser || {},
+        user?.email,
+        user.user_metadata || {},
+      ) || 'PMO Admin'
+    const resolvedInviterJobTitle = rawProfile?.job_title || ''
+
+    // Use the org already resolved by the caller (form state) as the primary source;
+    // fall back to the DB join result so we never lose it if the join works.
+    const resolvedOrgName =
+      (options.organisationName && String(options.organisationName).trim()) ||
+      project?.accounts?.account_display_name ||
+      project?.accounts?.account_name ||
+      project?.accounts?.company_name ||
+      ''
 
     const result = await sendProjectInvitation(email, {
       projectId,
       projectName: project?.project_name || 'Project',
       projectCode: project?.project_code || null,
       projectTypeId: project?.project_type_id || null,
-      organisationName:
-        project?.accounts?.account_display_name ||
-        project?.accounts?.account_name ||
-        project?.accounts?.company_name ||
-        '',
+      organisationName: resolvedOrgName,
       roleId,
       roleName: roleDisplayName,
-      inviterName: inviterUser?.full_name || inviterUser?.email || 'PMO Admin',
+      inviterName: resolvedInviterName,
+      inviterJobTitle: resolvedInviterJobTitle,
       message,
       expiryDays,
+      inviteeFirstName: options.inviteeFirstName ?? null,
+      inviteeLastName: options.inviteeLastName ?? null,
       projectContext: projectContext || null,
+      appointmentTerms: options.appointmentTerms || null,
     })
 
     return result

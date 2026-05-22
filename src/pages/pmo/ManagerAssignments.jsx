@@ -17,6 +17,8 @@ import {
   removeProgrammeManager,
   removePortfolioManager,
 } from '../../services/managerAssignmentService'
+import { createManagerAppointment } from '../../services/managerAppointmentService'
+import { managerRoleForEntityType } from '../../utils/appointmentRoleUtils'
 
 const VIEW_KEY = 'pmo-manager-assignments-view'
 const SORT_PREFIX = 'pmo-manager-assignments-sort-'
@@ -262,12 +264,38 @@ export default function ManagerAssignments() {
   }, [tab])
 
   const handleModalConfirm = useCallback(
-    async (userId) => {
+    async (userId, appointmentTerms) => {
       if (!modal) return
-      if (modal.type === 'project') await assignProjectManager(modal.id, userId)
-      if (modal.type === 'programme') await assignProgrammeManager(modal.id, userId)
-      if (modal.type === 'portfolio') await assignPortfolioManager(modal.id, userId)
-      toast.success('Manager assigned')
+      if (appointmentTerms) {
+        const entityType =
+          modal.type === 'portfolio' ? 'portfolio' : modal.type === 'programme' ? 'programme' : 'project'
+        const res = await createManagerAppointment({
+          entityType,
+          projectId: entityType === 'project' ? modal.id : null,
+          programmeId: entityType === 'programme' ? modal.id : null,
+          portfolioId: entityType === 'portfolio' ? modal.id : null,
+          appointeeUserId: userId,
+          managerRoleName: managerRoleForEntityType(entityType),
+          assignmentStartDate: appointmentTerms.assignmentStartDate || null,
+          assignmentEndDate: appointmentTerms.assignmentEndDate || null,
+          timeCommitmentPct: appointmentTerms.timeCommitmentPct,
+          reportingToUserId: appointmentTerms.reportingToUserId || null,
+          budgetAuthorityLimit: appointmentTerms.budgetAuthorityLimit,
+          authorityNotes: appointmentTerms.authorityNotes,
+          reportingFrequency: appointmentTerms.reportingFrequency,
+          knownConstraints: appointmentTerms.knownConstraints,
+          referenceDocument: appointmentTerms.referenceDocument,
+          appointmentMessage: appointmentTerms.appointmentMessage,
+        })
+        if (!res.success) throw new Error(res.error || 'Failed to send appointment')
+        toast.success('Formal appointment invitation sent')
+      } else {
+        if (modal.type === 'project') await assignProjectManager(modal.id, userId)
+        if (modal.type === 'programme') await assignProgrammeManager(modal.id, userId)
+        if (modal.type === 'portfolio') await assignPortfolioManager(modal.id, userId)
+        toast.success('Manager assigned')
+      }
+      setModal(null)
       await load()
     },
     [modal, load]
@@ -388,6 +416,7 @@ export default function ManagerAssignments() {
             workloadByUserId={workload}
             limit={limit}
             onConfirm={handleModalConfirm}
+            useFormalAppointment
           />
         </Suspense>
 

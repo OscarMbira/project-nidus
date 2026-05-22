@@ -100,4 +100,18 @@ describe('draftQueueService – stakeholder entity', () => {
       expect(getHoldQueueRoute('practice_stakeholder')).toBe('/simulator/practice-stakeholders/on-hold');
     });
   });
+
+  describe('draft queue config – stakeholder_assessment_matrix', () => {
+    it('getEntityConfig returns assessment matrix config', () => {
+      const config = getEntityConfig('stakeholder_assessment_matrix');
+      expect(config?.createRoute).toBe('/platform/stakeholders/assessment-matrix');
+      expect(config?.holdQueueRoute).toBe('/platform/stakeholders/assessment-matrix/on-hold');
+    });
+
+    it('getHoldQueueRoute for practice_stakeholder_assessment_matrix', () => {
+      expect(getHoldQueueRoute('practice_stakeholder_assessment_matrix')).toBe(
+        '/simulator/practice-stakeholders/assessment-matrix/on-hold'
+      );
+    });
+  });
 });

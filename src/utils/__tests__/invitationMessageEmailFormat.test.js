@@ -5,6 +5,9 @@ import {
   formatInvitationPersonalMessageHtml,
   formatInvitationPersonalMessagePlain,
   normalizeInvitationMessageOrganisation,
+  normalizeInvitationMessageLineBreaks,
+  prepareInvitationMessageForDisplay,
+  splitMarkdownBoldParts,
 } from '../invitationMessageEmailFormat'
 
 const SAMPLE = `You have been invited to join **Helix Robotics** as **Project Manager**. You will lead day-to-day project delivery, manage the project team, and report progress to the project board. Welcome to the team.
@@ -53,5 +56,34 @@ describe('invitationMessageEmailFormat', () => {
     })
     expect(html).toContain('Hifo Solutions')
     expect(html).not.toContain('our organisation')
+  })
+
+  it('inserts line breaks before expiry and sign-off in one-line messages', () => {
+    const oneLine =
+      'You will lead delivery. Please accept within **7 days**. Kind regards, **Pat** our organisation'
+    const withBreaks = normalizeInvitationMessageLineBreaks(oneLine)
+    expect(withBreaks).toContain('\n\nPlease accept')
+    expect(withBreaks).toContain('\n\nKind regards')
+  })
+
+  it('prepareInvitationMessageForDisplay splits body expiry and sign-off', () => {
+    const oneLine =
+      'You have been invited to join **Proj** as **Team Member**. Welcome! Please accept within **7 days** — expires soon. Kind regards, **Pat** our organisation'
+    const { body, expiry, signOff } = prepareInvitationMessageForDisplay(oneLine, {
+      organisationName: 'Acme Ltd',
+    })
+    expect(body.length).toBeGreaterThan(0)
+    expect(expiry).toMatch(/Please accept within/)
+    expect(signOff).toMatch(/Kind regards/)
+  })
+
+  it('splitMarkdownBoldParts yields bold segments', () => {
+    const parts = splitMarkdownBoldParts('Join **Proj** as **Lead**')
+    expect(parts).toEqual([
+      { type: 'text', value: 'Join ' },
+      { type: 'bold', value: 'Proj' },
+      { type: 'text', value: ' as ' },
+      { type: 'bold', value: 'Lead' },
+    ])
   })
 })

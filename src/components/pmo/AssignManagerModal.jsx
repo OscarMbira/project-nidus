@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { AlertTriangle, Search, X } from 'lucide-react'
+import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../pm/ManagerAppointmentForm'
 
 const LABELS = {
   project: 'Project',
@@ -20,7 +21,8 @@ const LABELS = {
  * @param {Array<{ id: string, email: string, full_name: string | null }>} props.eligibleUsers
  * @param {Record<string, number>} props.workloadByUserId
  * @param {number} props.limit
- * @param {(userId: string) => Promise<void>} props.onConfirm
+ * @param {(userId: string, appointmentTerms?: object) => Promise<void>} props.onConfirm
+ * @param {boolean} [props.useFormalAppointment] — v593 invitation + appointment record
  */
 export default function AssignManagerModal({
   open,
@@ -33,18 +35,21 @@ export default function AssignManagerModal({
   workloadByUserId = {},
   limit = 5,
   onConfirm,
+  useFormalAppointment = false,
 }) {
   const panelRef = useRef(null)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState('')
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
+  const [appointmentTerms, setAppointmentTerms] = useState(MANAGER_APPOINTMENT_EMPTY)
 
   useEffect(() => {
     if (!open) return
     setSearch('')
     setSelectedId(currentManagerId || '')
     setErr(null)
+    setAppointmentTerms(MANAGER_APPOINTMENT_EMPTY)
   }, [open, currentManagerId])
 
   useEffect(() => {
@@ -71,7 +76,7 @@ export default function AssignManagerModal({
     setErr(null)
     setSaving(true)
     try {
-      await onConfirm(selectedId)
+      await onConfirm(selectedId, useFormalAppointment ? appointmentTerms : undefined)
       onClose()
     } catch (ex) {
       setErr(ex?.message || 'Assignment failed')
@@ -175,6 +180,15 @@ export default function AssignManagerModal({
           })}
         </div>
 
+        {useFormalAppointment && selectedId ? (
+          <ManagerAppointmentForm
+            value={appointmentTerms}
+            onChange={setAppointmentTerms}
+            eligibleUsers={eligibleUsers}
+            storageKey={`nidus-mgr-appt-${entityType}-${entityName}`}
+          />
+        ) : null}
+
         {err && (
           <p className="text-sm text-red-600 dark:text-red-400" role="alert">
             {err}
@@ -194,7 +208,7 @@ export default function AssignManagerModal({
             disabled={saving}
             className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {saving ? 'Saving…' : 'Assign'}
+            {saving ? 'Saving…' : useFormalAppointment ? 'Send appointment' : 'Assign'}
           </button>
         </div>
       </form>

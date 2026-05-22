@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { simDb } from '../../../services/supabase/supabaseClient'
+import { performLogout, getLogoutRedirectPath } from '../../../services/authLogoutService'
 import { ChevronRight, ChevronDown, LogOut, X, Briefcase } from 'lucide-react'
 import simulatorPMMenuConfig from '../../../config/simulatorPMMenuConfig'
 
@@ -73,12 +73,23 @@ function SimulatorPMSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null
 
 export default function SimulatorPMSidebar({ isOpen, onClose }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [expandedMenuId, setExpandedMenuId] = useState(null)
+  const [loggingOut, setLoggingOut] = useState(false)
   const handleToggleExpand = (id) => setExpandedMenuId((prev) => (prev === id ? null : id))
 
   const handleLogout = async () => {
-    await simDb.auth.signOut()
-    navigate('/simulator/login')
+    if (loggingOut) return
+    setLoggingOut(true)
+    onClose?.()
+    try {
+      await performLogout({ simulator: true })
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      navigate(getLogoutRedirectPath(location.pathname), { replace: true })
+      setLoggingOut(false)
+    }
   }
 
   return (
@@ -133,11 +144,14 @@ export default function SimulatorPMSidebar({ isOpen, onClose }) {
           {/* Footer */}
           <div className="border-t border-gray-200 dark:border-gray-700 p-4">
             <button
+              type="button"
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              disabled={loggingOut}
+              aria-busy={loggingOut}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <LogOut className={`h-5 w-5 flex-shrink-0 ${loggingOut ? 'animate-pulse' : ''}`} />
+              <span>{loggingOut ? 'Signing out…' : 'Logout'}</span>
             </button>
           </div>
         </div>

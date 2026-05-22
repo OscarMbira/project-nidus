@@ -145,6 +145,8 @@ export default function PlatformAccountSetup() {
           p_auth_user_id: user.id,
           p_email: user.email || '',
           p_full_name: user.user_metadata?.full_name || null,
+          p_first_name: user.user_metadata?.first_name || null,
+          p_last_name: user.user_metadata?.last_name || null,
           p_is_verified: true
         })
 

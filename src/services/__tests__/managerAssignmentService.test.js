@@ -22,6 +22,27 @@ function chainSingle(data, error = null) {
   }
 }
 
+function chainList(data, error = null) {
+  const result = { data, error }
+  const chain = {
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    order: vi.fn().mockResolvedValue(result),
+    then(onFulfilled, onRejected) {
+      return Promise.resolve(result).then(onFulfilled, onRejected)
+    },
+  }
+  chain.select.mockReturnValue(chain)
+  chain.eq.mockReturnValue(chain)
+  chain.in.mockReturnValue(chain)
+  chain.is.mockReturnValue(chain)
+  chain.or.mockReturnValue(chain)
+  return chain
+}
+
 describe('managerAssignmentService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -60,5 +81,37 @@ describe('managerAssignmentService', () => {
     })
     await managerAssignmentService.updateSystemAssignmentLimit(7)
     expect(mockFrom).toHaveBeenCalledWith('system_settings')
+  })
+
+  it('listProgrammesForPortfolioManager returns empty when userId missing', async () => {
+    const rows = await managerAssignmentService.listProgrammesForPortfolioManager('')
+    expect(rows).toEqual([])
+    expect(mockFrom).not.toHaveBeenCalled()
+  })
+
+  it('listProgrammesForPortfolioManager queries portfolios then programmes', async () => {
+    mockFrom
+      .mockReturnValueOnce(chainList([{ id: 'port-1' }]))
+      .mockReturnValueOnce(
+        chainList([
+          {
+            id: 'prog-1',
+            programme_code: 'P1',
+            programme_name: 'Alpha',
+            programme_manager_user_id: null,
+          },
+        ])
+      )
+    const rows = await managerAssignmentService.listProgrammesForPortfolioManager('user-1')
+    expect(rows).toHaveLength(1)
+    expect(rows[0].programme_code).toBe('P1')
+    expect(mockFrom).toHaveBeenNthCalledWith(1, 'portfolios')
+    expect(mockFrom).toHaveBeenNthCalledWith(2, 'programmes')
+  })
+
+  it('listProjectsForProgrammeManager returns empty when no programmes', async () => {
+    mockFrom.mockReturnValueOnce(chainList([]))
+    const rows = await managerAssignmentService.listProjectsForProgrammeManager('user-2')
+    expect(rows).toEqual([])
   })
 })

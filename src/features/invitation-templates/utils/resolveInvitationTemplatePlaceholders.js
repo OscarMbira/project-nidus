@@ -1,3 +1,5 @@
+import { formatInviteeFullName } from '../../../utils/invitationInviteeFormat.js'
+
 const EXPIRY_FALLBACK_DAYS = 7
 
 function clampDisplayExpiryDays(raw) {
@@ -78,6 +80,16 @@ export function resolveInvitationTemplatePlaceholders(body, ctx) {
   s = s.replaceAll('{{invitation_expiry_days}}', String(expiryDays))
   s = s.replaceAll('{{invitation_expiry_period}}', expiryPeriod)
   s = s.replaceAll('{{invitation_expiry_note}}', expiryNote)
+
+  const inviteeFirst = ctx.inviteeFirstName?.trim() || ''
+  const inviteeLast = ctx.inviteeLastName?.trim() || ''
+  const inviteeFull = formatInviteeFullName(inviteeFirst, inviteeLast)
+  const inviteeGreeting = inviteeFull || 'colleague'
+  s = s.replaceAll('{{invitee_first_name}}', inviteeFirst)
+  s = s.replaceAll('{{invitee_last_name}}', inviteeLast)
+  s = s.replaceAll('{{invitee_full_name}}', inviteeFull)
+  s = s.replaceAll('{{invitee_name}}', inviteeGreeting)
+
   s = applyProjectContextPlaceholders(s, ctx, pc)
   return s
 }

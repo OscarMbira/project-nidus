@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Table2, AlertTriangle } from 'lucide-react'
-import { getStakeholderAnalysis } from '../../services/stakeholderService'
+import { Table2, AlertTriangle, Pencil } from 'lucide-react'
 import ExportListMenu from '../ui/ExportListMenu'
+import { SEAM_LEVELS, prettySeamLevel } from '../../utils/stakeholderSEAMUtils'
 
 const SEAM_COLUMNS = [
   { key: 'stakeholder_name', label: 'Stakeholder' },
@@ -10,85 +9,17 @@ const SEAM_COLUMNS = [
   { key: 'gap', label: 'Gap' },
 ]
 
-const LEVELS = ['unaware', 'resistant', 'neutral', 'supportive', 'leading']
-
-function mapAttitudeToLevel(attitude) {
-  if (!attitude) return 'unaware'
-  const a = String(attitude).toLowerCase()
-  if (a === 'champion') return 'leading'
-  if (a === 'supporter') return 'supportive'
-  if (a === 'neutral') return 'neutral'
-  if (a === 'critic' || a === 'blocker') return 'resistant'
-  return 'unaware'
-}
-
-function prettyLevel(level) {
-  switch (level) {
-    case 'unaware': return 'Unaware'
-    case 'resistant': return 'Resistant'
-    case 'neutral': return 'Neutral'
-    case 'supportive': return 'Supportive'
-    case 'leading': return 'Leading'
-    default: return level
-  }
-}
-
-export default function StakeholderSEAM({ projectId }) {
-  const [rows, setRows] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!projectId) {
-      setRows([])
-      setLoading(false)
-      return
-    }
-    load()
-  }, [projectId])
-
-  const load = async () => {
-    if (!projectId) return
-    setLoading(true)
-    try {
-      const data = await getStakeholderAnalysis({ project_id: projectId })
-      const latestByStakeholder = new Map()
-      ;(data || []).forEach((rec) => {
-        const existing = latestByStakeholder.get(rec.stakeholder_id)
-        if (!existing || new Date(rec.analysis_date) > new Date(existing.analysis_date)) {
-          latestByStakeholder.set(rec.stakeholder_id, rec)
-        }
-      })
-      const mapped = Array.from(latestByStakeholder.values()).map((rec) => {
-        const currentLevel = mapAttitudeToLevel(rec.current_attitude)
-        const desiredLevel = mapAttitudeToLevel(rec.desired_attitude)
-        const gap = currentLevel === desiredLevel
-          ? 'None'
-          : `${prettyLevel(currentLevel)} → ${prettyLevel(desiredLevel)}`
-        return {
-          id: rec.id,
-          stakeholder_name: rec.stakeholder?.stakeholder_name || 'Unknown',
-          currentLevel,
-          desiredLevel,
-          gap,
-        }
-      })
-      setRows(mapped)
-    } catch (e) {
-      console.error(e)
-      setRows([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  if (!projectId) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
-        Select a project above to view the Stakeholder Engagement Assessment Matrix.
-      </div>
-    )
-  }
-
+/**
+ * SEAM grid — parent supplies rows (from stakeholder_assessment_matrix).
+ */
+export default function StakeholderSEAM({
+  rows = [],
+  loading = false,
+  emptyMessage = 'No assessments yet. Add an assessment to populate the matrix.',
+  onEdit,
+  onStakeholderClick,
+  showExport = true,
+}) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -99,56 +30,78 @@ export default function StakeholderSEAM({ projectId }) {
 
   if (!rows.length) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-500 dark:text-gray-400">
-        No stakeholder analysis records found. Capture analysis first, then SEAM will be available.
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-8 text-center text-gray-400">
+        {emptyMessage}
       </div>
     )
   }
 
-  const exportData = rows.map(r => ({
+  const exportData = rows.map((r) => ({
     stakeholder_name: r.stakeholder_name,
-    current_level: prettyLevel(r.currentLevel),
-    desired_level: prettyLevel(r.desiredLevel),
+    current_level: prettySeamLevel(r.currentLevel),
+    desired_level: prettySeamLevel(r.desiredLevel),
     gap: r.gap,
   }))
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
           <Table2 className="h-5 w-5 text-amber-500" />
-          Stakeholder Engagement Assessment Matrix (SEAM)
+          Stakeholder Engagement Assessment Matrix
         </h3>
-        <ExportListMenu
-          columns={SEAM_COLUMNS}
-          data={exportData}
-          baseFilename="Stakeholder-SEAM"
-          disabled={!rows.length}
-        />
+        {showExport && (
+          <ExportListMenu
+            columns={SEAM_COLUMNS}
+            data={exportData}
+            baseFilename="Stakeholder-Assessment-Matrix"
+            disabled={!rows.length}
+          />
+        )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-700">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-900/80">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stakeholder</th>
-              {LEVELS.map(level => (
-                <th key={level} className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  {prettyLevel(level)}
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
+                Stakeholder
+              </th>
+              {SEAM_LEVELS.map((level) => (
+                <th
+                  key={level}
+                  className="px-4 py-3 text-center text-xs font-medium text-gray-400 uppercase"
+                >
+                  {prettySeamLevel(level)}
                 </th>
               ))}
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Gap</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">Gap</th>
+              {onEdit && (
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {rows.map(row => {
+          <tbody className="divide-y divide-gray-700">
+            {rows.map((row) => {
               const hasGap = row.currentLevel !== row.desiredLevel
               return (
-                <tr key={row.id} className={hasGap ? 'bg-amber-50/60 dark:bg-amber-900/20' : ''}>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
-                    {row.stakeholder_name}
+                <tr key={row.id} className={hasGap ? 'bg-amber-900/20' : ''}>
+                  <td className="px-4 py-3 text-sm font-medium text-white whitespace-nowrap">
+                    {onStakeholderClick ? (
+                      <button
+                        type="button"
+                        onClick={() => onStakeholderClick(row.stakeholder_id)}
+                        className="text-blue-400 hover:underline text-left"
+                      >
+                        {row.stakeholder_name}
+                      </button>
+                    ) : (
+                      row.stakeholder_name
+                    )}
                   </td>
-                  {LEVELS.map(level => {
+                  {SEAM_LEVELS.map((level) => {
                     const isCurrent = row.currentLevel === level
                     const isDesired = row.desiredLevel === level
                     return (
@@ -157,30 +110,42 @@ export default function StakeholderSEAM({ projectId }) {
                           <span
                             className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                               isCurrent && isDesired
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                                ? 'bg-green-900/40 text-green-200'
                                 : isCurrent
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200'
-                                : 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-200'
+                                  ? 'bg-blue-900/40 text-blue-200'
+                                  : 'bg-purple-900/40 text-purple-200'
                             }`}
                           >
                             {isCurrent && isDesired ? 'C / D' : isCurrent ? 'C' : 'D'}
                           </span>
                         ) : (
-                          <span className="text-gray-300 dark:text-gray-600">–</span>
+                          <span className="text-gray-600">–</span>
                         )}
                       </td>
                     )
                   })}
-                  <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-gray-200 whitespace-nowrap">
                     {hasGap ? (
                       <span className="inline-flex items-center gap-1">
                         <AlertTriangle className="h-3 w-3 text-amber-500" />
                         {row.gap}
                       </span>
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500">Aligned</span>
+                      <span className="text-gray-500">Aligned</span>
                     )}
                   </td>
+                  {onEdit && (
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => onEdit(row.raw || row)}
+                        className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit
+                      </button>
+                    </td>
+                  )}
                 </tr>
               )
             })}
@@ -190,4 +155,3 @@ export default function StakeholderSEAM({ projectId }) {
     </div>
   )
 }
-

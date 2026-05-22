@@ -13,6 +13,9 @@ import {
   updatePlatformProjectMemberRole,
   removePlatformProjectMember,
   listProjectsForMemberManagement,
+  canInviteToProject,
+  readMemberManagementProjectsCache,
+  fetchProjectPickerRowById,
 } from '../../services/projectMembershipService'
 import { getProjectSeatAllocation } from '../../services/seatManagementService'
 import {
@@ -21,6 +24,8 @@ import {
 } from '../../services/projectRoleAssignmentService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import InviteUserForm from '../../components/app/InviteUserForm'
+import BulkInviteForm from '../../components/app/BulkInviteForm'
+import { loadDraft as loadBulkInviteDraft } from '../../services/bulkInviteDraftService'
 import EditMemberRoleModal from '../../components/app/EditMemberRoleModal'
 import SeatUsageWidget from '../../components/app/SeatUsageWidget'
 import ExportListMenu from '../../components/ui/ExportListMenu'
@@ -34,6 +39,7 @@ import { isLikelyDatabaseUuid } from '../../utils/isUuid'
 import {
   Users,
   UserPlus,
+  Upload,
   Mail,
   Edit,
   Trash2,
@@ -42,11 +48,11 @@ import {
 } from 'lucide-react'
 import { useToastContext } from '../../context/ToastContext'
 import PermissionGate from '../../components/auth/PermissionGate'
-import { hasPermission } from '../../utils/permissionChecker'
 import { isPmoAdmin } from '../../services/organisationRoleService'
 
 const STORAGE_SORT = 'nidus-platform-project-users-sort'
 const LOAD_MEMBERS_TIMEOUT_MS = 25000
+const INTERNAL_USER_CACHE_PREFIX = 'nidus-internal-user-id'
 
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },
@@ -61,7 +67,7 @@ export default function ProjectUsers() {
   const [searchParams, setSearchParams] = useSearchParams()
   const qpProjectRaw = searchParams.get('project')
   const qpProject = qpProjectRaw?.trim() ? qpProjectRaw.trim() : null
-  const qpAction = searchParams.get('action') || ''    // 'invite' → auto-scroll to invite form
+  const qpAction = searchParams.get('action') || ''    // 'send-invite' | 'invite' | 'bulk-invite' → scroll to form
   const qpTab    = searchParams.get('tab')    || ''    // 'pending' → scroll to pending invitations
   const qpRole   = searchParams.get('role')   || ''    // role_name to pre-select in invite form
   const qpEntity = useEntityId(qpProject || '', 'project')
@@ -78,6 +84,7 @@ export default function ProjectUsers() {
   const [loading, setLoading] = useState(true)
   const [sessionUser, setSessionUser] = useState({ internalId: null, authId: null })
   const [projectList, setProjectList] = useState([])
+  const [projectListLoading, setProjectListLoading] = useState(true)
   const [selectedProjectId, setSelectedProjectId] = useState('')
   const [members, setMembers] = useState([])
   const [invitations, setInvitations] = useState([])
@@ -93,6 +100,8 @@ export default function ProjectUsers() {
     loading: true,
     canAdd: false,
   })
+  const [invitePanel, setInvitePanel] = useState('single')
+  const [bulkResumeDraft, setBulkResumeDraft] = useState(null)
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'name', direction: 'asc' },
@@ -114,11 +123,54 @@ export default function ProjectUsers() {
     document.getElementById('add-project-member')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [])
 
+  const scrollToBulkInviteForm = useCallback(() => {
+    document.getElementById('bulk-invite-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
+
+  const scrollToSendRoleInvitation = useCallback(() => {
+    document.getElementById('send-role-invitation')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [])
+
+  const refreshBulkDraft = useCallback(async () => {
+    if (!effectiveProjectId) {
+      setBulkResumeDraft(null)
+      return
+    }
+    const res = await loadBulkInviteDraft(effectiveProjectId)
+    setBulkResumeDraft(res.success && res.data ? res.data : null)
+  }, [effectiveProjectId])
+
   const resolveSession = useCallback(async () => {
-    const { data: { user } } = await platformDb.auth.getUser()
-    if (!user?.id) return
-    const { data: row } = await platformDb.from('users').select('id').eq('auth_user_id', user.id).maybeSingle()
-    setSessionUser({ authId: user.id, internalId: row?.id || null })
+    const { data: { session } } = await platformDb.auth.getSession()
+    const authId = session?.user?.id
+    if (!authId) {
+      setSessionUser({ internalId: null, authId: null })
+      return
+    }
+    let internalId = null
+    try {
+      internalId = sessionStorage.getItem(`${INTERNAL_USER_CACHE_PREFIX}:${authId}`)
+    } catch {
+      /* ignore */
+    }
+    if (internalId) {
+      setSessionUser({ authId, internalId })
+      return
+    }
+    const { data: row } = await platformDb
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authId)
+      .maybeSingle()
+    internalId = row?.id || null
+    if (internalId) {
+      try {
+        sessionStorage.setItem(`${INTERNAL_USER_CACHE_PREFIX}:${authId}`, internalId)
+      } catch {
+        /* ignore */
+      }
+    }
+    setSessionUser({ authId, internalId })
   }, [])
 
   useEffect(() => {
@@ -127,7 +179,6 @@ export default function ProjectUsers() {
 
   useEffect(() => {
     if (!sessionUser.authId) {
-      setIsPmoAdminUser(false)
       setMemberAddEligibility({ loading: false, canAdd: false })
       return
     }
@@ -135,18 +186,19 @@ export default function ProjectUsers() {
       setMemberAddEligibility({ loading: false, canAdd: false })
       return
     }
+    if (isPmoAdminUser) {
+      setMemberAddEligibility({ loading: false, canAdd: true })
+      return
+    }
     let cancelled = false
     setMemberAddEligibility({ loading: true, canAdd: false })
     ;(async () => {
       try {
-        const pmo = await isPmoAdmin(sessionUser.authId)
-        if (cancelled) return
-        setIsPmoAdminUser(!!pmo)
-        if (pmo) {
-          setMemberAddEligibility({ loading: false, canAdd: true })
-          return
-        }
-        const inviteOk = await hasPermission(sessionUser.authId, effectiveProjectId, 'user.invite')
+        const inviteOk = await canInviteToProject(
+          sessionUser.authId,
+          sessionUser.internalId,
+          effectiveProjectId,
+        )
         if (!cancelled) setMemberAddEligibility({ loading: false, canAdd: !!inviteOk })
       } catch (e) {
         console.error('ProjectUsers: member add eligibility', e)
@@ -156,19 +208,83 @@ export default function ProjectUsers() {
     return () => {
       cancelled = true
     }
-  }, [sessionUser.authId, effectiveProjectId])
+  }, [sessionUser.authId, sessionUser.internalId, effectiveProjectId, isPmoAdminUser])
+
+  const applyProjectList = useCallback((rows) => {
+    const list = rows || []
+    setProjectList(list)
+    if (!routeProjectId && !qpProject && list.length === 1) {
+      setSelectedProjectId((prev) => prev || list[0].id)
+    }
+  }, [routeProjectId, qpProject])
 
   useEffect(() => {
-    if (!sessionUser.internalId || !sessionUser.authId) return
+    if (!sessionUser.internalId || !sessionUser.authId) {
+      setProjectListLoading(false)
+      return
+    }
+
+    const cached = readMemberManagementProjectsCache(sessionUser.internalId)
+    const hadCache = !!(cached?.length)
+    if (hadCache) {
+      applyProjectList(cached)
+      setProjectListLoading(false)
+    } else {
+      setProjectListLoading(true)
+    }
+
+    let cancelled = false
     ;(async () => {
-      const res = await listProjectsForMemberManagement(sessionUser.internalId, sessionUser.authId)
-      if (res.success) setProjectList(res.data || [])
-      else {
-        setProjectList([])
-        toastError(res.error || 'Failed to load project list')
+      try {
+        const pmo = await isPmoAdmin(sessionUser.authId)
+        if (cancelled) return
+        setIsPmoAdminUser(!!pmo)
+
+        const res = await listProjectsForMemberManagement(
+          sessionUser.internalId,
+          sessionUser.authId,
+          { isPmoAdmin: pmo },
+        )
+        if (cancelled) return
+        if (res.success) applyProjectList(res.data || [])
+        else {
+          if (!cached?.length) setProjectList([])
+          toastError(res.error || 'Failed to load project list')
+        }
+      } catch (e) {
+        if (!cancelled) {
+          console.error('ProjectUsers: project list', e)
+          if (!cached?.length) setProjectList([])
+          toastError(e?.message || 'Failed to load project list')
+        }
+      } finally {
+        if (!cancelled) setProjectListLoading(false)
       }
     })()
-  }, [sessionUser, toastError])
+
+    return () => {
+      cancelled = true
+    }
+  }, [sessionUser.internalId, sessionUser.authId, applyProjectList, toastError])
+
+  useEffect(() => {
+    const pid = effectiveProjectId
+    if (!pid || projectList.some((p) => String(p.id).toLowerCase() === String(pid).toLowerCase())) {
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const res = await fetchProjectPickerRowById(pid)
+      if (cancelled || !res.success || !res.data) return
+      setProjectList((prev) => {
+        if (prev.some((p) => p.id === res.data.id)) return prev
+        return [...prev, res.data]
+      })
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [effectiveProjectId, projectList])
 
   useEffect(() => {
     if (routeProjectId || qpProject) return
@@ -220,19 +336,18 @@ export default function ProjectUsers() {
       return
     }
 
-    // If project picker is active, only load details for projects user can actually access.
-    const projectKnown =
-      projectList.length > 0 &&
-      projectList.some(
-        (p) =>
-          String(p.id).toLowerCase() === String(effectiveProjectId).toLowerCase()
+    // If project picker finished loading, only load details for projects in the allowed list.
+    if (!routeProjectId && !projectListLoading && projectList.length > 0) {
+      const projectKnown = projectList.some(
+        (p) => String(p.id).toLowerCase() === String(effectiveProjectId).toLowerCase(),
       )
-    if (!routeProjectId && projectList.length > 0 && !projectKnown) {
-      setMembers([])
-      setInvitations([])
-      setSeatAllocation(null)
-      releaseLoading()
-      return
+      if (!projectKnown) {
+        setMembers([])
+        setInvitations([])
+        setSeatAllocation(null)
+        releaseLoading()
+        return
+      }
     }
 
     try {
@@ -270,7 +385,7 @@ export default function ProjectUsers() {
     } finally {
       releaseLoading()
     }
-  }, [effectiveProjectId, routeProjectId, projectList, toastError, isPmoAdminUser])
+  }, [effectiveProjectId, routeProjectId, projectList, projectListLoading, toastError, isPmoAdminUser])
 
   const loadInviteContext = useCallback(async () => {
     if (!effectiveProjectId) return
@@ -438,13 +553,24 @@ export default function ProjectUsers() {
     loadInviteContext()
   }, [effectiveProjectId, loadInviteContext])
 
-  // Auto-scroll when arriving via sidebar shortcut links (?action=invite / ?tab=pending)
+  useEffect(() => {
+    refreshBulkDraft()
+  }, [refreshBulkDraft])
+
+  // Auto-scroll when arriving via sidebar shortcut links (?action=send-invite / ?tab=pending)
   useEffect(() => {
     if (loading || !effectiveProjectId) return
-    if (qpAction === 'invite') {
+    if (qpAction === 'send-invite') {
+      setInvitePanel('single')
+      setTimeout(() => scrollToSendRoleInvitation(), 150)
+    } else if (qpAction === 'invite') {
+      setInvitePanel('single')
       setTimeout(() => {
         document.getElementById('add-project-member')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 150)
+    } else if (qpAction === 'bulk-invite') {
+      setInvitePanel('bulk')
+      setTimeout(() => scrollToBulkInviteForm(), 150)
     } else if (qpTab === 'pending') {
       setTimeout(() => {
         document.getElementById('pending-invitations-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -461,6 +587,11 @@ export default function ProjectUsers() {
           <h1 className="text-2xl font-bold">Project members</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             Invite users, change roles, and manage seats for your project.
+            {qpAction === 'send-invite' && (
+              <span className="block mt-1 text-blue-700 dark:text-blue-300">
+                Choose a role and send a single invitation, or switch to Bulk invite to upload a CSV.
+              </span>
+            )}
             {isPmoAdminUser && (
               <span className="block mt-1 text-blue-700 dark:text-blue-300">
                 PMO: pick any template role (sponsor / executive, programme manager, project manager,
@@ -473,14 +604,41 @@ export default function ProjectUsers() {
         <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
           {sessionUser.authId && effectiveProjectId ? (
             <>
-              <button
-                type="button"
-                onClick={scrollToAddMemberForm}
-                className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm w-full sm:w-auto min-h-[44px]"
+              <div
+                id="send-role-invitation"
+                className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"
               >
-                <UserPlus className="h-4 w-4 mr-2 shrink-0" aria-hidden />
-                Add member
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvitePanel('single')
+                    scrollToAddMemberForm()
+                  }}
+                  className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg shadow-sm w-full sm:w-auto min-h-[44px] ${
+                    invitePanel === 'single'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <UserPlus className="h-4 w-4 mr-2 shrink-0" aria-hidden />
+                  Single invite
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInvitePanel('bulk')
+                    scrollToBulkInviteForm()
+                  }}
+                  className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg w-full sm:w-auto min-h-[44px] ${
+                    invitePanel === 'bulk'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                      : 'border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <Upload className="h-4 w-4 mr-2 shrink-0" aria-hidden />
+                  Bulk invite
+                </button>
+              </div>
               {memberAddEligibility.loading ? (
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-right">Checking permissions…</p>
               ) : !memberAddEligibility.canAdd ? (
@@ -501,18 +659,32 @@ export default function ProjectUsers() {
       {!routeProjectId && (
         <label className="block max-w-xl">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Project</span>
-          <select
-            value={selectedProjectId || qpProject || ''}
-            onChange={(e) => onChangeProject(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2"
-          >
-            <option value="">Select a project…</option>
-            {projectList.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.project_name} {p.project_code ? `(${p.project_code})` : ''}
+          {projectList.length === 1 && !projectListLoading ? (
+            <p
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-gray-900 dark:text-gray-100"
+              aria-live="polite"
+            >
+              {projectList[0].project_name}
+              {projectList[0].project_code ? ` (${projectList[0].project_code})` : ''}
+            </p>
+          ) : (
+            <select
+              value={selectedProjectId || qpResolvedUuid || ''}
+              onChange={(e) => onChangeProject(e.target.value)}
+              disabled={projectListLoading && projectList.length === 0}
+              className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 disabled:opacity-60"
+              aria-busy={projectListLoading}
+            >
+              <option value="">
+                {projectListLoading ? 'Loading projects…' : 'Select a project…'}
               </option>
-            ))}
-          </select>
+              {projectList.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.project_name} {p.project_code ? `(${p.project_code})` : ''}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
       )}
 
@@ -529,19 +701,67 @@ export default function ProjectUsers() {
         </div>
       )}
 
-      {effectiveProjectId && sessionUser.authId ? (
-        <InviteUserForm
-          key={effectiveProjectId}
+      {effectiveProjectId && sessionUser.authId && bulkResumeDraft ? (
+        <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-sm text-amber-900 dark:text-amber-100">
+            You have a saved bulk invite draft for this project (
+            {(bulkResumeDraft.members || []).length} row(s)).
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setInvitePanel('bulk')
+              scrollToBulkInviteForm()
+            }}
+            className="inline-flex justify-center px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px]"
+          >
+            Resume draft
+          </button>
+        </div>
+      ) : null}
+
+      {effectiveProjectId && sessionUser.authId && invitePanel === 'single' ? (
+        <div id="add-project-member">
+          <InviteUserForm
+            key={`invite-${effectiveProjectId}`}
+            projectId={effectiveProjectId}
+            onSuccess={handleInviteSuccess}
+            allowLeadershipRoles={isPmoAdminUser}
+            callerIsPmoAdmin={isPmoAdminUser}
+            defaultRole={qpRole || null}
+            permissionNote={
+              !memberAddEligibility.loading && !memberAddEligibility.canAdd
+                ? 'If submit fails with a permission error, ask a PMO administrator to grant project invite access or use a PMO account.'
+                : null
+            }
+          />
+        </div>
+      ) : null}
+
+      {effectiveProjectId && sessionUser.authId && invitePanel === 'bulk' ? (
+        <div id="bulk-invite-panel">
+        <BulkInviteForm
+          key={`bulk-${effectiveProjectId}-${bulkResumeDraft?.id || 'new'}`}
           projectId={effectiveProjectId}
-          onSuccess={handleInviteSuccess}
           allowLeadershipRoles={isPmoAdminUser}
-          defaultRole={qpRole || null}
-          permissionNote={
-            !memberAddEligibility.loading && !memberAddEligibility.canAdd
-              ? 'If submit fails with a permission error, ask a PMO administrator to grant project invite access or use a PMO account.'
-              : null
-          }
+          callerIsPmoAdmin={isPmoAdminUser}
+          existingMemberEmails={members.map((m) => m.user?.email).filter(Boolean)}
+          pendingInviteEmails={invitations
+            .filter((i) => i.invitation_status === 'pending')
+            .map((i) => i.invited_email)
+            .filter(Boolean)}
+          seatAllocation={seatAllocation}
+          resumeDraft={invitePanel === 'bulk' ? bulkResumeDraft : null}
+          onSuccess={() => {
+            handleInviteSuccess()
+            refreshBulkDraft()
+          }}
+          onCancel={() => {
+            setInvitePanel('single')
+            refreshBulkDraft()
+          }}
         />
+        </div>
       ) : null}
 
       {effectiveProjectId && seatAllocation && (

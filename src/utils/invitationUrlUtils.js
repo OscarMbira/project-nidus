@@ -1,29 +1,9 @@
 /**
- * Human-friendly project invitation URLs.
- * Path: /auth/invitation/{projectCode}/{roleSlug}?token=...
- * Legacy path-token URLs remain supported for older emails.
+ * Clean token-based invitation URLs.
+ * New format : /i/{token}          (used in outgoing emails)
+ * Legacy      : /auth/invitation/{projectCode}/{roleSlug}?token=...
+ *               Both routes still resolve to InvitationAccept for old emails.
  */
-
-const toSlug = (str) =>
-  (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 40) || 'invite'
-
-/**
- * First URL segment: prefer projects.project_code, else slugified project name.
- * @param {string | null | undefined} projectCode
- * @param {string | null | undefined} projectName
- */
-export function invitationProjectSegment(projectCode, projectName) {
-  const code = String(projectCode ?? '').trim()
-  if (code) return encodeURIComponent(code)
-  return encodeURIComponent(toSlug(projectName))
-}
-
-/**
- * Second URL segment: slugified role (decorative; validation uses token only).
- */
-export function invitationRoleSegment(roleName) {
-  return encodeURIComponent(toSlug(roleName))
-}
 
 /**
  * @param {{
@@ -45,14 +25,26 @@ export function buildProjectInvitationUrls({
     return { acceptUrl: null, declineUrl: null }
   }
 
-  const projectSeg = invitationProjectSegment(projectCode, projectName)
-  const roleSeg = invitationRoleSegment(roleName)
-  const base = `${origin.replace(/\/$/, '')}/auth/invitation/${projectSeg}/${roleSeg}`
-  const tokenQs = `token=${encodeURIComponent(invitationToken)}`
-  const acceptUrl = `${base}?${tokenQs}`
-  const declineUrl = `${acceptUrl}&action=decline`
+  const base = `${origin.replace(/\/$/, '')}/i/${encodeURIComponent(invitationToken)}`
+  const acceptUrl = base
+  const declineUrl = `${base}?action=decline`
 
   return { acceptUrl, declineUrl }
+}
+
+// ── Helpers kept for any internal callers ──────────────────────────────────
+
+const toSlug = (str) =>
+  (str || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').substring(0, 40) || 'invite'
+
+export function invitationProjectSegment(projectCode, projectName) {
+  const code = String(projectCode ?? '').trim()
+  if (code) return encodeURIComponent(code)
+  return encodeURIComponent(toSlug(projectName))
+}
+
+export function invitationRoleSegment(roleName) {
+  return encodeURIComponent(toSlug(roleName))
 }
 
 /** @deprecated Use object form — kept for quick migration */

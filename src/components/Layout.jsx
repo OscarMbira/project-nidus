@@ -28,7 +28,12 @@ const Layout = ({ children }) => {
     path.startsWith('/app/project-members') ||
     path.startsWith('/app/project-users') ||
     path.startsWith('/app/local-data-extensions') ||
-    path.startsWith('/app/settings/invitation-templates')
+    path.startsWith('/app/settings/invitation-templates') ||
+    path.startsWith('/app/invitation-tracker') ||
+    path.startsWith('/app/team-appointments') ||
+    path.startsWith('/platform/my-appointments') ||
+    path.startsWith('/platform/my-team-appointments') ||
+    path.startsWith('/platform/pmo-admin/appointments')
   const isSimulatorApp = path.startsWith('/simulator/')
 
   return (

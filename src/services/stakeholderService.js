@@ -1,12 +1,17 @@
 import { platformDb } from './supabaseClient'
+import { buildGapSummary } from '../utils/stakeholderSEAMUtils'
 
 /**
  * Stakeholder Service - API functions for Stakeholder Management module
  * Uses platformDb (public schema) for consistency with Platform app.
  */
 
-/** Max time to wait for auth session read (avoids indefinite hang). */
-const AUTH_SESSION_TIMEOUT_MS = 8000
+/** Matches platformDb auth.storageKey in supabase/supabaseClient.js */
+const AUTH_STORAGE_KEY = 'project-nidus-auth'
+const INTERNAL_USER_CACHE_PREFIX = 'nidus-internal-user-id'
+
+/** Max time to wait for auth user read when storage has no session (avoids indefinite hang). */
+const AUTH_SESSION_TIMEOUT_MS = 15000
 /** Max time to wait for a single stakeholders table write (avoids stuck "Saving..."). */
 const STAKEHOLDER_WRITE_TIMEOUT_MS = 45000
 
@@ -96,21 +101,58 @@ export function pickStakeholderWritePayload(raw) {
 }
 
 /**
+ * Read auth user id from sessionStorage (same key as platformDb). Avoids getSession() hangs
+ * when GoTrue is refreshing or simDb auth sync is in flight.
+ */
+function readStoredAuthUserId() {
+  if (typeof window === 'undefined' || !window.sessionStorage) return null
+  try {
+    const raw = window.sessionStorage.getItem(AUTH_STORAGE_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw)
+    if (data?.user?.id) return data.user.id
+    if (data?.currentSession?.user?.id) return data.currentSession.user.id
+    if (Array.isArray(data)) {
+      for (const entry of data) {
+        const id = entry?.user?.id ?? entry?.currentSession?.user?.id
+        if (id) return id
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+let _authUserIdInFlight = null
+
+/**
  * Supabase Auth user id (auth.users / session).
  */
 async function getAuthSessionUserId() {
-  const { data: { session }, error } = await withTimeout(
-    platformDb.auth.getSession(),
-    AUTH_SESSION_TIMEOUT_MS,
-    'Loading your session'
-  )
-  if (error) throw error
-  if (!session?.user?.id) throw new Error('User not authenticated')
-  return session.user.id
+  const stored = readStoredAuthUserId()
+  if (stored) return stored
+
+  if (!_authUserIdInFlight) {
+    _authUserIdInFlight = (async () => {
+      const { data: { user }, error } = await withTimeout(
+        platformDb.auth.getUser(),
+        AUTH_SESSION_TIMEOUT_MS,
+        'Loading your session'
+      )
+      if (error) throw error
+      if (!user?.id) throw new Error('User not authenticated')
+      return user.id
+    })().finally(() => {
+      _authUserIdInFlight = null
+    })
+  }
+  return _authUserIdInFlight
 }
 
 /** Cache: auth uid -> public.users.id (FK targets use the latter, not auth uid). */
 let _platformUserCache = { authId: null, platformUserId: null }
+let _platformUserIdInFlight = null
 
 /**
  * public.users.id for audit/FK columns (created_by, updated_by, analyzed_by, …).
@@ -118,19 +160,48 @@ let _platformUserCache = { authId: null, platformUserId: null }
  */
 async function getPlatformUserId() {
   const authId = await getAuthSessionUserId()
-  if (_platformUserCache.authId === authId) {
+  if (_platformUserCache.authId === authId && _platformUserCache.platformUserId) {
     return _platformUserCache.platformUserId
   }
-  const { data: row } = await platformDb
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', authId)
-    .eq('is_deleted', false)
-    .maybeSingle()
 
-  const platformUserId = row?.id ?? null
-  _platformUserCache = { authId, platformUserId }
-  return platformUserId
+  let cachedPlatformId = null
+  try {
+    cachedPlatformId = sessionStorage.getItem(`${INTERNAL_USER_CACHE_PREFIX}:${authId}`)
+  } catch {
+    /* ignore */
+  }
+  if (cachedPlatformId) {
+    _platformUserCache = { authId, platformUserId: cachedPlatformId }
+    return cachedPlatformId
+  }
+
+  if (_platformUserIdInFlight) {
+    return _platformUserIdInFlight
+  }
+
+  _platformUserIdInFlight = (async () => {
+    const { data: row } = await platformDb
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', authId)
+      .eq('is_deleted', false)
+      .maybeSingle()
+
+    const platformUserId = row?.id ?? null
+    _platformUserCache = { authId, platformUserId }
+    if (platformUserId) {
+      try {
+        sessionStorage.setItem(`${INTERNAL_USER_CACHE_PREFIX}:${authId}`, platformUserId)
+      } catch {
+        /* ignore */
+      }
+    }
+    return platformUserId
+  })().finally(() => {
+    _platformUserIdInFlight = null
+  })
+
+  return _platformUserIdInFlight
 }
 
 // ================================================
@@ -324,8 +395,138 @@ export async function importStakeholders(rows, options = {}) {
 }
 
 // ================================================
-// STAKEHOLDER ANALYSIS
+// STAKEHOLDER ASSESSMENT MATRIX (SEAM)
 // ================================================
+
+const ASSESSMENT_MATRIX_WRITE_KEYS = new Set([
+  'project_id',
+  'stakeholder_id',
+  'assessment_date',
+  'current_level',
+  'desired_level',
+  'gap_summary',
+  'notes',
+])
+
+/**
+ * @param {Record<string, unknown>} raw
+ */
+export function pickAssessmentMatrixWritePayload(raw) {
+  const out = {}
+  if (!raw || typeof raw !== 'object') return out
+  for (const key of ASSESSMENT_MATRIX_WRITE_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(raw, key)) continue
+    if (raw[key] !== undefined) out[key] = raw[key]
+  }
+  if (!out.gap_summary && out.current_level && out.desired_level) {
+    out.gap_summary = buildGapSummary(String(out.current_level), String(out.desired_level))
+  }
+  return out
+}
+
+export async function getStakeholderAssessmentMatrix(filters = {}) {
+  let query = platformDb
+    .from('stakeholder_assessment_matrix')
+    .select(`
+      *,
+      stakeholder:stakeholder_id (
+        id,
+        stakeholder_name,
+        stakeholder_reference,
+        stakeholder_type
+      ),
+      project:project_id (
+        id,
+        project_name,
+        project_code
+      )
+    `)
+    .eq('is_deleted', false)
+
+  if (filters.project_id) query = query.eq('project_id', filters.project_id)
+  if (filters.stakeholder_id) query = query.eq('stakeholder_id', filters.stakeholder_id)
+
+  const { data, error } = await query.order('assessment_date', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function getStakeholderAssessmentMatrixById(id) {
+  const { data, error } = await platformDb
+    .from('stakeholder_assessment_matrix')
+    .select(`
+      *,
+      stakeholder:stakeholder_id (id, stakeholder_name, stakeholder_reference),
+      project:project_id (id, project_name, project_code)
+    `)
+    .eq('id', id)
+    .eq('is_deleted', false)
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function saveStakeholderAssessmentMatrix(matrixData, matrixId = null) {
+  const platformUserId = await getPlatformUserId()
+  const cleaned = pickAssessmentMatrixWritePayload(matrixData)
+  const updateData = { ...cleaned }
+  if (platformUserId) updateData.updated_by = platformUserId
+  if (!updateData.assessment_date) {
+    updateData.assessment_date = new Date().toISOString().split('T')[0]
+  }
+
+  if (matrixId) {
+    const { data, error } = await platformDb
+      .from('stakeholder_assessment_matrix')
+      .update(updateData)
+      .eq('id', matrixId)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  }
+
+  const projectId = updateData.project_id
+  const stakeholderId = updateData.stakeholder_id
+  if (projectId && stakeholderId) {
+    const { data: existing } = await platformDb
+      .from('stakeholder_assessment_matrix')
+      .select('id')
+      .eq('project_id', projectId)
+      .eq('stakeholder_id', stakeholderId)
+      .eq('is_deleted', false)
+      .maybeSingle()
+    if (existing?.id) {
+      return saveStakeholderAssessmentMatrix(updateData, existing.id)
+    }
+  }
+
+  if (platformUserId) updateData.created_by = platformUserId
+  const { data, error } = await platformDb
+    .from('stakeholder_assessment_matrix')
+    .insert(updateData)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteStakeholderAssessmentMatrix(matrixId) {
+  const platformUserId = await getPlatformUserId()
+  const patch = { is_deleted: true, deleted_at: new Date().toISOString() }
+  if (platformUserId) {
+    patch.deleted_by = platformUserId
+    patch.updated_by = platformUserId
+  }
+  const { data, error } = await platformDb
+    .from('stakeholder_assessment_matrix')
+    .update(patch)
+    .eq('id', matrixId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
 
 /**
  * Get stakeholder analysis records
@@ -863,6 +1064,13 @@ export default {
   deleteStakeholder,
   importStakeholders,
   
+  // Stakeholder Assessment Matrix
+  getStakeholderAssessmentMatrix,
+  getStakeholderAssessmentMatrixById,
+  saveStakeholderAssessmentMatrix,
+  deleteStakeholderAssessmentMatrix,
+  pickAssessmentMatrixWritePayload,
+
   // Stakeholder Analysis
   getStakeholderAnalysis,
   saveStakeholderAnalysis,

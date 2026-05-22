@@ -380,3 +380,307 @@ export async function removePracticePortfolioManager(portfolioId) {
     .eq('user_id', ownerId)
   if (error) throw error
 }
+
+/** public.users.id for current sim user */
+export async function getCurrentSimPublicUserId() {
+  const {
+    data: { user: authUser },
+  } = await simDb.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+  const { data: row, error } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUser.id)
+    .maybeSingle()
+  if (error) throw error
+  if (!row?.id) throw new Error('Platform user profile not found')
+  return row.id
+}
+
+export async function simListProgrammesForPortfolioManager(publicUserId) {
+  const authId = await resolveAuthUserId(publicUserId)
+  if (!authId) return []
+  const { data: portfolios, error: pErr } = await simDb
+    .from('practice_portfolios')
+    .select('id')
+    .eq('portfolio_manager_user_id', authId)
+    .eq('is_deleted', false)
+    .in('portfolio_status', ACTIVE_PORTFOLIO_STATUSES)
+  if (pErr) throw pErr
+  const portfolioIds = (portfolios || []).map((p) => p.id).filter(Boolean)
+  if (!portfolioIds.length) return []
+
+  const { data, error } = await simDb
+    .from('practice_programmes')
+    .select(
+      `
+      id,
+      programme_code,
+      programme_name,
+      programme_status,
+      practice_portfolio_id,
+      programme_manager_user_id
+    `
+    )
+    .in('practice_portfolio_id', portfolioIds)
+    .eq('is_deleted', false)
+    .in('programme_status', ACTIVE_PROGRAMME_STATUSES)
+    .order('programme_name', { ascending: true })
+  if (error) throw error
+  return enrichManagerDisplay(data || [], 'programme_manager_user_id')
+}
+
+export async function simListProjectsForPortfolioManager(publicUserId) {
+  const programmes = await simListProgrammesForPortfolioManager(publicUserId)
+  const programmeIds = programmes.map((p) => p.id).filter(Boolean)
+  if (!programmeIds.length) return []
+
+  const { data: links, error: lErr } = await simDb
+    .from('practice_programme_projects')
+    .select('practice_project_id')
+    .in('practice_programme_id', programmeIds)
+    .eq('assignment_status', 'active')
+  if (lErr) throw lErr
+  const projectIds = [...new Set((links || []).map((l) => l.practice_project_id).filter(Boolean))]
+  if (!projectIds.length) return []
+
+  const statusIds = await getActivePracticeProjectStatusIds()
+  let query = simDb
+    .from('practice_projects')
+    .select(
+      `
+      id,
+      project_code,
+      project_name,
+      project_manager_user_id,
+      status_id,
+      practice_project_statuses:status_id (status_code, status_name)
+    `
+    )
+    .in('id', projectIds)
+    .eq('is_deleted', false)
+  if (statusIds.length) query = query.in('status_id', statusIds)
+  const { data, error } = await query.order('project_name', { ascending: true })
+  if (error) throw error
+  const rows = data || []
+  const pmap = await fetchUsersByIds(rows.map((r) => r.project_manager_user_id).filter(Boolean))
+  return rows.map((r) => ({
+    ...r,
+    manager: r.project_manager_user_id ? pmap.get(r.project_manager_user_id) || null : null,
+    manager_public_user_id: r.project_manager_user_id || null,
+  }))
+}
+
+export async function simListProjectsForProgrammeManager(publicUserId) {
+  const authId = await resolveAuthUserId(publicUserId)
+  if (!authId) return []
+  const { data: programmes, error: progErr } = await simDb
+    .from('practice_programmes')
+    .select('id')
+    .eq('programme_manager_user_id', authId)
+    .eq('is_deleted', false)
+    .in('programme_status', ACTIVE_PROGRAMME_STATUSES)
+  if (progErr) throw progErr
+  const programmeIds = (programmes || []).map((p) => p.id).filter(Boolean)
+  if (!programmeIds.length) return []
+
+  const { data: links, error: lErr } = await simDb
+    .from('practice_programme_projects')
+    .select('practice_project_id')
+    .in('practice_programme_id', programmeIds)
+    .eq('assignment_status', 'active')
+  if (lErr) throw lErr
+  const projectIds = [...new Set((links || []).map((l) => l.practice_project_id).filter(Boolean))]
+  if (!projectIds.length) return []
+
+  const statusIds = await getActivePracticeProjectStatusIds()
+  let query = simDb
+    .from('practice_projects')
+    .select(
+      `
+      id,
+      project_code,
+      project_name,
+      project_manager_user_id,
+      status_id
+    `
+    )
+    .in('id', projectIds)
+    .eq('is_deleted', false)
+  if (statusIds.length) query = query.in('status_id', statusIds)
+  const { data, error } = await query.order('project_name', { ascending: true })
+  if (error) throw error
+  const rows = data || []
+  const pmap = await fetchUsersByIds(rows.map((r) => r.project_manager_user_id).filter(Boolean))
+  return rows.map((r) => ({
+    ...r,
+    manager: r.project_manager_user_id ? pmap.get(r.project_manager_user_id) || null : null,
+    manager_public_user_id: r.project_manager_user_id || null,
+  }))
+}
+
+async function assertPortfolioManagerAuthForProgramme(programmeId) {
+  const {
+    data: { user: authUser },
+  } = await simDb.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+  const { data: prog, error } = await simDb
+    .from('practice_programmes')
+    .select('id, practice_portfolio_id')
+    .eq('id', programmeId)
+    .eq('is_deleted', false)
+    .single()
+  if (error) throw error
+  if (!prog?.practice_portfolio_id) throw new Error('Programme is not linked to a portfolio')
+  const { data: port, error: pErr } = await simDb
+    .from('practice_portfolios')
+    .select('portfolio_manager_user_id')
+    .eq('id', prog.practice_portfolio_id)
+    .single()
+  if (pErr) throw pErr
+  if (port?.portfolio_manager_user_id !== authUser.id) {
+    throw new Error('Not allowed to manage this programme')
+  }
+}
+
+async function assertProgrammeManagerAuthForProject(projectId) {
+  const {
+    data: { user: authUser },
+  } = await simDb.auth.getUser()
+  if (!authUser) throw new Error('Not authenticated')
+  const { data: links, error: lErr } = await simDb
+    .from('practice_programme_projects')
+    .select('practice_programme_id')
+    .eq('practice_project_id', projectId)
+    .eq('assignment_status', 'active')
+    .limit(1)
+  if (lErr) throw lErr
+  const programmeId = links?.[0]?.practice_programme_id
+  if (!programmeId) throw new Error('Project is not linked to a programme')
+  const { data: prog, error } = await simDb
+    .from('practice_programmes')
+    .select('programme_manager_user_id')
+    .eq('id', programmeId)
+    .single()
+  if (error) throw error
+  if (prog?.programme_manager_user_id !== authUser.id) {
+    throw new Error('Not allowed to manage this project')
+  }
+}
+
+export async function simAssignProgrammeManagerAsPortfolioManager(programmeId, managerPublicUserId) {
+  await assertPortfolioManagerAuthForProgramme(programmeId)
+  const authId = await resolveAuthUserId(managerPublicUserId)
+  if (!authId) throw new Error('User cannot be assigned (no auth account)')
+
+  const { data: row, error } = await simDb
+    .from('practice_programmes')
+    .select('programme_manager_user_id')
+    .eq('id', programmeId)
+    .single()
+  if (error) throw error
+
+  if (row?.programme_manager_user_id !== authId) {
+    const { allowed, limit } = await checkAssignmentLimit(managerPublicUserId)
+    if (!allowed) {
+      throw new Error(`Manager has reached the maximum of ${limit} concurrent active assignments`)
+    }
+  }
+
+  const { error: ue } = await simDb
+    .from('practice_programmes')
+    .update({ programme_manager_user_id: authId, updated_at: new Date().toISOString() })
+    .eq('id', programmeId)
+  if (ue) throw ue
+}
+
+export async function simRemoveProgrammeManagerAsPortfolioManager(programmeId) {
+  await assertPortfolioManagerAuthForProgramme(programmeId)
+  const { error } = await simDb
+    .from('practice_programmes')
+    .update({ programme_manager_user_id: null, updated_at: new Date().toISOString() })
+    .eq('id', programmeId)
+  if (error) throw error
+}
+
+export async function simAssignProjectManagerAsPortfolioManager(projectId, managerPublicUserId) {
+  const { data: links, error: lErr } = await simDb
+    .from('practice_programme_projects')
+    .select('practice_programme_id')
+    .eq('practice_project_id', projectId)
+    .limit(1)
+  if (lErr) throw lErr
+  if (links?.[0]?.practice_programme_id) {
+    await assertPortfolioManagerAuthForProgramme(links[0].practice_programme_id)
+  } else {
+    throw new Error('Project is not linked to a programme')
+  }
+
+  const { data: row, error } = await simDb
+    .from('practice_projects')
+    .select('project_manager_user_id')
+    .eq('id', projectId)
+    .eq('is_deleted', false)
+    .single()
+  if (error) throw error
+
+  const previousId = row?.project_manager_user_id
+  if (previousId !== managerPublicUserId) {
+    const { allowed, limit } = await checkAssignmentLimit(managerPublicUserId)
+    if (!allowed) {
+      throw new Error(`Manager has reached the maximum of ${limit} concurrent active assignments`)
+    }
+  }
+
+  const { error: ue } = await simDb
+    .from('practice_projects')
+    .update({ project_manager_user_id: managerPublicUserId, updated_at: new Date().toISOString() })
+    .eq('id', projectId)
+  if (ue) throw ue
+}
+
+export async function simRemoveProjectManagerAsPortfolioManager(projectId) {
+  const { data: links } = await simDb
+    .from('practice_programme_projects')
+    .select('practice_programme_id')
+    .eq('practice_project_id', projectId)
+    .limit(1)
+  if (links?.[0]?.practice_programme_id) {
+    await assertPortfolioManagerAuthForProgramme(links[0].practice_programme_id)
+  }
+  const { error } = await simDb
+    .from('practice_projects')
+    .update({ project_manager_user_id: null, updated_at: new Date().toISOString() })
+    .eq('id', projectId)
+  if (error) throw error
+}
+
+export async function simAssignProjectManagerAsProgrammeManager(projectId, managerPublicUserId) {
+  await assertProgrammeManagerAuthForProject(projectId)
+  const { data: row, error } = await simDb
+    .from('practice_projects')
+    .select('project_manager_user_id')
+    .eq('id', projectId)
+    .single()
+  if (error) throw error
+  if (row?.project_manager_user_id !== managerPublicUserId) {
+    const { allowed, limit } = await checkAssignmentLimit(managerPublicUserId)
+    if (!allowed) {
+      throw new Error(`Manager has reached the maximum of ${limit} concurrent active assignments`)
+    }
+  }
+  const { error: ue } = await simDb
+    .from('practice_projects')
+    .update({ project_manager_user_id: managerPublicUserId, updated_at: new Date().toISOString() })
+    .eq('id', projectId)
+  if (ue) throw ue
+}
+
+export async function simRemoveProjectManagerAsProgrammeManager(projectId) {
+  await assertProgrammeManagerAuthForProject(projectId)
+  const { error } = await simDb
+    .from('practice_projects')
+    .update({ project_manager_user_id: null, updated_at: new Date().toISOString() })
+    .eq('id', projectId)
+  if (error) throw error
+}

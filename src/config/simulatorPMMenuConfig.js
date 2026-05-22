@@ -52,11 +52,81 @@ import {
   Presentation,
   RefreshCcw,
   ShieldCheck,
-  FlaskConical
+  FlaskConical,
+  MailCheck,
+  Users,
+  Mail,
+  UserCog,
 } from 'lucide-react';
 
 const simulatorPMMenuConfig = [
   { id: 'sim-pm-dashboard', label: 'Dashboard', path: '/simulator/pm/dashboard', icon: LayoutDashboard, section: null, order: 0 },
+  {
+    id: 'sim-pm-people-assignments',
+    label: 'People & Assignments',
+    path: null,
+    icon: UserCog,
+    section: 'People & Assignments',
+    order: 1,
+    children: [
+      {
+        id: 'sim-pm-portfolio-assign',
+        label: 'Assign Managers (Portfolio)',
+        path: '/simulator/pm/portfolio-manager/assignments',
+        icon: UserCog,
+        order: 1,
+      },
+      {
+        id: 'sim-pm-programme-assign',
+        label: 'Assign Project Managers (Programme)',
+        path: '/simulator/pm/programme-manager/assignments',
+        icon: UserCog,
+        order: 2,
+      },
+      {
+        id: 'sim-pm-team-members',
+        label: 'Manage Team Members',
+        path: '/simulator/pm/team-members',
+        icon: Users,
+        order: 3,
+      },
+      {
+        id: 'sim-pm-send-invite',
+        label: 'Send Invitation',
+        path: '/simulator/pm/team-members?action=send-invite',
+        icon: Mail,
+        order: 4,
+      },
+      {
+        id: 'sim-pm-invitation-status',
+        label: 'Invitation Status',
+        path: '/simulator/pm/invitation-tracker',
+        icon: MailCheck,
+        order: 5,
+      },
+      {
+        id: 'sim-pm-my-appointments',
+        label: 'My Appointments',
+        path: '/simulator/my-appointments',
+        icon: UserCog,
+        order: 6,
+      },
+      {
+        id: 'sim-pm-team-appointments',
+        label: 'Team Appointments',
+        path: '/simulator/app/team-appointments',
+        icon: Users,
+        order: 7,
+      },
+      {
+        id: 'sim-pm-my-team-assignments',
+        label: 'My Assignment',
+        path: '/simulator/my-team-appointments',
+        icon: ClipboardList,
+        order: 8,
+      },
+    ],
+  },
   {
     id: 'sim-pm-my-work',
     label: 'My Practice Work',
@@ -153,6 +223,7 @@ const simulatorPMMenuConfig = [
     children: [
       { id: 'sim-pm-people-teams', label: 'Practice Teams', path: '/simulator/practice-teams', icon: Briefcase, order: 1 },
       { id: 'sim-pm-people-stakeholders', label: 'Stakeholders', path: '/simulator/practice-stakeholders', icon: AlertCircle, order: 2 },
+      { id: 'sim-pm-invitation-tracker', label: 'Invitation Status', path: '/simulator/pm/invitation-tracker', icon: MailCheck, order: 3 },
     ]
   },
   {

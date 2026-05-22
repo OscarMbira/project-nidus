@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Plus, Search, Target, MessageSquare, BarChart3, FileText, Table2, ListTodo, GitBranch, Triangle, Upload, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getStakeholders, saveStakeholderAnalysis } from '../services/stakeholderService';
+import { getStakeholders, saveStakeholderAnalysis, getStakeholderAssessmentMatrix } from '../services/stakeholderService';
+import { mapAssessmentRowToSeamDisplay } from '../utils/stakeholderSEAMUtils';
 import StakeholderRegister from '../components/stakeholders/StakeholderRegister';
 import StakeholderForm from '../components/stakeholders/StakeholderForm';
 import PowerInterestMatrix from '../components/stakeholders/PowerInterestMatrix';
@@ -49,6 +50,8 @@ export default function StakeholderManagement() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [projects, setProjects] = useState([]);
   const [activeTab, setActiveTab] = useState('register');
+  const [seamRows, setSeamRows] = useState([]);
+  const [seamLoading, setSeamLoading] = useState(false);
   const [matrixRefreshTrigger, setMatrixRefreshTrigger] = useState(0);
   const [showImportModal, setShowImportModal] = useState(false);
   const [stakeholderViewMode, setStakeholderViewMode] = useViewMode('stakeholder-register', 'grid');
@@ -69,6 +72,29 @@ export default function StakeholderManagement() {
     }
     fetchData();
   }, [filters, selectedProjectId, activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'seam' || !selectedProjectId) {
+      setSeamRows([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setSeamLoading(true);
+      try {
+        const data = await getStakeholderAssessmentMatrix({ project_id: selectedProjectId });
+        if (!cancelled) setSeamRows((data || []).map(mapAssessmentRowToSeamDisplay));
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setSeamRows([]);
+      } finally {
+        if (!cancelled) setSeamLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, selectedProjectId]);
 
   const fetchProjects = async () => {
     try {
@@ -393,7 +419,16 @@ export default function StakeholderManagement() {
       )}
 
       {activeTab === 'seam' && (
-        <StakeholderSEAM projectId={selectedProjectId || null} />
+        <StakeholderSEAM
+          rows={seamRows}
+          loading={seamLoading}
+          emptyMessage="No assessments yet. Use Stakeholder Assessment Matrix in the sidebar to add C/D levels."
+          onEdit={() =>
+            navigate('/platform/stakeholders/assessment-matrix', {
+              state: { projectId: selectedProjectId },
+            })
+          }
+        />
       )}
 
       {activeTab === 'actions' && (

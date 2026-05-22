@@ -55,9 +55,9 @@ import {
   ShieldCheck,
   FlaskConical,
   Users,
-  UserPlus,
-  UserCheck,
   Mail,
+  MailCheck,
+  UserCog,
 } from 'lucide-react';
 
 const pmDashboardMenuConfig = [
@@ -88,17 +88,17 @@ const pmDashboardMenuConfig = [
         order: 1,
       },
       {
-        id: 'pm-invite-team-manager',
-        label: 'Invite Team Manager / Lead',
-        path: '/pm/team-members?action=invite&role=team_manager',
-        icon: UserCheck,
+        id: 'pm-send-role-invitation',
+        label: 'Send Role Invitation',
+        path: '/pm/team-members?action=send-invite',
+        icon: Mail,
         order: 2,
       },
       {
-        id: 'pm-invite-team-member',
-        label: 'Invite Project Team Member',
-        path: '/pm/team-members?action=invite',
-        icon: UserPlus,
+        id: 'pm-invitation-tracker',
+        label: 'Invitation Status',
+        path: '/app/invitation-tracker',
+        icon: MailCheck,
         order: 3,
       },
       {
@@ -107,6 +107,60 @@ const pmDashboardMenuConfig = [
         path: '/pm/team-members?tab=pending',
         icon: Mail,
         order: 4,
+      },
+      {
+        id: 'pm-my-team-appointments',
+        label: 'My Assignment',
+        path: '/platform/my-team-appointments',
+        icon: ClipboardList,
+        order: 5,
+      },
+    ],
+  },
+
+  // People & Assignments — decoupled manager/member assignment (v592)
+  {
+    id: 'pm-people-assignments',
+    label: 'People & Assignments',
+    path: null,
+    icon: UserCog,
+    section: 'People & Assignments',
+    order: 2,
+    children: [
+      {
+        id: 'pm-portfolio-assign-managers',
+        label: 'Assign Managers (Portfolio)',
+        path: '/platform/portfolio-manager/assignments',
+        icon: UserCog,
+        order: 1,
+      },
+      {
+        id: 'pm-programme-assign-pm',
+        label: 'Assign Project Managers (Programme)',
+        path: '/platform/programme-manager/assignments',
+        icon: UserCog,
+        order: 2,
+      },
+      {
+        id: 'pm-people-invitation-status',
+        label: 'Invitation Status',
+        path: '/app/invitation-tracker',
+        icon: MailCheck,
+        order: 3,
+      },
+      {
+        id: 'pm-my-appointments',
+        label: 'My Appointments',
+        path: '/platform/my-appointments',
+        icon: UserCog,
+        order: 4,
+      },
+      {
+        id: 'pm-team-appointments',
+        label: 'Team Appointments',
+        path: '/platform/app/team-appointments',
+        icon: Users,
+        order: 5,
       },
     ],
   },

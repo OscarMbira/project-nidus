@@ -102,7 +102,7 @@ describe('probePostgrestRpcListedInOpenApi', () => {
 describe('buildInvitationRpcPayload', () => {
   const expires = '2026-05-10T12:00:00.000Z'
 
-  it('always JSON-serializes all five parameter keys (no undefined omissions)', () => {
+  it('always JSON-serializes all seven parameter keys (no undefined omissions)', () => {
     const payload = buildInvitationRpcPayload(
       'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
       '11111111-2222-3333-4444-555555555555',
@@ -115,7 +115,22 @@ describe('buildInvitationRpcPayload', () => {
     expect(json).toContain('"p_role_id"')
     expect(json).toContain('"p_invitation_message"')
     expect(json).toContain('"p_invitation_expires_at"')
+    expect(json).toContain('"p_invited_first_name"')
+    expect(json).toContain('"p_invited_last_name"')
     expect(payload.p_invitation_message).toBe(null)
+    expect(payload.p_invited_first_name).toBe(null)
+    expect(payload.p_invited_last_name).toBe(null)
+  })
+
+  it('maps invitee first and last name when provided', () => {
+    const payload = buildInvitationRpcPayload(
+      'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+      '11111111-2222-3333-4444-555555555555',
+      { email: 'a@b.com', inviteeFirstName: ' Jane ', inviteeLastName: ' Doe ' },
+      expires,
+    )
+    expect(payload.p_invited_first_name).toBe('Jane')
+    expect(payload.p_invited_last_name).toBe('Doe')
   })
 
   it('trims email and maps blank message to null', () => {

@@ -56,14 +56,25 @@ const PlatformDashboard = memo(function PlatformDashboard() {
       setUserId(user.id);
 
       // Get user details
-      const { data: userRecord, error: userRecordError } = await platformDb
+      let { data: userRecord } = await platformDb
         .from('users')
         .select('id, full_name')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (userRecordError || !userRecord) {
-        console.error('Error getting user record:', userRecordError);
+      if (!userRecord) {
+        // auth_user_id not linked yet (invited user) — call SECURITY DEFINER repair then retry
+        await platformDb.rpc('link_auth_account');
+        const { data: retried } = await platformDb
+          .from('users')
+          .select('id, full_name')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+        userRecord = retried;
+      }
+
+      if (!userRecord) {
+        console.error('Error getting user record: auth_user_id not linked');
         setLoading(false);
         return;
       }

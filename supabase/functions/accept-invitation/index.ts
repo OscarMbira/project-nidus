@@ -48,6 +48,21 @@ async function restPost(base: string, key: string, path: string, payload: unknow
   return { ok: res.ok, status: res.status, body };
 }
 
+async function restPatch(base: string, key: string, path: string, payload: unknown) {
+  const res = await fetch(`${base}${path}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': key,
+      'Authorization': `Bearer ${key}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+    },
+    body: JSON.stringify(payload),
+  });
+  const body = await res.json().catch(() => null);
+  return { ok: res.ok, status: res.status, body };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
@@ -146,11 +161,33 @@ serve(async (req) => {
     console.log('[accept-invitation] auth user id:', authUserId);
 
     // ── 3. Ensure public.users row (idempotent) ───────────────────────────────
-    const checkRes = await restGet(rest, key, `/users?auth_user_id=eq.${encodeURIComponent(authUserId)}&select=id&limit=1`);
-    const existingId: string | null =
-      checkRes.ok && Array.isArray(checkRes.body) ? (checkRes.body[0]?.id ?? null) : null;
+    // Priority 1: find by auth_user_id (the normal path for new users)
+    const checkByAuthRes = await restGet(rest, key, `/users?auth_user_id=eq.${encodeURIComponent(authUserId)}&select=id&limit=1`);
+    let existingId: string | null =
+      checkByAuthRes.ok && Array.isArray(checkByAuthRes.body) ? (checkByAuthRes.body[0]?.id ?? null) : null;
 
     if (!existingId) {
+      // Priority 2: find by email — handles the case where a users row was created
+      // without an auth_user_id (e.g. admin-created, legacy import, or prior partial signup).
+      const checkByEmailRes = await restGet(rest, key, `/users?email=eq.${encodeURIComponent(email)}&select=id,auth_user_id&limit=1`);
+      const emailRow = checkByEmailRes.ok && Array.isArray(checkByEmailRes.body) ? checkByEmailRes.body[0] : null;
+
+      if (emailRow?.id) {
+        existingId = emailRow.id;
+        // Backfill auth_user_id so future lookups work correctly
+        if (!emailRow.auth_user_id || emailRow.auth_user_id !== authUserId) {
+          const patchRes = await restPatch(rest, key, `/users?id=eq.${encodeURIComponent(existingId)}`, {
+            auth_user_id: authUserId,
+            is_active: true,
+            is_verified: true,
+          });
+          console.log('[accept-invitation] backfill auth_user_id status:', patchRes.status);
+        }
+      }
+    }
+
+    if (!existingId) {
+      // Truly new — insert
       const insRes = await restPost(rest, key, '/users', {
         auth_user_id: authUserId,
         email,
@@ -164,7 +201,7 @@ serve(async (req) => {
       }
     }
 
-    // Re-fetch the canonical users.id
+    // Re-fetch canonical users.id (covers all three paths above)
     const uRes = await restGet(rest, key, `/users?auth_user_id=eq.${encodeURIComponent(authUserId)}&select=id&limit=1`);
     const userId: string | null =
       uRes.ok && Array.isArray(uRes.body) ? (uRes.body[0]?.id ?? null) : null;

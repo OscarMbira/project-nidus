@@ -51,6 +51,8 @@ import {
   FolderKanban,
   Database,
   Mail,
+  MailCheck,
+  Send,
   Clock,
   AtSign,
 } from 'lucide-react';
@@ -610,9 +612,12 @@ const pmoMenuConfig = [
     order: 14,
     children: [
       { id: 'pmo-people-manager-assignments', label: 'Manager Assignments', path: '/platform/pmo-admin/manager-assignments', icon: Users, order: 1, permission: 'pmo.admin' },
-      { id: 'pmo-people-assignment-settings', label: 'Assignment Settings', path: '/platform/pmo-admin/manager-assignment-settings', icon: Settings2, order: 2, permission: 'pmo.admin' },
-      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 4, permission: 'pmo.admin' },
-      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 5, permission: 'pmo.admin' },
+      { id: 'pmo-people-appointment-tracker', label: 'Appointment Tracker', path: '/platform/pmo-admin/appointments', icon: ClipboardCheck, order: 2, permission: 'pmo.admin' },
+      { id: 'pmo-people-assignment-settings', label: 'Assignment Settings', path: '/platform/pmo-admin/manager-assignment-settings', icon: Settings2, order: 3, permission: 'pmo.admin' },
+      { id: 'pmo-people-invitation-tracker', label: 'Invitation Tracker', path: '/platform/admin/invitation-tracker', icon: MailCheck, order: 4, permission: 'pmo.admin' },
+      { id: 'pmo-people-send-invites', label: 'Send Invitations', path: '/platform/admin/send-role-invites', icon: Send, order: 5, permission: 'pmo.admin' },
+      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 6, permission: 'pmo.admin' },
+      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 7, permission: 'pmo.admin' },
     ],
   },
 ];

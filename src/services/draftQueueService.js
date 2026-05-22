@@ -506,7 +506,9 @@ export function getRequiredFields(entityType) {
     exception_report: ['report_title', 'exception_type'],
     highlight_report: ['report_title', 'period_start', 'period_end'],
     stakeholder: ['stakeholder_name'],
-    practice_stakeholder: ['stakeholder_name']
+    practice_stakeholder: ['stakeholder_name'],
+    stakeholder_assessment_matrix: ['stakeholder_id', 'current_level', 'desired_level'],
+    practice_stakeholder_assessment_matrix: ['practice_stakeholder_id', 'current_level', 'desired_level']
   };
 
   return fieldMappings[entityType] || [];
@@ -549,7 +551,9 @@ export function extractTitle(entityType, formData) {
     exception_report: 'report_title',
     highlight_report: 'report_title',
     stakeholder: 'stakeholder_name',
-    practice_stakeholder: 'stakeholder_name'
+    practice_stakeholder: 'stakeholder_name',
+    stakeholder_assessment_matrix: 'stakeholder_id',
+    practice_stakeholder_assessment_matrix: 'practice_stakeholder_id'
   };
 
   const field = titleFields[entityType] || 'name';

@@ -8,21 +8,29 @@
 
 import { appDb } from './supabase/supabaseClient'
 import { isPmoAdmin } from './organisationRoleService'
-import { getMyProjects } from './projectService'
+import { hasPermission } from '../utils/permissionChecker'
 import {
   clampInvitationExpiryDays,
-  fetchDefaultInvitationExpiryDaysForProject,
   INVITE_EXPIRY_FALLBACK_DAYS,
 } from './invitationExpiryService'
 import {
   buildInvitationRpcPayload,
-  invitationRpcSetupSuffix,
   isInvitationRpcMissingOrUnreachable,
-  probePostgrestRpcListedInOpenApi,
+  parseInvitationRpcPayload,
+  isValidInvitationRow,
 } from './inviteRpcUtils'
+import {
+  runWithHardTimeout,
+  raceWithTimeout,
+  postInviteRpc,
+  postInviteTableRow,
+  formatInvitationInviteError,
+  INVITE_PREP_MS,
+  INVITE_HARD_LIMIT_MS,
+} from './inviteTransport'
 
 /** Maps project_roles.role_name (templates) → roles.role_name used by project_invitations.role_id FK */
-const PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE = {
+export const PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE = {
   team_manager: 'pm_team_manager',
   team_member: 'pm_team_member',
   project_assurance: 'pm_project_assurance',
@@ -30,21 +38,67 @@ const PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE = {
   change_authority: 'pm_change_authority',
 }
 
-/** PostgREST may return json scalar as object or string depending on driver/version */
-function parseInvitationRpcPayload(raw) {
-  if (raw == null) return null
-  if (typeof raw === 'string') {
-    try {
-      return JSON.parse(raw)
-    } catch {
-      return null
-    }
-  }
-  return typeof raw === 'object' ? raw : null
+/**
+ * Role names to try when resolving invitation role_id (legacy pm_* first, then template name).
+ * @param {string} projectRoleName
+ * @returns {string[]}
+ */
+export function invitationRoleLookupNames(projectRoleName) {
+  const legacy = PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE[projectRoleName]
+  if (!legacy) return [projectRoleName]
+  if (legacy === projectRoleName) return [legacy]
+  return [legacy, projectRoleName]
 }
 
-function isValidInvitationRow(row) {
-  return !!(row && row.id)
+const invitationRoleIdCache = new Map()
+
+const INVITE_SEAT_CHECK_MS = 1_500
+
+async function lookupFirstActiveRoleIdByNames(roleNames) {
+  const names = [...new Set(roleNames.filter(Boolean))]
+  if (!names.length) return null
+  const { data, error } = await appDb
+    .from('roles')
+    .select('id, role_name')
+    .in('role_name', names)
+    .eq('is_active', true)
+    .eq('is_deleted', false)
+  if (error) throw error
+  for (const name of names) {
+    const row = (data || []).find((r) => r.role_name === name)
+    if (row?.id) return row.id
+  }
+  return null
+}
+
+/**
+ * Whether to fall back to direct project_invitations INSERT after RPC failure.
+ * @param {object|null|undefined} rpcError
+ * @param {boolean} rpcNotDeployed
+ */
+export function shouldTryLegacyInvitationInsert(rpcError, rpcNotDeployed) {
+  if (rpcNotDeployed) return true
+  if (!rpcError) return false
+  // RPC timed out (often v586 without v597 statement_timeout) — try sender RLS insert.
+  if (rpcError.code === 'CLIENT_TIMEOUT' || rpcError.status === 408 || rpcError.code === '408') {
+    return true
+  }
+  const msg = String(rpcError.message || '')
+  if (rpcError.code === '42501' || rpcError.status === 403 || rpcError.statusCode === 403) {
+    if (/not authenticated/i.test(msg)) return false
+    if (/inviter user profile not found/i.test(msg)) return false
+    if (/not a pmo admin|pmo suite admin|project invite access|forbidden/i.test(msg)) return true
+    return true
+  }
+  if (/not a pmo admin|caller is not a pmo admin/i.test(msg)) return true
+  return false
+}
+
+async function getAuthUserForInvite() {
+  const { data: { session }, error } = await appDb.auth.getSession()
+  if (error) throw error
+  if (session?.user?.id) return session.user
+  throw new Error('Not authenticated. Please sign in again.')
 }
 
 /**
@@ -53,6 +107,14 @@ function isValidInvitationRow(row) {
  * @returns {Promise<{success: boolean, invitationRoleId?: string, error?: string|null}>}
  */
 export async function resolveInvitationRoleIdForInsert(selectedRoleId) {
+  if (!selectedRoleId) {
+    return { success: false, error: 'Invalid role selection' }
+  }
+  const cached = invitationRoleIdCache.get(selectedRoleId)
+  if (cached) {
+    return { success: true, invitationRoleId: cached, error: null }
+  }
+
   try {
     const { data: pr, error: prErr } = await appDb
       .from('project_roles')
@@ -63,37 +125,19 @@ export async function resolveInvitationRoleIdForInsert(selectedRoleId) {
     if (prErr) throw prErr
 
     if (pr?.role_name) {
-      const legacyName = PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE[pr.role_name]
-      if (legacyName) {
-        const { data: lr, error: lrErr } = await appDb
-          .from('roles')
-          .select('id')
-          .eq('role_name', legacyName)
-          .eq('is_active', true)
-          .eq('is_deleted', false)
-          .maybeSingle()
-
-        if (lrErr) throw lrErr
-        if (!lr?.id) {
-          return {
-            success: false,
-            error: `System role "${legacyName}" is missing. Run database migrations (v388).`,
-          }
-        }
-        return { success: true, invitationRoleId: lr.id, error: null }
+      const candidates = invitationRoleLookupNames(pr.role_name)
+      const roleId = await lookupFirstActiveRoleIdByNames(candidates)
+      if (roleId) {
+        invitationRoleIdCache.set(selectedRoleId, roleId)
+        return { success: true, invitationRoleId: roleId, error: null }
       }
 
-      const { data: directRole, error: drErr } = await appDb
-        .from('roles')
-        .select('id')
-        .eq('role_name', pr.role_name)
-        .eq('is_active', true)
-        .eq('is_deleted', false)
-        .maybeSingle()
-
-      if (drErr) throw drErr
-      if (directRole?.id) {
-        return { success: true, invitationRoleId: directRole.id, error: null }
+      const primaryLegacy = PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE[pr.role_name]
+      if (primaryLegacy) {
+        return {
+          success: false,
+          error: `System role "${primaryLegacy}" is missing. Run SQL/v580_ensure_pm_invitation_roles.sql in Supabase (or v86_default_project_roles_seed.sql).`,
+        }
       }
 
       return {
@@ -110,6 +154,7 @@ export async function resolveInvitationRoleIdForInsert(selectedRoleId) {
 
     if (legErr) throw legErr
     if (legacy?.id) {
+      invitationRoleIdCache.set(selectedRoleId, legacy.id)
       return { success: true, invitationRoleId: legacy.id, error: null }
     }
 
@@ -127,6 +172,97 @@ const PM_MEMBER_MANAGEMENT_ROLE_NAMES = new Set([
   'pm_project_manager',
 ])
 
+/** Permission codes on project_roles.permissions that allow inviting members */
+export const PROJECT_INVITE_PERMISSION_CODES = ['user.invite', 'project.manage_users']
+
+/** Roles that may invite when assigned via project_memberships (matches SQL v579) */
+export const PROJECT_INVITE_CAPABLE_ROLE_NAMES = new Set([
+  'project_manager',
+  'programme_manager',
+  'project_board_member',
+  'project_sponsor',
+  'pm_project_manager',
+  'pm_programme_manager',
+  'pm_project_board',
+])
+
+/**
+ * Pure helper: whether a project role grants invite (used by canInviteToProject).
+ * @param {string|null|undefined} roleName
+ * @param {string[]|null|undefined} permissions - from project_roles.permissions JSONB
+ */
+export function projectRoleGrantsInvite(roleName, permissions) {
+  if (Array.isArray(permissions)) {
+    if (PROJECT_INVITE_PERMISSION_CODES.some((code) => permissions.includes(code))) {
+      return true
+    }
+  }
+  return !!(roleName && PROJECT_INVITE_CAPABLE_ROLE_NAMES.has(roleName))
+}
+
+/**
+ * Whether the user may invite members to a project (UI + aligns with v579 RPC).
+ * @param {string} authUserId - auth.users.id
+ * @param {string} internalUserId - public.users.id
+ * @param {string} projectId - project UUID
+ */
+export async function canInviteToProject(authUserId, internalUserId, projectId) {
+  if (!authUserId || !projectId) return false
+
+  try {
+    if (await isPmoAdmin(authUserId)) return true
+
+    if (await hasPermission(authUserId, projectId, 'user.invite')) return true
+    if (await hasPermission(authUserId, projectId, 'project.manage_users')) return true
+
+    if (internalUserId) {
+      const { data: proj } = await appDb
+        .from('projects')
+        .select('project_manager_user_id')
+        .eq('id', projectId)
+        .eq('is_deleted', false)
+        .maybeSingle()
+
+      if (proj?.project_manager_user_id === internalUserId) return true
+
+      const { data: memberships, error: memErr } = await appDb
+        .from('project_memberships')
+        .select('invitation_status, role:project_roles(role_name, permissions)')
+        .eq('user_id', internalUserId)
+        .eq('project_id', projectId)
+        .eq('is_active', true)
+
+      if (!memErr && memberships?.length) {
+        for (const m of memberships) {
+          const status = m.invitation_status ?? 'accepted'
+          if (status !== 'accepted' && status !== 'pending') continue
+          const role = m.role
+          if (projectRoleGrantsInvite(role?.role_name, role?.permissions)) return true
+        }
+      }
+
+      const { data: userRoles, error: urErr } = await appDb
+        .from('user_roles')
+        .select('roles:roles!user_roles_role_id_fkey(role_name)')
+        .eq('user_id', internalUserId)
+        .eq('project_id', projectId)
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+
+      if (!urErr && userRoles?.length) {
+        for (const ur of userRoles) {
+          if (PROJECT_INVITE_CAPABLE_ROLE_NAMES.has(ur.roles?.role_name)) return true
+        }
+      }
+    }
+
+    return false
+  } catch (error) {
+    console.error('canInviteToProject:', error)
+    return false
+  }
+}
+
 function projectPickerRow(p) {
   if (!p?.id) return null
   return {
@@ -141,46 +277,110 @@ function addProjectPickerRow(map, p) {
   if (row) map.set(row.id, row)
 }
 
+const MEMBER_MGMT_PROJECTS_CACHE_PREFIX = 'nidus-pm-member-mgmt-projects'
+const MEMBER_MGMT_PROJECTS_CACHE_TTL_MS = 2 * 60 * 1000
+
+/** @returns {Array<{id: string, project_name: string, project_code?: string}>|null} */
+export function readMemberManagementProjectsCache(internalUserId) {
+  if (!internalUserId || typeof sessionStorage === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(`${MEMBER_MGMT_PROJECTS_CACHE_PREFIX}:${internalUserId}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (!parsed?.ts || !Array.isArray(parsed.data)) return null
+    if (Date.now() - parsed.ts > MEMBER_MGMT_PROJECTS_CACHE_TTL_MS) return null
+    return parsed.data
+  } catch {
+    return null
+  }
+}
+
+export function writeMemberManagementProjectsCache(internalUserId, data) {
+  if (!internalUserId || typeof sessionStorage === 'undefined') return
+  try {
+    sessionStorage.setItem(
+      `${MEMBER_MGMT_PROJECTS_CACHE_PREFIX}:${internalUserId}`,
+      JSON.stringify({ ts: Date.now(), data }),
+    )
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+/**
+ * Lightweight project picker row by id (for instant label while list loads).
+ * @param {string} projectId
+ */
+export async function fetchProjectPickerRowById(projectId) {
+  if (!projectId) return { success: false, data: null, error: 'missing' }
+  try {
+    const { data, error } = await appDb
+      .from('projects')
+      .select('id, project_name, project_code')
+      .eq('id', projectId)
+      .eq('is_deleted', false)
+      .maybeSingle()
+    if (error) throw error
+    const row = projectPickerRow(data)
+    return row ? { success: true, data: row, error: null } : { success: false, data: null, error: 'not_found' }
+  } catch (error) {
+    return { success: false, data: null, error: error.message || 'Failed to load project' }
+  }
+}
+
 /**
  * Projects where the user is assigned as PM (not merely a team member).
- * Merges user_projects, projects.project_manager_user_id, project_memberships, and user_roles.
+ * Parallel queries + minimal columns (avoids heavy getMyProjects embed).
  * @param {string} internalUserId - public.users.id
  */
 async function listPmProjectsForMemberManagement(internalUserId) {
   const byId = new Map()
 
-  const upRes = await getMyProjects(internalUserId, {})
-  if (!upRes.success) {
-    return { success: false, data: [], error: upRes.error || 'Failed to load projects' }
-  }
-  for (const p of upRes.data || []) {
-    if (p?.id && p.is_deleted !== true) addProjectPickerRow(byId, p)
-  }
+  const [
+    userProjectsRes,
+    directManagedRes,
+    membershipsRes,
+    userRolesRes,
+  ] = await Promise.all([
+    appDb
+      .from('user_projects')
+      .select('project_id')
+      .eq('user_id', internalUserId)
+      .eq('is_deleted', false),
+    appDb
+      .from('projects')
+      .select('id, project_name, project_code')
+      .eq('project_manager_user_id', internalUserId)
+      .eq('is_deleted', false),
+    appDb
+      .from('project_memberships')
+      .select(`
+        project_id,
+        project:projects(id, project_name, project_code, is_deleted),
+        role:project_roles(role_name)
+      `)
+      .eq('user_id', internalUserId)
+      .eq('is_active', true)
+      .or('invitation_status.eq.accepted,invitation_status.is.null'),
+    appDb
+      .from('user_roles')
+      .select(`
+        project_id,
+        roles:roles!user_roles_role_id_fkey(role_name)
+      `)
+      .eq('user_id', internalUserId)
+      .eq('is_active', true)
+      .eq('is_deleted', false)
+      .not('project_id', 'is', null),
+  ])
 
-  const { data: directManaged, error: dmErr } = await appDb
-    .from('projects')
-    .select('id, project_name, project_code')
-    .eq('project_manager_user_id', internalUserId)
-    .eq('is_deleted', false)
+  if (directManagedRes.error) throw directManagedRes.error
+  for (const p of directManagedRes.data || []) addProjectPickerRow(byId, p)
 
-  if (dmErr) throw dmErr
-  for (const p of directManaged || []) addProjectPickerRow(byId, p)
-
-  const { data: memberships, error: memErr } = await appDb
-    .from('project_memberships')
-    .select(`
-      project_id,
-      project:projects(id, project_name, project_code, is_deleted),
-      role:project_roles(role_name)
-    `)
-    .eq('user_id', internalUserId)
-    .eq('is_active', true)
-    .or('invitation_status.eq.accepted,invitation_status.is.null')
-
-  if (memErr) {
-    console.warn('listPmProjectsForMemberManagement: project_memberships', memErr.message)
+  if (membershipsRes.error) {
+    console.warn('listPmProjectsForMemberManagement: project_memberships', membershipsRes.error.message)
   } else {
-    for (const m of memberships || []) {
+    for (const m of membershipsRes.data || []) {
       const roleName = m.role?.role_name
       if (roleName && PM_MEMBER_MANAGEMENT_ROLE_NAMES.has(roleName)) {
         const proj = m.project
@@ -189,40 +389,34 @@ async function listPmProjectsForMemberManagement(internalUserId) {
     }
   }
 
-  const { data: userRoles, error: urErr } = await appDb
-    .from('user_roles')
-    .select(`
-      project_id,
-      roles:roles!user_roles_role_id_fkey(role_name)
-    `)
-    .eq('user_id', internalUserId)
-    .eq('is_active', true)
-    .eq('is_deleted', false)
-    .not('project_id', 'is', null)
-
-  if (urErr) {
-    console.warn('listPmProjectsForMemberManagement: user_roles', urErr.message)
+  const missingFromUserRoles = []
+  if (userRolesRes.error) {
+    console.warn('listPmProjectsForMemberManagement: user_roles', userRolesRes.error.message)
   } else {
-    const missingIds = []
-    for (const ur of userRoles || []) {
+    for (const ur of userRolesRes.data || []) {
       const roleName = ur.roles?.role_name
       if (!roleName || !PM_MEMBER_MANAGEMENT_ROLE_NAMES.has(roleName)) continue
       const pid = ur.project_id
-      if (pid && !byId.has(pid)) missingIds.push(pid)
+      if (pid && !byId.has(pid)) missingFromUserRoles.push(pid)
     }
-    const uniqueMissing = [...new Set(missingIds)]
-    if (uniqueMissing.length > 0) {
-      const { data: projRows, error: pErr } = await appDb
-        .from('projects')
-        .select('id, project_name, project_code')
-        .in('id', uniqueMissing)
-        .eq('is_deleted', false)
+  }
 
-      if (pErr) {
-        console.warn('listPmProjectsForMemberManagement: projects by user_roles', pErr.message)
-      } else {
-        for (const p of projRows || []) addProjectPickerRow(byId, p)
-      }
+  const userProjectIds = [
+    ...new Set((userProjectsRes.data || []).map((r) => r.project_id).filter(Boolean)),
+  ].filter((id) => !byId.has(id))
+
+  const batchIds = [...new Set([...missingFromUserRoles, ...userProjectIds])]
+  if (batchIds.length > 0) {
+    const { data: projRows, error: pErr } = await appDb
+      .from('projects')
+      .select('id, project_name, project_code')
+      .in('id', batchIds)
+      .eq('is_deleted', false)
+
+    if (pErr) {
+      console.warn('listPmProjectsForMemberManagement: projects batch', pErr.message)
+    } else {
+      for (const p of projRows || []) addProjectPickerRow(byId, p)
     }
   }
 
@@ -239,10 +433,12 @@ async function listPmProjectsForMemberManagement(internalUserId) {
  * Projects the current user may manage members for: all active (PMO admin) or my projects (PM).
  * @param {string} internalUserId - public.users.id
  * @param {string} authUserId - auth.users.id
+ * @param {{ isPmoAdmin?: boolean }} [options] - pass when already resolved to skip duplicate RPC
  */
-export async function listProjectsForMemberManagement(internalUserId, authUserId) {
+export async function listProjectsForMemberManagement(internalUserId, authUserId, options = {}) {
   try {
-    const admin = await isPmoAdmin(authUserId)
+    const admin =
+      typeof options.isPmoAdmin === 'boolean' ? options.isPmoAdmin : await isPmoAdmin(authUserId)
     if (admin) {
       // Keep this lightweight and RLS-friendly; avoid complex embeds from assignment pages.
       const { data: rows, error } = await appDb
@@ -252,18 +448,24 @@ export async function listProjectsForMemberManagement(internalUserId, authUserId
         .order('project_name', { ascending: true })
 
       if (error) throw error
+      const data = (rows || []).map((p) => ({
+        id: p.id,
+        project_name: p.project_name,
+        project_code: p.project_code,
+      }))
+      writeMemberManagementProjectsCache(internalUserId, data)
       return {
         success: true,
-        data: (rows || []).map((p) => ({
-          id: p.id,
-          project_name: p.project_name,
-          project_code: p.project_code,
-        })),
+        data,
         error: null,
       }
     }
 
-    return listPmProjectsForMemberManagement(internalUserId)
+    const pmRes = await listPmProjectsForMemberManagement(internalUserId)
+    if (pmRes.success && pmRes.data?.length) {
+      writeMemberManagementProjectsCache(internalUserId, pmRes.data)
+    }
+    return pmRes
   } catch (error) {
     console.error('listProjectsForMemberManagement:', error)
     return { success: false, data: [], error: error.message || 'Failed to list projects' }
@@ -271,56 +473,86 @@ export async function listProjectsForMemberManagement(internalUserId, authUserId
 }
 
 /**
+ * Persist invitee name columns when RPC succeeded but DB overload omitted name params.
+ */
+async function syncInviteeNamesOnInvitationRow(invitationId, invitationData) {
+  const first = invitationData?.inviteeFirstName?.trim() || null
+  const last = invitationData?.inviteeLastName?.trim() || null
+  if (!invitationId || (!first && !last)) return
+  try {
+    await appDb
+      .from('project_invitations')
+      .update({
+        invited_first_name: first,
+        invited_last_name: last,
+      })
+      .eq('id', invitationId)
+  } catch (e) {
+    console.warn('[syncInviteeNamesOnInvitationRow]', e?.message)
+  }
+}
+
+/**
  * Invite user to project
  * @param {string} projectId - Project UUID
  * @param {object} invitationData - Invitation details
+ * @param {{ skipSeatCheck?: boolean, invitationRoleId?: string, inviterUserId?: string, isPmoAdmin?: boolean }} [options]
  * @returns {Promise<{success: boolean, data: object|null, error: string|null}>}
  */
-export async function inviteUserToProject(projectId, invitationData) {
-  try {
-    const { data: { user } } = await appDb.auth.getUser()
-    if (!user) throw new Error('Not authenticated')
+async function inviteUserToProjectCore(projectId, invitationData, options = {}) {
+  const user = await getAuthUserForInvite()
+  if (!user?.id) throw new Error('Not authenticated')
 
-    const resolved = await resolveInvitationRoleIdForInsert(invitationData.roleId)
-    if (!resolved.success) {
-      return { success: false, data: null, error: resolved.error || 'Invalid role' }
-    }
-    const invitationRoleId = resolved.invitationRoleId
+  const emailTrimmed = String(invitationData?.email ?? '').trim()
+  if (!projectId || !emailTrimmed) {
+    return { success: false, data: null, error: 'Invalid invitation details' }
+  }
 
-    const emailTrimmed = String(invitationData?.email ?? '').trim()
-    if (!projectId || !invitationRoleId || !emailTrimmed) {
-      return { success: false, data: null, error: 'Invalid invitation details' }
-    }
+  let invitationRoleId = options.invitationRoleId || null
+  let inviterUserId = options.inviterUserId || null
 
-    // Get internal user ID
-    const { data: userData, error: userError } = await appDb
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .single()
+  const prep = await raceWithTimeout(
+    Promise.all([
+      invitationRoleId
+        ? Promise.resolve({ success: true, invitationRoleId })
+        : resolveInvitationRoleIdForInsert(invitationData.roleId),
+      inviterUserId
+        ? Promise.resolve({ data: { id: inviterUserId }, error: null })
+        : appDb.from('users').select('id').eq('auth_user_id', user.id).maybeSingle(),
+      appDb.from('users').select('id').eq('email', emailTrimmed).maybeSingle(),
+    ]),
+    INVITE_PREP_MS,
+    'Invitation setup',
+  )
 
-    if (userError) throw userError
+  if (prep?.timedOut) {
+    return { success: false, data: null, error: prep.error || 'Invitation setup timed out' }
+  }
 
-    // Check if user already exists with this email (avoid .single() — 0 rows is normal)
-    const { data: existingUser } = await appDb
-      .from('users')
-      .select('id')
-      .eq('email', emailTrimmed)
-      .maybeSingle()
+  const [resolved, inviterRes, existingUserRes] = prep
 
-    // Check seat availability — non-blocking: a hung or missing RPC must never
-    // prevent the invitation from being attempted. v85 check_seat_availability called
-    // calculate_project_seat_usage (UPDATE) which could deadlock on the lock held by
-    // a previous stalled request. v535 SQL fixes the root cause; Promise.race(timeout)
-    // below is the JS-side defence so the button never sticks even on older DB versions
-    // where the RPC hangs (a hanging await is NOT caught by try-catch alone).
+  if (!resolved.success) {
+    return { success: false, data: null, error: resolved.error || 'Invalid role' }
+  }
+  invitationRoleId = resolved.invitationRoleId
+  if (!invitationRoleId) {
+    return { success: false, data: null, error: 'Invalid role' }
+  }
+
+  if (inviterRes.error) throw inviterRes.error
+  inviterUserId = inviterRes.data?.id
+  if (!inviterUserId) {
+    return { success: false, data: null, error: 'Inviter user profile not found' }
+  }
+
+  if (!options.skipSeatCheck) {
     try {
       const seatRpc = appDb.rpc('check_seat_availability', { p_project_id: projectId })
-      const seatFallback = new Promise(resolve =>
-        setTimeout(() => resolve({ data: null, error: { message: 'seat_check_timeout' } }), 3_000)
+      const seatFallback = new Promise((resolve) =>
+        setTimeout(() => resolve({ data: null, error: { message: 'seat_check_timeout' } }), INVITE_SEAT_CHECK_MS),
       )
       const { data: seatCheck, error: seatError } = await Promise.race([seatRpc, seatFallback])
-      if (!seatError && seatCheck && seatCheck.length > 0 && !seatCheck[0].has_available_seats) {
+      if (!seatError && seatCheck?.length > 0 && !seatCheck[0].has_available_seats) {
         return {
           success: false,
           data: null,
@@ -329,168 +561,107 @@ export async function inviteUserToProject(projectId, invitationData) {
           seatInfo: seatCheck[0],
         }
       }
-      if (seatError) {
-        console.warn('[inviteUserToProject] seat check error/timeout (proceeding):', seatError?.message)
-      }
-    } catch (seatErr) {
-      console.warn('[inviteUserToProject] seat check threw (proceeding):', seatErr?.message)
+    } catch {
+      /* non-blocking */
     }
+  }
 
-    let expiryDays = INVITE_EXPIRY_FALLBACK_DAYS
-    if (invitationData.expiryDays != null && invitationData.expiryDays !== '') {
-      expiryDays = clampInvitationExpiryDays(invitationData.expiryDays)
-    } else {
-      const resolved = await fetchDefaultInvitationExpiryDaysForProject(projectId)
-      expiryDays = resolved.days
+  const expiryDays =
+    invitationData.expiryDays != null && invitationData.expiryDays !== ''
+      ? clampInvitationExpiryDays(invitationData.expiryDays)
+      : INVITE_EXPIRY_FALLBACK_DAYS
+
+  const invitationExpiresAt = new Date(
+    Date.now() + expiryDays * 24 * 60 * 60 * 1000,
+  ).toISOString()
+
+  const selectCols =
+    'id, invitation_token, invitation_expires_at, invitation_status, project_id, invited_email, role_id, created_at'
+
+  const rpcPayload = buildInvitationRpcPayload(
+    projectId,
+    invitationRoleId,
+    { ...invitationData, email: emailTrimmed },
+    invitationExpiresAt,
+  )
+
+  const rpcRes = await postInviteRpc(rpcPayload)
+
+  if (rpcRes.ok) {
+    const row = parseInvitationRpcPayload(rpcRes.data)
+    if (isValidInvitationRow(row)) {
+      await syncInviteeNamesOnInvitationRow(row.id, invitationData)
+      return { success: true, data: row, error: null }
     }
-
-    const invitationExpiresAt = new Date(
-      Date.now() + expiryDays * 24 * 60 * 60 * 1000,
-    ).toISOString()
-
-    const selectCols =
-      'id, invitation_token, invitation_expires_at, invitation_status, project_id, invited_email, role_id, created_at'
-
-    const rpcPayload = buildInvitationRpcPayload(
-      projectId,
-      invitationRoleId,
-      { ...invitationData, email: emailTrimmed },
-      invitationExpiresAt,
-    )
-
-    // Prefer SECURITY DEFINER RPC (v398): PostgREST often omits SQLSTATE on 403 so table-insert
-    // fallback was unreliable; RPC bypasses RLS for PMO admins and project members (SQL-enforced).
-    // 10s timeout: seat-check(3s) + rpc(10s) + legacy(8s) < 30s outer — outer fires last.
-    const rpcCallPromise = appDb.rpc('insert_project_invitation_as_pmo_admin', rpcPayload)
-    const rpcTimeoutPromise = new Promise(resolve =>
-      setTimeout(
-        () => resolve({ data: null, error: { message: 'Invitation RPC timed out — PostgREST may not have loaded v398 yet. Pause/resume your Supabase project, then retry.', code: 'CLIENT_TIMEOUT' }, status: 408 }),
-        10_000,
-      )
-    )
-    const rpcResult = await Promise.race([rpcCallPromise, rpcTimeoutPromise])
-    const rpcData = rpcResult.data
-    const rpcError = rpcResult.error
-    const rpcHttpStatus = rpcResult.status
-
-    const rpcNotDeployed = isInvitationRpcMissingOrUnreachable(rpcError, rpcHttpStatus)
-
-    if (rpcError || rpcHttpStatus === 404) {
-      console.warn('[inviteUserToProject] insert_project_invitation_as_pmo_admin:', {
-        code: rpcError?.code,
-        message: rpcError?.message,
-        details: rpcError?.details,
-        hint: rpcError?.hint,
-        httpStatus: rpcHttpStatus,
-        errorStatus: rpcError?.status ?? rpcError?.statusCode,
-        rpcNotDeployed,
-      })
-    }
-
-    if (import.meta.env.DEV && rpcNotDeployed && rpcHttpStatus === 404) {
-      try {
-        let userJwt = null
-        try {
-          const { data: sessWrap } = await appDb.auth.getSession()
-          userJwt = sessWrap?.session?.access_token ?? null
-        } catch {
-          /* ignore */
-        }
-        const openApiProbe = await probePostgrestRpcListedInOpenApi(
-          import.meta.env.VITE_SUPABASE_URL,
-          import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'insert_project_invitation_as_pmo_admin',
-          userJwt,
-        )
-        console.warn('[inviteUserToProject] PostgREST OpenAPI RPC probe (compare with SQL grants):', openApiProbe)
-      } catch (probeErr) {
-        console.warn('[inviteUserToProject] PostgREST OpenAPI probe failed:', probeErr)
-      }
-    }
-
-    if (!rpcError) {
-      const row = parseInvitationRpcPayload(rpcData)
-      if (isValidInvitationRow(row)) {
-        return { success: true, data: row, error: null }
-      }
-      // RPC ran but returned no id — this is abnormal (function should always return json with id
-      // or raise an exception). Do not silently fall to legacy INSERT for PMO admin context.
-      console.warn('[inviteUserToProject] RPC returned success but no valid row:', rpcData)
-      return {
-        success: false,
-        data: null,
-        error: 'Invitation RPC returned an empty response. Check Supabase logs for the function body error.',
-      }
-    }
-
-    // Caller is not a PMO admin according to the function — fall through to legacy INSERT
-    // so PMs can still invite team members via direct table INSERT + their own RLS policies.
-    const callerNotPmoAdmin =
-      rpcError?.code === '42501' && /not a pmo admin/i.test(String(rpcError?.message || ''))
-
-    if (rpcError && !rpcNotDeployed && !callerNotPmoAdmin) {
-      return {
-        success: false,
-        data: null,
-        error: rpcError.message || 'Failed to send invitation',
-      }
-    }
-
-    // Legacy path: either RPC not deployed (v400 not run yet) OR caller is a PM (not PMO admin).
-    // 8s timeout keeps total chain (seat 3s + rpc 10s + legacy 8s) well under 30s outer limit.
-    const legacyInsertPromise = appDb
-      .from('project_invitations')
-      .insert({
-        project_id: projectId,
-        invited_email: emailTrimmed,
-        invited_user_id: existingUser?.id || null,
-        role_id: invitationRoleId,
-        invited_by_user_id: userData.id,
-        invitation_message: invitationData.message || null,
-        invitation_expires_at: invitationExpiresAt,
-      })
-      .select(selectCols)
-      .maybeSingle()
-    const legacyInsertTimeout = new Promise((resolve) =>
-      setTimeout(
-        () =>
-          resolve({
-            data: null,
-            error: { message: 'Database insert timed out — likely an RLS or lock issue. Run SQL/v397 + v398 then pause/resume Supabase.', code: 'CLIENT_TIMEOUT' },
-          }),
-        8_000,
-      ),
-    )
-    const { data, error } = await Promise.race([legacyInsertPromise, legacyInsertTimeout])
-
-    if (error) {
-      const denied = /permission denied/i.test(String(error.message || ''))
-      if (denied) {
-        const rpcDiag = rpcError
-          ? ` [RPC ${rpcError.code || 'err'}: ${rpcError.message || 'unknown'}]`
-          : ` [RPC: 404 — function not found by PostgREST]`
-        const insertDiag = ` [INSERT ${error.code || 'err'}: ${error.message || 'permission denied'}]`
-        return {
-          success: false,
-          data: null,
-          error: `Run SQL/v404_fix_uuid_and_sender_policy.sql in Supabase SQL Editor, then retry.${rpcDiag}${insertDiag}`,
-          requiresDbSetup: true,
-        }
-      }
-      throw error
-    }
-
     return {
-      success: true,
-      data: data,
-      error: null,
+      success: false,
+      data: null,
+      error: 'Invitation saved but the server returned an unexpected response.',
     }
+  }
+
+  const rpcError = {
+    message: rpcRes.error,
+    code: rpcRes.status === 403 ? '42501' : String(rpcRes.status),
+    status: rpcRes.status,
+  }
+  const rpcNotDeployed = isInvitationRpcMissingOrUnreachable(rpcError, rpcRes.status)
+
+  if (!shouldTryLegacyInvitationInsert(rpcError, rpcNotDeployed)) {
+    return {
+      success: false,
+      data: null,
+      error: formatInvitationInviteError(rpcRes.error || 'Failed to send invitation', {
+        requiresDbSetup: rpcRes.status === 403,
+      }),
+    }
+  }
+
+  const tableRes = await postInviteTableRow(
+    {
+      project_id: projectId,
+      entity_type: 'project',
+      invited_email: emailTrimmed,
+      invited_user_id: existingUserRes.data?.id || null,
+      role_id: invitationRoleId,
+      invited_by_user_id: inviterUserId,
+      invitation_message: invitationData.message || null,
+      invitation_expires_at: invitationExpiresAt,
+      invited_first_name: invitationData.inviteeFirstName?.trim() || null,
+      invited_last_name: invitationData.inviteeLastName?.trim() || null,
+    },
+    selectCols,
+  )
+
+  if (tableRes.ok && isValidInvitationRow(tableRes.data)) {
+    await syncInviteeNamesOnInvitationRow(tableRes.data.id, invitationData)
+    return { success: true, data: tableRes.data, error: null }
+  }
+
+  const requiresDbSetup = tableRes.status === 403 || rpcRes.status === 403
+  return {
+    success: false,
+    data: null,
+    error: formatInvitationInviteError(
+      tableRes.error || rpcRes.error || 'Failed to send invitation',
+      { requiresDbSetup },
+    ),
+    requiresDbSetup,
+  }
+}
+
+export async function inviteUserToProject(projectId, invitationData, options = {}) {
+  try {
+    return await runWithHardTimeout(
+      () => inviteUserToProjectCore(projectId, invitationData, options),
+      INVITE_HARD_LIMIT_MS,
+    )
   } catch (error) {
     console.error('Error inviting user:', error)
     return {
       success: false,
       data: null,
-      error: error.message || 'Failed to send invitation',
+      error: formatInvitationInviteError(error.message || 'Failed to send invitation'),
     }
   }
 }
@@ -1270,4 +1441,12 @@ export default {
   getUserPendingInvitations,
   resolveInvitationRoleIdForInsert,
   listProjectsForMemberManagement,
+  canInviteToProject,
+  projectRoleGrantsInvite,
+  readMemberManagementProjectsCache,
+  writeMemberManagementProjectsCache,
+  fetchProjectPickerRowById,
+  PROJECT_ROLE_TO_LEGACY_INVITATION_ROLE,
+  invitationRoleLookupNames,
+  shouldTryLegacyInvitationInsert,
 }

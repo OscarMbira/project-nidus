@@ -17,8 +17,8 @@ const mockFrom = vi.fn(() => ({
 vi.mock('../supabaseClient', () => ({
   platformDb: {
     auth: {
-      getSession: vi.fn().mockResolvedValue({
-        data: { session: { user: { id: 'auth-user-1' } } },
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: 'auth-user-1' } },
         error: null,
       }),
     },

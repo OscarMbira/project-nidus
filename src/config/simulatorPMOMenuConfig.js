@@ -49,6 +49,7 @@ import {
   Users,
   FolderKanban,
   Clock,
+  MailCheck,
 } from 'lucide-react';
 
 const simulatorPMOMenuConfig = [
@@ -452,10 +453,12 @@ const simulatorPMOMenuConfig = [
     order: 12,
     children: [
       { id: 'sim-pmo-people-manager-assignments', label: 'Manager Assignments', path: '/simulator/pmo/manager-assignments', icon: Users, order: 1 },
-      { id: 'sim-pmo-people-assignment-settings', label: 'Assignment Settings', path: '/simulator/pmo/manager-assignment-settings', icon: Settings2, order: 2 },
-      { id: 'sim-pmo-people-invitation-expiry', label: 'Invitation expiry', path: '/platform/admin/invitation-settings', icon: Clock, order: 3 },
-      { id: 'sim-pmo-people-resource-directory', label: 'Resource Directory', path: '/simulator/practice-teams', icon: Users, order: 4 },
-      { id: 'sim-pmo-people-team-capacity', label: 'Team Capacity', path: '/simulator/practice-teams', icon: BarChart3, order: 5 },
+      { id: 'sim-pmo-appointment-tracker', label: 'Appointment Tracker', path: '/simulator/pmo/appointments', icon: ClipboardCheck, order: 2 },
+      { id: 'sim-pmo-people-assignment-settings', label: 'Assignment Settings', path: '/simulator/pmo/manager-assignment-settings', icon: Settings2, order: 3 },
+      { id: 'sim-pmo-invitation-tracker', label: 'Invitation Tracker', path: '/simulator/pmo/invitation-tracker', icon: MailCheck, order: 4 },
+      { id: 'sim-pmo-people-invitation-expiry', label: 'Invitation expiry', path: '/platform/admin/invitation-settings', icon: Clock, order: 5 },
+      { id: 'sim-pmo-people-resource-directory', label: 'Resource Directory', path: '/simulator/practice-teams', icon: Users, order: 6 },
+      { id: 'sim-pmo-people-team-capacity', label: 'Team Capacity', path: '/simulator/practice-teams', icon: BarChart3, order: 7 },
     ]
   }
 ];

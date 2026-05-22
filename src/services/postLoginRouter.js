@@ -19,18 +19,29 @@ const ENABLE_SUBSCRIPTION_ROUTING = false;
  */
 async function getUserId(authUserId) {
   try {
+    // Primary: look up by auth_user_id
     const { data, error } = await platformDb
       .from('users')
       .select('id')
       .eq('auth_user_id', authUserId)
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
-      console.error('Error fetching user ID:', error);
-      return null;
+    if (data?.id) return data.id;
+
+    // Fallback: auth_user_id may not be backfilled yet (e.g. invited user whose
+    // users row was created before they logged in). Use the current session email.
+    const { data: { user: authUser } } = await platformDb.auth.getUser();
+    if (authUser?.email) {
+      const { data: byEmail } = await platformDb
+        .from('users')
+        .select('id')
+        .eq('email', authUser.email)
+        .maybeSingle();
+      if (byEmail?.id) return byEmail.id;
     }
 
-    return data.id;
+    console.error('Error fetching user ID:', error);
+    return null;
   } catch (error) {
     console.error('Exception fetching user ID:', error);
     return null;
