@@ -4,6 +4,7 @@ import { Shield, Save, ArrowLeft, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { getTeamCharter, createTeamCharter, updateTeamCharter } from '../../services/teamCharterService'
+import { usePlanningProjectId } from '../../components/planning/PlanningProjectBar'
 
 const EMPTY = {
   title: 'Team Charter',
@@ -34,7 +35,9 @@ function Field({ label, name, value, onChange, rows = 4, hint }) {
 }
 
 export default function TeamCharterEditPage() {
-  const { projectId } = useParams()
+  const { projectId: paramProjectId } = useParams()
+  const queryProjectId = usePlanningProjectId()
+  const projectId = paramProjectId || queryProjectId
   const navigate = useNavigate()
   const [form, setForm] = useState(EMPTY)
   const [charterId, setCharterId] = useState(null)

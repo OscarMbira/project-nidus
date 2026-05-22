@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Shield, FileEdit, ArrowLeft, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getTeamCharter } from '../../services/teamCharterService'
+import PlanningProjectBar, { usePlanningProjectId } from '../../components/planning/PlanningProjectBar'
 
 function Section({ title, content }) {
   if (!content) return null
@@ -17,13 +18,15 @@ function Section({ title, content }) {
 }
 
 export default function TeamCharterPage() {
-  const { projectId } = useParams()
+  const { projectId: paramProjectId } = useParams()
+  const queryProjectId = usePlanningProjectId()
+  const projectId = paramProjectId || queryProjectId
   const navigate = useNavigate()
   const [charter, setCharter] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!projectId) return
+    if (!projectId) { setLoading(false); return }
     ;(async () => {
       setLoading(true)
       try {
@@ -65,17 +68,25 @@ export default function TeamCharterPage() {
               Team Charter
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={() => navigate(`/platform/projects/${projectId}/team-charter/edit`)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-2 text-sm font-medium text-white min-h-[40px]"
-          >
-            <FileEdit className="h-4 w-4" />
-            {charter ? 'Edit Charter' : 'Create Charter'}
-          </button>
+          {projectId && (
+            <button
+              type="button"
+              onClick={() => navigate(`/platform/projects/${projectId}/team-charter/edit`)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-2 text-sm font-medium text-white min-h-[40px]"
+            >
+              <FileEdit className="h-4 w-4" />
+              {charter ? 'Edit Charter' : 'Create Charter'}
+            </button>
+          )}
         </div>
 
-        {!charter ? (
+        <PlanningProjectBar isSim={false} />
+
+        {!projectId ? (
+          <div className="rounded-xl border border-slate-700 bg-slate-800 px-6 py-8 text-center">
+            <p className="text-slate-400 text-sm">Select a project above to view its team charter.</p>
+          </div>
+        ) : !charter ? (
           <div className="rounded-xl border border-slate-700 bg-slate-800 px-6 py-12 text-center">
             <AlertCircle className="h-10 w-10 text-slate-500 mx-auto mb-3" />
             <p className="text-slate-400 text-sm">No team charter has been created yet.</p>

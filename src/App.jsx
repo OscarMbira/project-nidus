@@ -358,6 +358,7 @@ const GovernanceGateChecklist = lazy(() => import('./pages/planning/governance/G
 const MicroPlanList = lazy(() => import('./pages/planning/microplans/MicroPlanList'))
 const MicroPlanDetail = lazy(() => import('./pages/planning/microplans/MicroPlanDetail'))
 const MicroPlanDraftQueue = lazy(() => import('./pages/planning/microplans/MicroPlanDraftQueue'))
+const MicroPlanForm = lazy(() => import('./pages/planning/microplans/MicroPlanForm'))
 const TeamCharterPage = lazy(() => import('./pages/platform-app/TeamCharterPage'))
 const TeamCharterEditPage = lazy(() => import('./pages/platform-app/TeamCharterEditPage'))
 const DecisionLogPage = lazy(() => import('./pages/platform-app/DecisionLogPage'))
@@ -5125,12 +5126,40 @@ function App() {
               </ToastProvider></ThemeProvider>
             </Suspense>
           } />
+          <Route path="platform/plans/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><MicroPlanForm /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/plans/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><MicroPlanForm /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
 
           {/* ── Team Charter Routes ───────────────────────────────────── */}
+          <Route path="platform/team-charter" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TeamCharterPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
           <Route path="platform/projects/:projectId/team-charter" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider><ToastProvider>
                 <ProtectedRoute><Layout><TeamCharterPage /></Layout></ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="platform/team-charter/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute><Layout><TeamCharterEditPage /></Layout></ProtectedRoute>
               </ToastProvider></ThemeProvider>
             </Suspense>
           } />
@@ -5247,6 +5276,24 @@ function App() {
               <ThemeProvider><ToastProvider>
                 <ProtectedRoute requiredPlatform="simulator">
                   <SimulatorTMLayout><MicroPlanList scope="individual" /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/plans/new" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><MicroPlanForm /></SimulatorTMLayout>
+                </ProtectedRoute>
+              </ToastProvider></ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/tm/plans/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider><ToastProvider>
+                <ProtectedRoute requiredPlatform="simulator">
+                  <SimulatorTMLayout><MicroPlanForm /></SimulatorTMLayout>
                 </ProtectedRoute>
               </ToastProvider></ThemeProvider>
             </Suspense>

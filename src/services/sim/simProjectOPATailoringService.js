@@ -208,3 +208,17 @@ export async function exportCustomisationToPpt(customisation, fieldConfigs) {
     `OPA_Template_${customisation.id?.slice(0, 8) || 'export'}`
   )
 }
+
+/** Returns practice projects / simulation runs for use in picker dropdowns. */
+export async function listSimulationRunsForPicker() {
+  const { data, error } = await simDb
+    .from('simulation_runs')
+    .select('id, run_name, status, created_at')
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.warn('listSimulationRunsForPicker:', error.message)
+    return { data: [] }
+  }
+  return { data: data || [] }
+}

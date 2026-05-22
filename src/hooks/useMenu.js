@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { platformDb } from '../services/supabaseClient'
 
 const MENU_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v17_'
+const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v18_'
 const LEGACY_MENU_CACHE_KEY_PREFIX = 'nidus_menu_'
 
 function getCacheKey(userId) {
@@ -12,6 +12,7 @@ function getCacheKey(userId) {
 function getCacheKeys(userId) {
   return [
     `${MENU_CACHE_KEY_PREFIX}${userId}`,
+    `nidus_menu_v17_${userId}`,
     `nidus_menu_v16_${userId}`,
     `nidus_menu_v15_${userId}`,
     `nidus_menu_v14_${userId}`,
@@ -407,25 +408,26 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   ]
 
   sectionMyProjects.children = [
-    leaf('vtm-proj',    'tm_projects_list',   'My Projects',      '/platform/projects',   'folder',      10, 'vtm-s-mp', false),
-    leaf('vtm-members', 'tm_proj_members',    'Project Members',  '/app/project-members', 'users',       20, 'vtm-s-mp', false),
+    leaf('vtm-proj',    'tm_projects_list',   'My Projects',      '/platform/projects',   'folder',      10, 'vtm-s-mp'),
+    leaf('vtm-members', 'tm_proj_members',    'Project Members',  '/app/project-members', 'users',       20, 'vtm-s-mp'),
   ]
 
   sectionPlans.children = [
-    leaf('vtm-myplans', 'tm_my_plans',       'My Plans',        '/platform/plans/my-plans',   'user-square', 10, 'vtm-s-pl'),
-    ...(isLead ? [leaf('vtm-twp', 'tm_team_workstream_plans', 'Team Workstream Plans', '/platform/plans/team-workstreams', 'network', 20, 'vtm-s-pl')] : []),
-    leaf('vtm-planov',  'tm_plans_overview', 'Plans Overview',  '/platform/projects/__PROJECT__/plans', 'layout-grid', 30, 'vtm-s-pl', false),
-    leaf('vtm-projplan','tm_project_plan',   'Project Plan',    '/platform/projects/__PROJECT__/plans/project-plan', 'git-branch', 40, 'vtm-s-pl', false),
-    leaf('vtm-stage',   'tm_stage_plans',    'Stage Plans',     '/platform/projects/__PROJECT__/plans/stage-plan', 'milestone', 50, 'vtm-s-pl', false),
+    leaf('vtm-myplans', 'tm_my_plans',      'My Plans',           '/platform/plans/my-plans',        'user-square',  10, 'vtm-s-pl'),
+    leaf('vtm-newplan', 'tm_new_plan',      'Create New Plan',    '/platform/plans/new',              'plus-circle',  20, 'vtm-s-pl'),
+    leaf('vtm-draftq',  'tm_plan_drafts',   'Draft Plans',        '/pm/planning/microplans/drafts',   'file-clock',   30, 'vtm-s-pl'),
+    leaf('vtm-planov',  'tm_plans_overview','Plans Overview',     '/pm/planning/microplans',          'layout-grid',  40, 'vtm-s-pl'),
+    ...(isLead ? [leaf('vtm-twp', 'tm_team_workstream_plans', 'Team Workstream Plans', '/platform/plans/team-workstreams', 'network', 50, 'vtm-s-pl')] : []),
   ]
 
   sectionControls.children = [
-    leaf('vtm-risk',    'tm_risk_register',   'Risk Register',    '/pmo/oversight/risk-register',              'shield-alert',    10, 'vtm-s-cr'),
-    leaf('vtm-issues',  'tm_issue_log',       'Issue Log',        '/pmo/oversight/issue-register',             'alert-circle',    20, 'vtm-s-cr'),
-    leaf('vtm-change',  'tm_change_log',      'Change Log',       '/platform/projects/:id/registers/changes',  'git-pull-request',30, 'vtm-s-cr'),
-    leaf('vtm-delay',   'tm_delay_log',       'Delay Log',        '/platform/delays',                          'clock-4',         40, 'vtm-s-cr'),
-    leaf('vtm-defect',  'tm_defect_register', 'Defect Register',  '/platform/testing/defects',                 'bug',             50, 'vtm-s-cr'),
-    leaf('vtm-decision','tm_decision_log',    'Decision Log',     '/platform/governance/decisions',            'gavel',           60, 'vtm-s-cr'),
+    leaf('vtm-risk',       'tm_risk_register',   'Risk Register',    '/pmo/oversight/risk-register',    'shield-alert',    10, 'vtm-s-cr'),
+    leaf('vtm-issues',     'tm_issue_log',       'Issue Log',        '/pmo/oversight/issue-register',   'alert-circle',    20, 'vtm-s-cr'),
+    leaf('vtm-change',     'tm_change_log',      'Change Log',       '/platform/change-requests',       'git-pull-request',30, 'vtm-s-cr'),
+    leaf('vtm-delay',      'tm_delay_log',       'Delay Log',        '/platform/delays',                'clock-4',         40, 'vtm-s-cr'),
+    leaf('vtm-defect',     'tm_defect_register', 'Defect Register',  '/platform/testing/defects',       'bug',             50, 'vtm-s-cr'),
+    leaf('vtm-decision',   'tm_decision_log',    'Decision Log',     '/platform/governance/decisions',  'gavel',           60, 'vtm-s-cr'),
+    leaf('vtm-decision-new','tm_new_decision',   'New Decision',     '/platform/governance/decisions/new','plus-circle',    70, 'vtm-s-cr'),
   ]
 
   sectionForms.children = [
@@ -438,8 +440,8 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   ]
 
   sectionCharter.children = [
-    leaf('vtm-charter-view', 'tm_team_charter_view', 'Team Charter', '/platform/projects/__PROJECT__/team-charter', 'shield-check', 10, 'vtm-s-ch', false),
-    ...(isLead ? [leaf('vtm-charter-edit', 'tm_team_charter_edit', 'Edit Team Charter', '/platform/projects/__PROJECT__/team-charter/edit', 'file-edit', 20, 'vtm-s-ch')] : []),
+    leaf('vtm-charter-view', 'tm_team_charter_view', 'View Team Charter', '/platform/team-charter',      'shield-check', 10, 'vtm-s-ch'),
+    ...(isLead ? [leaf('vtm-charter-edit', 'tm_team_charter_edit', 'Edit Team Charter', '/platform/team-charter/edit', 'file-edit', 20, 'vtm-s-ch')] : []),
   ]
 
   sectionComms.children = [
@@ -454,14 +456,14 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   ]
 
   sectionStakeholders.children = [
-    leaf('vtm-sreg', 'tm_stakeholder_register', 'Stakeholder Register', '/platform/stakeholders/register', 'network',   10, 'vtm-s-sh', false),
-    leaf('vtm-sana', 'tm_stakeholder_analysis', 'Stakeholder Analysis', '/platform/stakeholders/analysis', 'pie-chart', 20, 'vtm-s-sh', false),
+    leaf('vtm-sreg', 'tm_stakeholder_register', 'Stakeholder Register', '/platform/stakeholders/register', 'network',   10, 'vtm-s-sh'),
+    leaf('vtm-sana', 'tm_stakeholder_analysis', 'Stakeholder Analysis', '/platform/stakeholders/analysis', 'pie-chart', 20, 'vtm-s-sh'),
   ]
 
   sectionReporting.children = [
-    leaf('vtm-highlight',   'tm_highlight_reports',  'Highlight Reports',   '/pm/reporting/highlight-reports',  'bar-chart-2',  10, 'vtm-s-rp', false),
-    leaf('vtm-checkpoint',  'tm_checkpoint_reports', 'Checkpoint Reports',  '/pm/reporting/checkpoint-reports', 'check-square', 20, 'vtm-s-rp', false),
-    leaf('vtm-replib',      'tm_reports_library',    'Reports Library',     '/platform/reports',                'library',      30, 'vtm-s-rp', false),
+    leaf('vtm-highlight',   'tm_highlight_reports',  'Highlight Reports',   '/pm/reporting/highlight-reports',  'bar-chart-2',  10, 'vtm-s-rp'),
+    leaf('vtm-checkpoint',  'tm_checkpoint_reports', 'Checkpoint Reports',  '/pm/reporting/checkpoint-reports', 'check-square', 20, 'vtm-s-rp'),
+    leaf('vtm-replib',      'tm_reports_library',    'Reports Library',     '/platform/reports',                'library',      30, 'vtm-s-rp'),
   ]
 
   sectionTimesheets.children = [
@@ -471,7 +473,7 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   ]
 
   sectionKnowledge.children = [
-    leaf('vtm-indtemp', 'tm_industry_templates', 'Industry Templates', '/platform/industry-templates', 'layers', 10, 'vtm-s-kn', false),
+    leaf('vtm-indtemp', 'tm_industry_templates', 'Industry Templates', '/platform/industry-templates', 'layers', 10, 'vtm-s-kn'),
   ]
 
   return [

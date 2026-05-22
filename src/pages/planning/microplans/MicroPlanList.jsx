@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { LayoutGrid, Table2, Search, ArrowUpDown, Download } from 'lucide-react'
+import { LayoutGrid, Table2, Search, ArrowUpDown, Download, Plus, Pencil, Trash2 } from 'lucide-react'
 import PlanningProjectBar, { usePlanningProjectId } from '../../../components/planning/PlanningProjectBar'
 import * as api from '../../../services/microPlanService'
 import * as simApi from '../../../services/sim/simMicroPlanService'
@@ -32,10 +32,15 @@ export default function MicroPlanList({ scope }) {
   const isSim = useLocation().pathname.includes('/simulator/')
   const [searchParams] = useSearchParams()
   const workPackageFilter = searchParams.get('workPackageId')
-  // scope can be 'individual' (My Plans) or 'team' (Team Workstream Plans)
   const scopeParam = scope || searchParams.get('scope')
   const projectId = usePlanningProjectId()
   const base = isSim ? '/simulator/pm/planning' : '/pm/planning'
+  // TM context uses dedicated edit routes; PM context uses detail page
+  const isTMScope = !!scopeParam
+  const editRoute = (planId) =>
+    isTMScope
+      ? (isSim ? `/simulator/tm/plans/${planId}/edit` : `/platform/plans/${planId}/edit`) + (projectId ? `?projectId=${encodeURIComponent(projectId)}` : '')
+      : `${base}/microplans/${planId}${projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''}`
   const q = projectId ? `?projectId=${encodeURIComponent(projectId)}` : ''
   const [rows, setRows] = useState([])
   const [view, setView] = useState(() => {
@@ -111,6 +116,21 @@ export default function MicroPlanList({ scope }) {
     setExportOpen(false)
   }
 
+  const handleDelete = async (p) => {
+    if (!window.confirm(`Delete plan "${p.plan_name}"? This cannot be undone.`)) return
+    try {
+      if (isSim) {
+        await simApi.updateMicroPlan(p.id, { is_deleted: true })
+      } else {
+        await api.deleteMicroPlan(p.id)
+      }
+      setRows((prev) => prev.filter((r) => r.id !== p.id))
+      toast.success('Plan deleted')
+    } catch (e) {
+      toast.error(e?.message || 'Delete failed')
+    }
+  }
+
   const SortBtn = ({ k, label }) => (
     <button
       type="button"
@@ -174,6 +194,13 @@ export default function MicroPlanList({ scope }) {
               )}
             </div>
             <Link
+              to={isSim ? `/simulator/tm/plans/new${q}` : `/platform/plans/new${q}`}
+              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              <Plus className="h-4 w-4" />
+              New Plan
+            </Link>
+            <Link
               to={projectId ? `${base}/microplans/drafts?projectId=${projectId}` : `${base}/microplans/drafts`}
               className="text-sm text-blue-400 hover:text-blue-300"
             >
@@ -226,8 +253,21 @@ export default function MicroPlanList({ scope }) {
                     to={`${base}/microplans/${p.id}${q}`}
                     className="text-xs text-blue-400 hover:text-blue-300"
                   >
-                    Open →
+                    View
                   </Link>
+                  <Link
+                    to={editRoute(p.id)}
+                    className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1"
+                  >
+                    <Pencil className="h-3 w-3" /> Edit
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(p)}
+                    className="text-xs text-red-400 hover:text-red-300 inline-flex items-center gap-1"
+                  >
+                    <Trash2 className="h-3 w-3" /> Delete
+                  </button>
                 </div>
               </li>
             ))}
@@ -266,9 +306,21 @@ export default function MicroPlanList({ scope }) {
                     <td className="px-3 py-2 text-gray-400">{p.status}</td>
                     <td className="px-3 py-2 text-gray-400">{p.overall_rag}</td>
                     <td className="px-3 py-2 text-right">
-                      <Link to={`${base}/microplans/${p.id}${q}`} className="text-blue-400 hover:text-blue-300 text-xs">
-                        View
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link to={`${base}/microplans/${p.id}${q}`} className="text-blue-400 hover:text-blue-300 text-xs">
+                          View
+                        </Link>
+                        <Link to={editRoute(p.id)} className="text-amber-400 hover:text-amber-300 text-xs inline-flex items-center gap-1">
+                          <Pencil className="h-3 w-3" /> Edit
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(p)}
+                          className="text-red-400 hover:text-red-300 text-xs inline-flex items-center gap-1"
+                        >
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
