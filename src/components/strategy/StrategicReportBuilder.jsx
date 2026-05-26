@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { FileText, Plus, Edit2, Trash2, Download, Eye, Calendar, FolderKanban, Target } from 'lucide-react';
 import { getStrategicReports, deleteStrategicReport } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function StrategicReportBuilder({ portfolioId = null, projectId = null, onGenerate }) {
   const [reports, setReports] = useState([]);
@@ -230,6 +232,7 @@ export default function StrategicReportBuilder({ portfolioId = null, projectId =
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Report Name
                   </th>
@@ -254,8 +257,9 @@ export default function StrategicReportBuilder({ portfolioId = null, projectId =
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {reports.map((report) => (
+                {reports.map((report, index) => (
                   <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />

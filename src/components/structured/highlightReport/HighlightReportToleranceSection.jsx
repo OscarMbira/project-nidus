@@ -3,6 +3,7 @@ import { TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react'
 import { getTolerances, getToleranceBreaches } from '../../../services/highlightReportToleranceService'
 import { calculateAllTolerances } from '../../../services/highlightReportToleranceService'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function HighlightReportToleranceSection({ reportId, formData, onChange, mode }) {
   const [tolerances, setTolerances] = useState([])
   const [breaches, setBreaches] = useState([])
@@ -115,7 +116,7 @@ export default function HighlightReportToleranceSection({ reportId, formData, on
             Tolerance breaches
           </h4>
           <ul className="list-disc list-inside text-sm text-amber-800 dark:text-amber-200">
-            {breaches.map((b) => (
+            {breaches.map((b, index) => (
               <li key={b.id}>{b.tolerance_type}: {b.status_notes || b.status}</li>
             ))}
           </ul>

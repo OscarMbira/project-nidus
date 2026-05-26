@@ -10,6 +10,8 @@ import { Select } from '../../components/ui/Select'
 import { Loading } from '../../components/ui/Loading'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { supabase } from '../../services/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function HelpManagement() {
   const [activeTab, setActiveTab] = useState('articles') // articles, categories, tours, feedback
@@ -272,6 +274,7 @@ export default function HelpManagement() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Title
                       </th>
@@ -293,8 +296,9 @@ export default function HelpManagement() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {articles.map((article) => (
+                    {articles.map((article, index) => (
                       <tr key={article.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {article.title}
@@ -384,6 +388,7 @@ export default function HelpManagement() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Name
                       </th>
@@ -399,8 +404,9 @@ export default function HelpManagement() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {categories.map((category) => (
+                    {categories.map((category, index) => (
                       <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {category.category_name}

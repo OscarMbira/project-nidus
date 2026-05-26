@@ -4,8 +4,9 @@ import { FolderKanban, Edit2, Trash2, TrendingUp, AlertTriangle, DollarSign, Use
 import { deletePortfolio } from '../../services/portfolioService';
 import SortToolbar from '../ui/SortToolbar';
 import { useSortableTable } from '../../hooks/useSortableTable';
-import { TableHeaderCell } from '../ui/Table';
-
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils';
+import RowNumberBadge from '../ui/RowNumberBadge';
 export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid' }) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(null);
@@ -161,6 +162,7 @@ export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid'
             <table className="w-full border-collapse">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  <TableRowNumberHeader className="!normal-case" />
                   <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Category</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
@@ -175,7 +177,7 @@ export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid'
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {displayPortfolios.map((portfolio) => {
+                {displayPortfolios.map((portfolio, index) => {
                   const start = portfolio.start_date || portfolio.planned_start_date;
                   const end = portfolio.end_date || portfolio.planned_end_date;
                   return (
@@ -184,6 +186,7 @@ export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid'
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer group"
                       onClick={() => navigate(`/portfolio/${portfolio.id}`)}
                     >
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{portfolio.portfolio_name}</td>
                       <td className="px-6 py-4">
                         {portfolio.portfolio_type ? (
@@ -259,7 +262,7 @@ export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid'
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayPortfolios.map((portfolio) => (
+          {displayPortfolios.map((portfolio, index) => (
             <div
               key={portfolio.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -269,6 +272,7 @@ export default function PortfolioList({ portfolios, onRefresh, viewMode = 'grid'
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     <FolderKanban className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {portfolio.portfolio_name}

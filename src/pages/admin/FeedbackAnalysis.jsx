@@ -379,7 +379,7 @@ export default function FeedbackAnalysis() {
                   Ratings Distribution
                 </h3>
                 <div className="space-y-3">
-                  {[5, 4, 3, 2, 1].map((rating) => (
+                  {[5, 4, 3, 2, 1].map((rating, index) => (
                     <div key={rating}>
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1">
@@ -425,7 +425,7 @@ export default function FeedbackAnalysis() {
           />
         ) : (
           <div className="space-y-4">
-            {feedback.map((item) => (
+            {feedback.map((item, index) => (
               <div
                 key={item.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-md transition-shadow"

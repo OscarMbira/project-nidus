@@ -4,6 +4,7 @@ import { X, Save, User, Calendar, DollarSign, Clock } from 'lucide-react'
 import { addAction, updateAction } from '../../services/issueActionService'
 import { format } from 'date-fns'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function ActionForm({ issueId, action, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     action_description: '',
@@ -181,7 +182,7 @@ export default function ActionForm({ issueId, action, onSave, onCancel }) {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Unassigned</option>
-                {teamMembers.map((member) => (
+                {teamMembers.map((member, index) => (
                   <option key={member.user_id} value={member.user_id}>
                     {member.user?.full_name || member.user?.email}
                   </option>

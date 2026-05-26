@@ -1,5 +1,6 @@
 import { TrendingUp, Clock, DollarSign, Award, Target, Shield, AlertTriangle } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 const VAR_OPTIONS = [
   { value: '', label: '—' },
   { value: 'on_track', label: 'On track' },
@@ -56,7 +57,7 @@ export default function HighlightReportSixVariablesSection({ formData, onChange,
                   disabled={disabled}
                   className={inputClass(statusKey)}
                 >
-                  {VAR_OPTIONS.map((o) => (
+                  {VAR_OPTIONS.map((o, index) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>

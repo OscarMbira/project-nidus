@@ -1,9 +1,12 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import ViewToggle from '../ui/ViewToggle'
 import { useViewMode } from '../../hooks/useViewMode'
 import { prettySeamLevel } from '../../utils/stakeholderSEAMUtils'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../ui/RowNumberBadge'
 
 function sortIndicator(direction) {
   if (direction === 'asc') return '↑'
@@ -70,7 +73,7 @@ export default function StakeholderAssessmentMatrixList({
 
       {viewMode === 'grid' ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {displayRows.map((r) => {
+          {displayRows.map((r, index) => {
             const hasGap = r.current_level !== r.desired_level
             return (
               <article
@@ -81,7 +84,9 @@ export default function StakeholderAssessmentMatrixList({
                     : 'border-gray-700 bg-gray-800'
                 }`}
               >
-                <h4 className="font-medium text-white">
+                <div className="flex items-start gap-2 mb-1">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <h4 className="font-medium text-white min-w-0">
                   {onStakeholderClick ? (
                     <button
                       type="button"
@@ -94,6 +99,7 @@ export default function StakeholderAssessmentMatrixList({
                     r.stakeholder?.stakeholder_name || '—'
                   )}
                 </h4>
+                </div>
                 <p className="text-xs text-gray-500 mt-1">{r.assessment_date}</p>
                 <p className="text-sm text-gray-300 mt-2">
                   C: {prettySeamLevel(r.current_level)} · D: {prettySeamLevel(r.desired_level)}
@@ -125,6 +131,7 @@ export default function StakeholderAssessmentMatrixList({
           <table className="min-w-full divide-y divide-gray-700">
             <thead className="bg-gray-900/80">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 {[
                   ['stakeholder_name', 'Stakeholder'],
                   ['assessment_date', 'Date'],
@@ -142,8 +149,9 @@ export default function StakeholderAssessmentMatrixList({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-700">
-              {displayRows.map((r) => (
+              {displayRows.map((r, index) => (
                 <tr key={r.id} className="hover:bg-gray-700/40">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-4 py-3 text-sm text-white">
                     {onStakeholderClick ? (
                       <button

@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Plus, Gauge, Edit2, Trash2 } from 'lucide-react'
 import ToleranceCard from './ToleranceCard'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const TOLERANCE_TYPES = [
   { id: 'time', label: 'Time', unit: 'days/weeks', icon: '⏱️' },
   { id: 'cost', label: 'Cost', unit: 'currency', icon: '💰' },
@@ -130,7 +131,7 @@ export default function TolerancesSection({
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {tolerances.map((tolerance) => (
+          {tolerances.map((tolerance, index) => (
             <ToleranceCard
               key={tolerance.id}
               tolerance={tolerance}
@@ -159,7 +160,7 @@ export default function TolerancesSection({
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">Select type...</option>
-                  {TOLERANCE_TYPES.map((type) => (
+                  {TOLERANCE_TYPES.map((type, index) => (
                     <option key={type.id} value={type.id}>
                       {type.icon} {type.label}
                     </option>

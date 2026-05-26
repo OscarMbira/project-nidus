@@ -12,6 +12,7 @@ import { getProductStatusAccountByProject, getStatusSummary } from '../../servic
 import ProductStatusAccountCard from '../../components/productStatusAccount/ProductStatusAccountCard'
 import PSAStatusIndicator from '../../components/productStatusAccount/PSAStatusIndicator'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function ProductStatusAccountDashboard() {
   const { projectId, routeKey } = usePlatformProjectId()
   const [psas, setPsas] = useState([])
@@ -170,7 +171,7 @@ export default function ProductStatusAccountDashboard() {
             Products at Risk or Delayed
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {atRiskProducts.map((psa) => (
+            {atRiskProducts.map((psa, index) => (
               <ProductStatusAccountCard key={psa.id} psa={psa} projectId={projectId} />
             ))}
           </div>
@@ -189,7 +190,7 @@ export default function ProductStatusAccountDashboard() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredPSAs.map((psa) => (
+            {filteredPSAs.map((psa, index) => (
               <ProductStatusAccountCard key={psa.id} psa={psa} projectId={projectId} />
             ))}
           </div>

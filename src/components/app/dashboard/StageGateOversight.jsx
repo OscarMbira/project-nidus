@@ -14,6 +14,8 @@ import { Clock, AlertTriangle, CheckCircle, XCircle, Flag, ArrowUp, FileX } from
 import { getStageGates, getOverdueGates, flagOverdueGate, escalateGate, checkGateDocumentCompliance } from '../../../services/stageGateService';
 import { platformDb } from '../../../services/supabase/supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 // Note: stageGateService uses 'stage_gates' table, but actual table is 'stage_boundaries'
 // This component will work with stageGateService, but may need adjustment if table name differs
@@ -217,6 +219,7 @@ const StageGateOversight = memo(function StageGateOversight({ organizationId }) 
             <table className="w-full">
               <thead className="bg-gray-700/50">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Project</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Document Compliance</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Gate Name</th>
@@ -236,6 +239,7 @@ const StageGateOversight = memo(function StageGateOversight({ organizationId }) 
                       key={gate.id} 
                       className={`hover:bg-gray-700/30 ${isOverdue ? 'bg-red-900/10' : ''}`}
                     >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3">
                         <button
                           onClick={() => gate.project?.id && navigate(`/platform/projects/${gate.project.id}`)}

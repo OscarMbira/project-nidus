@@ -205,7 +205,7 @@ export default function WorkPackageForm({ workPackage, projectId, stageBoundarie
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Select Stage</option>
-                {stageBoundaries.map((stage) => (
+                {stageBoundaries.map((stage, index) => (
                   <option key={stage.id} value={stage.id}>
                     {stage.gate_name} - {stage.stage_name}
                   </option>

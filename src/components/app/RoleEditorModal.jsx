@@ -9,6 +9,7 @@ import { createCustomRole, updateRole, getRoleWithPermissions } from '../../serv
 import { appDb } from '../../services/supabaseClient'
 import { useToast } from '../../hooks/useToast'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
@@ -275,7 +276,7 @@ export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
                         {category}
                       </h4>
                       <div className="grid grid-cols-2 gap-2 ml-4">
-                        {perms.map((perm) => (
+                        {perms.map((perm, index) => (
                           <label
                             key={perm.id}
                             className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded"

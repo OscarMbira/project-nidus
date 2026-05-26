@@ -218,8 +218,7 @@ export default function QualityActivityBulkImport({ onImportComplete }) {
               <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Errors:</div>
               <div className="space-y-1">
                 {errors.slice(0, 10).map((error, idx) => (
-                  <div key={idx} className="text-sm text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                    Row {error.row}: {error.error || error.warning}
+                  <div key={idx} className="text-sm text-red-600 dark:text-red-400 p-2 bg-red-50 dark:bg-red-900/20 rounded">                    Row {error.row}: {error.error || error.warning}
                   </div>
                 ))}
                 {errors.length > 10 && (

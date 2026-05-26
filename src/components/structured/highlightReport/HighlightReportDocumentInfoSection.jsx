@@ -2,6 +2,7 @@ import { FileText, Calendar } from 'lucide-react'
 import { generateReportReference } from '../../../services/controllingStageService'
 import { useEffect } from 'react'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 const FREQUENCY_OPTIONS = [
   { value: '', label: 'Select frequency' },
   { value: 'weekly', label: 'Weekly' },
@@ -98,7 +99,7 @@ export default function HighlightReportDocumentInfoSection({ formData, onChange,
             disabled={disabled}
             className={inputClass('frequency')}
           >
-            {FREQUENCY_OPTIONS.map((o) => (
+            {FREQUENCY_OPTIONS.map((o, index) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>

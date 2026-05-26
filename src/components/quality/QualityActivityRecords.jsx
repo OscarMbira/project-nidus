@@ -251,7 +251,7 @@ export default function QualityActivityRecords({ activityType, activityId, onUpd
         </div>
       ) : (
         <div className="space-y-3">
-          {records.map((record) => (
+          {records.map((record, index) => (
             <div
               key={record.id}
               className="flex items-start justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"

@@ -103,8 +103,7 @@ export default function RiskMatrixChart({ projectId, risks = [] }) {
               <div
                 key={impact}
                 className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-1"
-              >
-                {formatLabel(impact)}
+              >                {formatLabel(impact)}
               </div>
             ))}
 
@@ -114,8 +113,7 @@ export default function RiskMatrixChart({ projectId, risks = [] }) {
                 <div
                   key={`label-${prob}`}
                   className="text-right text-xs font-medium text-gray-500 dark:text-gray-400 py-2 pr-2"
-                >
-                  {formatLabel(prob)}
+                >                  {formatLabel(prob)}
                 </div>
                 {IMPACTS.map((impact, impactIdx) => {
                   const reversedProbIdx = PROBABILITIES.length - 1 - probIdx

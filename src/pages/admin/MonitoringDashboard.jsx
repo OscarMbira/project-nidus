@@ -191,7 +191,7 @@ export default function MonitoringDashboard() {
         {/* Date Range Selector */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex gap-2">
-            {['7d', '30d', '90d'].map((range) => (
+            {['7d', '30d', '90d'].map((range, index) => (
               <button
                 key={range}
                 onClick={() => setDateRange(range)}
@@ -215,7 +215,7 @@ export default function MonitoringDashboard() {
               { id: 'performance', label: 'Performance', icon: Zap },
               { id: 'security', label: 'Security', icon: Shield },
               { id: 'support', label: 'Support', icon: TrendingUp }
-            ].map((tab) => (
+            ].map((tab, index) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -303,7 +303,7 @@ export default function MonitoringDashboard() {
                   </button>
                 </div>
                 <div className="space-y-3">
-                  {securityAlerts.slice(0, 5).map((alert) => (
+                  {securityAlerts.slice(0, 5).map((alert, index) => (
                     <div
                       key={alert.id}
                       className="p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20"

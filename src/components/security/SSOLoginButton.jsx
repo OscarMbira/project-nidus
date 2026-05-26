@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { initiateSAMLLogin, initiateOAuthLogin, getSSOProviders } from '../../services/ssoService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function SSOLoginButton({ onLoginStart, onLoginComplete }) {
   const [providers, setProviders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,7 +78,7 @@ export default function SSOLoginButton({ onLoginStart, onLoginComplete }) {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        {providers.map((provider) => (
+        {providers.map((provider, index) => (
           <button
             key={provider.id}
             onClick={() => handleSSOLogin(provider)}

@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { getEEFById, listEEFCategories, listProjectsForOrganisation, updateEEF } from '../../services/eefService'
 import { getCurrentUserAccountId } from '../../utils/accountResolution'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function EEFEdit() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -129,7 +130,7 @@ export default function EEFEdit() {
             onChange={(e) => set('category_id', e.target.value)}
           >
             <option value="">—</option>
-            {categories.map((c) => (
+            {categories.map((c, index) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>

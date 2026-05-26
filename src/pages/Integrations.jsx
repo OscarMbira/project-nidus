@@ -259,7 +259,7 @@ export default function Integrations() {
           </div>
         ) : (
           <div className="space-y-4">
-            {integrations.map((integration) => (
+            {integrations.map((integration, index) => (
               <div
                 key={integration.id}
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"

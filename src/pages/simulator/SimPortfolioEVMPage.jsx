@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { simDb } from '../../services/supabase/supabaseClient'
 import { listSimEvmSnapshots } from '../../services/simEvmService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'project_code', label: 'Project code' },
@@ -113,6 +115,7 @@ export default function SimPortfolioEVMPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2 text-left">Practice project</th>
                 <th className="px-3 py-2 text-left">Period</th>
                 <th className="px-3 py-2 text-right">PV</th>
@@ -123,6 +126,7 @@ export default function SimPortfolioEVMPage() {
             <tbody>
               {rollup.map(({ project, last }) => (
                 <tr key={project.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">
                     <Link
                       className="text-blue-400 hover:underline"

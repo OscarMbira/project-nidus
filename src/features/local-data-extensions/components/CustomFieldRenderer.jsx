@@ -5,6 +5,7 @@ import CustomFieldInput from './CustomFieldInput'
 import RepeatingFieldGroup from './RepeatingFieldGroup'
 import { validateSingleField } from '../utils/validateCustomField'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function CustomFieldRenderer({
   platformDb,
   /** Use public.users for internal user id when `platformDb` is simDb */
@@ -117,7 +118,7 @@ export default function CustomFieldRenderer({
         <p className="text-sm text-gray-500 dark:text-gray-400">No published local fields for this screen.</p>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {definitions.map((d) => (
+        {definitions.map((d, index) => (
           <CustomFieldInput
             key={d.id}
             definition={d}

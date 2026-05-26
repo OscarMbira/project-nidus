@@ -5,6 +5,8 @@ import PlanningProjectBar, { usePlanningProjectId } from '../../../components/pl
 import * as api from '../../../services/planConfidenceService'
 import * as simApi from '../../../services/sim/simPlanConfidenceService'
 import { platformDb } from '../../../services/supabase/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 export default function ConfidenceForecastView() {
   const isSim = useLocation().pathname.includes('/simulator/')
@@ -66,14 +68,16 @@ export default function ConfidenceForecastView() {
             <table className="mt-4 w-full text-sm border border-gray-700 rounded-lg overflow-hidden">
               <thead className="bg-gray-900 text-gray-400">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="text-left p-2">Confidence %</th>
                   <th className="text-left p-2">Likely date</th>
                   <th className="text-left p-2">Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {rows.map((r, index) => (
                   <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="p-2">{r.confidence_pct}</td>
                     <td className="p-2">{r.likely_date || '—'}</td>
                     <td className="p-2">{r.basis_notes || '—'}</td>

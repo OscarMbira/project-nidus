@@ -7,7 +7,9 @@ import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { AlertTriangle, TrendingUp, FileText, Link2, Filter, Search, BarChart3, Download } from 'lucide-react'
 import SortToolbar from '../components/ui/SortToolbar'
-import { TableHeaderCell } from '../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
+import RowNumberBadge from '../components/ui/RowNumberBadge'
 import { useSortableTable } from '../hooks/useSortableTable'
 import { useViewMode } from '../hooks/useViewMode'
 import ViewToggle from '../components/ui/ViewToggle'
@@ -419,6 +421,7 @@ export default function RAIDLog() {
               <table className="w-full border-collapse">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                    <TableRowNumberHeader className="!normal-case whitespace-nowrap" />
                     <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">ID / Code</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case">Type</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
@@ -428,8 +431,9 @@ export default function RAIDLog() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {displayRaidItems.map((item) => (
+                  {displayRaidItems.map((item, index) => (
                     <tr key={`${item.raid_type}-${item.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-6 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{item.code || '—'}</td>
                       <td className="px-6 py-3">
                         <span className={`px-2 py-1 rounded text-xs capitalize ${getTypeColor(item.raid_type)}`}>{item.raid_type}</span>
@@ -465,14 +469,15 @@ export default function RAIDLog() {
             </div>
           </div>
         ) : (
-          displayRaidItems.map((item) => (
+          displayRaidItems.map((item, index) => (
             <div
               key={`${item.raid_type}-${item.id}`}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} />
                     {getTypeIcon(item.raid_type)}
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {item.title}

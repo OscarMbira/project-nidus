@@ -7,6 +7,8 @@ import {
   deletePortfolioBudget,
 } from '../../services/portfolioService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const BUDGET_TYPES   = ['Capital', 'Operational', 'Programme', 'Contingency', 'Reserve']
 const BUDGET_STATUSES = ['draft', 'approved', 'active', 'closed', 'cancelled']
@@ -243,6 +245,7 @@ export default function PortfolioFinancial() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Portfolio', 'Budget Name', 'Type', 'Approved', 'Spent', 'Remaining', 'Utilisation', 'Status', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                   ))}
@@ -253,6 +256,7 @@ export default function PortfolioFinancial() {
                   const pct = utilPct(r.approved_amount, r.actual_spent)
                   return (
                     <tr key={r.id} className={`border-b border-gray-700/50 hover:bg-gray-700/30 ${i % 2 ? 'bg-gray-700/10' : ''}`}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3 text-gray-300">{r.portfolio?.portfolio_name || '—'}</td>
                       <td className="px-4 py-3 text-white font-medium">{r.budget_name}</td>
                       <td className="px-4 py-3 text-gray-300">{r.budget_type || '—'}</td>

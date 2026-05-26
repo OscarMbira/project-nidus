@@ -52,7 +52,7 @@ export default function PracticeManagingDelivery() {
             <p className="text-gray-500">No work packages found</p>
           ) : (
             <div className="space-y-2">
-              {workPackages.slice(0, 5).map((wp) => (
+              {workPackages.slice(0, 5).map((wp, index) => (
                 <div key={wp.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <span className="text-sm">{wp.work_package_name}</span>
                   <span className={`text-xs px-2 py-1 rounded ${wp.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
@@ -72,7 +72,7 @@ export default function PracticeManagingDelivery() {
             <p className="text-gray-500">No quality items found</p>
           ) : (
             <div className="space-y-2">
-              {qualityItems.slice(0, 5).map((item) => (
+              {qualityItems.slice(0, 5).map((item, index) => (
                 <div key={item.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <span className="text-sm">{item.product_name}</span>
                   <span className={`text-xs px-2 py-1 rounded ${item.quality_status === 'passed' ? 'bg-green-100 text-green-800' : item.quality_status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Plus, BarChart3, TrendingUp, Users, Calendar, AlertTriangle, Settings } from 'lucide-react'
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function AnalyticsDashboard() {
   const navigate = useNavigate()
@@ -261,6 +263,7 @@ function TableWidget({ widget }) {
       <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className="bg-gray-50 dark:bg-gray-700">
           <tr>
+                <TableRowNumberHeader className="!normal-case" />
             <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">
               Column 1
             </th>
@@ -271,6 +274,7 @@ function TableWidget({ widget }) {
         </thead>
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
             <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">Data 1</td>
             <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">Data 2</td>
           </tr>

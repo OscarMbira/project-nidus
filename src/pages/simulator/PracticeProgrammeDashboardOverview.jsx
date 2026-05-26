@@ -184,7 +184,7 @@ export default function PracticeProgrammeDashboardOverview() {
               By Programme
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rollups.map((row) => (
+              {rollups.map((row, index) => (
                 <div
                   key={row.id}
                   onClick={() => navigate(`/simulator/practice-programme/${row.id}`)}

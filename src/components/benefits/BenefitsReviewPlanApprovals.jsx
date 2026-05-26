@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, Plus, User, MessageSquare } from 'lucide-react';
 import { getApprovals, requestApproval, recordApproval, getMyPendingApprovals } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpdate }) {
   const [approvals, setApprovals] = useState([]);
@@ -196,6 +198,7 @@ export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpda
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Approver
                   </th>
@@ -217,8 +220,9 @@ export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpda
                 </tr>
               </thead>
               <tbody>
-                {approvals.map((approval) => (
+                {approvals.map((approval, index) => (
                   <tr key={approval.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm">
                       <div className="font-medium text-gray-900 dark:text-white">
                         {approval.approver?.full_name || approval.approver_name || approval.approver?.email || 'N/A'}

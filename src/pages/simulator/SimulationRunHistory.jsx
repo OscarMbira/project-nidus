@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { simDb } from '../../services/supabase/supabaseClient'
 import { getSimAuthUserId } from '../../services/sim/simAuth'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function SimulationRunHistory() {
   const [runs, setRuns] = useState([])
@@ -26,6 +28,7 @@ export default function SimulationRunHistory() {
       <table className="w-full text-sm border border-gray-700">
         <thead>
           <tr className="bg-gray-800">
+                <TableRowNumberHeader className="!normal-case" />
             <th className="p-2 text-left">Started</th>
             <th className="p-2 text-left">Role</th>
             <th className="p-2 text-left">Methodology</th>
@@ -35,8 +38,9 @@ export default function SimulationRunHistory() {
           </tr>
         </thead>
         <tbody>
-          {runs.map((r) => (
+          {runs.map((r, index) => (
             <tr key={r.id} className="border-t border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
               <td className="p-2">{r.started_at?.slice(0, 10)}</td>
               <td className="p-2 capitalize">{r.user_role?.replace(/_/g, ' ')}</td>
               <td className="p-2">{r.methodology}</td>

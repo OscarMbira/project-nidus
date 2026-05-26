@@ -8,6 +8,7 @@ import { Package, Plus } from 'lucide-react'
 import { getPracticeProductDescriptions } from '../../services/sim/practiceProductDescriptionService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRACTICE_PD_COLUMNS = [
   { key: 'product_title', label: 'Title' },
   { key: 'pd_reference', label: 'Reference' }
@@ -49,7 +50,7 @@ export default function PracticeProductDescriptionList() {
       </div>
       {loading ? <div className="text-center py-12">Loading...</div> : products.length === 0 ? <div className="text-center py-12 text-gray-500">No product descriptions found</div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div key={product.id} onClick={() => navigate(`/simulator/practice-product-desc/${product.id}?projectId=${projectId}`)} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer hover:shadow-lg">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{product.product_title}</h3>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{product.purpose?.substring(0, 100)}...</p>

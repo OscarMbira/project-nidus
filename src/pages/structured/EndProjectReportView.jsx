@@ -211,7 +211,7 @@ export default function EndProjectReportView() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => (
+            {tabs.map((tab, index) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -324,7 +324,7 @@ export default function EndProjectReportView() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Business Case Review</h2>
               {businessCaseReviews.length > 0 ? (
                 <div className="space-y-4">
-                  {businessCaseReviews.map((benefit) => (
+                  {businessCaseReviews.map((benefit, index) => (
                     <BenefitReviewCard key={benefit.id} benefit={benefit} mode="view" />
                   ))}
                 </div>
@@ -341,7 +341,7 @@ export default function EndProjectReportView() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Objectives Performance Review</h2>
               {objectivesReviews.length > 0 ? (
                 <div className="space-y-4">
-                  {objectivesReviews.map((objective) => (
+                  {objectivesReviews.map((objective, index) => (
                     <div key={objective.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-gray-900 dark:text-white capitalize">{objective.objective_area}</h3>
@@ -378,9 +378,8 @@ export default function EndProjectReportView() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Team Performance & Recognition</h2>
               {teamPerformance.length > 0 ? (
                 <div className="space-y-4">
-                  {teamPerformance.map((team) => (
-                    <div key={team.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{team.team_name || 'Team Member'}</h3>
+                  {teamPerformance.map((team, index) => (
+                    <div key={team.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{team.team_name || 'Team Member'}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Role: {team.role}</p>
                       <p className="text-gray-600 dark:text-gray-400">{team.performance_description}</p>
                     </div>
@@ -402,9 +401,8 @@ export default function EndProjectReportView() {
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Quality Records</h3>
                   {qualityRecords.length > 0 ? (
                     <div className="space-y-2">
-                      {qualityRecords.map((record) => (
-                        <div key={record.id} className="border border-gray-200 dark:border-gray-700 rounded p-3 text-sm">
-                          <p className="font-medium">{record.activity_name}</p>
+                      {qualityRecords.map((record, index) => (
+                        <div key={record.id} className="border border-gray-200 dark:border-gray-700 rounded p-3 text-sm">                          <p className="font-medium">{record.activity_name}</p>
                           <p className="text-gray-600 dark:text-gray-400">Status: {record.status}</p>
                         </div>
                       ))}
@@ -417,9 +415,8 @@ export default function EndProjectReportView() {
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Approval Records</h3>
                   {approvalRecords.length > 0 ? (
                     <div className="space-y-2">
-                      {approvalRecords.map((record) => (
-                        <div key={record.id} className="border border-gray-200 dark:border-gray-700 rounded p-3 text-sm">
-                          <p className="font-medium">{record.product_name}</p>
+                      {approvalRecords.map((record, index) => (
+                        <div key={record.id} className="border border-gray-200 dark:border-gray-700 rounded p-3 text-sm">                          <p className="font-medium">{record.product_name}</p>
                           <p className="text-gray-600 dark:text-gray-400">Status: {record.approval_status}</p>
                         </div>
                       ))}
@@ -432,9 +429,8 @@ export default function EndProjectReportView() {
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Off-Specifications</h3>
                   {offSpecifications.length > 0 ? (
                     <div className="space-y-2">
-                      {offSpecifications.map((offSpec) => (
-                        <div key={offSpec.id} className="border border-gray-200 dark:border-gray-700 rounded p-3 text-sm">
-                          <p className="font-medium">{offSpec.product_name}</p>
+                      {offSpecifications.map((offSpec, index) => (
+                        <div key={offSpec.id} className="border border-gray-200 dark:border-gray-700 rounded p-3 text-sm">                          <p className="font-medium">{offSpec.product_name}</p>
                           <p className="text-gray-600 dark:text-gray-400">Type: {offSpec.off_spec_type}</p>
                         </div>
                       ))}
@@ -454,7 +450,7 @@ export default function EndProjectReportView() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Lessons Learned</h2>
               {lessons.length > 0 ? (
                 <div className="space-y-4">
-                  {lessons.map((lesson) => (
+                  {lessons.map((lesson, index) => (
                     <div key={lesson.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold text-gray-900 dark:text-white">{lesson.title}</h3>
@@ -484,9 +480,8 @@ export default function EndProjectReportView() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Follow-On Actions</h2>
               {followOnActions.length > 0 ? (
                 <div className="space-y-4">
-                  {followOnActions.map((action) => (
-                    <div key={action.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <p className="font-semibold text-gray-900 dark:text-white">{action.source_type}</p>
+                  {followOnActions.map((action, index) => (
+                    <div key={action.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">                      <p className="font-semibold text-gray-900 dark:text-white">{action.source_type}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Reference: {action.source_reference}</p>
                     </div>
                   ))}

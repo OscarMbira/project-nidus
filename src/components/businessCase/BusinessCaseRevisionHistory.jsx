@@ -6,6 +6,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import { History, Loader2 } from 'lucide-react'
 import { getRevisionHistory } from '../../services/businessCaseService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BusinessCaseRevisionHistory({ caseId }) {
   const [revisions, setRevisions] = useState([])
@@ -48,6 +50,7 @@ export default function BusinessCaseRevisionHistory({ caseId }) {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Version</th>
                 <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
                 <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Summary</th>
@@ -55,8 +58,9 @@ export default function BusinessCaseRevisionHistory({ caseId }) {
               </tr>
             </thead>
             <tbody>
-              {revisions.map((r) => (
+              {revisions.map((r, index) => (
                 <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-2 px-3 font-medium text-gray-900 dark:text-white">{r.version_number}</td>
                   <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{r.revision_date}</td>
                   <td className="py-2 px-3 text-gray-700 dark:text-gray-300">{r.summary_of_changes}</td>

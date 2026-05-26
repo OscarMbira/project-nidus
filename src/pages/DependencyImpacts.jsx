@@ -222,7 +222,7 @@ export default function DependencyImpacts() {
         </div>
       ) : (
         <div className="space-y-4">
-          {displayImpacts.map((impact) => (
+          {displayImpacts.map((impact, index) => (
             <div
               key={impact.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

@@ -112,7 +112,7 @@ export default function StartingUpProject() {
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="flex space-x-8">
-          {['overview', 'mandate', 'project-brief'].map((tab) => (
+          {['overview', 'mandate', 'project-brief'].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

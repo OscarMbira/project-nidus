@@ -8,7 +8,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, Filter } from 'lucide-react'
 import { getPracticeTasks } from '../../services/sim/practiceTaskService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableHeaderCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 import { useSortableTable } from '../../hooks/useSortableTable'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
@@ -115,6 +117,7 @@ export default function PracticeTasks() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <TableHeaderCell
                   sortable
                   sortDirection={getSortDirectionForColumn('task_name')}
@@ -158,8 +161,9 @@ export default function PracticeTasks() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {displayTasks.map((task) => (
+              {displayTasks.map((task, index) => (
                 <tr key={task.id} onClick={() => navigate(`/simulator/practice-tasks/${task.id}`)} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{task.task_name}</div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">{task.task_description?.substring(0, 50)}...</div>
@@ -179,14 +183,17 @@ export default function PracticeTasks() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayTasks.map((task) => (
+          {displayTasks.map((task, index) => (
             <button
               key={task.id}
               type="button"
               onClick={() => navigate(`/simulator/practice-tasks/${task.id}`)}
               className="text-left bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow min-h-[160px]"
             >
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{task.task_name}</h3>
+              <div className="flex items-start gap-2 mb-2">
+                <RowNumberBadge number={getDisplayRowNumber(index)} />
+                <h3 className="font-semibold text-gray-900 dark:text-white">{task.task_name}</h3>
+              </div>
               {task.task_description && (
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{task.task_description}</p>
               )}

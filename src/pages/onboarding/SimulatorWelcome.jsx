@@ -12,6 +12,7 @@ import { useToast } from '../../hooks/useToast'
 import MainHeader from '../../components/homepage/MainHeader'
 import Footer from '../../components/homepage/Footer'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function SimulatorWelcome() {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -115,7 +116,7 @@ export default function SimulatorWelcome() {
                 What's your current skill level?
               </label>
               <div className="grid grid-cols-3 gap-4">
-                {['beginner', 'intermediate', 'advanced'].map((level) => (
+                {['beginner', 'intermediate', 'advanced'].map((level, index) => (
                   <button
                     key={level}
                     onClick={() => setSkillLevel(level)}

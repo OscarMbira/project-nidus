@@ -13,6 +13,8 @@ import { createCheckoutSession } from '../services/stripeService';
 import { simDb } from '../services/supabase/supabaseClient';
 import MainHeader from '../components/homepage/MainHeader';
 import SimulatorFooter from '../components/homepage/SimulatorFooter';
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function SimulatorPricing() {
   const { theme } = useTheme();
@@ -244,6 +246,7 @@ export default function SimulatorPricing() {
           <table className="w-full">
             <thead>
               <tr className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="text-left py-4 px-4 font-semibold">Feature</th>
                 <th className="text-center py-4 px-4 font-semibold">Free</th>
                 <th className="text-center py-4 px-4 font-semibold">Basic</th>
@@ -253,6 +256,7 @@ export default function SimulatorPricing() {
             </thead>
             <tbody className={`divide-y ${theme === 'dark' ? 'divide-gray-700' : 'divide-gray-200'}`}>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Beginner Scenarios</td>
                 <td className="text-center py-4 px-4">5</td>
                 <td className="text-center py-4 px-4">
@@ -266,6 +270,7 @@ export default function SimulatorPricing() {
                 </td>
               </tr>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Intermediate Scenarios</td>
                 <td className="text-center py-4 px-4">
                   <X className="h-5 w-5 text-red-500 mx-auto" />
@@ -281,6 +286,7 @@ export default function SimulatorPricing() {
                 </td>
               </tr>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Expert Scenarios</td>
                 <td className="text-center py-4 px-4">
                   <X className="h-5 w-5 text-red-500 mx-auto" />
@@ -296,6 +302,7 @@ export default function SimulatorPricing() {
                 </td>
               </tr>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Advanced AI Feedback</td>
                 <td className="text-center py-4 px-4">
                   <X className="h-5 w-5 text-red-500 mx-auto" />
@@ -311,6 +318,7 @@ export default function SimulatorPricing() {
                 </td>
               </tr>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Custom Scenarios</td>
                 <td className="text-center py-4 px-4">
                   <X className="h-5 w-5 text-red-500 mx-auto" />
@@ -326,6 +334,7 @@ export default function SimulatorPricing() {
                 </td>
               </tr>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Certificates</td>
                 <td className="text-center py-4 px-4">
                   <X className="h-5 w-5 text-red-500 mx-auto" />
@@ -335,6 +344,7 @@ export default function SimulatorPricing() {
                 <td className="text-center py-4 px-4">All (Discounted)</td>
               </tr>
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="py-4 px-4">Priority Support</td>
                 <td className="text-center py-4 px-4">
                   <X className="h-5 w-5 text-red-500 mx-auto" />

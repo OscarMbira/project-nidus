@@ -3,6 +3,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { X, ArrowRight, Calendar, Users } from 'lucide-react';
 import { createFollowOnAction, updateFollowOnAction } from '../../../services/closingProjectService';
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function FollowOnActionsForm({ projectId, action, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
@@ -177,7 +178,7 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">Select user...</option>
-                {users.map((user) => (
+                {users.map((user, index) => (
                   <option key={user.id} value={user.id}>
                     {user.full_name || user.email}
                   </option>

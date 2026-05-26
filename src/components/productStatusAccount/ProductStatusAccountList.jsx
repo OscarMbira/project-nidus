@@ -8,6 +8,7 @@ import { getProductStatusAccountByProject } from '../../services/productStatusAc
 import ProductStatusAccountCard from './ProductStatusAccountCard'
 import ExportListMenu from '../ui/ExportListMenu'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PSA_COLUMNS = [
   { key: 'psa_reference', label: 'Reference' },
   { key: 'product_name', label: 'Product Name' },
@@ -167,7 +168,7 @@ export default function ProductStatusAccountList({ projectId, onCreate, reportDa
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPSAs.map((psa) => (
+          {filteredPSAs.map((psa, index) => (
             <ProductStatusAccountCard key={psa.id} psa={psa} projectId={projectId} />
           ))}
         </div>

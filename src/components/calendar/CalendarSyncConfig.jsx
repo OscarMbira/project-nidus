@@ -3,6 +3,7 @@ import { syncTasksToCalendar, syncMilestonesToCalendar } from '../../services/ca
 import { supabase } from '../../services/supabaseClient'
 import { Calendar, RefreshCw, CheckCircle, XCircle, Clock, Settings } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function CalendarSyncConfig() {
   const [connections, setConnections] = useState([])
   const [loading, setLoading] = useState(true)
@@ -193,7 +194,7 @@ export default function CalendarSyncConfig() {
             onChange={(e) => setSyncSettings({ ...syncSettings, provider: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           >
-            {connections.map((conn) => (
+            {connections.map((conn, index) => (
               <option key={conn.provider} value={conn.provider}>
                 {conn.provider === 'google' ? 'Google Calendar' : 'Microsoft 365 Calendar'}
               </option>

@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { createEEF, listEEFCategories, listProjectsForOrganisation } from '../../services/eefService'
 import { getCurrentUserAccountId } from '../../utils/accountResolution'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const initial = {
   title: '',
   description: '',
@@ -140,7 +141,7 @@ export default function EEFCreate() {
               onChange={(e) => set('category_id', e.target.value)}
             >
               <option value="">— Select —</option>
-              {categories.map((c) => (
+              {categories.map((c, index) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

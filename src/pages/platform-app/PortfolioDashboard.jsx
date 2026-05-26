@@ -4,6 +4,8 @@ import { getPortfolios } from '../../services/portfolioService'
 import { getAllPortfolioProjects } from '../../services/portfolioService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 function KpiCard({ label, value, icon: Icon, colour }) {
   return (
@@ -154,6 +156,7 @@ export default function PortfolioDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-750 border-b border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Name', 'Code', 'Status', 'Projects', 'Budget', 'Health', 'Owner'].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-gray-400 font-medium">{h}</th>
                   ))}
@@ -165,6 +168,7 @@ export default function PortfolioDashboard() {
                     key={p.id}
                     className={`border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-700/10'}`}
                   >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-white font-medium">{p.portfolio_name}</td>
                     <td className="px-4 py-3 text-gray-300 font-mono text-xs">{p.portfolio_code}</td>
                     <td className="px-4 py-3">{statusBadge(p.portfolio_status)}</td>

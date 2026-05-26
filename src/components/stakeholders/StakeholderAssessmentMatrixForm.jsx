@@ -3,6 +3,7 @@ import { X, Save, PauseCircle } from 'lucide-react'
 import { SEAM_LEVELS, prettySeamLevel } from '../../utils/stakeholderSEAMUtils'
 import { saveDraft } from '../../services/draftQueueService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function StakeholderAssessmentMatrixForm({
   record,
   projectId,
@@ -124,7 +125,7 @@ export default function StakeholderAssessmentMatrixForm({
               className={fieldClass}
             >
               <option value="">Select stakeholder</option>
-              {stakeholders.map((s) => (
+              {stakeholders.map((s, index) => (
                 <option key={s.id} value={s.id}>
                   {s.stakeholder_name}
                   {s.stakeholder_reference ? ` (${s.stakeholder_reference})` : ''}
@@ -152,7 +153,7 @@ export default function StakeholderAssessmentMatrixForm({
                 onChange={handleChange}
                 className={fieldClass}
               >
-                {SEAM_LEVELS.map((l) => (
+                {SEAM_LEVELS.map((l, index) => (
                   <option key={l} value={l}>
                     {prettySeamLevel(l)}
                   </option>
@@ -167,7 +168,7 @@ export default function StakeholderAssessmentMatrixForm({
                 onChange={handleChange}
                 className={fieldClass}
               >
-                {SEAM_LEVELS.map((l) => (
+                {SEAM_LEVELS.map((l, index) => (
                   <option key={l} value={l}>
                     {prettySeamLevel(l)}
                   </option>

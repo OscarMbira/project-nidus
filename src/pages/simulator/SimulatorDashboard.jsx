@@ -193,12 +193,11 @@ const SimulatorDashboard = () => {
         <div className={`rounded-xl p-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow`}>
           <h2 className="text-lg font-semibold mb-4">Continue Where You Left Off</h2>
           <div className="space-y-3">
-            {dashboardData.inProgressRuns.map((run) => (
+            {dashboardData.inProgressRuns.map((run, index) => (
               <div
                 key={run.id}
                 className={`flex items-center justify-between p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}`}
-              >
-                <div>
+              >                <div>
                   <h3 className="font-medium">{run.scenarios?.name}</h3>
                   <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                     {run.scenarios?.industry} • {run.current_phase}
@@ -228,7 +227,7 @@ const SimulatorDashboard = () => {
           </Link>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {featuredScenarios.map((scenario) => (
+          {featuredScenarios.map((scenario, index) => (
             <div
               key={scenario.id}
               className={`rounded-xl overflow-hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow hover:shadow-lg transition-shadow`}

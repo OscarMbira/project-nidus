@@ -42,9 +42,10 @@ import {
   DollarSign,
   ClipboardCheck,
   TrendingUp,
-  SlidersHorizontal,
-  GitBranch,
   Layers,
+  Map,
+  Activity,
+  GitBranch,
   FlaskConical,
   Users,
   FolderKanban,
@@ -273,6 +274,25 @@ const simulatorPMOMenuConfig = [
         icon: FileClock,
         order: 8
       }
+    ]
+  },
+
+  // Section 3b: Process Templates (v629)
+  {
+    id: 'sim-pmo-process-templates',
+    label: 'Process Templates',
+    path: null,
+    icon: Layers,
+    section: 'Process Templates',
+    order: 7,
+    children: [
+      { id: 'sim-pmo-pt-hub', label: 'Hub Overview', path: '/simulator/pmo/process-templates', icon: Layers, order: 1 },
+      { id: 'sim-pmo-pt-pre', label: 'Pre-Project', path: '/simulator/pmo/process-templates/pre-project', icon: FileText, order: 2 },
+      { id: 'sim-pmo-pt-init', label: 'Initiating', path: '/simulator/pmo/process-templates/initiating', icon: Flag, order: 3 },
+      { id: 'sim-pmo-pt-plan', label: 'Planning', path: '/simulator/pmo/process-templates/planning', icon: Map, order: 4 },
+      { id: 'sim-pmo-pt-exec', label: 'Executing', path: '/simulator/pmo/process-templates/executing', icon: Activity, order: 5 },
+      { id: 'sim-pmo-pt-mon', label: 'Monitoring & Controlling', path: '/simulator/pmo/process-templates/monitoring-controlling', icon: BarChart3, order: 6 },
+      { id: 'sim-pmo-pt-close', label: 'Closing', path: '/simulator/pmo/process-templates/closing', icon: FileCheck, order: 7 },
     ]
   },
 

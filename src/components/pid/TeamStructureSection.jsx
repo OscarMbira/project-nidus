@@ -8,6 +8,7 @@ import { Plus, Users, Edit2, Trash2 } from 'lucide-react'
 import TeamMemberForm from './TeamMemberForm'
 import TeamMemberCard from './TeamMemberCard'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function TeamStructureSection({
   pidId,
   projectId,
@@ -97,7 +98,7 @@ export default function TeamStructureSection({
                 Project Board
               </h4>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedMembers.board.map((member) => (
+                {groupedMembers.board.map((member, index) => (
                   <TeamMemberCard
                     key={member.id}
                     member={member}
@@ -117,7 +118,7 @@ export default function TeamStructureSection({
                 Project Manager
               </h4>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedMembers.manager.map((member) => (
+                {groupedMembers.manager.map((member, index) => (
                   <TeamMemberCard
                     key={member.id}
                     member={member}
@@ -137,7 +138,7 @@ export default function TeamStructureSection({
                 Team Members
               </h4>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedMembers.team.map((member) => (
+                {groupedMembers.team.map((member, index) => (
                   <TeamMemberCard
                     key={member.id}
                     member={member}
@@ -157,7 +158,7 @@ export default function TeamStructureSection({
                 Project Support
               </h4>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedMembers.support.map((member) => (
+                {groupedMembers.support.map((member, index) => (
                   <TeamMemberCard
                     key={member.id}
                     member={member}
@@ -177,7 +178,7 @@ export default function TeamStructureSection({
                 Other Roles
               </h4>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {groupedMembers.other.map((member) => (
+                {groupedMembers.other.map((member, index) => (
                   <TeamMemberCard
                     key={member.id}
                     member={member}

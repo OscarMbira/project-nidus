@@ -9,6 +9,7 @@ import { getCorporateLessonsByCategory, searchCorporateLessons } from '../servic
 import { platformDb } from '../services/supabase/supabaseClient';
 import LessonCard from '../components/lessonsLog/LessonCard';
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 export default function CorporateLessonsLibrary() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -155,7 +156,7 @@ export default function CorporateLessonsLibrary() {
               <p className="text-gray-500">No corporate lessons found</p>
             </div>
           ) : (
-            lessons.map((lesson) => (
+            lessons.map((lesson, index) => (
               <LessonCard key={lesson.id} lesson={lesson} />
             ))
           )}

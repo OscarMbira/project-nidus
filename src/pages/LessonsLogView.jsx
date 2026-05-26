@@ -276,9 +276,8 @@ export default function LessonsLogView() {
             Lessons from other projects that may be relevant to this project
           </p>
           <div className="space-y-2">
-            {corporateLessons.slice(0, 3).map((lesson) => (
-              <div key={lesson.lesson_id} className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
-                <p className="font-medium text-gray-900 dark:text-white">{lesson.title}</p>
+            {corporateLessons.slice(0, 3).map((lesson, index) => (
+              <div key={lesson.lesson_id} className="bg-white dark:bg-gray-800 rounded p-2 text-sm">                <p className="font-medium text-gray-900 dark:text-white">{lesson.title}</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">{lesson.recommendations}</p>
               </div>
             ))}

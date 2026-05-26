@@ -186,7 +186,7 @@ export default function EPRBusinessCaseReview({ reportId, businessCaseReviews, o
         </div>
       ) : (
         <div className="space-y-3">
-          {businessCaseReviews.map((review) => (
+          {businessCaseReviews.map((review, index) => (
             <div
               key={review.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"

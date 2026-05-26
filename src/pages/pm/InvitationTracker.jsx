@@ -6,7 +6,7 @@ export default function PMInvitationTracker() {
     <InvitationTrackerView
       scope="pm"
       pageId="pm-invitation-tracker"
-      title="Invitation Status"
+      title="Invitation Tracker"
       service={invitationTrackerService}
     />
   )

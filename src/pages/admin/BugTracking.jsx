@@ -279,7 +279,7 @@ export default function BugTracking() {
           />
         ) : (
           <div className="space-y-4">
-            {bugs.map((bug) => (
+            {bugs.map((bug, index) => (
               <div
                 key={bug.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-md transition-shadow"

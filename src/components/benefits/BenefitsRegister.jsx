@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Target, Plus, Edit2, Trash2, CheckCircle, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { deleteBenefit, calculateBenefitRealization } from '../../services/benefitsService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
   const [deleting, setDeleting] = useState(null);
@@ -94,6 +96,7 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Benefit
                 </th>
@@ -118,7 +121,7 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {benefits.map((benefit) => {
+              {benefits.map((benefit, index) => {
                 const StatusIcon = getStatusIcon(benefit.benefit_status);
                 const realizationPercentage = benefit.target_value && benefit.target_value > 0
                   ? ((benefit.realized_value || benefit.current_value || 0) / benefit.target_value) * 100
@@ -126,6 +129,7 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
 
                 return (
                   <tr key={benefit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">

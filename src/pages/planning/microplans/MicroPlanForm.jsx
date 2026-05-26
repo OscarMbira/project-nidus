@@ -7,6 +7,7 @@ import * as api from '../../../services/microPlanService'
 import * as simApi from '../../../services/sim/simMicroPlanService'
 import { platformDb, simDb } from '../../../services/supabase/supabaseClient'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 const RAG_OPTIONS = ['green', 'amber', 'red']
 const FREQUENCY_OPTIONS = ['daily', 'weekly', 'fortnightly', 'monthly']
 const STATUS_OPTIONS = ['draft', 'active', 'on_hold', 'completed', 'cancelled']
@@ -255,7 +256,7 @@ export default function MicroPlanForm() {
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Review Frequency">
               <select className={inputCls} value={form.review_frequency} onChange={set('review_frequency')}>
-                {FREQUENCY_OPTIONS.map((f) => (
+                {FREQUENCY_OPTIONS.map((f, index) => (
                   <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
                 ))}
               </select>
@@ -277,7 +278,7 @@ export default function MicroPlanForm() {
             </Field>
             <Field label="RAG Status">
               <select className={inputCls} value={form.overall_rag} onChange={set('overall_rag')}>
-                {RAG_OPTIONS.map((r) => (
+                {RAG_OPTIONS.map((r, index) => (
                   <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>
                 ))}
               </select>

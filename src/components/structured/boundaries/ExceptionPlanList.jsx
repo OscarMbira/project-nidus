@@ -68,7 +68,7 @@ export default function ExceptionPlanList({ plans, onEdit, onRefresh, onAdd }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {plans.map((plan) => (
+        {plans.map((plan, index) => (
           <div
             key={plan.id}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"

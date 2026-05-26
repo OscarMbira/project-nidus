@@ -213,7 +213,7 @@ export default function SimMandateView() {
               Practice Projects Created ({practiceProjects.length})
             </h3>
             <div className="space-y-2">
-              {practiceProjects.map((project) => (
+              {practiceProjects.map((project, index) => (
                 <div key={project.id} className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
                   <div className="flex justify-between items-center">
                     <div>
@@ -325,7 +325,7 @@ export default function SimMandateView() {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Deliverables</h2>
             <ul className="space-y-2">
-              {deliverables.map((deliverable) => (
+              {deliverables.map((deliverable, index) => (
                 <li key={deliverable.id} className="text-gray-700 dark:text-gray-300">
                   • {deliverable.deliverable_name}
                   {deliverable.deliverable_description && (
@@ -342,7 +342,7 @@ export default function SimMandateView() {
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Stakeholders</h2>
             <ul className="space-y-2">
-              {stakeholders.map((stakeholder) => (
+              {stakeholders.map((stakeholder, index) => (
                 <li key={stakeholder.id} className="text-gray-700 dark:text-gray-300">
                   • {stakeholder.stakeholder_name} ({stakeholder.stakeholder_type})
                   {stakeholder.stakeholder_organisation && (

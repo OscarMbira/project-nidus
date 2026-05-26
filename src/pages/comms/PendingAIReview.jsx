@@ -7,6 +7,7 @@ import { listPendingForCurrentUser } from '../../services/sim/communications/sim
 import { useIsSimulator } from './useIsSimulator'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const COLS = [
   { key: 'ai_extracted_title', label: 'Title' },
   { key: 'status', label: 'Status' },
@@ -35,7 +36,7 @@ export default function PendingAIReview() {
     })()
   }, [isSim])
 
-  const exportRows = [...issues.map((x) => ({ ...x, kind: 'issue' })), ...risks.map((x) => ({ ...x, kind: 'risk' }))]
+  const exportRows = [...issues.map((x, index) => ({ ...x, kind: 'issue' })), ...risks.map((x, index) => ({ ...x, kind: 'risk' }))]
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -47,7 +48,7 @@ export default function PendingAIReview() {
         <section>
           <h2 className="font-semibold text-gray-900 dark:text-white mb-2">Issues</h2>
           <ul className="space-y-2">
-            {issues.map((i) => (
+            {issues.map((i, index) => (
               <li key={i.id} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-white dark:bg-gray-900">
                 <p className="font-medium text-gray-900 dark:text-white">{i.ai_extracted_title}</p>
                 <Link to={`${basePath}/review/${i.meeting_id}`} className="text-sm text-cyan-600">

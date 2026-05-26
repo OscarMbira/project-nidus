@@ -14,11 +14,13 @@ import {
 } from '../../services/sim/simProjectMembershipService'
 import { useToast } from '../../hooks/useToast'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useViewMode } from '../../hooks/useViewMode'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import SimAddMemberModal from '../../components/sim/SimAddMemberModal'
 import SimEditMemberRoleModal from '../../components/sim/SimEditMemberRoleModal'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STORAGE_SORT = 'nidus-sim-project-members-sort'
 const EXPORT_COLS = [
@@ -240,7 +242,7 @@ export default function SimProjectMembers() {
 
           {viewMode === 'grid' ? (
             <div className="grid sm:grid-cols-2 gap-4">
-              {displayRows.map((m) => (
+              {displayRows.map((m, index) => (
                 <div
                   key={m.id}
                   className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm"
@@ -249,6 +251,7 @@ export default function SimProjectMembers() {
                   <div className="text-sm text-gray-500 dark:text-gray-400">{m.email}</div>
                   <div className="text-xs text-violet-600 dark:text-violet-400 mt-2">{m.role_name}</div>
                   <div className="flex gap-2 mt-3">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     <button
                       type="button"
                       onClick={() => setEditRow(m)}
@@ -272,6 +275,7 @@ export default function SimProjectMembers() {
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-100 dark:bg-gray-800">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="text-left px-4 py-2">
                       <button type="button" className="font-semibold inline-flex items-center gap-1" onClick={() => handleSort('name')}>
                         Name {sortIndicator('name')}
@@ -292,8 +296,9 @@ export default function SimProjectMembers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayRows.map((m) => (
+                  {displayRows.map((m, index) => (
                     <tr key={m.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3">{m.name}</td>
                       <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{m.email}</td>
                       <td className="px-4 py-3">{m.role_name}</td>

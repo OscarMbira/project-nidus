@@ -5,6 +5,8 @@ import toast from 'react-hot-toast'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { listSimEvmSnapshots, upsertSimEvmSnapshot } from '../../services/simEvmService'
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'period_date', label: 'Period' },
@@ -70,11 +72,13 @@ export default function SimProjectEVMPage() {
         </form>
         <table className="min-w-full text-sm border border-gray-800 rounded">
           <thead className="bg-gray-900">
-            <tr><th className="px-2 py-1 text-left">Period</th><th className="px-2 py-1">PV</th><th className="px-2 py-1">EV</th><th className="px-2 py-1">AC</th></tr>
+            <tr>
+                <TableRowNumberHeader className="!normal-case" /><th className="px-2 py-1 text-left">Period</th><th className="px-2 py-1">PV</th><th className="px-2 py-1">EV</th><th className="px-2 py-1">AC</th></tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {rows.map((r, index) => (
               <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="px-2 py-1">{r.period_date}</td>
                 <td className="px-2 py-1 text-right">{r.planned_value}</td>
                 <td className="px-2 py-1 text-right">{r.earned_value}</td>

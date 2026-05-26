@@ -13,6 +13,7 @@ import { platformDb } from '../../services/supabase/supabaseClient';
 import { getPortfolios, deletePortfolio } from '../../services/portfolioService';
 import ExportListMenu from '../../components/ui/ExportListMenu';
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const EXPORT_COLUMNS = [
   { key: 'portfolio_name', label: 'Name' },
   { key: 'portfolio_code', label: 'Code' },
@@ -133,7 +134,7 @@ export default function Portfolio() {
 
   const exportData = useMemo(
     () =>
-      filteredPortfolios.map((p) => ({
+      filteredPortfolios.map((p, index) => ({
         portfolio_name: p.portfolio_name || '',
         portfolio_code: p.portfolio_code || '',
         portfolio_description: p.portfolio_description || '',

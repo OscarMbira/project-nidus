@@ -52,9 +52,8 @@ export default function TestingDashboardPage({ pathPrefix = '/platform/testing-c
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Dashboard</p>
       {err && <p className="text-red-500 text-sm mb-2">{err}</p>}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
-        {kpi.map((c) => (
-          <div key={c.label} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/80 p-4">
-            <div className="text-xs text-gray-500 dark:text-gray-400">{c.label}</div>
+        {kpi.map((c, index) => (
+          <div key={c.label} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/80 p-4">            <div className="text-xs text-gray-500 dark:text-gray-400">{c.label}</div>
             <div className="text-2xl font-bold">{c.value}</div>
           </div>
         ))}

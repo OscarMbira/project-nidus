@@ -5,6 +5,8 @@ import toast from 'react-hot-toast'
 import { listEvmSnapshots, upsertEvmSnapshot, computeEvmMetrics } from '../../services/evmService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { useFinancialPermissions } from '../../hooks/useFinancialPermissions'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProjectEVMPage() {
   const { projectId } = useParams()
@@ -95,6 +97,7 @@ export default function ProjectEVMPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2 text-left">Period</th>
                 <th className="px-3 py-2 text-right">PV</th>
                 <th className="px-3 py-2 text-right">EV</th>
@@ -102,8 +105,9 @@ export default function ProjectEVMPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-100 dark:border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">{r.period_date}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.planned_value}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.earned_value}</td>

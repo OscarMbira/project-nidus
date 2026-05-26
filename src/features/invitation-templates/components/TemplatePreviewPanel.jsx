@@ -5,6 +5,7 @@ import { parseInvitationMessageBlocks, stripMarkdownBold } from '../../../utils/
 import { buildMockInvitationProjectContext } from '../../../services/invitationProjectContextService'
 import ProjectContextPreview from './ProjectContextPreview'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 /** Full email layout preview with resolved placeholders and hardcoded sender block. */
 export default function TemplatePreviewPanel({ messageBody, sampleContext }) {
   const [show, setShow] = useState(false)
@@ -52,7 +53,7 @@ export default function TemplatePreviewPanel({ messageBody, sampleContext }) {
             {/* Resolved template body (matches sent email layout) */}
             <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/40 px-5 py-4 text-sm space-y-3">
               {body.length ? (
-                body.map((block) => (
+                body.map((block, index) => (
                   <p key={block.slice(0, 24)} className="text-gray-700 dark:text-gray-300 leading-relaxed m-0">
                     {stripMarkdownBold(block)}
                   </p>

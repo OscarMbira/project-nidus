@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import ScenarioCard from '../../components/sim/ScenarioCard';
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const Scenarios = () => {
   const { theme } = useTheme();
   const [scenarios, setScenarios] = useState([]);
@@ -215,7 +216,7 @@ const Scenarios = () => {
             } focus:outline-none focus:ring-1 focus:ring-blue-500`}
           >
             <option value="">All Industries</option>
-            {industries.map((i) => (
+            {industries.map((i, index) => (
               <option key={i} value={i}>
                 {i}
               </option>
@@ -249,7 +250,7 @@ const Scenarios = () => {
             } focus:outline-none focus:ring-1 focus:ring-blue-500`}
           >
             <option value="">All Difficulties</option>
-            {difficulties.map((d) => (
+            {difficulties.map((d, index) => (
               <option key={d} value={d} className="capitalize">
                 {d.charAt(0).toUpperCase() + d.slice(1)}
               </option>
@@ -281,7 +282,7 @@ const Scenarios = () => {
         </div>
       ) : scenarios.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {scenarios.map((scenario) => (
+          {scenarios.map((scenario, index) => (
             <ScenarioCard key={scenario.id} scenario={scenario} />
           ))}
         </div>

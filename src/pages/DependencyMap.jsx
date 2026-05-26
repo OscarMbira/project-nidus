@@ -115,7 +115,7 @@ export default function DependencyMap() {
               Dependency Network Preview
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dependencies.slice(0, 12).map((dep) => (
+              {dependencies.slice(0, 12).map((dep, index) => (
                 <div
                   key={dep.id}
                   className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"

@@ -191,7 +191,7 @@ export default function EndStageReportView() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8 overflow-x-auto">
-            {tabs.map((tab) => (
+            {tabs.map((tab, index) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -284,9 +284,8 @@ export default function EndStageReportView() {
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Product/Deliverable Status</h2>
               {productStatuses.length > 0 ? (
                 <div className="space-y-4">
-                  {productStatuses.map((product) => (
-                    <div key={product.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                      <h3 className="font-semibold text-gray-900 dark:text-white">{product.product_name}</h3>
+                  {productStatuses.map((product, index) => (
+                    <div key={product.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">                      <h3 className="font-semibold text-gray-900 dark:text-white">{product.product_name}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Status: {product.completion_status} | Quality: {product.quality_status}</p>
                     </div>
                   ))}

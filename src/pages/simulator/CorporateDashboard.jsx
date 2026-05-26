@@ -3,6 +3,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { Users, TrendingUp, Award, Clock, UserPlus, Download } from 'lucide-react';
 import { getCorporateLicense, getTeamMembers, getCorporateAnalytics } from '../../services/corporateService';
 import { simDb } from '../../services/supabase/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const CorporateDashboard = () => {
   const { theme } = useTheme();
@@ -202,6 +204,7 @@ const CorporateDashboard = () => {
           <table className="w-full">
             <thead>
               <tr className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="text-left py-3 px-4">Member</th>
                 <th className="text-left py-3 px-4">Role</th>
                 <th className="text-left py-3 px-4">Status</th>
@@ -209,11 +212,12 @@ const CorporateDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {teamMembers.map((member) => (
+              {teamMembers.map((member, index) => (
                 <tr
                   key={member.id}
                   className={`border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`}
                 >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-3 px-4">
                     {member.user?.email || 'Unknown'}
                   </td>

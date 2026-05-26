@@ -5,6 +5,7 @@ import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { getRelease, listReleaseStories, linkStoryToRelease } from '../../services/agileReleaseService'
 import { supabase } from '../../services/supabaseClient'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function AgileReleaseDetail() {
   const { releaseId } = useParams()
   const { projectId, loading: pidLoading, error: pidErr } = usePlatformProjectId()
@@ -96,7 +97,7 @@ export default function AgileReleaseDetail() {
       <div className="flex flex-wrap gap-2 mb-4">
         <select value={pick} onChange={(e) => setPick(e.target.value)} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm">
           <option value="">Link story from backlog…</option>
-          {backlog.map((b) => (
+          {backlog.map((b, index) => (
             <option key={b.id} value={b.id}>
               {b.story_title} ({b.story_points ?? 0} pts)
             </option>

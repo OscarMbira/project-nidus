@@ -18,6 +18,7 @@ import StakeholderRelationships from './StakeholderRelationships'
 import { exportRecordToWord, exportRecordToExcel, exportRecordToPPT, exportRecordToPrint } from '../../utils/exportUtils'
 import { getCompletenessPercent } from '../../utils/stakeholderCompleteness'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const ID_SOURCE_LABELS = {
   'project-charter': 'Project charter',
   'procurement-docs': 'Procurement docs',
@@ -228,7 +229,7 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
             <p className="text-sm text-gray-500 dark:text-gray-400">No communications recorded.</p>
           ) : (
             <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {communications.map((c) => (
+              {communications.map((c, index) => (
                 <li key={c.id} className="py-2">
                   <div className="font-medium text-gray-900 dark:text-white text-sm">{c.communication_subject || '—'}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">{c.communication_type} · {c.actual_date ? new Date(c.actual_date).toLocaleDateString() : ''} · {c.communication_status}</div>

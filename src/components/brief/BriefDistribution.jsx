@@ -260,7 +260,7 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {distributions.map((dist) => (
+          {distributions.map((dist, index) => (
             <div
               key={dist.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"

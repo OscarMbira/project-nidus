@@ -10,6 +10,7 @@ import { getPracticeWorkPackages } from '../../services/sim/practiceWorkPackageS
 import { getPracticeCheckpointReports } from '../../services/sim/practiceCheckpointReportService'
 import { getPracticeExceptionReports } from '../../services/sim/practiceExceptionReportService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function PracticeControllingStage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -51,7 +52,7 @@ export default function PracticeControllingStage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
-            {['work-packages', 'progress', 'exceptions'].map((tab) => (
+            {['work-packages', 'progress', 'exceptions'].map((tab, index) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -80,7 +81,7 @@ export default function PracticeControllingStage() {
                 <p className="text-gray-500">No work packages found</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {workPackages.map((wp) => (
+                  {workPackages.map((wp, index) => (
                     <div key={wp.id} onClick={() => navigate(`/simulator/practice-work-packages/${wp.id}?projectId=${projectId}`)} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
                       <h3 className="font-semibold">{wp.work_package_name}</h3>
                       <p className="text-sm text-gray-500">{wp.status}</p>
@@ -98,7 +99,7 @@ export default function PracticeControllingStage() {
                 <p className="text-gray-500">No checkpoint reports found</p>
               ) : (
                 <div className="space-y-4">
-                  {checkpointReports.map((report) => (
+                  {checkpointReports.map((report, index) => (
                     <div key={report.id} onClick={() => navigate(`/simulator/practice-checkpoint-reports/${report.id}?projectId=${projectId}`)} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
                       <h3 className="font-semibold">{report.report_title || 'Checkpoint Report'}</h3>
                       <p className="text-sm text-gray-500">Date: {report.checkpoint_date}</p>
@@ -116,7 +117,7 @@ export default function PracticeControllingStage() {
                 <p className="text-gray-500">No exception reports found</p>
               ) : (
                 <div className="space-y-4">
-                  {exceptionReports.map((report) => (
+                  {exceptionReports.map((report, index) => (
                     <div key={report.id} onClick={() => navigate(`/simulator/practice-exception-reports/${report.id}?projectId=${projectId}`)} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600">
                       <h3 className="font-semibold">{report.report_title}</h3>
                       <p className="text-sm text-gray-500">Date: {report.report_date}</p>

@@ -266,7 +266,7 @@ const SkillAssessment = () => {
               <h3 className="font-medium mb-2 text-green-500">Strengths</h3>
               <ul className="space-y-1">
                 {results.strengths.length > 0 ? (
-                  results.strengths.map((s) => (
+                  results.strengths.map((s, index) => (
                     <li key={s} className={`text-sm capitalize ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
                       • {s.replace('_', ' ')}
                     </li>
@@ -341,7 +341,7 @@ const SkillAssessment = () => {
 
         {/* Options */}
         <div className="space-y-3 mb-6">
-          {question.options.map((option) => (
+          {question.options.map((option, index) => (
             <button
               key={option.value}
               onClick={() => handleAnswer(question.id, option.value)}

@@ -9,7 +9,9 @@ import { ListChecks, Plus, Search, Filter, Calendar, LayoutGrid } from 'lucide-r
 import { platformDb } from '../services/supabase/supabaseClient';
 import { getMyTasks, getAllTasks } from '../services/taskService';
 import ExportListMenu from '../components/ui/ExportListMenu';
-import { TableHeaderCell } from '../components/ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table';
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils';
+import RowNumberBadge from '../components/ui/RowNumberBadge';
 import { useSortableTable } from '../hooks/useSortableTable';
 import { useViewMode } from '../hooks/useViewMode';
 import ViewToggle from '../components/ui/ViewToggle';
@@ -334,7 +336,7 @@ export default function Tasks() {
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Statuses</option>
-              {taskStatuses.map((status) => (
+              {taskStatuses.map((status, index) => (
                 <option key={status.id} value={status.id}>
                   {status.status_name}
                 </option>
@@ -348,7 +350,7 @@ export default function Tasks() {
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Projects</option>
-              {projects.map((project) => (
+              {projects.map((project, index) => (
                 <option key={project.id} value={project.id}>
                   {project.project_name}
                 </option>
@@ -381,16 +383,19 @@ export default function Tasks() {
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayTasks.map((task) => (
+            {displayTasks.map((task, index) => (
               <div
                 key={task.id}
                 onClick={() => navigate(`/platform/tasks/${task.id}`)}
                 className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-purple-500 transition-colors cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-100 flex-1">
-                    {task.task_name}
-                  </h3>
+                <div className="flex items-start justify-between mb-4 gap-2">
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                    <h3 className="text-lg font-semibold text-gray-100">
+                      {task.task_name}
+                    </h3>
+                  </div>
                   {task.priority && (
                     <span className={`px-2 py-1 text-xs rounded border ${getPriorityColor(task.priority)}`}>
                       {task.priority}
@@ -439,6 +444,7 @@ export default function Tasks() {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
+                    <TableRowNumberHeader className="!text-gray-300 !normal-case !px-6" />
                     <TableHeaderCell
                       sortable
                       sortDirection={getSortDirectionForColumn('task_name')}
@@ -490,12 +496,13 @@ export default function Tasks() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {displayTasks.map((task) => (
+                  {displayTasks.map((task, index) => (
                     <tr
                       key={task.id}
                       onClick={() => navigate(`/platform/tasks/${task.id}`)}
                       className="hover:bg-gray-700/30 cursor-pointer"
                     >
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} className="!px-6" />
                       <td className="px-6 py-4">
                         <div>
                           <div className="text-gray-100 font-medium">{task.task_name}</div>

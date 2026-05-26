@@ -109,7 +109,7 @@ export default function RiskReviewHistory({ registerId, projectId }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {reviews.map((review) => (
+          {reviews.map((review, index) => (
             <div
               key={review.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"

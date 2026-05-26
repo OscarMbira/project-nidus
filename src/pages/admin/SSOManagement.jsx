@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSSOProviders, configureSSOProvider, validateSSOProvider } from '../../services/ssoService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function SSOManagement() {
   const [providers, setProviders] = useState([])
@@ -348,6 +350,7 @@ export default function SSOManagement() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Provider Name
                   </th>
@@ -369,8 +372,9 @@ export default function SSOManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {providers.map((provider) => (
+                {providers.map((provider, index) => (
                   <tr key={provider.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                       {provider.provider_name}
                     </td>

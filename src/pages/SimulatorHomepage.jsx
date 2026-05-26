@@ -532,8 +532,7 @@ const SimulatorHomepage = () => {
                 transition={{ delay: index * 0.15, duration: 0.5 }}
               >
                 <Card className="h-full border-gray-200 dark:border-gray-700">
-                  <div className="p-6">
-                    <p className="text-gray-600 dark:text-gray-400 italic mb-6 leading-relaxed">
+                  <div className="p-6">                    <p className="text-gray-600 dark:text-gray-400 italic mb-6 leading-relaxed">
                       "{testimonial.quote}"
                     </p>
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-4">

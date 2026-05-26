@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { TrendingUp, Clock, Zap, Activity } from 'lucide-react'
 import { getPerformanceMetrics } from '../../services/performanceService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function PerformanceDashboard() {
   const [metrics, setMetrics] = useState(null)
   const [stats, setStats] = useState(null)
@@ -74,7 +75,7 @@ export default function PerformanceDashboard() {
         {/* Date Range Selector */}
         <div className="mb-6">
           <div className="flex gap-2">
-            {['7d', '30d', '90d'].map((range) => (
+            {['7d', '30d', '90d'].map((range, index) => (
               <button
                 key={range}
                 onClick={() => setDateRange(range)}

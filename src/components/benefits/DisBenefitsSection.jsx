@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Edit2, Trash2, TrendingDown, Shield, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { getDisBenefitsForPlan, saveDisBenefit, deleteDisBenefit, updateMitigationStatus } from '../../services/disBenefitsService';
 import { platformDb } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
   const [disBenefits, setDisBenefits] = useState([]);
@@ -480,6 +482,7 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Code
                   </th>
@@ -507,8 +510,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
                 </tr>
               </thead>
               <tbody>
-                {disBenefits.map((disBenefit) => (
+                {disBenefits.map((disBenefit, index) => (
                   <tr key={disBenefit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                       {disBenefit.dis_benefit_code}
                     </td>

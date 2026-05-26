@@ -6,6 +6,8 @@ import {
   savePortfolioGovernance,
 } from '../../services/portfolioService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const GOVERNANCE_MODELS = [
   'Centralised', 'Decentralised', 'Federated', 'Hybrid', 'Matrix',
@@ -192,6 +194,7 @@ export default function PortfolioGovernance() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Portfolio', 'Governance Model', 'Review Frequency', 'Last Review', 'Next Review', 'Decision Authority', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                   ))}
@@ -200,6 +203,7 @@ export default function PortfolioGovernance() {
               <tbody>
                 {filtered.map((r, i) => (
                   <tr key={r.id} className={`border-b border-gray-700/50 hover:bg-gray-700/30 ${i % 2 ? 'bg-gray-700/10' : ''}`}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-white font-medium">{r.portfolio?.portfolio_name || '—'}</td>
                     <td className="px-4 py-3">{modelBadge(r.governance_model)}</td>
                     <td className="px-4 py-3 text-gray-300">{r.review_frequency || '—'}</td>

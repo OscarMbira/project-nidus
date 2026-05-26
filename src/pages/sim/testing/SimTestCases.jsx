@@ -6,6 +6,8 @@ import ExportListMenu from '../../../components/ui/ExportListMenu'
 import { getPracticeTestCases } from '../../../services/sim/practiceTestCaseService'
 import { testCaseDetailPathSegment } from '../../../services/testCaseService'
 import { SIM_TESTING_BASE } from './simTestingPaths'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'test_case_ref', label: 'Ref' },
@@ -70,6 +72,7 @@ function CasesBody({ projectId }) {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-900 text-gray-400 text-left">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">Ref</th>
                 <th className="p-3">Title</th>
                 <th className="p-3 min-w-[12rem] max-w-md">Description</th>
@@ -78,8 +81,9 @@ function CasesBody({ projectId }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3 text-gray-400">{r.test_case_ref}</td>
                   <td className="p-3">
                     <Link className="text-emerald-400 hover:underline" to={`${SIM_TESTING_BASE}/cases/${testCaseDetailPathSegment(r)}`}>

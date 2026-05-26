@@ -213,7 +213,7 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Progress History</h3>
                 <div className="space-y-4">
-                  {progressSnapshots.map((snapshot) => (
+                  {progressSnapshots.map((snapshot, index) => (
                     <div key={snapshot.id} className="border-l-4 border-blue-500 pl-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -235,7 +235,7 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Milestones</h3>
                 <div className="space-y-4">
-                  {milestones.map((milestone) => (
+                  {milestones.map((milestone, index) => (
                     <div key={milestone.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">{milestone.milestone_name}</h4>
@@ -355,7 +355,7 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Linked Issues & Blockers</h3>
                 <div className="space-y-4">
-                  {linkedIssues.map((link) => (
+                  {linkedIssues.map((link, index) => (
                     <div key={link.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">
@@ -388,7 +388,7 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Dependencies</h3>
                 <div className="space-y-4">
-                  {dependencies.map((dep) => (
+                  {dependencies.map((dep, index) => (
                     <div key={dep.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900 dark:text-white">
@@ -433,7 +433,7 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Status History</h3>
               {statusHistory.length > 0 ? (
                 <div className="space-y-4">
-                  {statusHistory.map((history) => (
+                  {statusHistory.map((history, index) => (
                     <div key={history.id} className="border-l-4 border-blue-500 pl-4">
                       <div className="flex items-center justify-between">
                         <div>

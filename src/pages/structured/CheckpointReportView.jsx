@@ -225,7 +225,7 @@ export default function CheckpointReportView() {
               {products.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No products added</p>
               ) : (
-                products.map((product) => (
+                products.map((product, index) => (
                   <div key={product.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{product.product_name}</h4>
                     {product.product_description && (
@@ -252,7 +252,7 @@ export default function CheckpointReportView() {
               {qualityActivities.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No quality activities</p>
               ) : (
-                qualityActivities.map((activity) => (
+                qualityActivities.map((activity, index) => (
                   <div key={activity.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{activity.activity_name}</h4>
                     {activity.activity_description && (
@@ -277,9 +277,8 @@ export default function CheckpointReportView() {
               {followUps.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No follow-up items</p>
               ) : (
-                followUps.map((followUp) => (
-                  <div key={followUp.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <p className="text-gray-900 dark:text-white mb-2">{followUp.follow_up_item}</p>
+                followUps.map((followUp, index) => (
+                  <div key={followUp.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">                    <p className="text-gray-900 dark:text-white mb-2">{followUp.follow_up_item}</p>
                     {followUp.resolution && (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         <strong>Resolution:</strong> {followUp.resolution}
@@ -299,7 +298,7 @@ export default function CheckpointReportView() {
               {lessons.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No lessons identified</p>
               ) : (
-                lessons.map((lesson) => (
+                lessons.map((lesson, index) => (
                   <div key={lesson.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{lesson.lesson_title}</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{lesson.lesson_description}</p>

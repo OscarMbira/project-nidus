@@ -206,7 +206,7 @@ export default function MyDailyLogEntries() {
             No entries assigned to you.
           </div>
         ) : (
-          entries.map((entry) => (
+          entries.map((entry, index) => (
             <div key={entry.id} className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">

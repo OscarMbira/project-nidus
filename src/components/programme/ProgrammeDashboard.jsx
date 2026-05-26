@@ -200,7 +200,7 @@ export default function ProgrammeDashboard({ programmeId }) {
             Projects Overview
           </h3>
           <div className="space-y-3">
-            {stats.projects.slice(0, 5).map((proj) => (
+            {stats.projects.slice(0, 5).map((proj, index) => (
               <div
                 key={proj.id}
                 className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"

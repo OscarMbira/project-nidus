@@ -7,9 +7,8 @@ export default function TestMetricsCards({ suiteStats, caseStats, runStats, defe
   ]
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map((c) => (
-        <div key={c.label} className="rounded-xl border border-gray-800 bg-gray-900/50 p-4">
-          <p className="text-xs text-gray-500">{c.label}</p>
+      {cards.map((c, index) => (
+        <div key={c.label} className="rounded-xl border border-gray-800 bg-gray-900/50 p-4">          <p className="text-xs text-gray-500">{c.label}</p>
           <p className="text-2xl font-bold text-white mt-1">{c.value}</p>
           <p className="text-[11px] text-gray-500 mt-1">{c.sub}</p>
         </div>

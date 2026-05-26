@@ -188,7 +188,7 @@ export default function IssueAnalytics() {
               Issues by Priority
             </h3>
             <div className="space-y-3">
-              {['critical', 'high', 'medium', 'low'].map((priority) => (
+              {['critical', 'high', 'medium', 'low'].map((priority, index) => (
                 <div key={priority} className="flex items-center justify-between">
                   <span className="text-gray-700 dark:text-gray-300 capitalize">{priority}</span>
                   <div className="flex items-center gap-2">
@@ -290,7 +290,7 @@ export default function IssueAnalytics() {
             Issue Aging Analysis
           </h3>
           <div className="space-y-3">
-            {aging.map((ageGroup) => (
+            {aging.map((ageGroup, index) => (
               <div key={ageGroup.age_bracket} className="flex items-center justify-between">
                 <span className="text-gray-700 dark:text-gray-300">{ageGroup.age_bracket}</span>
                 <div className="flex items-center gap-2">

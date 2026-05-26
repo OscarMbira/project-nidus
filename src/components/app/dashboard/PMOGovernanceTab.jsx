@@ -5,6 +5,8 @@ import { memo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileCheck, ExternalLink } from 'lucide-react';
 import { platformDb } from '../../../services/supabase/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const PMOGovernanceTab = memo(function PMOGovernanceTab({
   organizationId,
@@ -101,6 +103,7 @@ const PMOGovernanceTab = memo(function PMOGovernanceTab({
           <table className="min-w-full text-sm text-left text-gray-900 dark:text-gray-100">
             <thead className="bg-gray-100 dark:bg-gray-800/80 text-xs uppercase text-gray-600 dark:text-gray-400">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2">Project</th>
                 <th className="px-3 py-2">Compliance %</th>
                 <th className="px-3 py-2">Status</th>
@@ -109,8 +112,9 @@ const PMOGovernanceTab = memo(function PMOGovernanceTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.project_id} className="bg-white dark:bg-gray-900/60">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2 font-medium">{r.project_name || '—'}</td>
                   <td className="px-3 py-2 tabular-nums">{r.compliance_percentage ?? '—'}</td>
                   <td className="px-3 py-2">{r.compliance_status || '—'}</td>

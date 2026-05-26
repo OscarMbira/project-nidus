@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { Target, Plus, AlertTriangle, CheckCircle, XCircle, Edit2, Trash2, Calendar, User } from 'lucide-react';
 import { getPlanBenefits, addBenefitToPlan, updateBenefitCoverage, removeBenefitFromPlan, getUnmappedBenefits } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsCoverageSection({ planId, projectId, onUpdate }) {
   const [coverage, setCoverage] = useState([]);
@@ -441,6 +443,7 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Benefit
                   </th>
@@ -465,8 +468,9 @@ export default function BenefitsCoverageSection({ planId, projectId, onUpdate })
                 </tr>
               </thead>
               <tbody>
-                {coverage.map((item) => (
+                {coverage.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm">
                       <div className="font-medium text-gray-900 dark:text-white">
                         {item.benefit?.benefit_code || 'N/A'} - {item.benefit?.benefit_name || 'N/A'}

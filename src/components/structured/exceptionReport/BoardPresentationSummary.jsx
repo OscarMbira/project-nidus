@@ -166,7 +166,7 @@ export default function BoardPresentationSummary({ report, options = [], quality
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Options Summary</h4>
           <div className="space-y-3">
-            {options.map((option) => (
+            {options.map((option, index) => (
               <div key={option.id} className="border-l-4 border-gray-300 dark:border-gray-600 pl-4">
                 <div className="flex items-center gap-2">
                   <strong className="text-gray-900 dark:text-white">

@@ -6,6 +6,8 @@
 import { useState, useEffect } from 'react'
 import { Star, Pencil } from 'lucide-react'
 import { getStakeholderCommunications, saveStakeholderCommunication } from '../../services/stakeholderService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 function StarRating({ value, max = 5, size = 'sm' }) {
   const v = value == null ? 0 : Math.min(max, Math.max(0, Number(value)))
@@ -98,6 +100,7 @@ export default function CommunicationLog({ projectId }) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Subject</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
@@ -111,6 +114,7 @@ export default function CommunicationLog({ projectId }) {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {logs.map(log => (
               <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{log.communication_subject || '—'}</td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{log.communication_type || '—'}</td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{log.actual_date ? new Date(log.actual_date).toLocaleDateString() : '—'}</td>

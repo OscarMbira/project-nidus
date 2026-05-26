@@ -1,5 +1,7 @@
 import { memo } from 'react';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
+import { TableRowNumberCell } from '../ui/Table';
+import RowNumberBadge from '../ui/RowNumberBadge';
 
 function formatShortDate(iso) {
   if (!iso) return '';
@@ -17,6 +19,7 @@ export const ProjectGridCard = memo(function ProjectGridCard({
   onEdit,
   onDelete,
   deletingId,
+  rowNumber,
 }) {
   const start = formatShortDate(project.planned_start_date);
   const end = formatShortDate(project.planned_end_date);
@@ -31,9 +34,12 @@ export const ProjectGridCard = memo(function ProjectGridCard({
         className="p-6 text-left cursor-pointer flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 rounded-t-lg"
       >
         <div className="flex items-start justify-between mb-4 gap-2">
-          <h3 className="text-xl font-semibold text-gray-100">
-            {project.project_name}
-          </h3>
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            {rowNumber != null && <RowNumberBadge number={rowNumber} className="shrink-0 mt-0.5" />}
+            <h3 className="text-xl font-semibold text-gray-100">
+              {project.project_name}
+            </h3>
+          </div>
           {project.project_code && (
             <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded shrink-0">
               {project.project_code}
@@ -113,6 +119,7 @@ export const ProjectListRow = memo(function ProjectListRow({
   onEdit,
   onDelete,
   deletingId,
+  rowNumber,
 }) {
   const start = formatShortDate(project.planned_start_date);
   const end = formatShortDate(project.planned_end_date);
@@ -123,6 +130,7 @@ export const ProjectListRow = memo(function ProjectListRow({
       className="hover:bg-gray-700/30 cursor-pointer group"
       onClick={() => onSelect(project)}
     >
+      <TableRowNumberCell number={rowNumber} className="!px-6" />
       <td className="px-6 py-4">
         <div>
           <div className="text-gray-100 font-medium">{project.project_name}</div>

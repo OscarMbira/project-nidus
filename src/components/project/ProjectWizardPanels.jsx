@@ -10,6 +10,7 @@ import PortfolioAssignmentSection from './PortfolioAssignmentSection'
 import ProgrammeAssignmentSection from './ProgrammeAssignmentSection'
 import { Briefcase, Network } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 /**
  * Shared 12-step body for Create / Edit / View project wizard.
  * @param {'create'|'edit'|'view'} mode — view: read-only fields + summary-only portfolio/programme
@@ -171,7 +172,7 @@ function ProjectWizardPanels({
                       } focus:border-blue-500 dark:border-gray-600`}
                     >
                       <option value="">Select a methodology</option>
-                      {methodologies.map((m) => (
+                      {methodologies.map((m, index) => (
                         <option key={m.id} value={m.id}>
                           {m.methodology_name}
                         </option>

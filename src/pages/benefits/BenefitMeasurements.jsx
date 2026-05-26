@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Plus, Edit2, Trash2, Calendar } from 'lucide-react';
 import { getBenefits, getBenefitMeasurements, saveBenefitMeasurement, deleteBenefitMeasurement } from '../../services/benefitsService';
 import SortToolbar from '../../components/ui/SortToolbar';
-import { TableHeaderCell } from '../../components/ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table';
 import { useSortableTable } from '../../hooks/useSortableTable';
 import { useViewMode } from '../../hooks/useViewMode';
 import ViewToggle from '../../components/ui/ViewToggle';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitMeasurements() {
   const navigate = useNavigate();
@@ -251,6 +252,7 @@ export default function BenefitMeasurements() {
                   <table className="w-full border-collapse">
                     <thead className="bg-gray-50 dark:bg-gray-700">
                       <tr>
+                <TableRowNumberHeader className="!normal-case" />
                         <TableHeaderCell sortable={false} className="!normal-case">Date</TableHeaderCell>
                         <TableHeaderCell sortable={false} className="!normal-case">Type</TableHeaderCell>
                         <TableHeaderCell sortable={false} className="!normal-case">Value</TableHeaderCell>
@@ -259,8 +261,9 @@ export default function BenefitMeasurements() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {displayMeasurements.map((measurement) => (
+                      {displayMeasurements.map((measurement, index) => (
                         <tr key={measurement.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-6 py-3 text-sm">{new Date(measurement.measurement_date).toLocaleDateString()}</td>
                           <td className="px-6 py-3">
                             <span className={`px-2 py-1 text-xs rounded ${
@@ -288,12 +291,13 @@ export default function BenefitMeasurements() {
                 </div>
               </div>
             ) : (
-            displayMeasurements.map((measurement) => (
+            displayMeasurements.map((measurement, index) => (
               <div
                 key={measurement.id}
                 className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <Calendar className="h-5 w-5 text-gray-400" />

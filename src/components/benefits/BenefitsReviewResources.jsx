@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { DollarSign, Plus, Edit2, Trash2, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { getPlanResources, addResource, updateResource, removeResource, calculateTotalResourceCost } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsReviewResources({ planId, onUpdate }) {
   const [resources, setResources] = useState([]);
@@ -474,6 +476,7 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Resource
                   </th>
@@ -498,8 +501,9 @@ export default function BenefitsReviewResources({ planId, onUpdate }) {
                 </tr>
               </thead>
               <tbody>
-                {resources.map((resource) => (
+                {resources.map((resource, index) => (
                   <tr key={resource.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm">
                       <div className="font-medium text-gray-900 dark:text-white">
                         {resource.resource_name}

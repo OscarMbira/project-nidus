@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLdeContext } from './LocalDataExtensionsRoutes'
 import { listGroups, upsertGroup } from '../api/customFieldGroupsApi'
 import { WORKFLOW_STATUS } from '../utils/customFieldConstants'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 export default function FieldGroupsPage() {
   const { platformDb, accountId, userInternalId } = useLdeContext()
@@ -129,6 +131,7 @@ export default function FieldGroupsPage() {
         <table className="min-w-full text-sm border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
+                <TableRowNumberHeader className="!normal-case" />
               <th className="text-left p-2">Code</th>
               <th className="text-left p-2">Label</th>
               <th className="text-left p-2">Rows min/max</th>
@@ -136,8 +139,9 @@ export default function FieldGroupsPage() {
             </tr>
           </thead>
           <tbody>
-            {groups.map((g) => (
+            {groups.map((g, index) => (
               <tr key={g.id} className="border-t border-gray-100 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="p-2 font-mono text-xs">{g.group_code}</td>
                 <td className="p-2">{g.label}</td>
                 <td className="p-2">
@@ -148,6 +152,7 @@ export default function FieldGroupsPage() {
             ))}
             {!groups.length && (
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td colSpan={4} className="p-6 text-center text-gray-500">
                   No groups yet.
                 </td>

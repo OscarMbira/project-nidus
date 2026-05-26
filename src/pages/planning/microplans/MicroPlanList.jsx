@@ -6,6 +6,8 @@ import PlanningProjectBar, { usePlanningProjectId } from '../../../components/pl
 import * as api from '../../../services/microPlanService'
 import * as simApi from '../../../services/sim/simMicroPlanService'
 import { exportListToCSV, exportListToJSON, exportListToXML, exportListToPrint } from '../../../utils/exportUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const VIEW_KEY = 'pm-microplan-list-view-v1'
 
@@ -279,6 +281,7 @@ export default function MicroPlanList({ scope }) {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-800/90 text-gray-400">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-3 py-2">
                     <SortBtn k="plan_reference" label="Reference" />
                   </th>
@@ -298,8 +301,9 @@ export default function MicroPlanList({ scope }) {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((p) => (
+                {filtered.map((p, index) => (
                   <tr key={p.id} className="border-t border-gray-700/80 hover:bg-gray-800/40">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-3 py-2 font-mono text-gray-300">{p.plan_reference}</td>
                     <td className="px-3 py-2 text-gray-200">{p.plan_name}</td>
                     <td className="px-3 py-2 text-gray-400">{p.plan_type}</td>

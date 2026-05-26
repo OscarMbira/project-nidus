@@ -43,13 +43,37 @@ function writeToStorage(storage, key, value) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Role → layout type resolution
+// Determines sidebar layout from the user's actual DB role names.
+// This is the authoritative source — never infer layout from menu item signals.
+// ---------------------------------------------------------------------------
+const PMO_LAYOUT_ROLES = new Set(['pmo_admin', 'system_admin', 'account_owner'])
+const TM_LEAD_ROLES   = new Set(['team_lead'])
+const TM_LAYOUT_ROLES = new Set(['team_member', 'team_lead'])
+
+/**
+ * Resolve sidebar layout type from the user's actual role names.
+ * @param {string[]} roleNames
+ * @returns {{ layout: 'pmo' | 'pm' | 'tm', isLead: boolean }}
+ */
+function resolveLayoutType(roleNames = []) {
+  if (roleNames.some(r => PMO_LAYOUT_ROLES.has(r))) return { layout: 'pmo', isLead: false }
+  if (roleNames.some(r => TM_LEAD_ROLES.has(r)))   return { layout: 'tm',  isLead: true  }
+  if (roleNames.some(r => TM_LAYOUT_ROLES.has(r))) return { layout: 'tm',  isLead: false }
+  // project_manager, portfolio_manager, programme_manager, project_sponsor, etc.
+  return { layout: 'pm', isLead: false }
+}
+
+// Cache now stores layoutHint alongside items so the correct layout is used on
+// cache hits without needing to re-fetch role names from the DB.
 function readCache(userId) {
   try {
     for (const key of getCacheKeys(userId)) {
       const raw = readFromStorage(localStorage, key) ?? readFromStorage(sessionStorage, key)
       if (!raw) continue
-      const { items, at } = JSON.parse(raw)
-      if (Date.now() - at < MENU_CACHE_TTL) return items
+      const { items, at, layoutHint } = JSON.parse(raw)
+      if (Date.now() - at < MENU_CACHE_TTL) return { items, layoutHint: layoutHint || null }
     }
     return null
   } catch { return null }
@@ -61,17 +85,17 @@ function readStaleCache(userId) {
     for (const key of getCacheKeys(userId)) {
       const raw = readFromStorage(localStorage, key) ?? readFromStorage(sessionStorage, key)
       if (!raw) continue
-      const { items } = JSON.parse(raw)
-      if (Array.isArray(items)) return items
+      const { items, layoutHint } = JSON.parse(raw)
+      if (Array.isArray(items)) return { items, layoutHint: layoutHint || null }
     }
     return null
   } catch { return null }
 }
 
-function writeCache(userId, items) {
+function writeCache(userId, items, layoutHint) {
   try {
     const key = getCacheKey(userId)
-    const payload = JSON.stringify({ items, at: Date.now() })
+    const payload = JSON.stringify({ items, at: Date.now(), layoutHint: layoutHint || null })
     writeToStorage(localStorage, key, payload)
     writeToStorage(sessionStorage, key, payload)
   } catch { /* storage unavailable */ }
@@ -250,6 +274,113 @@ function ensurePmSendRoleInvitationMenu(menuItems = []) {
   return clone
 }
 
+/** Platform path for PM invitation tracker (Teams section, mirrors PMO admin tracker). */
+const PM_INVITATION_TRACKER_PATH = '/platform/invitation-tracker'
+
+function makeVirtualMenuLeaf({ id, code, label, path, icon, sort }) {
+  return {
+    id,
+    menu_code: code,
+    menu_label: label,
+    menu_description: label,
+    parent_menu_id: null,
+    menu_level: 2,
+    sort_order: sort,
+    route_path: path,
+    external_url: null,
+    menu_icon: icon,
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: [],
+  }
+}
+
+/**
+ * PM Platform sidebar — Teams section (mirrors PMO Teams category).
+ * Consolidates project members, invitations, and appointments.
+ */
+function ensurePmPlatformTeamsMenu(menuItems = []) {
+  const roots = Array.isArray(menuItems) ? menuItems : []
+  const norm = (v) => String(v || '').trim().toLowerCase()
+
+  const hasPmTeamsSection = roots.some((n) => norm(n.menu_code) === 'pm_platform_teams_section')
+  if (hasPmTeamsSection) return roots
+
+  const teamLeaves = [
+    makeVirtualMenuLeaf({
+      id: 'vpm-teams-members',
+      code: 'pm_teams_manage_members',
+      label: 'Project Members',
+      path: '/app/project-members',
+      icon: 'users',
+      sort: 10,
+    }),
+    makeVirtualMenuLeaf({
+      id: 'vpm-teams-send-invite',
+      code: 'pm_teams_send_role_invitations',
+      label: 'Send Role Invitations',
+      path: '/app/project-members?action=send-invite',
+      icon: 'mail',
+      sort: 40,
+    }),
+    makeVirtualMenuLeaf({
+      id: 'vpm-teams-invitation-tracker',
+      code: 'pm_invitation_tracker',
+      label: 'Invitation Tracker',
+      path: PM_INVITATION_TRACKER_PATH,
+      icon: 'mail-check',
+      sort: 50,
+    }),
+    makeVirtualMenuLeaf({
+      id: 'vpm-teams-appointments',
+      code: 'pm_teams_my_appointments',
+      label: 'My Appointments',
+      path: '/platform/my-appointments',
+      icon: 'clipboard-check',
+      sort: 60,
+    }),
+    makeVirtualMenuLeaf({
+      id: 'vpm-teams-my-team',
+      code: 'pm_teams_my_team',
+      label: 'My Team',
+      path: '/platform/teams/my-team',
+      icon: 'users',
+      sort: 110,
+    }),
+  ]
+
+  const teamsSection = {
+    id: 'virtual-pm-platform-teams',
+    menu_code: 'pm_platform_teams_section',
+    menu_label: 'Teams',
+    menu_description: 'Project team members, invitations, and appointments',
+    parent_menu_id: null,
+    menu_level: 1,
+    sort_order: 75,
+    route_path: null,
+    external_url: null,
+    menu_icon: 'users',
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: teamLeaves,
+  }
+
+  const clone = roots
+    .filter((n) => norm(n.menu_code) !== 'pm_team_members_section')
+    .map((n) => ({ ...n, children: [...(n.children || [])] }))
+
+  clone.push(teamsSection)
+  return clone.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+}
+
 /** Inject Invitation Status under Team & Members when DB seed (v595) was not applied. */
 function ensurePmInvitationTrackerMenu(menuItems = []) {
   const roots = Array.isArray(menuItems) ? menuItems : []
@@ -257,7 +388,7 @@ function ensurePmInvitationTrackerMenu(menuItems = []) {
   const hasTracker = (nodes) => {
     for (const n of nodes) {
       if (norm(n.menu_code) === 'pm_invitation_tracker') return true
-      if (/\/app\/invitation-tracker\b/.test(String(n.route_path || ''))) return true
+      if (/\/app\/invitation-tracker\b|\/platform\/invitation-tracker\b/.test(String(n.route_path || ''))) return true
       if (n.children?.length && hasTracker(n.children)) return true
     }
     return false
@@ -267,12 +398,12 @@ function ensurePmInvitationTrackerMenu(menuItems = []) {
   const trackerItem = {
     id: 'virtual-pm-invitation-tracker',
     menu_code: 'pm_invitation_tracker',
-    menu_label: 'Invitation Status',
-    menu_description: 'Track all project invitations you have sent',
+    menu_label: 'Invitation Tracker',
+    menu_description: 'Track project invitations you have sent',
     parent_menu_id: null,
     menu_level: 2,
     sort_order: 35,
-    route_path: '/app/invitation-tracker',
+    route_path: PM_INVITATION_TRACKER_PATH,
     external_url: null,
     menu_icon: 'mail-check',
     menu_color: null,
@@ -312,6 +443,126 @@ function ensurePmInvitationTrackerMenu(menuItems = []) {
     })
   }
   return clone
+}
+
+/** Process Templates hub links (v629) — shared leaf definitions */
+function processTemplateLeafDefs(basePath, codePrefix) {
+  return [
+    { label: 'Hub Overview', path: basePath, icon: 'layers', sort: 10, code: `${codePrefix}_hub` },
+    { label: 'Pre-Project', path: `${basePath}/pre-project`, icon: 'file-text', sort: 20, code: `${codePrefix}_pre` },
+    { label: 'Initiating', path: `${basePath}/initiating`, icon: 'play-circle', sort: 30, code: `${codePrefix}_init` },
+    { label: 'Planning', path: `${basePath}/planning`, icon: 'map', sort: 40, code: `${codePrefix}_plan` },
+    { label: 'Executing', path: `${basePath}/executing`, icon: 'zap', sort: 50, code: `${codePrefix}_exec` },
+    { label: 'Monitoring & Control', path: `${basePath}/monitoring-controlling`, icon: 'activity', sort: 60, code: `${codePrefix}_mon` },
+    { label: 'Closing', path: `${basePath}/closing`, icon: 'check-circle', sort: 70, code: `${codePrefix}_close` },
+  ]
+}
+
+function hasProcessTemplatesMenu(nodes = []) {
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  for (const n of nodes) {
+    const code = norm(n.menu_code)
+    if (code.includes('process_templates') || code.startsWith('tm_pt_') || code.startsWith('pm_pt_')) return true
+    if (/\/process-templates\b/.test(String(n.route_path || ''))) return true
+    if (n.children?.length && hasProcessTemplatesMenu(n.children)) return true
+  }
+  return false
+}
+
+function buildProcessTemplatesSectionNode({ basePath, sectionId, sectionCode, sectionLabel, sortOrder, codePrefix }) {
+  const leaves = processTemplateLeafDefs(basePath, codePrefix).map((d) => ({
+    id: `virtual-${sectionCode}-${d.code}`,
+    menu_code: d.code,
+    menu_label: d.label,
+    menu_description: d.label,
+    parent_menu_id: sectionId,
+    menu_level: 2,
+    sort_order: d.sort,
+    route_path: d.path,
+    external_url: null,
+    menu_icon: d.icon,
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: [],
+  }))
+  return {
+    id: sectionId,
+    menu_code: sectionCode,
+    menu_label: sectionLabel,
+    menu_description: sectionLabel,
+    parent_menu_id: null,
+    menu_level: 1,
+    sort_order: sortOrder,
+    route_path: null,
+    external_url: null,
+    menu_icon: 'layers',
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: leaves,
+  }
+}
+
+/** Inject Process Templates section for PM sidebar (DB or platform layout). */
+function ensureProcessTemplatesMenusForPm(menuItems = []) {
+  const roots = Array.isArray(menuItems) ? menuItems : []
+  if (hasProcessTemplatesMenu(roots)) return roots
+
+  const section = buildProcessTemplatesSectionNode({
+    basePath: '/pm/process-templates',
+    sectionId: 'virtual-pm-process-templates',
+    sectionCode: 'pm_process_templates_section',
+    sectionLabel: 'Process Templates',
+    sortOrder: 145,
+    codePrefix: 'pm_pt',
+  })
+
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  const clone = roots.map((n) => ({ ...n, children: [...(n.children || [])] }))
+  const attachAfter = clone.findIndex((n) => {
+    const code = norm(n.menu_code)
+    const lbl = norm(n.menu_label)
+    return (
+      code === 'pm_section_controls' ||
+      code === 'platform_controls' ||
+      code === 'pm_section_forms' ||
+      code === 'platform_forms' ||
+      lbl === 'controls & registers' ||
+      lbl === 'process group forms'
+    )
+  })
+  if (attachAfter >= 0) clone.splice(attachAfter + 1, 0, section)
+  else clone.push(section)
+  return clone.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+}
+
+/** Merge Process Templates into team-member sidebar (DB-seeded or virtual). */
+function ensureProcessTemplatesInTeamMemberTree(menuItems = []) {
+  const roots = Array.isArray(menuItems) ? menuItems : []
+  if (hasProcessTemplatesMenu(roots)) return roots
+
+  const section = buildProcessTemplatesSectionNode({
+    basePath: '/pm/process-templates',
+    sectionId: 'vtm-s-pt',
+    sectionCode: 'tm_section_process_templates',
+    sectionLabel: 'Process Templates',
+    sortOrder: 65,
+    codePrefix: 'tm_pt',
+  })
+
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  const clone = roots.map((n) => ({ ...n, children: [...(n.children || [])] }))
+  const formsIdx = clone.findIndex((n) => norm(n.menu_code) === 'tm_section_forms')
+  if (formsIdx >= 0) clone.splice(formsIdx + 1, 0, section)
+  else clone.push(section)
+  return clone.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 }
 
 /** Detect team-member context: no PMO, no PM signals, menu codes are all tm_ prefixed */
@@ -374,7 +625,7 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   const hasTmSection = (nodes) =>
     nodes.some(n => norm(n.menu_code).startsWith('tm_section_'))
 
-  if (hasTmSection(menuItems)) return menuItems
+  if (hasTmSection(menuItems)) return ensureProcessTemplatesInTeamMemberTree(menuItems)
 
   const section = (id, code, label, icon, sort, route = null) =>
     makeVirtual(id, code, label, label, route, icon, true, sort)
@@ -388,6 +639,7 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   const sectionPlans        = section('vtm-s-pl',      'tm_section_plans',          'Plans',                 'git-branch',        40)
   const sectionControls     = section('vtm-s-cr',      'tm_section_controls',       'Controls & Registers',  'list-checks',       50)
   const sectionForms        = section('vtm-s-fm',      'tm_section_forms',          'Process Group Forms',   'file-text',         60)
+  const sectionProcessTemplates = section('vtm-s-pt', 'tm_section_process_templates', 'Process Templates', 'layers', 65)
   const sectionCharter      = section('vtm-s-ch',      'tm_section_team_charter',   'Team Charter',          'shield-check',      70)
   const sectionComms        = section('vtm-s-co',      'tm_section_communications', 'Communications',        'message-square',    80)
   const sectionTeam         = section('vtm-s-tm',      'tm_section_team',           'Team & Collaboration',  'users',             90)
@@ -439,6 +691,16 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
     leaf('vtm-fdraft', 'tm_draft_forms',     'My Draft Forms',       '/platform/projects/:projectId/forms/drafts',           'file-clock',   60, 'vtm-s-fm'),
   ]
 
+  sectionProcessTemplates.children = [
+    leaf('vtm-pt-all',   'tm_pt_all',   'All Process Templates', '/pm/process-templates',                          'layers',       10, 'vtm-s-pt'),
+    leaf('vtm-pt-pre',   'tm_pt_pre',   'Pre-Project',           '/pm/process-templates/pre-project',              'file-text',    20, 'vtm-s-pt'),
+    leaf('vtm-pt-init',  'tm_pt_init',  'Initiating',            '/pm/process-templates/initiating',               'play-circle',  30, 'vtm-s-pt'),
+    leaf('vtm-pt-plan',  'tm_pt_plan',  'Planning',              '/pm/process-templates/planning',                 'map',          40, 'vtm-s-pt'),
+    leaf('vtm-pt-exec',  'tm_pt_exec',  'Executing',             '/pm/process-templates/executing',                  'zap',          50, 'vtm-s-pt'),
+    leaf('vtm-pt-mon',   'tm_pt_mon',   'Monitoring & Control',  '/pm/process-templates/monitoring-controlling',   'activity',     60, 'vtm-s-pt'),
+    leaf('vtm-pt-close', 'tm_pt_close', 'Closing',               '/pm/process-templates/closing',                  'check-circle', 70, 'vtm-s-pt'),
+  ]
+
   sectionCharter.children = [
     leaf('vtm-charter-view', 'tm_team_charter_view', 'View Team Charter', '/platform/team-charter',      'shield-check', 10, 'vtm-s-ch'),
     ...(isLead ? [leaf('vtm-charter-edit', 'tm_team_charter_edit', 'Edit Team Charter', '/platform/team-charter/edit', 'file-edit', 20, 'vtm-s-ch')] : []),
@@ -483,6 +745,7 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
     sectionPlans,
     sectionControls,
     sectionForms,
+    sectionProcessTemplates,
     sectionCharter,
     sectionComms,
     sectionTeam,
@@ -495,7 +758,7 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   ]
 }
 
-function applyRoleSidebarRevamp(menuItems = []) {
+function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
   const roots = Array.isArray(menuItems) ? menuItems : []
   const norm = (value) => String(value || '').trim().toLowerCase()
   const score = (node) => ((node?.children?.length || 0) * 100) + (node?.sort_order || 0)
@@ -540,6 +803,30 @@ function applyRoleSidebarRevamp(menuItems = []) {
   }
 
   const baseline = dedupeByLabelAndRoute(roots)
+
+  // ------------------------------------------------------------------
+  // PRIMARY ROUTING: use the explicit role-based layout hint when available.
+  // This is set from the user's actual DB role — it is always authoritative.
+  // The signal-based heuristics below are a legacy fallback for old cache
+  // entries that pre-date the layoutHint field.
+  // ------------------------------------------------------------------
+  if (layoutHint) {
+    const { layout, isLead } = layoutHint
+    if (layout === 'tm') return ensureProcessTemplatesInTeamMemberTree(ensureTeamMemberMenus(baseline, isLead))
+    if (layout === 'pm') return ensurePmPlatformTeamsMenu(
+      ensureProcessTemplatesMenusForPm(
+        ensurePmInvitationTrackerMenu(
+          ensurePmSendRoleInvitationMenu(ensureIndustryPlanMenusForPm(baseline))
+        )
+      )
+    )
+    // layout === 'pmo' falls through to full PMO categorisation below
+  }
+
+  // ------------------------------------------------------------------
+  // LEGACY FALLBACK: signal-based detection for old cache entries only.
+  // Do NOT expand these patterns — use resolveLayoutType() for new logic.
+  // ------------------------------------------------------------------
   const hasPMOContext = baseline.some((n) => {
     const s = signal(n)
     return (
@@ -555,10 +842,14 @@ function applyRoleSidebarRevamp(menuItems = []) {
     const isTM = isTeamMemberContext(baseline)
     if (isTM) {
       const isLead = isTeamLeadContext(baseline)
-      return ensureTeamMemberMenus(baseline, isLead)
+      return ensureProcessTemplatesInTeamMemberTree(ensureTeamMemberMenus(baseline, isLead))
     }
-    return ensurePmInvitationTrackerMenu(
-      ensurePmSendRoleInvitationMenu(ensureIndustryPlanMenusForPm(baseline)),
+    return ensurePmPlatformTeamsMenu(
+      ensureProcessTemplatesMenusForPm(
+        ensurePmInvitationTrackerMenu(
+          ensurePmSendRoleInvitationMenu(ensureIndustryPlanMenusForPm(baseline)),
+        )
+      )
     )
   }
 
@@ -739,6 +1030,7 @@ function applyRoleSidebarRevamp(menuItems = []) {
     'financial & commercial management',
     'risk, issues & quality',
     'governance & standards',
+    'process templates',
     'reporting & intelligence',
     'workflows & approvals',
     'people & stakeholders',
@@ -795,6 +1087,7 @@ function applyRoleSidebarRevamp(menuItems = []) {
     { id: 'pmo-cat-financial-commercial', label: 'Financial & Commercial Management', order: 3 },
     { id: 'pmo-cat-risk-issues-quality', label: 'Risk, Issues & Quality', order: 4 },
     { id: 'pmo-cat-governance-standards', label: 'Governance & Standards', order: 5 },
+    { id: 'pmo-cat-process-templates', label: 'Process Templates', order: 5.8 },
     { id: 'pmo-cat-reporting-intelligence', label: 'Reporting & Intelligence', order: 6 },
     { id: 'pmo-cat-workflows-approvals', label: 'Workflows & Approvals', order: 7 },
     { id: 'pmo-cat-teams', label: 'Teams', order: 8 },
@@ -818,6 +1111,7 @@ function applyRoleSidebarRevamp(menuItems = []) {
     'pmo-cat-financial-commercial': { label: 'Financial View', path: '/platform/financial-reports' },
     'pmo-cat-risk-issues-quality': { label: 'Risk & Quality View', path: '/pmo/oversight/risk-register' },
     'pmo-cat-governance-standards': { label: 'Governance View', path: '/pmo/governance/mandate' },
+    'pmo-cat-process-templates': { label: 'Hub Overview', path: '/pmo/process-templates' },
     'pmo-cat-reporting-intelligence': { label: 'Reporting View', path: '/platform/reports' },
     'pmo-cat-workflows-approvals': { label: 'Pending Approvals', path: '/pmo/forms?status=in_review' },
     'pmo-cat-teams': { label: 'Manager assignments', path: '/platform/pmo-admin/manager-assignments' },
@@ -869,6 +1163,7 @@ function applyRoleSidebarRevamp(menuItems = []) {
     // "\bquality\b" catches bare "Quality" section headers; "\btesting\b" catches "Testing and QA".
     if (/risk register|enterprise risk|issue register|quality assurance|audit findings|capa|quality register|\bquality\b|\btesting\b/.test(s)) return 'pmo-cat-risk-issues-quality'
     if (/governance|framework|methodology|policy|lifecycle standards|compliance checks|itto/.test(s)) return 'pmo-cat-governance-standards'
+    if (/\/process-templates\b|process templates|process_template|pm_process_templates|tm_section_process/.test(s)) return 'pmo-cat-process-templates'
     if (/reports|reporting|analytics|intelligence|report builder/.test(s)) return 'pmo-cat-reporting-intelligence'
     if (/pending approvals|workflow|decision log|change approvals|stage gate|draft submissions|approv/.test(s)) return 'pmo-cat-workflows-approvals'
     // "Roles & Permissions" is system-level role management — must be caught before the generic
@@ -1211,6 +1506,10 @@ function applyRoleSidebarRevamp(menuItems = []) {
     50
   )
 
+  processTemplateLeafDefs('/pmo/process-templates', 'pmo_pt').forEach((d) => {
+    pushVirtualToCategory('pmo-cat-process-templates', d.label, d.path, d.icon, d.sort)
+  })
+
   const teamsAdminSortKey = (item) => {
     const s = signal(item)
     if (/manager.?assignments?/.test(s)) return 10
@@ -1471,6 +1770,16 @@ async function fetchMenuFromDB(user) {
     return { items: null, error: msg }
   }
 
+  // Resolve the sidebar layout type from the user's actual role names.
+  // This must happen before menu items are fetched so the correct layout
+  // is used to categorise them — never infer layout from menu item signals.
+  const { data: roleDetails } = await platformDb
+    .from('roles')
+    .select('role_name')
+    .in('id', roleIds)
+  const roleNames = (roleDetails || []).map(r => r.role_name).filter(Boolean)
+  const layoutHint = resolveLayoutType(roleNames)
+
   const { data: roleMenuRows, error: menuError } = await platformDb
     .from('role_menu_items')
     .select('menu_item_id, can_use')
@@ -1551,8 +1860,8 @@ async function fetchMenuFromDB(user) {
 
   const menuRows = [...menuMap.values()]
   const hierarchy = buildHierarchy(menuRows, canUseById)
-  const items = applyRoleSidebarRevamp(hierarchy)
-  return { items: items.length > 0 ? items : [], error: null }
+  const items = applyRoleSidebarRevamp(hierarchy, layoutHint)
+  return { items: items.length > 0 ? items : [], error: null, layoutHint }
 }
 
 export function useMenu() {
@@ -1575,35 +1884,38 @@ export function useMenu() {
         return
       }
 
-      const cached = readCache(user.id)
-      const stale = readStaleCache(user.id)
-      const sanitizeMenuItems = (items) => {
-        if (!Array.isArray(items) || items.length === 0) return []
-        return applyRoleSidebarRevamp(items)
-      }
-      const sanitizedCached = sanitizeMenuItems(cached)
-      const sanitizedStale = sanitizeMenuItems(stale)
-      const initial = (sanitizedCached.length > 0 ? sanitizedCached : sanitizedStale)
+      const cachedData = readCache(user.id)   // { items, layoutHint } | null
+      const staleData  = readStaleCache(user.id) // { items, layoutHint } | null
 
-      if (initial) {
+      // Rehydrate a cache entry through applyRoleSidebarRevamp using the
+      // stored layoutHint so the correct layout is applied on every render.
+      const sanitizeMenuItems = (data) => {
+        const items = data?.items
+        if (!Array.isArray(items) || items.length === 0) return []
+        return applyRoleSidebarRevamp(items, data?.layoutHint || null)
+      }
+
+      const sanitizedCached = sanitizeMenuItems(cachedData)
+      const sanitizedStale  = sanitizeMenuItems(staleData)
+      const initial = sanitizedCached.length > 0 ? sanitizedCached : sanitizedStale
+
+      if (initial.length > 0) {
         setMenuItems(initial)
         setLoading(false)
       } else {
         setLoading(true)
       }
 
-      const { items, error: fetchError } = await fetchMenuFromDB(user)
+      const { items, error: fetchError, layoutHint } = await fetchMenuFromDB(user)
       if (fetchError) {
         // If a usable initial menu is already rendered (cache/stale),
         // don't show transient fetch errors as a blocking banner.
-        if (!initial) setError(fetchError)
-        if (!initial) {
-          setMenuItems(sanitizedStale)
-        }
+        if (!initial.length) setError(fetchError)
+        if (!initial.length) setMenuItems(sanitizedStale)
       } else {
         setMenuItems(items || [])
         if (items && items.length > 0) {
-          writeCache(user.id, items)
+          writeCache(user.id, items, layoutHint)
         }
       }
     } catch (err) {
@@ -1613,9 +1925,13 @@ export function useMenu() {
       try {
         const { data: { user } } = await platformDb.auth.getUser()
         if (user?.id) {
-          const stale = readStaleCache(user.id)
-          if (Array.isArray(stale) && stale.length > 0) setMenuItems(applyRoleSidebarRevamp(stale))
-          else setMenuItems([])
+          const staleData = readStaleCache(user.id)
+          const staleItems = staleData?.items
+          if (Array.isArray(staleItems) && staleItems.length > 0) {
+            setMenuItems(applyRoleSidebarRevamp(staleItems, staleData?.layoutHint || null))
+          } else {
+            setMenuItems([])
+          }
         } else setMenuItems([])
       } catch (_) {
         setMenuItems([])

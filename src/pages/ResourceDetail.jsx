@@ -9,6 +9,8 @@ import ResourceCalendar from '../components/ResourceCalendar'
 import ResourceSkills from '../components/ResourceSkills'
 import ExportRecordButtons from '../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 const RESOURCE_VIEW_SECTIONS = [
   { title: 'Resource', fields: [
@@ -284,6 +286,7 @@ export default function ResourceDetail() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Assignment
                   </th>
@@ -302,8 +305,9 @@ export default function ResourceDetail() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {assignments.map((assignment) => (
+                {assignments.map((assignment, index) => (
                   <tr key={assignment.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {getAssignmentTypeLabel(assignment.assignment_type)}

@@ -242,7 +242,7 @@ export default function ActivityFeed() {
                   <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
                 </div>
                 <div className="space-y-4">
-                  {dateActivities.map((activity) => (
+                  {dateActivities.map((activity, index) => (
                     <div
                       key={activity.id}
                       className="flex items-start gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-colors"

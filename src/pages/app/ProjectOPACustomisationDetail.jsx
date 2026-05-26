@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Archive, Pencil } from 'lucide-react'
 import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProjectOPACustomisationDetail() {
   const navigate = useNavigate()
@@ -106,6 +108,7 @@ export default function ProjectOPACustomisationDetail() {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-3 py-2 text-left">Field</th>
               <th className="px-3 py-2">Visible</th>
               <th className="px-3 py-2">Required</th>
@@ -113,8 +116,9 @@ export default function ProjectOPACustomisationDetail() {
             </tr>
           </thead>
           <tbody>
-            {normalized.map((f) => (
+            {normalized.map((f, index) => (
               <tr key={f.field_key} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="px-3 py-2">{f.field_label}</td>
                 <td className="px-3 py-2 text-center">{f.is_visible ? 'Yes' : 'No'}</td>
                 <td className="px-3 py-2 text-center">{f.is_required ? 'Yes' : 'No'}</td>

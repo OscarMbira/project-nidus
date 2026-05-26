@@ -138,7 +138,7 @@ export default function ManagingProductDelivery() {
             className="w-full md:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">All Work Packages</option>
-            {workPackages.map((wp) => (
+            {workPackages.map((wp, index) => (
               <option key={wp.id} value={wp.id}>
                 {wp.work_package_code || wp.work_package_name}
               </option>
@@ -370,7 +370,7 @@ function ProductList({ products, onEdit, onRefresh, projectId, onCreateProductDe
 
   return (
     <div className="space-y-4">
-      {products.map((product) => (
+      {products.map((product, index) => (
         <div
           key={product.id}
           className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

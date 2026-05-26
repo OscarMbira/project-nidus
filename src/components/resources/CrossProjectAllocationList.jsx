@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Edit2, Trash2, AlertTriangle, FolderKanban, Target, TrendingUp } from 'lucide-react';
 import { deleteCrossProjectAllocation } from '../../services/crossResourceService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function CrossProjectAllocationList({ allocations, onRefresh }) {
   const navigate = useNavigate();
@@ -77,6 +79,7 @@ export default function CrossProjectAllocationList({ allocations, onRefresh }) {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Resource
                 </th>
@@ -101,8 +104,9 @@ export default function CrossProjectAllocationList({ allocations, onRefresh }) {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {allocations.map((allocation) => (
+              {allocations.map((allocation, index) => (
                 <tr key={allocation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Users className="h-5 w-5 text-gray-400 mr-3" />

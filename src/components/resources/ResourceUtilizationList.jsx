@@ -1,4 +1,6 @@
 import { Users, TrendingUp, AlertTriangle, Activity, Calendar } from 'lucide-react';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ResourceUtilizationList({ utilization, onRefresh }) {
   const getStatusColor = (status) => {
@@ -36,6 +38,7 @@ export default function ResourceUtilizationList({ utilization, onRefresh }) {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Resource
                 </th>
@@ -60,8 +63,9 @@ export default function ResourceUtilizationList({ utilization, onRefresh }) {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {utilization.map((util) => (
+              {utilization.map((util, index) => (
                 <tr key={util.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Users className="h-5 w-5 text-gray-400 mr-3" />

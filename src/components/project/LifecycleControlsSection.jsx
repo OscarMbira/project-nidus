@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Info, Plus, Trash2, X } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 function parseLines(value) {
   if (!value || typeof value !== 'string') return []
   return value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
@@ -93,7 +94,7 @@ export default function LifecycleControlsSection({
               <option value="">
                 {lifecycleTemplates.length > 0 ? 'Select Lifecycle Template...' : 'Select Lifecycle Template... (configure in PMO Admin)'}
               </option>
-              {lifecycleTemplates.map((tpl) => (
+              {lifecycleTemplates.map((tpl, index) => (
                 <option key={tpl.id} value={tpl.name}>
                   {tpl.name}
                 </option>

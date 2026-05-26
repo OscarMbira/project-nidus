@@ -8,6 +8,7 @@ import { FileText, Plus } from 'lucide-react'
 import { getPracticePIDs } from '../../services/sim/practicePIDService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRACTICE_PID_COLUMNS = [
   { key: 'pid_title', label: 'Title' },
   { key: 'pid_reference', label: 'Reference' }
@@ -49,7 +50,7 @@ export default function PracticePIDList() {
       </div>
       {loading ? <div className="text-center py-12">Loading...</div> : pids.length === 0 ? <div className="text-center py-12 text-gray-500">No PIDs found</div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pids.map((pid) => (
+          {pids.map((pid, index) => (
             <div key={pid.id} onClick={() => navigate(`/simulator/practice-pids/${pid.id}?projectId=${projectId}`)} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer hover:shadow-lg">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{pid.pid_title}</h3>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{pid.pid_description?.substring(0, 100)}...</p>

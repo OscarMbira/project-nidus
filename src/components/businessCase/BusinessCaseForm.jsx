@@ -7,6 +7,7 @@
 import { useState } from 'react'
 import BusinessCaseFinancials from './BusinessCaseFinancials'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
   { id: 'reasons', label: 'Reasons' },
@@ -48,7 +49,7 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
     <div>
       {/* Section tabs */}
       <div className="flex flex-wrap gap-1 mb-6 border-b border-gray-200 dark:border-gray-700 pb-2">
-        {SECTIONS.map((s) => (
+        {SECTIONS.map((s, index) => (
           <button
             key={s.id}
             type="button"

@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { createOPA, listOPACategories, listProjectsForOrganisation } from '../../services/opaService'
 import { getCurrentUserAccountId } from '../../utils/accountResolution'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const OPA_TYPES = ['template', 'guideline', 'standard', 'procedure', 'policy', 'historical_info', 'lessons_learned', 'other']
 
 const initial = {
@@ -148,7 +149,7 @@ export default function OPACreate() {
               onChange={(e) => set('category_id', e.target.value)}
             >
               <option value="">— Select —</option>
-              {categories.map((c) => (
+              {categories.map((c, index) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -163,7 +164,7 @@ export default function OPACreate() {
                 value={form.opa_type}
                 onChange={(e) => set('opa_type', e.target.value)}
               >
-                {OPA_TYPES.map((t) => (
+                {OPA_TYPES.map((t, index) => (
                   <option key={t} value={t}>
                     {t.replace(/_/g, ' ')}
                   </option>

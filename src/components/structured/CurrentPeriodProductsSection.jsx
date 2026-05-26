@@ -143,7 +143,7 @@ export default function CurrentPeriodProductsSection({ reportId, products, onPro
         </div>
       ) : (
         <div className="space-y-3">
-          {products.map((product) => (
+          {products.map((product, index) => (
             <div
               key={product.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"

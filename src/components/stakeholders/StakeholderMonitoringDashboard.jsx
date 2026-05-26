@@ -5,6 +5,8 @@
 import { useState, useEffect } from 'react'
 import { getStakeholderManagementStats, getStakeholderAnalysis, getStakeholders } from '../../services/stakeholderService'
 import { Users2, Target, MessageSquare, AlertTriangle } from 'lucide-react'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function StakeholderMonitoringDashboard({ projectId }) {
   const [stats, setStats] = useState(null)
@@ -97,6 +99,7 @@ export default function StakeholderMonitoringDashboard({ projectId }) {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stakeholder</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quadrant</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Current</th>
@@ -106,6 +109,7 @@ export default function StakeholderMonitoringDashboard({ projectId }) {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {highRisk.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{a.stakeholder?.stakeholder_name || '—'}</td>
                   <td className="px-6 py-4 text-sm capitalize">{a.matrix_quadrant?.replace('-', ' ') || '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.current_attitude || '—'}</td>

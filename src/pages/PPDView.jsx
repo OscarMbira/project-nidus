@@ -365,7 +365,7 @@ export default function PPDView() {
                     <p className="text-gray-500 dark:text-gray-400">No composition items defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {compositionItems.map((item) => (
+                      {compositionItems.map((item, index) => (
                         <div
                           key={item.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -432,7 +432,7 @@ export default function PPDView() {
                     <p className="text-gray-500 dark:text-gray-400">No acceptance criteria defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {criteria.map((criterion) => (
+                      {criteria.map((criterion, index) => (
                         <div
                           key={criterion.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"

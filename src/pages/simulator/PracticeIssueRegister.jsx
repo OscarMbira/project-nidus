@@ -9,6 +9,8 @@ import { getPracticeIssues } from '../../services/sim/practiceIssueService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const PRACTICE_ISSUE_COLUMNS = [
   { key: 'issue_title', label: 'Title' },
@@ -87,6 +89,7 @@ export default function PracticeIssueRegister() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Issue</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Priority</th>
@@ -94,7 +97,7 @@ export default function PracticeIssueRegister() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {issues.map((issue) => (
+              {issues.map((issue, index) => (
                 <tr
                   key={issue.id}
                   onClick={() => navigate(`/simulator/practice-issue-register/${issue.id}?projectId=${projectId}`)}
@@ -128,7 +131,7 @@ export default function PracticeIssueRegister() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {issues.map((issue) => (
+          {issues.map((issue, index) => (
             <button
               key={issue.id}
               type="button"
@@ -140,6 +143,7 @@ export default function PracticeIssueRegister() {
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{issue.issue_description}</p>
               )}
               <div className="flex flex-wrap gap-2">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-200">{issue.issue_type}</span>
                 <span
                   className={`px-2 py-1 text-xs rounded ${

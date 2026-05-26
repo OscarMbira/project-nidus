@@ -96,7 +96,7 @@ export default function BusinessCaseBenefits({ caseId, benefits = [], readOnly =
       )}
 
       <div className="space-y-3">
-        {benefits.map((b) => (
+        {benefits.map((b, index) => (
           <div
             key={b.id}
             className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-800"

@@ -9,7 +9,10 @@ import { Target, Search, BarChart3, FileText } from 'lucide-react'
 import { getAllPracticeBenefitsReviewPlans } from '../../services/sim/practiceBenefitsService'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 export default function PracticeBenefitsMeasurements() {
   const navigate = useNavigate()
   const [brpViewMode, setBrpViewMode] = useViewMode('simulator-practice-benefits-measurements', 'grid')
@@ -113,6 +116,7 @@ export default function PracticeBenefitsMeasurements() {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Project</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Last updated</th>
@@ -120,8 +124,9 @@ export default function PracticeBenefitsMeasurements() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {filtered.map((plan) => (
+                  {filtered.map((plan, index) => (
                     <tr key={plan.id} className="hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3 text-gray-200">
                         {plan.practice_projects?.project_name || '—'}
                       </td>
@@ -149,14 +154,17 @@ export default function PracticeBenefitsMeasurements() {
             </div>
           ) : (
             <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((plan) => (
+              {filtered.map((plan, index) => (
                 <button
                   key={plan.id}
                   type="button"
                   onClick={() => navigate(`/simulator/practice-benefits-review-plans/${plan.id}`)}
                   className="text-left rounded-lg border border-gray-700 bg-gray-900/40 p-4 hover:border-blue-500/50 min-h-[140px]"
                 >
-                  <div className="font-medium text-gray-100 mb-2">{plan.practice_projects?.project_name || 'Project'}</div>
+                  <div className="flex items-start gap-2 mb-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                    <div className="font-medium text-gray-100">{plan.practice_projects?.project_name || 'Project'}</div>
+                  </div>
                   <span className="px-2 py-1 rounded text-xs bg-gray-600 text-gray-300">{plan.status || '—'}</span>
                   <p className="mt-3 text-sm text-gray-400">
                     Updated {plan.updated_at ? new Date(plan.updated_at).toLocaleDateString() : '—'}

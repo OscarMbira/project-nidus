@@ -8,6 +8,8 @@ import {
   getProjectsList,
 } from '../../services/portfolioService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STATUS_OPTS = ['active', 'removed']
 
@@ -217,6 +219,7 @@ export default function PortfolioProjects() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Project Name', 'Code', 'Portfolio', 'Status', 'Methodology', 'Start', 'End', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                   ))}
@@ -225,6 +228,7 @@ export default function PortfolioProjects() {
               <tbody>
                 {filtered.map((r, i) => (
                   <tr key={r.id} className={`border-b border-gray-700/50 hover:bg-gray-700/30 ${i % 2 ? 'bg-gray-700/10' : ''}`}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-white font-medium">{r.project?.project_name || '—'}</td>
                     <td className="px-4 py-3 text-gray-300 font-mono text-xs">{r.project?.project_code || '—'}</td>
                     <td className="px-4 py-3 text-gray-300">{r.portfolio?.portfolio_name || '—'}</td>

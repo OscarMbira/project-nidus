@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
 import { getAlignmentScores, getStrategicAlignmentDashboardStats } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function AlignmentDashboard({ portfolioId = null, projectId = null }) {
   const [stats, setStats] = useState(null);
@@ -174,6 +176,7 @@ export default function AlignmentDashboard({ portfolioId = null, projectId = nul
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Context
                   </th>
@@ -195,8 +198,9 @@ export default function AlignmentDashboard({ portfolioId = null, projectId = nul
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {scores.map((score) => (
+                {scores.map((score, index) => (
                   <tr key={score.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
                         {score.portfolio?.portfolio_name || score.project?.project_name || 'N/A'}

@@ -8,6 +8,7 @@ import { X, Save } from 'lucide-react'
 import { addResponsibility, updateResponsibility } from '../../services/ppdAcceptanceResponsibilitiesService'
 import { supabase } from '../../services/supabaseClient'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function ResponsibilityForm({ ppdId, responsibility = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     role_name: '',
@@ -269,7 +270,7 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
               Assign to Acceptance Criteria (Optional)
             </label>
             <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 space-y-2">
-              {criteria.map((criterion) => (
+              {criteria.map((criterion, index) => (
                 <label key={criterion.id} className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

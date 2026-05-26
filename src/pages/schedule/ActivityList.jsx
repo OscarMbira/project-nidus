@@ -5,6 +5,8 @@ import { useProjectRole } from '../../hooks/useProjectRole'
 import { listActivities, saveActivity } from '../../services/activityListService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'activity_code', label: 'Code' },
@@ -172,6 +174,7 @@ export default function ActivityList() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">
                   <SortTh label="Code" col="activity_code" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
                 </th>
@@ -188,8 +191,9 @@ export default function ActivityList() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
+              {filtered.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3 font-mono text-xs">{r.activity_code || '—'}</td>
                   <td className="p-3">{r.name}</td>
                   <td className="p-3">{r.status}</td>
@@ -208,7 +212,7 @@ export default function ActivityList() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
+          {filtered.map((r, index) => (
             <Link
               key={r.id}
               to={`/platform/projects/${projectId}/schedule/activities/${r.id}`}
@@ -216,8 +220,7 @@ export default function ActivityList() {
             >
               <div className="font-mono text-xs text-gray-500">{r.activity_code || '—'}</div>
               <div className="mt-1 font-medium text-gray-900 dark:text-white">{r.name}</div>
-              <div className="mt-2 text-xs text-gray-500">
-                {r.status} · {r.planned_start_date || '—'} → {r.planned_end_date || '—'}
+              <div className="mt-2 text-xs text-gray-500">                {r.status} · {r.planned_start_date || '—'} → {r.planned_end_date || '—'}
               </div>
             </Link>
           ))}

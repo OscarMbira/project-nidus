@@ -3,6 +3,7 @@ import { supabase } from '../../services/supabaseClient'
 import { X, Save, Package } from 'lucide-react'
 import { addCompositionItem, updateCompositionItem } from '../../services/ppdCompositionService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_name: '',
@@ -245,7 +246,7 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
             >
               <option value="">No Link</option>
-              {productDescriptions.map((pd) => (
+              {productDescriptions.map((pd, index) => (
                 <option key={pd.id} value={pd.id}>
                   {pd.pd_reference} - {pd.product_title}
                 </option>

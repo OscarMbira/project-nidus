@@ -268,7 +268,7 @@ export default function AcceptanceTestingPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {criteria.map((criterion) => (
+          {criteria.map((criterion, index) => (
             <div
               key={criterion.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

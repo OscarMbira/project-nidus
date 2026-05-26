@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { processDataExportRequest, processDataDeletionRequest, createDataBreachRecord } from '../../services/gdprService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function GDPRCompliance() {
   const [stats, setStats] = useState({
@@ -215,7 +217,7 @@ export default function GDPRCompliance() {
             </p>
           ) : (
             <div className="space-y-3">
-              {exportRequests.map((request) => (
+              {exportRequests.map((request, index) => (
                 <div
                   key={request.id}
                   className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
@@ -266,7 +268,7 @@ export default function GDPRCompliance() {
             </p>
           ) : (
             <div className="space-y-3">
-              {deletionRequests.map((request) => (
+              {deletionRequests.map((request, index) => (
                 <div
                   key={request.id}
                   className="p-4 border border-red-200 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20"
@@ -318,6 +320,7 @@ export default function GDPRCompliance() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Type
                   </th>
@@ -336,8 +339,9 @@ export default function GDPRCompliance() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {consentLogs.map((consent) => (
+                {consentLogs.map((consent, index) => (
                   <tr key={consent.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {consent.consent_type.replace('_', ' ').toUpperCase()}
                     </td>
@@ -386,7 +390,7 @@ export default function GDPRCompliance() {
           </p>
         ) : (
           <div className="space-y-3">
-            {dataBreaches.map((breach) => (
+            {dataBreaches.map((breach, index) => (
               <div
                 key={breach.id}
                 className="p-4 border border-orange-200 dark:border-orange-700 rounded-lg bg-orange-50 dark:bg-orange-900/20"

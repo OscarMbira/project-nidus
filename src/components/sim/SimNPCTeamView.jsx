@@ -6,7 +6,7 @@ export default function SimNPCTeamView({ assignments = [], theme }) {
   }
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-      {assignments.map((row) => (
+      {assignments.map((row, index) => (
         <div
           key={row.id || row.role_name}
           className={`rounded-lg p-3 border ${theme === 'dark' ? 'border-gray-700 bg-gray-800/80' : 'border-gray-200 bg-white'}`}

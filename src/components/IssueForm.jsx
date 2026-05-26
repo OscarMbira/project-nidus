@@ -7,6 +7,7 @@ import { createIssue, updateIssue } from '../services/issueService'
 import { validateIssueForm, validateStatusTransition } from '../utils/issueValidation'
 import { HoldButton } from './ui/HoldButton'
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 export default function IssueForm({ issue, projectId, issueRegisterId, onSave, onCancel, linkedTaskId, linkedWorkPackageId, linkedUserStoryId, linkedKanbanCardId }) {
   const [formData, setFormData] = useState({
     issue_title: '',
@@ -523,7 +524,7 @@ export default function IssueForm({ issue, projectId, issueRegisterId, onSave, o
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select...</option>
-                  {teamMembers.map((member) => (
+                  {teamMembers.map((member, index) => (
                     <option key={member.user_id} value={member.user_id}>
                       {member.user?.full_name || member.user?.email}
                     </option>
@@ -568,7 +569,7 @@ export default function IssueForm({ issue, projectId, issueRegisterId, onSave, o
                   }`}
                 >
                   <option value="">Unassigned</option>
-                  {teamMembers.map((member) => (
+                  {teamMembers.map((member, index) => (
                     <option key={member.user_id} value={member.user_id}>
                       {member.user?.full_name || member.user?.email}
                     </option>
@@ -776,7 +777,7 @@ export default function IssueForm({ issue, projectId, issueRegisterId, onSave, o
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">No Task Link</option>
-                  {tasks.map((task) => (
+                  {tasks.map((task, index) => (
                     <option key={task.id} value={task.id}>
                       {task.task_name}
                     </option>
@@ -830,7 +831,7 @@ export default function IssueForm({ issue, projectId, issueRegisterId, onSave, o
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">No Kanban Card Link</option>
-                  {kanbanCards.map((card) => (
+                  {kanbanCards.map((card, index) => (
                     <option key={card.id} value={card.id}>
                       {card.card_title}
                     </option>

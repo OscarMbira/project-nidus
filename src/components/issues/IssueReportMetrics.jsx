@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { FileText, AlertCircle, Clock, CheckCircle } from 'lucide-react'
 import { getIssueReportsByProject, getIssueReportsRequiringDecision } from '../../services/issueReportService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function IssueReportMetrics({ projectId = null, organizationId = null }) {
   const [metrics, setMetrics] = useState({
     totalReports: 0,
@@ -102,7 +103,7 @@ export default function IssueReportMetrics({ projectId = null, organizationId = 
           </div>
           {reportsRequiringDecision.length > 0 && (
             <ul className="mt-2 text-xs text-yellow-700 dark:text-yellow-300 list-disc list-inside">
-              {reportsRequiringDecision.slice(0, 3).map((report) => (
+              {reportsRequiringDecision.slice(0, 3).map((report, index) => (
                 <li key={report.report_id}>
                   {report.report_reference} - {report.days_waiting} day{report.days_waiting !== 1 ? 's' : ''} waiting
                 </li>

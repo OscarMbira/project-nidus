@@ -303,7 +303,7 @@ export default function SecuritySettings() {
           </p>
         ) : (
           <div className="space-y-3">
-            {mfaDevices.map((device) => (
+            {mfaDevices.map((device, index) => (
               <div
                 key={device.id}
                 className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between"
@@ -363,7 +363,7 @@ export default function SecuritySettings() {
           </p>
         ) : (
           <div className="space-y-3">
-            {activeSessions.map((session) => (
+            {activeSessions.map((session, index) => (
               <div
                 key={session.id}
                 className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-between"

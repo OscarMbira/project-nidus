@@ -42,10 +42,9 @@ const BlogSection = () => {
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {BLOG_POSTS.map((post) => (
+          {BLOG_POSTS.map((post, index) => (
             <Card key={post.id} className="h-full overflow-hidden hover:shadow-xl transition-shadow">
-              <div className={`h-60 bg-gradient-to-br ${post.gradient} relative`}>
-                <div className="absolute top-6 left-6 bg-white/90 dark:bg-gray-900/90 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+              <div className={`h-60 bg-gradient-to-br ${post.gradient} relative`}>                <div className="absolute top-6 left-6 bg-white/90 dark:bg-gray-900/90 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
                   {post.category}
                 </div>
               </div>

@@ -106,7 +106,7 @@ export default function BoardDecisionList({ decisions, onEdit, onRefresh, meetin
       </div>
 
       <div className="space-y-4">
-        {decisions.map((decision) => (
+        {decisions.map((decision, index) => (
           <div
             key={decision.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

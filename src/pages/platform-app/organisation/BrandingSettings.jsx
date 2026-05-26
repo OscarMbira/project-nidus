@@ -19,6 +19,7 @@ import LogoUpload from '../../../components/branding/LogoUpload'
 import FontSelector from '../../../components/branding/FontSelector'
 import BrandingPreview from '../../../components/branding/BrandingPreview'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 const TABS = [
   { id: 'identity', label: 'Identity',        icon: User },
   { id: 'logos',    label: 'Logos & Images',  icon: Image },
@@ -295,7 +296,7 @@ export default function BrandingSettings() {
           {/* ── Logos & Images Tab ── */}
           {activeTab === 'logos' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {LOGO_SLOTS.map((slot) => (
+              {LOGO_SLOTS.map((slot, index) => (
                 <LogoUpload
                   key={slot.assetType}
                   {...slot}
@@ -315,7 +316,7 @@ export default function BrandingSettings() {
                 Click the colour swatch or enter a hex value. Changes are previewed live on the right.
                 A warning is shown if the colour combination fails WCAG AA contrast (4.5:1 ratio).
               </p>
-              {COLOUR_FIELDS.map((field) => (
+              {COLOUR_FIELDS.map((field, index) => (
                 <ColourPicker
                   key={field.key}
                   label={field.label}

@@ -269,7 +269,7 @@ function MandateSearch() {
           </div>
 
           <div className="space-y-4">
-            {results.map((mandate) => (
+            {results.map((mandate, index) => (
               <MandateResultCard
                 key={mandate.id}
                 mandate={mandate}
@@ -420,8 +420,7 @@ const MandateResultCard = memo(function MandateResultCard({ mandate, searchTerm,
                   ? 'bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800'
                   : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
               }`}
-            >
-              <p className="text-sm text-gray-900 dark:text-white">
+            >              <p className="text-sm text-gray-900 dark:text-white">
                 {highlightText(item, searchTerm)}
               </p>
             </div>

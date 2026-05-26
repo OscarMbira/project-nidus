@@ -9,6 +9,8 @@ import { getPracticeStakeholders } from '../../services/sim/practiceStakeholderS
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STAKEHOLDER_EXPORT_COLUMNS = [
   { key: 'stakeholder_name', label: 'Name' },
@@ -108,6 +110,7 @@ export default function PracticeStakeholders() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Organization</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
@@ -115,7 +118,7 @@ export default function PracticeStakeholders() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredStakeholders.map((stakeholder) => (
+              {filteredStakeholders.map((stakeholder, index) => (
                 <tr
                   key={stakeholder.id}
                   onClick={() => goTo(stakeholder.id)}
@@ -132,7 +135,7 @@ export default function PracticeStakeholders() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStakeholders.map((stakeholder) => (
+          {filteredStakeholders.map((stakeholder, index) => (
             <button
               key={stakeholder.id}
               type="button"
@@ -142,6 +145,7 @@ export default function PracticeStakeholders() {
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">{stakeholder.stakeholder_name}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{stakeholder.stakeholder_organization || '—'}</p>
               <div className="flex flex-wrap gap-2">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 <span className="px-2 py-1 text-xs rounded bg-blue-900/40 text-blue-200 border border-blue-700/50">
                   {stakeholder.stakeholder_type || 'Type N/A'}
                 </span>

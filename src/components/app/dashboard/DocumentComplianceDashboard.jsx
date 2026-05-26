@@ -225,7 +225,7 @@ const DocumentComplianceDashboard = memo(function DocumentComplianceDashboard({
             Overdue Documents
           </h3>
           <div className="space-y-2">
-            {overdue.slice(0, 10).map((doc) => (
+            {overdue.slice(0, 10).map((doc, index) => (
               <div
                 key={doc.id}
                 className="flex items-center gap-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800"

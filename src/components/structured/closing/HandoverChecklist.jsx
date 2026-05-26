@@ -221,7 +221,7 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                 required
               >
                 <option value="">Select user...</option>
-                {users.map((user) => (
+                {users.map((user, index) => (
                   <option key={user.id} value={user.id}>
                     {user.full_name || user.email}
                   </option>
@@ -241,7 +241,7 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                 required
               >
                 <option value="">Select user...</option>
-                {users.map((user) => (
+                {users.map((user, index) => (
                   <option key={user.id} value={user.id}>
                     {user.full_name || user.email}
                   </option>

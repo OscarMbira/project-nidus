@@ -111,6 +111,21 @@ const simulatorTMMenuConfig = [
     ],
   },
   {
+    id: 'sim-tm-process-templates',
+    label: 'Process Templates',
+    path: null,
+    icon: Layers,
+    children: [
+      { id: 'sim-tm-pt-all', label: 'All Process Templates', path: '/simulator/pm/process-templates', icon: Layers },
+      { id: 'sim-tm-pt-pre', label: 'Pre-Project', path: '/simulator/pm/process-templates/pre-project', icon: FileText },
+      { id: 'sim-tm-pt-init', label: 'Initiating', path: '/simulator/pm/process-templates/initiating', icon: PlayCircle },
+      { id: 'sim-tm-pt-plan', label: 'Planning', path: '/simulator/pm/process-templates/planning', icon: Map },
+      { id: 'sim-tm-pt-exec', label: 'Executing', path: '/simulator/pm/process-templates/executing', icon: Zap },
+      { id: 'sim-tm-pt-mon', label: 'Monitoring & Control', path: '/simulator/pm/process-templates/monitoring-controlling', icon: Activity },
+      { id: 'sim-tm-pt-close', label: 'Closing', path: '/simulator/pm/process-templates/closing', icon: CheckCircle },
+    ],
+  },
+  {
     id: 'sim-tm-charter',
     label: 'Team Charter',
     path: null,

@@ -7,6 +7,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { Plus, Trash2, Share2, Loader2 } from 'lucide-react'
 import { getDistributionList, addDistributionEntry, removeDistributionEntry } from '../../services/businessCaseService'
 import { useToastContext } from '../../context/ToastContext'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const empty = () => ({
   recipient_name: '',
@@ -111,6 +113,7 @@ export default function BusinessCaseDistribution({ caseId, readOnly = false }) {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Recipient</th>
                 <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                 <th className="text-left py-2 px-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
@@ -120,8 +123,9 @@ export default function BusinessCaseDistribution({ caseId, readOnly = false }) {
               </tr>
             </thead>
             <tbody>
-              {list.map((entry) => (
+              {list.map((entry, index) => (
                 <tr key={entry.id} className="border-b border-gray-100 dark:border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-2 px-3 text-gray-900 dark:text-white">
                     {entry.recipient_name}
                     {entry.recipient && (

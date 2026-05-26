@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const SEVERITY = ['critical', 'high', 'medium', 'low', 'trivial']
 const PRIORITY = ['critical', 'high', 'medium', 'low']
 const STATUS = ['new', 'open', 'in_progress', 'resolved', 'closed', 'reopened', 'deferred', 'duplicate']
@@ -88,7 +89,7 @@ export default function DefectForm({ defect, projectId, onSubmit, disabled, proj
             disabled={disabled}
             className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white"
           >
-            {SEVERITY.map((s) => (
+            {SEVERITY.map((s, index) => (
               <option key={s} value={s}>
                 {s}
               </option>

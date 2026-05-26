@@ -11,6 +11,8 @@ import * as defaultRfpService from '../../services/rfpService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import RFPStatusBadge from './RFPStatusBadge'
 import RFPStats from './RFPStats'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const RFPListRow = memo(function RFPListRow({ rfp, readOnly, deletingId, onView, onEdit, onDelete }) {
   return (
@@ -188,6 +190,7 @@ export default function RFPList({ readOnly = false, basePath = '/pmo', rfpServic
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-700/50">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Reference</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
@@ -199,7 +202,7 @@ export default function RFPList({ readOnly = false, basePath = '/pmo', rfpServic
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {rfps.map((rfp) => (
+                {rfps.map((rfp, index) => (
                   <RFPListRow
                     key={rfp.id}
                     rfp={rfp}

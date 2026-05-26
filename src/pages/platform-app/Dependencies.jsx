@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { Link2, Plus, Search, Network, AlertTriangle, CheckCircle } from 'lucide-react';
 import { platformDb } from '../../services/supabase/supabaseClient';
 import { getInterProjectDependencies, getDependencyDashboardStats } from '../../services/dependencyService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function Dependencies() {
   const navigate = useNavigate();
@@ -211,6 +213,7 @@ export default function Dependencies() {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Source Project</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Target Project</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
@@ -220,7 +223,7 @@ export default function Dependencies() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {filteredDependencies.map((dep) => (
+                  {filteredDependencies.map((dep, index) => (
                     <tr
                       key={dep.id}
                       onClick={() => navigate(`/platform/dependencies/${dep.id}`)}

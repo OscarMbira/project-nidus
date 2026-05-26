@@ -337,7 +337,7 @@ const LMSTab = ({ integrations, organizationId, onUpdate }) => {
         </p>
       ) : (
         <div className="space-y-4">
-          {integrations.map((integration) => (
+          {integrations.map((integration, index) => (
             <div
               key={integration.id}
               className={`p-4 rounded-lg border ${
@@ -485,7 +485,7 @@ const APITab = ({ keys, organizationId, userId, onUpdate }) => {
         </p>
       ) : (
         <div className="space-y-4">
-          {keys.map((key) => (
+          {keys.map((key, index) => (
             <div
               key={key.id}
               className={`p-4 rounded-lg border ${
@@ -577,7 +577,7 @@ const SSOTab = ({ configs, organizationId, onUpdate }) => {
         </p>
       ) : (
         <div className="space-y-4">
-          {configs.map((config) => (
+          {configs.map((config, index) => (
             <div
               key={config.id}
               className={`p-4 rounded-lg border ${

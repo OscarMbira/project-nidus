@@ -9,6 +9,8 @@ import { Plus, Eye, Edit, FileText, Search } from 'lucide-react'
 import { getAllBusinessCases } from '../../services/businessCaseService'
 import BusinessCaseStatusBadge from './BusinessCaseStatusBadge'
 import ExportListMenu from '../ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -128,6 +130,7 @@ export default function BusinessCaseList({ basePath = '/pmo/initiation/business-
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Reference</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Title</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
@@ -138,8 +141,9 @@ export default function BusinessCaseList({ basePath = '/pmo/initiation/business-
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {filtered.map((bc) => (
+                {filtered.map((bc, index) => (
                   <tr key={bc.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-sm font-mono font-medium text-blue-600 dark:text-blue-400">
                       {bc.case_reference}
                     </td>

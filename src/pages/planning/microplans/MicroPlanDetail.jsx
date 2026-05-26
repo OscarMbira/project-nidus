@@ -6,6 +6,8 @@ import PlanningProjectBar, { usePlanningProjectId } from '../../../components/pl
 import * as api from '../../../services/microPlanService'
 import * as simApi from '../../../services/sim/simMicroPlanService'
 import { platformDb } from '../../../services/supabase/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 export default function MicroPlanDetail() {
   const { microPlanId } = useParams()
@@ -143,6 +145,7 @@ export default function MicroPlanDetail() {
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-800/80 text-left text-gray-400">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-3 py-2">Name</th>
                     <th className="px-3 py-2">Status</th>
                     <th className="px-3 py-2">Progress</th>
@@ -150,8 +153,9 @@ export default function MicroPlanDetail() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(plan.activities || []).map((a) => (
+                  {(plan.activities || []).map((a, index) => (
                     <tr key={a.id} className="border-t border-gray-700/80">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-3 py-2 text-gray-200">{a.activity_name}</td>
                       <td className="px-3 py-2 text-gray-400">{a.status}</td>
                       <td className="px-3 py-2 text-gray-400">{a.progress_pct ?? 0}%</td>

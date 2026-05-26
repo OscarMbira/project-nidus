@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { FileText, Filter } from 'lucide-react'
 import { getProgrammeList, getProgrammeReports } from '../../services/programmeService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProgrammeReportsPage() {
   const [programmes, setProgrammes] = useState([])
@@ -138,6 +140,7 @@ export default function ProgrammeReportsPage() {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-400 border-b border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="py-2 pr-4">Date</th>
                   <th className="py-2 pr-4">Type</th>
                   <th className="py-2 pr-4">Status</th>
@@ -146,8 +149,9 @@ export default function ProgrammeReportsPage() {
                 </tr>
               </thead>
               <tbody>
-                {reports.map((r) => (
+                {reports.map((r, index) => (
                   <tr key={r.id} className="border-b border-gray-800 last:border-0">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="py-2 pr-4 text-gray-300">
                       {r.report_date || '—'}
                     </td>

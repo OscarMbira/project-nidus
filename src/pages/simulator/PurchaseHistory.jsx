@@ -181,7 +181,7 @@ Payment ID: ${receipt.paymentId}
         </div>
       ) : (
         <div className="space-y-4">
-          {purchases.map((purchase) => (
+          {purchases.map((purchase, index) => (
             <div
               key={purchase.id}
               className={`rounded-xl p-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow`}

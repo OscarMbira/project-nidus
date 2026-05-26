@@ -9,6 +9,8 @@ import { getPracticeCommunicationPlans, getPracticeCommunicationLog } from '../.
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function PracticeCommunicationPlans() {
   const navigate = useNavigate()
@@ -114,6 +116,7 @@ export default function PracticeCommunicationPlans() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
               </tr>
@@ -121,6 +124,7 @@ export default function PracticeCommunicationPlans() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {plans.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{p.plan_title}</td>
                   <td className="px-6 py-4 text-sm">{p.status || '—'}</td>
                 </tr>
@@ -133,6 +137,7 @@ export default function PracticeCommunicationPlans() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
@@ -141,6 +146,7 @@ export default function PracticeCommunicationPlans() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {log.map(l => (
                 <tr key={l.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{l.communication_type || '—'}</td>
                   <td className="px-6 py-4 text-sm">{l.sent_date ? new Date(l.sent_date).toLocaleDateString() : '—'}</td>
                   <td className="px-6 py-4 text-sm">{l.status || '—'}</td>

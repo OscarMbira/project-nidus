@@ -69,7 +69,7 @@ export default function TemplateOnHold() {
     []
   )
   const displayRows = useMemo(() => sortedData(rows, accessors), [rows, sortedData, accessors])
-  const exportRows = useMemo(() => displayRows.map((r) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
+  const exportRows = useMemo(() => displayRows.map((r, index) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -107,12 +107,11 @@ export default function TemplateOnHold() {
         <p className="text-gray-600 dark:text-gray-400">Loading…</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <div
               key={r.id}
               className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm"
-            >
-              <button
+            >              <button
                 type="button"
                 onClick={() => navigate(`${BASE}/copies/${r.id}`)}
                 className="text-left font-semibold text-gray-900 dark:text-white hover:underline w-full"

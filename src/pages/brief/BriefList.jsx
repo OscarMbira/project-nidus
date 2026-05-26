@@ -12,6 +12,8 @@ import { getAllProjects } from '../../services/projectService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import BriefStatusBadge from '../../components/brief/BriefStatusBadge'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const BRIEF_COLUMNS = [
   { key: 'brief_reference', label: 'Reference' },
@@ -196,6 +198,7 @@ export default function BriefList() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Reference
                 </th>
@@ -217,8 +220,9 @@ export default function BriefList() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {briefs.map((brief) => (
+              {briefs.map((brief, index) => (
                 <tr key={brief.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {brief.brief_reference}

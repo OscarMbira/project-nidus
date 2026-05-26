@@ -9,6 +9,7 @@ import { useViewMode } from '../../../hooks/useViewMode'
 import { useSortableTable } from '../../../hooks/useSortableTable'
 import { Table, TableBody, TableHeader, TableRow, TableHeaderCell, TableCell } from '../../../components/ui/Table'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 const BASE = '/simulator/templates'
 const EXPORT_COLS = [
   { key: 'title', label: 'Title' },
@@ -71,7 +72,7 @@ export default function SimProjectTemplateCopyList() {
     []
   )
   const displayRows = useMemo(() => sortedData(rows, accessors), [rows, sortedData, accessors])
-  const exportRows = useMemo(() => displayRows.map((r) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
+  const exportRows = useMemo(() => displayRows.map((r, index) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
 
   if (!accountId && !loading) {
     return <div className="p-8 text-center text-gray-600">No organisation context.</div>
@@ -108,7 +109,7 @@ export default function SimProjectTemplateCopyList() {
         <p>Loading…</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <button
               key={r.id}
               type="button"

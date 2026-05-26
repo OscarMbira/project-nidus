@@ -146,12 +146,11 @@ export default function ChangeBoardDashboard({ projectId, boardId = null }) {
             Change Board Members
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {boardMembers.map((member) => (
+            {boardMembers.map((member, index) => (
               <div
                 key={member.id}
                 className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              >
-                <div className="font-medium text-gray-900 dark:text-white">
+              >                <div className="font-medium text-gray-900 dark:text-white">
                   {member.user?.full_name || member.user?.email || 'Unknown'}
                 </div>
                 {member.role && (
@@ -177,7 +176,7 @@ export default function ChangeBoardDashboard({ projectId, boardId = null }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {pendingRequests.slice(0, 10).map((request) => (
+            {pendingRequests.slice(0, 10).map((request, index) => (
               <div
                 key={request.id}
                 className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -235,7 +234,7 @@ export default function ChangeBoardDashboard({ projectId, boardId = null }) {
             Upcoming Board Meetings
           </h3>
           <div className="space-y-3">
-            {boardMeetings.map((meeting) => (
+            {boardMeetings.map((meeting, index) => (
               <div
                 key={meeting.id}
                 className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"

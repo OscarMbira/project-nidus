@@ -4,6 +4,7 @@ import { X, Save, User, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { recordDecision } from '../../services/issueDecisionService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     decision_type: 'approve',
@@ -87,7 +88,7 @@ export default function DecisionForm({ issueId, issue, onSave, onCancel }) {
               Decision Type *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {['approve', 'reject', 'defer', 'escalate', 'accept_concession', 'request_more_info'].map((type) => (
+              {['approve', 'reject', 'defer', 'escalate', 'accept_concession', 'request_more_info'].map((type, index) => (
                 <label
                   key={type}
                   className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${

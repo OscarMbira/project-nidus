@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getTemplateById, getMasterVersionHistory } from '../../services/templateLibraryService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const BASE = '/platform/templates'
 
 export default function TemplateMasterVersionHistory() {
@@ -47,7 +48,7 @@ export default function TemplateMasterVersionHistory() {
             className="w-full mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           >
             <option value="">—</option>
-            {rows.map((r) => (
+            {rows.map((r, index) => (
               <option key={r.id} value={r.id}>
                 {r.version_number} · {r.changed_at ? new Date(r.changed_at).toLocaleString() : ''}
               </option>
@@ -62,7 +63,7 @@ export default function TemplateMasterVersionHistory() {
             className="w-full mt-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2"
           >
             <option value="">—</option>
-            {rows.map((r) => (
+            {rows.map((r, index) => (
               <option key={r.id} value={r.id}>
                 {r.version_number} · {r.changed_at ? new Date(r.changed_at).toLocaleString() : ''}
               </option>

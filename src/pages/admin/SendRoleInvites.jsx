@@ -47,6 +47,7 @@ import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../../compone
 import { isManagerAppointmentRole } from '../../utils/appointmentRoleUtils'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 async function fetchInviterFullName(fallbackEmail, userMeta = {}) {
   // SECURITY DEFINER RPC — links auth_user_id and returns profile, bypasses RLS
   try {
@@ -652,7 +653,7 @@ export default function SendRoleInvites() {
                           ? 'No roles available'
                           : 'Choose a role...'}
                     </option>
-                    {availableRoles.map((role) => (
+                    {availableRoles.map((role, index) => (
                       <option key={role.id} value={role.id}>
                         {role.role_display_name || role.role_name}
                       </option>
@@ -696,7 +697,7 @@ export default function SendRoleInvites() {
                 {[
                   { key: 'invitation', label: 'Invitation Details' },
                   { key: 'appointment', label: 'Appointment Terms' },
-                ].map((t) => (
+                ].map((t, index) => (
                   <button
                     key={t.key}
                     type="button"

@@ -11,6 +11,9 @@ import { getMyPracticeProjects } from '../../services/sim/practiceProjectService
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 
 const PRACTICE_PROJECT_COLUMNS = [
   { key: 'project_name', label: 'Name' },
@@ -28,7 +31,7 @@ function formatShortDate(iso) {
   }
 }
 
-function PracticeProjectGridCard({ project, onSelect }) {
+function PracticeProjectGridCard({ project, onSelect, rowNumber }) {
   const status = project.project_status
   return (
     <div
@@ -44,7 +47,10 @@ function PracticeProjectGridCard({ project, onSelect }) {
       className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 cursor-pointer hover:border-blue-500 dark:hover:border-purple-500 transition-colors text-left"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{project.project_name}</h3>
+        <div className="flex items-start gap-2 min-w-0 flex-1">
+          {rowNumber != null && <RowNumberBadge number={rowNumber} className="shrink-0" />}
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{project.project_name}</h3>
+        </div>
         {project.project_code && (
           <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded shrink-0 font-mono">
             {project.project_code}
@@ -320,8 +326,13 @@ export default function PracticeProjects() {
         <div
           className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${showUpdating ? 'opacity-75 transition-opacity' : ''}`}
         >
-          {filteredProjects.map((project) => (
-            <PracticeProjectGridCard key={project.id} project={project} onSelect={goToProject} />
+          {filteredProjects.map((project, index) => (
+            <PracticeProjectGridCard
+              key={project.id}
+              project={project}
+              onSelect={goToProject}
+              rowNumber={getDisplayRowNumber(index)}
+            />
           ))}
         </div>
       ) : (
@@ -334,6 +345,7 @@ export default function PracticeProjects() {
             <table className="w-full text-left">
               <thead className="bg-gray-100 dark:bg-gray-700/50">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                     Project
                   </th>
@@ -352,7 +364,7 @@ export default function PracticeProjects() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredProjects.map((project) => (
+                {filteredProjects.map((project, index) => (
                   <PracticeProjectTableRow key={project.id} project={project} onSelect={goToProject} />
                 ))}
               </tbody>

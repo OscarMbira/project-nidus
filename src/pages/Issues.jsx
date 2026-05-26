@@ -15,6 +15,7 @@ import Pagination from '../components/Pagination'
 import SortToolbar from '../components/ui/SortToolbar'
 import { useSortableTable } from '../hooks/useSortableTable'
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 const ISSUE_EXPORT_COLUMNS = [
   { key: 'issue_title', label: 'Title' },
   { key: 'issue_type', label: 'Type' },
@@ -338,7 +339,7 @@ export default function Issues() {
         <div className="flex flex-wrap items-center gap-3">
           <ExportListMenu
             columns={ISSUE_EXPORT_COLUMNS}
-            data={issues.map((i) => ({
+            data={issues.map((i, index) => ({
               ...i,
               assigned: i.assigned_to?.full_name || i.assigned_to?.email || '',
             }))}

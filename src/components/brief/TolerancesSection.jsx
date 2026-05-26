@@ -264,7 +264,7 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {tolerances.map((tolerance) => (
+          {tolerances.map((tolerance, index) => (
             <div
               key={tolerance.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"

@@ -271,7 +271,7 @@ export default function EmailSenderProfiles() {
               <p>No sender profiles yet. Add a system default profile to customise outbound email identities.</p>
             </div>
           ) : (
-            profiles.map((profile) => (
+            profiles.map((profile, index) => (
               <div
                 key={profile.id}
                 className="grid grid-cols-12 gap-2 px-4 py-3 items-center border-b border-gray-800 last:border-0 hover:bg-gray-800/40"
@@ -447,7 +447,7 @@ export default function EmailSenderProfiles() {
                     className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white"
                   >
                     <option value="">Select project type…</option>
-                    {projectTypes.map((pt) => (
+                    {projectTypes.map((pt, index) => (
                       <option key={pt.id} value={pt.id}>{pt.type_name}</option>
                     ))}
                   </select>

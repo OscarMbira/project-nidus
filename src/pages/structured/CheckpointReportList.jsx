@@ -124,7 +124,7 @@ export default function CheckpointReportList() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredReports.map((report) => (
+          {filteredReports.map((report, index) => (
             <div
               key={report.id}
               onClick={() => navigate(`/app/projects/${projectId}/work-packages/${workPackageId}/checkpoint-reports/${report.id}`)}

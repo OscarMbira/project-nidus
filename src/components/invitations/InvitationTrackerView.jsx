@@ -15,7 +15,10 @@ import ViewToggle from '../ui/ViewToggle'
 import ExportListMenu from '../ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { resolveInviteeNamesForInvitation } from '../../utils/invitationInviteeFormat'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../ui/RowNumberBadge'
 
 const STATUS_TABS = [
   { key: '', label: 'All' },
@@ -339,7 +342,7 @@ export default function InvitationTrackerView({
       </div>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        {STATUS_TABS.map((tab) => (
+        {STATUS_TABS.map((tab, index) => (
           <button
             key={tab.key || 'all'}
             type="button"
@@ -363,7 +366,7 @@ export default function InvitationTrackerView({
             className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm min-h-[44px]"
             aria-label="Filter by entity type"
           >
-            {ENTITY_OPTIONS.map((o) => (
+            {ENTITY_OPTIONS.map((o, index) => (
               <option key={o.value || 'all'} value={o.value}>
                 {o.label}
               </option>
@@ -415,15 +418,19 @@ export default function InvitationTrackerView({
                 </button>
                 {open && (
                   <div className="p-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {group.map((row) => {
+                    {group.map((row, index) => {
                       const { full } = resolveInviteeNamesForInvitation(row)
+                      const rowNumber = getDisplayRowNumber(displayRows.findIndex((r) => r.id === row.id))
                       return (
                         <article
                           key={row.id}
                           className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
                         >
                           <div className="flex justify-between gap-2 mb-2">
-                            <StatusBadge status={row.invitation_status} />
+                            <div className="flex items-center gap-2 min-w-0">
+                              <RowNumberBadge number={rowNumber >= 0 ? rowNumber : getDisplayRowNumber(index)} className="shrink-0" />
+                              <StatusBadge status={row.invitation_status} />
+                            </div>
                             <span className="text-xs text-slate-500">{formatEntityType(row.entity_type)}</span>
                           </div>
                           <h3 className="font-semibold text-slate-900 dark:text-white truncate">
@@ -451,6 +458,7 @@ export default function InvitationTrackerView({
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 {[
                   ['entity_type', 'Entity'],
                   ['entity_name', 'Name'],
@@ -473,10 +481,11 @@ export default function InvitationTrackerView({
               </tr>
             </thead>
             <tbody>
-              {displayRows.map((row) => {
+              {displayRows.map((row, index) => {
                 const { full } = resolveInviteeNamesForInvitation(row)
                 return (
                   <tr key={row.id} className="border-t border-slate-100 dark:border-slate-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-2 capitalize">{formatEntityType(row.entity_type)}</td>
                     <td className="px-4 py-2 font-medium text-slate-900 dark:text-white">{row.entity_name || '—'}</td>
                     <td className="px-4 py-2">

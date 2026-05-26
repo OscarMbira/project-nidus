@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { listEvmSnapshots } from '../../services/evmService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProgrammeEVMPage() {
   const { id: programmeId } = useParams()
@@ -49,6 +51,7 @@ export default function ProgrammeEVMPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2 text-left">Project</th>
                 <th className="px-3 py-2 text-left">Last period</th>
                 <th className="px-3 py-2 text-right">PV</th>
@@ -59,6 +62,7 @@ export default function ProgrammeEVMPage() {
             <tbody>
               {rollup.map(({ project, last }) => (
                 <tr key={project.id} className="border-t border-gray-100 dark:border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">
                     <Link className="text-blue-400 hover:underline" to={`/platform/projects/${project.id}/evm`}>
                       {project.project_code}

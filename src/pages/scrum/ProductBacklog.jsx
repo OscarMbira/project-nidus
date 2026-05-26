@@ -319,7 +319,7 @@ export default function ProductBacklog() {
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="flex space-x-8">
-          {['backlog', 'epics'].map((tab) => (
+          {['backlog', 'epics'].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -813,7 +813,7 @@ function BacklogTab({ stories, epics, isReordering, onAddStory, onEditStory, sho
             </div>
           )}
           <SortableContext items={stories.map(s => s.id)} strategy={verticalListSortingStrategy}>
-            {stories.map((story) => (
+            {stories.map((story, index) => (
               <SortableStoryCard
                 key={story.id}
                 story={story}
@@ -978,7 +978,7 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {epics.map((epic) => (
+          {epics.map((epic, index) => (
             <div
               key={epic.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

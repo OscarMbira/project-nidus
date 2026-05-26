@@ -14,6 +14,7 @@ import { buildCustomFieldExportParts } from '../../features/local-data-extension
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
 import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRACTICE_PROJECT_VIEW_SECTIONS = [
   { title: 'Project', fields: [
     { key: 'project_name', label: 'Name' },
@@ -168,7 +169,7 @@ export default function PracticeProjectDetail() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
-            {['overview', 'tasks', 'briefs', 'risks', 'issues', 'quality'].map((tab) => (
+            {['overview', 'tasks', 'briefs', 'risks', 'issues', 'quality'].map((tab, index) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

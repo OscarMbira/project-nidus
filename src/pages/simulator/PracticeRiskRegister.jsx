@@ -9,6 +9,8 @@ import { getPracticeRisks } from '../../services/sim/practiceRiskService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const PRACTICE_RISK_COLUMNS = [
   { key: 'risk_title', label: 'Title' },
@@ -95,6 +97,7 @@ export default function PracticeRiskRegister() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Risk</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Level</th>
@@ -103,7 +106,7 @@ export default function PracticeRiskRegister() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {risks.map((risk) => (
+              {risks.map((risk, index) => (
                 <tr
                   key={risk.id}
                   onClick={() => navigate(`/simulator/practice-risk-register/${risk.id}?projectId=${projectId}`)}
@@ -138,7 +141,7 @@ export default function PracticeRiskRegister() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {risks.map((risk) => (
+          {risks.map((risk, index) => (
             <button
               key={risk.id}
               type="button"
@@ -150,6 +153,7 @@ export default function PracticeRiskRegister() {
                 <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">{risk.risk_description}</p>
               )}
               <div className="flex flex-wrap gap-2 text-sm">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-200">{risk.risk_category || 'Category'}</span>
                 <span
                   className={`px-2 py-1 text-xs rounded ${

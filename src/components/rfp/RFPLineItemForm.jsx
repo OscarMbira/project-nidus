@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRIORITY_OPTIONS = [
   { value: 'must_have', label: 'Must Have' },
   { value: 'should_have', label: 'Should Have' },
@@ -132,7 +133,7 @@ export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSav
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
               <select name="priority" value={form.priority} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                {PRIORITY_OPTIONS.map((o) => (
+                {PRIORITY_OPTIONS.map((o, index) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
@@ -140,7 +141,7 @@ export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSav
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Requirement Type</label>
               <select name="requirement_type" value={form.requirement_type} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                {REQUIREMENT_TYPE_OPTIONS.map((o) => (
+                {REQUIREMENT_TYPE_OPTIONS.map((o, index) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>

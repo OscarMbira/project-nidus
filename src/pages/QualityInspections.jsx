@@ -5,6 +5,8 @@ import { getQualityInspections, deleteQualityInspection } from '../services/qual
 import QualityInspectionForm from '../components/quality/QualityInspectionForm';
 import ExportListMenu from '../components/ui/ExportListMenu';
 import { supabase } from '../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function QualityInspections() {
   const navigate = useNavigate();
@@ -257,6 +259,7 @@ export default function QualityInspections() {
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Inspection
                   </th>
@@ -284,8 +287,9 @@ export default function QualityInspections() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {inspections.map((inspection) => (
+                {inspections.map((inspection, index) => (
                   <tr key={inspection.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">

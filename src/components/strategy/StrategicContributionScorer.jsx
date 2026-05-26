@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Target, TrendingUp, Plus, Edit2, Trash2, CheckCircle, DollarSign, BarChart3 } from 'lucide-react';
 import { getStrategicContributions, deleteStrategicContribution } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function StrategicContributionScorer({ projectId = null, objectiveId = null, onAdd, onEdit }) {
   const [contributions, setContributions] = useState([]);
@@ -225,6 +227,7 @@ export default function StrategicContributionScorer({ projectId = null, objectiv
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Project
                   </th>
@@ -249,8 +252,9 @@ export default function StrategicContributionScorer({ projectId = null, objectiv
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {contributions.map((contribution) => (
+                {contributions.map((contribution, index) => (
                   <tr key={contribution.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {contribution.project?.project_name || 'N/A'}

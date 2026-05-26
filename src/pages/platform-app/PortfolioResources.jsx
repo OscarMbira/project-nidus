@@ -8,6 +8,8 @@ import {
   updatePortfolioMember,
 } from '../../services/portfolioService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const ROLE_OPTS = ['Portfolio Manager', 'Portfolio Owner', 'Analyst', 'Sponsor', 'Stakeholder', 'Contributor']
 const STATUS_OPTS = ['active', 'inactive']
@@ -210,6 +212,7 @@ export default function PortfolioResources() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Member', 'Email', 'Role', 'Portfolio', 'Status', 'Start', 'End', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                   ))}
@@ -220,6 +223,7 @@ export default function PortfolioResources() {
                   const isEditing = editId === r.id
                   return (
                     <tr key={r.id} className={`border-b border-gray-700/50 hover:bg-gray-700/30 ${i % 2 ? 'bg-gray-700/10' : ''}`}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3 text-white font-medium">{r.user?.full_name || '—'}</td>
                       <td className="px-4 py-3 text-gray-300 text-xs">{r.user?.email || '—'}</td>
                       <td className="px-4 py-3">

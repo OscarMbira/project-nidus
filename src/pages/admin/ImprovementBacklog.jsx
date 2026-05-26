@@ -264,7 +264,7 @@ export default function ImprovementBacklog() {
           />
         ) : (
           <div className="space-y-4">
-            {improvements.map((improvement) => (
+            {improvements.map((improvement, index) => (
               <div
                 key={improvement.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-lg transition-shadow cursor-pointer"

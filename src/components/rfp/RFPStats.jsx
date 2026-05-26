@@ -18,9 +18,8 @@ function RFPStats({ stats = {}, loading = false }) {
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
-            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+        {[1, 2, 3, 4, 5, 6].map((i, index) => (
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 animate-pulse">            <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
             <div className="h-8 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
           </div>
         ))}

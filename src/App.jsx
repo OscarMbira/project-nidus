@@ -600,6 +600,10 @@ const TestingCentreRoutesPmo = lazy(() => import('./pages/testingCentre/TestingC
 const TestingCentreRoutesSim = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSim })))
 const TestingCentreRoutesSimPm = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSimPm })))
 const TestingCentreRoutesSimPmo = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSimPmo })))
+const ProcessTemplatesRoutesPmo = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesPmo })))
+const ProcessTemplatesRoutesPm = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesPm })))
+const ProcessTemplatesRoutesSimPmo = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesSimPmo })))
+const ProcessTemplatesRoutesSimPm = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesSimPm })))
 const FormsGallery = lazy(() => import('./pages/forms/FormsGallery'))
 const FormNew = lazy(() => import('./pages/forms/FormNew'))
 const FormEdit = lazy(() => import('./pages/forms/FormEdit'))
@@ -3772,6 +3776,20 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="invitation-tracker" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <PMInvitationTracker />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="invitation-tracker/view" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <InvitationDetailPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="admin/invitation-settings" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -4035,6 +4053,19 @@ function App() {
                   <ProtectedRoute>
                     <PMOLayout>
                       <TestingCentreRoutesPmo />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pmo/process-templates/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <ProcessTemplatesRoutesPmo />
                     </PMOLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -4870,6 +4901,19 @@ function App() {
                   <ProtectedRoute>
                     <PMLayout>
                       <TestingCentreRoutesPm />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/process-templates/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <ProcessTemplatesRoutesPm />
                     </PMLayout>
                   </ProtectedRoute>
                 </ToastProvider>
@@ -9396,6 +9440,19 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="simulator/pmo/process-templates/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <ProcessTemplatesRoutesSimPmo />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="simulator/pmo/manager-assignments" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -9613,6 +9670,19 @@ function App() {
                   <ProtectedRoute requiredPlatform="simulator">
                     <SimulatorPMLayout>
                       <TestingCentreRoutesSimPm />
+                    </SimulatorPMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pm/process-templates/*" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMLayout>
+                      <ProcessTemplatesRoutesSimPm />
                     </SimulatorPMLayout>
                   </ProtectedRoute>
                 </ToastProvider>

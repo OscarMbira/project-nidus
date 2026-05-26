@@ -101,13 +101,12 @@ export default function ActivitiesCalendar({ cmsId }) {
             {day}
           </div>
           <div className="space-y-1 overflow-y-auto max-h-16">
-            {dayActivities.slice(0, 2).map((activity) => (
+            {dayActivities.slice(0, 2).map((activity, index) => (
               <div
                 key={activity.id}
                 className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-1 py-0.5 rounded truncate"
                 title={activity.activity_name}
-              >
-                {formatTime(activity.scheduled_time)} {activity.activity_name}
+              >                {formatTime(activity.scheduled_time)} {activity.activity_name}
               </div>
             ))}
             {dayActivities.length > 2 && (
@@ -151,7 +150,7 @@ export default function ActivitiesCalendar({ cmsId }) {
 
     return (
       <div className="space-y-4">
-        {sortedActivities.map((activity) => (
+        {sortedActivities.map((activity, index) => (
           <div
             key={activity.id}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"

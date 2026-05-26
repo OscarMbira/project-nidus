@@ -30,6 +30,9 @@ import EditMemberRoleModal from '../../components/app/EditMemberRoleModal'
 import SeatUsageWidget from '../../components/app/SeatUsageWidget'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 import { useSortableTable } from '../../hooks/useSortableTable'
 import { useViewMode } from '../../hooks/useViewMode'
 import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
@@ -101,6 +104,7 @@ export default function ProjectUsers() {
     canAdd: false,
   })
   const [invitePanel, setInvitePanel] = useState('single')
+  const [memberPageTab, setMemberPageTab] = useState('active')
   const [bulkResumeDraft, setBulkResumeDraft] = useState(null)
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
@@ -119,17 +123,18 @@ export default function ProjectUsers() {
     [routeProjectId, selectedProjectId, qpResolvedUuid],
   )
 
-  const scrollToAddMemberForm = useCallback(() => {
-    document.getElementById('add-project-member')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const openAddMemberTab = useCallback((panel = 'single') => {
+    setInvitePanel(panel)
+    setMemberPageTab('add')
   }, [])
+
+  const scrollToAddMemberForm = useCallback(() => {
+    openAddMemberTab('single')
+  }, [openAddMemberTab])
 
   const scrollToBulkInviteForm = useCallback(() => {
-    document.getElementById('bulk-invite-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [])
-
-  const scrollToSendRoleInvitation = useCallback(() => {
-    document.getElementById('send-role-invitation')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }, [])
+    openAddMemberTab('bulk')
+  }, [openAddMemberTab])
 
   const refreshBulkDraft = useCallback(async () => {
     if (!effectiveProjectId) {
@@ -321,6 +326,10 @@ export default function ProjectUsers() {
     if (routeProjectId) setSelectedProjectId(routeProjectId)
   }, [routeProjectId])
 
+  useEffect(() => {
+    setMemberPageTab('active')
+  }, [effectiveProjectId])
+
   const loadData = useCallback(async () => {
     const seq = ++loadMembersSeq.current
 
@@ -491,6 +500,7 @@ export default function ProjectUsers() {
       detail: isDirect ? `${projectName} — active immediately` : projectName,
     })
     toastSuccess(isDirect ? 'Member added to the project.' : 'Invitation sent successfully.')
+    setMemberPageTab('active')
   }
 
   const onChangeProject = (id) => {
@@ -562,16 +572,15 @@ export default function ProjectUsers() {
     if (loading || !effectiveProjectId) return
     if (qpAction === 'send-invite') {
       setInvitePanel('single')
-      setTimeout(() => scrollToSendRoleInvitation(), 150)
+      setMemberPageTab('add')
     } else if (qpAction === 'invite') {
       setInvitePanel('single')
-      setTimeout(() => {
-        document.getElementById('add-project-member')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 150)
+      setMemberPageTab('add')
     } else if (qpAction === 'bulk-invite') {
       setInvitePanel('bulk')
-      setTimeout(() => scrollToBulkInviteForm(), 150)
+      setMemberPageTab('add')
     } else if (qpTab === 'pending') {
+      setMemberPageTab('active')
       setTimeout(() => {
         document.getElementById('pending-invitations-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 150)
@@ -602,57 +611,13 @@ export default function ProjectUsers() {
           </p>
         </div>
         <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
-          {sessionUser.authId && effectiveProjectId ? (
-            <>
-              <div
-                id="send-role-invitation"
-                className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInvitePanel('single')
-                    scrollToAddMemberForm()
-                  }}
-                  className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg shadow-sm w-full sm:w-auto min-h-[44px] ${
-                    invitePanel === 'single'
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <UserPlus className="h-4 w-4 mr-2 shrink-0" aria-hidden />
-                  Single invite
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInvitePanel('bulk')
-                    scrollToBulkInviteForm()
-                  }}
-                  className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg w-full sm:w-auto min-h-[44px] ${
-                    invitePanel === 'bulk'
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
-                      : 'border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  <Upload className="h-4 w-4 mr-2 shrink-0" aria-hidden />
-                  Bulk invite
-                </button>
-              </div>
-              {memberAddEligibility.loading ? (
-                <p className="text-xs text-gray-500 dark:text-gray-400 text-right">Checking permissions…</p>
-              ) : !memberAddEligibility.canAdd ? (
-                <p className="text-xs text-amber-700 dark:text-amber-300 text-right max-w-xs">
-                  You may not have invite permission on this project — the form below may still be useful; the
-                  server will reject if not allowed.
-                </p>
-              ) : isPmoAdminUser ? (
-                <span className="text-xs text-gray-500 dark:text-gray-400 text-right hidden sm:block">
-                  Form below: invite by email or add an existing user (PMO).
-                </span>
-              ) : null}
-            </>
-          ) : null}
+          {sessionUser.authId && effectiveProjectId && memberPageTab === 'add' && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-right hidden sm:block">
+              {isPmoAdminUser
+                ? 'Invite by email or add an existing user (PMO).'
+                : 'Creates a pending invitation — they join when they accept the email.'}
+            </p>
+          )}
         </div>
       </div>
 
@@ -678,7 +643,7 @@ export default function ProjectUsers() {
               <option value="">
                 {projectListLoading ? 'Loading projects…' : 'Select a project…'}
               </option>
-              {projectList.map((p) => (
+              {projectList.map((p, index) => (
                 <option key={p.id} value={p.id}>
                   {p.project_name} {p.project_code ? `(${p.project_code})` : ''}
                 </option>
@@ -701,7 +666,7 @@ export default function ProjectUsers() {
         </div>
       )}
 
-      {effectiveProjectId && sessionUser.authId && bulkResumeDraft ? (
+      {effectiveProjectId && sessionUser.authId && bulkResumeDraft && memberPageTab === 'active' ? (
         <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-sm text-amber-900 dark:text-amber-100">
             You have a saved bulk invite draft for this project (
@@ -709,10 +674,7 @@ export default function ProjectUsers() {
           </p>
           <button
             type="button"
-            onClick={() => {
-              setInvitePanel('bulk')
-              scrollToBulkInviteForm()
-            }}
+            onClick={scrollToBulkInviteForm}
             className="inline-flex justify-center px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px]"
           >
             Resume draft
@@ -720,340 +682,456 @@ export default function ProjectUsers() {
         </div>
       ) : null}
 
-      {effectiveProjectId && sessionUser.authId && invitePanel === 'single' ? (
-        <div id="add-project-member">
-          <InviteUserForm
-            key={`invite-${effectiveProjectId}`}
-            projectId={effectiveProjectId}
-            onSuccess={handleInviteSuccess}
-            allowLeadershipRoles={isPmoAdminUser}
-            callerIsPmoAdmin={isPmoAdminUser}
-            defaultRole={qpRole || null}
-            permissionNote={
-              !memberAddEligibility.loading && !memberAddEligibility.canAdd
-                ? 'If submit fails with a permission error, ask a PMO administrator to grant project invite access or use a PMO account.'
-                : null
-            }
-          />
-        </div>
-      ) : null}
+      {effectiveProjectId && (
+        <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm">
+          <nav
+            className="flex border-b border-gray-200 dark:border-gray-800 px-4 sm:px-6"
+            aria-label="Member management tabs"
+            role="tablist"
+          >
+            <button
+              type="button"
+              role="tab"
+              id="members-tab-active"
+              aria-selected={memberPageTab === 'active'}
+              aria-controls="members-panel-active"
+              onClick={() => setMemberPageTab('active')}
+              className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm mr-8 ${
+                memberPageTab === 'active'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              <Users className="h-5 w-5" aria-hidden />
+              Active members ({loading ? '…' : displayRows.length})
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="members-tab-add"
+              aria-selected={memberPageTab === 'add'}
+              aria-controls="members-panel-add"
+              onClick={() => setMemberPageTab('add')}
+              className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm ${
+                memberPageTab === 'add'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+              }`}
+            >
+              <UserPlus className="h-5 w-5" aria-hidden />
+              Add project member
+            </button>
+          </nav>
 
-      {effectiveProjectId && sessionUser.authId && invitePanel === 'bulk' ? (
-        <div id="bulk-invite-panel">
-        <BulkInviteForm
-          key={`bulk-${effectiveProjectId}-${bulkResumeDraft?.id || 'new'}`}
-          projectId={effectiveProjectId}
-          allowLeadershipRoles={isPmoAdminUser}
-          callerIsPmoAdmin={isPmoAdminUser}
-          existingMemberEmails={members.map((m) => m.user?.email).filter(Boolean)}
-          pendingInviteEmails={invitations
-            .filter((i) => i.invitation_status === 'pending')
-            .map((i) => i.invited_email)
-            .filter(Boolean)}
-          seatAllocation={seatAllocation}
-          resumeDraft={invitePanel === 'bulk' ? bulkResumeDraft : null}
-          onSuccess={() => {
-            handleInviteSuccess()
-            refreshBulkDraft()
-          }}
-          onCancel={() => {
-            setInvitePanel('single')
-            refreshBulkDraft()
-          }}
-        />
-        </div>
-      ) : null}
+          {memberPageTab === 'active' && (
+            <div id="members-panel-active" role="tabpanel" aria-labelledby="members-tab-active" className="p-4 sm:p-6 space-y-6">
+              {!effectiveProjectId ? (
+                <p className="text-gray-500 dark:text-gray-400">Select a project to manage members.</p>
+              ) : loading ? (
+                <div className="flex justify-center py-16">
+                  <Loader className="h-8 w-8 animate-spin text-blue-500" />
+                </div>
+              ) : (
+                <>
+                  {seatAllocation && (
+                    <SeatUsageWidget
+                      projectId={effectiveProjectId}
+                      seatAllocation={seatAllocation}
+                      onPurchase={scrollToAddMemberForm}
+                    />
+                  )}
 
-      {effectiveProjectId && seatAllocation && (
-        <SeatUsageWidget
-          projectId={effectiveProjectId}
-          seatAllocation={seatAllocation}
-          onPurchase={scrollToAddMemberForm}
-        />
-      )}
-
-      {!effectiveProjectId ? (
-        <p className="text-gray-500 dark:text-gray-400">Select a project to manage members.</p>
-      ) : loading ? (
-        <div className="flex justify-center py-16">
-          <Loader className="h-8 w-8 animate-spin text-blue-500" />
-        </div>
-      ) : (
-        <>
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-800">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <h2 className="text-lg font-semibold flex items-center">
-                <Users className="h-5 w-5 mr-2" />
-                Active members ({displayRows.length})
-              </h2>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    loadData()
-                    loadInviteContext()
-                  }}
-                  className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  aria-label="Refresh members and invitations"
-                  title="Refresh"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </button>
-                {sessionUser.authId && (
-                  <button
-                    type="button"
-                    onClick={scrollToAddMemberForm}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 shrink-0"
-                  >
-                    <UserPlus className="h-4 w-4 shrink-0" aria-hidden />
-                    Add member
-                  </button>
-                )}
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search name or email…"
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                />
-                <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="Members layout" />
-                <ExportListMenu columns={EXPORT_COLS} data={exportData} baseFilename={`ProjectMembers_${effectiveProjectId}`} />
-              </div>
-            </div>
-
-            {viewMode === 'grid' ? (
-              <div className="p-4 grid sm:grid-cols-2 gap-4">
-                {displayRows.length === 0 && (
-                  <div className="sm:col-span-2 text-center py-10 text-gray-500 dark:text-gray-400">
-                    <p className="font-medium text-gray-700 dark:text-gray-300">No active members yet</p>
-                    <p className="text-sm mt-2 max-w-md mx-auto">
-                      {isPmoAdminUser
-                        ? 'Open Add member: invite by email, or use “Add existing user now” if they already have a login.'
-                        : 'Use Add member above to send an invitation; people appear here after they accept.'}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={scrollToAddMemberForm}
-                      className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      <UserPlus className="h-4 w-4 mr-2 shrink-0" />
-                      Go to add member form
-                    </button>
-                  </div>
-                )}
-                {displayRows.map((member) => (
-                  <div
-                    key={member.id}
-                    className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium shrink-0">
-                        {member.user?.full_name?.charAt(0) || member.user?.email?.charAt(0) || 'U'}
-                      </div>
-                      <div>
-                        <p className="font-medium">{member.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{member.email}</p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{member.role}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 capitalize">
-                          Status: {member.status}
-                        </p>
-                      </div>
-                    </div>
-                    {isPmoAdminUser ? (
-                      <div className="flex gap-2 mt-2">
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                    <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gray-50 dark:bg-gray-900/50">
+                      <h2 className="text-lg font-semibold flex items-center">
+                        <Users className="h-5 w-5 mr-2" />
+                        Active members ({displayRows.length})
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => setEditMember(member)}
-                          className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
+                          onClick={() => {
+                            loadData()
+                            loadInviteContext()
+                          }}
+                          className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          aria-label="Refresh members and invitations"
+                          title="Refresh"
                         >
-                          <Edit className="w-4 h-4" /> Edit role
+                          <RefreshCw className="h-4 w-4" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => onRemoveMember(member)}
-                          className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
-                        >
-                          <Trash2 className="w-4 h-4" /> Remove
-                        </button>
-                      </div>
-                    ) : (
-                      <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            type="button"
-                            onClick={() => setEditMember(member)}
-                            className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
-                          >
-                            <Edit className="w-4 h-4" /> Edit role
-                          </button>
-                          <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
-                            <button
-                              type="button"
-                              onClick={() => onRemoveMember(member)}
-                              className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
-                            >
-                              <Trash2 className="w-4 h-4" /> Remove
-                            </button>
-                          </PermissionGate>
-                        </div>
-                      </PermissionGate>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-100 dark:bg-gray-800">
-                    <tr>
-                      <th className="text-left px-4 py-2">
-                        <button type="button" className="font-semibold" onClick={() => handleSort('name')}>
-                          Name {sortIndicator('name')}
-                        </button>
-                      </th>
-                      <th className="text-left px-4 py-2">Email</th>
-                      <th className="text-left px-4 py-2">
-                        <button type="button" className="font-semibold" onClick={() => handleSort('role')}>
-                          Role {sortIndicator('role')}
-                        </button>
-                      </th>
-                      <th className="text-left px-4 py-2">
-                        <button type="button" className="font-semibold" onClick={() => handleSort('status')}>
-                          Status {sortIndicator('status')}
-                        </button>
-                      </th>
-                      <th className="text-left px-4 py-2">
-                        <button type="button" className="font-semibold" onClick={() => handleSort('joined')}>
-                          Joined {sortIndicator('joined')}
-                        </button>
-                      </th>
-                      <th className="text-right px-4 py-2">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayRows.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                          <p className="font-medium text-gray-700 dark:text-gray-300">No active members yet</p>
-                          <p className="text-sm mt-2 max-w-md mx-auto">
-                            {isPmoAdminUser
-                              ? 'Use Add member: send an invitation, or choose “Add existing user now” if they already have a platform login.'
-                              : 'Use Add member above to send an invitation; they appear here after they accept.'}
-                          </p>
+                        {sessionUser.authId && (
                           <button
                             type="button"
                             onClick={scrollToAddMemberForm}
-                            className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 shrink-0"
                           >
-                            <UserPlus className="h-4 w-4 mr-2 shrink-0" />
-                            Go to add member form
+                            <UserPlus className="h-4 w-4 shrink-0" aria-hidden />
+                            Add member
                           </button>
-                        </td>
-                      </tr>
-                    )}
-                    {displayRows.map((member) => (
-                      <tr key={member.id} className="border-t border-gray-200 dark:border-gray-800">
-                        <td className="px-4 py-3">{member.name}</td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{member.email}</td>
-                        <td className="px-4 py-3">{member.role}</td>
-                        <td className="px-4 py-3 capitalize text-gray-600 dark:text-gray-300">{member.status}</td>
-                        <td className="px-4 py-3">
-                          {member.joined ? new Date(member.joined).toLocaleDateString() : '—'}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {isPmoAdminUser ? (
-                            <>
-                              <button
-                                type="button"
-                                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
-                                onClick={() => setEditMember(member)}
-                                aria-label="Edit role"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button
-                                type="button"
-                                className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
-                                onClick={() => onRemoveMember(member)}
-                                aria-label="Remove member"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </>
-                          ) : (
-                            <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
-                              <button
-                                type="button"
-                                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
-                                onClick={() => setEditMember(member)}
-                                aria-label="Edit role"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                        )}
+                        <input
+                          type="search"
+                          value={search}
+                          onChange={(e) => setSearch(e.target.value)}
+                          placeholder="Search name or email…"
+                          className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+                        />
+                        <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="Members layout" />
+                        <ExportListMenu columns={EXPORT_COLS} data={exportData} baseFilename={`ProjectMembers_${effectiveProjectId}`} />
+                      </div>
+                    </div>
+
+                    {viewMode === 'grid' ? (
+                      <div className="p-4 grid sm:grid-cols-2 gap-4">
+                        {displayRows.length === 0 && (
+                          <div className="sm:col-span-2 text-center py-10 text-gray-500 dark:text-gray-400">
+                            <p className="font-medium text-gray-700 dark:text-gray-300">No active members yet</p>
+                            <p className="text-sm mt-2 max-w-md mx-auto">
+                              {isPmoAdminUser
+                                ? 'Open Add member: invite by email, or use “Add existing user now” if they already have a login.'
+                                : 'Use Add member above to send an invitation; people appear here after they accept.'}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={scrollToAddMemberForm}
+                              className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                              <UserPlus className="h-4 w-4 mr-2 shrink-0" />
+                              Go to add member form
+                            </button>
+                          </div>
+                        )}
+                        {displayRows.map((member, index) => (
+                          <div
+                            key={member.id}
+                            className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-col gap-2"
+                          >
+                            <div className="flex items-start gap-3">
+                              <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium shrink-0">
+                                {member.user?.full_name?.charAt(0) || member.user?.email?.charAt(0) || 'U'}
+                              </div>
+                              <div>
+                                <p className="font-medium">{member.name}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{member.email}</p>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">{member.role}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 capitalize">
+                                  Status: {member.status}
+                                </p>
+                              </div>
+                            </div>
+                            {isPmoAdminUser ? (
+                              <div className="flex gap-2 mt-2">
                                 <button
                                   type="button"
-                                  className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
-                                  onClick={() => onRemoveMember(member)}
-                                  aria-label="Remove member"
+                                  onClick={() => setEditMember(member)}
+                                  className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
                                 >
-                                  <Trash2 className="h-4 w-4" />
+                                  <Edit className="w-4 h-4" /> Edit role
                                 </button>
+                                <button
+                                  type="button"
+                                  onClick={() => onRemoveMember(member)}
+                                  className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
+                                >
+                                  <Trash2 className="w-4 h-4" /> Remove
+                                </button>
+                              </div>
+                            ) : (
+                              <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditMember(member)}
+                                    className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
+                                  >
+                                    <Edit className="w-4 h-4" /> Edit role
+                                  </button>
+                                  <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                                    <button
+                                      type="button"
+                                      onClick={() => onRemoveMember(member)}
+                                      className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
+                                    >
+                                      <Trash2 className="w-4 h-4" /> Remove
+                                    </button>
+                                  </PermissionGate>
+                                </div>
                               </PermissionGate>
-                            </PermissionGate>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {invitations.length > 0 && (
-            <div id="pending-invitations-section" className="bg-white dark:bg-gray-900 rounded-lg shadow border border-gray-200 dark:border-gray-800">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <Mail className="h-5 w-5 mr-2" />
-                  Pending invitations ({invitations.length})
-                </h2>
-              </div>
-              <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                {invitations.map((invitation) => (
-                  <div key={invitation.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <p className="font-medium">{invitation.invited_email}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Role: {invitation.role?.role_display_name || invitation.role?.role_name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                        Sent {new Date(invitation.invitation_sent_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onResend(invitation)}
-                        className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-1" />
-                        Resend
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onCancelInvite(invitation)}
-                        className="text-sm text-red-600 dark:text-red-400"
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-gray-100 dark:bg-gray-800">
+                            <tr>
+                              <TableRowNumberHeader className="!px-4 !py-2 !normal-case" />
+                              <th className="text-left px-4 py-2">
+                                <button type="button" className="font-semibold" onClick={() => handleSort('name')}>
+                                  Name {sortIndicator('name')}
+                                </button>
+                              </th>
+                              <th className="text-left px-4 py-2">Email</th>
+                              <th className="text-left px-4 py-2">
+                                <button type="button" className="font-semibold" onClick={() => handleSort('role')}>
+                                  Role {sortIndicator('role')}
+                                </button>
+                              </th>
+                              <th className="text-left px-4 py-2">
+                                <button type="button" className="font-semibold" onClick={() => handleSort('status')}>
+                                  Status {sortIndicator('status')}
+                                </button>
+                              </th>
+                              <th className="text-left px-4 py-2">
+                                <button type="button" className="font-semibold" onClick={() => handleSort('joined')}>
+                                  Joined {sortIndicator('joined')}
+                                </button>
+                              </th>
+                              <th className="text-right px-4 py-2">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {displayRows.length === 0 && (
+                              <tr>
+                                <td colSpan={6} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
+                                  <p className="font-medium text-gray-700 dark:text-gray-300">No active members yet</p>
+                                  <p className="text-sm mt-2 max-w-md mx-auto">
+                                    {isPmoAdminUser
+                                      ? 'Use Add member: send an invitation, or choose “Add existing user now” if they already have a platform login.'
+                                      : 'Use Add member above to send an invitation; they appear here after they accept.'}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={scrollToAddMemberForm}
+                                    className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                  >
+                                    <UserPlus className="h-4 w-4 mr-2 shrink-0" />
+                                    Go to add member form
+                                  </button>
+                                </td>
+                              </tr>
+                            )}
+                            {displayRows.map((member, index) => (
+                              <tr key={member.id} className="border-t border-gray-200 dark:border-gray-800">
+                                <TableRowNumberCell number={getDisplayRowNumber(index)} className="!px-4 !py-3" />
+                                <td className="px-4 py-3">{member.name}</td>
+                                <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{member.email}</td>
+                                <td className="px-4 py-3">{member.role}</td>
+                                <td className="px-4 py-3 capitalize text-gray-600 dark:text-gray-300">{member.status}</td>
+                                <td className="px-4 py-3">
+                                  {member.joined ? new Date(member.joined).toLocaleDateString() : '—'}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {isPmoAdminUser ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
+                                        onClick={() => setEditMember(member)}
+                                        aria-label="Edit role"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
+                                        onClick={() => onRemoveMember(member)}
+                                        aria-label="Remove member"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
+                                      <button
+                                        type="button"
+                                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
+                                        onClick={() => setEditMember(member)}
+                                        aria-label="Edit role"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                                        <button
+                                          type="button"
+                                          className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
+                                          onClick={() => onRemoveMember(member)}
+                                          aria-label="Remove member"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </button>
+                                      </PermissionGate>
+                                    </PermissionGate>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
+
+                  {invitations.length > 0 && (
+                    <div id="pending-invitations-section" className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+                        <h2 className="text-lg font-semibold flex items-center">
+                          <Mail className="h-5 w-5 mr-2" />
+                          Pending invitations ({invitations.length})
+                        </h2>
+                      </div>
+                      <div className="divide-y divide-gray-200 dark:divide-gray-800">
+                        {invitations.map((invitation, index) => (
+                          <div key={invitation.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                            <div>
+                              <p className="font-medium">{invitation.invited_email}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Role: {invitation.role?.role_display_name || invitation.role?.role_name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                Sent {new Date(invitation.invitation_sent_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => onResend(invitation)}
+                                className="inline-flex items-center text-sm text-blue-600 dark:text-blue-400"
+                              >
+                                <RefreshCw className="w-4 h-4 mr-1" />
+                                Resend
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onCancelInvite(invitation)}
+                                className="text-sm text-red-600 dark:text-red-400"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           )}
-        </>
+
+          {memberPageTab === 'add' && sessionUser.authId && (
+            <div id="members-panel-add" role="tabpanel" aria-labelledby="members-tab-add" className="p-4 sm:p-6 space-y-6">
+              {effectiveProjectId && bulkResumeDraft ? (
+                <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <p className="text-sm text-amber-900 dark:text-amber-100">
+                    You have a saved bulk invite draft for this project (
+                    {(bulkResumeDraft.members || []).length} row(s)).
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setInvitePanel('bulk')
+                    }}
+                    className="inline-flex justify-center px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 min-h-[44px]"
+                  >
+                    Resume draft
+                  </button>
+                </div>
+              ) : null}
+
+              <div
+                id="send-role-invitation"
+                className="flex flex-col sm:flex-row gap-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => setInvitePanel('single')}
+                  className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg shadow-sm w-full sm:w-auto min-h-[44px] ${
+                    invitePanel === 'single'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <UserPlus className="h-4 w-4 mr-2 shrink-0" aria-hidden />
+                  Single invite
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setInvitePanel('bulk')}
+                  className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg w-full sm:w-auto min-h-[44px] ${
+                    invitePanel === 'bulk'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                      : 'border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <Upload className="h-4 w-4 mr-2 shrink-0" aria-hidden />
+                  Bulk invite
+                </button>
+              </div>
+
+              {memberAddEligibility.loading ? (
+                <p className="text-xs text-gray-500 dark:text-gray-400">Checking permissions…</p>
+              ) : !memberAddEligibility.canAdd ? (
+                <p className="text-xs text-amber-700 dark:text-amber-300 max-w-xl">
+                  You may not have invite permission on this project — the form below may still be useful; the
+                  server will reject if not allowed.
+                </p>
+              ) : isPmoAdminUser ? (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Invite by email or add an existing user (PMO).
+                </p>
+              ) : null}
+
+              {invitePanel === 'single' ? (
+                <InviteUserForm
+                  key={`invite-${effectiveProjectId}`}
+                  projectId={effectiveProjectId}
+                  onSuccess={handleInviteSuccess}
+                  allowLeadershipRoles={isPmoAdminUser}
+                  callerIsPmoAdmin={isPmoAdminUser}
+                  defaultRole={qpRole || null}
+                  permissionNote={
+                    !memberAddEligibility.loading && !memberAddEligibility.canAdd
+                      ? 'If submit fails with a permission error, ask a PMO administrator to grant project invite access or use a PMO account.'
+                      : null
+                  }
+                />
+              ) : (
+                <div id="bulk-invite-panel">
+                  <BulkInviteForm
+                    key={`bulk-${effectiveProjectId}-${bulkResumeDraft?.id || 'new'}`}
+                    projectId={effectiveProjectId}
+                    allowLeadershipRoles={isPmoAdminUser}
+                    callerIsPmoAdmin={isPmoAdminUser}
+                    existingMemberEmails={members.map((m) => m.user?.email).filter(Boolean)}
+                    pendingInviteEmails={invitations
+                      .filter((i) => i.invitation_status === 'pending')
+                      .map((i) => i.invited_email)
+                      .filter(Boolean)}
+                    seatAllocation={seatAllocation}
+                    resumeDraft={invitePanel === 'bulk' ? bulkResumeDraft : null}
+                    onSuccess={() => {
+                      handleInviteSuccess()
+                      refreshBulkDraft()
+                    }}
+                    onCancel={() => {
+                      setInvitePanel('single')
+                      refreshBulkDraft()
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!effectiveProjectId && (
+        <p className="text-gray-500 dark:text-gray-400">Select a project to manage members.</p>
       )}
 
       <EditMemberRoleModal

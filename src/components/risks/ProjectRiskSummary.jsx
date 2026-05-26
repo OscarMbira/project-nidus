@@ -113,8 +113,7 @@ export default function ProjectRiskSummary({ projectId, routeKey }) {
             {topRisks.map((risk, index) => (
               <div
                 key={risk.risk_id || index}
-                onClick={() =>
-                  navigate(
+                onClick={() =>                  navigate(
                     platformRiskPath(projectRouteKey, risk.risk_code || risk.risk_id),
                   )
                 }

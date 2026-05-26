@@ -230,7 +230,7 @@ export default function OPAList() {
         <p className="text-gray-600 dark:text-gray-400">{seedLoading ? 'Loading sample…' : 'Loading…'}</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <div
               key={r.id}
               className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex flex-col gap-2 shadow-sm"
@@ -331,7 +331,7 @@ export default function OPAList() {
                 className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 min-h-[44px]"
               >
                 <option value="">Select project</option>
-                {projects.map((p) => (
+                {projects.map((p, index) => (
                   <option key={p.id} value={p.id}>
                     {p.project_name}
                   </option>

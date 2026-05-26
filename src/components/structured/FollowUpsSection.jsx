@@ -102,7 +102,7 @@ export default function FollowUpsSection({ reportId, followUps, onFollowUpsChang
         </div>
       ) : (
         <div className="space-y-3">
-          {followUps.map((item) => (
+          {followUps.map((item, index) => (
             <div
               key={item.id}
               className={`border rounded-lg p-4 ${

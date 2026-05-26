@@ -226,8 +226,7 @@ export default function LessonsReport() {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Key Recommendations</h2>
           <div className="space-y-3">
             {reportData.keyRecommendations.map((recommendation, index) => (
-              <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{recommendation}</p>
+              <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{recommendation}</p>
               </div>
             ))}
           </div>
@@ -276,7 +275,7 @@ export default function LessonsReport() {
           {lessons.length === 0 ? (
             <p className="text-center text-gray-500 dark:text-gray-400 py-8">No lessons found</p>
           ) : (
-            lessons.map((lesson) => (
+            lessons.map((lesson, index) => (
               <div
                 key={lesson.id}
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"

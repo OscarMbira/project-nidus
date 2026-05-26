@@ -10,6 +10,8 @@ import PowerInterestMatrix from '../../components/stakeholders/PowerInterestMatr
 import StakeholderAnalysisForm from '../../components/stakeholders/StakeholderAnalysisForm'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { platformDb } from '../../services/supabase/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function StakeholderAnalysisPage() {
   const navigate = useNavigate()
@@ -207,6 +209,7 @@ export default function StakeholderAnalysisPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stakeholder</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Power</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Interest</th>
@@ -218,6 +221,7 @@ export default function StakeholderAnalysisPage() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {analysis.map(a => (
                 <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{a.stakeholder?.stakeholder_name || '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.power_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.interest_level ?? '—'}</td>

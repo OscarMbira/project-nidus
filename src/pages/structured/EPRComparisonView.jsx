@@ -5,6 +5,8 @@ import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { ArrowLeft, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { getEndProjectReportById, getBusinessCaseForReview, calculateBenefitsVariance } from '../../services/endProjectReportService'
 import { getBenefitsComparison } from '../../services/eprBusinessCaseReviewService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 // Format currency helper
 const formatCurrency = (value) => {
   if (!value && value !== 0) return 'N/A'
@@ -171,6 +173,7 @@ export default function EPRComparisonView() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Benefit Description</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Type</th>
                     <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Target Value</th>
@@ -181,8 +184,9 @@ export default function EPRComparisonView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {benefitsComparison.map((benefit) => (
+                  {benefitsComparison.map((benefit, index) => (
                     <tr key={benefit.id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">{benefit.benefit_description}</td>
                       <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 capitalize">{benefit.benefit_type?.replace('_', ' ')}</td>
                       <td className="py-3 px-4 text-sm text-gray-900 dark:text-white text-right">

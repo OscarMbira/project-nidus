@@ -10,11 +10,13 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import { useViewMode } from '../../hooks/useViewMode'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import ITTOCard from '../../components/itto/ITTOCard'
 import ITTOTemplateForm from './ITTOTemplateForm'
 import ITTOProcessGroupBadge from '../../components/itto/ITTOProcessGroupBadge'
 import { ITTO_PROCESS_GROUPS, ITTO_KNOWLEDGE_AREAS } from '../../constants/ittoConstants'
 import { useIttoPermissions } from '../../hooks/useIttoPermissions'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },
@@ -262,7 +264,7 @@ export default function ITTOTemplateList({ isSim = false }) {
           aria-label="Filter by knowledge area"
         >
           <option value="">All knowledge areas</option>
-          {ITTO_KNOWLEDGE_AREAS.map((ka) => (
+          {ITTO_KNOWLEDGE_AREAS.map((ka, index) => (
             <option key={ka} value={ka}>
               {ka}
             </option>
@@ -292,12 +294,13 @@ export default function ITTOTemplateList({ isSim = false }) {
         <p className="text-gray-600 dark:text-gray-400">Loading…</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <ITTOCard
               key={r.id}
               record={r}
               footer={
                 <div className="flex flex-wrap gap-2 justify-end">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                   {showCopy && (
                     <button
                       type="button"
@@ -338,6 +341,7 @@ export default function ITTOTemplateList({ isSim = false }) {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+                <TableRowNumberHeader className="!normal-case" />
                 {['name', 'process_group', 'knowledge_area', 'status', 'created_at', 'updated_at'].map((col) => (
                   <th key={col} className="text-left p-3">
                     <button
@@ -366,8 +370,9 @@ export default function ITTOTemplateList({ isSim = false }) {
               </tr>
             </thead>
             <tbody>
-              {displayRows.map((r) => (
+              {displayRows.map((r, index) => (
                 <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/80">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3 text-gray-900 dark:text-white font-medium">{r.name}</td>
                   <td className="p-3">
                     <ITTOProcessGroupBadge processGroup={r.process_group} />

@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
 import { useOfflineQueue } from '../hooks/useOfflineQueue'
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 export default function TasksCreate() {
   useOfflineQueue()
   const navigate = useNavigate()
@@ -253,7 +254,7 @@ export default function TasksCreate() {
             required
           >
             <option value="">Select a project</option>
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <option key={project.id} value={project.id}>
                 {project.project_name} {project.project_code ? `(${project.project_code})` : ''}
               </option>
@@ -281,7 +282,7 @@ export default function TasksCreate() {
               required
             >
               <option value="">Select a status</option>
-              {taskStatuses.map((status) => (
+              {taskStatuses.map((status, index) => (
                 <option key={status.id} value={status.id}>
                   {status.status_name}
                 </option>
@@ -324,7 +325,7 @@ export default function TasksCreate() {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
           >
             <option value="">Unassigned</option>
-            {users.map((user) => (
+            {users.map((user, index) => (
               <option key={user.id} value={user.id}>
                 {user.full_name || user.email}
               </option>

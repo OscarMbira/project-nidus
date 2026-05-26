@@ -121,7 +121,7 @@ export default function MFAManagement({ onEnrollNew }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {devices.map((device) => (
+          {devices.map((device, index) => (
             <div
               key={device.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-between"

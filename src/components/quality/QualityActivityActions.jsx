@@ -296,7 +296,7 @@ export default function QualityActivityActions({ activityType, activityId, onUpd
         </div>
       ) : (
         <div className="space-y-3">
-          {actions.map((action) => (
+          {actions.map((action, index) => (
             <div
               key={action.id}
               className={`p-4 border rounded-lg ${

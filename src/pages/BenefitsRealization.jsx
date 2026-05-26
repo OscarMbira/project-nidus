@@ -210,9 +210,8 @@ export default function BenefitsRealization() {
             </span>
           </div>
           <div className="space-y-3">
-            {realizedBenefits.slice(0, 5).map((benefit) => (
-              <div key={benefit.id} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <div className="font-medium text-gray-900 dark:text-white text-sm">
+            {realizedBenefits.slice(0, 5).map((benefit, index) => (
+              <div key={benefit.id} className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">                <div className="font-medium text-gray-900 dark:text-white text-sm">
                   {benefit.benefit_name}
                 </div>
                 {benefit.realized_value_currency && (
@@ -242,9 +241,8 @@ export default function BenefitsRealization() {
             </span>
           </div>
           <div className="space-y-3">
-            {inProgressBenefits.slice(0, 5).map((benefit) => (
-              <div key={benefit.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <div className="font-medium text-gray-900 dark:text-white text-sm">
+            {inProgressBenefits.slice(0, 5).map((benefit, index) => (
+              <div key={benefit.id} className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">                <div className="font-medium text-gray-900 dark:text-white text-sm">
                   {benefit.benefit_name}
                 </div>
                 {benefit.current_value && benefit.target_value && (
@@ -274,9 +272,8 @@ export default function BenefitsRealization() {
             </span>
           </div>
           <div className="space-y-3">
-            {plannedBenefits.slice(0, 5).map((benefit) => (
-              <div key={benefit.id} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="font-medium text-gray-900 dark:text-white text-sm">
+            {plannedBenefits.slice(0, 5).map((benefit, index) => (
+              <div key={benefit.id} className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">                <div className="font-medium text-gray-900 dark:text-white text-sm">
                   {benefit.benefit_name}
                 </div>
                 {benefit.expected_realization_date && (

@@ -5,6 +5,8 @@ import { Plus, Search, LayoutGrid, Table2, ArrowUpDown, Download, Gavel } from '
 import { getDecisions, deleteDecision } from '../../services/decisionLogService'
 import { exportListToCSV, exportListToJSON, exportListToXML, exportListToPrint } from '../../utils/exportUtils'
 import PlanningProjectBar, { usePlanningProjectId } from '../../components/planning/PlanningProjectBar'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const VIEW_KEY = 'tm-decision-log-view-v1'
 
@@ -205,6 +207,7 @@ export default function DecisionLogPage() {
             <table className="min-w-full text-sm">
               <thead className="bg-slate-800 text-slate-400 uppercase text-xs">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left"><SortBtn k="decision_reference" label="Reference" /></th>
                   <th className="px-4 py-3 text-left"><SortBtn k="decision_title" label="Title" /></th>
                   <th className="px-4 py-3 text-left"><SortBtn k="status" label="Status" /></th>
@@ -216,6 +219,7 @@ export default function DecisionLogPage() {
               <tbody className="divide-y divide-slate-800">
                 {filtered.map(row => (
                   <tr key={row.id} className="hover:bg-slate-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 font-mono text-xs text-slate-400">{row.decision_reference || '—'}</td>
                     <td className="px-4 py-3 font-medium text-slate-100 max-w-xs truncate">{row.decision_title}</td>
                     <td className="px-4 py-3"><StatusBadge status={row.status} /></td>

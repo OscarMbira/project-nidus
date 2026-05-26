@@ -24,6 +24,8 @@ import { PLATFORM_SUBSCRIPTION_TIERS, getActivePlatformSubscription } from '../s
 import { useToast } from '../hooks/useToast';
 import MainHeader from '../components/homepage/MainHeader';
 import PlatformFooter from '../components/homepage/PlatformFooter';
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function PlatformPricing() {
   const navigate = useNavigate();
@@ -344,6 +346,7 @@ export default function PlatformPricing() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="text-left py-4 px-4 text-gray-900 dark:text-white font-semibold">
                     Feature
                   </th>
@@ -360,6 +363,7 @@ export default function PlatformPricing() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-4 px-4 text-gray-700 dark:text-gray-300">
                     <FolderKanban className="inline-block h-4 w-4 mr-2" />
                     Projects
@@ -371,6 +375,7 @@ export default function PlatformPricing() {
                   </td>
                 </tr>
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-4 px-4 text-gray-700 dark:text-gray-300">
                     <Users className="inline-block h-4 w-4 mr-2" />
                     Team Members
@@ -380,6 +385,7 @@ export default function PlatformPricing() {
                   <td className="text-center py-4 px-4 text-gray-700 dark:text-gray-300">100</td>
                 </tr>
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-4 px-4 text-gray-700 dark:text-gray-300">
                     <TrendingUp className="inline-block h-4 w-4 mr-2" />
                     Advanced Analytics
@@ -395,6 +401,7 @@ export default function PlatformPricing() {
                   </td>
                 </tr>
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="py-4 px-4 text-gray-700 dark:text-gray-300">
                     <Shield className="inline-block h-4 w-4 mr-2" />
                     API Access

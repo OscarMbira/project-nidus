@@ -195,7 +195,7 @@ export default function PMOScopeQuickActions({ scope, isOrgAdmin = false }) {
     <div className="space-y-3 mb-8">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{TITLES[scope]}</h3>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        {actions.map((action) => (
+        {actions.map((action, index) => (
           <button
             key={action.id}
             type="button"
@@ -203,8 +203,7 @@ export default function PMOScopeQuickActions({ scope, isOrgAdmin = false }) {
             className={action.className}
           >
             <action.icon className="w-7 h-7 sm:w-8 sm:h-8 shrink-0 opacity-95" aria-hidden />
-            <div className="text-center px-0.5">
-              <div className="text-xs sm:text-sm font-semibold leading-tight">{action.label}</div>
+            <div className="text-center px-0.5">              <div className="text-xs sm:text-sm font-semibold leading-tight">{action.label}</div>
               <div className="text-[10px] sm:text-xs opacity-90 mt-1 leading-snug">{action.description}</div>
             </div>
           </button>

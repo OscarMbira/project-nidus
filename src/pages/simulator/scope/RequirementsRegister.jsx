@@ -5,6 +5,8 @@ import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
 import { simListRequirements, simSaveRequirement } from '../../../services/sim/simPlanningService'
 import { simDb } from '../../../services/supabase/supabaseClient'
 import ExportListMenu from '../../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'requirement_code', label: 'Code' },
@@ -207,6 +209,7 @@ export default function RequirementsRegister() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">
                   <SortTh label="Code" col="requirement_code" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
                 </th>
@@ -226,8 +229,9 @@ export default function RequirementsRegister() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
+              {filtered.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3 font-mono text-xs">{r.requirement_code || '—'}</td>
                   <td className="p-3 text-gray-900 dark:text-gray-100">{r.name}</td>
                   <td className="p-3">{r.category || '—'}</td>
@@ -245,7 +249,7 @@ export default function RequirementsRegister() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
+          {filtered.map((r, index) => (
             <Link
               key={r.id}
               to={`/simulator/practice-projects/${projectId}/scope/requirements/${r.id}`}
@@ -253,8 +257,7 @@ export default function RequirementsRegister() {
             >
               <div className="font-mono text-xs text-gray-500">{r.requirement_code || '—'}</div>
               <div className="mt-1 font-medium text-gray-900 dark:text-white">{r.name}</div>
-              <div className="mt-2 text-xs text-gray-500">
-                {r.category} · {r.priority} · {r.status}
+              <div className="mt-2 text-xs text-gray-500">                {r.category} · {r.priority} · {r.status}
               </div>
             </Link>
           ))}

@@ -8,6 +8,8 @@ import {
 import CustomFieldAdminBuilder from '../components/CustomFieldAdminBuilder'
 import { WORKFLOW_STATUS } from '../utils/customFieldConstants'
 import { invalidateAllCustomFieldsCache } from '../hooks/useCustomFields'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 export default function FieldDefinitionsPage() {
   const { platformDb, accountId, userInternalId } = useLdeContext()
@@ -84,6 +86,7 @@ export default function FieldDefinitionsPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="text-left p-2">Code</th>
                 <th className="text-left p-2">Label</th>
                 <th className="text-left p-2">Type</th>
@@ -92,8 +95,9 @@ export default function FieldDefinitionsPage() {
               </tr>
             </thead>
             <tbody>
-              {displayed.map((r) => (
+              {displayed.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-100 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-2 font-mono text-xs">{r.field_code}</td>
                   <td className="p-2">{r.label}</td>
                   <td className="p-2">{r.field_type}</td>
@@ -112,6 +116,7 @@ export default function FieldDefinitionsPage() {
               ))}
               {!displayed.length && (
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td colSpan={5} className="p-6 text-center text-gray-500">
                     No fields yet.
                   </td>

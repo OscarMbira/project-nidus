@@ -137,7 +137,7 @@ export default function EPRLessonsReport({ reportId, lessons, onLessonsChange, p
         </div>
       ) : (
         <div className="space-y-3">
-          {lessons.map((lesson) => (
+          {lessons.map((lesson, index) => (
             <div
               key={lesson.id}
               className={`border rounded-lg p-4 ${

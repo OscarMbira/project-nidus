@@ -3,6 +3,7 @@ import { supabase } from '../../services/supabaseClient'
 import { X, Save, FileText, Package, BookOpen, Users, Award, Target, Settings } from 'lucide-react'
 import { createPPD, updatePPD, createPPDFromMandate } from '../../services/projectProductDescriptionService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_title: '',
@@ -532,7 +533,7 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select...</option>
-                  {teamMembers.map((member) => (
+                  {teamMembers.map((member, index) => (
                     <option key={member.id} value={member.id}>
                       {member.full_name || member.email}
                     </option>
@@ -570,7 +571,7 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                 >
                   <option value="">Select...</option>
-                  {teamMembers.map((member) => (
+                  {teamMembers.map((member, index) => (
                     <option key={member.id} value={member.id}>
                       {member.full_name || member.email}
                     </option>

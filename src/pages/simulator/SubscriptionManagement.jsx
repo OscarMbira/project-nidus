@@ -233,7 +233,7 @@ const SubscriptionManagement = () => {
           </p>
         ) : (
           <div className="space-y-3">
-            {billingHistory.map((invoice) => (
+            {billingHistory.map((invoice, index) => (
               <div
                 key={invoice.id}
                 className={`p-4 rounded-lg border ${

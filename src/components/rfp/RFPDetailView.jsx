@@ -174,8 +174,7 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
               <ul className="space-y-3">
                 {rfp.service_provider_contacts.map((c, i) => (
                   <li key={i} className="p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-600 text-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <span className="text-gray-500 dark:text-gray-400">Contact</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">                      <span className="text-gray-500 dark:text-gray-400">Contact</span>
                       <span className="text-gray-900 dark:text-white">{c.contact_person || '-'}</span>
                       <span className="text-gray-500 dark:text-gray-400">Email</span>
                       <span className="text-gray-900 dark:text-white">{c.email || '-'}</span>

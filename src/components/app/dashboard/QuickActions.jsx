@@ -121,15 +121,14 @@ export default function QuickActions({ isOrgAdmin = false }) {
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Quick Actions</h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {actions.map((action) => (
+        {actions.map((action, index) => (
           <button
             key={action.id}
             onClick={() => handleActionClick(action.path)}
             className={`${action.color} text-white rounded-lg p-4 transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-2 min-h-[120px]`}
           >
             <action.icon className="w-8 h-8" />
-            <div className="text-center">
-              <div className="text-sm font-semibold">{action.label}</div>
+            <div className="text-center">              <div className="text-sm font-semibold">{action.label}</div>
               <div className="text-xs opacity-80 mt-1">{action.description}</div>
             </div>
           </button>

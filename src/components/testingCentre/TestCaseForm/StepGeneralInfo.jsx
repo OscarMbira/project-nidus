@@ -2,6 +2,7 @@ import Input from '../../ui/Input'
 import Textarea from '../../ui/Textarea'
 import SearchableSelect from '../../ui/SearchableSelect'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 const METH = [
   { value: 'system', label: 'System' },
   { value: 'predictive', label: 'Predictive' },
@@ -20,10 +21,10 @@ const SCEN = [
   { value: 'negative', label: 'Negative' },
   { value: 'edge_case', label: 'Edge case' },
 ]
-const PRIO = ['critical', 'high', 'medium', 'low'].map((p) => ({ value: p, label: p }))
+const PRIO = ['critical', 'high', 'medium', 'low'].map((p, index) => ({ value: p, label: p }))
 
 export default function StepGeneralInfo({ form, setForm, moduleOptions, onRegenerateCode, readOnlyCode = false }) {
-  const opts = (moduleOptions || []).map((m) => ({ value: m.id, label: `${m.code} — ${m.name}` }))
+  const opts = (moduleOptions || []).map((m, index) => ({ value: m.id, label: `${m.code} — ${m.name}` }))
 
   return (
     <div className="space-y-4 max-w-2xl">

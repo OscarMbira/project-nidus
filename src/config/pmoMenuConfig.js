@@ -55,6 +55,8 @@ import {
   Send,
   Clock,
   AtSign,
+  Map,
+  Activity,
 } from 'lucide-react';
 
 const pmoMenuConfig = [
@@ -354,6 +356,25 @@ const pmoMenuConfig = [
         icon: RefreshCcw,
         order: 9
       }
+    ]
+  },
+
+  // Section 4b: Process Templates (v629)
+  {
+    id: 'pmo-process-templates',
+    label: 'Process Templates',
+    path: null,
+    icon: Layers,
+    section: 'Process Templates',
+    order: 7,
+    children: [
+      { id: 'pmo-pt-hub', label: 'Hub Overview', path: '/pmo/process-templates', icon: Layers, order: 1 },
+      { id: 'pmo-pt-pre', label: 'Pre-Project', path: '/pmo/process-templates/pre-project', icon: FileText, order: 2 },
+      { id: 'pmo-pt-init', label: 'Initiating', path: '/pmo/process-templates/initiating', icon: Flag, order: 3 },
+      { id: 'pmo-pt-plan', label: 'Planning', path: '/pmo/process-templates/planning', icon: Map, order: 4 },
+      { id: 'pmo-pt-exec', label: 'Executing', path: '/pmo/process-templates/executing', icon: Activity, order: 5 },
+      { id: 'pmo-pt-mon', label: 'Monitoring & Controlling', path: '/pmo/process-templates/monitoring-controlling', icon: BarChart3, order: 6 },
+      { id: 'pmo-pt-close', label: 'Closing', path: '/pmo/process-templates/closing', icon: FileCheck, order: 7 },
     ]
   },
 

@@ -7,6 +7,8 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import { getTestRuns, createTestRun, bootstrapTestRunExecutions } from '../../services/testRunService'
 import { getTestSuites } from '../../services/testSuiteService'
 import { resolveInternalUserId } from '../../utils/resolveInternalUserId'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const COLS = [
   { key: 'run_name', label: 'Run' },
@@ -67,6 +69,7 @@ function Body({ projectId }) {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-900 text-gray-400 text-left">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">Run</th>
                 <th className="p-3">Env</th>
                 <th className="p-3">Status</th>
@@ -74,8 +77,9 @@ function Body({ projectId }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3">
                     <Link className="text-emerald-400 hover:underline" to={`/platform/testing/runs/${r.id}`}>
                       {r.run_name}

@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { Share2, Plus, User, Mail, CheckCircle, X } from 'lucide-react';
 import { getDistributionList, addRecipient, removeRecipient, recordAcknowledgement } from '../../services/benefitsReviewPlanService';
 import { platformDb, supabase } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
   const [distribution, setDistribution] = useState([]);
@@ -264,6 +266,7 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Recipient
                   </th>
@@ -285,8 +288,9 @@ export default function BenefitsReviewPlanDistribution({ planId, onUpdate }) {
                 </tr>
               </thead>
               <tbody>
-                {distribution.map((item) => (
+                {distribution.map((item, index) => (
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm">
                       <div className="font-medium text-gray-900 dark:text-white">
                         {item.recipient?.full_name || item.recipient_name || item.recipient?.email || 'N/A'}

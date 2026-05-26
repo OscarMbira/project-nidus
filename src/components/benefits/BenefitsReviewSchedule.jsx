@@ -9,6 +9,8 @@ import { getReviewSchedule, scheduleReview, updateReview, completeReview, getUpc
 import { platformDb } from '../../services/supabaseClient';
 import { getBenefits } from '../../services/benefitsService';
 import { XCircle } from 'lucide-react';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) {
   const [reviews, setReviews] = useState([]);
@@ -561,6 +563,7 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Review Name
                   </th>
@@ -588,8 +591,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
                 </tr>
               </thead>
               <tbody>
-                {reviews.map((review) => (
+                {reviews.map((review, index) => (
                   <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                       {review.review_name}
                     </td>

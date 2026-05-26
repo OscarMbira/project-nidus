@@ -29,7 +29,7 @@ export default function EPRProductsReview({
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700">
         <div className="flex gap-2">
-          {['quality', 'approvals', 'offspecs'].map((tab) => (
+          {['quality', 'approvals', 'offspecs'].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -154,7 +154,7 @@ function QualityRecordsTab({ reportId, qualityRecords, onQualityRecordsChange, p
         </div>
       ) : (
         <div className="space-y-3">
-          {qualityRecords.map((record) => (
+          {qualityRecords.map((record, index) => (
             <div key={record.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -340,7 +340,7 @@ function ApprovalRecordsTab({ reportId, approvalRecords, onApprovalRecordsChange
         </div>
       ) : (
         <div className="space-y-3">
-          {approvalRecords.map((record) => (
+          {approvalRecords.map((record, index) => (
             <div key={record.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -494,7 +494,7 @@ function OffSpecificationsTab({ reportId, offSpecifications, onOffSpecifications
         </div>
       ) : (
         <div className="space-y-3">
-          {offSpecifications.map((offSpec) => (
+          {offSpecifications.map((offSpec, index) => (
             <div key={offSpec.id} className="border border-red-200 dark:border-red-800 rounded-lg p-4 bg-red-50 dark:bg-red-900/20">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

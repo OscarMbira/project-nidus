@@ -248,7 +248,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {channels.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No communication channels defined.</p>
             ) : (
-              channels.map((channel) => (
+              channels.map((channel, index) => (
                 <div key={channel.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -281,7 +281,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {methods.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No communication methods defined.</p>
             ) : (
-              methods.map((method) => (
+              methods.map((method, index) => (
                 <div key={method.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -314,7 +314,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {audienceGroups.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No audience groups defined.</p>
             ) : (
-              audienceGroups.map((group) => (
+              audienceGroups.map((group, index) => (
                 <div key={group.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{group.group_name}</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{group.group_description}</p>
@@ -343,7 +343,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {standards.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No communication standards defined.</p>
             ) : (
-              standards.map((standard) => (
+              standards.map((standard, index) => (
                 <div key={standard.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -371,7 +371,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {tools.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No tools and technologies defined.</p>
             ) : (
-              tools.map((tool) => (
+              tools.map((tool, index) => (
                 <div key={tool.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{tool.tool_name}</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{tool.tool_description}</p>
@@ -392,7 +392,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {records.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No communication records defined.</p>
             ) : (
-              records.map((record) => (
+              records.map((record, index) => (
                 <div key={record.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -420,7 +420,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {reports.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No communication reports defined.</p>
             ) : (
-              reports.map((report) => (
+              reports.map((report, index) => (
                 <div key={report.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{report.report_name}</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{report.report_description}</p>
@@ -446,7 +446,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {activities.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No scheduled activities defined.</p>
             ) : (
-              activities.map((activity) => (
+              activities.map((activity, index) => (
                 <div key={activity.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{activity.activity_name}</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{activity.activity_description}</p>
@@ -472,9 +472,8 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
             {roles.length === 0 ? (
               <p className="text-gray-500 dark:text-gray-400">No communication roles defined.</p>
             ) : (
-              roles.map((role) => (
-                <div key={role.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{role.role_name}</h4>
+              roles.map((role, index) => (
+                <div key={role.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{role.role_name}</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{role.role_description}</p>
                   {role.assigned_to && (
                     <p className="text-sm text-gray-600 dark:text-gray-400">

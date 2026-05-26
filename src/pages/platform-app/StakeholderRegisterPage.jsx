@@ -15,6 +15,7 @@ import ViewToggle from '../../components/ui/ViewToggle'
 import { useViewMode } from '../../hooks/useViewMode'
 import { platformDb } from '../../services/supabase/supabaseClient'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_name', label: 'Name' },
   { key: 'stakeholder_type', label: 'Type' },
@@ -129,7 +130,7 @@ export default function StakeholderRegisterPage() {
 
   const exportData = useMemo(
     () =>
-      stakeholders.map((s) => ({
+      stakeholders.map((s, index) => ({
         stakeholder_name: s.stakeholder_name,
         stakeholder_type: s.stakeholder_type || '',
         stakeholder_organization: s.stakeholder_organization || '',

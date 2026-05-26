@@ -11,12 +11,14 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import { useViewMode } from '../../hooks/useViewMode'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useDelayPermissions } from '../../hooks/useDelayPermissions'
 import DelayCard from '../../components/delays/DelayCard'
 import DelaySummaryStats from '../../components/delays/DelaySummaryStats'
 import DelaySeverityBadge from '../../components/delays/DelaySeverityBadge'
 import DelayForm from './DelayForm'
 import { DELAY_SOURCE_TYPES } from '../../constants/delayConstants'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'delay_reference', label: 'Reference' },
@@ -371,7 +373,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
             disabled={false}
           >
             <option value="">{pmoOversight ? 'All projects (oversight)' : 'Select…'}</option>
-            {(isSim ? practiceProjects : projects).map((p) => (
+            {(isSim ? practiceProjects : projects).map((p, index) => (
               <option key={p.id} value={p.id}>
                 {p.project_name}
               </option>
@@ -398,7 +400,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">All</option>
-            {['identified', 'under_review', 'approved', 'resolved', 'closed'].map((s) => (
+            {['identified', 'under_review', 'approved', 'resolved', 'closed'].map((s, index) => (
               <option key={s} value={s}>
                 {s}
               </option>
@@ -413,7 +415,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
             onChange={(e) => setSourceFilter(e.target.value)}
           >
             <option value="">All</option>
-            {DELAY_SOURCE_TYPES.map((s) => (
+            {DELAY_SOURCE_TYPES.map((s, index) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>
@@ -428,10 +430,11 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
 
       {!loading && viewMode === 'card' && (
         <div className="grid gap-4 md:grid-cols-2">
-          {displayRows.map((row) => (
+          {displayRows.map((row, index) => (
             <DelayCard
               key={row.id}
               row={row}
+              rowNumber={getDisplayRowNumber(index)}
               readOnly={readOnly}
               onEdit={() => {
                 setEditRow(row)
@@ -447,6 +450,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
           <table className="min-w-full text-sm text-left text-slate-200">
             <thead className="bg-slate-800 text-xs uppercase text-slate-400">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 {EXPORT_COLS.map((col) => (
                   <th key={col.key} className="px-3 py-2">
                     <button type="button" className="inline-flex items-center gap-1" onClick={() => handleSort(col.key)}>
@@ -459,8 +463,9 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
               </tr>
             </thead>
             <tbody>
-              {displayRows.map((row) => (
+              {displayRows.map((row, index) => (
                 <tr key={row.id} className="border-t border-slate-700 hover:bg-slate-800/60">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2 font-mono text-xs">{row.delay_reference}</td>
                   <td className="px-3 py-2">{row.title}</td>
                   <td className="px-3 py-2 capitalize">{row.delay_category?.replace(/_/g, ' ')}</td>
@@ -510,7 +515,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
               </button>
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {templates.map((t) => (
+              {templates.map((t, index) => (
                 <button
                   key={t.id}
                   type="button"

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, Calendar, User, Clock } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 export default function ResourceAssignment({ assignment, resourceId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     assignment_type: 'task',
@@ -220,7 +221,7 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Select {formData.assignment_type.replace('_', ' ')}</option>
-                {getTargetOptions().map((option) => (
+                {getTargetOptions().map((option, index) => (
                   <option key={option.id} value={option.id}>
                     {option.name}
                   </option>

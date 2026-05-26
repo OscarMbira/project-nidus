@@ -12,6 +12,8 @@ import {
   downloadTextReport,
 } from '../utils/capacityReportExport'
 import { getResourceCapacityPlans, getCrossProjectAllocations } from '../services/crossResourceService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function ResourceCapacity() {
   const navigate = useNavigate()
@@ -448,7 +450,7 @@ export default function ResourceCapacity() {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {capacityPlans.slice(0, 6).map((plan) => (
+            {capacityPlans.slice(0, 6).map((plan, index) => (
               <div
                 key={plan.id}
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -617,6 +619,7 @@ export default function ResourceCapacity() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Resource
                   </th>
@@ -638,8 +641,9 @@ export default function ResourceCapacity() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {capacityData.map((item) => (
+                {capacityData.map((item, index) => (
                   <tr key={item.resource_id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {item.resource_name}

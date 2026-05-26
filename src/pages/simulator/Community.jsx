@@ -106,7 +106,7 @@ const Community = () => {
       {/* Categories */}
       {!selectedCategory && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
@@ -152,7 +152,7 @@ const Community = () => {
 
           <div className={`rounded-xl overflow-hidden ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow`}>
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
-              {topics.map((topic) => (
+              {topics.map((topic, index) => (
                 <Link
                   key={topic.id}
                   to={`/simulator/community/topic/${topic.id}`}

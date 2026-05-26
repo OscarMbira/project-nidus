@@ -114,7 +114,7 @@ export default function GDPRDashboard() {
             Pending Export Requests
           </h3>
           <div className="space-y-3">
-            {exportRequests.map((request) => (
+            {exportRequests.map((request, index) => (
               <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div className="flex items-center gap-3">
                   <FileText className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
@@ -143,7 +143,7 @@ export default function GDPRDashboard() {
             Pending Deletion Requests
           </h3>
           <div className="space-y-3">
-            {deletionRequests.map((request) => (
+            {deletionRequests.map((request, index) => (
               <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div className="flex items-center gap-3">
                   <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
@@ -175,7 +175,7 @@ export default function GDPRDashboard() {
             Active Data Breaches
           </h3>
           <div className="space-y-3">
-            {dataBreaches.map((breach) => (
+            {dataBreaches.map((breach, index) => (
               <div key={breach.id} className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-start gap-3">

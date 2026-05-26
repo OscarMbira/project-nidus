@@ -308,7 +308,7 @@ const BetaProgram = () => {
           </p>
         ) : (
           <div className="space-y-4">
-            {feedback.map((item) => (
+            {feedback.map((item, index) => (
               <div
                 key={item.id}
                 className={`p-4 rounded-lg border ${
@@ -357,7 +357,7 @@ const BetaProgram = () => {
         <div className={`rounded-xl p-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow`}>
           <h2 className="text-xl font-bold mb-4">Surveys</h2>
           <div className="space-y-4">
-            {surveys.map((survey) => (
+            {surveys.map((survey, index) => (
               <div
                 key={survey.id}
                 className={`p-4 rounded-lg border ${

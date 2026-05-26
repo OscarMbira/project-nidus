@@ -11,6 +11,8 @@ import {
 } from '../../../services/sim/practiceTestSuiteService'
 import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },
@@ -71,6 +73,7 @@ function Body({ projectId }) {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-900 text-gray-400 text-left">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">Name</th>
                 <th className="p-3">Type</th>
                 <th className="p-3">Status</th>
@@ -78,8 +81,9 @@ function Body({ projectId }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3 text-white">
                     <Link to={`${SIM_TESTING_BASE}/suites/${r.id}`} className="text-emerald-400 hover:underline">
                       {r.name}

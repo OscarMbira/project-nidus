@@ -10,6 +10,8 @@ import CommunicationPlanForm from '../../components/stakeholders/CommunicationPl
 import CommunicationLog from '../../components/stakeholders/CommunicationLog'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { platformDb } from '../../services/supabase/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function CommunicationPlanPage() {
   const navigate = useNavigate()
@@ -108,6 +110,7 @@ export default function CommunicationPlanPage() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plan</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Start</th>
@@ -117,6 +120,7 @@ export default function CommunicationPlanPage() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {plans.map(p => (
                 <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{p.plan_name}</td>
                   <td className="px-6 py-4 text-sm">{p.plan_status}</td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{p.plan_start_date ? new Date(p.plan_start_date).toLocaleDateString() : '—'}</td>

@@ -6,6 +6,8 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import { listCostEntries, createCostEntry, deleteCostEntry } from '../../services/projectCostService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { useFinancialPermissions } from '../../hooks/useFinancialPermissions'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const VIEW_KEY = 'proj-cost-view'
 
@@ -122,6 +124,7 @@ export default function ProjectCostManagement() {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-100 dark:bg-gray-800">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-2 text-left">Date</th>
                   <th className="px-4 py-2 text-left">Amount</th>
                   <th className="px-4 py-2 text-left">Description</th>
@@ -129,8 +132,9 @@ export default function ProjectCostManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {rows.map((r) => (
+                {rows.map((r, index) => (
                   <tr key={r.id}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-2">{r.entry_date}</td>
                     <td className="px-4 py-2 tabular-nums">{r.amount} {r.currency}</td>
                     <td className="px-4 py-2">{r.description || '—'}</td>
@@ -149,9 +153,8 @@ export default function ProjectCostManagement() {
           </div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {rows.map((r) => (
-              <div key={r.id} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-                <div className="text-xs text-gray-500">{r.entry_date}</div>
+            {rows.map((r, index) => (
+              <div key={r.id} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">                <div className="text-xs text-gray-500">{r.entry_date}</div>
                 <div className="text-lg font-semibold tabular-nums">{r.amount} {r.currency}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">{r.description || '—'}</div>
               </div>

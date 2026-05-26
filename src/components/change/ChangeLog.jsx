@@ -11,6 +11,8 @@ import {
 } from '../../services/changeLogService'
 import ExportListMenu from '../ui/ExportListMenu'
 import ChangeLogAttachments from './ChangeLogAttachments'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
@@ -768,6 +770,7 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className={thCls} onClick={() => cycleSort('timestamp')}>Timestamp <SortIcon col="timestamp" sort={sort} /></th>
                   <th className={thCls} onClick={() => cycleSort('action')}>Action <SortIcon col="action" sort={sort} /></th>
                   <th className={thCls} onClick={() => cycleSort('cr')}>CR Reference <SortIcon col="cr" sort={sort} /></th>
@@ -781,6 +784,7 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {paged.map(entry => (
                   <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />

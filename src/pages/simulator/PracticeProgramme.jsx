@@ -7,10 +7,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { getPracticeProgrammesForList } from '../../services/sim/practicePortfolioService'
-import { TableHeaderCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 export default function PracticeProgramme() {
   const navigate = useNavigate()
   const [programmeViewMode, setProgrammeViewMode] = useViewMode('simulator-practice-programme', 'grid')
@@ -49,14 +51,16 @@ export default function PracticeProgramme() {
             <table className="w-full border-collapse">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Description</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case text-right">Actions</TableHeaderCell>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {programmes.map((programme) => (
+                {programmes.map((programme, index) => (
                   <tr key={programme.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-3 font-medium text-gray-900 dark:text-white">{programme.programme_name}</td>
                     <td className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400 max-w-xl truncate">{programme.programme_description || '—'}</td>
                     <td className="px-6 py-3 text-right">
@@ -72,9 +76,12 @@ export default function PracticeProgramme() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {programmes.map((programme) => (
+          {programmes.map((programme, index) => (
             <div key={programme.id} onClick={() => navigate(`/simulator/practice-programme/${programme.id}`)} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer hover:shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{programme.programme_name}</h3>
+              <div className="flex items-start gap-2 mb-2">
+                <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{programme.programme_name}</h3>
+              </div>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{programme.programme_description?.substring(0, 100)}...</p>
             </div>
           ))}

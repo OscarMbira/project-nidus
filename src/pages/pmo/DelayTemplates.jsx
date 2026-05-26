@@ -10,9 +10,12 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import { useViewMode } from '../../hooks/useViewMode'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useDelayPermissions } from '../../hooks/useDelayPermissions'
 import DelayTemplateForm from './DelayTemplateForm'
 import { DELAY_CATEGORIES, TEMPLATE_STATUSES } from '../../constants/delayConstants'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },
@@ -187,7 +190,7 @@ export default function DelayTemplates({ isSim = false }) {
           onChange={(e) => setStatusFilter(e.target.value)}
         >
           <option value="">All statuses</option>
-          {TEMPLATE_STATUSES.map((s) => (
+          {TEMPLATE_STATUSES.map((s, index) => (
             <option key={s} value={s}>
               {s}
             </option>
@@ -199,8 +202,9 @@ export default function DelayTemplates({ isSim = false }) {
 
       {!loading && viewMode === 'card' && (
         <div className="grid md:grid-cols-2 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <div key={r.id} className="rounded-xl border border-slate-600 p-4 bg-slate-900/40">
+                          <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0 mb-2" />
               <div className="font-semibold text-slate-100">{r.name}</div>
               <div className="text-xs text-slate-400 mt-1 capitalize">{r.delay_category?.replace(/_/g, ' ')}</div>
               <div className="text-xs text-slate-500 mt-2">Used by {usage[r.id] ?? 0} project delay(s)</div>
@@ -219,6 +223,7 @@ export default function DelayTemplates({ isSim = false }) {
           <table className="min-w-full text-sm text-slate-200">
             <thead className="bg-slate-800 text-xs uppercase text-slate-400">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 {EXPORT_COLS.map((col) => (
                   <th key={col.key} className="px-3 py-2">
                     <button type="button" className="inline-flex gap-1" onClick={() => handleSort(col.key)}>
@@ -232,8 +237,9 @@ export default function DelayTemplates({ isSim = false }) {
               </tr>
             </thead>
             <tbody>
-              {displayRows.map((r) => (
+              {displayRows.map((r, index) => (
                 <tr key={r.id} className="border-t border-slate-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">{r.name}</td>
                   <td className="px-3 py-2 capitalize">{r.delay_category?.replace(/_/g, ' ')}</td>
                   <td className="px-3 py-2">{r.default_severity}</td>

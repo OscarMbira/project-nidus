@@ -6,6 +6,8 @@ import {
   saveSimPortfolioGovernance,
 } from '../../services/simPortfolioService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const GOVERNANCE_MODELS = ['Centralised', 'Decentralised', 'Federated', 'Hybrid', 'Matrix']
 
@@ -189,7 +191,7 @@ export default function SimPortfolioGovernance() {
             Practice portfolios without a governance record:
           </p>
           <div className="flex flex-wrap gap-2">
-            {portfoliosWithoutGov.map((p) => (
+            {portfoliosWithoutGov.map((p, index) => (
               <button
                 key={p.id}
                 onClick={() => openCreate(p.id)}
@@ -219,7 +221,7 @@ export default function SimPortfolioGovernance() {
           className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
         >
           <option value="">All Portfolios</option>
-          {portfolios.map((p) => (
+          {portfolios.map((p, index) => (
             <option key={p.id} value={p.id}>
               {p.portfolio_code} — {p.portfolio_name}
             </option>
@@ -231,7 +233,7 @@ export default function SimPortfolioGovernance() {
           className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
         >
           <option value="">All Models</option>
-          {GOVERNANCE_MODELS.map((m) => (
+          {GOVERNANCE_MODELS.map((m, index) => (
             <option key={m} value={m}>
               {m}
             </option>
@@ -258,6 +260,7 @@ export default function SimPortfolioGovernance() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {[
                     'Portfolio',
                     'Governance Model',
@@ -281,6 +284,7 @@ export default function SimPortfolioGovernance() {
                       i % 2 ? 'bg-gray-700/10' : ''
                     }`}
                   >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-white font-medium">
                       {r.portfolio?.portfolio_name || '—'}
                     </td>
@@ -348,7 +352,7 @@ export default function SimPortfolioGovernance() {
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
                   >
                     <option value="">—</option>
-                    {GOVERNANCE_MODELS.map((m) => (
+                    {GOVERNANCE_MODELS.map((m, index) => (
                       <option key={m} value={m}>
                         {m}
                       </option>
@@ -365,7 +369,7 @@ export default function SimPortfolioGovernance() {
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
                   >
                     <option value="">—</option>
-                    {REVIEW_FREQUENCIES.map((rf) => (
+                    {REVIEW_FREQUENCIES.map((rf, index) => (
                       <option key={rf} value={rf}>
                         {rf}
                       </option>

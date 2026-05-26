@@ -382,8 +382,7 @@ const SimulationRunEnhanced = () => {
                   <div
                     key={index}
                     className={`p-3 rounded-lg bg-gradient-to-r from-yellow-400 to-orange-500 text-white`}
-                  >
-                    <div className="font-medium text-sm">{badge.name}</div>
+                  >                    <div className="font-medium text-sm">{badge.name}</div>
                     <div className="text-xs opacity-90">{badge.description}</div>
                     {badge.xp_reward > 0 && (
                       <div className="text-xs mt-1">+{badge.xp_reward} XP</div>

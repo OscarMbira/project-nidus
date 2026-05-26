@@ -198,7 +198,7 @@ export default function SimOPAList() {
         <p className="text-gray-500 dark:text-gray-400">{seedLoading ? 'Loading sample…' : 'Loading…'}</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <div key={r.id} className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
               <button type="button" className="font-semibold text-left" onClick={() => navigate(`${base}/${r.id}`)}>
                 {r.title}
@@ -275,7 +275,7 @@ export default function SimOPAList() {
               className="w-full rounded-lg border px-3 py-2 mb-4 min-h-[44px]"
             >
               <option value="">Select practice project</option>
-              {practiceProjects.map((p) => (
+              {practiceProjects.map((p, index) => (
                 <option key={p.id} value={p.id}>
                   {p.project_name}
                 </option>

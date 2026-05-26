@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSecurityDashboardStats, getFailedLoginAttempts, getUnauthorizedAccessAttempts, getSuspiciousActivities, getSecurityAlerts } from '../../services/securityMonitoringService'
 import { StatCard } from '../../components/DashboardWidgets'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function SecurityMonitoring() {
   const [stats, setStats] = useState({
@@ -150,7 +152,7 @@ export default function SecurityMonitoring() {
             </p>
           ) : (
             <div className="space-y-3">
-              {alerts.slice(0, 5).map((alert) => (
+              {alerts.slice(0, 5).map((alert, index) => (
                 <div
                   key={alert.id}
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
@@ -186,7 +188,7 @@ export default function SecurityMonitoring() {
             </p>
           ) : (
             <div className="space-y-3">
-              {failedLogins.slice(0, 5).map((event) => (
+              {failedLogins.slice(0, 5).map((event, index) => (
                 <div
                   key={event.id}
                   className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"
@@ -223,6 +225,7 @@ export default function SecurityMonitoring() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead>
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Type
                   </th>
@@ -241,8 +244,9 @@ export default function SecurityMonitoring() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {suspiciousActivities.map((activity) => (
+                {suspiciousActivities.map((activity, index) => (
                   <tr key={activity.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {activity.event_type}
                     </td>

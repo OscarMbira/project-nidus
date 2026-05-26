@@ -8,6 +8,7 @@ import { FileText, Plus } from 'lucide-react'
 import { getPracticeBriefs } from '../../services/sim/practiceBriefService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRACTICE_BRIEF_COLUMNS = [
   { key: 'brief_title', label: 'Title' },
   { key: 'brief_reference', label: 'Reference' }
@@ -58,7 +59,7 @@ export default function PracticeBriefList() {
         <div className="text-center py-12 text-gray-500">No briefs found</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {briefs.map((brief) => (
+          {briefs.map((brief, index) => (
             <div
               key={brief.id}
               onClick={() => navigate(`/simulator/practice-briefs/${brief.id}`)}

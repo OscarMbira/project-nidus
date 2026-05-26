@@ -301,7 +301,7 @@ export default function ResourceCalendar({ resourceId, onClose, onSave }) {
                 Calendar Entries
               </h4>
               <div className="space-y-2">
-                {calendarEntries.map((entry) => (
+                {calendarEntries.map((entry, index) => (
                   <div
                     key={entry.id}
                     className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"

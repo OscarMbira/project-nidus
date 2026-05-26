@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, FileText, CheckCircle2, ClipboardList, Search, Filter, FileCheck, AlertTriangle } from 'lucide-react';
 import { platformDb } from '../../services/supabase/supabaseClient';
 import { getFramework, getPolicies, getComplianceStatus, getDecisions, getAuditLog } from '../../services/governanceService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function Governance() {
   const navigate = useNavigate();
@@ -229,6 +231,7 @@ export default function Governance() {
                   <table className="w-full">
                     <thead className="bg-gray-700/50">
                       <tr>
+                <TableRowNumberHeader className="!normal-case" />
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date/Time</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
@@ -237,8 +240,9 @@ export default function Governance() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
-                      {auditLogs.map((log) => (
+                      {auditLogs.map((log, index) => (
                         <tr key={log.id} className="hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
                             {new Date(log.created_at).toLocaleString()}
                           </td>

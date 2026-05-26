@@ -96,8 +96,8 @@ const pmDashboardMenuConfig = [
       },
       {
         id: 'pm-invitation-tracker',
-        label: 'Invitation Status',
-        path: '/app/invitation-tracker',
+        label: 'Invitation Tracker',
+        path: '/platform/invitation-tracker',
         icon: MailCheck,
         order: 3,
       },
@@ -143,8 +143,8 @@ const pmDashboardMenuConfig = [
       },
       {
         id: 'pm-people-invitation-status',
-        label: 'Invitation Status',
-        path: '/app/invitation-tracker',
+        label: 'Invitation Tracker',
+        path: '/platform/invitation-tracker',
         icon: MailCheck,
         order: 3,
       },
@@ -371,6 +371,25 @@ const pmDashboardMenuConfig = [
         icon: GraduationCap,
         order: 5
       }
+    ]
+  },
+
+  // Section 4b: Process Templates (v629)
+  {
+    id: 'pm-process-templates',
+    label: 'Process Templates',
+    path: null,
+    icon: Layers,
+    section: 'Process Templates',
+    order: 4.5,
+    children: [
+      { id: 'pm-pt-hub', label: 'Hub Overview', path: '/pm/process-templates', icon: Layers, order: 1 },
+      { id: 'pm-pt-pre', label: 'Pre-Project', path: '/pm/process-templates/pre-project', icon: FileText, order: 2 },
+      { id: 'pm-pt-init', label: 'Initiating', path: '/pm/process-templates/initiating', icon: Flag, order: 3 },
+      { id: 'pm-pt-plan', label: 'Planning', path: '/pm/process-templates/planning', icon: Map, order: 4 },
+      { id: 'pm-pt-exec', label: 'Executing', path: '/pm/process-templates/executing', icon: Activity, order: 5 },
+      { id: 'pm-pt-mon', label: 'Monitoring & Controlling', path: '/pm/process-templates/monitoring-controlling', icon: BarChart3, order: 6 },
+      { id: 'pm-pt-close', label: 'Closing', path: '/pm/process-templates/closing', icon: FileCheck, order: 7 },
     ]
   },
 

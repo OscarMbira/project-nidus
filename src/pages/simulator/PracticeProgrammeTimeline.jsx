@@ -8,6 +8,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Calendar, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeTimelineData } from '../../services/sim/practicePortfolioService'
 import ProgrammeTimelineView from '../../components/programme/ProgrammeTimelineView'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function PracticeProgrammeTimelinePage() {
   const [programmes, setProgrammes] = useState([])
@@ -120,12 +122,13 @@ export default function PracticeProgrammeTimelinePage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700 bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="py-3 px-4">Programme name</th>
                     <th className="py-3 px-4">Code</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProgrammes.map((p) => (
+                  {filteredProgrammes.map((p, index) => (
                     <tr
                       key={p.id}
                       onClick={() => setSelectedProgrammeId(p.id)}

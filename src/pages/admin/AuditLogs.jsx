@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getAuditTrail, searchAuditLog, exportAuditLog } from '../../services/auditService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function AuditLogs() {
   const [auditLogs, setAuditLogs] = useState([])
@@ -220,6 +222,7 @@ export default function AuditLogs() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Time
                   </th>
@@ -247,8 +250,9 @@ export default function AuditLogs() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {auditLogs.map((log) => (
+                {auditLogs.map((log, index) => (
                   <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {new Date(log.created_at).toLocaleString()}
                     </td>

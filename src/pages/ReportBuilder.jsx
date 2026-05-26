@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Save, Play, Download, Plus, X, Filter, SortAsc, BarChart3, Table as TableIcon } from 'lucide-react'
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function ReportBuilder() {
   const navigate = useNavigate()
@@ -562,6 +564,7 @@ export default function ReportBuilder() {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   {reportConfig.field_config.filter(f => f.visible).map(field => (
                     <th
                       key={field.name}
@@ -575,6 +578,7 @@ export default function ReportBuilder() {
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {reportData.map((row, index) => (
                   <tr key={index}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     {reportConfig.field_config.filter(f => f.visible).map(field => (
                       <td
                         key={field.name}

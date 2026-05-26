@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Link2, Edit2, Trash2, AlertTriangle, FolderKanban, Target, TrendingUp, ArrowRight } from 'lucide-react';
 import { deleteInterProjectDependency } from '../../services/dependencyService';
-import { TableHeaderCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils';
 import { useSortableTable } from '../../hooks/useSortableTable';
 
 export default function DependencyList({ dependencies, onEdit, onRefresh, viewMode = 'grid' }) {
@@ -109,11 +110,12 @@ export default function DependencyList({ dependencies, onEdit, onRefresh, viewMo
   if (viewMode === 'grid') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayDeps.map((dependency) => (
+        {displayDeps.map((dependency, index) => (
           <div
             key={dependency.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[200px] flex flex-col hover:shadow-md transition-shadow"
           >
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
             <button
               type="button"
               className="text-left flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
@@ -164,6 +166,7 @@ export default function DependencyList({ dependencies, onEdit, onRefresh, viewMo
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <TableHeaderCell
                   sortable
                   sortDirection={getSortDirectionForColumn('dependency_name')}
@@ -213,8 +216,9 @@ export default function DependencyList({ dependencies, onEdit, onRefresh, viewMo
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {displayDeps.map((dependency) => (
+              {displayDeps.map((dependency, index) => (
                 <tr key={dependency.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900 dark:text-white">

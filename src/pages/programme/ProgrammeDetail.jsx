@@ -18,6 +18,8 @@ import ProgrammeTimelineView from '../../components/programme/ProgrammeTimelineV
 import ProgrammeForm from '../../components/programme/ProgrammeForm';
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const PROGRAMME_VIEW_SECTIONS = [
   { title: 'Programme', fields: [
@@ -80,6 +82,7 @@ function ProgrammeProjectsTab({ programmeId }) {
       <table className="min-w-full text-sm">
         <thead>
           <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
             <th className="py-2 pr-4">Project</th>
             <th className="py-2 pr-4">Code</th>
             <th className="py-2 pr-4">Status</th>
@@ -87,8 +90,9 @@ function ProgrammeProjectsTab({ programmeId }) {
           </tr>
         </thead>
         <tbody>
-          {projects.map((row) => (
+          {projects.map((row, index) => (
             <tr key={row.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
               <td className="py-2 pr-4 text-gray-900 dark:text-white">
                 {row.project?.project_name || 'Unknown Project'}
               </td>
@@ -302,6 +306,7 @@ function ProgrammeReportsTab({ programmeId }) {
       <table className="min-w-full text-sm">
         <thead>
           <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
             <th className="py-2 pr-4">Date</th>
             <th className="py-2 pr-4">Type</th>
             <th className="py-2 pr-4">Status</th>
@@ -310,8 +315,9 @@ function ProgrammeReportsTab({ programmeId }) {
           </tr>
         </thead>
         <tbody>
-          {reports.map((r) => (
+          {reports.map((r, index) => (
             <tr key={r.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
               <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">
                 {r.report_date || '—'}
               </td>

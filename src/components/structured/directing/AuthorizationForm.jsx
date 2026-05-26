@@ -3,6 +3,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { X, FileCheck, Calendar, FileText, AlertTriangle } from 'lucide-react';
 import { createProjectAuthorization, updateProjectAuthorization, fetchBoardMeetings } from '../../../services/directingProjectService';
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function AuthorizationForm({ projectId, boardId, authorization, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [meetings, setMeetings] = useState([]);
@@ -135,7 +136,7 @@ export default function AuthorizationForm({ projectId, boardId, authorization, o
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               >
-                {authorizationTypes.map((type) => (
+                {authorizationTypes.map((type, index) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
@@ -159,7 +160,7 @@ export default function AuthorizationForm({ projectId, boardId, authorization, o
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               >
-                {statusOptions.map((status) => (
+                {statusOptions.map((status, index) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>

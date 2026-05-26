@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, Edit2, Trash2, TrendingUp, AlertTriangle, DollarSign, Users, Eye } from 'lucide-react';
-import { TableHeaderCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils';
+import RowNumberBadge from '../ui/RowNumberBadge';
 import { deleteProgramme } from '../../services/programmeService';
 import SortToolbar from '../ui/SortToolbar';
 import { useSortableTable } from '../../hooks/useSortableTable';
@@ -156,6 +158,7 @@ export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid'
             <table className="w-full border-collapse">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  <TableRowNumberHeader className="!normal-case" />
                   <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Projects</TableHeaderCell>
@@ -170,7 +173,7 @@ export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid'
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {displayProgrammes.map((programme) => {
+                {displayProgrammes.map((programme, index) => {
                   const start = programme.start_date || programme.planned_start_date;
                   const end = programme.end_date || programme.planned_end_date;
                   return (
@@ -179,6 +182,7 @@ export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid'
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer group"
                       onClick={() => navigate(`/programme/${programme.id}`)}
                     >
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{programme.programme_name}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(programme.programme_status)}`}>
@@ -233,7 +237,7 @@ export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid'
         </div>
       ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {displayProgrammes.map((programme) => (
+        {displayProgrammes.map((programme, index) => (
           <div
             key={programme.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"
@@ -241,6 +245,7 @@ export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid'
           >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />

@@ -5,6 +5,8 @@ import { FileText, Search, Filter, Eye, CheckCircle, Clock, AlertCircle, Plus, E
 import { getPPDByProject, deletePPD } from '../services/projectProductDescriptionService'
 import PPDForm from '../components/ppd/PPDForm'
 import ExportListMenu from '../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 const PPD_COLUMNS = [
   { key: 'product_title', label: 'Product Title' },
@@ -305,6 +307,7 @@ export default function PPDList() {
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Reference
                   </th>
@@ -332,8 +335,9 @@ export default function PPDList() {
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredPPDs.map((ppd) => (
+                {filteredPPDs.map((ppd, index) => (
                   <tr key={ppd.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="font-mono text-sm text-gray-900 dark:text-white">
                         {ppd.ppd_reference || 'N/A'}

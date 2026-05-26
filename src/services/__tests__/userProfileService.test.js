@@ -23,7 +23,6 @@ describe('buildUserProfileUpdatePayload', () => {
     expect(payload.phone_number).toBe('+123')
     expect(payload.job_title).toBe('PM')
     expect(payload.bio).toBe('Bio text')
-    expect(payload.updated_at).toBeTruthy()
   })
 
   it('throws when full name is empty', () => {

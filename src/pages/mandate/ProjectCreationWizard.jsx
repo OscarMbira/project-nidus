@@ -190,7 +190,7 @@ export default function ProjectCreationWizard() {
       {/* Step Indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          {[1, 2, 3].map((stepNum) => (
+          {[1, 2, 3].map((stepNum, index) => (
             <div key={stepNum} className="flex items-center flex-1">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
                 step >= stepNum ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -257,7 +257,7 @@ export default function ProjectCreationWizard() {
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white mb-2">Deliverables ({deliverables.length})</h3>
               <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                {deliverables.filter(d => d.is_in_scope !== false).map((d) => (
+                {deliverables.filter(d => d.is_in_scope !== false).map((d, index) => (
                   <li key={d.id}>{d.deliverable_name}</li>
                 ))}
               </ul>
@@ -268,7 +268,7 @@ export default function ProjectCreationWizard() {
             <div>
               <h3 className="font-medium text-gray-900 dark:text-white mb-2">Stakeholders ({stakeholders.length})</h3>
               <ul className="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                {stakeholders.map((s) => (
+                {stakeholders.map((s, index) => (
                   <li key={s.id}>{s.stakeholder_name} ({s.stakeholder_type})</li>
                 ))}
               </ul>

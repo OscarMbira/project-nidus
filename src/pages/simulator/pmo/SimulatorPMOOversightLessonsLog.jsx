@@ -16,6 +16,8 @@ import {
 import PMOOversightHeader from '../../../components/pmo/PMOOversightHeader';
 import ExportListMenu from '../../../components/ui/ExportListMenu';
 import { useToastContext } from '../../../context/ToastContext';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const EXPORT_COLUMNS = [
   { key: 'lesson_title', label: 'Title' },
@@ -162,6 +164,7 @@ export default function SimulatorPMOOversightLessonsLog() {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Description</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
@@ -173,16 +176,18 @@ export default function SimulatorPMOOversightLessonsLog() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                   {entries.length === 0 ? (
                     <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td colSpan={selectedProjectId ? 5 : 6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                         No lesson entries. Select a project and add lessons from the lessons log.
                       </td>
                     </tr>
                   ) : (
-                    entries.map((entry) => {
+                    entries.map((entry, index) => {
                       const logId = entry._log_id ?? logByProject.get(entry.practice_project_id || selectedProjectId)?.id;
                       const projId = entry.practice_project_id || selectedProjectId;
                       return (
                         <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{entry.lesson_title || '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 truncate max-w-xs">{entry.lesson_description || '—'}</td>
                           <td className="px-4 py-3 text-sm">{entry.status || '—'}</td>

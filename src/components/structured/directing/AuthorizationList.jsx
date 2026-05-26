@@ -86,7 +86,7 @@ export default function AuthorizationList({ authorizations, onEdit, onRefresh, o
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {authorizations.map((auth) => (
+        {authorizations.map((auth, index) => (
           <div
             key={auth.id}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"

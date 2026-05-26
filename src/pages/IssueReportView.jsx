@@ -214,7 +214,7 @@ export default function IssueReportView() {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
-            {['overview', 'impact', 'options', 'decision', 'approval', 'distribution'].map((tab) => (
+            {['overview', 'impact', 'options', 'decision', 'approval', 'distribution'].map((tab, index) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -370,7 +370,7 @@ export default function IssueReportView() {
 
           {activeTab === 'distribution' && (
             <div className="space-y-2">
-              {distribution.map((item) => (
+              {distribution.map((item, index) => (
                 <div
                   key={item.id}
                   className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex items-center justify-between"

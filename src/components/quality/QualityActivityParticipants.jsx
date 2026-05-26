@@ -214,7 +214,7 @@ export default function QualityActivityParticipants({
         </div>
       ) : (
         <div className="space-y-3">
-          {participants.map((participant) => (
+          {participants.map((participant, index) => (
             <div
               key={participant.id}
               className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg"

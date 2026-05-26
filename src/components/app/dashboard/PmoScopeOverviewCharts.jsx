@@ -43,9 +43,8 @@ function PmoTooltip({ active, payload, label }) {
       {label != null && label !== '' && (
         <div className="font-medium text-gray-900 dark:text-gray-100">{label}</div>
       )}
-      {payload.map((p) => (
-        <div key={p.dataKey} className="tabular-nums text-gray-700 dark:text-gray-200">
-          {p.name}: {p.value}
+      {payload.map((p, index) => (
+        <div key={p.dataKey} className="tabular-nums text-gray-700 dark:text-gray-200">          {p.name}: {p.value}
         </div>
       ))}
     </div>
@@ -180,7 +179,7 @@ export const ProgrammesLifecycleCharts = memo(function ProgrammesLifecycleCharts
               <YAxis allowDecimals={false} tick={AXIS_TICK} width={32} />
               <Tooltip content={<PmoTooltip />} cursor={{ fill: 'rgba(148,163,184,0.12)' }} />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} name="Programmes">
-                {lifecycle.map((e) => (
+                {lifecycle.map((e, index) => (
                   <Cell key={e.name} fill={e.fill} />
                 ))}
               </Bar>
@@ -318,7 +317,7 @@ export const ProjectsLifecycleCharts = memo(function ProjectsLifecycleCharts({ p
                   outerRadius={76}
                   paddingAngle={1}
                 >
-                  {linkage.map((e) => (
+                  {linkage.map((e, index) => (
                     <Cell key={e.name} fill={e.fill} />
                   ))}
                 </Pie>
@@ -349,7 +348,7 @@ export const ProjectsLifecycleCharts = memo(function ProjectsLifecycleCharts({ p
                   outerRadius={78}
                   paddingAngle={2}
                 >
-                  {health.map((e) => (
+                  {health.map((e, index) => (
                     <Cell key={e.name} fill={e.fill} />
                   ))}
                 </Pie>
@@ -384,7 +383,7 @@ export const ProjectsLifecycleCharts = memo(function ProjectsLifecycleCharts({ p
                 <YAxis tick={AXIS_TICK} width={44} />
                 <Tooltip content={<PmoTooltip />} cursor={{ fill: 'rgba(148,163,184,0.12)' }} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} name="Amount">
-                  {budgetRows.map((e) => (
+                  {budgetRows.map((e, index) => (
                     <Cell key={e.name} fill={e.fill} />
                   ))}
                 </Bar>
@@ -410,7 +409,7 @@ export const ProjectsLifecycleCharts = memo(function ProjectsLifecycleCharts({ p
                 <YAxis tick={AXIS_TICK} width={44} />
                 <Tooltip content={<PmoTooltip />} cursor={{ fill: 'rgba(148,163,184,0.12)' }} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} name="Amount">
-                  {budgetRows.map((e) => (
+                  {budgetRows.map((e, index) => (
                     <Cell key={e.name} fill={e.fill} />
                   ))}
                 </Bar>

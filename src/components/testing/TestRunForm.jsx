@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function TestRunForm({ projectId, suites, onSave, onClose, projectIdKey = 'project_id' }) {
   const [form, setForm] = useState({
     run_name: '',
@@ -61,7 +62,7 @@ export default function TestRunForm({ projectId, suites, onSave, onClose, projec
             className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
           >
             <option value="">Select suite…</option>
-            {suites.map((s) => (
+            {suites.map((s, index) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
@@ -76,7 +77,7 @@ export default function TestRunForm({ projectId, suites, onSave, onClose, projec
               onChange={(e) => setForm((f) => ({ ...f, environment: e.target.value }))}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
             >
-              {['dev', 'staging', 'uat', 'production', 'other'].map((e) => (
+              {['dev', 'staging', 'uat', 'production', 'other'].map((e, index) => (
                 <option key={e} value={e}>
                   {e}
                 </option>

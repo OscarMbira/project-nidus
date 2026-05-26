@@ -6,6 +6,8 @@ import { platformDb } from '../../../services/supabase/supabaseClient'
 import { getTeamTimesheets, approveTimesheetEntry, rejectTimesheetEntry } from '../../../services/timesheetService'
 import { exportListToCSV } from '../../../utils/exportUtils'
 import PlanningProjectBar, { usePlanningProjectId } from '../../../components/planning/PlanningProjectBar'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const STATUS_COLORS = {
   draft:     'bg-slate-700 text-slate-300 border-slate-600',
@@ -173,6 +175,7 @@ export default function TeamTimesheetsPage() {
             <table className="min-w-full text-sm">
               <thead className="bg-slate-800 text-slate-400 uppercase text-xs">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left">Date</th>
                   <th className="px-4 py-3 text-left">Member</th>
                   <th className="px-4 py-3 text-left">Hours</th>
@@ -186,6 +189,7 @@ export default function TeamTimesheetsPage() {
                 {filtered.map(e => (
                   <>
                     <tr key={e.id} className="hover:bg-slate-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3 text-slate-300">{formatDate(e.entry_date)}</td>
                       <td className="px-4 py-3 text-slate-400 font-mono text-xs">{e.user_id?.slice(0, 8)}…</td>
                       <td className="px-4 py-3 font-semibold text-blue-400">{e.hours_worked}h</td>
@@ -201,6 +205,7 @@ export default function TeamTimesheetsPage() {
                     </tr>
                     {reviewingId === e.id && (
                       <tr key={`${e.id}-review`} className="bg-slate-800/70">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td colSpan={7} className="px-4 py-3">
                           <div className="flex flex-wrap items-center gap-3">
                             <input type="text" value={reviewNote} onChange={ev => setReviewNote(ev.target.value)}

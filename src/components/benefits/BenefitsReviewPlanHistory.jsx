@@ -6,6 +6,8 @@
 import { useState, useEffect } from 'react';
 import { History, Plus, Clock, User, FileText } from 'lucide-react';
 import { getRevisionHistory, addRevision } from '../../services/benefitsReviewPlanService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
   const [revisions, setRevisions] = useState([]);
@@ -183,6 +185,7 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Revision
                   </th>
@@ -201,8 +204,9 @@ export default function BenefitsReviewPlanHistory({ planId, onUpdate }) {
                 </tr>
               </thead>
               <tbody>
-                {revisions.map((revision) => (
+                {revisions.map((revision, index) => (
                   <tr key={revision.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
                       {revision.revision_number}
                     </td>

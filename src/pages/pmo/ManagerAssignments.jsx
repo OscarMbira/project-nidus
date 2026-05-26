@@ -19,6 +19,8 @@ import {
 } from '../../services/managerAssignmentService'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
 import { managerRoleForEntityType } from '../../utils/appointmentRoleUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const VIEW_KEY = 'pmo-manager-assignments-view'
 const SORT_PREFIX = 'pmo-manager-assignments-sort-'
@@ -427,6 +429,7 @@ export default function ManagerAssignments() {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-100 dark:bg-gray-800 text-left">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3">
                     <SortBtn
                       label="Code"
@@ -459,7 +462,7 @@ export default function ManagerAssignments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {rows.map((r) => (
+                {rows.map((r, index) => (
                   <AssignmentTableRow
                     key={r.id}
                     row={r}
@@ -479,7 +482,7 @@ export default function ManagerAssignments() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rows.map((r) => (
+            {rows.map((r, index) => (
               <AssignmentCard
                 key={r.id}
                 row={r}

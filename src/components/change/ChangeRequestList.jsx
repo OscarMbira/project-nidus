@@ -3,7 +3,9 @@ import { FileEdit, Edit2, Trash2, Plus, Calendar, User, ArrowRight, AlertCircle,
 import { deleteChangeRequest } from '../../services/changeManagementService';
 import SortToolbar from '../ui/SortToolbar';
 import { useSortableTable } from '../../hooks/useSortableTable';
-import { TableHeaderCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils';
+import RowNumberBadge from '../ui/RowNumberBadge';
 import ViewToggle from '../ui/ViewToggle';
 
 export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, onSelect, viewMode = 'grid', onViewModeChange }) {
@@ -220,6 +222,7 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
             <table className="w-full border-collapse">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                  <TableRowNumberHeader className="!normal-case" />
                   <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Category</TableHeaderCell>
                   <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
@@ -231,8 +234,9 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {displayRequests.map((request) => (
+                {displayRequests.map((request, index) => (
                   <tr key={request.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-3 font-medium text-gray-900 dark:text-white max-w-xs truncate">{request.change_title}</td>
                     <td className="px-6 py-3">
                       <span className={`px-2 py-1 rounded text-xs capitalize ${getCategoryColor(request.change_category)}`}>
@@ -271,7 +275,7 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
         </div>
       ) : (
       <div className="grid grid-cols-1 gap-4">
-        {displayRequests.map((request) => {
+        {displayRequests.map((request, index) => {
           const StatusIcon = getStatusIcon(request.status);
           return (
             <div
@@ -282,6 +286,7 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-start gap-4 mb-3">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     <div className={`p-3 rounded-lg ${getStatusColor(request.status)}`}>
                       <StatusIcon className="h-5 w-5" />
                     </div>

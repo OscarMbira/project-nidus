@@ -229,7 +229,7 @@ export default function StakeholdersList({
                   {type.replace('_', ' ')} ({items.length})
                 </h4>
                 <div className="space-y-2">
-                  {items.map((stakeholder) => (
+                  {items.map((stakeholder, index) => (
                     <div
                       key={stakeholder.id}
                       className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex justify-between items-start"

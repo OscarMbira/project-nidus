@@ -231,7 +231,7 @@ export default function SupportTickets() {
           />
         ) : (
           <div className="space-y-4">
-            {tickets.map((ticket) => (
+            {tickets.map((ticket, index) => (
               <div
                 key={ticket.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer hover:shadow-lg transition-shadow"
@@ -400,7 +400,7 @@ export default function SupportTickets() {
               <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Comments</h3>
               <div className="space-y-4 max-h-[300px] overflow-y-auto">
                 {selectedTicket.comments && selectedTicket.comments.length > 0 ? (
-                  selectedTicket.comments.map((comment) => (
+                  selectedTicket.comments.map((comment, index) => (
                     <div
                       key={comment.id}
                       className={`p-4 rounded-lg ${

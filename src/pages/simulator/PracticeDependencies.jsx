@@ -9,6 +9,8 @@ import { getPracticeDependencies } from '../../services/sim/practicePortfolioSer
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const DEP_COLUMNS = [
   { key: 'source_name', label: 'Source' },
@@ -64,7 +66,7 @@ export default function PracticeDependencies() {
 
   const exportRows = useMemo(
     () =>
-      filteredDependencies.map((dep) => ({
+      filteredDependencies.map((dep, index) => ({
         ...dep,
         source_name: dep.source_name || dep.source_type || '',
         target_name: dep.target_name || dep.target_type || ''
@@ -111,6 +113,7 @@ export default function PracticeDependencies() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Source</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Target</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
@@ -118,8 +121,9 @@ export default function PracticeDependencies() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {filteredDependencies.map((dep) => (
+              {filteredDependencies.map((dep, index) => (
                 <tr key={dep.id} className="hover:bg-gray-700/50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{dep.source_name || dep.source_type}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{dep.target_name || dep.target_type}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{dep.dependency_category}</td>
@@ -131,7 +135,7 @@ export default function PracticeDependencies() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDependencies.map((dep) => (
+          {filteredDependencies.map((dep, index) => (
             <article
               key={dep.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[160px] min-w-0"
@@ -141,6 +145,7 @@ export default function PracticeDependencies() {
                 {(dep.source_name || dep.source_type || '—') + ' → ' + (dep.target_name || dep.target_type || '—')}
               </p>
               <div className="flex flex-wrap gap-2">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 <span className="px-2 py-1 text-xs rounded bg-blue-900/40 text-blue-200 border border-blue-700/50">{dep.dependency_category}</span>
                 <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-200">{dep.status}</span>
               </div>

@@ -7,6 +7,9 @@ import ViewToggle from '../../../components/ui/ViewToggle'
 import { useViewMode } from '../../../hooks/useViewMode'
 import * as api from '../../../services/planIntelligenceService'
 import * as simApi from '../../../services/sim/simPlanIntelligenceService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../../../components/ui/RowNumberBadge'
 
 const EXPORT_COLS = [
   { key: 'severity', label: 'Severity' },
@@ -97,14 +100,16 @@ export default function PlanningIntelligenceDashboard() {
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-900 text-gray-400">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="text-left p-2">Severity</th>
                       <th className="text-left p-2">Finding</th>
                       <th className="text-left p-2">Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((r) => (
+                    {filtered.map((r, index) => (
                       <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="p-2 capitalize">{r.severity}</td>
                         <td className="p-2">{r.finding_text}</td>
                         <td className="p-2">{r.status}</td>
@@ -115,10 +120,15 @@ export default function PlanningIntelligenceDashboard() {
               </div>
             ) : (
               <ul className="space-y-2">
-                {filtered.map((r) => (
+                {filtered.map((r, index) => (
                   <li key={r.id} className="rounded-lg border border-gray-700 p-3 bg-gray-900/50">
+                    <div className="flex items-start gap-2">
+                      <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                      <div className="min-w-0">
                     <span className="text-xs uppercase text-gray-500">{r.severity}</span>
                     <p className="text-gray-200 mt-1">{r.finding_text}</p>
+                      </div>
+                    </div>
                   </li>
                 ))}
               </ul>

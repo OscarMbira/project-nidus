@@ -200,7 +200,7 @@ export default function ReferencesSection({ briefId, readOnly = false }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {references.map((ref) => (
+          {references.map((ref, index) => (
             <div
               key={ref.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4"

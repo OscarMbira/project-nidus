@@ -352,7 +352,7 @@ export default function FeatureRequests() {
           />
         ) : (
           <div className="space-y-4">
-            {requests.map((request) => (
+            {requests.map((request, index) => (
               <div
                 key={request.id}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-md transition-shadow"

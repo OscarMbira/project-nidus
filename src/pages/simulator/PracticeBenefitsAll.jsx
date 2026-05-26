@@ -7,6 +7,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Target, Search, FileText } from 'lucide-react'
 import { getAllPracticeBenefitsReviewPlans } from '../../services/sim/practiceBenefitsService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function PracticeBenefitsAll() {
   const navigate = useNavigate()
@@ -106,6 +108,7 @@ export default function PracticeBenefitsAll() {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Project</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">Updated</th>
@@ -113,8 +116,9 @@ export default function PracticeBenefitsAll() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {filtered.map((plan) => (
+                  {filtered.map((plan, index) => (
                     <tr key={plan.id} className="hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3 text-gray-200">
                         {plan.practice_projects?.project_name || '—'}
                       </td>

@@ -151,7 +151,7 @@ export default function ProjectITTOForm({
 
         <div className="p-4">
           <div className="flex gap-2 mb-6 text-sm">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3, 4].map((s, index) => (
               <button
                 key={s}
                 type="button"
@@ -194,7 +194,7 @@ export default function ProjectITTOForm({
                     onChange={(e) => setProcessGroup(e.target.value)}
                     className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white"
                   >
-                    {ITTO_PROCESS_GROUPS.map((pg) => (
+                    {ITTO_PROCESS_GROUPS.map((pg, index) => (
                       <option key={pg} value={pg}>
                         {pg}
                       </option>

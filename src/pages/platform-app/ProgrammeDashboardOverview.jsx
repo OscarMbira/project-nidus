@@ -210,7 +210,7 @@ export default function ProgrammeDashboardOverview() {
               By Programme
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rollups.map((row) => (
+              {rollups.map((row, index) => (
                 <div
                   key={row.programme_id}
                   className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-blue-500 transition-colors"

@@ -162,7 +162,7 @@ export default function ExceptionReportDashboard() {
             Exceptions Requiring Reports
           </h2>
           <div className="space-y-3">
-            {exceptionsNeedingReports.map((exception) => (
+            {exceptionsNeedingReports.map((exception, index) => (
               <div
                 key={exception.id}
                 className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -196,7 +196,7 @@ export default function ExceptionReportDashboard() {
           <p className="text-gray-500 dark:text-gray-400">No reports yet</p>
         ) : (
           <div className="space-y-3">
-            {reports.slice(0, 10).map((report) => (
+            {reports.slice(0, 10).map((report, index) => (
               <div
                 key={report.id}
                 className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"

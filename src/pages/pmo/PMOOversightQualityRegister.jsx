@@ -21,6 +21,8 @@ import QualityReviewForm from '../../components/quality/QualityReviewForm';
 import QualityInspectionForm from '../../components/quality/QualityInspectionForm';
 import ExportListMenu from '../../components/ui/ExportListMenu';
 import { useToastContext } from '../../context/ToastContext';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const TABS = [
   { id: 'register', label: 'Register' },
@@ -262,6 +264,7 @@ export default function PMOOversightQualityRegister() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ref</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Product</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
@@ -273,11 +276,13 @@ export default function PMOOversightQualityRegister() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {registerItems.length === 0 ? (
                       <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td colSpan={selectedProjectId ? 5 : 6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No register items.</td>
                       </tr>
                     ) : (
-                      registerItems.map((r) => (
+                      registerItems.map((r, index) => (
                         <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{r.product_reference || '—'}</td>
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{r.product_name || '—'}</td>
                           <td className="px-4 py-3 text-sm">{r.product_type || '—'}</td>
@@ -297,6 +302,7 @@ export default function PMOOversightQualityRegister() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Planned</th>
@@ -308,11 +314,13 @@ export default function PMOOversightQualityRegister() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {reviews.length === 0 ? (
                       <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td colSpan={selectedProjectId ? 5 : 6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No reviews.</td>
                       </tr>
                     ) : (
-                      reviews.map((r) => (
+                      reviews.map((r, index) => (
                         <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{r.review_title || '—'}</td>
                           <td className="px-4 py-3 text-sm">{r.review_type || '—'}</td>
                           <td className="px-4 py-3 text-sm">{r.planned_date || '—'}</td>
@@ -332,6 +340,7 @@ export default function PMOOversightQualityRegister() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Result</th>
@@ -342,11 +351,13 @@ export default function PMOOversightQualityRegister() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {inspections.length === 0 ? (
                       <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td colSpan={selectedProjectId ? 4 : 5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No inspections.</td>
                       </tr>
                     ) : (
-                      inspections.map((r) => (
+                      inspections.map((r, index) => (
                         <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{r.inspection_title || '—'}</td>
                           <td className="px-4 py-3 text-sm">{r.inspection_date || '—'}</td>
                           <td className="px-4 py-3 text-sm">{r.inspection_result || '—'}</td>

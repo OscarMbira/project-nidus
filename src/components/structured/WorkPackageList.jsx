@@ -149,7 +149,7 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
         />
         <ExportListMenu columns={WP_COLUMNS} data={displayWPs} baseFilename="WorkPackages" disabled={!displayWPs.length} />
       </div>
-      {displayWPs.map((wp) => (
+      {displayWPs.map((wp, index) => (
         <div
           key={wp.id}
           className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

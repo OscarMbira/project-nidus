@@ -187,7 +187,7 @@ export default function PMODashboard() {
             { name: 'Configuration Management Strategy', path: '/pmo/governance/configuration-strategy', status: 'Active' },
             { name: 'Quality Management Strategy', path: '/pmo/governance/quality-strategy', status: 'Active' },
             { name: 'Risk Management Strategy', path: '/pmo/governance/risk-strategy', status: 'Active' },
-          ].map((doc) => (
+          ].map((doc, index) => (
             <Link
               key={doc.name}
               to={doc.path}

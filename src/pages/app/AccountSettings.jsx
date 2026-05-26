@@ -269,7 +269,7 @@ export default function AccountSettings() {
         </h2>
         {projects.length > 0 ? (
           <div className="space-y-2">
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <div
                 key={project.project_id}
                 className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"

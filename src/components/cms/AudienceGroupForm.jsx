@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function AudienceGroupForm({ groupData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [channelInput, setChannelInput] = useState('')
   const [messageInput, setMessageInput] = useState('')
@@ -153,7 +154,7 @@ export default function AudienceGroupForm({ groupData = {}, onChange, onCancel, 
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="">Select frequency...</option>
-            {frequencyOptions.map((freq) => (
+            {frequencyOptions.map((freq, index) => (
               <option key={freq.value} value={freq.value}>
                 {freq.label}
               </option>
@@ -170,7 +171,7 @@ export default function AudienceGroupForm({ groupData = {}, onChange, onCancel, 
             onChange={(e) => handleChange('confidentiality_level', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
-            {confidentialityLevels.map((level) => (
+            {confidentialityLevels.map((level, index) => (
               <option key={level.value} value={level.value}>
                 {level.label}
               </option>

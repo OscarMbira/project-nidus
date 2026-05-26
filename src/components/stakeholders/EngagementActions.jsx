@@ -7,6 +7,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { getEngagementActions, saveEngagementAction, deleteEngagementAction, getStakeholders } from '../../services/stakeholderService'
 import { platformDb } from '../../services/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open' },
@@ -228,7 +230,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
                 required
               >
                 <option value="">Select stakeholder</option>
-                {stakeholders.map((s) => (
+                {stakeholders.map((s, index) => (
                   <option key={s.id} value={s.id}>{s.stakeholder_name || s.stakeholder_reference || s.id}</option>
                 ))}
               </select>
@@ -243,7 +245,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">—</option>
-                {users.map((u) => (
+                {users.map((u, index) => (
                   <option key={u.id} value={u.id}>{u.full_name || u.email || u.id}</option>
                 ))}
               </select>
@@ -266,7 +268,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
                 onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
-                {STATUS_OPTIONS.map((o) => (
+                {STATUS_OPTIONS.map((o, index) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
@@ -334,6 +336,7 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Description</th>
                   {!stakeholderId && <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Stakeholder</th>}
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Owner</th>
@@ -345,11 +348,12 @@ export default function EngagementActions({ projectId, stakeholderId = null }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {actions.map((row) => (
+                {actions.map((row, index) => (
                   <tr
                     key={row.id}
                     className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 ${isOverdue(row.due_date, row.status) ? 'bg-red-50 dark:bg-red-900/10' : ''}`}
                   >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">{row.action_description || '—'}</td>
                     {!stakeholderId && (
                       <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { FolderKanban, Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
 import { getStrategicObjectives, getProjectObjectiveMappings, getAlignmentScores } from '../../services/strategicService';
 import { platformDb } from '../../services/supabase/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function StrategicPortfolioView({ portfolioId = null }) {
   const [portfolio, setPortfolio] = useState(null);
@@ -271,6 +273,7 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Project
                     </th>
@@ -293,6 +296,7 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
                     const projectMappings = mappings.filter(m => m.project_id === project.id);
                     return (
                       <tr key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {project.project_name}

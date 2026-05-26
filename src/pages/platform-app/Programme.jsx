@@ -11,6 +11,7 @@ import { Layers, Plus, Search, GitBranch, Target, Calendar, Eye, Edit2, Trash2 }
 import { getProgrammesForList, deleteProgramme } from '../../services/programmeService';
 import ExportListMenu from '../../components/ui/ExportListMenu';
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const EXPORT_COLUMNS = [
   { key: 'programme_name', label: 'Name' },
   { key: 'programme_code', label: 'Code' },
@@ -110,7 +111,7 @@ export default function Programme() {
 
   const exportData = useMemo(
     () =>
-      programmes.map((p) => ({
+      programmes.map((p, index) => ({
         programme_name: p.programme_name || '',
         programme_code: p.programme_code || '',
         programme_type: p.programme_type || '',

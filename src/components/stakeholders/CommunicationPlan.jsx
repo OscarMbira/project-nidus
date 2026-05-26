@@ -209,7 +209,7 @@ export default function CommunicationPlan({ projectId }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {plans.map((plan) => (
+          {plans.map((plan, index) => (
             <div
               key={plan.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"

@@ -443,7 +443,7 @@ export default function ExceptionPlanForm({ projectId, boardId, plan, onClose, o
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Options Analysis</h3>
 
-                {[1, 2, 3].map((num) => (
+                {[1, 2, 3].map((num, index) => (
                   <div key={num} className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <input

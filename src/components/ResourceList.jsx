@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Edit2, Trash2, Calendar, User, Users, TrendingUp, AlertTriangle } from 'lucide-react'
 import { supabase } from '../services/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from './ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function ResourceList({ resources, onEdit, onRefresh }) {
   const navigate = useNavigate()
@@ -59,6 +61,7 @@ export default function ResourceList({ resources, onEdit, onRefresh }) {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Resource
               </th>
@@ -80,8 +83,9 @@ export default function ResourceList({ resources, onEdit, onRefresh }) {
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {resources.map((resource) => (
+            {resources.map((resource, index) => (
               <tr key={resource.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900 dark:text-white">

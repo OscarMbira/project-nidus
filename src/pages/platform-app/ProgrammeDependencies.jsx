@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { GitBranch, Search } from 'lucide-react'
 import { getProgrammeList, getProgrammeDependencies } from '../../services/programmeService'
 import DependencyMapVisualization from '../../components/programme/DependencyMapVisualization'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProgrammeDependenciesPage() {
   const [programmes, setProgrammes] = useState([])
@@ -107,12 +109,13 @@ export default function ProgrammeDependenciesPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700 bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="py-3 px-4">Programme name</th>
                     <th className="py-3 px-4">Code</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProgrammes.map((p) => (
+                  {filteredProgrammes.map((p, index) => (
                     <tr
                       key={p.id}
                       onClick={() => setSelectedProgrammeId(p.id)}

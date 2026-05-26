@@ -30,6 +30,7 @@ const Layout = ({ children }) => {
     path.startsWith('/app/local-data-extensions') ||
     path.startsWith('/app/settings/invitation-templates') ||
     path.startsWith('/app/invitation-tracker') ||
+    path.startsWith('/platform/invitation-tracker') ||
     path.startsWith('/app/team-appointments') ||
     path.startsWith('/platform/my-appointments') ||
     path.startsWith('/platform/my-team-appointments') ||

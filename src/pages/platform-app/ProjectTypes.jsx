@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProjectTypes, createProjectType, updateProjectType, deleteProjectType } from '../../services/projectTypeService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 // Memoized table row component to prevent unnecessary re-renders
 const TypeTableRow = memo(function TypeTableRow({ type, onEdit, onDelete }) {
@@ -377,6 +379,7 @@ export default function ProjectTypes() {
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-750">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
@@ -387,12 +390,13 @@ export default function ProjectTypes() {
               <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {sortedTypes.length === 0 ? (
                   <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td colSpan="5" className="px-6 py-8 text-center text-gray-400">
                       No project types found. Click "Add Project Type" to create one.
                     </td>
                   </tr>
                 ) : (
-                  sortedTypes.map((type) => (
+                  sortedTypes.map((type, index) => (
                     <TypeTableRow
                       key={type.id}
                       type={type}

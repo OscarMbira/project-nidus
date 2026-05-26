@@ -357,7 +357,7 @@ export default function RoleDescriptionsSection({ briefId, readOnly = false }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {roles.map((role) => (
+          {roles.map((role, index) => (
             <div
               key={role.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6"

@@ -13,6 +13,8 @@ import {
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const REVIEW_EXPORT_COLUMNS = [
   { key: 'review_title', label: 'Review' },
@@ -150,6 +152,7 @@ export default function PracticeQualityReviews() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Review</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Planned Date</th>
@@ -161,6 +164,7 @@ export default function PracticeQualityReviews() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {reviews.map(r => (
                 <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{r.review_title}</div>
                     {r.review_reference && <div className="text-xs text-gray-500">{r.review_reference}</div>}

@@ -9,6 +9,8 @@ import { getProgrammesForList } from '../../../services/programmeService'
 import { getAllProjects } from '../../../services/projectService'
 import { platformProjectPath } from '../../../utils/projectRouteParam'
 import ExportListMenu from '../../ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const DEBOUNCE_MS = 300
 
@@ -159,6 +161,7 @@ export function DashboardPortfolioPanel({ organizationId: _organizationId }) {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="text-left p-3">
                     <SortBtn label="Name" column="portfolio_name" sort={sort} onSort={onSort} />
                   </th>
@@ -175,8 +178,9 @@ export function DashboardPortfolioPanel({ organizationId: _organizationId }) {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((p) => (
+                {sorted.map((p, index) => (
                   <tr key={p.id} className="border-b border-gray-200 dark:border-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="p-3 text-gray-900 dark:text-gray-200">{p.portfolio_name}</td>
                     <td className="p-3 text-gray-600 dark:text-gray-400">{p.portfolio_code || '—'}</td>
                     <td className="p-3 text-gray-700 dark:text-gray-300">{p.portfolio_status || '—'}</td>
@@ -298,6 +302,7 @@ export function DashboardProgrammesPanel({ organizationId: _organizationId }) {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="text-left p-3">
                     <SortBtn label="Name" column="programme_name" sort={sort} onSort={onSort} />
                   </th>
@@ -314,8 +319,9 @@ export function DashboardProgrammesPanel({ organizationId: _organizationId }) {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((p) => (
+                {sorted.map((p, index) => (
                   <tr key={p.id} className="border-b border-gray-200 dark:border-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="p-3 text-gray-900 dark:text-gray-200">{p.programme_name}</td>
                     <td className="p-3 text-gray-600 dark:text-gray-400">{p.programme_code || '—'}</td>
                     <td className="p-3 text-gray-700 dark:text-gray-300">{p.programme_status || '—'}</td>
@@ -450,6 +456,7 @@ export function DashboardProjectsPanel({ organizationId }) {
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-100/90 dark:bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="text-left p-3">
                     <SortBtn label="Name" column="project_name" sort={sort} onSort={onSort} />
                   </th>
@@ -466,8 +473,9 @@ export function DashboardProjectsPanel({ organizationId }) {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((p) => (
+                {sorted.map((p, index) => (
                   <tr key={p.id} className="border-b border-gray-200 dark:border-gray-700/80 hover:bg-gray-100/80 dark:hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="p-3 text-gray-900 dark:text-gray-200">{p.project_name}</td>
                     <td className="p-3 text-gray-600 dark:text-gray-400">{p.project_code || '—'}</td>
                     <td className="p-3 text-gray-700 dark:text-gray-300">{p.status_name || '—'}</td>

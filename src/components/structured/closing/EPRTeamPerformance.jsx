@@ -116,7 +116,7 @@ export default function EPRTeamPerformance({ reportId, teamPerformance, onTeamPe
         </div>
       ) : (
         <div className="space-y-3">
-          {teamPerformance.map((recognition) => (
+          {teamPerformance.map((recognition, index) => (
             <div
               key={recognition.id}
               className={`border rounded-lg p-4 ${

@@ -4,6 +4,8 @@ import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, RefreshCw, CheckCircle, XCircle, Clock, Filter } from 'lucide-react'
 import { format } from 'date-fns'
 import { getSyncHistory, getItemMappings } from '../services/integrationService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function IntegrationSync() {
   const { id } = useParams()
@@ -182,6 +184,7 @@ export default function IntegrationSync() {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Started
                     </th>
@@ -200,8 +203,9 @@ export default function IntegrationSync() {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                  {syncHistory.map((sync) => (
+                  {syncHistory.map((sync, index) => (
                     <tr key={sync.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                         {sync.started_at
                           ? format(new Date(sync.started_at), 'MMM d, yyyy HH:mm')
@@ -284,6 +288,7 @@ export default function IntegrationSync() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                         External Item
                       </th>
@@ -299,8 +304,9 @@ export default function IntegrationSync() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {mappings.map((mapping) => (
+                    {mappings.map((mapping, index) => (
                       <tr key={mapping.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
                             {mapping.external_item_key || mapping.external_item_id}

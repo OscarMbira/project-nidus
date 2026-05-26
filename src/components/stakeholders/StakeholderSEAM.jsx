@@ -1,6 +1,8 @@
 import { Table2, AlertTriangle, Pencil } from 'lucide-react'
 import ExportListMenu from '../ui/ExportListMenu'
 import { SEAM_LEVELS, prettySeamLevel } from '../../utils/stakeholderSEAMUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const SEAM_COLUMNS = [
   { key: 'stakeholder_name', label: 'Stakeholder' },
@@ -64,6 +66,7 @@ export default function StakeholderSEAM({
         <table className="min-w-full divide-y divide-gray-700">
           <thead className="bg-gray-900/80">
             <tr>
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase">
                 Stakeholder
               </th>
@@ -84,10 +87,11 @@ export default function StakeholderSEAM({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
-            {rows.map((row) => {
+            {rows.map((row, index) => {
               const hasGap = row.currentLevel !== row.desiredLevel
               return (
                 <tr key={row.id} className={hasGap ? 'bg-amber-900/20' : ''}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-4 py-3 text-sm font-medium text-white whitespace-nowrap">
                     {onStakeholderClick ? (
                       <button
@@ -101,7 +105,7 @@ export default function StakeholderSEAM({
                       row.stakeholder_name
                     )}
                   </td>
-                  {SEAM_LEVELS.map((level) => {
+                  {SEAM_LEVELS.map((level, index) => {
                     const isCurrent = row.currentLevel === level
                     const isDesired = row.desiredLevel === level
                     return (

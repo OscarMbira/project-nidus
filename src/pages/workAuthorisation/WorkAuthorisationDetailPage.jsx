@@ -185,7 +185,7 @@ export default function WorkAuthorisationDetailPage() {
       <div className="mt-10">
         <h2 className="text-lg font-semibold mb-3">History</h2>
         <ul className="space-y-2 text-sm">
-          {history.map((h) => (
+          {history.map((h, index) => (
             <li key={h.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex justify-between gap-2">
                 <span className="font-medium">{h.action}</span>

@@ -5,10 +5,11 @@ import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { Plus, Kanban, Settings, Trash2 } from 'lucide-react'
 import SortToolbar from '../../components/ui/SortToolbar'
-import { TableHeaderCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useSortableTable } from '../../hooks/useSortableTable'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function KanbanBoards() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -245,6 +246,7 @@ export default function KanbanBoards() {
               <table className="w-full border-collapse">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <TableHeaderCell sortable={false} className="!normal-case">Name</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case">Project</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Created</TableHeaderCell>
@@ -252,8 +254,9 @@ export default function KanbanBoards() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {displayBoards.map((board) => (
+                  {displayBoards.map((board, index) => (
                     <tr key={board.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-6 py-3">
                         <button
                           type="button"
@@ -288,13 +291,14 @@ export default function KanbanBoards() {
           </div>
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayBoards.map((board) => (
+          {displayBoards.map((board, index) => (
             <div
               key={board.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"
               onClick={() => navigate(`/projects/${projectId}/kanban/board/${board.id}`)}
             >
               <div className="flex items-start justify-between mb-4">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
                     {board.board_name}

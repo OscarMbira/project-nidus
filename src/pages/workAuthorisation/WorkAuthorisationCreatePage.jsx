@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import * as platformSvc from '../../services/workAuthorisationService'
 import * as simSvc from '../../services/simWorkAuthorisationService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const ACTION_TYPES = [
   { value: 'stage_gate', label: 'Stage gate' },
   { value: 'closure', label: 'Closure' },
@@ -173,7 +174,7 @@ export default function WorkAuthorisationCreatePage() {
             disabled={!!id}
           >
             <option value="">Select…</option>
-            {projects.map((p) => (
+            {projects.map((p, index) => (
               <option key={p.id} value={p.id}>
                 {p.project_name}{p.project_code ? ` (${p.project_code})` : ''}
               </option>
@@ -195,7 +196,7 @@ export default function WorkAuthorisationCreatePage() {
             onChange={(e) => setActionType(e.target.value)}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-2 text-sm"
           >
-            {ACTION_TYPES.map((a) => (
+            {ACTION_TYPES.map((a, index) => (
               <option key={a.value} value={a.value}>{a.label}</option>
             ))}
           </select>

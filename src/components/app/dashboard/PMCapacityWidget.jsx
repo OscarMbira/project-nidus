@@ -13,6 +13,8 @@ import { useState, useEffect, memo } from 'react';
 import { Users, AlertTriangle, CheckCircle, Clock, User } from 'lucide-react';
 import { platformDb } from '../../../services/supabase/supabaseClient';
 import ReassignPMModal from './ReassignPMModal';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
   const [pmData, setPmData] = useState([]);
@@ -226,6 +228,7 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">PM Name</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Active Projects</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Capacity Status</th>
@@ -236,6 +239,7 @@ const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {
                 <tbody className="divide-y divide-gray-700">
                   {pmData.map(pm => (
                     <tr key={pm.pm_user_id} className="hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-400" />

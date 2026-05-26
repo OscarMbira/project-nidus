@@ -80,7 +80,7 @@ export default function TemplateLibraryList() {
   )
 
   const displayRows = useMemo(() => sortedData(rows, accessors), [rows, sortedData, accessors])
-  const exportRows = useMemo(() => displayRows.map((r) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
+  const exportRows = useMemo(() => displayRows.map((r, index) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
 
   if (!ready) {
     return <div className="p-8 text-gray-600 dark:text-gray-400">Loading…</div>
@@ -140,7 +140,7 @@ export default function TemplateLibraryList() {
           className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 min-h-[44px]"
         >
           <option value="">All types</option>
-          {TEMPLATE_TYPE_OPTIONS.map((t) => (
+          {TEMPLATE_TYPE_OPTIONS.map((t, index) => (
             <option key={t.code} value={t.code}>
               {t.label}
             </option>
@@ -154,7 +154,7 @@ export default function TemplateLibraryList() {
         <p className="text-gray-600 dark:text-gray-400">Loading…</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <div
               key={r.id}
               className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm"

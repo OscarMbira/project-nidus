@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SmartAmountInput from '../ui/SmartAmountInput'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 import {
   REPORTING_FREQUENCY_OPTIONS,
   TIME_COMMITMENT_OPTIONS,
@@ -116,7 +117,7 @@ export default function ManagerAppointmentForm({
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
           >
             <option value="">— Select —</option>
-            {eligibleUsers.map((u) => (
+            {eligibleUsers.map((u, index) => (
               <option key={u.id} value={u.id}>
                 {u.full_name || u.email}
               </option>
@@ -144,7 +145,7 @@ export default function ManagerAppointmentForm({
             onChange={(e) => patch({ reportingFrequency: e.target.value })}
             className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
           >
-            {REPORTING_FREQUENCY_OPTIONS.map((o) => (
+            {REPORTING_FREQUENCY_OPTIONS.map((o, index) => (
               <option key={o.value} value={o.value}>
                 {o.label}
               </option>

@@ -5,6 +5,7 @@ import PlanningProjectBar, { usePlanningProjectId } from '../../../components/pl
 import { platformDb } from '../../../services/supabase/supabaseClient'
 import * as healthApi from '../../../services/planHealthScoreService'
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function ExecutivePlanView() {
   const isSim = useLocation().pathname.includes('/simulator/')
   const projectId = usePlanningProjectId()
@@ -48,7 +49,7 @@ export default function ExecutivePlanView() {
             <div className="rounded-xl border border-gray-700 p-4 bg-gray-900/50">
               <div className="text-sm text-gray-400 mb-2">Next milestones</div>
               <ul className="text-sm space-y-1">
-                {milestones.map((m) => (
+                {milestones.map((m, index) => (
                   <li key={m.task_name} className="flex justify-between gap-2">
                     <span className="text-gray-200 truncate">{m.task_name}</span>
                     <span className="text-gray-500 shrink-0">{m.due_date || '—'}</span>

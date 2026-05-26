@@ -17,8 +17,7 @@ export default function VideoGrid({ localVideoRef, remoteUsers = [] }) {
         <span className="absolute bottom-1 left-1 text-xs text-white bg-black/50 px-1 rounded">You</span>
       </div>
       {remoteUsers.map((u, i) => (
-        <div key={u.uid ?? i} className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
-          <div ref={u.videoRef} className="w-full h-full object-cover bg-black" />
+        <div key={u.uid ?? i} className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">          <div ref={u.videoRef} className="w-full h-full object-cover bg-black" />
           <span className="absolute bottom-1 left-1 text-xs text-white bg-black/50 px-1 rounded">{u.label || `User ${i + 1}`}</span>
         </div>
       ))}

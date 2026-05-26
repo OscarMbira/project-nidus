@@ -14,6 +14,8 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, ArrowLeft, Save, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getProjectStatuses, createProjectStatus, updateProjectStatus, deleteProjectStatus } from '../../services/projectStatusService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 // Memoized table row component to prevent unnecessary re-renders
 const StatusTableRow = memo(function StatusTableRow({ status, onEdit, onDelete }) {
@@ -446,6 +448,7 @@ export default function ProjectStatuses() {
             <table className="min-w-full divide-y divide-gray-700">
               <thead className="bg-gray-750">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Code</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Order</th>
@@ -457,12 +460,13 @@ export default function ProjectStatuses() {
               <tbody className="bg-gray-800 divide-y divide-gray-700">
                 {sortedStatuses.length === 0 ? (
                   <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td colSpan="6" className="px-6 py-8 text-center text-gray-400">
                       No project statuses found. Click "Add Project Status" to create one.
                     </td>
                   </tr>
                 ) : (
-                  sortedStatuses.map((status) => (
+                  sortedStatuses.map((status, index) => (
                     <StatusTableRow
                       key={status.id}
                       status={status}

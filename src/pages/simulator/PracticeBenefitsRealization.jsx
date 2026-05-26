@@ -7,6 +7,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Target, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeBenefits } from '../../services/sim/practicePortfolioService'
 import BenefitsRealizationChart from '../../components/programme/BenefitsRealizationChart'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function PracticeBenefitsRealization() {
   const [programmes, setProgrammes] = useState([])
@@ -107,13 +109,14 @@ export default function PracticeBenefitsRealization() {
               <table className="w-full">
                 <thead className="bg-gray-700/50 sticky top-0">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Code</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-300 uppercase">Programme</th>
                     <th className="px-4 py-2 w-24 text-xs font-medium text-gray-300 uppercase">Select</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {filteredProgrammes.map((p) => (
+                  {filteredProgrammes.map((p, index) => (
                     <tr
                       key={p.id}
                       className={`hover:bg-gray-700/30 cursor-pointer ${selectedProgrammeId === p.id ? 'bg-purple-900/20' : ''}`}

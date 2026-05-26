@@ -10,6 +10,7 @@ import {
 } from '../../services/pidReportingArrangementsService'
 import { supabase } from '../../services/supabaseClient'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const REPORT_TYPES = [
   'highlight_report',
   'checkpoint_report',
@@ -139,7 +140,7 @@ export default function ReportingArrangementForm({
               onChange={(e) => set('report_type', e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
             >
-              {REPORT_TYPES.map((t) => (
+              {REPORT_TYPES.map((t, index) => (
                 <option key={t} value={t}>
                   {t.replace(/_/g, ' ')}
                 </option>

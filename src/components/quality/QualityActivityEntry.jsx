@@ -4,6 +4,8 @@
  */
 
 import { CheckCircle, XCircle, Clock, AlertTriangle } from 'lucide-react';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function QualityActivityEntry({ activity, onView }) {
   const formatDate = (date) => {
@@ -145,6 +147,7 @@ export default function QualityActivityEntry({ activity, onView }) {
         <table className="w-full border-collapse border border-gray-300 dark:border-gray-600">
           <thead>
             <tr className="bg-gray-100 dark:bg-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
               <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300"></th>
               <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center text-xs font-semibold text-gray-700 dark:text-gray-300">Planned</th>
               <th className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-center text-xs font-semibold text-gray-700 dark:text-gray-300">Forecast</th>
@@ -153,12 +156,14 @@ export default function QualityActivityEntry({ activity, onView }) {
           </thead>
           <tbody>
             <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Quality Activity</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.planned_date)}</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.forecast_date)}</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.actual_date)}</td>
             </tr>
             <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Sign-Off</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.sign_off_planned_date)}</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.sign_off_forecast_date)}</td>

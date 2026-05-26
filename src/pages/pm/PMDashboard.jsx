@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 import {
   Briefcase,
   Package,
@@ -188,7 +189,7 @@ export default function PMDashboard() {
               { name: 'Risk Management Strategy', path: '/pm/governance/risk-strategy' },
               { name: 'Quality Management Strategy', path: '/pm/governance/quality-strategy' },
               { name: 'Communication Management Strategy', path: '/pm/governance/communication-strategy' },
-            ].map((doc) => (
+            ].map((doc, index) => (
               <Link
                 key={doc.name}
                 to={doc.path}

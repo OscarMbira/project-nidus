@@ -173,7 +173,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
                 disabled={!!stakeholderId}
               >
                 <option value="">Select</option>
-                {stakeholders.map((s) => (
+                {stakeholders.map((s, index) => (
                   <option key={s.id} value={s.id}>{s.stakeholder_name || s.stakeholder_reference || s.id}</option>
                 ))}
               </select>
@@ -187,7 +187,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
                 required
               >
                 <option value="">Select</option>
-                {stakeholders.filter((s) => s.id !== form.from_stakeholder_id).map((s) => (
+                {stakeholders.filter((s) => s.id !== form.from_stakeholder_id).map((s, index) => (
                   <option key={s.id} value={s.id}>{s.stakeholder_name || s.stakeholder_reference || s.id}</option>
                 ))}
               </select>
@@ -201,7 +201,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
                 onChange={(e) => setForm((f) => ({ ...f, relationship_type: e.target.value }))}
                 className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
-                {REL_TYPES.map((o) => (
+                {REL_TYPES.map((o, index) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
@@ -245,7 +245,7 @@ export default function StakeholderRelationships({ projectId, stakeholderId = nu
           <div className="p-6 text-center text-gray-500 dark:text-gray-400">No relationships yet. Add one above.</div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {relationships.map((rel) => (
+            {relationships.map((rel, index) => (
               <div
                 key={rel.id}
                 className="flex flex-wrap items-center gap-2 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30"

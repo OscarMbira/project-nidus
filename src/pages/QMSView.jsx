@@ -435,7 +435,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No quality standards defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {standards.map((standard) => (
+                      {standards.map((standard, index) => (
                         <div
                           key={standard.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -477,7 +477,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No quality methods defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {methods.map((method) => (
+                      {methods.map((method, index) => (
                         <div
                           key={method.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -519,7 +519,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No quality roles defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {roles.map((role) => (
+                      {roles.map((role, index) => (
                         <div
                           key={role.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -590,7 +590,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No quality metrics defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {metrics.map((metric) => (
+                      {metrics.map((metric, index) => (
                         <div
                           key={metric.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -642,7 +642,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No tools or techniques defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {tools.map((tool) => (
+                      {tools.map((tool, index) => (
                         <div
                           key={tool.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -679,7 +679,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No quality records defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {records.map((record) => (
+                      {records.map((record, index) => (
                         <div
                           key={record.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -726,7 +726,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No quality reports defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {reports.map((report) => (
+                      {reports.map((report, index) => (
                         <div
                           key={report.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"
@@ -771,7 +771,7 @@ export default function QMSView() {
                     <p className="text-gray-500 dark:text-gray-400">No scheduled activities defined</p>
                   ) : (
                     <div className="space-y-3">
-                      {activities.map((activity) => (
+                      {activities.map((activity, index) => (
                         <div
                           key={activity.id}
                           className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600"

@@ -241,7 +241,7 @@ export default function QualityCriteria({ productId, projectId }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {criteria.map((criterion) => (
+          {criteria.map((criterion, index) => (
             <div
               key={criterion.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"

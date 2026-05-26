@@ -3,6 +3,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, CheckCircle, Calendar, TrendingUp, Target, Users } from 'lucide-react';
 import { createProjectClosure, updateProjectClosure } from '../../../services/closingProjectService';
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function ProjectClosureForm({ projectId, closure, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
@@ -186,7 +187,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select project board...</option>
-                  {boards.map((board) => (
+                  {boards.map((board, index) => (
                     <option key={board.id} value={board.id}>
                       {board.board_name}
                     </option>
@@ -410,7 +411,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select user...</option>
-                  {users.map((user) => (
+                  {users.map((user, index) => (
                     <option key={user.id} value={user.id}>
                       {user.full_name || user.email}
                     </option>
@@ -429,7 +430,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select user...</option>
-                  {users.map((user) => (
+                  {users.map((user, index) => (
                     <option key={user.id} value={user.id}>
                       {user.full_name || user.email}
                     </option>

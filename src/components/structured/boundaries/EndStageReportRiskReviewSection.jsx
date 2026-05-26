@@ -115,7 +115,7 @@ export default function EndStageReportRiskReviewSection({ reportId, riskReviews,
         </div>
       ) : (
         <div className="space-y-4">
-          {riskReviews.map((risk) => (
+          {riskReviews.map((risk, index) => (
             <div key={risk.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

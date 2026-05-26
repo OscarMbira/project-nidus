@@ -20,6 +20,8 @@ import {
 import PMOOversightHeader from '../../../components/pmo/PMOOversightHeader';
 import ExportListMenu from '../../../components/ui/ExportListMenu';
 import { useToastContext } from '../../../context/ToastContext';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const TABS = [
   { id: 'register', label: 'Register' },
@@ -214,6 +216,7 @@ export default function SimulatorPMOOversightQualityRegister() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Product</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                       {!selectedProjectId && <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Project</th>}
@@ -224,8 +227,9 @@ export default function SimulatorPMOOversightQualityRegister() {
                     {registerItems.length === 0 ? (
                       <tr><td colSpan={selectedProjectId ? 3 : 4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No register items.</td></tr>
                     ) : (
-                      registerItems.map((r) => (
+                      registerItems.map((r, index) => (
                         <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{r.product_name || r.product_reference || '—'}</td>
                           <td className="px-4 py-3 text-sm">{r.quality_status || '—'}</td>
                           {!selectedProjectId && <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{projectLabel(r)}</td>}
@@ -243,6 +247,7 @@ export default function SimulatorPMOOversightQualityRegister() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                       {!selectedProjectId && <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Project</th>}
@@ -250,8 +255,9 @@ export default function SimulatorPMOOversightQualityRegister() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                    {reviews.length === 0 ? <tr><td colSpan={selectedProjectId ? 3 : 4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No reviews.</td></tr> : reviews.map((r) => (
+                    {reviews.length === 0 ? <tr><td colSpan={selectedProjectId ? 3 : 4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No reviews.</td></tr> : reviews.map((r, index) => (
                       <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{r.review_title || '—'}</td>
                         <td className="px-4 py-3 text-sm">{r.review_status || '—'}</td>
                         {!selectedProjectId && <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{projectLabel(r)}</td>}
@@ -267,6 +273,7 @@ export default function SimulatorPMOOversightQualityRegister() {
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Title</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Result</th>
                       {!selectedProjectId && <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Project</th>}
@@ -274,8 +281,9 @@ export default function SimulatorPMOOversightQualityRegister() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                    {inspections.length === 0 ? <tr><td colSpan={selectedProjectId ? 3 : 4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No inspections.</td></tr> : inspections.map((r) => (
+                    {inspections.length === 0 ? <tr><td colSpan={selectedProjectId ? 3 : 4} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No inspections.</td></tr> : inspections.map((r, index) => (
                       <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{r.inspection_title || '—'}</td>
                         <td className="px-4 py-3 text-sm">{r.inspection_result || '—'}</td>
                         {!selectedProjectId && <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{projectLabel(r)}</td>}

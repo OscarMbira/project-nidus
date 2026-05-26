@@ -59,7 +59,7 @@ export default function RetroBoard({ items, onVote, currentUserId }) {
                       No items yet
                     </p>
                   ) : (
-                    categoryItems.map((item) => (
+                    categoryItems.map((item, index) => (
                       <div
                         key={item.id}
                         className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700"

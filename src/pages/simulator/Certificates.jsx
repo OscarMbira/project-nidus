@@ -146,7 +146,7 @@ const Certificates = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {certificates.map((certificate) => (
+          {certificates.map((certificate, index) => (
             <div
               key={certificate.id}
               className={`rounded-xl p-6 border-2 ${

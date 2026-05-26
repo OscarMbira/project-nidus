@@ -136,6 +136,37 @@ const TableHeaderCell = forwardRef(({
 
 TableHeaderCell.displayName = 'TableHeaderCell'
 
+const TableRowNumberHeader = forwardRef(({ className = '', ...props }, ref) => {
+  return (
+    <th
+      ref={ref}
+      scope="col"
+      aria-label="Row number"
+      className={`w-12 min-w-[3rem] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${className}`}
+      {...props}
+    >
+      #
+    </th>
+  )
+})
+
+TableRowNumberHeader.displayName = 'TableRowNumberHeader'
+
+const TableRowNumberCell = forwardRef(({ number, className = '', ...props }, ref) => {
+  return (
+    <td
+      ref={ref}
+      aria-label={number != null ? `Row ${number}` : undefined}
+      className={`w-12 min-w-[3rem] px-3 py-4 text-sm tabular-nums text-gray-500 dark:text-gray-400 ${className}`}
+      {...props}
+    >
+      {number}
+    </td>
+  )
+})
+
+TableRowNumberCell.displayName = 'TableRowNumberCell'
+
 const TableCell = forwardRef(({ 
   children, 
   className = '',
@@ -154,5 +185,14 @@ const TableCell = forwardRef(({
 
 TableCell.displayName = 'TableCell'
 
-export { Table, TableHeader, TableBody, TableRow, TableHeaderCell, TableCell }
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHeaderCell,
+  TableCell,
+  TableRowNumberHeader,
+  TableRowNumberCell,
+}
 

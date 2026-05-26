@@ -97,7 +97,7 @@ const PMOExecutiveAlertsPanel = memo(function PMOExecutiveAlertsPanel({
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-        {attention.map((row) => (
+        {attention.map((row, index) => (
           <div
             key={row.id}
             className={`px-3.5 py-3 flex items-start gap-2.5 text-sm text-slate-100 dark:text-slate-100 ${severityCardClass(row.severity)}`}

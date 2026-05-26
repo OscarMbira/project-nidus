@@ -191,7 +191,7 @@ export default function ApiKeyManager({ projectId = null }) {
                 Scopes
               </label>
               <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3">
-                {scopes.map((scope) => (
+                {scopes.map((scope, index) => (
                   <label key={scope.id} className="flex items-center">
                     <input
                       type="checkbox"
@@ -271,7 +271,7 @@ export default function ApiKeyManager({ projectId = null }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {apiKeys.map((key) => (
+          {apiKeys.map((key, index) => (
             <div
               key={key.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"

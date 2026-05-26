@@ -34,6 +34,7 @@ import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecor
 import CustomFieldRenderer from '../features/local-data-extensions/components/CustomFieldRenderer'
 import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 const ISSUE_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
     { key: 'issue_identifier', label: 'Identifier' },
@@ -420,7 +421,7 @@ export default function IssueDetailView() {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
-            {['overview', 'actions', 'decisions', 'comments', 'history'].map((tab) => (
+            {['overview', 'actions', 'decisions', 'comments', 'history'].map((tab, index) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

@@ -14,6 +14,8 @@ import {
   updateFundingSource,
   deleteFundingSource
 } from '../../services/fundingSourceService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function FundingSources() {
   const navigate = useNavigate();
@@ -207,6 +209,7 @@ export default function FundingSources() {
           <table className="min-w-full divide-y divide-gray-700">
             <thead className="bg-gray-700/50">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Code</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
@@ -216,13 +219,15 @@ export default function FundingSources() {
             <tbody className="divide-y divide-gray-700">
               {sources.length === 0 ? (
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td colSpan={4} className="px-6 py-8 text-center text-gray-400">
                     No funding sources. Add one to use in project budget categories.
                   </td>
                 </tr>
               ) : (
-                sources.map((row) => (
+                sources.map((row, index) => (
                   <tr key={row.id} className="hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 text-sm text-gray-100">{row.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-400">{row.code || '—'}</td>
                     <td className="px-6 py-4">

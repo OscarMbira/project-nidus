@@ -12,7 +12,8 @@ import { getMyProjects, getAllProjects, deleteProject } from '../services/projec
 import { platformProjectPath } from '../utils/projectRouteParam';
 import ExportListMenu from '../components/ui/ExportListMenu';
 import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
-import { TableHeaderCell } from '../components/ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table';
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils';
 import { ProjectGridCard, ProjectListRow } from '../components/project/ProjectsListViews';
 import { useSortableTable } from '../hooks/useSortableTable';
 import { useViewMode } from '../hooks/useViewMode';
@@ -439,10 +440,11 @@ export default function Projects() {
           <div
             className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${showUpdatingHint ? 'opacity-75 transition-opacity' : ''}`}
           >
-            {displayProjects.map((project) => (
+            {displayProjects.map((project, index) => (
               <ProjectGridCard
                 key={project.id}
                 project={project}
+                rowNumber={getDisplayRowNumber(index)}
                 onSelect={goToProject}
                 onEdit={goToEditProject}
                 onDelete={handleDeleteProject}
@@ -458,6 +460,7 @@ export default function Projects() {
               <table className="w-full">
                 <thead className="bg-gray-700/50">
                   <tr>
+                    <TableRowNumberHeader className="!text-gray-300 !normal-case !px-6" />
                     <TableHeaderCell
                       sortable
                       sortDirection={getSortDirectionForColumn('project_name')}
@@ -508,10 +511,11 @@ export default function Projects() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
-                  {displayProjects.map((project) => (
+                  {displayProjects.map((project, index) => (
                     <ProjectListRow
                       key={project.id}
                       project={project}
+                      rowNumber={getDisplayRowNumber(index)}
                       onSelect={goToProject}
                       onEdit={goToEditProject}
                       onDelete={handleDeleteProject}

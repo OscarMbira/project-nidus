@@ -11,11 +11,13 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import { useViewMode } from '../../hooks/useViewMode'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import ITTOCard from '../../components/itto/ITTOCard'
 import ProjectITTOForm from './ProjectITTOForm'
 import ITTOProcessGroupBadge from '../../components/itto/ITTOProcessGroupBadge'
 import { ITTO_PROCESS_GROUPS } from '../../constants/ittoConstants'
 import { useIttoPermissions } from '../../hooks/useIttoPermissions'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },
@@ -326,7 +328,7 @@ export default function ProjectITTOList({ isSim = false }) {
                     {p.project_name || p.id}
                   </option>
                 ))
-              : projects.map((p) => (
+              : projects.map((p, index) => (
                   <option key={p.id} value={p.id}>
                     {p.project_name || p.id}
                   </option>
@@ -351,7 +353,7 @@ export default function ProjectITTOList({ isSim = false }) {
             aria-label="Filter by process group"
           >
             <option value="">All process groups</option>
-            {ITTO_PROCESS_GROUPS.map((pg) => (
+            {ITTO_PROCESS_GROUPS.map((pg, index) => (
               <option key={pg} value={pg}>
                 {pg}
               </option>
@@ -384,12 +386,13 @@ export default function ProjectITTOList({ isSim = false }) {
         <p className="text-gray-600 dark:text-gray-400">Loading…</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <ITTOCard
               key={r.id}
               record={r}
               footer={
                 <div className="flex flex-wrap gap-2 justify-end">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                   {canWriteProjectIto && (
                     <button
                       type="button"
@@ -421,6 +424,7 @@ export default function ProjectITTOList({ isSim = false }) {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
+                <TableRowNumberHeader className="!normal-case" />
                 {['name', 'process_group', 'knowledge_area', 'status', 'created_at', 'updated_at'].map((col) => (
                   <th key={col} className="text-left p-3">
                     <button
@@ -449,8 +453,9 @@ export default function ProjectITTOList({ isSim = false }) {
               </tr>
             </thead>
             <tbody>
-              {displayRows.map((r) => (
+              {displayRows.map((r, index) => (
                 <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/80">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3 text-gray-900 dark:text-white font-medium">{r.name}</td>
                   <td className="p-3">
                     <ITTOProcessGroupBadge processGroup={r.process_group} />
@@ -504,7 +509,7 @@ export default function ProjectITTOList({ isSim = false }) {
           <div className="w-full max-w-lg rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-xl max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Pick template</h3>
             <ul className="space-y-2">
-              {templates.map((t) => (
+              {templates.map((t, index) => (
                 <li key={t.id}>
                   <button
                     type="button"

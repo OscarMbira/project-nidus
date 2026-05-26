@@ -369,7 +369,7 @@ export default function ResourceConflicts() {
         </div>
       ) : (
         <div className="space-y-4">
-          {conflicts.map((conflict) => (
+          {conflicts.map((conflict, index) => (
             <div
               key={conflict.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"

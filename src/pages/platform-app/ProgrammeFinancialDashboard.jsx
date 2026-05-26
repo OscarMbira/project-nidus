@@ -5,6 +5,8 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { listCostEntries } from '../../services/projectCostService'
 import { sumAmounts } from '../../services/projectRevenueService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProgrammeFinancialDashboard() {
   const { id: programmeId } = useParams()
@@ -43,7 +45,7 @@ export default function ProgrammeFinancialDashboard() {
     })()
   }, [programmeId])
 
-  const exportData = rows.map((r) => ({
+  const exportData = rows.map((r, index) => ({
     project_code: r.project_code,
     project_name: r.project_name,
     total_cost: r.totalCost,
@@ -100,6 +102,7 @@ export default function ProgrammeFinancialDashboard() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2 text-left">Code</th>
                 <th className="px-3 py-2 text-left">Project</th>
                 <th className="px-3 py-2 text-right">Total cost</th>
@@ -108,8 +111,9 @@ export default function ProgrammeFinancialDashboard() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-100 dark:border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2 font-mono text-xs">{r.project_code}</td>
                   <td className="px-3 py-2">
                     <Link className="text-blue-400 hover:underline" to={`/platform/projects/${r.id}/profitability`}>{r.project_name}</Link>

@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Check, PauseCircle } from 'lucide-react'
 import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
 import { getOPAById } from '../../services/opaService'
 import { getOPAById as getSimOPAById } from '../../services/sim/simOPAService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STEPS = ['Name & describe', 'Field visibility', 'Review & save']
 
@@ -284,6 +286,7 @@ export default function ProjectOPACopy() {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-3 py-2 text-left">Field</th>
                   <th className="px-3 py-2">Show</th>
                   <th className="px-3 py-2">Required</th>
@@ -291,10 +294,11 @@ export default function ProjectOPACopy() {
                 </tr>
               </thead>
               <tbody>
-                {normalizeFieldConfigs(fieldConfigs).map((f) => {
+                {normalizeFieldConfigs(fieldConfigs).map((f, index) => {
                   const locked = f.field_key === 'title'
                   return (
                     <tr key={f.field_key} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-3 py-2">{f.field_label}</td>
                       <td className="px-3 py-2 text-center">
                         <input
@@ -329,9 +333,8 @@ export default function ProjectOPACopy() {
           <div className="rounded-xl border border-sky-200 dark:border-sky-800 p-4 bg-sky-50/50 dark:bg-sky-900/20">
             <h2 className="font-semibold mb-3">Live preview</h2>
             <dl className="text-sm space-y-2">
-              {visibleFields.map((f) => (
-                <div key={f.field_key}>
-                  <dt className="text-gray-500">{f.custom_label || f.field_label}</dt>
+              {visibleFields.map((f, index) => (
+                <div key={f.field_key}>                  <dt className="text-gray-500">{f.custom_label || f.field_label}</dt>
                   <dd>
                     {f.field_key === 'tags' && Array.isArray(previewSource.tags)
                       ? previewSource.tags.join(', ') || '—'
@@ -356,7 +359,7 @@ export default function ProjectOPACopy() {
           <div>
             <h3 className="font-medium mb-2">Visible fields ({visibleFields.length})</h3>
             <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300">
-              {visibleFields.map((f) => (
+              {visibleFields.map((f, index) => (
                 <li key={f.field_key}>
                   {f.custom_label || f.field_label}
                   {f.is_required ? ' (required)' : ''}

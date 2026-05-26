@@ -6,6 +6,8 @@ import ViewToggle from '../ui/ViewToggle'
 import ExportListMenu from '../ui/ExportListMenu'
 import { useViewMode } from '../../hooks/useViewMode'
 import AppointmentTermsCard from '../invitations/AppointmentTermsCard'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const TABS = [
   { key: 'pending_acceptance', label: 'Pending' },
@@ -155,7 +157,7 @@ export default function AppointmentLedgerView({
         </div>
 
         <div className="flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-800 pb-2">
-          {TABS.map((t) => (
+          {TABS.map((t, index) => (
             <button
               key={t.key}
               type="button"
@@ -177,7 +179,7 @@ export default function AppointmentLedgerView({
           <p className="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">No records in this tab.</p>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {sortedData.map((r) => (
+            {sortedData.map((r, index) => (
               <div
                 key={r.id}
                 className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
@@ -190,6 +192,7 @@ export default function AppointmentLedgerView({
                   {r.time_commitment_pct != null ? `${r.time_commitment_pct}%` : '—'} · {fmtDate(r.assignment_start_date)}
                 </p>
                 <div className="flex gap-2 mt-3 flex-wrap">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                   <button
                     type="button"
                     onClick={() => toggleExpand(r.id)}
@@ -227,6 +230,7 @@ export default function AppointmentLedgerView({
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-800/80">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   {[
                     ['appointee', rowLabel || 'Appointee'],
                     ['role', 'Role'],
@@ -247,9 +251,10 @@ export default function AppointmentLedgerView({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {sortedData.map((r) => (
+                {sortedData.map((r, index) => (
                   <>
                     <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-2">{r.appointee?.full_name || r.appointee?.email}</td>
                       <td className="px-4 py-2 capitalize">
                         {(r.manager_role_name || r.member_role_name || r.role_title || '').replace(/_/g, ' ')}
@@ -281,6 +286,7 @@ export default function AppointmentLedgerView({
                     </tr>
                     {expandedId === r.id ? (
                       <tr key={`${r.id}-detail`} className="bg-gray-50 dark:bg-gray-900/60">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td colSpan={5} className="px-4 py-4">
                           <AppointmentTermsCard record={r} />
                         </td>

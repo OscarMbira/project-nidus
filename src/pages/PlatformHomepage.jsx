@@ -251,9 +251,8 @@ const PlatformHomepage = memo(() => {
       <section className="bg-white dark:bg-gray-800 py-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <h3 className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">{stat.value}</h3>
+            {stats.map((stat, index) => (
+              <div key={stat.label}>                <h3 className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">{stat.value}</h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">{stat.label}</p>
               </div>
             ))}
@@ -271,7 +270,7 @@ const PlatformHomepage = memo(() => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {featureList.map((feature) => (
+            {featureList.map((feature, index) => (
               <Card key={feature.title} className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-gray-200 dark:border-gray-700">
                 <div className="p-6 flex gap-6">
                   <div className="flex-shrink-0 w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
@@ -328,7 +327,7 @@ const PlatformHomepage = memo(() => {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {pricingTiers.map((tier) => (
+            {pricingTiers.map((tier, index) => (
               <div key={tier.name}>
                 <Card className={`h-full flex flex-col relative ${tier.popular ? 'border-2 border-blue-600 shadow-xl' : 'border-gray-200 dark:border-gray-700'}`}>
                   {tier.popular && (
@@ -376,8 +375,7 @@ const PlatformHomepage = memo(() => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {testimonials.map((testimonial, index) => (
-              <div key={index}>
-                <Card className="h-full border-gray-200 dark:border-gray-700">
+              <div key={index}>                <Card className="h-full border-gray-200 dark:border-gray-700">
                   <div className="p-6">
                     <p className="text-gray-600 dark:text-gray-400 italic mb-6 leading-relaxed">
                       "{testimonial.quote}"

@@ -8,6 +8,7 @@ import { FileText, Plus } from 'lucide-react'
 import { getPracticeCheckpointReports } from '../../services/sim/practiceCheckpointReportService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRACTICE_CHECKPOINT_COLUMNS = [
   { key: 'report_title', label: 'Title' },
   { key: 'checkpoint_date', label: 'Date' },
@@ -50,7 +51,7 @@ export default function PracticeCheckpointReportList() {
       </div>
       {loading ? <div className="text-center py-12">Loading...</div> : reports.length === 0 ? <div className="text-center py-12 text-gray-500">No checkpoint reports found</div> : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reports.map((report) => (
+          {reports.map((report, index) => (
             <div key={report.id} onClick={() => navigate(`/simulator/practice-checkpoint-reports/${report.id}?projectId=${projectId}`)} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 cursor-pointer hover:shadow-lg">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{report.report_title || 'Checkpoint Report'}</h3>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Date: {report.checkpoint_date}</p>

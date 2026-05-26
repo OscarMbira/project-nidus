@@ -24,7 +24,9 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import SortToolbar from '../../components/ui/SortToolbar'
 import { useSortableTable } from '../../hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useToast } from '../../hooks/useToast'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const MEMBERS_VIEW_KEY = 'nidus-sim-my-team-members-view'
 const ROLES_VIEW_KEY = 'nidus-sim-my-team-roles-view'
@@ -376,7 +378,7 @@ export default function SimMyTeam() {
             onChange={(e) => setSelectedTeamId(e.target.value)}
             className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-white min-h-[44px]"
           >
-            {teamList.map((t) => (
+            {teamList.map((t, index) => (
               <option key={t.id} value={t.id}>
                 {t.team_name} — {t.practice_projects?.project_name || 'Practice project'}
               </option>
@@ -472,6 +474,7 @@ export default function SimMyTeam() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     {['name', 'role', 'allocation', 'joined'].map((col) => (
                       <th key={col} className="text-left px-3 py-2">
                         <button
@@ -495,8 +498,9 @@ export default function SimMyTeam() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredMembers.map((m) => (
+                  {filteredMembers.map((m, index) => (
                     <tr key={m.id} className="bg-white dark:bg-gray-900">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-3 py-2 text-gray-900 dark:text-white">
                         {m.profile?.full_name || m.profile?.email}
                       </td>
@@ -530,7 +534,7 @@ export default function SimMyTeam() {
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {filteredMembers.map((m) => (
+              {filteredMembers.map((m, index) => (
                 <div
                   key={m.id}
                   className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900"
@@ -544,6 +548,7 @@ export default function SimMyTeam() {
                     <span className="text-gray-500">Allocation:</span> {m.allocation_percentage ?? '—'}%
                   </div>
                   <div className="mt-3 flex justify-end gap-2">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     <button
                       type="button"
                       onClick={() => setEditMember(m)}
@@ -579,6 +584,7 @@ export default function SimMyTeam() {
                 <table className="w-full text-xs sm:text-sm">
                   <thead>
                     <tr className="text-left text-gray-600 dark:text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="py-1 pr-2">Team</th>
                       <th className="py-1 pr-2">Practice project</th>
                       <th className="py-1 pr-2">Role</th>
@@ -588,6 +594,7 @@ export default function SimMyTeam() {
                   <tbody>
                     {pmoRolesSummary.map((row, i) => (
                       <tr key={`${row.teamId}-${row.roleLabel}-${i}`} className="border-t border-gray-200 dark:border-gray-600">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="py-1 pr-2">{row.teamName}</td>
                         <td className="py-1 pr-2">{row.projectName}</td>
                         <td className="py-1 pr-2">{row.roleLabel}</td>
@@ -644,6 +651,7 @@ export default function SimMyTeam() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="text-left px-3 py-2">
                       <button
                         type="button"
@@ -676,8 +684,9 @@ export default function SimMyTeam() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {roleRows.map((fr) => (
+                  {roleRows.map((fr, index) => (
                     <tr key={fr.id} className="bg-white dark:bg-gray-900">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-3 py-2 text-gray-900 dark:text-white">{fr.role_label}</td>
                       <td className="px-3 py-2 tabular-nums">{fr._count}</td>
                       <td className="px-3 py-2 text-right">
@@ -704,7 +713,7 @@ export default function SimMyTeam() {
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {roleRows.map((fr) => (
+              {roleRows.map((fr, index) => (
                 <div
                   key={fr.id}
                   className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900"
@@ -712,6 +721,7 @@ export default function SimMyTeam() {
                   <div className="font-medium text-gray-900 dark:text-white">{fr.role_label}</div>
                   <div className="text-sm text-gray-500 mt-1">Members using: {fr._count}</div>
                   <div className="mt-3 flex gap-2 justify-end">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                     <button
                       type="button"
                       onClick={() => setRoleModal({ mode: 'edit', row: fr })}

@@ -112,7 +112,7 @@ export default function EPRFollowOnActions({ reportId, followOnActions, onFollow
         </div>
       ) : (
         <div className="space-y-3">
-          {followOnActions.map((link) => (
+          {followOnActions.map((link, index) => (
             <div
               key={link.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"

@@ -139,14 +139,13 @@ const Support = () => {
 
             {faqResults.length > 0 ? (
               <div className="space-y-4">
-                {faqResults.map((faq) => (
+                {faqResults.map((faq, index) => (
                   <div
                     key={faq.id}
                     className={`p-4 rounded-lg border ${
                       theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'
                     }`}
-                  >
-                    <h3 className="font-semibold mb-2">{faq.question}</h3>
+                  >                    <h3 className="font-semibold mb-2">{faq.question}</h3>
                     <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                       {faq.answer}
                     </p>
@@ -163,7 +162,7 @@ const Support = () => {
                   Search for frequently asked questions or browse by category:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {categories.map((cat) => (
+                  {categories.map((cat, index) => (
                     <button
                       key={cat.id}
                       onClick={() => setSearchQuery(cat.name)}

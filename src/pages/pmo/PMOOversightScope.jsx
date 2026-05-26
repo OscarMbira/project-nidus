@@ -8,6 +8,8 @@ import { FileText } from 'lucide-react'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import PMOOversightHeader from '../../components/pmo/PMOOversightHeader'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const PLAN_COLS = [
   { key: 'project_name', label: 'Project' },
@@ -89,6 +91,7 @@ export default function PMOOversightScope() {
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-100 dark:bg-gray-800">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="p-3 text-left">Project</th>
                     <th className="p-3 text-left">Status</th>
                     <th className="p-3 text-left">Version</th>
@@ -97,8 +100,9 @@ export default function PMOOversightScope() {
                   </tr>
                 </thead>
                 <tbody>
-                  {plans.map((r) => (
+                  {plans.map((r, index) => (
                     <tr key={r.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="p-3">{r.project_name}</td>
                       <td className="p-3">{r.status}</td>
                       <td className="p-3">{r.version}</td>
@@ -131,6 +135,7 @@ export default function PMOOversightScope() {
               <table className="min-w-full text-sm">
                 <thead className="bg-gray-100 dark:bg-gray-800">
                   <tr>
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="p-3 text-left">Project</th>
                     <th className="p-3 text-left">Status</th>
                     <th className="p-3 text-left">Version</th>
@@ -139,8 +144,9 @@ export default function PMOOversightScope() {
                   </tr>
                 </thead>
                 <tbody>
-                  {stmts.map((r) => (
+                  {stmts.map((r, index) => (
                     <tr key={r.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="p-3">{r.project_name}</td>
                       <td className="p-3">{r.status}</td>
                       <td className="p-3">{r.version}</td>

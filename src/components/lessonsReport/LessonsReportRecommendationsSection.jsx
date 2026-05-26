@@ -225,7 +225,7 @@ export default function LessonsReportRecommendationsSection({
         </div>
       ) : (
         <div className="space-y-4">
-          {recommendations.map((rec) => (
+          {recommendations.map((rec, index) => (
             <div
               key={rec.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"

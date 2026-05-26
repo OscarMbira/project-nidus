@@ -7,6 +7,8 @@ import DefectStatusBadge from '../../../components/testing/DefectStatusBadge'
 import DefectSeverityBadge from '../../../components/testing/DefectSeverityBadge'
 import { getPracticeDefects } from '../../../services/sim/practiceDefectService'
 import { SIM_TESTING_BASE } from './simTestingPaths'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'defect_ref', label: 'Ref' },
@@ -101,6 +103,7 @@ function Body({ projectId }) {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-900 text-gray-400 text-left">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">Ref</th>
                 <th className="p-3">Title</th>
                 <th className="p-3">Status</th>
@@ -108,8 +111,9 @@ function Body({ projectId }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {rows.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-3">
                     <Link to={`${SIM_TESTING_BASE}/defects/${r.id}`} className="text-emerald-400 hover:underline">
                       {r.defect_ref || r.id}

@@ -124,7 +124,7 @@ export default function IssueReportsList() {
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {filteredReports.map((report) => (
+            {filteredReports.map((report, index) => (
               <div
                 key={report.id}
                 className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"

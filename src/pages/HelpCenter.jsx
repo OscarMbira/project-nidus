@@ -326,7 +326,7 @@ export default function HelpCenter() {
               >
                 All
               </button>
-              {categories.map((category) => (
+              {categories.map((category, index) => (
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
@@ -348,7 +348,7 @@ export default function HelpCenter() {
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Featured Articles</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {featuredArticles.map((article) => (
+              {featuredArticles.map((article, index) => (
                 <button
                   key={article.id}
                   onClick={() => navigate(`/help/article/${article.slug}`)}
@@ -384,7 +384,7 @@ export default function HelpCenter() {
             </div>
           ) : (
             <div className="space-y-4">
-              {articles.map((article) => (
+              {articles.map((article, index) => (
                 <button
                   key={article.id}
                   onClick={() => navigate(`/help/article/${article.slug}`)}

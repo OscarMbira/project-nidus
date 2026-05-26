@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Briefcase, TrendingUp, DollarSign, Activity, RefreshCw, AlertCircle } from 'lucide-react'
 import { getSimPortfolios, getAllSimPortfolioProjects } from '../../services/simPortfolioService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 function KpiCard({ label, value, icon: Icon, colour }) {
   return (
@@ -112,6 +114,7 @@ export default function SimPortfolioDashboard() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Name', 'Code', 'Status', 'Budget', 'Health', 'Start', 'End'].map(h => (
                     <th key={h} className="text-left px-4 py-3 font-medium">{h}</th>
                   ))}
@@ -120,6 +123,7 @@ export default function SimPortfolioDashboard() {
               <tbody>
                 {portfolios.map((p, i) => (
                   <tr key={p.id} className={`border-b border-gray-700/50 hover:bg-gray-700/30 ${i % 2 ? 'bg-gray-700/10' : ''}`}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-white font-medium">{p.portfolio_name}</td>
                     <td className="px-4 py-3 text-gray-300 font-mono text-xs">{p.portfolio_code || '—'}</td>
                     <td className="px-4 py-3">{statusBadge(p.portfolio_status)}</td>

@@ -11,6 +11,7 @@ import RiskForm from '../components/RiskForm'
 import ExportRecordButtons from '../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../utils/exportUtils'
 
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 const TASK_VIEW_SECTIONS = [
   { title: 'Task', fields: [
     { key: 'task_name', label: 'Name' },
@@ -508,7 +509,7 @@ export default function TasksDetail() {
                 required
               >
                 <option value="">Select a project</option>
-                {projects.map((project) => (
+                {projects.map((project, index) => (
                   <option key={project.id} value={project.id}>
                     {project.project_name} {project.project_code && `(${project.project_code})`}
                   </option>

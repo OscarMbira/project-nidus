@@ -18,6 +18,8 @@ import {
   removePracticeProgrammeManager,
   removePracticePortfolioManager,
 } from '../../../services/sim/simManagerAssignmentService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 
 const VIEW_KEY = 'sim-pmo-manager-assignments-view'
 const SORT_PREFIX = 'sim-pmo-manager-assignments-sort-'
@@ -304,6 +306,7 @@ export default function SimManagerAssignments() {
             <table className="min-w-full text-sm">
               <thead className="bg-gray-100 dark:bg-gray-800 text-left">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3">
                     <SortBtn label="Code" sortKey="code" activeKey={sortDir.key} dir={sortDir.dir} onClick={handleSortClick} />
                   </th>
@@ -318,11 +321,12 @@ export default function SimManagerAssignments() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {rows.map((r) => {
+                {rows.map((r, index) => {
                   const mid = r.manager_public_user_id
                   const w = mid ? workload[mid] ?? 0 : null
                   return (
                     <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-2 font-mono text-xs text-gray-600 dark:text-gray-300">{r[codeField]}</td>
                       <td className="px-4 py-2 text-gray-900 dark:text-white">{r[nameField]}</td>
                       <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{r.manager?.full_name || r.manager?.email || '—'}</td>

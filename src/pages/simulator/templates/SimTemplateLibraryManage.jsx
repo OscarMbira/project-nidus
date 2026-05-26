@@ -70,7 +70,7 @@ export default function TemplateLibraryManage() {
     []
   )
   const displayRows = useMemo(() => sortedData(rows, accessors), [rows, sortedData, accessors])
-  const exportRows = useMemo(() => displayRows.map((r) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
+  const exportRows = useMemo(() => displayRows.map((r, index) => ({ ...r, updated_at: accessors.updated_at(r) })), [displayRows, accessors])
 
   if (!accountId && !loading) {
     return <div className="p-8 text-center text-gray-600 dark:text-gray-400">No organisation context.</div>
@@ -105,7 +105,7 @@ export default function TemplateLibraryManage() {
         <p className="text-gray-600 dark:text-gray-400">Loading…</p>
       ) : viewMode === 'grid' ? (
         <div className="grid sm:grid-cols-2 gap-4">
-          {displayRows.map((r) => (
+          {displayRows.map((r, index) => (
             <div key={r.id} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
               <p className="font-semibold text-gray-900 dark:text-white">{r.title}</p>
               <p className="text-xs text-gray-500 mt-1">

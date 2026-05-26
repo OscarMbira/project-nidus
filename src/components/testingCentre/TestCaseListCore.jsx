@@ -5,7 +5,10 @@ import { useViewMode } from '../../hooks/useViewMode'
 import ExportListMenu from '../ui/ExportListMenu'
 import * as platform from '../../services/testingCentreService'
 import * as sim from '../../services/simTestingCentreService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
+import RowNumberBadge from '../ui/RowNumberBadge'
 const SORT_KEYS = ['test_case_code', 'title', 'module', 'test_type', 'priority', 'status', 'updated_at']
 
 function sortInd(key, sk, sd) {
@@ -57,7 +60,7 @@ export default function TestCaseListCore({ mode = 'platform', pathPrefix, viewKe
     })
   }, [items, search, sk, sd])
 
-  const exportData = useMemo(() => filtered.map((r) => ({
+  const exportData = useMemo(() => filtered.map((r, index) => ({
     test_case_code: r.test_case_code,
     title: r.title,
     module: r.module?.name || r.module?.code || '',
@@ -104,6 +107,7 @@ export default function TestCaseListCore({ mode = 'platform', pathPrefix, viewKe
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-white dark:bg-gray-900/90 border-b border-gray-200 dark:border-gray-800">
+                <TableRowNumberHeader className="!normal-case" />
                 {['test_case_code', 'title', 'module', 'test_type', 'priority', 'status', 'updated_at'].map((k) => (
                   <th key={k} className="text-left p-2">
                     <button type="button" onClick={() => cycle(k, sk, sd, setSort)} className="inline-flex items-center gap-1">
@@ -115,8 +119,9 @@ export default function TestCaseListCore({ mode = 'platform', pathPrefix, viewKe
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
+              {filtered.map((r, index) => (
                 <tr key={r.id} className="border-b border-gray-100 dark:border-gray-800/80 hover:bg-gray-100/80 dark:hover:bg-gray-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="p-2 font-mono text-xs">
                     <Link to={`${pathPrefix}/cases/${r.id}`} className="text-blue-500 hover:underline">{r.test_case_code}</Link>
                   </td>
@@ -134,11 +139,16 @@ export default function TestCaseListCore({ mode = 'platform', pathPrefix, viewKe
       )}
       {viewMode === 'grid' && !loading && (
         <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((r) => (
+          {filtered.map((r, index) => (
             <li key={r.id} className="rounded-lg border border-gray-200 dark:border-gray-800 p-3 bg-white dark:bg-gray-900/80">
+              <div className="flex items-start gap-2 mb-1">
+                <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                <div className="min-w-0">
               <div className="text-xs text-blue-500 font-mono mb-1">{r.test_case_code}</div>
               <Link to={`${pathPrefix}/cases/${r.id}`} className="font-medium hover:underline block mb-1">{r.title}</Link>
               <div className="text-xs text-gray-500">{r.status} · {r.priority}</div>
+                </div>
+              </div>
             </li>
           ))}
         </ul>

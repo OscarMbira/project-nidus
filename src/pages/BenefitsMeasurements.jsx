@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Plus, Search, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
 import { getBenefits, getBenefitMeasurements } from '../services/benefitsService';
 import { supabase } from '../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function BenefitsMeasurements() {
   const navigate = useNavigate();
@@ -194,6 +196,7 @@ export default function BenefitsMeasurements() {
                 <table className="w-full">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Date
                       </th>
@@ -212,8 +215,9 @@ export default function BenefitsMeasurements() {
                     </tr>
                   </thead>
                   <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    {measurements.map((measurement) => (
+                    {measurements.map((measurement, index) => (
                       <tr key={measurement.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           {measurement.measurement_date && new Date(measurement.measurement_date).toLocaleDateString()}
                         </td>

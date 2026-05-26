@@ -14,6 +14,8 @@ import {
   updatePortfolioCategory,
   deletePortfolioCategory,
 } from '../../services/portfolioCategoryService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function PortfolioCategories() {
   const navigate = useNavigate()
@@ -260,6 +262,7 @@ export default function PortfolioCategories() {
           <table className="min-w-full divide-y divide-gray-700">
             <thead className="bg-gray-700/50">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase">
                   Order
                 </th>
@@ -280,13 +283,15 @@ export default function PortfolioCategories() {
             <tbody className="divide-y divide-gray-700">
               {items.length === 0 ? (
                 <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
                     No portfolio categories. Add one to start classifying portfolios.
                   </td>
                 </tr>
               ) : (
-                items.map((row) => (
+                items.map((row, index) => (
                   <tr key={row.id} className="hover:bg-gray-700/30">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 text-sm text-gray-400">{row.sort_order ?? 0}</td>
                     <td className="px-6 py-4 text-sm text-gray-100">{row.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-400">{row.code || '—'}</td>

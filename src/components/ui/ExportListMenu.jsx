@@ -18,8 +18,16 @@ import {
   DEFAULT_LIST_EXPORT_FIELDS,
   MAX_LIST_EXPORT_FIELDS
 } from '../../utils/exportUtils'
+import { withExportRowNumbers } from '../../utils/tableRowNumberUtils'
 
-export default function ExportListMenu({ columns = [], data = [], baseFilename = 'Export', disabled = false }) {
+export default function ExportListMenu({
+  columns = [],
+  data = [],
+  baseFilename = 'Export',
+  disabled = false,
+  includeRowNumbers = true,
+  pagination = {},
+}) {
   const [open, setOpen] = useState(false)
   const [fieldModal, setFieldModal] = useState(null) // 'word' | 'ppt' | null
   const [selectedKeys, setSelectedKeys] = useState(() => {
@@ -33,6 +41,9 @@ export default function ExportListMenu({ columns = [], data = [], baseFilename =
     () => (columns || []).filter(c => selectedKeys.includes(c.key)),
     [columns, selectedKeys]
   )
+
+  const resolveExport = (cols, rows) =>
+    withExportRowNumbers(cols, rows, { includeRowNumbers, ...pagination })
 
   const toggleKey = (key) => {
     setSelectedKeys(prev => {
@@ -101,7 +112,11 @@ export default function ExportListMenu({ columns = [], data = [], baseFilename =
               )}
               <button
                 type="button"
-                onClick={() => { exportToExcel(columns, data, baseFilename); setOpen(false) }}
+                onClick={() => {
+                  const { columns: c, rows: r } = resolveExport(columns, data)
+                  exportToExcel(c, r, baseFilename)
+                  setOpen(false)
+                }}
                 disabled={!data.length}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -125,7 +140,11 @@ export default function ExportListMenu({ columns = [], data = [], baseFilename =
               </button>
               <button
                 type="button"
-                onClick={() => { exportListToCSV(columns, data, baseFilename); setOpen(false) }}
+                onClick={() => {
+                  const { columns: c, rows: r } = resolveExport(columns, data)
+                  exportListToCSV(c, r, baseFilename)
+                  setOpen(false)
+                }}
                 disabled={!data.length}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -133,7 +152,11 @@ export default function ExportListMenu({ columns = [], data = [], baseFilename =
               </button>
               <button
                 type="button"
-                onClick={() => { exportListToXML(columns, data, baseFilename); setOpen(false) }}
+                onClick={() => {
+                  const { columns: c, rows: r } = resolveExport(columns, data)
+                  exportListToXML(c, r, baseFilename)
+                  setOpen(false)
+                }}
                 disabled={!data.length}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -141,7 +164,11 @@ export default function ExportListMenu({ columns = [], data = [], baseFilename =
               </button>
               <button
                 type="button"
-                onClick={() => { exportListToJSON(columns, data, baseFilename); setOpen(false) }}
+                onClick={() => {
+                  const { columns: c, rows: r } = resolveExport(columns, data)
+                  exportListToJSON(c, r, baseFilename)
+                  setOpen(false)
+                }}
                 disabled={!data.length}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -149,7 +176,11 @@ export default function ExportListMenu({ columns = [], data = [], baseFilename =
               </button>
               <button
                 type="button"
-                onClick={() => { exportListToPrint(columns, data, baseFilename); setOpen(false) }}
+                onClick={() => {
+                  const { columns: c, rows: r } = resolveExport(columns, data)
+                  exportListToPrint(c, r, baseFilename)
+                  setOpen(false)
+                }}
                 disabled={!data.length}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Target, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { getQualityRegister } from '../../services/qualityManagementService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function QualityCriteriaManager({ projectId, qualityRegisterId = null }) {
   const [criteria, setCriteria] = useState([]);
@@ -223,6 +225,7 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Criterion
                   </th>
@@ -244,8 +247,9 @@ export default function QualityCriteriaManager({ projectId, qualityRegisterId = 
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {criteria.map((criterion) => (
+                {criteria.map((criterion, index) => (
                   <tr key={criterion.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">

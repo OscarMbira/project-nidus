@@ -74,7 +74,7 @@ export default function CurrentPeriodQualitySection({ reportId, qualityActivitie
         </div>
       ) : (
         <div className="space-y-3">
-          {qualityActivities.map((activity) => (
+          {qualityActivities.map((activity, index) => (
             <div
               key={activity.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800"

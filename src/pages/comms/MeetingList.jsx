@@ -9,6 +9,7 @@ import { useSortableTable } from '../../hooks/useSortableTable'
 import { Table, TableBody, TableHeader, TableRow, TableHeaderCell, TableCell } from '../../components/ui/Table'
 import { useCommsApi } from './useCommsApi'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const EXPORT_COLS = [
   { key: 'title', label: 'Title' },
   { key: 'status', label: 'Status' },
@@ -65,7 +66,7 @@ export default function MeetingList() {
 
   const exportRows = useMemo(
     () =>
-      filtered.map((m) => ({
+      filtered.map((m, index) => ({
         ...m,
         scheduled_start: m.scheduled_start ? new Date(m.scheduled_start).toLocaleString() : '',
       })),
@@ -121,7 +122,7 @@ export default function MeetingList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((m) => (
+              {filtered.map((m, index) => (
                 <TableRow key={m.id}>
                   <TableCell>{m.title}</TableCell>
                   <TableCell>{m.status}</TableCell>
@@ -138,7 +139,7 @@ export default function MeetingList() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((m) => (
+          {filtered.map((m, index) => (
             <Link
               key={m.id}
               to={`${basePath}/meetings/${m.id}`}

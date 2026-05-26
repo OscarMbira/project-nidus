@@ -333,7 +333,7 @@ export default function MetricsDashboard() {
               value={selectedBoardId || ''}
               onChange={(e) => setSelectedBoardId(e.target.value)}
             >
-              {boards.map((b) => (
+              {boards.map((b, index) => (
                 <option key={b.id} value={b.id}>
                   {b.board_name}
                 </option>
@@ -360,7 +360,7 @@ export default function MetricsDashboard() {
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date Range:</span>
           </div>
           <div className="flex items-center gap-2">
-            {['7', '30', '60', '90'].map((days) => (
+            {['7', '30', '60', '90'].map((days, index) => (
               <button
                 key={days}
                 onClick={() => setDateRange(days)}
@@ -421,8 +421,7 @@ export default function MetricsDashboard() {
                   ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300'
                   : 'border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 text-blue-800 dark:text-blue-300'
               }`}
-            >
-              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+            >              <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <p className="text-sm">{alert.message}</p>
             </div>
           ))}
@@ -435,7 +434,7 @@ export default function MetricsDashboard() {
           { id: 'leadCycle', label: 'Lead / cycle' },
           { id: 'throughput', label: 'Throughput' },
           { id: 'flowEfficiency', label: 'Flow efficiency' },
-        ].map((t) => (
+        ].map((t, index) => (
           <button
             key={t.id}
             type="button"

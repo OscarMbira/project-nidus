@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { Shield, Ban, AlertTriangle, CheckCircle, X } from 'lucide-react'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ThreatIntelligence() {
   const [threats, setThreats] = useState([])
@@ -259,6 +261,7 @@ export default function ThreatIntelligence() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Threat Type
               </th>
@@ -282,13 +285,15 @@ export default function ThreatIntelligence() {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {threats.length === 0 ? (
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td colSpan="6" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                   No threats recorded
                 </td>
               </tr>
             ) : (
-              threats.map((threat) => (
+              threats.map((threat, index) => (
                 <tr key={threat.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                     {threat.threat_type}
                   </td>

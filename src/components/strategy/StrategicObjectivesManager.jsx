@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Target, Plus, Edit2, Trash2, CheckCircle, AlertTriangle, TrendingUp, FolderKanban } from 'lucide-react';
 import { deleteStrategicObjective } from '../../services/strategicService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function StrategicObjectivesManager({ objectives = [], onEdit, onRefresh }) {
   const [deleting, setDeleting] = useState(null);
@@ -88,6 +90,7 @@ export default function StrategicObjectivesManager({ objectives = [], onEdit, on
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Objective
                 </th>
@@ -112,7 +115,7 @@ export default function StrategicObjectivesManager({ objectives = [], onEdit, on
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {objectives.map((objective) => {
+              {objectives.map((objective, index) => {
                 const CategoryIcon = getCategoryIcon(objective.objective_category);
                 const progress = objective.target_value && objective.target_value > 0
                   ? ((objective.current_value || 0) / objective.target_value) * 100
@@ -120,6 +123,7 @@ export default function StrategicObjectivesManager({ objectives = [], onEdit, on
 
                 return (
                   <tr key={objective.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">

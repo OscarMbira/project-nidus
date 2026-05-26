@@ -323,7 +323,7 @@ export default function SprintPlanning() {
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
         <nav className="flex space-x-8">
-          {['planning', 'sprints'].map((tab) => (
+          {['planning', 'sprints'].map((tab, index) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -590,7 +590,7 @@ function PlanningTab({
                   No available stories
                 </p>
               ) : (
-                availableStories.map((story) => (
+                availableStories.map((story, index) => (
                   <div
                     key={story.id}
                     className={`p-4 rounded-lg border ${
@@ -734,7 +734,7 @@ function SprintsTab({ sprints, onCreateSprint, onEditSprint, onSelectSprint }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sprints.map((sprint) => (
+          {sprints.map((sprint, index) => (
             <div
               key={sprint.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow cursor-pointer"

@@ -6,6 +6,8 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import { listRevenueEntries, createRevenueEntry, sumAmounts } from '../../services/projectRevenueService'
 import { listCostEntries } from '../../services/projectCostService'
 import { useFinancialPermissions } from '../../hooks/useFinancialPermissions'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProjectProfitability() {
   const { projectId } = useParams()
@@ -101,14 +103,16 @@ export default function ProjectProfitability() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2 text-left">Date</th>
                 <th className="px-3 py-2 text-right">Amount</th>
                 <th className="px-3 py-2 text-left">Type</th>
               </tr>
             </thead>
             <tbody>
-              {revenue.map((r) => (
+              {revenue.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-100 dark:border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">{r.revenue_date}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.amount}</td>
                   <td className="px-3 py-2">{r.revenue_type}</td>

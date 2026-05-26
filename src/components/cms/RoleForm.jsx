@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { platformDb } from '../../services/supabaseClient'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(false)
@@ -132,7 +133,7 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
             disabled={loadingUsers}
           >
             <option value="">Unassigned</option>
-            {users.map((user) => (
+            {users.map((user, index) => (
               <option key={user.id} value={user.id}>
                 {user.full_name || user.email}
               </option>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Target, Link, Plus, Edit2, Trash2, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 import { getProjectObjectiveMappings, deleteProjectObjectiveMapping, calculateProjectAlignmentScore } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProjectObjectiveMapper({ projectId, onAddMapping, onEdit }) {
   const [mappings, setMappings] = useState([]);
@@ -163,6 +165,7 @@ export default function ProjectObjectiveMapper({ projectId, onAddMapping, onEdit
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Strategic Objective
                   </th>
@@ -184,8 +187,9 @@ export default function ProjectObjectiveMapper({ projectId, onAddMapping, onEdit
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {mappings.map((mapping) => (
+                {mappings.map((mapping, index) => (
                   <tr key={mapping.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Target className="h-4 w-4 text-blue-600 dark:text-blue-400" />

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { simDb } from '../../services/supabase/supabaseClient'
 import { createPracticeProject } from '../../services/sim/practiceProjectService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function PracticeProjectCreate() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -97,7 +98,7 @@ export default function PracticeProjectCreate() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Select type</option>
-                {projectTypes.map((type) => (
+                {projectTypes.map((type, index) => (
                   <option key={type.id} value={type.id}>{type.type_name}</option>
                 ))}
               </select>
@@ -111,7 +112,7 @@ export default function PracticeProjectCreate() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="">Select status</option>
-                {projectStatuses.map((status) => (
+                {projectStatuses.map((status, index) => (
                   <option key={status.id} value={status.id}>{status.status_name}</option>
                 ))}
               </select>

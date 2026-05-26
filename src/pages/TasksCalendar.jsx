@@ -105,13 +105,12 @@ export default function TasksCalendar() {
 
       return (
         <div className="flex flex-wrap gap-1 justify-center mt-1">
-          {dayTasks.slice(0, 3).map((task) => (
+          {dayTasks.slice(0, 3).map((task, index) => (
             <div
               key={task.id}
               className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}
               title={task.task_name}
-            />
-          ))}
+            />          ))}
           {dayTasks.length > 3 && (
             <span className="text-xs text-gray-500 dark:text-gray-400">
               +{dayTasks.length - 3}
@@ -162,7 +161,7 @@ export default function TasksCalendar() {
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
           >
             <option value="all">All Projects</option>
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <option key={project.id} value={project.id}>
                 {project.project_name}
               </option>
@@ -212,7 +211,7 @@ export default function TasksCalendar() {
               </div>
             ) : (
               <div className="space-y-3">
-                {selectedDateTasks.map((task) => (
+                {selectedDateTasks.map((task, index) => (
                   <div
                     key={task.id}
                     onClick={() => navigate(`/tasks/${task.id}`)}

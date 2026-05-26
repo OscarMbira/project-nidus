@@ -33,6 +33,7 @@ import {
   FileClock,
   Package,
   Layers,
+  Map,
   FileBox,
   Activity,
   Calendar,
@@ -168,6 +169,23 @@ const simulatorPMMenuConfig = [
     ]
   },
   {
+    id: 'sim-pm-process-templates',
+    label: 'Process Templates',
+    path: null,
+    icon: Layers,
+    section: 'Process Templates',
+    order: 3.5,
+    children: [
+      { id: 'sim-pm-pt-hub', label: 'Hub Overview', path: '/simulator/pm/process-templates', icon: Layers, order: 1 },
+      { id: 'sim-pm-pt-pre', label: 'Pre-Project', path: '/simulator/pm/process-templates/pre-project', icon: FileText, order: 2 },
+      { id: 'sim-pm-pt-init', label: 'Initiating', path: '/simulator/pm/process-templates/initiating', icon: Flag, order: 3 },
+      { id: 'sim-pm-pt-plan', label: 'Planning', path: '/simulator/pm/process-templates/planning', icon: Map, order: 4 },
+      { id: 'sim-pm-pt-exec', label: 'Executing', path: '/simulator/pm/process-templates/executing', icon: Activity, order: 5 },
+      { id: 'sim-pm-pt-mon', label: 'Monitoring & Controlling', path: '/simulator/pm/process-templates/monitoring-controlling', icon: BarChart3, order: 6 },
+      { id: 'sim-pm-pt-close', label: 'Closing', path: '/simulator/pm/process-templates/closing', icon: FileCheck, order: 7 },
+    ]
+  },
+  {
     id: 'sim-pm-planning-delivery',
     label: 'Planning & Delivery',
     path: null,
@@ -223,7 +241,7 @@ const simulatorPMMenuConfig = [
     children: [
       { id: 'sim-pm-people-teams', label: 'Practice Teams', path: '/simulator/practice-teams', icon: Briefcase, order: 1 },
       { id: 'sim-pm-people-stakeholders', label: 'Stakeholders', path: '/simulator/practice-stakeholders', icon: AlertCircle, order: 2 },
-      { id: 'sim-pm-invitation-tracker', label: 'Invitation Status', path: '/simulator/pm/invitation-tracker', icon: MailCheck, order: 3 },
+      { id: 'sim-pm-invitation-tracker', label: 'Invitation Tracker', path: '/simulator/pm/invitation-tracker', icon: MailCheck, order: 3 },
     ]
   },
   {

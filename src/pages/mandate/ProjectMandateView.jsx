@@ -404,7 +404,7 @@ export default function ProjectMandateView() {
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">6. Constraints</h2>
               {constraints.length > 0 ? (
                 <div className="space-y-2">
-                  {constraints.map((c) => (
+                  {constraints.map((c, index) => (
                     <ConstraintListItem key={c.id} constraint={c} readOnly />
                   ))}
                 </div>

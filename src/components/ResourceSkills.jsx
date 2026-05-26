@@ -213,7 +213,7 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {skills.map((skill) => (
+              {skills.map((skill, index) => (
                 <div
                   key={skill.id}
                   className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"

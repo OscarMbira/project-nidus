@@ -7,6 +7,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BookOpen, Plus } from 'lucide-react'
 import { getPracticeLessonsLog, getPracticeLessonEntries, createPracticeLessonsLog, createPracticeLessonEntry } from '../../services/sim/practiceLessonsService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const PRACTICE_LESSON_ENTRY_COLUMNS = [
   { key: 'lesson_title', label: 'Title' },
@@ -69,6 +71,7 @@ export default function PracticeLessonsLog() {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Lesson</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Priority</th>
@@ -76,7 +79,7 @@ export default function PracticeLessonsLog() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {entries.map((entry) => (
+              {entries.map((entry, index) => (
                 <tr key={entry.id} onClick={() => navigate(`/simulator/practice-lessons-log/${log.id}/entry/${entry.id}?projectId=${projectId}`)} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{entry.lesson_title}</div>

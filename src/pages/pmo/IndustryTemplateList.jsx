@@ -11,6 +11,8 @@ import {
   duplicateTemplate,
 } from '../../services/industryTemplateService'
 import { downloadText, templatesToCsv } from '../../utils/industryPlanExport'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'industry_code', label: 'Code' },
@@ -127,7 +129,7 @@ export default function IndustryTemplateList() {
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {!loading && viewMode === 'grid' && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
+          {filtered.map((r, index) => (
             <div
               key={r.id}
               className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
@@ -138,6 +140,7 @@ export default function IndustryTemplateList() {
                 {r.status}
               </span>
               <div className="mt-4 flex gap-2">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 <Link to={`/pmo/industry-templates/${r.id}`} className="text-xs text-blue-600 flex items-center gap-1">
                   <Eye className="h-3 w-3" /> View
                 </Link>
@@ -157,6 +160,7 @@ export default function IndustryTemplateList() {
           <table className="min-w-full text-sm">
             <thead className="bg-slate-50 dark:bg-slate-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-4 py-2 text-left">Industry</th>
                 <th className="px-4 py-2 text-left">Code</th>
                 <th className="px-4 py-2 text-left">Status</th>
@@ -165,8 +169,9 @@ export default function IndustryTemplateList() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((r) => (
+              {filtered.map((r, index) => (
                 <tr key={r.id} className="border-t border-slate-100 dark:border-slate-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-4 py-2 font-medium">{r.industry_name}</td>
                   <td className="px-4 py-2 text-slate-500">{r.industry_code}</td>
                   <td className="px-4 py-2">{r.status}</td>

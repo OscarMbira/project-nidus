@@ -24,6 +24,7 @@ import { format } from 'date-fns'
 import BurndownChart from '../../components/charts/BurndownChart'
 import BurnupChart from '../../components/charts/BurnupChart'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 // Sortable Story Card Component
 function SortableStoryCard({ story, sprintBacklog, onClick }) {
   const {
@@ -435,7 +436,7 @@ export default function SprintBoard() {
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {statuses.map((status) => (
+          {statuses.map((status, index) => (
             <DroppableStatusColumn
               key={status}
               status={status}

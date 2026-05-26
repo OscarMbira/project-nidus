@@ -9,6 +9,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Eye, FileText, Search } from 'lucide-react'
 import { getBenefitsReviewPlans } from '../../services/benefitsReviewPlanService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const STATUS_COLORS = {
   draft: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
@@ -139,6 +141,7 @@ export default function BenefitsReviewPlanList({ projectId }) {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900">
                 <tr>
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Reference</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Plan Title</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Project</th>
@@ -149,10 +152,11 @@ export default function BenefitsReviewPlanList({ projectId }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {filtered.map((plan) => {
+                {filtered.map((plan, index) => {
                   const viewPath = getViewPath(plan)
                   return (
                     <tr key={plan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-4 py-3 text-sm font-mono text-blue-600 dark:text-blue-400">
                         {plan.document_ref || '—'}
                       </td>

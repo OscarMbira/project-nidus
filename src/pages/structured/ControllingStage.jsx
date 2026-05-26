@@ -176,7 +176,7 @@ export default function ControllingStage() {
             className="w-full md:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">All Stages</option>
-            {stageBoundaries.map((stage) => (
+            {stageBoundaries.map((stage, index) => (
               <option key={stage.id} value={stage.id}>
                 {stage.gate_name} - {stage.stage_name}
               </option>
@@ -356,7 +356,7 @@ export default function ControllingStage() {
               <p className="text-gray-500 dark:text-gray-400">No checkpoint reports yet.</p>
             ) : (
               <div className="space-y-3">
-                {checkpointReports.map((report) => (
+                {checkpointReports.map((report, index) => (
                   <div
                     key={report.id}
                     onClick={() => {
@@ -434,7 +434,7 @@ export default function ControllingStage() {
               }
               return (
               <div className="space-y-3">
-                {display.map((report) => (
+                {display.map((report, index) => (
                   <div
                     key={report.id}
                     role="button"

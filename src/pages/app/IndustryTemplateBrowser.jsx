@@ -38,7 +38,7 @@ export default function IndustryTemplateBrowser({ isSim = false }) {
         />
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {rows.map((r) => (
+        {rows.map((r, index) => (
           <div key={r.id} className="rounded-xl border p-4 dark:border-slate-700">
             <h2 className="font-semibold">{r.industry_name}</h2>
             <p className="text-xs text-slate-500 mt-1">{r.typical_duration}</p>

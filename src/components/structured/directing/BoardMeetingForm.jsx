@@ -3,6 +3,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { X, Calendar, Clock, MapPin, FileText, Users } from 'lucide-react';
 import { createBoardMeeting, updateBoardMeeting, fetchBoardMembers } from '../../../services/directingProjectService';
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [boardMembers, setBoardMembers] = useState([]);
@@ -142,7 +143,7 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               >
-                {meetingTypes.map((type) => (
+                {meetingTypes.map((type, index) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
                   </option>
@@ -167,7 +168,7 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 required
               >
-                {meetingStatuses.map((status) => (
+                {meetingStatuses.map((status, index) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>

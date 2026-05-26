@@ -3,6 +3,7 @@ import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Target, TrendingUp, DollarSign, CheckCircle, AlertTriangle, Users, Lightbulb } from 'lucide-react';
 import { createEndProjectReport, updateEndProjectReport } from '../../../services/closingProjectService';
 
+import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 export default function EndProjectReportForm({ projectId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
@@ -412,7 +413,7 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">Select associated closure...</option>
-                {closures.map((closure) => (
+                {closures.map((closure, index) => (
                   <option key={closure.id} value={closure.id}>
                     {closure.closure_type} - {closure.closure_status}
                   </option>
@@ -448,7 +449,7 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select user...</option>
-                  {users.map((user) => (
+                  {users.map((user, index) => (
                     <option key={user.id} value={user.id}>
                       {user.full_name || user.email}
                     </option>
@@ -467,7 +468,7 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select user...</option>
-                  {users.map((user) => (
+                  {users.map((user, index) => (
                     <option key={user.id} value={user.id}>
                       {user.full_name || user.email}
                     </option>

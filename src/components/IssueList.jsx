@@ -3,7 +3,9 @@ import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { Edit2, Trash2, CheckCircle, Clock, AlertCircle, User, Calendar, Bug, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { TableHeaderCell } from './ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './ui/Table'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
+import RowNumberBadge from './ui/RowNumberBadge'
 
 export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMode = 'grid' }) {
   const navigate = useNavigate()
@@ -133,6 +135,7 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
           <table className="w-full border-collapse">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Type</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
@@ -145,11 +148,12 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {issues.map((issue) => (
+              {issues.map((issue, index) => (
                 <tr
                   key={issue.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group"
                 >
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4">
                     <div className="font-medium text-gray-900 dark:text-white">{issue.issue_title}</div>
                     {issue.issue_description && (
@@ -206,7 +210,7 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
 
   return (
     <div className="space-y-4">
-      {issues.map((issue) => (
+      {issues.map((issue, index) => (
         <div
           key={issue.id}
           className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
@@ -214,6 +218,7 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
+                <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                 {getTypeIcon(issue.issue_type)}
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {issue.issue_title}

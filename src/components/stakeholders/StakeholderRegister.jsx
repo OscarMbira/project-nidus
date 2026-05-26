@@ -2,7 +2,9 @@ import { useState, useMemo } from 'react';
 import { User, Edit2, Trash2, Eye, Users, Building, Mail, Phone, MapPin } from 'lucide-react';
 import { deleteStakeholder } from '../../services/stakeholderService';
 import { getCompletenessPercent } from '../../utils/stakeholderCompleteness';
-import { TableHeaderCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils';
+import RowNumberBadge from '../ui/RowNumberBadge';
 import { useSortableTable } from '../../hooks/useSortableTable';
 
 export default function StakeholderRegister({
@@ -137,7 +139,7 @@ export default function StakeholderRegister({
   if (viewMode === 'grid') {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {displayRows.map((stakeholder) => (
+        {displayRows.map((stakeholder, index) => (
           <div
             key={stakeholder.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 min-h-[220px] flex flex-col hover:shadow-md transition-shadow"
@@ -148,7 +150,10 @@ export default function StakeholderRegister({
               className="text-left flex-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded-lg"
             >
               <div className="flex items-start justify-between gap-2 mb-3">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{stakeholder.stakeholder_name}</h3>
+                <div className="flex items-start gap-2 min-w-0 flex-1">
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{stakeholder.stakeholder_name}</h3>
+                </div>
                 <span className={`shrink-0 px-2 py-1 text-xs font-medium rounded capitalize ${getTypeColor(stakeholder.stakeholder_type)}`}>
                   {stakeholder.stakeholder_type || 'N/A'}
                 </span>
@@ -199,6 +204,7 @@ export default function StakeholderRegister({
         <table className="w-full border-collapse">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+              <TableRowNumberHeader className="!normal-case" />
               <TableHeaderCell
                 sortable
                 sortDirection={getSortDirectionForColumn('stakeholder_name')}
@@ -241,12 +247,13 @@ export default function StakeholderRegister({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {displayRows.map((stakeholder) => (
+            {displayRows.map((stakeholder, index) => (
               <tr
                 key={stakeholder.id}
                 className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${onView ? 'cursor-pointer' : ''}`}
                 onClick={() => onView?.(stakeholder)}
               >
+                <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">

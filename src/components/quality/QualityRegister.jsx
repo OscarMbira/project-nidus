@@ -3,7 +3,8 @@ import { CheckCircle, XCircle, Clock, AlertTriangle, Edit2, Trash2, Eye, FileTex
 import { deleteQualityRegisterItem, getQualityActivities } from '../../services/qualityManagementService';
 import QualityActivityExportMenu from './QualityActivityExportMenu';
 import ExportListMenu from '../ui/ExportListMenu';
-import { TableHeaderCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils';
 import { useSortableTable } from '../../hooks/useSortableTable';
 
 const QUALITY_REGISTER_COLUMNS = [
@@ -418,11 +419,12 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
       {/* Register Tab Content */}
       {activeTab === 'register' && registerViewMode === 'grid' && (
         <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayRegisterItems.map((item) => (
+          {displayRegisterItems.map((item, index) => (
             <div
               key={item.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 min-h-[200px] flex flex-col bg-white dark:bg-gray-800"
             >
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">{item.product_name}</h3>
               <div className="flex flex-wrap gap-2 mb-2">
                 <span className="text-xs capitalize px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
@@ -470,6 +472,7 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
           <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+              <TableRowNumberHeader className="!normal-case" />
               <TableHeaderCell
                 sortable
                 sortDirection={getSortDirectionForColumn('product_name')}
@@ -524,8 +527,9 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {displayRegisterItems.map((item) => (
+            {displayRegisterItems.map((item, index) => (
               <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900 dark:text-white">

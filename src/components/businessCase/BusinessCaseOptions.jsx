@@ -118,7 +118,7 @@ export default function BusinessCaseOptions({ caseId, options = [], readOnly = f
       )}
 
       <div className="space-y-4">
-        {options.map((opt) => (
+        {options.map((opt, index) => (
           <div
             key={opt.id}
             className={`border rounded-lg p-4 dark:border-gray-600 ${

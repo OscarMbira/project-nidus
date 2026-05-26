@@ -3,6 +3,7 @@ import { supabase } from '../../services/supabaseClient';
 import { X, FileText, AlertTriangle, Target, TrendingUp } from 'lucide-react';
 import { createChangeRequest, updateChangeRequest } from '../../services/changeManagementService';
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 export default function ChangeRequestForm({ projectId, request, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
@@ -200,7 +201,7 @@ export default function ChangeRequestForm({ projectId, request, onClose, onSucce
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                   <option value="">Select board...</option>
-                  {boards.map((board) => (
+                  {boards.map((board, index) => (
                     <option key={board.id} value={board.id}>
                       {board.board_name}
                     </option>

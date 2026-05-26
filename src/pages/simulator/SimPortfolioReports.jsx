@@ -7,6 +7,8 @@ import {
   deleteSimPortfolioReport,
 } from '../../services/simPortfolioService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const REPORT_TYPES = [
   'Portfolio Status Report',
@@ -253,7 +255,7 @@ export default function SimPortfolioReports() {
           className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
         >
           <option value="">All Statuses</option>
-          {STATUSES.map((s) => (
+          {STATUSES.map((s, index) => (
             <option key={s} value={s}>
               {s.replace(/_/g, ' ')}
             </option>
@@ -294,6 +296,7 @@ export default function SimPortfolioReports() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-700 text-gray-400">
+                <TableRowNumberHeader className="!normal-case" />
                   {['Report Name', 'Type', 'Portfolio', 'Period', 'Status', 'Date', ''].map((h) => (
                     <th key={h} className="text-left px-4 py-3 font-medium">
                       {h}
@@ -309,6 +312,7 @@ export default function SimPortfolioReports() {
                       i % 2 ? 'bg-gray-700/10' : ''
                     }`}
                   >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-4 py-3 text-white font-medium">{r.report_name}</td>
                     <td className="px-4 py-3 text-gray-300 text-xs">{r.report_type || '—'}</td>
                     <td className="px-4 py-3 text-gray-300">{r.portfolio?.portfolio_name || '—'}</td>
@@ -368,7 +372,7 @@ export default function SimPortfolioReports() {
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-1 focus:ring-orange-500"
                 >
                   <option value="">Select portfolio…</option>
-                  {portfolios.map((p) => (
+                  {portfolios.map((p, index) => (
                     <option key={p.id} value={p.id}>
                       {p.portfolio_code} — {p.portfolio_name}
                     </option>
@@ -393,7 +397,7 @@ export default function SimPortfolioReports() {
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
                   >
                     <option value="">—</option>
-                    {REPORT_TYPES.map((t) => (
+                    {REPORT_TYPES.map((t, index) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
@@ -409,7 +413,7 @@ export default function SimPortfolioReports() {
                     }
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none"
                   >
-                    {STATUSES.map((s) => (
+                    {STATUSES.map((s, index) => (
                       <option key={s} value={s}>
                         {s.replace(/_/g, ' ')}
                       </option>

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { getWebhookLogs } from '../../services/webhookService'
 import { supabase } from '../../services/supabaseClient'
 import { RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle, Filter } from 'lucide-react'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function WebhookLogs({ webhookId = null }) {
   const [logs, setLogs] = useState([])
@@ -178,6 +180,7 @@ export default function WebhookLogs({ webhookId = null }) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Timestamp
               </th>
@@ -204,13 +207,15 @@ export default function WebhookLogs({ webhookId = null }) {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {logs.length === 0 ? (
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td colSpan="7" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                   No webhook logs found
                 </td>
               </tr>
             ) : (
-              logs.map((log) => (
+              logs.map((log, index) => (
                 <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {new Date(log.created_at).toLocaleString()}
                   </td>

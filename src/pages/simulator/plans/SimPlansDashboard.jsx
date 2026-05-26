@@ -135,12 +135,11 @@ export default function SimPlansDashboard() {
         {activeTab === 'stage' && (
           stagePlans.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stagePlans.map((plan) => (
+              {stagePlans.map((plan, index) => (
                 <div
                   key={plan.id}
                   className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6"
-                >
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                >                  <h3 className="font-semibold text-gray-900 dark:text-white">
                     Stage {plan.stage_number}: {plan.stage_title}
                   </h3>
                   <p className="text-sm text-gray-500 mt-1 capitalize">{plan.status}</p>

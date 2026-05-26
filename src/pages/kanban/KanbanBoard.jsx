@@ -25,6 +25,7 @@ import { format, differenceInDays } from 'date-fns'
 import { calculateFlowMetrics } from '../../utils/flowMetricsCalculator'
 import { listClassesForBoard, saveClassOfService } from '../../services/kanbanClassOfServiceService'
 
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 // Sortable Card Component
 function SortableCard({ card, onClick }) {
   const {
@@ -169,7 +170,7 @@ function DroppableColumn({ column, cards, onCardClick, onCreateCard, wipLimit })
       )}
       <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
         <div className="space-y-2 min-h-[100px]">
-          {cards.map((card) => (
+          {cards.map((card, index) => (
             <SortableCard
               key={card.id}
               card={card}
@@ -537,7 +538,7 @@ export default function KanbanBoard() {
           </button>
         </div>
         <ul className="text-sm space-y-1 text-gray-700 dark:text-gray-300">
-          {cosList.map((c) => (
+          {cosList.map((c, index) => (
             <li key={c.id}>
               {c.name}
               {c.wip_limit != null && <span className="text-gray-500"> (WIP {c.wip_limit})</span>}

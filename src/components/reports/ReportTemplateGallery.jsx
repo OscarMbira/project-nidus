@@ -55,7 +55,7 @@ export default function ReportTemplateGallery({ onSelectTemplate, onCreateFromTe
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((template) => (
+          {templates.map((template, index) => (
             <div
               key={template.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"

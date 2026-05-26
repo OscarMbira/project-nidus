@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getAuditTrail, searchAuditLog, exportAuditLog } from '../../services/auditService'
 import { FileText, Download, Search, Filter, Calendar } from 'lucide-react'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function AuditLogViewer({ onEventClick }) {
   const [auditLogs, setAuditLogs] = useState([])
@@ -237,6 +239,7 @@ export default function AuditLogViewer({ onEventClick }) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 dark:border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Timestamp
               </th>
@@ -263,12 +266,13 @@ export default function AuditLogViewer({ onEventClick }) {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {auditLogs.length === 0 ? (
               <tr>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td colSpan="7" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                   No audit logs found
                 </td>
               </tr>
             ) : (
-              auditLogs.map((log) => (
+              auditLogs.map((log, index) => (
                 <tr
                   key={log.id}
                   onClick={() => onEventClick && onEventClick(log)}

@@ -7,6 +7,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Layers, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeProjects } from '../../services/sim/practicePortfolioService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function PracticeProgrammeProjectsPage() {
   const [programmes, setProgrammes] = useState([])
@@ -113,12 +115,13 @@ export default function PracticeProgrammeProjectsPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700 bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="py-3 px-4">Programme name</th>
                     <th className="py-3 px-4">Code</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProgrammes.map((p) => (
+                  {filteredProgrammes.map((p, index) => (
                     <tr
                       key={p.id}
                       onClick={() => setSelectedProgrammeId(p.id)}
@@ -159,6 +162,7 @@ export default function PracticeProgrammeProjectsPage() {
                 <table className="min-w-full text-sm">
                   <thead>
                     <tr className="text-left text-gray-400 border-b border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                       <th className="py-2 pr-4">Project</th>
                       <th className="py-2 pr-4">Code</th>
                       <th className="py-2 pr-4">Status</th>
@@ -166,8 +170,9 @@ export default function PracticeProgrammeProjectsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {projects.map((row) => (
+                    {projects.map((row, index) => (
                       <tr key={row.id} className="border-b border-gray-800 last:border-0">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="py-2 pr-4 text-gray-100">
                           {row.practice_project?.project_name || 'Unknown Project'}
                         </td>

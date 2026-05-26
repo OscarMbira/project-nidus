@@ -6,6 +6,8 @@ import ExportListMenu from '../../components/ui/ExportListMenu'
 import { listSimRevenueEntries, createSimRevenueEntry, sumAmounts } from '../../services/simProjectRevenueService'
 import { listSimCostEntries } from '../../services/simProjectCostService'
 import { simDb } from '../../services/supabase/supabaseClient'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function SimProjectProfitability() {
   const { projectId } = useParams()
@@ -100,14 +102,16 @@ export default function SimProjectProfitability() {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-900">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-3 py-2 text-left">Date</th>
                 <th className="px-3 py-2 text-right">Amount</th>
                 <th className="px-3 py-2 text-left">Type</th>
               </tr>
             </thead>
             <tbody>
-              {rev.map((r) => (
+              {rev.map((r, index) => (
                 <tr key={r.id} className="border-t border-gray-800">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">{r.revenue_date}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.amount}</td>
                   <td className="px-3 py-2">{r.revenue_type}</td>

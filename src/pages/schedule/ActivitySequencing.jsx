@@ -5,6 +5,8 @@ import { listDependencies, saveDependency, softDeleteDependency } from '../../se
 import { listActivities } from '../../services/activityListService'
 import ActivityNetworkDiagram from '../../components/schedule/ActivityNetworkDiagram'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const COLS = [
   { key: 'pred', label: 'Predecessor' },
@@ -111,7 +113,7 @@ export default function ActivitySequencing() {
               className="rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             >
               <option value="">Predecessor…</option>
-              {acts.map((a) => (
+              {acts.map((a, index) => (
                 <option key={a.id} value={a.id}>
                   {(a.activity_code || '') + ' ' + a.name}
                 </option>
@@ -157,6 +159,7 @@ export default function ActivitySequencing() {
         <table className="min-w-full text-sm">
           <thead className="bg-gray-100 dark:bg-gray-800">
             <tr>
+                <TableRowNumberHeader className="!normal-case" />
               <th className="p-3 text-left">Predecessor</th>
               <th className="p-3 text-left">Successor</th>
               <th className="p-3 text-left">Type</th>
@@ -165,8 +168,9 @@ export default function ActivitySequencing() {
             </tr>
           </thead>
           <tbody>
-            {tableData.map((r) => (
+            {tableData.map((r, index) => (
               <tr key={r.id} className="border-t border-gray-200 dark:border-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="p-3">{r.pred}</td>
                 <td className="p-3">{r.succ}</td>
                 <td className="p-3">{r.dependency_type}</td>

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Edit2, Trash2, AlertTriangle, Target, TrendingUp, Calendar } from 'lucide-react';
 import { deleteResourceForecast } from '../../services/crossResourceService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ResourceForecastList({ forecasts, onEdit, onRefresh }) {
   const [deleting, setDeleting] = useState(null);
@@ -43,6 +45,7 @@ export default function ResourceForecastList({ forecasts, onEdit, onRefresh }) {
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Forecast Period
                 </th>
@@ -64,8 +67,9 @@ export default function ResourceForecastList({ forecasts, onEdit, onRefresh }) {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {forecasts.map((forecast) => (
+              {forecasts.map((forecast, index) => (
                 <tr key={forecast.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Calendar className="h-5 w-5 text-gray-400 mr-3" />

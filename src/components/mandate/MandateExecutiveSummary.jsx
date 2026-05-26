@@ -121,9 +121,8 @@ export default function MandateExecutiveSummary({ mandate, deliverables = [], st
           <div className="pt-4 border-t">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Key Stakeholders</h3>
             <div className="space-y-2">
-              {primaryStakeholders.slice(0, 5).map((s) => (
-                <div key={s.id} className="text-sm">
-                  <span className="font-medium text-gray-900 dark:text-white">{s.stakeholder_name}</span>
+              {primaryStakeholders.slice(0, 5).map((s, index) => (
+                <div key={s.id} className="text-sm">                  <span className="font-medium text-gray-900 dark:text-white">{s.stakeholder_name}</span>
                   {s.stakeholder_organisation && (
                     <span className="text-gray-600 dark:text-gray-400"> - {s.stakeholder_organisation}</span>
                   )}

@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { Users, UserPlus, Search, Plus, Building2, Calendar, BarChart3, UserSearch } from 'lucide-react';
 import { platformDb } from '../../services/supabase/supabaseClient';
 import { getAllTeams, getResourceDirectory } from '../../services/teamService';
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function Teams() {
   const navigate = useNavigate();
@@ -293,6 +295,7 @@ export default function Teams() {
                   <table className="w-full">
                     <thead className="bg-gray-700/50">
                       <tr>
+                <TableRowNumberHeader className="!normal-case" />
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Job Title</th>
@@ -302,6 +305,7 @@ export default function Teams() {
                     <tbody className="divide-y divide-gray-700">
                       {filteredResources.map(resource => (
                         <tr key={resource.id} className="hover:bg-gray-700/30 cursor-pointer">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               {resource.avatar_url ? (

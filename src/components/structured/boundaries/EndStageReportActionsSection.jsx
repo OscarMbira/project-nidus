@@ -103,7 +103,7 @@ export default function EndStageReportActionsSection({ reportId, followOnActions
         </div>
       ) : (
         <div className="space-y-4">
-          {followOnActions.map((action) => (
+          {followOnActions.map((action, index) => (
             <div key={action.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

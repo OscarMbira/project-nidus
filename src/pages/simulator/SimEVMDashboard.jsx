@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { simDb } from '../../services/supabase/supabaseClient'
 import SimEVMPanel from '../../components/sim/SimEVMPanel'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function SimEVMDashboard() {
   const { runId } = useParams()
@@ -25,6 +27,7 @@ export default function SimEVMDashboard() {
         <table className="w-full text-sm border-collapse border border-gray-700">
           <thead>
             <tr className="bg-gray-800">
+                <TableRowNumberHeader className="!normal-case" />
               <th className="border border-gray-700 p-2 text-left">Sim day</th>
               <th className="border border-gray-700 p-2 text-left">AC</th>
             </tr>
@@ -32,6 +35,7 @@ export default function SimEVMDashboard() {
           <tbody>
             {actuals.map((row, i) => (
               <tr key={i}>
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                 <td className="border border-gray-700 p-2">{row.sim_day}</td>
                 <td className="border border-gray-700 p-2">{row.ac}</td>
               </tr>

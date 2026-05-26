@@ -5,6 +5,8 @@ import { useViewMode } from '../../hooks/useViewMode'
 import ExportListMenu from '../ui/ExportListMenu'
 import * as platformSvc from '../../services/workAuthorisationService'
 import * as simSvc from '../../services/simWorkAuthorisationService'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const SORT_KEYS = ['reference_code', 'title', 'action_type', 'status', 'updated_at']
 
@@ -176,6 +178,7 @@ export default function WorkAuthorisationListCore({ mode = 'platform' }) {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800/80">
               <tr>
+                <TableRowNumberHeader className="!normal-case" />
                 {[
                   ['reference_code', 'Reference'],
                   ['title', 'Title'],
@@ -203,8 +206,9 @@ export default function WorkAuthorisationListCore({ mode = 'platform' }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {filtered.map((r) => (
+              {filtered.map((r, index) => (
                 <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2 font-mono text-xs">{r.reference_code}</td>
                   <td className="px-3 py-2 max-w-xs truncate">{r.title}</td>
                   <td className="px-3 py-2">{r.action_type}</td>
@@ -232,11 +236,12 @@ export default function WorkAuthorisationListCore({ mode = 'platform' }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((r) => (
+          {filtered.map((r, index) => (
             <div
               key={r.id}
               className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 p-4 shadow-sm flex flex-col gap-2"
             >
+                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
               <div className="flex justify-between gap-2">
                 <span className="font-mono text-xs text-gray-500">{r.reference_code}</span>
                 <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700">{r.status}</span>

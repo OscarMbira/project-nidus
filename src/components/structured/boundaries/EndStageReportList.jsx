@@ -98,7 +98,7 @@ export default function EndStageReportList({ reports, onEdit, onView, onRefresh,
       />
 
       <div className="grid grid-cols-1 gap-4">
-        {displayReports.map((report) => (
+        {displayReports.map((report, index) => (
           <div
             key={report.id}
             className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"

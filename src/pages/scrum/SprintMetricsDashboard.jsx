@@ -6,6 +6,8 @@ import { computeSprintForecast } from '../../services/sprintForecastService'
 import BurndownChart from '../../components/charts/BurndownChart'
 import BurnupChart from '../../components/charts/BurnupChart'
 import { format } from 'date-fns'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function SprintMetricsDashboard() {
   const { projectId, loading: pidLoading, error: pidErr } = usePlatformProjectId()
@@ -137,7 +139,7 @@ export default function SprintMetricsDashboard() {
             onChange={(e) => setSelectedSprintId(e.target.value)}
             className="w-full mb-4 rounded-lg border border-gray-700 bg-gray-950 px-3 py-2 text-sm"
           >
-            {sprints.map((s) => (
+            {sprints.map((s, index) => (
               <option key={s.id} value={s.id}>
                 {s.sprint_name} ({format(new Date(s.sprint_start_date), 'MMM d')} –{' '}
                 {format(new Date(s.sprint_end_date), 'MMM d')})
@@ -154,6 +156,7 @@ export default function SprintMetricsDashboard() {
             <table className="w-full text-left">
               <thead>
                 <tr className="text-gray-500 border-b border-gray-800">
+                <TableRowNumberHeader className="!normal-case" />
                   <th className="py-2">Sprint</th>
                   <th className="py-2">Committed</th>
                   <th className="py-2">Completed</th>
@@ -161,8 +164,9 @@ export default function SprintMetricsDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {sprints.slice(0, 15).map((s) => (
+                {sprints.slice(0, 15).map((s, index) => (
                   <tr key={s.id} className="border-b border-gray-800/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="py-2">{s.sprint_name}</td>
                     <td className="py-2">{s.committed_story_points ?? '—'}</td>
                     <td className="py-2">{s.completed_story_points ?? s.velocity ?? '—'}</td>

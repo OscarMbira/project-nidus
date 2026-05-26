@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Target, Search } from 'lucide-react'
 import { getProgrammeList, getProgrammeBenefits } from '../../services/programmeService'
 import BenefitsRealizationChart from '../../components/programme/BenefitsRealizationChart'
+import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 export default function ProgrammeBenefitsPage() {
   const [programmes, setProgrammes] = useState([])
@@ -107,12 +109,13 @@ export default function ProgrammeBenefitsPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 border-b border-gray-700 bg-gray-900/50">
+                <TableRowNumberHeader className="!normal-case" />
                     <th className="py-3 px-4">Programme name</th>
                     <th className="py-3 px-4">Code</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProgrammes.map((p) => (
+                  {filteredProgrammes.map((p, index) => (
                     <tr
                       key={p.id}
                       onClick={() => setSelectedProgrammeId(p.id)}
@@ -151,6 +154,7 @@ export default function ProgrammeBenefitsPage() {
                   <table className="min-w-full text-sm">
                     <thead>
                       <tr className="text-left text-gray-400 border-b border-gray-700">
+                <TableRowNumberHeader className="!normal-case" />
                         <th className="py-2 pr-4">Benefit</th>
                         <th className="py-2 pr-4">Category</th>
                         <th className="py-2 pr-4">Type</th>
@@ -158,8 +162,9 @@ export default function ProgrammeBenefitsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {benefits.map((b) => (
+                      {benefits.map((b, index) => (
                         <tr key={b.id} className="border-b border-gray-800 last:border-0">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="py-2 pr-4 text-gray-100">
                             {b.benefit_name || 'Unnamed benefit'}
                           </td>

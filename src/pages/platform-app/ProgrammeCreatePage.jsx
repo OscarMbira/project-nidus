@@ -467,8 +467,7 @@ export default function ProgrammeCreatePage() {
                   <div className="col-span-1" />
                 </div>
                 {budgetItems.map((row, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-2 items-start">
-                    <div className="col-span-4">
+                  <div key={index} className="grid grid-cols-12 gap-2 items-start">                    <div className="col-span-4">
                       <select value={row.category_name || ''} onChange={e => updateBudgetItem(index, 'category_name', e.target.value)} className={INPUT_CLS}>
                         <option value="">Select category…</option>
                         {budgetCategories.map(bc => (
