@@ -6,6 +6,7 @@ import pmoMenuConfig from '../../config/pmoMenuConfig'
 
 function PMOSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null }) {
   const location = useLocation()
+  const navigate = useNavigate()
   const [isExpandedLocal, setIsExpandedLocal] = useState(false)
   const hasChildren = menuItem.children && menuItem.children.length > 0
   const isActive = menuItem.path && (
@@ -32,6 +33,12 @@ function PMOSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onTogg
       } else {
         setIsExpandedLocal((prev) => !prev)
       }
+      return
+    }
+    // Always return to the list root when re-clicking a sidebar item from a create/edit/view sub-route
+    if (menuItem.path && location.pathname.startsWith(`${menuItem.path}/`)) {
+      e.preventDefault()
+      navigate(menuItem.path)
     }
   }
 

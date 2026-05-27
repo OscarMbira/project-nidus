@@ -79,16 +79,16 @@ export default function BusinessCaseViewComponent({
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Created</p>
             <p className="text-gray-900 dark:text-white">{businessCase.created_date}</p>
           </div>
-          {businessCase.projects?.name && (
+          {businessCase.projects?.project_name && (
             <div className="col-span-2">
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Project</p>
-              <p className="text-gray-900 dark:text-white">{businessCase.projects.name}</p>
+              <p className="text-gray-900 dark:text-white">{businessCase.projects.project_name}</p>
             </div>
           )}
-          {businessCase.programmes?.name && (
+          {businessCase.programmes?.programme_name && (
             <div className="col-span-2">
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Programme</p>
-              <p className="text-gray-900 dark:text-white">{businessCase.programmes.name}</p>
+              <p className="text-gray-900 dark:text-white">{businessCase.programmes.programme_name}</p>
             </div>
           )}
         </div>

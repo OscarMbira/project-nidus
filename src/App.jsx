@@ -3,6 +3,7 @@ import { lazy, Suspense, useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppToPlatformRedirect from './components/AppToPlatformRedirect'
+import { PmisGapRouteElements } from './modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import OfflineIndicator from './components/pwa/OfflineIndicator'
 import PWAUpdatePrompt from './components/pwa/PWAUpdatePrompt'
 
@@ -4920,6 +4921,8 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          {/* v631 PMIS gap features — GAP-01 through GAP-29 */}
+          <PmisGapRouteElements />
           <Route path="pm/itto/templates" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -5525,6 +5528,45 @@ function App() {
                   <ProtectedRoute>
                     <PMLayout>
                       <PMInitiationBusinessCase />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/initiation/business-case/create" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <BusinessCaseCreate />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/initiation/business-case/:id/view" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <BusinessCaseViewPage />
+                    </PMLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="pm/initiation/business-case/:id/edit" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMLayout>
+                      <BusinessCaseEdit />
                     </PMLayout>
                   </ProtectedRoute>
                 </ToastProvider>

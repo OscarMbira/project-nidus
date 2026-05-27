@@ -1,48 +1,32 @@
 import { useState } from 'react'
-import PMSidebar from './PMSidebar'
-import SystemHeader from '../headers/SystemHeader'
+import Sidebar from '../Sidebar'
+import PlatformAppHeader from '../headers/PlatformAppHeader'
+import QuickCaptureFab from '../../modules/pmis-gaps/components/QuickCaptureFab'
+import { BrandingProvider } from '../../context/BrandingContext'
 
 export default function PMLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const pmNavLinks = [
-    { label: 'Dashboard', path: '/pm/dashboard' },
-    { label: 'Team', path: '/pm/team-members' },
-    { label: 'Delivery', path: '/pm/delivery/work-packages' },
-    { label: 'Controls', path: '/pm/controls/risk-register' },
-    { label: 'Reports', path: '/pm/reporting/checkpoint-reports' },
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <SystemHeader
-        systemName="Project Manager"
-        logoBgColor="bg-blue-600"
-        headerBgClass="bg-gray-800 dark:bg-gray-900"
-        textColor="text-white"
-        subtextColor="text-gray-400"
-        hoverBgClass="hover:bg-gray-700"
-        borderColor="border-gray-700 dark:border-gray-800"
-        dashboardPath="/pm/dashboard"
-        settingsPath="/pm/settings"
-        profilePath="/pm/profile"
-        navLinks={pmNavLinks}
-        onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+    <BrandingProvider>
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
+        <PlatformAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
 
-      {/* PM Sidebar */}
-      <PMSidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+        <div className="flex flex-1 overflow-hidden relative">
+          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content */}
-      <main className="lg:ml-80 pt-14 sm:pt-16 min-h-screen">
-        <div className="p-4 sm:p-6">
-          {children}
+          <main
+            id="main-content"
+            tabIndex="-1"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:ml-80 pt-14 sm:pt-16 w-full"
+          >
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 sm:pt-2">
+              {children}
+            </div>
+          </main>
         </div>
-      </main>
-    </div>
+        <QuickCaptureFab />
+      </div>
+    </BrandingProvider>
   )
 }

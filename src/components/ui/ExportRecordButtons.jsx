@@ -1,13 +1,20 @@
 /**
  * ExportRecordButtons — Single Export dropdown for record view pages.
  * Options: Excel, Word, PowerPoint, CSV, XML, JSON, Print.
- * Theme-aware (dark/light). System-wide: one dropdown for a cleaner UI.
+ *
+ * Declarative API (preferred): pass sections + record + baseFilename — wires all formats via ExportRecordMenu.
+ * Callback API (legacy): pass onExportExcel, onExportWord, etc.
  */
 
 import { useState } from 'react'
 import { Download, ChevronDown, Presentation, FileText, Table2, FileSpreadsheet, Code, Braces, Printer } from 'lucide-react'
+import ExportRecordMenu from './ExportRecordMenu'
 
 export default function ExportRecordButtons({
+  sections,
+  record,
+  baseFilename,
+  title,
   onExportPPT,
   onExportWord,
   onExportExcel,
@@ -17,6 +24,17 @@ export default function ExportRecordButtons({
   onExportPrint,
   disabled = false
 }) {
+  if (sections && record) {
+    return (
+      <ExportRecordMenu
+        sections={sections}
+        record={record}
+        baseFilename={baseFilename || title || 'Record'}
+        disabled={disabled}
+      />
+    )
+  }
+
   const [open, setOpen] = useState(false)
 
   const btnBase = 'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border disabled:opacity-50 disabled:cursor-not-allowed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'

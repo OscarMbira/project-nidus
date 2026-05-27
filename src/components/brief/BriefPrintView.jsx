@@ -44,6 +44,15 @@ export default function BriefPrintView({ brief, project, mandate }) {
     window.print()
   }
 
+  const handleExportWord = async () => {
+    try {
+      await exportBriefToWord(brief, project, mandate)
+    } catch (error) {
+      console.error('Error exporting brief to Word:', error)
+      alert('Failed to export Word document.')
+    }
+  }
+
   if (!brief) {
     return <div className="text-center py-8">No brief data available</div>
   }

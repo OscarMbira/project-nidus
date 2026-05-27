@@ -130,6 +130,10 @@ export async function createBriefFromMandate(mandateId, projectId) {
  */
 export async function getBriefById(briefId) {
   try {
+    if (!briefId || briefId === 'undefined') {
+      throw new Error('Brief ID is required')
+    }
+
     const { data, error } = await supabase
       .from('project_briefs')
       .select(`

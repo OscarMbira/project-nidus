@@ -1,6 +1,9 @@
 /**
  * Simulator PMO Dashboard Sidebar Menu Configuration
  *
+ * @deprecated Runtime sidebar uses DB menu_items via useSimMenu + Sidebar.jsx (v641).
+ * Use src/config/menuRegistry.js (domain: simulator) as build-time source of truth.
+ *
  * Static menu for the Simulator PMO Dashboard (/simulator/pmo/*)
  * Mirrors Platform PMO structure but for practice/simulation context
  *

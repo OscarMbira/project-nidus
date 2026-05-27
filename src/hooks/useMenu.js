@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
 import { platformDb } from '../services/supabaseClient'
+import {
+  DELIVERY_MANAGEMENT_SUB_DEFS,
+  PMO_CATEGORY_DEFS,
+  PMO_CATEGORY_FALLBACKS,
+} from '../config/pmoSidebarCategories'
+import { applyRegistryCategoryFallback, collectMenuRoutePaths, applySimulatorRegistryFallback } from '../config/menuRegistryUtils'
 
 const MENU_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v18_'
+const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v22_'
 const LEGACY_MENU_CACHE_KEY_PREFIX = 'nidus_menu_'
 
 function getCacheKey(userId) {
@@ -12,6 +18,10 @@ function getCacheKey(userId) {
 function getCacheKeys(userId) {
   return [
     `${MENU_CACHE_KEY_PREFIX}${userId}`,
+    `nidus_menu_v21_${userId}`,
+    `nidus_menu_v20_${userId}`,
+    `nidus_menu_v19_${userId}`,
+    `nidus_menu_v18_${userId}`,
     `nidus_menu_v17_${userId}`,
     `nidus_menu_v16_${userId}`,
     `nidus_menu_v15_${userId}`,
@@ -48,9 +58,13 @@ function writeToStorage(storage, key, value) {
 // Determines sidebar layout from the user's actual DB role names.
 // This is the authoritative source — never infer layout from menu item signals.
 // ---------------------------------------------------------------------------
-const PMO_LAYOUT_ROLES = new Set(['pmo_admin', 'system_admin', 'account_owner'])
+const PMO_LAYOUT_ROLES = new Set(['pmo_admin', 'system_admin', 'account_owner', 'super_admin'])
 const TM_LEAD_ROLES   = new Set(['team_lead'])
 const TM_LAYOUT_ROLES = new Set(['team_member', 'team_lead'])
+
+function normalizeRoleName(roleName) {
+  return String(roleName || '').trim().toLowerCase().replace(/\s+/g, '_')
+}
 
 /**
  * Resolve sidebar layout type from the user's actual role names.
@@ -58,9 +72,10 @@ const TM_LAYOUT_ROLES = new Set(['team_member', 'team_lead'])
  * @returns {{ layout: 'pmo' | 'pm' | 'tm', isLead: boolean }}
  */
 function resolveLayoutType(roleNames = []) {
-  if (roleNames.some(r => PMO_LAYOUT_ROLES.has(r))) return { layout: 'pmo', isLead: false }
-  if (roleNames.some(r => TM_LEAD_ROLES.has(r)))   return { layout: 'tm',  isLead: true  }
-  if (roleNames.some(r => TM_LAYOUT_ROLES.has(r))) return { layout: 'tm',  isLead: false }
+  const names = roleNames.map(normalizeRoleName)
+  if (names.some((r) => PMO_LAYOUT_ROLES.has(r))) return { layout: 'pmo', isLead: false }
+  if (names.some((r) => TM_LEAD_ROLES.has(r)))   return { layout: 'tm',  isLead: true  }
+  if (names.some((r) => TM_LAYOUT_ROLES.has(r))) return { layout: 'tm',  isLead: false }
   // project_manager, portfolio_manager, programme_manager, project_sponsor, etc.
   return { layout: 'pm', isLead: false }
 }
@@ -462,20 +477,21 @@ function hasProcessTemplatesMenu(nodes = []) {
   const norm = (v) => String(v || '').trim().toLowerCase()
   for (const n of nodes) {
     const code = norm(n.menu_code)
-    if (code.includes('process_templates') || code.startsWith('tm_pt_') || code.startsWith('pm_pt_')) return true
-    if (/\/process-templates\b/.test(String(n.route_path || ''))) return true
-    if (n.children?.length && hasProcessTemplatesMenu(n.children)) return true
+    const path = String(n.route_path || '')
+    if (code.startsWith('pmo_pt_') || code.startsWith('pm_pt_') || code.startsWith('tm_pt_')) return true
+    if (/\/process-templates\b/.test(path)) return true
+    if (Array.isArray(n.children) && n.children.length > 0 && hasProcessTemplatesMenu(n.children)) return true
   }
   return false
 }
 
-function buildProcessTemplatesSectionNode({ basePath, sectionId, sectionCode, sectionLabel, sortOrder, codePrefix }) {
-  const leaves = processTemplateLeafDefs(basePath, codePrefix).map((d) => ({
-    id: `virtual-${sectionCode}-${d.code}`,
+function buildProcessTemplatesLeafNodes(basePath, codePrefix, parentId = null) {
+  return processTemplateLeafDefs(basePath, codePrefix).map((d) => ({
+    id: `virtual-${codePrefix}-${d.code}`,
     menu_code: d.code,
     menu_label: d.label,
     menu_description: d.label,
-    parent_menu_id: sectionId,
+    parent_menu_id: parentId,
     menu_level: 2,
     sort_order: d.sort,
     route_path: d.path,
@@ -489,6 +505,10 @@ function buildProcessTemplatesSectionNode({ basePath, sectionId, sectionCode, se
     canUse: true,
     children: [],
   }))
+}
+
+function buildProcessTemplatesSectionNode({ basePath, sectionId, sectionCode, sectionLabel, sortOrder, codePrefix }) {
+  const leaves = buildProcessTemplatesLeafNodes(basePath, codePrefix, sectionId)
   return {
     id: sectionId,
     menu_code: sectionCode,
@@ -563,6 +583,123 @@ function ensureProcessTemplatesInTeamMemberTree(menuItems = []) {
   if (formsIdx >= 0) clone.splice(formsIdx + 1, 0, section)
   else clone.push(section)
   return clone.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+}
+
+/** Ensure PMO categorised sidebar always has Process Templates children (v629). */
+function ensureProcessTemplatesPmoCategoryGrouped(grouped) {
+  const bucketId = 'pmo-cat-process-templates'
+  if (!grouped.has(bucketId)) grouped.set(bucketId, [])
+  const bucket = grouped.get(bucketId)
+  const norm = (v) => String(v || '').trim().toLowerCase()
+
+  for (const d of processTemplateLeafDefs('/pmo/process-templates', 'pmo_pt')) {
+    const exists = bucket.some((i) => {
+      const iPath = norm(i.route_path)
+      if (iPath && iPath === norm(d.path)) return true
+      if (!iPath) return false
+      return norm(i.menu_label) === norm(d.label)
+    })
+    if (!exists) {
+      bucket.push({
+        id: `virtual-pmo-cat-process-templates-${d.code}`,
+        menu_code: d.code,
+        menu_label: d.label,
+        menu_description: d.label,
+        parent_menu_id: null,
+        menu_level: 1,
+        sort_order: d.sort,
+        route_path: d.path,
+        external_url: null,
+        menu_icon: d.icon,
+        menu_color: null,
+        badge_text: null,
+        badge_color: null,
+        is_visible: true,
+        is_active: true,
+        canUse: true,
+        children: [],
+      })
+    }
+  }
+
+  const filtered = bucket.filter((item) => {
+    const code = norm(item.menu_code)
+    const path = String(item.route_path || '').trim()
+    const hasKids = Array.isArray(item.children) && item.children.length > 0
+    if (path || hasKids) return true
+    if (code.startsWith('pmo_pt_')) return true
+    return code !== 'pmo_process_templates_section' && norm(item.menu_label) !== 'process templates'
+  })
+  bucket.length = 0
+  bucket.push(...filtered)
+}
+
+function ensureProcessTemplatesInPmoCategorisedTree(categorisedRoots = []) {
+  const norm = (v) => String(v || '').trim().toLowerCase()
+  const ptIndex = categorisedRoots.findIndex(
+    (n) => n.menu_code === 'pmo-cat-process-templates' || norm(n.menu_label) === 'process templates'
+  )
+
+  const buildCategory = () => ({
+    id: 'pmo-cat-process-templates',
+    menu_code: 'pmo-cat-process-templates',
+    menu_label: 'Process Templates',
+    menu_description: 'Process Templates',
+    parent_menu_id: null,
+    menu_level: 1,
+    sort_order: 5.8,
+    route_path: null,
+    external_url: null,
+    menu_icon: 'layers',
+    menu_color: null,
+    badge_text: null,
+    badge_color: null,
+    is_visible: true,
+    is_active: true,
+    canUse: true,
+    children: buildProcessTemplatesLeafNodes('/pmo/process-templates', 'pmo_pt', 'pmo-cat-process-templates'),
+  })
+
+  if (ptIndex < 0) {
+    const out = [...categorisedRoots, buildCategory()]
+    out.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    return out
+  }
+
+  const existing = categorisedRoots[ptIndex]
+  const mergedChildren = [...(existing.children || [])]
+  for (const leaf of buildProcessTemplatesLeafNodes('/pmo/process-templates', 'pmo_pt', existing.id)) {
+    const has = mergedChildren.some(
+      (c) => norm(c.route_path) === norm(leaf.route_path) || norm(c.menu_code) === norm(leaf.menu_code)
+    )
+    if (!has) mergedChildren.push(leaf)
+  }
+  mergedChildren.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+
+  return categorisedRoots.map((node, idx) =>
+    idx === ptIndex
+      ? { ...node, menu_icon: node.menu_icon || 'layers', children: mergedChildren }
+      : node
+  )
+}
+
+/** Inject Process Templates for PMO flat sidebar fallback (non-categorised). */
+function ensureProcessTemplatesMenusForPmo(menuItems = []) {
+  const roots = Array.isArray(menuItems) ? menuItems : []
+  if (hasProcessTemplatesMenu(roots)) return roots
+
+  const section = buildProcessTemplatesSectionNode({
+    basePath: '/pmo/process-templates',
+    sectionId: 'virtual-pmo-process-templates',
+    sectionCode: 'pmo_process_templates_section',
+    sectionLabel: 'Process Templates',
+    sortOrder: 75,
+    codePrefix: 'pmo_pt',
+  })
+
+  const clone = [...roots, section]
+  clone.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  return clone
 }
 
 /** Detect team-member context: no PMO, no PM signals, menu codes are all tm_ prefixed */
@@ -758,6 +895,15 @@ function ensureTeamMemberMenus(menuItems = [], isLead = false) {
   ]
 }
 
+/**
+ * PMO sidebar transform pipeline (presentation only — no new routes invented here):
+ * 1. Filter baseline by layout (PM / PMO / TM)
+ * 2. Flatten legacy section headers (portfolio/programme, projects hub)
+ * 3. Classify items into pmo-cat-* buckets (matchCategory)
+ * 4. Registry fallback for missing DB rows (menuRegistryUtils)
+ * 5. Dedupe by route, organize teams/stakeholders sub-groups
+ * 6. Build categorised tree with delivery-management nesting
+ */
 function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
   const roots = Array.isArray(menuItems) ? menuItems : []
   const norm = (value) => String(value || '').trim().toLowerCase()
@@ -813,8 +959,8 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
   if (layoutHint) {
     const { layout, isLead } = layoutHint
     if (layout === 'tm') return ensureProcessTemplatesInTeamMemberTree(ensureTeamMemberMenus(baseline, isLead))
-    if (layout === 'pm') return ensurePmPlatformTeamsMenu(
-      ensureProcessTemplatesMenusForPm(
+    if (layout === 'pm') return ensureProcessTemplatesMenusForPm(
+      ensurePmPlatformTeamsMenu(
         ensurePmInvitationTrackerMenu(
           ensurePmSendRoleInvitationMenu(ensureIndustryPlanMenusForPm(baseline))
         )
@@ -838,25 +984,27 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     )
   })
 
-  if (!hasPMOContext) {
+  const usePmoCategorisedSidebar = layoutHint?.layout === 'pmo' || hasPMOContext
+
+  if (!usePmoCategorisedSidebar) {
     const isTM = isTeamMemberContext(baseline)
     if (isTM) {
       const isLead = isTeamLeadContext(baseline)
       return ensureProcessTemplatesInTeamMemberTree(ensureTeamMemberMenus(baseline, isLead))
     }
-    return ensurePmPlatformTeamsMenu(
-      ensureProcessTemplatesMenusForPm(
+    const pmMenu = ensureProcessTemplatesMenusForPm(
+      ensurePmPlatformTeamsMenu(
         ensurePmInvitationTrackerMenu(
           ensurePmSendRoleInvitationMenu(ensureIndustryPlanMenusForPm(baseline)),
         )
       )
     )
+    return layoutHint?.layout === 'pmo' ? ensureProcessTemplatesMenusForPmo(pmMenu) : pmMenu
   }
 
   const pmOnlyLabels = new Set([
     'delivery management',
     'controls & registers',
-    'initiation & business justification',
     'agile delivery',
     'project closure',
     'org knowledge',
@@ -864,12 +1012,25 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     'communications',
   ])
 
+  const initiationSectionChildren = []
+  for (const n of baseline) {
+    const lbl = label(n)
+    const kids = n.children
+    if (!Array.isArray(kids) || kids.length === 0) continue
+    if (pmOnlyLabels.has(lbl) || lbl === 'initiation & business justification' || lbl === 'initiation documents') {
+      initiationSectionChildren.push(...kids.map((c) => ({ ...c })))
+    }
+  }
+
   const pmoBase = dedupeByLabelAndRoute(
     baseline.filter((n) => {
       const s = signal(n)
+      const p = route(n)
+      if (p && /\/pmo\/initiation\//.test(p)) return true
       if (s.includes('/simulator/')) return false
       if (s.includes('/pm/')) return false
       if (s.includes('pm_')) return false
+      if (label(n) === 'initiation & business justification') return false
       if (pmOnlyLabels.has(label(n))) return false
       return true
     })
@@ -1073,57 +1234,11 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
   )
 
   /** Nested under "Delivery Management" (not top-level sidebar rows). */
-  const deliveryManagementSubDefs = [
-    { id: 'pmo-cat-portfolio', label: 'Portfolio', order: 1 },
-    { id: 'pmo-cat-programme', label: 'Programme', order: 2 },
-    { id: 'pmo-cat-projects', label: 'Projects', order: 3 },
-    { id: 'pmo-cat-project-oversight', label: 'Project Oversight', order: 4 },
-    { id: 'pmo-cat-delivery-controls', label: 'Delivery Controls', order: 5 },
-  ]
+  const deliveryManagementSubDefs = DELIVERY_MANAGEMENT_SUB_DEFS
 
-  const categoryDefs = [
-    { id: 'pmo-cat-exec', label: 'Executive Overview', order: 1 },
-    { id: 'pmo-cat-delivery-management', label: 'Delivery Management', order: 2, isDeliveryManagementParent: true },
-    { id: 'pmo-cat-financial-commercial', label: 'Financial & Commercial Management', order: 3 },
-    { id: 'pmo-cat-risk-issues-quality', label: 'Risk, Issues & Quality', order: 4 },
-    { id: 'pmo-cat-governance-standards', label: 'Governance & Standards', order: 5 },
-    { id: 'pmo-cat-process-templates', label: 'Process Templates', order: 5.8 },
-    { id: 'pmo-cat-reporting-intelligence', label: 'Reporting & Intelligence', order: 6 },
-    { id: 'pmo-cat-workflows-approvals', label: 'Workflows & Approvals', order: 7 },
-    { id: 'pmo-cat-teams', label: 'Teams', order: 8 },
-    { id: 'pmo-cat-stakeholders', label: 'Stakeholders', order: 9 },
-    { id: 'pmo-cat-knowledge-assets', label: 'Knowledge & Assets', order: 10 },
-    { id: 'pmo-cat-audit-compliance', label: 'Audit Trail & Compliance', order: 11 },
-    { id: 'pmo-cat-email-notifications', label: 'Email & Notifications', order: 12 },
-    { id: 'pmo-cat-admin', label: 'PMO Administration', order: 13 },
-    { id: 'pmo-cat-system-admin', label: 'System Administration', order: 14 },
-    { id: 'pmo-cat-help', label: 'Help', order: 15 },
-    { id: 'pmo-cat-support', label: 'Support', order: 16 },
-  ]
+  const categoryDefs = PMO_CATEGORY_DEFS
 
-  const categoryFallbacks = {
-    'pmo-cat-exec': { label: 'PMO Dashboard', path: '/platform/dashboard' },
-    'pmo-cat-portfolio': { label: 'Portfolio View', path: '/platform/portfolio' },
-    'pmo-cat-programme': { label: 'Programme View', path: '/platform/programme' },
-    'pmo-cat-projects': { label: 'My Projects', path: '/platform/projects' },
-    'pmo-cat-project-oversight': { label: 'Project Oversight View', path: '/platform/dashboard' },
-    'pmo-cat-delivery-controls': { label: 'Delivery Controls View', path: '/platform/dashboard' },
-    'pmo-cat-financial-commercial': { label: 'Financial View', path: '/platform/financial-reports' },
-    'pmo-cat-risk-issues-quality': { label: 'Risk & Quality View', path: '/pmo/oversight/risk-register' },
-    'pmo-cat-governance-standards': { label: 'Governance View', path: '/pmo/governance/mandate' },
-    'pmo-cat-process-templates': { label: 'Hub Overview', path: '/pmo/process-templates' },
-    'pmo-cat-reporting-intelligence': { label: 'Reporting View', path: '/platform/reports' },
-    'pmo-cat-workflows-approvals': { label: 'Pending Approvals', path: '/pmo/forms?status=in_review' },
-    'pmo-cat-teams': { label: 'Manager assignments', path: '/platform/pmo-admin/manager-assignments' },
-    'pmo-cat-stakeholders': { label: 'Stakeholder Register', path: '/platform/stakeholders/register' },
-    'pmo-cat-knowledge-assets': { label: 'Org Knowledge Hub', path: '/platform/org-knowledge' },
-    'pmo-cat-audit-compliance': { label: 'Compliance View', path: '/platform/reports' },
-    'pmo-cat-email-notifications': { label: 'Email Settings', path: '/platform/admin/email-settings' },
-    'pmo-cat-admin': { label: 'Organisation Settings', path: '/platform/pmo-admin/settings' },
-    'pmo-cat-system-admin': { label: 'Platform Settings', path: '/platform/settings' },
-    'pmo-cat-help': { label: 'Help Center', path: '/help' },
-    'pmo-cat-support': { label: 'Support Center', path: '/support' },
-  }
+  const categoryFallbacks = PMO_CATEGORY_FALLBACKS
 
   const matchCategory = (item) => {
     const s = signal(item)
@@ -1148,7 +1263,7 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     if (/\/platform\/project-members\b/.test(s)) return 'pmo-cat-projects'
     if (/\/app\/daily-log\b/.test(s)) return 'pmo-cat-projects'
     if (
-      /^projects$|^projects\s+(hub|menu|home)$|\bproject dashboard\b|\bmy projects\b|\bproject list\b|\bbrowse\b.*\bedit\b|\ball projects\b|\bcreate project\b|\bquick create\b|\bnew wizard\b|project templates|template library|\bdaily log\b|\blessons log\b|\bproduct descriptions\b|\bmanage members\b|\bmembers\b.*\broles\b|\binvite\b.*\bassign\b|\brisk register\b|\bissue log\b|\bchange log\b|\brequirements register\b|\bstatus reports\b|process group forms|\barchived projects\b|\bon hold\b.*\bdrafts\b|\bbusiness cases?\b|\bproject brief\b|\binitiation\b/.test(
+      /^projects$|^projects\s+(hub|menu|home)$|\bproject dashboard\b|\bmy projects\b|\bproject list\b|\bbrowse\b.*\bedit\b|\ball projects\b|\bcreate project\b|\bquick create\b|\bnew wizard\b|project templates|template library|\bdaily log\b|\blessons log\b|\bproduct descriptions\b|\bmanage members\b|\bmembers\b.*\broles\b|\binvite\b.*\bassign\b|\brisk register\b|\bissue log\b|\bchange log\b|\brequirements register\b|\bstatus reports\b|process group forms|\barchived projects\b|\bon hold\b.*\bdrafts\b/.test(
         s
       )
     ) {
@@ -1163,6 +1278,7 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     // "\bquality\b" catches bare "Quality" section headers; "\btesting\b" catches "Testing and QA".
     if (/risk register|enterprise risk|issue register|quality assurance|audit findings|capa|quality register|\bquality\b|\btesting\b/.test(s)) return 'pmo-cat-risk-issues-quality'
     if (/governance|framework|methodology|policy|lifecycle standards|compliance checks|itto/.test(s)) return 'pmo-cat-governance-standards'
+    if (/\/pmo\/initiation\/|\/pm\/initiation\/|benefits review plan|project brief|\bbusiness cases?\b/.test(s)) return 'pmo-cat-initiation'
     if (/\/process-templates\b|process templates|process_template|pm_process_templates|tm_section_process/.test(s)) return 'pmo-cat-process-templates'
     if (/reports|reporting|analytics|intelligence|report builder/.test(s)) return 'pmo-cat-reporting-intelligence'
     if (/pending approvals|workflow|decision log|change approvals|stage gate|draft submissions|approv/.test(s)) return 'pmo-cat-workflows-approvals'
@@ -1220,7 +1336,8 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     if (/accountability|communications overview/.test(s) && /stakeholder/.test(s)) {
       return 'pmo-cat-stakeholders'
     }
-    if (/template library|templates|playbook|reusable|best practice|knowledge base|lessons learned|forms & documents|org knowledge/.test(s)) return 'pmo-cat-knowledge-assets'
+    if (/template library|playbook|reusable|best practice|knowledge base|lessons learned|forms & documents|org knowledge/.test(s) && !/\/process-templates\b/.test(s)) return 'pmo-cat-knowledge-assets'
+    if (/templates/.test(s) && !/\/process-templates\b/.test(s)) return 'pmo-cat-knowledge-assets'
     if (/activity logs|change history|approval history|document version history|compliance evidence|access logs|audit/.test(s)) return 'pmo-cat-audit-compliance'
     if (/email settings|sender profiles|invitation templates|invitation expiry|email-sender-profiles|invitation-settings|email notifications/.test(s)) {
       return 'pmo-cat-email-notifications'
@@ -1506,9 +1623,22 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     50
   )
 
-  processTemplateLeafDefs('/pmo/process-templates', 'pmo_pt').forEach((d) => {
-    pushVirtualToCategory('pmo-cat-process-templates', d.label, d.path, d.icon, d.sort)
-  })
+  applyRegistryCategoryFallback(
+    grouped,
+    pushVirtualToCategory,
+    collectMenuRoutePaths(baseline),
+    'platform'
+  )
+
+  const initiationBucket = grouped.get('pmo-cat-initiation') || []
+  if (!grouped.has('pmo-cat-initiation')) grouped.set('pmo-cat-initiation', initiationBucket)
+  for (const child of dedupeByLabelAndRoute(initiationSectionChildren)) {
+    const pathStr = route(child)
+    const exists = initiationBucket.some(
+      (i) => norm(i.route_path) === norm(pathStr) || label(i) === label(child)
+    )
+    if (!exists && pathStr) initiationBucket.push(child)
+  }
 
   const teamsAdminSortKey = (item) => {
     const s = signal(item)
@@ -1680,7 +1810,7 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
       sort_order: def.order,
       route_path: null,
       external_url: null,
-      menu_icon: null,
+      menu_icon: def.menuIcon || null,
       menu_color: null,
       badge_text: null,
       badge_color: null,
@@ -1691,39 +1821,81 @@ function applyRoleSidebarRevamp(menuItems = [], layoutHint = null) {
     }
   }
 
-  return categoryDefs
-    .map((def) => {
-      if (def.isDeliveryManagementParent) {
-        return {
-          id: def.id,
-          menu_code: def.id,
-          menu_label: def.label,
-          menu_description: def.label,
-          parent_menu_id: null,
-          menu_level: 1,
-          sort_order: def.order,
-          route_path: null,
-          external_url: null,
-          menu_icon: 'layers',
-          menu_color: null,
-          badge_text: null,
-          badge_color: null,
-          is_visible: true,
-          is_active: true,
-          canUse: true,
-          children: deliveryManagementSubDefs
-            .map((sub) => toCategoryNode(sub))
-            .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+  return ensureProcessTemplatesInPmoCategorisedTree(
+    categoryDefs
+      .map((def) => {
+        if (def.isDeliveryManagementParent) {
+          return {
+            id: def.id,
+            menu_code: def.id,
+            menu_label: def.label,
+            menu_description: def.label,
+            parent_menu_id: null,
+            menu_level: 1,
+            sort_order: def.order,
+            route_path: null,
+            external_url: null,
+            menu_icon: 'layers',
+            menu_color: null,
+            badge_text: null,
+            badge_color: null,
+            is_visible: true,
+            is_active: true,
+            canUse: true,
+            children: deliveryManagementSubDefs
+              .map((sub) => toCategoryNode(sub))
+              .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
+          }
         }
+        return toCategoryNode(def)
+      })
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  )
+}
+
+/**
+ * Filter DB menu hierarchy to simulator scope (PMO or PM practice dashboards).
+ * @param {object[]} hierarchy
+ * @param {'pmo'|'pm'} scope
+ */
+export function applySimulatorMenuTransform(hierarchy = [], scope = 'pmo') {
+  const norm = (s) => String(s || '').trim().toLowerCase()
+
+  const isSimNode = (node) => {
+    const code = norm(node?.menu_code)
+    const path = norm(node?.route_path)
+    if (scope === 'pmo') {
+      if (code.startsWith('sim_pmo')) return true
+      if (path && path.startsWith('/simulator/pmo')) return true
+      return false
+    }
+    if (scope === 'pm') {
+      if (code.startsWith('sim_pm')) return true
+      if (path && path.startsWith('/simulator/pm')) return true
+      return false
+    }
+    return code.startsWith('sim_') || path.includes('/simulator/')
+  }
+
+  const filterTree = (nodes) => {
+    const out = []
+    for (const node of nodes || []) {
+      const children = filterTree(node.children || [])
+      if (isSimNode(node)) {
+        out.push({ ...node, children })
+      } else if (children.length) {
+        out.push({ ...node, children })
       }
-      return toCategoryNode(def)
-    })
-    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    }
+    return out.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+  }
+
+  return applySimulatorRegistryFallback(filterTree(hierarchy), scope)
 }
 
 // Pure DB fetch — returns { items, error }. No fallback; menu data is from DB only.
 // Use two separate queries to avoid PostgREST "more than one relationship" embed error between users and user_roles.
-async function fetchMenuFromDB(user) {
+export async function fetchMenuFromDB(user, { raw = false } = {}) {
   let { data: userRow, error: userError } = await platformDb
     .from('users')
     .select('id')
@@ -1860,6 +2032,9 @@ async function fetchMenuFromDB(user) {
 
   const menuRows = [...menuMap.values()]
   const hierarchy = buildHierarchy(menuRows, canUseById)
+  if (raw) {
+    return { items: hierarchy.length > 0 ? hierarchy : [], error: null, layoutHint }
+  }
   const items = applyRoleSidebarRevamp(hierarchy, layoutHint)
   return { items: items.length > 0 ? items : [], error: null, layoutHint }
 }

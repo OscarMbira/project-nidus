@@ -1,6 +1,9 @@
 /**
  * Simulator Project Manager Dashboard Sidebar Menu Configuration
  *
+ * @deprecated Runtime sidebar uses DB menu_items via useSimMenu + Sidebar.jsx (v641).
+ * Use src/config/menuRegistry.js (domain: simulator) as build-time source of truth.
+ *
  * Static menu for the Simulator PM Dashboard (/simulator/pm/*)
  * Mirrors Platform PM structure but for practice/simulation context
  *

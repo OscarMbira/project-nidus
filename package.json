@@ -16,7 +16,9 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "seed:ai-docs": "node scripts/seed_docs_index.js",
-    "clear-cache": "node clear-cache.js"
+    "clear-cache": "node clear-cache.js",
+    "validate:menus": "node scripts/validate-menu-registry.mjs",
+    "audit:menus-static": "node scripts/export-static-menu-audit.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

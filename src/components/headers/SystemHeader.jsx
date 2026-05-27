@@ -14,6 +14,7 @@ import ThemeToggle from '../ThemeToggle'
 import { getUnreadCount } from '../../utils/notificationUtils'
 import { normalizeDashboardTab } from '../../utils/pmoDashboardTabs'
 import { useBranding } from '../../context/BrandingContext'
+import GlobalSearchModal, { useGlobalSearchShortcut } from '../../modules/pmis-gaps/components/GlobalSearchModal'
 
 export default function SystemHeader({
   systemName = 'Platform', // 'Platform' or 'Simulator'
@@ -40,8 +41,12 @@ export default function SystemHeader({
   const [userInitials, setUserInitials] = useState('U')
   const [unreadCount, setUnreadCount] = useState(0)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
+  const isSimulator = systemName === 'Simulator'
+  useGlobalSearchShortcut(() => setGlobalSearchOpen(true))
 
   useEffect(() => {
     fetchUser()
@@ -235,26 +240,17 @@ export default function SystemHeader({
 
           {/* Center: Search Bar and Navigation Links - Desktop */}
           <div className="hidden lg:flex items-center gap-4 mx-4 flex-1">
-            {/* Search Bar */}
+            {/* Search Bar — opens global command palette (GAP-02) */}
             <div className="relative flex-1 max-w-md">
-              <div className="relative">
+              <button
+                type="button"
+                onClick={() => setGlobalSearchOpen(true)}
+                className="w-full flex items-center gap-2 pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:border-blue-500 transition-all text-left"
+                aria-label="Open global search (Ctrl+K)"
+              >
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+                Search... <span className="ml-auto hidden xl:inline text-xs opacity-60">Ctrl+K</span>
+              </button>
             </div>
 
             {/* Navigation Links */}
@@ -288,12 +284,12 @@ export default function SystemHeader({
             {/* Search Toggle - Mobile/Tablet */}
             <button
               onClick={() => {
-                setSearchOpen(!searchOpen)
+                setGlobalSearchOpen(true)
                 setMobileNavOpen(false)
               }}
               className={`lg:hidden p-1.5 sm:p-2 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
               aria-label="Search"
-              title="Search"
+              title="Search (Ctrl+K)"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -424,6 +420,11 @@ export default function SystemHeader({
           </div>
         )}
       </div>
+      <GlobalSearchModal
+        open={globalSearchOpen}
+        onClose={() => setGlobalSearchOpen(false)}
+        sim={isSimulator}
+      />
     </header>
   )
 }

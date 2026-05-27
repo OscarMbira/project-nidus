@@ -4,11 +4,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { usePlatformProjectId } from '../hooks/usePlatformProjectId.js'
 import { ArrowLeft, Plus, FileText, Target, DollarSign, Calendar, AlertTriangle, History, CheckCircle, Share2 } from 'lucide-react';
-import { getBenefitsReviewPlan, getOrCreatePlanForProject, getPlanBenefits, getPlanResources, getReviewSchedule } from '../services/benefitsReviewPlanService';
+import { getBenefitsReviewPlans, getPlanBenefits, getPlanResources, getReviewSchedule } from '../services/benefitsReviewPlanService';
 import { getDisBenefitsForPlan } from '../services/disBenefitsService';
 import { getRevisionHistory, getApprovals, getDistributionList } from '../services/benefitsReviewPlanService';
 import BenefitsReviewPlanView from '../components/benefits/BenefitsReviewPlanView';
@@ -35,6 +35,8 @@ const BRP_VIEW_SECTIONS = [
 export default function BenefitsReviewPlan() {
   const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const wantsCreate = searchParams.get('create') === '1';
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -42,25 +44,25 @@ export default function BenefitsReviewPlan() {
 
   useEffect(() => {
     fetchPlan();
-  }, [projectId]);
+  }, [projectId, wantsCreate]);
 
   const fetchPlan = async () => {
     try {
       setLoading(true);
-      // Try to get existing plan or create one
-      const data = await getOrCreatePlanForProject(projectId);
-      setPlan(data);
-      
-      if (data?.id) {
-        // Fetch related data
+      const plans = await getBenefitsReviewPlans({ project_id: projectId });
+      const existing = Array.isArray(plans) && plans.length > 0 ? plans[0] : null;
+      setPlan(existing);
+      setShowForm(wantsCreate && !existing);
+
+      if (existing?.id) {
         await Promise.all([
-          fetchCoverage(data.id),
-          fetchResources(data.id),
-          fetchReviews(data.id),
-          fetchDisBenefits(data.id),
-          fetchHistory(data.id),
-          fetchApprovals(data.id),
-          fetchDistribution(data.id),
+          fetchCoverage(existing.id),
+          fetchResources(existing.id),
+          fetchReviews(existing.id),
+          fetchDisBenefits(existing.id),
+          fetchHistory(existing.id),
+          fetchApprovals(existing.id),
+          fetchDistribution(existing.id),
         ]);
       }
     } catch (error) {
@@ -217,11 +219,11 @@ export default function BenefitsReviewPlan() {
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/pmo/initiation/benefits-review-plan')}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Back to Benefits Review Plans
         </button>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">

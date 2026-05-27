@@ -19,6 +19,7 @@ import BusinessCaseOptions from '../../components/businessCase/BusinessCaseOptio
 import BusinessCaseBenefits from '../../components/businessCase/BusinessCaseBenefits'
 import BusinessCaseDisBenefits from '../../components/businessCase/BusinessCaseDisBenefits'
 import BusinessCaseDistribution from '../../components/businessCase/BusinessCaseDistribution'
+import { resolveInitiationBasePath } from '../../utils/initiationRouteUtils'
 
 export default function BusinessCaseEdit() {
   const { id } = useParams()
@@ -26,8 +27,7 @@ export default function BusinessCaseEdit() {
   const location = useLocation()
   const toast = useToastContext()
 
-  const isPMO = location.pathname.startsWith('/pmo')
-  const basePath = isPMO ? '/pmo/initiation/business-case' : '/platform/business-case'
+  const basePath = resolveInitiationBasePath(location.pathname)
 
   const [businessCase, setBusinessCase] = useState(null)
   const [form, setForm] = useState({})

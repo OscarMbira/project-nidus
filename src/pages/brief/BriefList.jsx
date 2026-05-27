@@ -23,7 +23,7 @@ const BRIEF_COLUMNS = [
   { key: 'created_date', label: 'Created' }
 ]
 
-export default function BriefList() {
+export default function BriefList({ embedded = false }) {
   const navigate = useNavigate()
   const location = useLocation()
   const isPMOContext = location.pathname.startsWith('/pmo')
@@ -93,7 +93,7 @@ export default function BriefList() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={embedded ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'}>
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading briefs...</p>
@@ -103,15 +103,17 @@ export default function BriefList() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className={embedded ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        {!embedded && (
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Project Briefs</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
             Manage all project briefs
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        )}
+        <div className={`flex items-center gap-2 ${embedded ? 'ml-auto w-full justify-end' : ''}`}>
           {briefs.length > 0 && (
             <ExportListMenu
               columns={BRIEF_COLUMNS}

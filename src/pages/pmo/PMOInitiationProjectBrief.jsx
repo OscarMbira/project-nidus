@@ -17,7 +17,7 @@ export default function PMOInitiationProjectBrief() {
             Create initial project briefs and approve refined versions
           </p>
         </div>
-        <BriefList />
+        <BriefList embedded />
       </div>
     </DocumentGovernanceProvider>
   )

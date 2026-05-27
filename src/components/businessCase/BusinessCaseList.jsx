@@ -117,9 +117,18 @@ export default function BusinessCaseList({ basePath = '/pmo/initiation/business-
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-10 text-center">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600 dark:text-gray-400 mb-2">No business cases found</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            {statusFilter || search ? 'Try adjusting your filters.' : 'Create your first business case to get started.'}
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+            {statusFilter || search ? 'Try adjusting your filters.' : 'Create your first business case from this list.'}
           </p>
+          {!statusFilter && !search && (
+            <button
+              type="button"
+              onClick={() => navigate(`${basePath}/create`)}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" /> New Business Case
+            </button>
+          )}
         </div>
       )}
 
@@ -156,7 +165,7 @@ export default function BusinessCaseList({ basePath = '/pmo/initiation/business-
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{bc.version_number}</td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{bc.created_date}</td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                      {bc.projects?.name || bc.programmes?.name || '—'}
+                      {bc.projects?.project_name || bc.programmes?.programme_name || '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">

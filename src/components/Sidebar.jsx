@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMenu } from '../hooks/useMenu'
+import { useSimMenu } from '../hooks/useSimMenu'
 import { performLogout, getLogoutRedirectPath } from '../services/authLogoutService'
 import {
   LayoutDashboard,
@@ -73,6 +74,11 @@ import {
   Calendar,
   Wrench,
   FolderClosed,
+  PlayCircle,
+  Map,
+  Zap,
+  CheckCircle,
+  FileBox,
 } from 'lucide-react'
 import { useThemeContext } from '../context/ThemeContext'
 import { useBranding } from '../context/BrandingContext'
@@ -148,6 +154,11 @@ const iconMap = {
   'calendar': Calendar,
   'wrench': Wrench,
   'folder-closed': FolderClosed,
+  'play-circle': PlayCircle,
+  'map': Map,
+  'zap': Zap,
+  'check-circle': CheckCircle,
+  'file-box': FileBox,
   'menu': Menu,
 }
 
@@ -302,16 +313,18 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
   )
 }
 
-export default function Sidebar({ isOpen, onClose }) {
-  const { menuItems, loading, error, refetch } = useMenu()
+export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
+  const platformMenu = useMenu()
+  const simMenu = useSimMenu(simulatorScope || 'pmo', !!simulatorScope)
+  const { menuItems, loading, error, refetch } = simulatorScope ? simMenu : platformMenu
   const navigate = useNavigate()
   const { theme } = useThemeContext()
   const { branding } = useBranding()
   const location = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
   const [expandedMenuId, setExpandedMenuId] = useState(null)
-  const planningOpenFindingsCount = useOpenPlanningFindingsCount(!location.pathname.startsWith('/simulator'))
-  const isSimulatorContext = (location.pathname || '').startsWith('/simulator')
+  const planningOpenFindingsCount = useOpenPlanningFindingsCount(!simulatorScope && !location.pathname.startsWith('/simulator'))
+  const isSimulatorContext = !!simulatorScope || (location.pathname || '').startsWith('/simulator')
 
   const routeMatchesContext = (routePath) => {
     const route = (routePath || '').trim()

@@ -4,9 +4,11 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Edit, Printer } from 'lucide-react'
-import { getBriefById } from '../../services/projectBriefService'
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '../../utils/projectRouteParam.js'
+import { getBriefByProject } from '../../services/projectBriefService'
 import BriefHeader from '../../components/brief/BriefHeader'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
@@ -39,20 +41,31 @@ import QualityCriteriaChecklist from '../../components/brief/QualityCriteriaChec
 import MandateComparisonView from '../../components/brief/MandateComparisonView'
 
 export default function ProjectBriefView() {
-  const { briefId } = useParams()
+  const { projectId, routeKey, loading: projectLoading, error: projectError } = usePlatformProjectId()
   const navigate = useNavigate()
   const [brief, setBrief] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (projectLoading) return
+    if (!projectId) {
+      setLoading(false)
+      return
+    }
     loadBrief()
-  }, [briefId])
+  }, [projectId, projectLoading])
 
   const loadBrief = async () => {
     try {
       setLoading(true)
-      const data = await getBriefById(briefId)
+      setError(null)
+      const data = await getBriefByProject(projectId)
+      if (!data) {
+        setError('No project brief found for this project.')
+        setBrief(null)
+        return
+      }
       setBrief(data)
     } catch (err) {
       console.error('Error loading brief:', err)
@@ -66,7 +79,7 @@ export default function ProjectBriefView() {
     window.print()
   }
 
-  if (loading) {
+  if (projectLoading || loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
@@ -77,11 +90,13 @@ export default function ProjectBriefView() {
     )
   }
 
-  if (error) {
+  if (projectError || error) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <p className="text-red-800 dark:text-red-200">Error: {error}</p>
+          <p className="text-red-800 dark:text-red-200">
+            Error: {projectError === 'not_found' ? 'Project not found.' : error || 'Unable to load project.'}
+          </p>
         </div>
       </div>
     )
@@ -122,7 +137,7 @@ export default function ProjectBriefView() {
           />
           {canEdit && (
             <button
-              onClick={() => navigate(`/platform/projects/${brief.project_id}/brief/edit`)}
+              onClick={() => navigate(platformProjectPath(routeKey || brief.project_id, 'brief', 'edit'))}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center"
             >
               <Edit className="w-4 h-4 mr-2" />

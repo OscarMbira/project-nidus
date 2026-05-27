@@ -10,6 +10,7 @@ import { FileText, Save, ArrowLeft } from 'lucide-react'
 import { createBusinessCase } from '../../services/businessCaseService'
 import { useToastContext } from '../../context/ToastContext'
 import BusinessCaseForm from '../../components/businessCase/BusinessCaseForm'
+import { resolveInitiationBasePath } from '../../utils/initiationRouteUtils'
 
 const emptyForm = () => ({
   case_title: '',
@@ -41,8 +42,7 @@ export default function BusinessCaseCreate() {
   const location = useLocation()
   const toast = useToastContext()
 
-  const isPMO = location.pathname.startsWith('/pmo')
-  const basePath = isPMO ? '/pmo/initiation/business-case' : '/platform/business-case'
+  const basePath = resolveInitiationBasePath(location.pathname)
 
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)

@@ -11,6 +11,9 @@ import { getBenefitsReviewPlans } from '../../services/benefitsReviewPlanService
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { resolveBenefitsReviewPlanViewPath } from '../../utils/initiationRouteUtils'
+import { getAllProjects } from '../../services/projectService'
+import { platformDb } from '../../services/supabase/supabaseClient'
 
 const STATUS_COLORS = {
   draft: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
@@ -49,6 +52,9 @@ export default function BenefitsReviewPlanList({ projectId }) {
   const [error, setError] = useState(null)
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
+  const [showProjectSelector, setShowProjectSelector] = useState(false)
+  const [projectsForPlan, setProjectsForPlan] = useState([])
+  const [loadingProjects, setLoadingProjects] = useState(false)
 
   const fetchPlans = useCallback(async () => {
     try {
@@ -69,21 +75,40 @@ export default function BenefitsReviewPlanList({ projectId }) {
 
   useEffect(() => { fetchPlans() }, [fetchPlans])
 
+  const loadProjectsForSelector = useCallback(async () => {
+    setLoadingProjects(true)
+    try {
+      const { data: { user } } = await platformDb.auth.getUser()
+      if (!user) return
+      const { data: userRecord } = await platformDb.from('users').select('id').eq('auth_user_id', user.id).single()
+      if (!userRecord) return
+      let organizationId = null
+      const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).single()
+      if (account) organizationId = account.id
+      else {
+        const { data: project } = await platformDb.from('projects').select('account_id').eq('owner_user_id', userRecord.id).eq('is_deleted', false).limit(1).single()
+        if (project?.account_id) organizationId = project.account_id
+      }
+      if (!organizationId) { setProjectsForPlan([]); return }
+      const result = await getAllProjects(organizationId, {})
+      setProjectsForPlan(result?.data || [])
+    } catch (e) {
+      console.error('Error loading projects for benefits review plan:', e)
+      setProjectsForPlan([])
+    } finally {
+      setLoadingProjects(false)
+    }
+  }, [])
+
   const filtered = plans.filter(p =>
     !search ||
     p.plan_title?.toLowerCase().includes(search.toLowerCase()) ||
     p.document_ref?.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Navigate to the project-specific BRP page for view
-  const getViewPath = (plan) => {
-    if (plan.project_id) {
-      return isPMO
-        ? `/platform/projects/${plan.project_id}/benefits-review-plan`
-        : `/platform/projects/${plan.project_id}/benefits-review-plan`
-    }
-    return null
-  }
+  const getViewPath = (plan) => resolveBenefitsReviewPlanViewPath(plan.project_id, location.pathname)
+
+  const getCreatePath = (projectId) => `/platform/projects/${projectId}/benefits/review-plan?create=1`
 
   return (
     <div>
@@ -106,8 +131,51 @@ export default function BenefitsReviewPlanList({ projectId }) {
             {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
-        <ExportListMenu columns={EXPORT_COLUMNS} data={filtered} baseFilename="BenefitsReviewPlans" disabled={!filtered.length} />
+        <div className="flex items-center gap-2">
+          <ExportListMenu columns={EXPORT_COLUMNS} data={filtered} baseFilename="BenefitsReviewPlans" disabled={!filtered.length} />
+          <button
+            type="button"
+            onClick={() => { setShowProjectSelector(true); loadProjectsForSelector() }}
+            className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" /> New Benefits Review Plan
+          </button>
+        </div>
       </div>
+
+      {showProjectSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowProjectSelector(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Select project for new plan</h2>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              {loadingProjects ? (
+                <p className="text-gray-500 dark:text-gray-400">Loading projects...</p>
+              ) : projectsForPlan.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400">No projects found.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {projectsForPlan.map((p) => (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => { navigate(getCreatePath(p.id)); setShowProjectSelector(false) }}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
+                      >
+                        {p.project_name || p.project_code || p.id}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" onClick={() => setShowProjectSelector(false)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -128,9 +196,16 @@ export default function BenefitsReviewPlanList({ projectId }) {
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-10 text-center">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600 dark:text-gray-400 mb-2">No Benefits Review Plans found</p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Benefits Review Plans are created at the project level. Open a project and navigate to Initiation → Benefits Review Plan.
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+            Create a Benefits Review Plan from a project, or use New Benefits Review Plan above.
           </p>
+          <button
+            type="button"
+            onClick={() => { setShowProjectSelector(true); loadProjectsForSelector() }}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4" /> New Benefits Review Plan
+          </button>
         </div>
       )}
 

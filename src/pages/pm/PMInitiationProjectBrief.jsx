@@ -17,7 +17,7 @@ export default function PMInitiationProjectBrief() {
             Refine PMO-initiated project briefs
           </p>
         </div>
-        <BriefList />
+        <BriefList embedded />
       </div>
     </DocumentGovernanceProvider>
   )

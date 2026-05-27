@@ -75,6 +75,10 @@ describe('Project Brief Service', () => {
       expect(result).toBeDefined()
       expect(mockSupabase.from).toHaveBeenCalledWith('project_briefs')
     })
+
+    it('should reject missing brief ID', async () => {
+      await expect(getBriefById(undefined)).rejects.toThrow('Brief ID is required')
+    })
   })
 
   describe('updateBrief', () => {

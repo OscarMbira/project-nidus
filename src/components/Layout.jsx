@@ -8,6 +8,7 @@ import SimulatorAppHeader from './headers/SimulatorAppHeader'
 import HelpButton from './help/HelpButton'
 import FeedbackWidget from './feedback/FeedbackWidget'
 import AIChatWidget from './ai/AIChatWidget'
+import QuickCaptureFab from '../modules/pmis-gaps/components/QuickCaptureFab'
 import { BrandingProvider } from '../context/BrandingContext'
 
 const Layout = ({ children }) => {
@@ -104,6 +105,7 @@ const Layout = ({ children }) => {
       <HelpButton />
       <FeedbackWidget />
       {!isAuthPage && <AIChatWidget />}
+      {!isAuthPage && <QuickCaptureFab />}
     </div>
     </BrandingProvider>
   )

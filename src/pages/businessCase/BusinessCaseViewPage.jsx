@@ -17,6 +17,12 @@ import { useToastContext } from '../../context/ToastContext'
 import BusinessCaseViewComponent from '../../components/businessCase/BusinessCaseView'
 import BusinessCaseStatusBadge from '../../components/businessCase/BusinessCaseStatusBadge'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
+import { resolveInitiationBasePath } from '../../utils/initiationRouteUtils'
+import {
+  BUSINESS_CASE_EXPORT_SECTIONS,
+  buildBusinessCaseExportRecord,
+  businessCaseExportFilename,
+} from '../../utils/businessCaseExportSections'
 
 export default function BusinessCaseViewPage() {
   const { id } = useParams()
@@ -24,8 +30,7 @@ export default function BusinessCaseViewPage() {
   const location = useLocation()
   const toast = useToastContext()
 
-  const isPMO = location.pathname.startsWith('/pmo')
-  const basePath = isPMO ? '/pmo/initiation/business-case' : '/platform/business-case'
+  const basePath = resolveInitiationBasePath(location.pathname)
 
   const [businessCase, setBusinessCase] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -122,7 +127,11 @@ export default function BusinessCaseViewPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <ExportRecordButtons record={businessCase} title={businessCase.case_title} />
+            <ExportRecordButtons
+              sections={BUSINESS_CASE_EXPORT_SECTIONS}
+              record={buildBusinessCaseExportRecord(businessCase)}
+              baseFilename={businessCaseExportFilename(businessCase)}
+            />
 
             {canEdit && (
               <button

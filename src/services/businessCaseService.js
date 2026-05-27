@@ -53,8 +53,8 @@ export async function getAllBusinessCases(filters = {}) {
       executive_summary, overall_risk_rating,
       estimated_development_cost, estimated_ongoing_cost, total_investment_cost,
       created_by, created_at, updated_at,
-      projects:project_id (id, name),
-      programmes:programme_id (id, name)
+      projects:project_id (id, project_name, project_code),
+      programmes:programme_id (id, programme_name, programme_code)
     `)
     .eq('is_deleted', false)
     .order('created_date', { ascending: false })
@@ -76,8 +76,8 @@ export async function getBusinessCaseById(caseId) {
     .from('business_cases')
     .select(`
       *,
-      projects:project_id (id, name),
-      programmes:programme_id (id, name),
+      projects:project_id (id, project_name, project_code),
+      programmes:programme_id (id, programme_name, programme_code),
       creator:created_by (id, first_name, last_name, email)
     `)
     .eq('id', caseId)

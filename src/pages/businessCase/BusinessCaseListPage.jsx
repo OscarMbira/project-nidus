@@ -7,11 +7,11 @@
 import { FileText } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import BusinessCaseList from '../../components/businessCase/BusinessCaseList'
+import { resolveInitiationBasePath } from '../../utils/initiationRouteUtils'
 
 export default function BusinessCaseListPage() {
   const location = useLocation()
-  const isPMO = location.pathname.startsWith('/pmo')
-  const basePath = isPMO ? '/pmo/initiation/business-case' : '/platform/business-case'
+  const basePath = resolveInitiationBasePath(location.pathname)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
