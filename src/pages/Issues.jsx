@@ -14,6 +14,9 @@ import IssueList from '../components/IssueList'
 import Pagination from '../components/Pagination'
 import SortToolbar from '../components/ui/SortToolbar'
 import { useSortableTable } from '../hooks/useSortableTable'
+import RecordLifecycleListHeader from '../components/ui/RecordLifecycleListHeader'
+import useRecordLifecycleFilter from '../hooks/useRecordLifecycleFilter'
+import { applyRecordStatusFilter } from '../utils/lifecycleListUtils'
 
 import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 const ISSUE_EXPORT_COLUMNS = [
@@ -45,6 +48,8 @@ export default function Issues() {
   const itemsPerPage = 20
   const [issueViewMode, setIssueViewMode] = useViewMode('issues', 'grid')
 
+  const { statusFilter, setStatusFilter, counts } = useRecordLifecycleFilter('issues', { projectId })
+
   const { handleSort, getSortDirectionForColumn, supabaseOrder } = useSortableTable({
     defaultSort: { column: 'created_at', direction: 'desc' },
     storageKey: 'nidus-issues-sort',
@@ -71,7 +76,7 @@ export default function Issues() {
     if (projectId) {
       fetchIssues()
     }
-  }, [projectId, filters, currentPage, sortFetchKey])
+  }, [projectId, filters, currentPage, sortFetchKey, statusFilter])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -105,22 +110,19 @@ export default function Issues() {
       setLoading(true)
       
       // Build count query
-      let countQuery = supabase
-        .from('issues')
-        .select('id', { count: 'exact', head: true })
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
+      let countQuery = applyRecordStatusFilter(
+        supabase.from('issues').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('is_deleted', false),
+        statusFilter
+      )
 
-      // Build data query
-      let query = supabase
-        .from('issues')
-        .select(`
+      let query = applyRecordStatusFilter(
+        supabase.from('issues').select(`
           *,
           reported_by:reported_by_user_id (id, email, full_name),
           assigned_to:assigned_to_user_id (id, email, full_name)
-        `)
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        `).eq('project_id', projectId).eq('is_deleted', false),
+        statusFilter
+      )
 
       // Apply filters
       if (filters.status) {
@@ -220,6 +222,14 @@ export default function Issues() {
           {project?.project_name} - Track and manage project issues
         </p>
       </div>
+
+      <RecordLifecycleListHeader
+        tableName="issues"
+        projectId={projectId}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        counts={counts}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">

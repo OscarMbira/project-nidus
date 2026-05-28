@@ -8,7 +8,7 @@ import {
 import { applyRegistryCategoryFallback, collectMenuRoutePaths, applySimulatorRegistryFallback } from '../config/menuRegistryUtils'
 
 const MENU_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
-const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v22_'
+const MENU_CACHE_KEY_PREFIX = 'nidus_menu_v23_'
 const LEGACY_MENU_CACHE_KEY_PREFIX = 'nidus_menu_'
 
 function getCacheKey(userId) {
@@ -18,6 +18,7 @@ function getCacheKey(userId) {
 function getCacheKeys(userId) {
   return [
     `${MENU_CACHE_KEY_PREFIX}${userId}`,
+    `nidus_menu_v22_${userId}`,
     `nidus_menu_v21_${userId}`,
     `nidus_menu_v20_${userId}`,
     `nidus_menu_v19_${userId}`,

@@ -8,6 +8,7 @@
  */
 
 import { PMIS_GAP_MENU_REGISTRY } from './pmisGapMenuRegistry.js'
+import { RECORD_LIFECYCLE_MENU_REGISTRY } from './recordLifecycleMenuRegistry.js'
 
 /** @typedef {'platform' | 'simulator'} MenuDomain */
 
@@ -930,6 +931,7 @@ export const MENU_REGISTRY = [
   },
 
   ...PMIS_GAP_MENU_REGISTRY,
+  ...RECORD_LIFECYCLE_MENU_REGISTRY,
 ]
 
 /**

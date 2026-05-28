@@ -54,6 +54,11 @@ import {
   FolderKanban,
   Clock,
   MailCheck,
+  SlidersHorizontal,
+  ShieldCheck,
+  Send,
+  Database,
+  Archive,
 } from 'lucide-react';
 
 const simulatorPMOMenuConfig = [
@@ -70,6 +75,22 @@ const simulatorPMOMenuConfig = [
       { id: 'sim-pmo-live-inbox', label: 'Event Inbox', path: '/simulator/run/active/inbox', icon: Inbox, order: 3 },
       { id: 'sim-pmo-live-evm', label: 'EVM Dashboard', path: '/simulator/run/active/evm', icon: TrendingUp, order: 4 },
       { id: 'sim-pmo-live-history', label: 'My Run History', path: '/simulator/runs', icon: History, order: 5 },
+    ],
+  },
+  {
+    id: 'sim-pmo-authorisation',
+    label: 'Practice Authorisation',
+    path: null,
+    icon: ShieldCheck,
+    section: 'Practice Authorisation',
+    order: 0.5,
+    children: [
+      { id: 'sim-pmo-auth-queue', label: 'Authorisation Queue', path: '/simulator/pmo/authorisation/queue', icon: Inbox, order: 1 },
+      { id: 'sim-pmo-auth-dashboard', label: 'Lifecycle Dashboard', path: '/simulator/pmo/authorisation/dashboard', icon: BarChart3, order: 2 },
+      { id: 'sim-pmo-auth-configure', label: 'Configure Lifecycle Rules', path: '/simulator/pmo/authorisation/configure', icon: Settings2, order: 3 },
+      { id: 'sim-pmo-auth-chains', label: 'Approval Chains', path: '/simulator/pmo/authorisation/chains', icon: GitBranch, order: 4 },
+      { id: 'sim-pmo-auth-archive-retention', label: 'Archive Retention Rules', path: '/simulator/pmo/authorisation/archive-retention', icon: Archive, order: 5 },
+      { id: 'sim-pmo-auth-archive', label: 'Archive Vault', path: '/simulator/pmo/authorisation/archive', icon: Database, order: 6 },
     ],
   },
   {

@@ -66,6 +66,19 @@ import {
 const simulatorPMMenuConfig = [
   { id: 'sim-pm-dashboard', label: 'Dashboard', path: '/simulator/pm/dashboard', icon: LayoutDashboard, section: null, order: 0 },
   {
+    id: 'sim-pm-authorisation',
+    label: 'Practice Authorisation',
+    path: null,
+    icon: ShieldCheck,
+    section: 'Practice Authorisation',
+    order: 0.5,
+    children: [
+      { id: 'sim-pm-auth-queue', label: 'Pending My Approval', path: '/simulator/pm/authorisation/queue', icon: ClipboardCheck, order: 1 },
+      { id: 'sim-pm-auth-submitted', label: 'My Submitted Records', path: '/simulator/pm/authorisation/submitted', icon: Mail, order: 2 },
+      { id: 'sim-pm-auth-chains', label: 'Approval Chains', path: '/simulator/pm/authorisation/chains', icon: GitBranch, order: 3 },
+    ],
+  },
+  {
     id: 'sim-pm-people-assignments',
     label: 'People & Assignments',
     path: null,

@@ -71,6 +71,20 @@ const pmDashboardMenuConfig = [
     order: 0
   },
 
+  {
+    id: 'pm-authorisation',
+    label: 'Authorisation',
+    path: null,
+    icon: ShieldCheck,
+    section: 'Authorisation',
+    order: 0.5,
+    children: [
+      { id: 'pm-auth-queue', label: 'Pending My Approval', path: '/pm/authorisation/queue', icon: ClipboardCheck, order: 1 },
+      { id: 'pm-auth-submitted', label: 'My Submitted Records', path: '/pm/authorisation/submitted', icon: Mail, order: 2 },
+      { id: 'pm-auth-chains', label: 'Approval Chains', path: '/pm/authorisation/chains', icon: GitBranch, order: 3 },
+    ],
+  },
+
   // Team & Members — invite Team Manager/Lead and Team Members (v399, PM dashboard shell)
   {
     id: 'pm-team-members',

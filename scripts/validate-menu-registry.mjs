@@ -12,6 +12,7 @@ const root = path.join(__dirname, '..')
 
 const appJsxPath = path.join(root, 'src', 'App.jsx')
 const pmisGapRoutesPath = path.join(root, 'src', 'modules', 'pmis-gaps', 'routes', 'PmisGapRoutes.jsx')
+const recordLifecycleRoutesPath = path.join(root, 'src', 'modules', 'record-lifecycle', 'routes', 'RecordLifecycleRoutes.jsx')
 const registryPath = path.join(root, 'src', 'config', 'menuRegistry.js')
 
 function extractAppRoutes(appContent) {
@@ -64,6 +65,9 @@ async function main() {
   let appContent = fs.readFileSync(appJsxPath, 'utf8')
   if (fs.existsSync(pmisGapRoutesPath)) {
     appContent += fs.readFileSync(pmisGapRoutesPath, 'utf8')
+  }
+  if (fs.existsSync(recordLifecycleRoutesPath)) {
+    appContent += fs.readFileSync(recordLifecycleRoutesPath, 'utf8')
   }
   const appRoutes = extractAppRoutes(appContent)
 

@@ -12,6 +12,9 @@ import RiskList from '../components/RiskList'
 import Pagination from '../components/Pagination'
 import SortToolbar from '../components/ui/SortToolbar'
 import { useSortableTable } from '../hooks/useSortableTable'
+import RecordLifecycleListHeader from '../components/ui/RecordLifecycleListHeader'
+import useRecordLifecycleFilter from '../hooks/useRecordLifecycleFilter'
+import { applyRecordStatusFilter } from '../utils/lifecycleListUtils'
 
 export default function Risks() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -32,6 +35,8 @@ export default function Risks() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 20
+
+  const { statusFilter, setStatusFilter, counts } = useRecordLifecycleFilter('risks', { projectId })
 
   const { handleSort, getSortDirectionForColumn, supabaseOrder } = useSortableTable({
     defaultSort: { column: 'risk_score', direction: 'desc' },
@@ -59,7 +64,7 @@ export default function Risks() {
     if (projectId) {
       fetchRisks()
     }
-  }, [projectId, filters, currentPage, sortFetchKey])
+  }, [projectId, filters, currentPage, sortFetchKey, statusFilter])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -93,22 +98,19 @@ export default function Risks() {
       setLoading(true)
       
       // Build count query
-      let countQuery = supabase
-        .from('risks')
-        .select('id', { count: 'exact', head: true })
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
+      let countQuery = applyRecordStatusFilter(
+        supabase.from('risks').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('is_deleted', false),
+        statusFilter
+      )
 
-      // Build data query
-      let query = supabase
-        .from('risks')
-        .select(`
+      let query = applyRecordStatusFilter(
+        supabase.from('risks').select(`
           *,
           identified_by:identified_by_user_id (id, email, full_name),
           risk_owner:risk_owner_user_id (id, email, full_name)
-        `)
-        .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        `).eq('project_id', projectId).eq('is_deleted', false),
+        statusFilter
+      )
 
       // Apply filters
       if (filters.status) {
@@ -209,6 +211,14 @@ export default function Risks() {
           {project?.project_name} - Risk Register and Management
         </p>
       </div>
+
+      <RecordLifecycleListHeader
+        tableName="risks"
+        projectId={projectId}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        counts={counts}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4 mb-6">

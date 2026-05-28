@@ -7,7 +7,7 @@ import { platformDb } from '../services/supabaseClient'
 import { fetchMenuFromDB, applySimulatorMenuTransform } from './useMenu'
 
 const SIM_MENU_CACHE_TTL = 5 * 60 * 1000
-const SIM_MENU_CACHE_PREFIX = 'nidus_sim_menu_v22_'
+const SIM_MENU_CACHE_PREFIX = 'nidus_sim_menu_v23_'
 
 function simCacheKey(userId, scope) {
   return `${SIM_MENU_CACHE_PREFIX}${scope}_${userId}`

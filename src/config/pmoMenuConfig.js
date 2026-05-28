@@ -70,6 +70,23 @@ const pmoMenuConfig = [
     order: 0
   },
 
+  {
+    id: 'pmo-authorisation',
+    label: 'Authorisation & Lifecycle',
+    path: null,
+    icon: ShieldCheck,
+    section: 'Authorisation & Lifecycle',
+    order: 0.5,
+    children: [
+      { id: 'pmo-auth-queue', label: 'Authorisation Queue', path: '/pmo/authorisation/queue', icon: ClipboardCheck, order: 1 },
+      { id: 'pmo-auth-dashboard', label: 'Lifecycle Dashboard', path: '/pmo/authorisation/dashboard', icon: BarChart3, order: 2 },
+      { id: 'pmo-auth-configure', label: 'Configure Lifecycle Rules', path: '/pmo/authorisation/configure', icon: Settings2, order: 3 },
+      { id: 'pmo-auth-chains', label: 'Approval Chains', path: '/pmo/authorisation/chains', icon: GitBranch, order: 4 },
+      { id: 'pmo-auth-archive-retention', label: 'Archive Retention Rules', path: '/pmo/authorisation/archive-retention', icon: FileClock, order: 5 },
+      { id: 'pmo-auth-archive', label: 'Archive Vault', path: '/pmo/authorisation/archive', icon: FileSpreadsheet, order: 6 },
+    ],
+  },
+
   // Section 1a: Portfolio
   {
     id: 'pmo-portfolio',

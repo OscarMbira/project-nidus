@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppToPlatformRedirect from './components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from './modules/pmis-gaps/routes/PmisGapRoutes.jsx'
+import { RecordLifecycleRouteElements } from './modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import OfflineIndicator from './components/pwa/OfflineIndicator'
 import PWAUpdatePrompt from './components/pwa/PWAUpdatePrompt'
 
@@ -4923,6 +4924,7 @@ function App() {
           } />
           {/* v631 PMIS gap features — GAP-01 through GAP-29 */}
           <PmisGapRouteElements />
+          <RecordLifecycleRouteElements />
           <Route path="pm/itto/templates" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>

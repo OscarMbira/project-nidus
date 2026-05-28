@@ -37,6 +37,7 @@ import {
   Layers,
   MailCheck,
   Settings,
+  Send,
 } from 'lucide-react'
 
 const simulatorTMMenuConfig = [
@@ -57,6 +58,7 @@ const simulatorTMMenuConfig = [
       { id: 'sim-tm-daily-log', label: 'Daily Log', path: '/simulator/tm/daily-log', icon: BookOpen },
       { id: 'sim-tm-lesson-actions', label: 'My Lesson Actions', path: '/simulator/tm/lessons/my-actions', icon: Lightbulb },
       { id: 'sim-tm-issue-actions', label: 'My Issue Actions', path: '/simulator/tm/issues/my-actions', icon: AlertTriangle },
+      { id: 'sim-tm-auth-submitted', label: 'My Submitted Records', path: '/simulator/tm/authorisation/submitted', icon: Send },
     ],
   },
   {

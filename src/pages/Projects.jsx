@@ -18,6 +18,8 @@ import { ProjectGridCard, ProjectListRow } from '../components/project/ProjectsL
 import { useSortableTable } from '../hooks/useSortableTable';
 import { useViewMode } from '../hooks/useViewMode';
 import ViewToggle from '../components/ui/ViewToggle';
+import RecordLifecycleListHeader from '../components/ui/RecordLifecycleListHeader';
+import useRecordLifecycleFilter from '../hooks/useRecordLifecycleFilter';
 
 const PROJECT_COLUMNS = [
   { key: 'project_name', label: 'Project Name' },
@@ -90,6 +92,8 @@ export default function Projects() {
       created_at: 'created_at',
     },
   });
+
+  const { statusFilter, setStatusFilter, counts } = useRecordLifecycleFilter('projects');
 
   const projectSortAccessors = useMemo(
     () => ({
@@ -217,9 +221,11 @@ export default function Projects() {
 
   /** Client-side filter (My tab: primary; All tab: refines server results, e.g. status name) */
   const filteredProjects = useMemo(() => {
+    const statuses = statusFilter?.length ? statusFilter : ['live']
+    let list = projects.filter((p) => statuses.includes(p.record_status || 'live'))
     const q = debouncedSearchTerm.trim().toLowerCase();
-    if (!q) return projects;
-    return projects.filter((project) => {
+    if (!q) return list;
+    return list.filter((project) => {
       const name = project.project_name?.toLowerCase() ?? '';
       const desc = project.project_description?.toLowerCase() ?? '';
       const code = project.project_code?.toLowerCase() ?? '';
@@ -228,7 +234,7 @@ export default function Projects() {
         name.includes(q) || desc.includes(q) || code.includes(q) || status.includes(q)
       );
     });
-  }, [projects, debouncedSearchTerm]);
+  }, [projects, debouncedSearchTerm, statusFilter]);
 
   /** "All" tab: server-ordered; "My" tab: client sort */
   const displayProjects = useMemo(() => {
@@ -353,6 +359,13 @@ export default function Projects() {
           </div>
           <p className="text-gray-400">Manage and view all your projects</p>
         </div>
+
+        <RecordLifecycleListHeader
+          tableName="projects"
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+          counts={counts}
+        />
 
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
