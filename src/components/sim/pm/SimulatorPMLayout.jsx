@@ -4,12 +4,14 @@ import Sidebar from '../../Sidebar'
 import SimulatorAppHeader from '../../headers/SimulatorAppHeader'
 import PracticeDashboardSwitcher from '../ui/PracticeDashboardSwitcher'
 import { BrandingProvider } from '../../../context/BrandingContext'
+import { MenuProvider } from '../../../hooks/useMenu'
 
 export default function SimulatorPMLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <BrandingProvider>
+    <MenuProvider layoutScope="pm">
       <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
         <SimulatorAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
 
@@ -36,6 +38,7 @@ export default function SimulatorPMLayout({ children }) {
           </main>
         </div>
       </div>
+    </MenuProvider>
     </BrandingProvider>
   )
 }

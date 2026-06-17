@@ -5,6 +5,7 @@
 
 import { platformDb } from './supabase/supabaseClient'
 import { simDb } from './supabase/supabaseClient'
+import { getCurrentUserAccountId, isValidAccountId } from '../utils/accountResolution'
 
 /**
  * Get full AI settings for an organisation (for settings page).
@@ -12,7 +13,7 @@ import { simDb } from './supabase/supabaseClient'
  * @returns {Promise<{ data_answer_mode, data_privacy_accepted_at, insights_enabled?, insights_mode? }|null>}
  */
 export async function getSettings(orgId) {
-  if (!orgId) return null
+  if (!isValidAccountId(orgId)) return null
   const { data, error } = await platformDb
     .from('ai_settings')
     .select('data_answer_mode, data_privacy_accepted_at, insights_enabled, insights_mode')
@@ -46,7 +47,7 @@ export async function getSettings(orgId) {
  * @param {{ data_answer_mode?, set_privacy_accepted?: boolean, insights_enabled?: boolean, insights_mode?: 'template'|'gemini' }} payload
  */
 export async function updateSettings(orgId, payload) {
-  if (!orgId) throw new Error('Organisation ID required')
+  if (!isValidAccountId(orgId)) throw new Error('Organisation ID required')
   const current = await getSettings(orgId) || {
     data_answer_mode: 'template',
     data_privacy_accepted_at: null,
@@ -97,29 +98,11 @@ export async function updateSettings(orgId, payload) {
 export async function getOrgIdForUser(authUserId) {
   if (!authUserId) return null
   try {
-    const { data: userRow } = await platformDb
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUserId)
-      .maybeSingle()
-    const platformUserId = userRow?.id
-    if (!platformUserId) return null
-    const { data: accountRow } = await platformDb
-      .from('accounts')
-      .select('id')
-      .eq('owner_user_id', platformUserId)
-      .limit(1)
-      .maybeSingle()
-    if (accountRow?.id) return accountRow.id
-    const { data: projectRow } = await platformDb
-      .from('projects')
-      .select('account_id')
-      .eq('owner_user_id', platformUserId)
-      .eq('is_deleted', false)
-      .not('account_id', 'is', null)
-      .limit(1)
-      .maybeSingle()
-    return projectRow?.account_id ?? null
+    const {
+      data: { user },
+    } = await platformDb.auth.getUser()
+    if (!user || user.id !== authUserId) return null
+    return await getCurrentUserAccountId()
   } catch {
     return null
   }

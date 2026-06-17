@@ -47,3 +47,47 @@ export function formatProjectContextBlockHtml(ctx) {
 export function formatProjectContextBlockPlain(ctx) {
   return ctx?.projectContextBlockPlain || ''
 }
+
+/**
+ * Organisation-scoped invitation context (PMO Administrator, etc.).
+ * @param {{ organisationName?: string, roleName?: string, billingAccess?: boolean }} ctx
+ */
+export function formatOrganisationContextBlockHtml(ctx = {}) {
+  const org = String(ctx.organisationName || '').trim()
+  if (!org) return ''
+
+  const roleName = String(ctx.roleName || 'PMO Administrator').trim()
+  const billingNote = ctx.billingAccess
+    ? 'Includes Account & Subscription access (billing delegate).'
+    : 'Does not include billing or subscription access.'
+
+  const rows = [
+    renderLabelValueHtml('Organisation', org),
+    renderLabelValueHtml('Role', roleName),
+    renderLabelValueHtml('Access scope', 'Organisation-wide PMO'),
+    renderLabelValueHtml('Billing', billingNote),
+  ].filter(Boolean)
+
+  return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:20px 24px;margin:24px 0;">
+    <p style="margin:0 0 12px;color:#6b7280;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600;">Organisation context</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;">
+      ${rows.join('')}
+    </table>
+  </div>`
+}
+
+export function formatOrganisationContextBlockPlain(ctx = {}) {
+  const org = String(ctx.organisationName || '').trim()
+  if (!org) return ''
+  const roleName = String(ctx.roleName || 'PMO Administrator').trim()
+  const billingNote = ctx.billingAccess
+    ? 'Includes Account & Subscription access (billing delegate).'
+    : 'Does not include billing or subscription access.'
+  return [
+    'ORGANISATION CONTEXT',
+    `Organisation: ${org}`,
+    `Role: ${roleName}`,
+    'Access scope: Organisation-wide PMO',
+    `Billing: ${billingNote}`,
+  ].join('\n')
+}

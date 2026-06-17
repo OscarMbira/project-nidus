@@ -27,6 +27,8 @@ import {
   getAssignableRolesForPMOAdmin,
   sendRoleInvitation,
 } from '../../services/pmoAdminService'
+import { invitePmoAdministrator } from '../../services/accountBillingDelegateService'
+import { canInvitePmoAdmin, resolveBillingAccess } from '../../services/billingAccessService'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import {
   useInvitationTemplates,
@@ -48,6 +50,10 @@ import { isManagerAppointmentRole } from '../../utils/appointmentRoleUtils'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
 
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+
+const INVITE_MODE_PROJECT = 'project'
+const INVITE_MODE_PMO_ADMIN = 'pmo_admin'
+const PMO_ADMIN_TEMPLATE_ROLE = 'pmo_admin'
 async function fetchInviterFullName(fallbackEmail, userMeta = {}) {
   // SECURITY DEFINER RPC — links auth_user_id and returns profile, bypasses RLS
   try {
@@ -84,6 +90,9 @@ export default function SendRoleInvites() {
   const [message, setMessage] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [authUserId, setAuthUserId] = useState(null)
+  const [inviteMode, setInviteMode] = useState(INVITE_MODE_PROJECT)
+  const [canInviteOrgPmoAdmin, setCanInviteOrgPmoAdmin] = useState(false)
+  const [orgAccountId, setOrgAccountId] = useState(null)
 
   const [accountId, setAccountId] = useState(null)
   const [projectName, setProjectName] = useState('')
@@ -102,6 +111,7 @@ export default function SendRoleInvites() {
   const [reportingCandidates, setReportingCandidates] = useState([])
   const [inviterUserId, setInviterUserId] = useState(null)
   const prevRoleIdRef = useRef('')
+  const prevInviteModeRef = useRef(INVITE_MODE_PROJECT)
   const lastAutoFilledRef = useRef(null)
   const messageRef = useRef('')
 
@@ -141,7 +151,23 @@ export default function SendRoleInvites() {
   }, [message])
 
   useEffect(() => {
+    if (!orgAccountId) {
+      if (inviteMode === INVITE_MODE_PMO_ADMIN) {
+        setAccountDefaultExpiryDays(INVITE_EXPIRY_FALLBACK_DAYS)
+      }
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      const er = await fetchAccountInvitationExpiryDays(orgAccountId)
+      if (!cancelled) setAccountDefaultExpiryDays(er.days)
+    })()
+    return () => { cancelled = true }
+  }, [orgAccountId, inviteMode])
+
+  useEffect(() => {
     if (!selectedProject) {
+      if (inviteMode === INVITE_MODE_PMO_ADMIN) return
       setAccountId(null)
       setProjectName('')
       setOrganisationName('')
@@ -198,9 +224,88 @@ export default function SendRoleInvites() {
     return () => {
       cancelled = true
     }
-  }, [selectedProject])
+  }, [selectedProject, inviteMode])
 
   useEffect(() => {
+    if (inviteMode !== INVITE_MODE_PMO_ADMIN || !orgAccountId) return
+    let cancelled = false
+    ;(async () => {
+      const { data: acc } = await platformDb
+        .from('accounts')
+        .select('account_display_name, account_name, company_name')
+        .eq('id', orgAccountId)
+        .maybeSingle()
+      if (cancelled || !acc) return
+      setOrganisationName(acc.account_display_name || acc.account_name || acc.company_name || '')
+    })()
+    return () => { cancelled = true }
+  }, [inviteMode, orgAccountId])
+
+  useEffect(() => {
+    if (inviteMode !== INVITE_MODE_PMO_ADMIN) return
+
+    const tmpl = getTemplateForRole(PMO_ADMIN_TEMPLATE_ROLE)
+    const modeChanged = prevInviteModeRef.current !== inviteMode
+    prevInviteModeRef.current = inviteMode
+
+    const ctx = {
+      projectName: organisationName || 'our organisation',
+      roleDisplayName: 'PMO Administrator',
+      inviterName,
+      organisationName,
+      invitationExpiryDays: effectiveInviteExpiryDays,
+      projectContext: null,
+      inviteeFirstName,
+      inviteeLastName,
+    }
+
+    if (!tmpl?.message_body) {
+      if (modeChanged) setShowRestorePrompt(false)
+      return
+    }
+
+    const resolvedBase = resolveInvitationTemplatePlaceholders(tmpl.message_body, ctx)
+    const personalized = personalizeInvitationMessage(resolvedBase, {
+      inviteeFirstName,
+      inviteeLastName,
+    }).trim()
+    const baseTrim = resolvedBase.trim()
+    const cur = messageRef.current.trim()
+    const last = (lastAutoFilledRef.current || '').trim()
+
+    if (!modeChanged) {
+      if (last && (cur === last || cur === baseTrim)) {
+        setMessage(personalized)
+        lastAutoFilledRef.current = personalized
+      } else if (cur === '' && lastAutoFilledRef.current === null) {
+        setMessage(personalized)
+        lastAutoFilledRef.current = personalized
+      }
+      return
+    }
+
+    if (cur === '' || cur === last || cur === baseTrim) {
+      setMessage(personalized)
+      lastAutoFilledRef.current = personalized
+      setShowRestorePrompt(false)
+      setPendingResolvedMessage('')
+    } else {
+      setPendingResolvedMessage(personalized)
+      setShowRestorePrompt(true)
+    }
+  }, [
+    inviteMode,
+    templates,
+    organisationName,
+    inviterName,
+    effectiveInviteExpiryDays,
+    inviteeFirstName,
+    inviteeLastName,
+    getTemplateForRole,
+  ])
+
+  useEffect(() => {
+    if (inviteMode === INVITE_MODE_PMO_ADMIN) return
     if (!selectedRole) return
     const role = availableRoles.find((r) => r.id === selectedRole)
     if (!role) return
@@ -255,6 +360,7 @@ export default function SendRoleInvites() {
       setShowRestorePrompt(true)
     }
   }, [
+    inviteMode,
     selectedRole,
     availableRoles,
     templates,
@@ -270,23 +376,32 @@ export default function SendRoleInvites() {
 
   const selectedRoleRow = availableRoles.find((r) => r.id === selectedRole)
   const isManagerRole = selectedRoleRow ? isManagerAppointmentRole(selectedRoleRow.role_name) : false
+  const isOrgPmoAdminInvite = inviteMode === INVITE_MODE_PMO_ADMIN
 
   const resetMessageTemplateState = useCallback(() => {
     lastAutoFilledRef.current = null
     prevRoleIdRef.current = ''
+    prevInviteModeRef.current = INVITE_MODE_PROJECT
     setShowRestorePrompt(false)
     setPendingResolvedMessage('')
   }, [])
 
-  const selectedTemplate = selectedRoleRow ? getTemplateForRole(selectedRoleRow.role_name) : null
+  const activeTemplateRoleName = isOrgPmoAdminInvite
+    ? PMO_ADMIN_TEMPLATE_ROLE
+    : selectedRoleRow?.role_name
+  const selectedTemplate = activeTemplateRoleName ? getTemplateForRole(activeTemplateRoleName) : null
+  const activeRoleDisplayName = isOrgPmoAdminInvite
+    ? 'PMO Administrator'
+    : (selectedRoleRow?.role_display_name || selectedRoleRow?.role_name)
   const resolvedDefault =
-    selectedTemplate?.message_body && selectedRoleRow
+    selectedTemplate?.message_body && activeRoleDisplayName
       ? resolveInvitationTemplatePlaceholders(selectedTemplate.message_body, {
-          projectName,
-          roleDisplayName: selectedRoleRow.role_display_name || selectedRoleRow.role_name,
+          projectName: isOrgPmoAdminInvite ? (organisationName || 'our organisation') : projectName,
+          roleDisplayName: activeRoleDisplayName,
           inviterName,
           organisationName,
           invitationExpiryDays: effectiveInviteExpiryDays,
+          projectContext: isOrgPmoAdminInvite ? null : projectContext,
           inviteeFirstName,
           inviteeLastName,
         }).trim()
@@ -297,14 +412,14 @@ export default function SendRoleInvites() {
     message.trim() === resolvedDefault
 
   const applyResetToDefault = () => {
-    if (!selectedRoleRow || !selectedTemplate?.message_body) return
+    if (!activeRoleDisplayName || !selectedTemplate?.message_body) return
     const ctx = {
-      projectName,
-      roleDisplayName: selectedRoleRow.role_display_name || selectedRoleRow.role_name,
+      projectName: isOrgPmoAdminInvite ? (organisationName || 'our organisation') : projectName,
+      roleDisplayName: activeRoleDisplayName,
       inviterName,
       organisationName,
       invitationExpiryDays: effectiveInviteExpiryDays,
-      projectContext,
+      projectContext: isOrgPmoAdminInvite ? null : projectContext,
       inviteeFirstName,
       inviteeLastName,
     }
@@ -346,13 +461,20 @@ export default function SendRoleInvites() {
       setLoadingAuth(false)
       setListsLoading(true)
 
-      const [projectsResult, rolesResult, inviterNameResolved] = await Promise.all([
+      const [projectsResult, rolesResult, inviterNameResolved, billingAccess, inviteAllowed] = await Promise.all([
         getProjectsPicklistForPMOAdmin(),
         getAssignableRolesForPMOAdmin(),
         fetchInviterFullName(user.email, user.user_metadata || {}),
+        resolveBillingAccess(user.id),
+        canInvitePmoAdmin(user.id),
       ])
 
       setInviterName(inviterNameResolved)
+      setCanInviteOrgPmoAdmin(inviteAllowed)
+      if (billingAccess.accountId) {
+        setOrgAccountId(billingAccess.accountId)
+        setAccountId(billingAccess.accountId)
+      }
 
       if (!projectsResult.success) {
         setError(projectsResult.error || 'Failed to load projects')
@@ -383,7 +505,7 @@ export default function SendRoleInvites() {
     })
   }, [checkAccessAndLoadData])
 
-  const formDisabled = listsLoading || sending || projectContextLoading
+  const formDisabled = listsLoading || sending || (inviteMode === INVITE_MODE_PROJECT && projectContextLoading)
 
   const handleSendInvite = async (e) => {
     e.preventDefault()
@@ -392,7 +514,13 @@ export default function SendRoleInvites() {
     setSending(true)
 
     try {
-      if (!selectedProject || !email || !selectedRole) {
+      if (isOrgPmoAdminInvite) {
+        if (!email) {
+          setError('Please fill in all required fields')
+          setSending(false)
+          return
+        }
+      } else if (!selectedProject || !email || !selectedRole) {
         setError('Please fill in all required fields')
         setSending(false)
         return
@@ -422,6 +550,49 @@ export default function SendRoleInvites() {
         inviteeFirstName: firstTrim,
         inviteeLastName: lastTrim,
       })
+
+      if (isOrgPmoAdminInvite) {
+        if (!authUserId) {
+          setError('Session expired — please refresh and try again')
+          setSending(false)
+          return
+        }
+
+        const result = await Promise.race([
+          invitePmoAdministrator(
+            authUserId,
+            {
+              email: email.trim(),
+              firstName: firstTrim,
+              lastName: lastTrim,
+              message: messageToSend || null,
+              expiryDays: effectiveInviteExpiryDays,
+              inviterName,
+            },
+            { skipAccessRecheck: true, accountId: orgAccountId },
+          ),
+          new Promise((_, reject) =>
+            setTimeout(
+              () => reject(new Error('Request timed out. The server is taking too long — please try again.')),
+              20_000,
+            ),
+          ),
+        ])
+
+        if (result.success) {
+          setSuccess(`PMO Administrator invitation saved for ${firstTrim} ${lastTrim} (${email}). Email is being sent.`)
+          setEmail('')
+          setInviteeFirstName('')
+          setInviteeLastName('')
+          setMessage('')
+          resetMessageTemplateState()
+          setInviteExpirySelect('account')
+          setError(null)
+        } else {
+          setError(result.error || 'Failed to send invitation')
+        }
+        return
+      }
 
       const reportingToName = managerAppointmentTerms.reportingToUserId
         ? (reportingCandidates.find((u) => u.id === managerAppointmentTerms.reportingToUserId)?.full_name || '')
@@ -515,6 +686,7 @@ export default function SendRoleInvites() {
     setSuccess(null)
     setManagerAppointmentTerms(MANAGER_APPOINTMENT_EMPTY)
     setActiveTab('invitation')
+    setInviteMode(INVITE_MODE_PROJECT)
   }, [resetMessageTemplateState])
 
   const roleSelectDisabled = !selectedProject || availableRoles.length === 0
@@ -530,6 +702,9 @@ export default function SendRoleInvites() {
         </h1>
         <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
           Send email invitations to users with specific roles. Team Manager and Team Member invitations are reserved for Project Managers.
+          {canInviteOrgPmoAdmin && (
+            <> Use <strong>PMO Administrator</strong> to invite organisation-wide PMO admins without billing access.</>
+          )}
         </p>
       </div>
 
@@ -603,6 +778,76 @@ export default function SendRoleInvites() {
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-5 md:p-6">
             <form onSubmit={handleSendInvite} className="space-y-4 sm:space-y-5 md:space-y-6">
+              {canInviteOrgPmoAdmin && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Invitation type
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInviteMode(INVITE_MODE_PROJECT)
+                        prevInviteModeRef.current = INVITE_MODE_PMO_ADMIN
+                        setSelectedRole('')
+                        setMessage('')
+                        resetMessageTemplateState()
+                        setActiveTab('invitation')
+                      }}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium border transition-colors ${
+                        inviteMode === INVITE_MODE_PROJECT
+                          ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      Project role
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInviteMode(INVITE_MODE_PMO_ADMIN)
+                        prevInviteModeRef.current = INVITE_MODE_PROJECT
+                        setSelectedProject('')
+                        setSelectedRole('')
+                        setMessage('')
+                        lastAutoFilledRef.current = null
+                        prevRoleIdRef.current = ''
+                        setShowRestorePrompt(false)
+                        setPendingResolvedMessage('')
+                        setActiveTab('invitation')
+                        if (orgAccountId) setAccountId(orgAccountId)
+                      }}
+                      className={`rounded-lg px-4 py-2 text-sm font-medium border transition-colors ${
+                        inviteMode === INVITE_MODE_PMO_ADMIN
+                          ? 'border-emerald-600 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      PMO Administrator (no billing)
+                    </button>
+                  </div>
+                  {isOrgPmoAdminInvite && (
+                    <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      Organisation-wide <strong>pmo_admin</strong> role only — no Account &amp; Subscription access.
+                      Billing privileges can be granted separately by the account owner.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {isOrgPmoAdminInvite ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <span className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 flex-shrink-0" />
+                      Role
+                    </span>
+                  </label>
+                  <div className="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300">
+                    PMO Administrator — standard (no billing access)
+                  </div>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -664,9 +909,10 @@ export default function SendRoleInvites() {
                   </p>
                 </div>
               </div>
+              )}
 
-              {/* Organisation field — read-only, derived from selected project */}
-              {selectedProject && (
+              {/* Organisation field — read-only */}
+              {(selectedProject || isOrgPmoAdminInvite) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <span className="flex items-center gap-2">
@@ -681,18 +927,21 @@ export default function SendRoleInvites() {
                         <span className="font-medium">{organisationName}</span>
                       </>
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500 italic">No organisation on file for this project</span>
+                      <span className="text-gray-400 dark:text-gray-500 italic">No organisation on file</span>
                     )}
                   </div>
                   {organisationName && (
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      The invitee will be associated with this organisation upon acceptance.
+                      {isOrgPmoAdminInvite
+                        ? 'The invitee joins this organisation as a PMO Administrator upon acceptance.'
+                        : 'The invitee will be associated with this organisation upon acceptance.'}
                     </p>
                   )}
                 </div>
               )}
 
-              {/* Tab bar — always visible */}
+              {/* Tab bar — project roles only (manager appointment terms) */}
+              {!isOrgPmoAdminInvite && (
               <div className="flex border-b border-gray-200 dark:border-gray-700">
                 {[
                   { key: 'invitation', label: 'Invitation Details' },
@@ -712,9 +961,10 @@ export default function SendRoleInvites() {
                   </button>
                 ))}
               </div>
+              )}
 
               {/* Invitation Details tab content */}
-              {activeTab === 'invitation' && (
+              {(activeTab === 'invitation' || isOrgPmoAdminInvite) && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div>
@@ -862,7 +1112,7 @@ export default function SendRoleInvites() {
               )}
 
               {/* Appointment Terms tab content */}
-              {activeTab === 'appointment' && (
+              {!isOrgPmoAdminInvite && activeTab === 'appointment' && (
                 <ManagerAppointmentForm
                   value={managerAppointmentTerms}
                   onChange={setManagerAppointmentTerms}
@@ -877,11 +1127,10 @@ export default function SendRoleInvites() {
                   disabled={
                     formDisabled ||
                     sending ||
-                    !selectedProject ||
                     !email ||
-                    !selectedRole ||
                     !inviteeFirstName.trim() ||
-                    !inviteeLastName.trim()
+                    !inviteeLastName.trim() ||
+                    (!isOrgPmoAdminInvite && (!selectedProject || !selectedRole))
                   }
                   className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base font-medium"
                 >

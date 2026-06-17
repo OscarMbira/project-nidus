@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Save, FileText, Calendar, Target, CheckCircle } from 'lucide-react';
+import { Save, FileText, Calendar, Target, CheckCircle } from 'lucide-react';
 import { saveQualityRegisterItem } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
+import FormSurface from '../ui/FormSurface';
 
-export default function QualityRegisterForm({ item, projectId, onSave, onCancel }) {
+export default function QualityRegisterForm({ item, projectId, onSave, onCancel, variant = 'modal' }) {
   const [formData, setFormData] = useState({
     product_reference: '',
     product_name: '',
@@ -114,24 +115,13 @@ export default function QualityRegisterForm({ item, projectId, onSave, onCancel 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {item ? 'Edit Quality Register Item' : 'Add Quality Register Item'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <FormSurface
+      variant={variant}
+      title={item ? 'Edit Quality Register Item' : 'Add Quality Register Item'}
+      icon={FileText}
+      onClose={onCancel}
+    >
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -412,9 +402,8 @@ export default function QualityRegisterForm({ item, projectId, onSave, onCancel 
               {saving ? 'Saving...' : item ? 'Update Item' : 'Create Item'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </FormSurface>
   );
 }
 

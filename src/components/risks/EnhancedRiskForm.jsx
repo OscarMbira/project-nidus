@@ -5,11 +5,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { X, Save, ArrowRight, ArrowLeft, AlertTriangle, TrendingUp, FileText, Target, Users, CheckCircle } from 'lucide-react'
+import { Save, ArrowRight, ArrowLeft, AlertTriangle, TrendingUp, FileText, Target, Users, CheckCircle } from 'lucide-react'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { createRisk, updateRisk } from '../../services/riskService'
+import FormSurface from '../ui/FormSurface'
 
-export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel }) {
+export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel, variant = 'modal' }) {
   const [activeStep, setActiveStep] = useState(1)
   const [formData, setFormData] = useState({
     // Step 1: Description
@@ -893,26 +894,13 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {risk ? 'Edit Risk' : 'Create Risk'}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Step {activeStep} of {steps.length}: {steps.find(s => s.id === activeStep)?.title}
-            </p>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
+    <FormSurface
+      variant={variant}
+      title={risk ? 'Edit Risk' : 'Create Risk'}
+      subtitle={`Step ${activeStep} of ${steps.length}: ${steps.find((s) => s.id === activeStep)?.title}`}
+      icon={AlertTriangle}
+      onClose={onCancel}
+    >
         {/* Progress Bar */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
@@ -988,7 +976,6 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
             </button>
           )}
         </div>
-      </div>
-    </div>
+    </FormSurface>
   )
 }

@@ -170,6 +170,8 @@ export async function getAssignableRolesForPMOAdmin() {
       .neq('role_name', 'pm_team_manager')
       .neq('role_name', 'pm_team_member')
       .neq('role_name', 'system_admin')
+      .neq('role_name', 'account_owner')
+      .neq('role_name', 'pmo_admin')
       .order('role_level', { ascending: false })
 
     if (error) throw error

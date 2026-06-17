@@ -1,6 +1,8 @@
 /**
  * Simulator Platform Menu Configuration
  * Defines menu structure for Simulator Platform with subscription-based visibility
+ *
+ * @see projectplan/v671 — simulator_user learner profile filtered in useSimMenu.js
  */
 
 export const simulatorMenuConfig = [
@@ -171,30 +173,7 @@ export const simulatorMenuConfig = [
     ],
   },
   {
-    id: 'sim-itto',
-    label: 'ITTO Management',
-    path: '/simulator/itto/templates',
-    icon: 'git-branch',
-    subscriptionTier: null,
-    children: [
-      { id: 'sim-itto-templates', label: 'ITTO Templates', path: '/simulator/itto/templates', subscriptionTier: null },
-      { id: 'sim-itto-project', label: 'Project ITTOs', path: '/simulator/itto/project', subscriptionTier: null },
-      { id: 'sim-itto-drafts', label: 'ITTO Drafts', path: '/simulator/itto/drafts', subscriptionTier: null },
-    ],
-  },
-  {
-    id: 'sim-delays',
-    label: 'Delays',
-    path: '/simulator/delays',
-    icon: 'clock-alert',
-    subscriptionTier: null,
-    children: [
-      { id: 'sim-delays-register', label: 'Delay Register', path: '/simulator/delays', icon: 'list', subscriptionTier: null },
-      { id: 'sim-delays-drafts', label: 'Delay Drafts', path: '/simulator/delays/drafts', icon: 'pause-circle', subscriptionTier: null },
-    ],
-  },
-  {
-    id: 'sim-pmo',
+    id: 'sim-org-knowledge',
     label: 'PMO',
     path: '/simulator/pmo/dashboard',
     icon: 'shield',
@@ -398,6 +377,57 @@ export const simulatorMenuConfig = [
         subscriptionTier: null,
       },
       {
+        id: 'sim-practice-lessons-log',
+        label: 'Lessons Log',
+        path: '/simulator/practice-lessons-log',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-practice-config-items',
+        label: 'Configuration Items',
+        path: '/simulator/practice-config-items',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-practice-delays-register',
+        label: 'Delay Register',
+        path: '/simulator/delays',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-practice-delays-drafts',
+        label: 'Delay Drafts',
+        path: '/simulator/delays/drafts',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-practice-itto-templates',
+        label: 'ITTO Templates',
+        path: '/simulator/itto/templates',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-practice-itto-project',
+        label: 'Project ITTOs',
+        path: '/simulator/itto/project',
+        subscriptionTier: null,
+      },
+      {
+        id: 'sim-practice-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/simulator/itto/drafts',
+        subscriptionTier: null,
+      },
+    ],
+  },
+  {
+    id: 'sim-practice-quality',
+    label: 'Quality',
+    path: null,
+    icon: 'award',
+    subscriptionTier: null,
+    children: [
+      {
         id: 'sim-practice-quality-reviews',
         label: 'Quality Reviews',
         path: '/simulator/practice-quality-reviews',
@@ -415,60 +445,15 @@ export const simulatorMenuConfig = [
         path: '/simulator/practice-quality-reports',
         subscriptionTier: null,
       },
-      {
-        id: 'sim-practice-lessons-log',
-        label: 'Lessons Log',
-        path: '/simulator/practice-lessons-log',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-config-items',
-        label: 'Configuration Items',
-        path: '/simulator/practice-config-items',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-dashboard',
-        label: 'Testing & QA — Dashboard',
-        path: '/simulator/practice-testing',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-suites',
-        label: 'Testing — Test Suites',
-        path: '/simulator/practice-testing/suites',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-cases',
-        label: 'Testing — Test Cases',
-        path: '/simulator/practice-testing/cases',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-runs',
-        label: 'Testing — Test Runs',
-        path: '/simulator/practice-testing/runs',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-import',
-        label: 'Testing — Bulk Import',
-        path: '/simulator/practice-testing/import',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-defects',
-        label: 'Testing — Defects',
-        path: '/simulator/practice-testing/defects',
-        subscriptionTier: null,
-      },
-      {
-        id: 'sim-practice-testing-defect-reports',
-        label: 'Testing — Defect Reports',
-        path: '/simulator/practice-testing/defects/dashboard',
-        subscriptionTier: null,
-      },
+    ],
+  },
+  {
+    id: 'sim-practice-stakeholders',
+    label: 'Stakeholders',
+    path: null,
+    icon: 'users-2',
+    subscriptionTier: null,
+    children: [
       {
         id: 'sim-practice-stakeholders-register',
         label: 'Stakeholder Register',
@@ -665,10 +650,10 @@ export const simulatorMenuConfig = [
   },
   {
     id: 'sim-practice-portfolio',
-    label: 'Practice Portfolio & Governance',
+    label: 'Practice Portfolio',
     path: null,
     icon: 'briefcase',
-    subscriptionTier: 'premium', // Premium feature
+    subscriptionTier: 'premium',
     children: [
       {
         id: 'sim-practice-portfolio',
@@ -712,10 +697,19 @@ export const simulatorMenuConfig = [
         path: '/simulator/practice-portfolio/reports',
         subscriptionTier: 'premium',
       },
+    ],
+  },
+  {
+    id: 'sim-practice-programme',
+    label: 'Practice Programme',
+    path: null,
+    icon: 'layers',
+    subscriptionTier: 'premium',
+    children: [
       {
-        id: 'sim-practice-portfolio-governance',
-        label: 'Portfolio Governance',
-        path: '/simulator/practice-portfolio/governance',
+        id: 'sim-practice-programme',
+        label: 'Programme',
+        path: '/simulator/practice-programme',
         subscriptionTier: 'premium',
       },
       {
@@ -731,48 +725,26 @@ export const simulatorMenuConfig = [
         subscriptionTier: 'premium',
       },
       {
-        id: 'sim-practice-programme-dependencies',
-        label: 'Programme Dependencies',
-        path: '/simulator/practice-programme/dependencies',
-        subscriptionTier: 'premium',
-      },
-      {
-        id: 'sim-practice-programme-benefits',
-        label: 'Benefits',
-        path: '/simulator/practice-programme/benefits',
-        subscriptionTier: 'premium',
-      },
-      {
         id: 'sim-practice-programme-timeline',
         label: 'Timeline',
         path: '/simulator/practice-programme/timeline',
         subscriptionTier: 'premium',
       },
-      {
-        id: 'sim-practice-programme',
-        label: 'Programme',
-        path: '/simulator/practice-programme',
-        subscriptionTier: 'premium',
-      },
-      {
-        id: 'sim-practice-dependencies',
-        label: 'Dependencies',
-        path: '/simulator/practice-dependencies',
-        subscriptionTier: 'premium',
-      },
-      {
-        id: 'sim-practice-stakeholders',
-        label: 'Stakeholders',
-        path: '/simulator/practice-stakeholders',
-        subscriptionTier: 'premium',
-      },
-      {
-        id: 'sim-practice-governance',
-        label: 'Governance',
-        path: '/simulator/practice-governance',
-        subscriptionTier: 'premium',
-      },
     ],
+  },
+  {
+    id: 'sim-practice-dependencies',
+    label: 'Dependencies',
+    path: '/simulator/practice-dependencies',
+    icon: 'git-branch',
+    subscriptionTier: 'premium',
+  },
+  {
+    id: 'sim-practice-governance',
+    label: 'Governance',
+    path: '/simulator/practice-governance',
+    icon: 'shield-check',
+    subscriptionTier: 'premium',
   },
   {
     id: 'sim-benefits',

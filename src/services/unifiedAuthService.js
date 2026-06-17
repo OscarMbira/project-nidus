@@ -35,13 +35,22 @@ export async function login(email, password) {
     }
 
     // Run platform access check and org check in parallel
+    const { data: userRow } = await appDb
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', data.user.id)
+      .maybeSingle()
+
     const [platformsData, orgResult] = await Promise.all([
       getPlatformAccess(data.user.id),
-      appDb
-        .from('accounts')
-        .select('id, organisation_verified')
-        .eq('owner_user_id', data.user.id)
-        .maybeSingle(),
+      userRow?.id
+        ? appDb
+            .from('accounts')
+            .select('id, organisation_verified')
+            .eq('owner_user_id', userRow.id)
+            .eq('is_deleted', false)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
     ])
 
     // Filter to only registered platforms

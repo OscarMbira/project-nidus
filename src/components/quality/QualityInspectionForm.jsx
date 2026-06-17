@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Search, Calendar, User, Target, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Save, Search, Calendar, User, Target, AlertTriangle, CheckCircle } from 'lucide-react';
 import { saveQualityInspection } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
+import FormSurface from '../ui/FormSurface';
 
-export default function QualityInspectionForm({ inspection, projectId, qualityRegisterId, onSave, onCancel }) {
+export default function QualityInspectionForm({ inspection, projectId, qualityRegisterId, onSave, onCancel, variant = 'modal' }) {
   const [formData, setFormData] = useState({
     inspection_reference: '',
     inspection_title: '',
@@ -173,24 +174,13 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <Search className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {inspection ? 'Edit Quality Inspection' : 'Create Quality Inspection'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <FormSurface
+      variant={variant}
+      title={inspection ? 'Edit Quality Inspection' : 'Create Quality Inspection'}
+      icon={Search}
+      onClose={onCancel}
+    >
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Inspection Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -651,9 +641,8 @@ export default function QualityInspectionForm({ inspection, projectId, qualityRe
               {saving ? 'Saving...' : inspection ? 'Update Inspection' : 'Create Inspection'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </FormSurface>
   );
 }
 

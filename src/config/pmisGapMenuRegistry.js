@@ -500,7 +500,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 5,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-delivery',
+    category: 'pmo-cat-agile-lean',
     registry_fallback: true,
   },
   {
@@ -512,7 +512,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 15,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-strategy',
+    category: 'pmo-cat-portfolio',
     is_container: true,
   },
   {
@@ -524,7 +524,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 1,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-strategy',
+    category: 'pmo-cat-portfolio',
     registry_fallback: true,
   },
   {
@@ -536,7 +536,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 2,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-strategy',
+    category: 'pmo-cat-portfolio',
     registry_fallback: true,
   },
   {
@@ -548,7 +548,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 3,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-strategy',
+    category: 'pmo-cat-portfolio',
     registry_fallback: true,
   },
   {
@@ -560,7 +560,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 4,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-strategy',
+    category: 'pmo-cat-portfolio',
     registry_fallback: true,
   },
   {
@@ -572,7 +572,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 5,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-strategy',
+    category: 'pmo-cat-portfolio',
     registry_fallback: true,
   },
   {
@@ -584,7 +584,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 135,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-admin',
     is_container: true,
   },
   {
@@ -596,7 +596,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 1,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-admin',
     registry_fallback: true,
   },
   {
@@ -608,7 +608,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 2,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-admin',
     registry_fallback: true,
   },
   {
@@ -620,7 +620,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 3,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-admin',
     registry_fallback: true,
   },
   {
@@ -632,7 +632,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 4,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-admin',
     registry_fallback: true,
   },
   {
@@ -644,7 +644,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 5,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-admin',
     registry_fallback: true,
   },
   {
@@ -704,7 +704,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 105,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-financial-commercial',
     is_container: true,
   },
   {
@@ -716,7 +716,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 1,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-financial-commercial',
     registry_fallback: true,
   },
   {
@@ -728,7 +728,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 2,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-financial-commercial',
     registry_fallback: true,
   },
   {
@@ -740,7 +740,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 3,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-financial-commercial',
     registry_fallback: true,
   },
   {
@@ -752,7 +752,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 4,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-financial-commercial',
     registry_fallback: true,
   },
   {
@@ -764,7 +764,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 5,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-financial-commercial',
     registry_fallback: true,
   },
   {
@@ -776,7 +776,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 85,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-oversight',
+    category: 'pmo-cat-reporting-intelligence',
     is_container: true,
   },
   {
@@ -788,7 +788,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 1,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-oversight',
+    category: 'pmo-cat-reporting-intelligence',
     registry_fallback: true,
   },
   {
@@ -800,7 +800,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 2,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-oversight',
+    category: 'pmo-cat-reporting-intelligence',
     registry_fallback: true,
   },
   {
@@ -812,7 +812,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 3,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-oversight',
+    category: 'pmo-cat-reporting-intelligence',
     registry_fallback: true,
   },
   {
@@ -824,7 +824,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 1,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-delivery',
+    category: 'pmo-cat-agile-lean',
     registry_fallback: true,
   },
   {
@@ -836,7 +836,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 155,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-delivery',
+    category: 'pmo-cat-agile-lean',
     is_container: true,
   },
   {
@@ -848,7 +848,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 2,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-delivery',
+    category: 'pmo-cat-agile-lean',
     registry_fallback: true,
   },
   {
@@ -860,7 +860,7 @@ export const PMIS_GAP_MENU_REGISTRY = [
     sort_order: 160,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance-standards',
+    category: 'pmo-cat-email-notifications',
     registry_fallback: true,
   },
 

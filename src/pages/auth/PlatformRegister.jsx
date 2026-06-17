@@ -27,17 +27,17 @@ export default function PlatformRegister() {
   const [invitationToken, setInvitationToken] = useState(null)
 
   useEffect(() => {
-    // Check for invitation token in URL
-    const invitation = searchParams.get('invitation')
+    const invitation = searchParams.get('invitation')?.trim()
     if (invitation) {
-      setInvitationToken(invitation)
-      // Try to fetch invitation details to pre-fill email
-      fetchInvitationDetails(invitation)
+      // Organisation / PMO invites use the same accept page as project invitations.
+      // Direct supabase.auth.signUp here often 504s; /i/{token} uses accept-invitation edge function.
+      const declineSuffix = searchParams.get('action') === 'decline' ? '?action=decline' : ''
+      navigate(`/i/${encodeURIComponent(invitation)}${declineSuffix}`, { replace: true })
+      return
     }
-    
-    // Check if user is already authenticated
+
     checkAuth()
-  }, [searchParams])
+  }, [searchParams, navigate])
 
   const checkAuth = async () => {
     try {

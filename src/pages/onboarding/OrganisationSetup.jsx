@@ -11,7 +11,9 @@ import { createOrganisation } from '../../services/organisationService';
 import { toast } from 'react-hot-toast';
 import { Building2, Mail, Phone, Globe, Briefcase, Users, User, MapPin, FileText, Link as LinkIcon } from 'lucide-react';
 import { platformDb, supabase } from '../../services/supabase/supabaseClient';
+import { checkOrganisationStatusByAuthId, getPostLoginRoute } from '../../services/postLoginRouter';
 import SearchableSelect from '../../components/ui/SearchableSelect';
+import { isPlatformBillingEnabled } from '../../config/platformBillingFeatures.js';
 
 // Lazy load header for faster initial render
 const PlatformHeader = lazy(() => import('../../components/homepage/PlatformHeader'));
@@ -42,6 +44,7 @@ const INDUSTRIES = [
 
 const OrganisationSetup = () => {
   const navigate = useNavigate();
+  const billingEnabled = isPlatformBillingEnabled();
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
@@ -57,6 +60,7 @@ const OrganisationSetup = () => {
     website: '',
     contactPerson: '',
     email: '',
+    billingEmail: '',
     fullAddress: '',
     registrationReference: ''
   });
@@ -73,6 +77,26 @@ const OrganisationSetup = () => {
     message: ''
   });
 
+  // Invited PMO admins join an existing organisation — skip mandatory org creation.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user?.id || cancelled) return;
+        const orgStatus = await checkOrganisationStatusByAuthId(user.id);
+        if (cancelled || !orgStatus.exists || !orgStatus.isInvitedMember) return;
+        const { route } = await getPostLoginRoute(user.id);
+        if (!cancelled && route && route !== '/onboarding/organisation-setup') {
+          navigate(route, { replace: true });
+        }
+      } catch (err) {
+        console.warn('[OrganisationSetup] invited member redirect skipped:', err?.message);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [navigate]);
+
   // Load user email immediately (critical for form)
   useEffect(() => {
     const loadUserEmail = async () => {
@@ -80,7 +104,7 @@ const OrganisationSetup = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) {
           setUserEmail(user.email);
-          setFormData(prev => ({ ...prev, email: user.email }));
+          setFormData(prev => ({ ...prev, email: user.email, billingEmail: prev.billingEmail || user.email }));
         }
       } catch (error) {
         console.error('Error loading user email:', error);
@@ -583,6 +607,29 @@ const OrganisationSetup = () => {
                   </p>
                 )}
               </div>
+
+              {/* Billing Email */}
+              {billingEnabled && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Billing email *
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    required
+                    value={formData.billingEmail}
+                    onChange={(e) => handleChange('billingEmail', e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="billing@example.com"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Invoices and subscription notices are sent here
+                </p>
+              </div>
+              )}
             </div>
 
             {/* Right Column */}

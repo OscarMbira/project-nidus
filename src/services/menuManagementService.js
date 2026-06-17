@@ -1,21 +1,15 @@
 import { platformDb } from './supabase/supabaseClient'
+import { purgeAllSidebarMenuCaches } from '../utils/menuCacheUtils'
 
-const MENU_CACHE_KEY_PREFIX = 'nidus_menu_'
-
-/** Same TTL as useMenu (for documentation); cache is cleared on save. */
-export const MENU_CACHE_TTL_MS = 5 * 60 * 1000
+/** @deprecated Menus are not cached; kept for callers after admin menu edits. */
+export const MENU_CACHE_TTL_MS = 0
 
 /**
- * Clear sidebar menu cache so useMenu refetches on next navigation.
- * @param {string} authUserId - Supabase auth user id
+ * Clear any legacy sidebar menu keys in browser storage (menus always load from DB).
+ * @param {string} [_authUserId] - unused; purges all legacy nidus_menu_* keys
  */
-export function clearSidebarMenuCache(authUserId) {
-  if (!authUserId) return
-  try {
-    sessionStorage.removeItem(`${MENU_CACHE_KEY_PREFIX}${authUserId}`)
-  } catch {
-    /* ignore */
-  }
+export function clearSidebarMenuCache(_authUserId) {
+  purgeAllSidebarMenuCaches()
 }
 
 function isPlatformSidebarRoute(row) {

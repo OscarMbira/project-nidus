@@ -5,7 +5,7 @@ import * as delayApi from '../../services/delayService'
 import * as simDelayApi from '../../services/sim/simDelayService'
 import { DELAY_CATEGORIES, DELAY_SEVERITIES, TEMPLATE_STATUSES } from '../../constants/delayConstants'
 
-export default function DelayTemplateForm({ open, onClose, onSaved, initial, accountId, userId, isSim, canEdit }) {
+export default function DelayTemplateForm({ open, onClose, onSaved, initial, accountId, userId, isSim, canEdit, variant = 'modal' }) {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(null)
@@ -69,9 +69,12 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 text-slate-100">
+  const panel = (
+      <div
+        className={`w-full overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 text-slate-100 ${
+          variant === 'page' ? 'max-w-4xl' : 'max-w-lg max-h-[90vh]'
+        }`}
+      >
         <div className="flex justify-between items-center px-4 py-3 border-b border-slate-700">
           <h2 className="text-lg font-semibold">{form.id ? 'Edit template' : 'New template'}</h2>
           <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800" aria-label="Close">
@@ -148,6 +151,15 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
           )}
         </div>
       </div>
+  )
+
+  if (variant === 'page') {
+    return <div className="mt-6">{panel}</div>
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      {panel}
     </div>
   )
 }

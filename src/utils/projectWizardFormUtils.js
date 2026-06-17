@@ -1,4 +1,5 @@
 import { format } from 'date-fns'
+import { normalizeProjectDeliveryTrack } from '../config/methodologyMenuUtils'
 
 export function formatProjectDate(value) {
   if (!value) return ''
@@ -222,6 +223,8 @@ export function wizardFormToProjectUpdatePayload(formData, userId) {
     benefit_owner_user_id: formData.benefit_owner_user_id || null,
     benefit_owner_name: formData.benefit_owner_name || null,
     delivery_methodology: formData.delivery_methodology || null,
+    delivery_methodology_track:
+      normalizeProjectDeliveryTrack(formData.delivery_methodology) || 'hybrid',
     lifecycle_template: formData.lifecycle_template || null,
     stage_model: formData.stage_model || null,
     stage_gate_enforcement: formData.stage_gate_enforcement || 'required',

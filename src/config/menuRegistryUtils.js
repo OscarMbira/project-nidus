@@ -1,10 +1,32 @@
 /**
  * Registry-driven virtual menu fallback for useMenu transforms.
- * Temporary shim until DB backfill (v638+) is confirmed in all environments.
+ * @deprecated v664+ — DB menu_items is the sole runtime source. Exports kept for unit tests.
  */
 import { getRegistryFallbackEntries } from './menuRegistry'
+import { resolveRegistryCategoryId } from './pmoSidebarCategories'
 
 const norm = (s) => String(s || '').trim().toLowerCase()
+
+/** Registry route → equivalent DB routes (v647 legacy paths). */
+const REGISTRY_ROUTE_EQUIVALENTS = {
+  '/pmo/collaboration/whiteboard': ['/pmo/collaboration/whiteboards', '/pmo/collaboration/whiteboard'],
+  '/pmo/planning/planning-poker': ['/pmo/planning/planning-poker', '/pmo/collaboration/poker'],
+  '/pmo/planning/s-curve': ['/pmo/planning/s-curve', '/pmo/reporting/s-curve'],
+  '/pmo/settings/notifications': ['/pmo/settings/notifications', '/pmo/notifications/preferences'],
+  '/pm/settings/notifications': ['/pm/settings/notifications', '/pm/notifications/preferences'],
+  '/pmo/strategy/portfolio-map': ['/pmo/strategy/portfolio-map', '/pmo/portfolio/map'],
+}
+
+function normalizePath(path) {
+  return norm(path).replace(/\/$/, '')
+}
+
+function pathExistsInBaseline(pathKey, existingPaths) {
+  if (existingPaths.has(pathKey)) return true
+  const equiv = REGISTRY_ROUTE_EQUIVALENTS[pathKey]
+  if (equiv?.some((p) => existingPaths.has(normalizePath(p)))) return true
+  return false
+}
 
 /**
  * Scope filter for simulator registry entries.
@@ -24,82 +46,13 @@ function matchesSimulatorScope(routePath, scope) {
  * @param {'pmo'|'pm'} scope
  * @returns {object[]}
  */
-export function applySimulatorRegistryFallback(tree = [], scope = 'pmo') {
-  const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV
-  const existingPaths = collectMenuRoutePaths(tree)
-  const existingCodes = new Set()
-  const walkCodes = (nodes) => {
-    for (const n of nodes || []) {
-      if (n?.menu_code) existingCodes.add(norm(n.menu_code))
-      walkCodes(n.children)
-    }
-  }
-  walkCodes(tree)
-
-  const findByCode = (nodes, code) => {
-    for (const n of nodes || []) {
-      if (norm(n.menu_code) === norm(code)) return n
-      const found = findByCode(n.children, code)
-      if (found) return found
-    }
-    return null
-  }
-
-  const next = tree.map((n) => ({ ...n, children: [...(n.children || [])] }))
-
-  for (const entry of getRegistryFallbackEntries('simulator')) {
-    if (!entry.route_path || !matchesSimulatorScope(entry.route_path, scope)) continue
-    const pathKey = norm(entry.route_path).replace(/\/$/, '')
-    if (existingPaths.has(pathKey) || existingCodes.has(norm(entry.menu_code))) continue
-
-    const leaf = {
-      id: `virtual-sim-${entry.menu_code}`,
-      menu_code: entry.menu_code,
-      menu_label: entry.menu_label,
-      menu_description: entry.menu_label,
-      parent_menu_id: null,
-      menu_level: 2,
-      sort_order: entry.sort_order,
-      route_path: entry.route_path,
-      external_url: null,
-      menu_icon: entry.menu_icon,
-      menu_color: null,
-      badge_text: null,
-      badge_color: null,
-      is_visible: true,
-      is_active: true,
-      canUse: true,
-      children: [],
-    }
-
-    if (isDev) {
-      console.warn(`[menuRegistry] simulator fallback: ${entry.menu_code} (${entry.route_path})`)
-    }
-
-    if (entry.parent_code) {
-      const parent = findByCode(next, entry.parent_code)
-      if (parent) {
-        parent.children = [...(parent.children || []), leaf]
-        parent.children.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-      } else {
-        next.push(leaf)
-      }
-    } else {
-      next.push(leaf)
-    }
-    existingPaths.add(pathKey)
-    existingCodes.add(norm(entry.menu_code))
-  }
-
-  return next.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+export function applySimulatorRegistryFallback(tree = [], _scope = 'pmo') {
+  // v664+: simulator menus are DB-seeded; no registry injection at runtime.
+  return [...(tree || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
 }
 
 /**
- * Push missing registry items into a PMO category bucket.
- * @param {Map<string, object[]>} grouped
- * @param {(categoryId: string, label: string, path: string, icon: string, sortOrder: number) => void} pushVirtualToCategory
- * @param {Set<string>} [existingPaths] — normalized route paths already present in baseline
- * @param {'platform'|'simulator'} [domain='platform']
+ * @deprecated v664+ — no runtime injection. Kept for unit tests only.
  */
 export function applyRegistryCategoryFallback(
   grouped,
@@ -112,24 +65,25 @@ export function applyRegistryCategoryFallback(
   for (const entry of getRegistryFallbackEntries(domain)) {
     if (!entry.category || !entry.route_path) continue
 
-    const pathKey = norm(entry.route_path).replace(/\/$/, '')
-    if (!grouped.has(entry.category)) grouped.set(entry.category, [])
-    const bucket = grouped.get(entry.category)
+    const categoryId = resolveRegistryCategoryId(entry.category)
+    const pathKey = normalizePath(entry.route_path)
+    if (!grouped.has(categoryId)) grouped.set(categoryId, [])
+    const bucket = grouped.get(categoryId)
     const existsInBucket = bucket.some((i) => {
-      const iPath = norm(i.route_path).replace(/\/$/, '')
+      const iPath = normalizePath(i.route_path)
       if (iPath && iPath === pathKey) return true
       return norm(i.menu_label) === norm(entry.menu_label)
     })
-    const existsInBaseline = existingPaths.has(pathKey)
+    const existsInBaseline = pathExistsInBaseline(pathKey, existingPaths)
 
     if (!existsInBucket && !existsInBaseline) {
       if (isDev) {
         console.warn(
-          `[menuRegistry] virtual fallback: ${entry.menu_code} → ${entry.category} (${entry.route_path})`
+          `[menuRegistry] registry fallback (${domain}): ${entry.menu_code} → ${categoryId} (${entry.route_path}) — seed menu_items or run v664 SQL`
         )
       }
       pushVirtualToCategory(
-        entry.category,
+        categoryId,
         entry.menu_label,
         entry.route_path,
         entry.menu_icon,

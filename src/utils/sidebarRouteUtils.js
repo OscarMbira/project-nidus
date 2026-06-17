@@ -80,6 +80,22 @@ export function resolveMenuRoutePath(routePath, pathname) {
   return normalizedRoute
 }
 
+/** PM layout entry points — keep PM users on /pm/* dashboards where possible. */
+const PM_LAYOUT_ROUTE_REWRITES = {
+  '/platform/dashboard': '/pm/dashboard',
+}
+
+/**
+ * Resolve menu link targets for the active sidebar layout.
+ * Shared /platform/* pages stay on the same URL but PM dashboard links use /pm/dashboard.
+ */
+export function resolveMenuRoutePathForLayout(routePath, pathname, layout = null) {
+  const resolved = resolveMenuRoutePath(routePath, pathname)
+  if (layout !== 'pm') return resolved
+  const base = String(resolved || '').split('?')[0]
+  return PM_LAYOUT_ROUTE_REWRITES[base] || resolved
+}
+
 function searchParamsMatch(currentSearch, expectedQueryWithoutLeadingQm) {
   const exp = new URLSearchParams(String(expectedQueryWithoutLeadingQm || '').replace(/^\?/, ''))
   const cur = new URLSearchParams(String(currentSearch || '').replace(/^\?/, ''))

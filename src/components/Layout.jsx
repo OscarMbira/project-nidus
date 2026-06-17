@@ -10,6 +10,9 @@ import FeedbackWidget from './feedback/FeedbackWidget'
 import AIChatWidget from './ai/AIChatWidget'
 import QuickCaptureFab from '../modules/pmis-gaps/components/QuickCaptureFab'
 import { BrandingProvider } from '../context/BrandingContext'
+import { MenuProvider } from '../hooks/useMenu'
+import PMLayout from './pm/PMLayout'
+import { shouldUsePmLayoutShell } from '../utils/menuLayoutUtils'
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -21,8 +24,12 @@ const Layout = ({ children }) => {
                      location.pathname.startsWith('/auth/confirm-email') ||
                      location.pathname.startsWith('/onboarding')
 
-  // Determine which header to show based on route
   const path = location.pathname
+
+  // PM users on shared /platform/* delivery routes must use PMLayout (layoutScope="pm").
+  if (!isAuthPage && shouldUsePmLayoutShell(path)) {
+    return <PMLayout>{children || <Outlet />}</PMLayout>
+  }
   const isPlatformApp =
     path.startsWith('/platform/') ||
     // First-class Platform URLs under /app/* (registered before app/* redirect in App.jsx)
@@ -40,6 +47,7 @@ const Layout = ({ children }) => {
 
   return (
     <BrandingProvider>
+    <MenuProvider layoutScope={null}>
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Skip to main content link */}
       <a href="#main-content" className="skip-to-content">
@@ -107,6 +115,7 @@ const Layout = ({ children }) => {
       {!isAuthPage && <AIChatWidget />}
       {!isAuthPage && <QuickCaptureFab />}
     </div>
+    </MenuProvider>
     </BrandingProvider>
   )
 }

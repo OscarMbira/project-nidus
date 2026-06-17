@@ -59,7 +59,7 @@ BEGIN
     PERFORM cron.schedule(
       'nidus_auto_archive_history',
       '0 0 * * *',
-      $$SELECT public.auto_archive_expired_history();$$
+      $cron$SELECT public.auto_archive_expired_history();$cron$
     );
   END IF;
 EXCEPTION WHEN OTHERS THEN

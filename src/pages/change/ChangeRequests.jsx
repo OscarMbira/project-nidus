@@ -15,7 +15,7 @@ const CHANGE_REQUEST_COLUMNS = [
   { key: 'status', label: 'Status' }
 ];
 
-export default function ChangeRequests() {
+export default function ChangeRequests({ formVariant = 'modal' }) {
   const navigate = useNavigate();
   const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-requests', 'grid');
   const [requests, setRequests] = useState([]);
@@ -134,10 +134,12 @@ export default function ChangeRequests() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {!showForm && (
+      <>
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Change Requests
+            {formVariant === 'page' ? 'Change Register' : 'Change Requests'}
           </h1>
           <div className="flex gap-2">
             <ExportListMenu columns={crExportColumns} data={crExportRows} baseFilename="ChangeRequests" disabled={!requests.length} />
@@ -219,13 +221,15 @@ export default function ChangeRequests() {
         viewMode={changeRequestViewMode}
         onViewModeChange={setChangeRequestViewMode}
       />
+      </>
+      )}
 
-      {/* Change Request Form Modal */}
       {showForm && (
         <ChangeRequestForm
+          variant={formVariant}
           request={editingRequest}
-          onSave={handleSuccess}
-          onCancel={() => {
+          onSuccess={handleSuccess}
+          onClose={() => {
             setShowForm(false);
             setEditingRequest(null);
           }}

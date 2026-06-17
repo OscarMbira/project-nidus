@@ -62,11 +62,14 @@ export default function LifecycleControlsSection({
               }`}
             >
               <option value="">Select Methodology...</option>
-              <option value="PRINCE2">PRINCE2 (Structured)</option>
-              <option value="Agile">Agile</option>
-              <option value="Hybrid">Hybrid (PRINCE2 + Agile)</option>
-              <option value="Waterfall">Waterfall</option>
-              <option value="Structured">Structured</option>
+              <option value="hybrid">Hybrid (all tracks)</option>
+              <option value="structured">Structured / Traditional</option>
+              <option value="pmbok">PMBOK Process Groups</option>
+              <option value="agile">Agile & Lean</option>
+              <option value="Structured">Structured (legacy)</option>
+              <option value="Agile">Agile (legacy)</option>
+              <option value="Hybrid">Hybrid (legacy)</option>
+              <option value="Waterfall">Waterfall (legacy)</option>
             </select>
             {errors.delivery_methodology && (
               <p className="mt-1 text-sm text-red-600">{errors.delivery_methodology}</p>

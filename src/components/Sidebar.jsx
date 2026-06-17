@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMenu } from '../hooks/useMenu'
 import { useSimMenu } from '../hooks/useSimMenu'
@@ -82,8 +82,11 @@ import {
 } from 'lucide-react'
 import { useThemeContext } from '../context/ThemeContext'
 import { useBranding } from '../context/BrandingContext'
-import { resolveMenuRoutePath, menuPathIsActive } from '../utils/sidebarRouteUtils'
+import { resolveMenuRoutePath, resolveMenuRoutePathForLayout, menuPathIsActive } from '../utils/sidebarRouteUtils'
+import { persistMenuLayoutScope } from '../utils/menuLayoutUtils'
+import { resolveSidebarThemeTokens } from '../utils/sidebarThemeUtils'
 import { useOpenPlanningFindingsCount } from '../hooks/useOpenPlanningFindingsCount'
+import MethodologySwitcher from './ui/MethodologySwitcher'
 
 // Icon mapping for menu items
 const iconMap = {
@@ -160,45 +163,175 @@ const iconMap = {
   'check-circle': CheckCircle,
   'file-box': FileBox,
   'menu': Menu,
+  'bar-chart-3': BarChart,
+  'brain': Lightbulb,
+  'cpu': Bot,
+  'sliders': SlidersHorizontal,
+  'search-code': Target,
 }
 
-function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null, planningOpenFindingsCount = null }) {
+function getMenuNodeKey(menuItem) {
+  return menuItem?.id ?? menuItem?.menu_code ?? String(menuItem?.menu_label ?? '')
+}
+
+function menuNodeContainsActive(node, location) {
+  if (!node) return false
+  if (node.route_path) {
+    const r = resolveMenuRoutePath(node.route_path, location.pathname)
+    if (menuPathIsActive(location.pathname, r, location.search)) return true
+  }
+  return (node.children || []).some((child) => menuNodeContainsActive(child, location))
+}
+
+function findAutoExpandTopLevelKey(items = [], location) {
+  for (const item of items) {
+    if (item.is_methodology_header) {
+      if ((item.children || []).some((child) => menuNodeContainsActive(child, location))) {
+        return getMenuNodeKey(item)
+      }
+      continue
+    }
+    if (item.children?.length && menuNodeContainsActive(item, location)) {
+      return getMenuNodeKey(item)
+    }
+  }
+  return null
+}
+
+function SidebarMenuItem({
+  menuItem,
+  level = 0,
+  expandedMenuId = null,
+  onToggleExpand = null,
+  planningOpenFindingsCount = null,
+  sidebarTokens = null,
+  menuLayout = null,
+}) {
   const location = useLocation()
   const { branding } = useBranding()
+  const tokens = sidebarTokens || resolveSidebarThemeTokens('dark', branding)
   const hasChildren = menuItem.children && menuItem.children.length > 0
-  const resolvedPath = resolveMenuRoutePath(menuItem.route_path, location.pathname)
+  const isMethodologySection = menuItem.is_methodology_header && level === 0
+
+  if (isMethodologySection) {
+    const nodeKey = getMenuNodeKey(menuItem)
+    const isChildActive = hasChildren && menuItem.children.some((child) => menuNodeContainsActive(child, location))
+    const usesAccordion = hasChildren && onToggleExpand != null
+    const [isExpandedLocal, setIsExpandedLocal] = useState(() => isChildActive)
+
+    useEffect(() => {
+      if (usesAccordion) return
+      if (isChildActive) setIsExpandedLocal(true)
+    }, [location.pathname, location.search, usesAccordion, isChildActive])
+
+    const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
+    const trackIconMap = { structured: Shield, pmbok: Settings2, agile: Zap }
+    const TrackIcon = trackIconMap[menuItem.methodology_track] || iconMap[menuItem.menu_icon] || Shield
+    const accent = menuItem.menu_color || '#3B82F6'
+    const badgeText = menuItem.badge_text || 'S'
+
+    const handleSectionClick = (e) => {
+      e.preventDefault()
+      if (usesAccordion && onToggleExpand) {
+        onToggleExpand(nodeKey)
+      } else {
+        setIsExpandedLocal((prev) => !prev)
+      }
+    }
+
+    const sectionActiveStyle = isChildActive
+      ? { backgroundColor: accent, color: tokens.activeTextColor }
+      : {}
+    const sectionClassName = `group flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors w-full ${
+      isChildActive ? 'shadow-sm' : tokens.sectionParentClass
+    }`
+
+    return (
+      <div className="mb-1">
+        <button
+          type="button"
+          onClick={handleSectionClick}
+          className={sectionClassName}
+          style={sectionActiveStyle}
+          aria-expanded={expanded}
+        >
+          <span
+            className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded text-white"
+            style={{ backgroundColor: accent }}
+            aria-hidden
+          >
+            [{badgeText}]
+          </span>
+          <TrackIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
+          <span className="flex-1 truncate text-left">{menuItem.menu_label}</span>
+          {hasChildren && (
+            <span className={`ml-auto ${isChildActive ? 'text-current' : tokens.chevronClass}`}>
+              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </span>
+          )}
+        </button>
+        {hasChildren && expanded && (
+          <div
+            className={`ml-4 mt-1 space-y-1 border-l-2 pl-2 ${
+              isChildActive ? '' : tokens.childBorderClass
+            }`}
+            style={isChildActive ? { borderLeftColor: accent } : undefined}
+          >
+            {(menuItem.children || []).map((child) => (
+              <SidebarMenuItem
+                key={getMenuNodeKey(child)}
+                menuItem={child}
+                level={level + 1}
+                expandedMenuId={expandedMenuId}
+                onToggleExpand={onToggleExpand}
+                planningOpenFindingsCount={planningOpenFindingsCount}
+                sidebarTokens={tokens}
+                menuLayout={menuLayout}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const resolvedPath = resolveMenuRoutePathForLayout(menuItem.route_path, location.pathname, menuLayout)
   const isNodeOrDescendantActive = (node) => {
     if (!node) return false
     if (node.route_path) {
-      const r = resolveMenuRoutePath(node.route_path, location.pathname)
+      const r = resolveMenuRoutePathForLayout(node.route_path, location.pathname, menuLayout)
       if (menuPathIsActive(location.pathname, r, location.search)) return true
     }
     return (node.children || []).some(isNodeOrDescendantActive)
   }
   const isChildActive = hasChildren && menuItem.children.some(isNodeOrDescendantActive)
-  const [isExpandedLocal, setIsExpandedLocal] = useState(isChildActive)
+  const nodeKey = getMenuNodeKey(menuItem)
   const isTopLevel = level === 0
-  const expandedByParent = isTopLevel && hasChildren && onToggleExpand != null
-    ? (expandedMenuId === menuItem.id) || isChildActive
-    : undefined
-  const expanded = expandedByParent !== undefined
-    ? expandedByParent
-    : (isExpandedLocal || isChildActive)
+  const usesAccordion = isTopLevel && hasChildren && onToggleExpand != null
+  const [isExpandedLocal, setIsExpandedLocal] = useState(() => isChildActive)
+
+  useEffect(() => {
+    if (usesAccordion) return
+    if (isChildActive) setIsExpandedLocal(true)
+  }, [location.pathname, location.search, usesAccordion, isChildActive])
+
+  const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
   // Treat a menu item as active ONLY when its route_path matches exactly.
   // This prevents all siblings in a section from appearing active at once.
   const isActive = !!menuItem.route_path && menuPathIsActive(location.pathname, resolvedPath, location.search)
 
   const Icon = iconMap[menuItem.menu_icon] || LayoutDashboard
 
-  // Brand active colour (item-level override > brand colour > blue fallback)
-  const brandActiveColor = menuItem.menu_color || branding?.sidebar_active_color || '#3B82F6'
-  const brandTextColor   = branding?.sidebar_text_color || null
+  const brandActiveColor = menuItem.menu_color || tokens.activeBackgroundColor
+  const isSectionParent = hasChildren && !String(menuItem.route_path || '').trim()
 
   const routePath = menuItem.route_path || ''
   const isPlanIntelligenceNav =
     menuItem.menu_code === 'planning_intelligence' ||
     menuItem.menu_code === 'pmo_intel_rules' ||
-    /planning\/intelligence/i.test(routePath)
+    menuItem.menu_code === 'plat_plan_intel_rules' ||
+    /planning\/intelligence-rules/i.test(routePath) ||
+    /\/pmo\/planning\/intelligence\/?$/i.test(routePath)
 
   let badgeText = menuItem.badge_text?.trim?.() ? menuItem.badge_text.trim() : null
   let badgeColorResolved = menuItem.badge_color || '#EF4444'
@@ -214,17 +347,32 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
   const handleClick = (e) => {
     if (hasChildren) {
       e.preventDefault()
-      if (isTopLevel && onToggleExpand) {
-        onToggleExpand(menuItem.id)
+      if (usesAccordion && onToggleExpand) {
+        onToggleExpand(nodeKey)
       } else {
         setIsExpandedLocal((prev) => !prev)
       }
+      return
+    }
+    if (menuLayout === 'pm') {
+      persistMenuLayoutScope('pm')
+    } else if (menuLayout === 'pmo') {
+      persistMenuLayoutScope('pmo')
     }
   }
 
-  const activeStyle = isActive ? { backgroundColor: brandActiveColor, color: '#ffffff' } : {}
-  const inactiveClass = 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-  const textStyle = (!isActive && brandTextColor) ? { color: brandTextColor } : {}
+  const activeStyle = isActive
+    ? { backgroundColor: brandActiveColor, color: tokens.activeTextColor }
+    : {}
+  const inactiveClass = isSectionParent ? tokens.sectionParentClass : tokens.inactiveItemClass
+  const textStyle =
+    !isActive && tokens.useBrandInactiveText && tokens.brandInactiveTextColor
+      ? { color: tokens.brandInactiveTextColor }
+      : {}
+
+  const itemClassName = `group flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+    isActive ? 'shadow-sm' : inactiveClass
+  }`
 
   return (
     <div>
@@ -233,12 +381,10 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
           href={menuItem.external_url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            isActive ? '' : inactiveClass
-          }`}
+          className={itemClassName}
           style={{ ...activeStyle, ...textStyle }}
         >
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
           <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
           {menuItem.canUse === false && (
             <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
@@ -262,12 +408,10 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
                 : resolvedPath
           }
           onClick={handleClick}
-          className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            isActive ? '' : inactiveClass
-          }`}
+          className={itemClassName}
           style={{ ...activeStyle, ...textStyle }}
         >
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
           <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
           {menuItem.canUse === false && (
             <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
@@ -281,7 +425,7 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
             </span>
           )}
           {hasChildren && (
-            <span className="ml-auto">
+            <span className={`ml-auto ${isActive ? 'text-current' : tokens.chevronClass}`}>
               {expanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
@@ -292,19 +436,22 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
         </Link>
       )}
       {hasChildren && expanded && (
-        <div className={`ml-4 mt-1 space-y-1 border-l-2 pl-2 ${
-          isActive ? '' : 'border-gray-200 dark:border-gray-700'
-        }`}
+        <div
+          className={`ml-4 mt-1 space-y-1 border-l-2 pl-2 ${
+            isActive ? '' : tokens.childBorderClass
+          }`}
           style={isActive ? { borderColor: brandActiveColor } : {}}
         >
           {menuItem.children.map((child) => (
             <SidebarMenuItem
-              key={child.id}
+              key={getMenuNodeKey(child)}
               menuItem={child}
               level={level + 1}
               expandedMenuId={expandedMenuId}
               onToggleExpand={onToggleExpand}
               planningOpenFindingsCount={planningOpenFindingsCount}
+              sidebarTokens={tokens}
+              menuLayout={menuLayout}
             />
           ))}
         </div>
@@ -316,13 +463,20 @@ function SidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleE
 export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
   const platformMenu = useMenu()
   const simMenu = useSimMenu(simulatorScope || 'pmo', !!simulatorScope)
-  const { menuItems, loading, error, refetch } = simulatorScope ? simMenu : platformMenu
+  const { menuItems, loading, error, refetch, layoutHint } = simulatorScope ? simMenu : platformMenu
+  const showMethodologySwitcher =
+    !simulatorScope && (layoutHint?.layout === 'pmo' || layoutHint?.layout === 'pm')
   const navigate = useNavigate()
   const { theme } = useThemeContext()
   const { branding } = useBranding()
+  const sidebarTokens = useMemo(
+    () => resolveSidebarThemeTokens(theme, branding),
+    [theme, branding]
+  )
   const location = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
   const [expandedMenuId, setExpandedMenuId] = useState(null)
+  const lastAutoExpandPathRef = useRef('')
   const planningOpenFindingsCount = useOpenPlanningFindingsCount(!simulatorScope && !location.pathname.startsWith('/simulator'))
   const isSimulatorContext = !!simulatorScope || (location.pathname || '').startsWith('/simulator')
 
@@ -342,7 +496,11 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
         const hasChildren = children.length > 0
         const ownRouteOk = routeMatchesContext(item.route_path)
         // Keep section headers only when at least one child is valid in current context.
-        if (!String(item.route_path || '').trim() && !hasChildren) return null
+        if (!String(item.route_path || '').trim() && !hasChildren) {
+          const code = String(item?.menu_code || '').trim()
+          if (code && !item?.is_methodology_header) return { ...item, children: [] }
+          return null
+        }
         if (String(item.route_path || '').trim() && !ownRouteOk) {
           if (!hasChildren) return null
           return { ...item, route_path: null, children }
@@ -359,6 +517,15 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
   const handleToggleExpand = (id) => {
     setExpandedMenuId((prev) => (prev === id ? null : id))
   }
+
+  useEffect(() => {
+    if (loading || prunedMenuItems.length === 0) return
+    const pathKey = `${location.pathname}${location.search}`
+    if (lastAutoExpandPathRef.current === pathKey) return
+    lastAutoExpandPathRef.current = pathKey
+    const activeKey = findAutoExpandTopLevelKey(prunedMenuItems, location)
+    if (activeKey) setExpandedMenuId(activeKey)
+  }, [location.pathname, location.search, prunedMenuItems, loading])
 
   const handleLogout = async () => {
     if (loggingOut) return
@@ -402,13 +569,10 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
           fixed top-14 sm:top-16 left-0 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] w-64 sm:w-72 shadow-lg z-40
           transform transition-transform duration-300 ease-in-out
           lg:translate-x-0 lg:h-[calc(100vh-4rem)] lg:w-80
-          ${!branding?.sidebar_bg_color ? 'bg-white dark:bg-gray-900' : ''}
+          ${sidebarTokens.asideClass}
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
-        style={branding?.sidebar_bg_color
-          ? { backgroundColor: branding.sidebar_bg_color }
-          : undefined
-        }
+        style={sidebarTokens.asideStyle}
         aria-label="Sidebar navigation"
       >
         <div className="flex flex-col h-full">
@@ -425,6 +589,9 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
 
           {/* Menu Items */}
           <nav className="flex-1 overflow-y-auto py-4 px-3">
+            {showMethodologySwitcher && !loading && (
+              <MethodologySwitcher onChange={() => refetch?.()} />
+            )}
             {error && (
               <div
                 className="mb-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm space-y-2"
@@ -433,7 +600,7 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
                 <p>{error}</p>
                 <button
                   type="button"
-                  onClick={() => refetch()}
+                  onClick={() => refetch?.()}
                   className="text-sm font-medium underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-amber-400 rounded"
                 >
                   Retry
@@ -448,17 +615,19 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
                   </div>
                 ))}
               </div>
-            ) : menuItems && menuItems.length > 0 ? (
+            ) : prunedMenuItems.length > 0 ? (
               <div className="space-y-1">
                 {prunedMenuItems
                   .map((menuItem) => (
                     <SidebarMenuItem
-                      key={menuItem.id}
+                      key={getMenuNodeKey(menuItem)}
                       menuItem={menuItem}
                       level={0}
                       expandedMenuId={expandedMenuId}
                       onToggleExpand={handleToggleExpand}
                       planningOpenFindingsCount={planningOpenFindingsCount}
+                      sidebarTokens={sidebarTokens}
+                      menuLayout={layoutHint?.layout}
                     />
                   ))}
               </div>

@@ -8,6 +8,7 @@ import {
   resolveInviteeNamesForInvitation,
   resolveInviterDisplayName,
 } from '../../utils/invitationInviteeFormat'
+import { isOrganisationScopeInvitation } from '../../utils/invitationScopeUtils'
 
 export const INVITATION_CARD_CLASS =
   'bg-white dark:bg-gray-800 rounded-xl shadow-lg shadow-gray-300/40 dark:shadow-none border border-gray-200 dark:border-gray-700 overflow-hidden'
@@ -56,6 +57,11 @@ export default function InvitationDetailsCard({ invitation }) {
   const projectEndLabel = formatInvitationDisplayDate(invitation.planned_end_date)
   const { full: inviteeFullName } = resolveInviteeNamesForInvitation(invitation)
   const inviterDisplayName = resolveInviterDisplayName(invitation)
+  const isOrganisationInvite = isOrganisationScopeInvitation(invitation)
+  const headerTitle = isOrganisationInvite
+    ? invitation.organisation_name || invitation.project_name
+    : invitation.project_name
+  const headerSubtitle = isOrganisationInvite ? 'Organisation invitation' : 'Project invitation'
 
   return (
     <div className={INVITATION_CARD_CLASS}>
@@ -63,7 +69,8 @@ export default function InvitationDetailsCard({ invitation }) {
         <div className="flex items-start gap-3">
           <Briefcase className="h-6 w-6 flex-shrink-0 mt-0.5 opacity-90" aria-hidden />
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold leading-snug">{invitation.project_name}</h2>
+            <p className="text-xs uppercase tracking-wide text-blue-100">{headerSubtitle}</p>
+            <h2 className="text-lg font-semibold leading-snug mt-1">{headerTitle}</h2>
             <p className="mt-1 text-sm text-blue-100">
               {inviteeFullName ? (
                 <>
@@ -96,10 +103,17 @@ export default function InvitationDetailsCard({ invitation }) {
             />
             <InvitationDetailCell label="Role" value={invitation.role_display_name} />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <InvitationDetailCell label="Project start" value={projectStartLabel} showCalendarIcon />
-            <InvitationDetailCell label="Project end" value={projectEndLabel} showCalendarIcon />
-          </div>
+          {isOrganisationInvite ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InvitationDetailCell label="Access scope" value="Organisation-wide PMO" />
+              <InvitationDetailCell label="Billing access" value="Not included" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InvitationDetailCell label="Project start" value={projectStartLabel} showCalendarIcon />
+              <InvitationDetailCell label="Project end" value={projectEndLabel} showCalendarIcon />
+            </div>
+          )}
         </dl>
 
         {invitation.invitation_message ? (

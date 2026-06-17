@@ -172,6 +172,7 @@ export default function PMOOversightIssueRegister() {
     // When editing we need register id; we'll get it when opening form from selectedIssue's issue_register_id
     return selectedIssue?.issue_register_id || null;
   };
+  const formVariant = 'page';
 
   return (
     <DocumentGovernanceProvider>
@@ -186,6 +187,7 @@ export default function PMOOversightIssueRegister() {
           onProjectChange={setSelectedProjectId}
         />
 
+        {!showForm && (
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -221,8 +223,9 @@ export default function PMOOversightIssueRegister() {
             disabled={!filteredByTab.length}
           />
         </div>
+        )}
 
-        {loading ? (
+        {!showForm && (loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
           </div>
@@ -246,8 +249,7 @@ export default function PMOOversightIssueRegister() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                   {filteredByTab.length === 0 ? (
                     <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                      <td colSpan={selectedProjectId ? 7 : 8} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                      <td colSpan={selectedProjectId ? 8 : 9} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                         No issues match.
                       </td>
                     </tr>
@@ -277,10 +279,11 @@ export default function PMOOversightIssueRegister() {
               </table>
             </div>
           </div>
-        )}
+        ))}
 
         {showForm && (
           <IssueForm
+            variant={formVariant}
             issue={selectedIssue}
             projectId={selectedProjectId || selectedIssue?.project_id}
             issueRegisterId={selectedIssue?.issue_register_id || registerIdForProject(selectedProjectId)}

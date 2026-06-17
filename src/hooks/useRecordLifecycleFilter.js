@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { getStatusCounts } from '../../services/recordLifecycleService'
+import { getStatusCounts } from '../services/recordLifecycleService'
 
 /**
  * Hook for list pages — status filter + count badges.

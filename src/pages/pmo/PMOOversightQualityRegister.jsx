@@ -208,6 +208,8 @@ export default function PMOOversightQualityRegister() {
   }, [activeTab, registerItems, reviews, inspections]);
 
   const exportColumns = activeTab === 'register' ? REGISTER_COLUMNS : activeTab === 'reviews' ? REVIEWS_COLUMNS : INSPECTIONS_COLUMNS;
+  const formOpen = showRegisterForm || showReviewForm || showInspectionForm;
+  const formVariant = 'page';
 
   return (
     <DocumentGovernanceProvider>
@@ -222,6 +224,7 @@ export default function PMOOversightQualityRegister() {
           onProjectChange={setSelectedProjectId}
         />
 
+        {!formOpen && (
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -253,7 +256,9 @@ export default function PMOOversightQualityRegister() {
           <ExportListMenu columns={exportColumns} data={exportData} baseFilename="PMO-Quality-Register" disabled={!exportData.length} />
         </div>
 
-        {loading ? (
+        )}
+
+        {!formOpen && (loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
           </div>
@@ -276,8 +281,7 @@ export default function PMOOversightQualityRegister() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {registerItems.length === 0 ? (
                       <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                        <td colSpan={selectedProjectId ? 5 : 6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No register items.</td>
+                        <td colSpan={selectedProjectId ? 6 : 7} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No register items.</td>
                       </tr>
                     ) : (
                       registerItems.map((r, index) => (
@@ -314,8 +318,7 @@ export default function PMOOversightQualityRegister() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {reviews.length === 0 ? (
                       <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                        <td colSpan={selectedProjectId ? 5 : 6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No reviews.</td>
+                        <td colSpan={selectedProjectId ? 6 : 7} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No reviews.</td>
                       </tr>
                     ) : (
                       reviews.map((r, index) => (
@@ -351,8 +354,7 @@ export default function PMOOversightQualityRegister() {
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                     {inspections.length === 0 ? (
                       <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                        <td colSpan={selectedProjectId ? 4 : 5} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No inspections.</td>
+                        <td colSpan={selectedProjectId ? 5 : 6} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No inspections.</td>
                       </tr>
                     ) : (
                       inspections.map((r, index) => (
@@ -374,10 +376,11 @@ export default function PMOOversightQualityRegister() {
               )}
             </div>
           </div>
-        )}
+        ))}
 
         {showRegisterForm && (
           <QualityRegisterForm
+            variant={formVariant}
             item={selectedRegister}
             projectId={selectedProjectId || selectedRegister?.project_id}
             onSave={() => { setShowRegisterForm(false); setSelectedRegister(null); fetchAll(); }}
@@ -386,6 +389,7 @@ export default function PMOOversightQualityRegister() {
         )}
         {showReviewForm && (
           <QualityReviewForm
+            variant={formVariant}
             review={selectedReview}
             projectId={selectedProjectId || selectedReview?.project_id}
             qualityRegisterId={selectedReview?.quality_register_id}
@@ -395,6 +399,7 @@ export default function PMOOversightQualityRegister() {
         )}
         {showInspectionForm && (
           <QualityInspectionForm
+            variant={formVariant}
             inspection={selectedInspection}
             projectId={selectedProjectId || selectedInspection?.project_id}
             qualityRegisterId={selectedInspection?.quality_register_id}

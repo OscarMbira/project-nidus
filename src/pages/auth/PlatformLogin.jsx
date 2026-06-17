@@ -107,7 +107,8 @@ function PlatformLogin() {
         }
 
         // Get post-login route based on organisation status
-        const routeResult = await getPostLoginRoute(result.user.id)
+        const returnTo = new URLSearchParams(window.location.search).get('returnTo')
+        const routeResult = await getPostLoginRoute(result.user.id, returnTo)
         navigate(routeResult.route, { replace: true })
       } else {
         setError(result.error || 'Login failed. Please check your credentials.')
@@ -162,7 +163,8 @@ function PlatformLogin() {
         }
 
         // Get post-login route
-        const routeResult = await getPostLoginRoute(data.user.id)
+        const returnTo = new URLSearchParams(window.location.search).get('returnTo')
+        const routeResult = await getPostLoginRoute(data.user.id, returnTo)
         navigate(routeResult.route, { replace: true })
       } catch (err) {
         console.error('Error after SSO login:', err)

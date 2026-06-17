@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../services/supabaseClient';
-import { X, FileText, AlertTriangle, Target, TrendingUp } from 'lucide-react';
+import { FileText, AlertTriangle, Target, TrendingUp } from 'lucide-react';
 import { createChangeRequest, updateChangeRequest } from '../../services/changeManagementService';
+import FormSurface from '../ui/FormSurface';
 
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
-export default function ChangeRequestForm({ projectId, request, onClose, onSuccess }) {
+export default function ChangeRequestForm({ projectId, request, onClose, onSuccess, variant = 'modal' }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
   const [boards, setBoards] = useState([]);
@@ -419,24 +420,13 @@ export default function ChangeRequestForm({ projectId, request, onClose, onSucce
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {request ? 'Edit Change Request' : 'Submit Change Request'}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Document and submit a change request for review
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <FormSurface
+      variant={variant}
+      title={request ? 'Edit Change Request' : 'Submit Change Request'}
+      subtitle="Document and submit a change request for review"
+      icon={FileText}
+      onClose={onClose}
+    >
 
         {/* Section Navigation */}
         <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
@@ -481,8 +471,7 @@ export default function ChangeRequestForm({ projectId, request, onClose, onSucce
               {loading ? 'Saving...' : request ? 'Update Request' : 'Submit Request'}
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </FormSurface>
   );
 }

@@ -12,9 +12,13 @@ const FINDING_SELECT = `
 `
 
 async function getProjectOrg(projectId) {
-  const { data, error } = await platformDb.from('projects').select('id, organisation_id').eq('id', projectId).single()
+  const { data, error } = await platformDb
+    .from('projects')
+    .select('id, account_id')
+    .eq('id', projectId)
+    .single()
   if (error) throw error
-  return data
+  return { ...data, organisation_id: data?.account_id ?? null }
 }
 
 export async function getIntelligenceRules(orgId) {
@@ -47,11 +51,13 @@ export async function runIntelligenceScan(projectId) {
   const project = await getProjectOrg(projectId)
   const orgId = project.organisation_id
 
-  const { data: rules, error: rulesErr } = await platformDb
-    .from('plan_intelligence_rules')
-    .select('*')
-    .eq('is_active', true)
-    .or(`organisation_id.is.null,organisation_id.eq.${orgId}`)
+  let rulesQuery = platformDb.from('plan_intelligence_rules').select('*').eq('is_active', true)
+  if (orgId) {
+    rulesQuery = rulesQuery.or(`organisation_id.is.null,organisation_id.eq.${orgId}`)
+  } else {
+    rulesQuery = rulesQuery.is('organisation_id', null)
+  }
+  const { data: rules, error: rulesErr } = await rulesQuery
   if (rulesErr) throw rulesErr
 
   const { data: tasks, error: tasksErr } = await platformDb

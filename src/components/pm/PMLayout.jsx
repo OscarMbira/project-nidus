@@ -3,12 +3,14 @@ import Sidebar from '../Sidebar'
 import PlatformAppHeader from '../headers/PlatformAppHeader'
 import QuickCaptureFab from '../../modules/pmis-gaps/components/QuickCaptureFab'
 import { BrandingProvider } from '../../context/BrandingContext'
+import { MenuProvider } from '../../hooks/useMenu'
 
 export default function PMLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
     <BrandingProvider>
+    <MenuProvider layoutScope="pm">
       <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
         <PlatformAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
 
@@ -27,6 +29,7 @@ export default function PMLayout({ children }) {
         </div>
         <QuickCaptureFab />
       </div>
+    </MenuProvider>
     </BrandingProvider>
   )
 }

@@ -8,7 +8,7 @@ import PMLayout from '../../../components/pm/PMLayout'
 import PMOLayout from '../../../components/pmo/PMOLayout'
 import SimulatorPMOLayout from '../../../components/sim/pmo/SimulatorPMOLayout'
 import SimulatorPMLayout from '../../../components/sim/pm/SimulatorPMLayout'
-import { createGapListPage } from '../pages/gapPageFactory'
+import { createGapListPage } from '../pages/gapPageFactory.jsx'
 
 const Loading = () => (
   <div className="min-h-[40vh] flex items-center justify-center">

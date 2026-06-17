@@ -114,13 +114,29 @@ serve(async (req) => {
       return fail('Email address does not match this invitation.', 403);
     }
 
+    const inviteeFirstName = String(inv.invited_first_name ?? '').trim();
+    const inviteeLastName = String(inv.invited_last_name ?? '').trim();
+    const inviteeFullName =
+      [inviteeFirstName, inviteeLastName].filter(Boolean).join(' ') ||
+      email.split('@')[0];
+
     // ── 2. Create auth user via GoTrue admin REST API ─────────────────────────
     let authUserId = '';
 
     const createRes = await fetch(`${auth}/admin/users`, {
       method: 'POST',
       headers: { 'apikey': key, 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, email_confirm: true }),
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: inviteeFirstName || undefined,
+          last_name: inviteeLastName || undefined,
+          full_name: inviteeFullName,
+          invitation_token,
+        },
+      }),
     });
     const createBody = await createRes.json().catch(() => ({}));
 
@@ -191,7 +207,9 @@ serve(async (req) => {
       const insRes = await restPost(rest, key, '/users', {
         auth_user_id: authUserId,
         email,
-        full_name: email.split('@')[0],
+        first_name: inviteeFirstName || null,
+        last_name: inviteeLastName || null,
+        full_name: inviteeFullName,
         is_active: true,
         is_verified: true,
       });
@@ -210,24 +228,40 @@ serve(async (req) => {
     console.log('[accept-invitation] public.users id:', userId);
 
     // ── 4. Accept the invitation ──────────────────────────────────────────────
-    const acceptRes = await restPost(rest, key, '/rpc/accept_project_invitation', {
+    let accepted = false
+    let invitationScope: 'project' | 'organisation' = inv.project_id ? 'project' : 'organisation'
+
+    const acceptProjectRes = await restPost(rest, key, '/rpc/accept_project_invitation', {
       p_token: invitation_token,
       p_accepting_user_id: userId,
-    });
+    })
 
-    console.log('[accept-invitation] accept_project_invitation status:', acceptRes.status, JSON.stringify(acceptRes.body));
+    console.log('[accept-invitation] accept_project_invitation status:', acceptProjectRes.status, JSON.stringify(acceptProjectRes.body))
 
-    if (!acceptRes.ok) {
-      const msg = (acceptRes.body?.message || acceptRes.body?.hint || '').toString();
-      if (msg.toLowerCase().includes('seat')) {
-        return fail('No available seats in this project', 409, { code: 'SEAT_LIMIT_EXCEEDED' });
+    if (acceptProjectRes.ok && acceptProjectRes.body === true) {
+      accepted = true
+      invitationScope = 'project'
+    } else {
+      const acceptOrgRes = await restPost(rest, key, '/rpc/accept_organisation_invitation', {
+        p_token: invitation_token,
+        p_accepting_user_id: userId,
+      })
+
+      console.log('[accept-invitation] accept_organisation_invitation status:', acceptOrgRes.status, JSON.stringify(acceptOrgRes.body))
+
+      if (acceptOrgRes.ok && acceptOrgRes.body === true) {
+        accepted = true
+        invitationScope = 'organisation'
+      } else if (!acceptProjectRes.ok) {
+        const msg = (acceptProjectRes.body?.message || acceptProjectRes.body?.hint || '').toString()
+        if (msg.toLowerCase().includes('seat')) {
+          return fail('No available seats in this project', 409, { code: 'SEAT_LIMIT_EXCEEDED' })
+        }
       }
-      return fail(`Could not accept invitation: ${msg || acceptRes.status}`, 500);
     }
 
-    // RPC returns BOOLEAN: false means token invalid/expired/already used
-    if (acceptRes.body === false) {
-      return fail('The invitation could not be accepted — it may have already been used or has expired.', 410);
+    if (!accepted) {
+      return fail('The invitation could not be accepted — it may have already been used or has expired.', 410)
     }
 
     // ── 5. Sign in server-side → return tokens ───────────────────────────────
@@ -244,13 +278,14 @@ serve(async (req) => {
 
     if (!signInRes.ok || !signInBody?.access_token) {
       // Membership is created — just can't establish session. Redirect to login.
-      return ok({ success: true, session: null, project_id: inv.project_id });
+      return ok({ success: true, session: null, project_id: inv.project_id, invitation_scope: invitationScope });
     }
 
     return ok({
       success: true,
       session: { access_token: signInBody.access_token, refresh_token: signInBody.refresh_token },
       project_id: inv.project_id,
+      invitation_scope: invitationScope,
     });
 
   } catch (err) {

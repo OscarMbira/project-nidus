@@ -20,7 +20,13 @@ export const INVITATION_TEMPLATE_ROLE_NAMES = [
   'quality_assurance',
   'change_authority',
   'team_member',
+  'pmo_admin',
 ]
+
+/** Roles whose default templates reference {{project_name}} (not organisation-only). */
+export const PROJECT_SCOPED_INVITATION_TEMPLATE_ROLES = INVITATION_TEMPLATE_ROLE_NAMES.filter(
+  (roleName) => roleName !== 'pmo_admin',
+)
 
 /**
  * Standard invitee message card — matches the personal message block in invitation emails.
@@ -30,6 +36,15 @@ export function buildStandardInvitationBody(roleSpecificSentence) {
   return `Dear {{invitee_name}},
 
 You have been invited to join **{{project_name}}** as **{{role_name}}**. ${roleSpecificSentence}
+
+{{invitation_expiry_note}}`
+}
+
+/** Organisation-wide PMO Administrator invite (no project context). */
+export function buildOrganisationInvitationBody(roleSpecificSentence) {
+  return `Dear {{invitee_name}},
+
+You have been invited to join **{{organisation_name}}** as **{{role_name}}**. ${roleSpecificSentence}
 
 {{invitation_expiry_note}}`
 }
@@ -96,6 +111,13 @@ export const DEFAULT_INVITATION_MESSAGES_BY_ROLE = {
     subject_line: '',
     message_body: buildStandardInvitationBody(
       'Your contributions will be an important part of delivering this project successfully. Welcome to the team!',
+    ),
+  },
+  pmo_admin: {
+    template_label: 'PMO Administrator',
+    subject_line: '',
+    message_body: buildOrganisationInvitationBody(
+      'You will support PMO operations, governance, and delivery oversight across the organisation. This role does not include billing or subscription access.',
     ),
   },
 }

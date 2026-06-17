@@ -212,27 +212,27 @@ export default function BusinessCaseEdit() {
         {activeTab === 'distribution' && (
           <BusinessCaseDistribution caseId={id} readOnly={false} />
         )}
-      </div>
 
-      {/* Save / Cancel — only visible on the main form tab */}
-      {activeTab === 'main' && (
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={() => navigate(`${basePath}/${id}/view`)}
-            className="px-5 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            <Save className="w-4 h-4" />
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      )}
+        {/* Save / Cancel — inside the card, only on the main form tab */}
+        {activeTab === 'main' && (
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+            <button
+              onClick={() => navigate(`${basePath}/${id}/view`)}
+              className="px-5 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center gap-2 px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="w-4 h-4" />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

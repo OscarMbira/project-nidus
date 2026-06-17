@@ -30,6 +30,12 @@ import {
   isManagerAppointmentRole,
   isTeamMemberAppointmentRole,
 } from '../../utils/appointmentRoleUtils'
+import {
+  getInvitationDeclinedMessage,
+  getInvitationScopeHeading,
+  getInvitationScopeIntro,
+  getInvitationTargetLabel,
+} from '../../utils/invitationScopeUtils'
 
 // ── User detection states ─────────────────────────────────────────────────────
 // 'loading'        — RPC/auth check in progress
@@ -476,6 +482,11 @@ export default function InvitationAccept() {
     )
   }
 
+  const invitationTargetLabel = getInvitationTargetLabel(invitation)
+  const invitationHeading = getInvitationScopeHeading(invitation)
+  const invitationIntro = getInvitationScopeIntro(invitation)
+  const invitationDeclinedMessage = getInvitationDeclinedMessage(invitation)
+
   if (declined) {
     return (
       <InvitationPageWrap>
@@ -490,7 +501,7 @@ export default function InvitationAccept() {
               Invitation declined
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 max-w-lg mx-auto">
-              You have declined this project invitation. Your account was not added to the project.
+              {invitationDeclinedMessage}
             </p>
           </div>
 
@@ -544,7 +555,7 @@ export default function InvitationAccept() {
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Decline invitation</h3>
       <p className="text-sm text-gray-700 dark:text-gray-300">
         Decline this invitation? You will not be added to{' '}
-        <span className="font-medium">{invitation?.project_name}</span>. You can ask the sender for a new invite later if you change your mind.
+        <span className="font-medium">{invitationTargetLabel}</span>. You can ask the sender for a new invite later if you change your mind.
       </p>
       {appointmentFlow && (
         <AppointmentAcceptPanel
@@ -809,10 +820,10 @@ export default function InvitationAccept() {
       <div className="w-full max-w-6xl space-y-6">
         <div className="text-center">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-            Project invitation
+            {invitationHeading}
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 max-w-sm mx-auto">
-            Review the details below, then accept to join the project or decline if this was not expected.
+            {invitationIntro}
           </p>
         </div>
 

@@ -11,8 +11,34 @@ function useAccountId() {
     ;(async () => {
       const { data: { user } } = await platformDb.auth.getUser()
       if (!user) return
-      const { data } = await platformDb.from('users').select('account_id').eq('id', user.id).maybeSingle()
-      setAccountId(data?.account_id || null)
+
+      const { data: userRow } = await platformDb
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle()
+      if (!userRow?.id) return
+
+      const { data: accountRow } = await platformDb
+        .from('accounts')
+        .select('id')
+        .eq('owner_user_id', userRow.id)
+        .eq('is_deleted', false)
+        .maybeSingle()
+      if (accountRow?.id) {
+        setAccountId(accountRow.id)
+        return
+      }
+
+      const { data: proj } = await platformDb
+        .from('projects')
+        .select('account_id')
+        .eq('owner_user_id', userRow.id)
+        .not('account_id', 'is', null)
+        .eq('is_deleted', false)
+        .limit(1)
+        .maybeSingle()
+      setAccountId(proj?.account_id || null)
     })()
   }, [])
   return accountId

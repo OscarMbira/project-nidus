@@ -4,6 +4,7 @@ import {
   extractPmDashboardProjectId,
   extractPracticeProjectId,
   resolveMenuRoutePath,
+  resolveMenuRoutePathForLayout,
   menuPathIsActive,
 } from '../sidebarRouteUtils'
 
@@ -82,5 +83,14 @@ describe('sidebarRouteUtils', () => {
     expect(menuPathIsActive('/platform/dashboard', '/platform/dashboard', '?tab=projects')).toBe(false)
     expect(menuPathIsActive('/platform/dashboard', '/platform/dashboard?tab=projects', '?tab=projects')).toBe(true)
     expect(menuPathIsActive('/platform/dashboard', '/platform/dashboard?tab=projects', '')).toBe(false)
+  })
+
+  it('resolveMenuRoutePathForLayout rewrites PM dashboard links', () => {
+    expect(
+      resolveMenuRoutePathForLayout('/platform/dashboard', '/platform/projects', 'pm')
+    ).toBe('/pm/dashboard')
+    expect(
+      resolveMenuRoutePathForLayout('/platform/dashboard', '/platform/projects', 'pmo')
+    ).toBe('/platform/dashboard')
   })
 })

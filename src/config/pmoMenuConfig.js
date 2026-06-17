@@ -6,9 +6,11 @@
  *
  * Sections:
  * 1. PMO Governance (Baselines)
- * 2. Initiation & Business Justification
+ * 2. Business Justification
  * 3. Project Oversight (Read-Only)
  * 4. Reporting & Assurance
+ *
+ * @see projectplan/v671 — methodology tracks [S]/[P]/[A] applied at runtime in useMenu.js
  */
 
 import {
@@ -20,6 +22,7 @@ import {
   CheckSquare,
   AlertTriangle,
   Briefcase,
+  Building2,
   BookOpen,
   Eye,
   AlertCircle,
@@ -57,6 +60,12 @@ import {
   AtSign,
   Map,
   Activity,
+  Plug,
+  Library,
+  Upload,
+  Rocket,
+  Workflow,
+  History,
 } from 'lucide-react';
 
 const pmoMenuConfig = [
@@ -168,34 +177,58 @@ const pmoMenuConfig = [
         icon: Users,
         order: 8,
       },
-      { id: 'pmo-pp-project-templates', label: 'Templates', path: '/platform/templates', icon: Layers, order: 10 },
-      {
-        id: 'pmo-industry-templates',
-        label: 'Industry Templates',
-        path: '/pmo/industry-templates',
-        icon: Layers,
-        order: 11,
-      },
-      {
-        id: 'pmo-industry-templates-new',
-        label: 'Add Industry Template',
-        path: '/pmo/industry-templates/new',
-        icon: Layers,
-        order: 12,
-      },
-      {
-        id: 'pmo-industry-templates-on-hold',
-        label: 'Template Drafts',
-        path: '/pmo/industry-templates/on-hold',
-        icon: Layers,
-        order: 13,
-      },
       {
         id: 'pmo-pr-my-daily-log',
         label: 'My daily log entries',
         path: '/app/daily-log/my-entries',
         icon: BookOpen,
+        order: 9,
+      },
+      {
+        id: 'pmo-pr-story-map',
+        label: 'Story Map',
+        path: '/platform/projects/:projectId/scrum/story-map',
+        icon: Map,
+        order: 10,
+      },
+      {
+        id: 'pmo-pr-releases',
+        label: 'Releases',
+        path: '/platform/projects/:projectId/scrum/releases',
+        icon: Rocket,
         order: 11,
+      },
+    ],
+  },
+
+  {
+    id: 'pmo-agile-lean',
+    label: 'Agile & Lean Tools',
+    path: null,
+    icon: Activity,
+    section: 'Agile & Lean Tools',
+    order: 3.5,
+    children: [
+      {
+        id: 'pmo-agile-scrum-of-scrums',
+        label: 'Scrum of Scrums',
+        path: '/platform/projects/:projectId/scrum/scrum-of-scrums',
+        icon: Users,
+        order: 1,
+      },
+      {
+        id: 'pmo-agile-value-stream',
+        label: 'Value Stream Map',
+        path: '/platform/projects/:projectId/lean/value-stream-map',
+        icon: GitBranch,
+        order: 2,
+      },
+      {
+        id: 'pmo-agile-kaizen',
+        label: 'Kaizen Board',
+        path: '/platform/projects/:projectId/lean/kaizen',
+        icon: RefreshCcw,
+        order: 3,
       },
     ],
   },
@@ -210,11 +243,34 @@ const pmoMenuConfig = [
     order: 4,
     children: [
       {
-        id: 'pmo-gov-mandate',
-        label: 'Project Mandate',
-        path: '/pmo/governance/mandate',
+        id: 'pmo-gov-mandates-section',
+        label: 'Project Mandates',
+        path: null,
         icon: FileText,
-        order: 1
+        order: 0.5,
+        children: [
+          {
+            id: 'pmo-gov-mandates-create',
+            label: 'Create Mandate',
+            path: '/platform/mandates/create',
+            icon: FilePlus,
+            order: 1,
+          },
+          {
+            id: 'pmo-gov-mandates-all',
+            label: 'All Mandates',
+            path: '/platform/mandates/list',
+            icon: FileText,
+            order: 2,
+          },
+          {
+            id: 'pmo-gov-mandates-unlinked',
+            label: 'Unlinked Mandates',
+            path: '/platform/mandates/unlinked',
+            icon: GitBranch,
+            order: 3,
+          },
+        ],
       },
       {
         id: 'pmo-gov-mandate-approval',
@@ -264,19 +320,47 @@ const pmoMenuConfig = [
         path: '/pmo/itto/drafts',
         icon: Pause,
         order: 8
-      }
+      },
+      {
+        id: 'pmo-gov-eef-list',
+        label: 'Environment Factors',
+        path: '/platform/eef',
+        icon: PackageOpen,
+        order: 9,
+      },
+      {
+        id: 'pmo-gov-eef-new',
+        label: 'Add EEF',
+        path: '/platform/eef/new',
+        icon: FilePlus,
+        order: 10,
+      },
+      {
+        id: 'pmo-gov-eef-drafts',
+        label: 'EEF Drafts',
+        path: '/platform/eef/on-hold',
+        icon: Pause,
+        order: 11,
+      },
     ]
   },
 
-  // Section 3: Initiation & Business Justification
+  // Section 3: Pre-Project Docs
   {
     id: 'pmo-initiation',
-    label: 'Initiation & Business Justification',
+    label: 'Pre-Project Docs',
     path: null,
     icon: Briefcase,
-    section: 'Initiation & Business Justification',
+    section: 'Pre-Project Docs',
     order: 5,
     children: [
+      {
+        id: 'pmo-init-project-mandate',
+        label: 'Project Mandate',
+        path: '/platform/mandates/list',
+        icon: FileText,
+        order: 0,
+      },
       {
         id: 'pmo-init-business-case',
         label: 'Business Case',
@@ -297,8 +381,49 @@ const pmoMenuConfig = [
         path: '/pmo/initiation/benefits-review-plan',
         icon: BookOpen,
         order: 3
-      }
+      },
+      {
+        id: 'pmo-init-briefs-section',
+        label: 'Project Briefs',
+        path: null,
+        icon: FileText,
+        order: 4,
+        children: [
+          {
+            id: 'pmo-init-briefs-all',
+            label: 'All Briefs',
+            path: '/platform/briefs/list',
+            icon: FileText,
+            order: 1,
+          },
+        ],
+      },
     ]
+  },
+
+  {
+    id: 'pmo-workflows',
+    label: 'Workflows & Approvals',
+    path: null,
+    icon: Workflow,
+    section: 'Workflows & Approvals',
+    order: 5.3,
+    children: [
+      {
+        id: 'pmo-workflows-mandate-approvals',
+        label: 'Mandate Approvals',
+        path: '/platform/mandates/approvals',
+        icon: FileCheck,
+        order: 1,
+      },
+      {
+        id: 'pmo-workflows-brief-approvals',
+        label: 'Project Brief Approvals',
+        path: '/platform/briefs/approvals',
+        icon: FileCheck,
+        order: 2,
+      },
+    ],
   },
 
   // Section 4: Project Oversight (Read-Only)
@@ -325,13 +450,6 @@ const pmoMenuConfig = [
         order: 2
       },
       {
-        id: 'pmo-oversight-quality-register',
-        label: 'Quality Register',
-        path: '/pmo/oversight/quality-register',
-        icon: ClipboardList,
-        order: 3
-      },
-      {
         id: 'pmo-oversight-lessons-log',
         label: 'Lessons Log',
         path: '/pmo/oversight/lessons-log',
@@ -346,32 +464,25 @@ const pmoMenuConfig = [
         order: 5
       },
       {
-        id: 'pmo-oversight-delay-templates',
-        label: 'Delay Templates',
-        path: '/pmo/delays/templates',
-        icon: Layers,
-        order: 6
-      },
-      {
         id: 'pmo-oversight-scope',
         label: 'Scope Oversight',
         path: '/pmo/oversight/scope',
         icon: ClipboardList,
-        order: 7
+        order: 6
       },
       {
         id: 'pmo-oversight-schedules',
         label: 'Schedule Oversight',
         path: '/pmo/oversight/schedules',
         icon: FileClock,
-        order: 8
+        order: 7
       },
       {
         id: 'pmo-oversight-changes',
         label: 'Change Register (All)',
         path: '/pmo/registers/changes',
         icon: RefreshCcw,
-        order: 9
+        order: 8
       }
     ]
   },
@@ -392,10 +503,63 @@ const pmoMenuConfig = [
       { id: 'pmo-pt-exec', label: 'Executing', path: '/pmo/process-templates/executing', icon: Activity, order: 5 },
       { id: 'pmo-pt-mon', label: 'Monitoring & Controlling', path: '/pmo/process-templates/monitoring-controlling', icon: BarChart3, order: 6 },
       { id: 'pmo-pt-close', label: 'Closing', path: '/pmo/process-templates/closing', icon: FileCheck, order: 7 },
+      { id: 'pmo-pt-delay-templates', label: 'Delay Templates', path: '/pmo/delays/templates', icon: Layers, order: 8 },
+      { id: 'pmo-pt-browse', label: 'Browse Templates', path: '/platform/templates', icon: Layers, order: 9 },
+      { id: 'pmo-pt-manage', label: 'Manage Templates', path: '/platform/templates/manage', icon: Settings2, order: 9 },
+      { id: 'pmo-pt-new', label: 'New Template', path: '/platform/templates/new', icon: FilePlus, order: 11 },
+      {
+        id: 'pmo-pt-agile-section',
+        label: 'Agile',
+        path: null,
+        icon: Activity,
+        order: 10,
+        children: [
+          { id: 'pmo-pt-product-backlog', label: 'Product Backlog', path: '/platform/projects/:projectId/scrum/product-backlog', icon: ClipboardList, order: 1 },
+          { id: 'pmo-pt-sprint-planning', label: 'Sprint Planning', path: '/platform/projects/:projectId/scrum/sprint-planning', icon: FileClock, order: 2 },
+          { id: 'pmo-pt-agile', label: 'Agile Templates', path: '/platform/projects/:projectId/scrum/templates', icon: Activity, order: 3 },
+          { id: 'pmo-pt-story-map', label: 'Story Map', path: '/platform/projects/:projectId/scrum/story-map', icon: Map, order: 4 },
+          { id: 'pmo-pt-sprint-metrics', label: 'Sprint Metrics', path: '/platform/projects/:projectId/scrum/metrics', icon: BarChart3, order: 5 },
+          { id: 'pmo-pt-releases', label: 'Releases', path: '/platform/projects/:projectId/scrum/releases', icon: GitBranch, order: 6 },
+          { id: 'pmo-pt-roadmap', label: 'Roadmap', path: '/platform/projects/:projectId/scrum/roadmap', icon: Compass, order: 7 },
+        ],
+      },
+      { id: 'pmo-industry-templates', label: 'Industry Templates', path: '/pmo/industry-templates', icon: Layers, order: 12 },
+      { id: 'pmo-industry-templates-new', label: 'Add Industry Template', path: '/pmo/industry-templates/new', icon: Layers, order: 13 },
+      { id: 'pmo-industry-templates-on-hold', label: 'Template Drafts', path: '/pmo/industry-templates/on-hold', icon: Layers, order: 14 },
     ]
   },
 
-  // Section 5: Reporting & Assurance
+  {
+    id: 'pmo-planning',
+    label: 'Planning Intelligence',
+    path: null,
+    icon: BarChart3,
+    section: 'Planning Intelligence',
+    order: 7.5,
+    children: [
+      {
+        id: 'pmo-planning-hub',
+        label: 'Planning Hub',
+        path: '/pmo/planning',
+        icon: LayoutDashboard,
+        order: 1
+      },
+      {
+        id: 'pmo-planning-intelligence',
+        label: 'Intelligence Rules',
+        path: '/pmo/planning/intelligence',
+        icon: SearchCode,
+        order: 2
+      },
+      {
+        id: 'pmo-planning-governance-config',
+        label: 'Governance Rules Config',
+        path: '/pmo/planning/governance-config',
+        icon: ShieldCheck,
+        order: 3
+      }
+    ]
+  },
   {
     id: 'pmo-reporting',
     label: 'Reporting & Assurance',
@@ -433,20 +597,94 @@ const pmoMenuConfig = [
         order: 4
       },
       {
+        id: 'pmo-report-lessons',
+        label: 'Lessons Report',
+        path: '/pm/closure/lessons-report',
+        icon: GraduationCap,
+        order: 5
+      },
+      {
+        id: 'pmo-report-sprint-metrics',
+        label: 'Sprint Metrics',
+        path: '/platform/projects/:projectId/scrum/metrics',
+        icon: Activity,
+        order: 6
+      },
+      {
         id: 'pmo-report-library',
         label: 'Report Library',
         path: '/platform/reports',
         icon: FileText,
-        order: 5
+        order: 7
       },
       {
         id: 'pmo-report-analytics',
         label: 'Analytics',
         path: '/platform/reports/analytics',
         icon: BarChart3,
-        order: 6
-      }
+        order: 8
+      },
+      {
+        id: 'pmo-report-lean-metrics',
+        label: 'Lean Metrics',
+        path: '/platform/projects/:projectId/lean/metrics',
+        icon: TrendingUp,
+        order: 9,
+      },
+      {
+        id: 'pmo-report-agile-metrics',
+        label: 'Agile Metrics Hub',
+        path: '/platform/projects/:projectId/agile/metrics',
+        icon: Activity,
+        order: 10,
+      },
     ]
+  },
+
+  {
+    id: 'pmo-knowledge-assets',
+    label: 'Knowledge & Assets',
+    path: null,
+    icon: Library,
+    section: 'Knowledge & Assets',
+    order: 10.5,
+    children: [
+      {
+        id: 'pmo-knowledge-hub',
+        label: 'Org Knowledge Hub',
+        path: '/platform/org-knowledge',
+        icon: BookOpen,
+        order: 1,
+      },
+      {
+        id: 'pmo-knowledge-opa',
+        label: 'Process Assets',
+        path: '/platform/opa',
+        icon: Library,
+        order: 2,
+      },
+      {
+        id: 'pmo-knowledge-opa-new',
+        label: 'Add OPA',
+        path: '/platform/opa/new',
+        icon: FilePlus,
+        order: 3,
+      },
+      {
+        id: 'pmo-knowledge-opa-drafts',
+        label: 'OPA Drafts',
+        path: '/platform/opa/on-hold',
+        icon: Pause,
+        order: 4,
+      },
+      {
+        id: 'pmo-knowledge-opa-bulk',
+        label: 'OPA Bulk upload',
+        path: '/platform/opa/bulk-upload',
+        icon: Upload,
+        order: 5,
+      },
+    ],
   },
 
   // Section 6: Procurement
@@ -455,8 +693,8 @@ const pmoMenuConfig = [
     label: 'Procurement',
     path: null,
     icon: ShoppingCart,
-    section: 'Administration',
-    order: 10,
+    section: 'Procurement',
+    order: 11,
     children: [
       {
         id: 'pmo-proc-rfp',
@@ -485,45 +723,6 @@ const pmoMenuConfig = [
   },
 
   {
-    id: 'pmo-planning',
-    label: 'Planning Intelligence',
-    path: null,
-    icon: BarChart3,
-    section: 'Planning Intelligence',
-    order: 7,
-    children: [
-      {
-        id: 'pmo-planning-hub',
-        label: 'Planning Hub',
-        path: '/pmo/planning',
-        icon: LayoutDashboard,
-        order: 1
-      },
-      {
-        id: 'pmo-planning-collisions',
-        label: 'Portfolio Collisions',
-        path: '/pmo/planning/collisions',
-        icon: AlertTriangle,
-        order: 2
-      },
-      {
-        id: 'pmo-planning-intelligence',
-        label: 'Intelligence Rules',
-        path: '/pmo/planning/intelligence',
-        icon: SearchCode,
-        order: 3
-      },
-      {
-        id: 'pmo-planning-governance-config',
-        label: 'Governance Rules Config',
-        path: '/pmo/planning/governance-config',
-        icon: ShieldCheck,
-        order: 4
-      }
-    ]
-  },
-
-  {
     id: 'pmo-financial',
     label: 'Financial Management',
     path: null,
@@ -546,18 +745,32 @@ const pmoMenuConfig = [
         order: 2
       },
       {
+        id: 'pmo-fin-programme-evm',
+        label: 'Programme EVM',
+        path: '/platform/programme/evm',
+        icon: TrendingUp,
+        order: 3
+      },
+      {
+        id: 'pmo-fin-project-evm',
+        label: 'Project EVM',
+        path: '/platform/projects/evm',
+        icon: TrendingUp,
+        order: 4
+      },
+      {
         id: 'pmo-fin-exp-approvals',
         label: 'Expense Approvals',
         path: '/platform/expenses/approvals',
         icon: ClipboardCheck,
-        order: 3
+        order: 5
       },
       {
         id: 'pmo-fin-thresholds',
         label: 'Expense Thresholds',
         path: '/platform/pmo-admin/expense-thresholds',
         icon: Settings2,
-        order: 4
+        order: 6
       }
     ]
   },
@@ -587,7 +800,7 @@ const pmoMenuConfig = [
     path: null,
     icon: FlaskConical,
     section: 'Quality & Testing',
-    order: 11,
+    order: 10,
     children: [
       { id: 'pmo-tc-dash', label: 'Testing Dashboard', path: '/pmo/testing-centre', icon: FlaskConical, order: 1, permission: 'testing_centre.view' },
       { id: 'pmo-tc-cases', label: 'Test Case Library', path: '/pmo/testing-centre/cases', icon: FlaskConical, order: 2, permission: 'testing_centre.view' },
@@ -612,20 +825,57 @@ const pmoMenuConfig = [
     section: 'Administration',
     order: 13,
     children: [
-      { id: 'pmo-admin-local-data-extensions', label: 'Local Data Extensions', path: '/app/local-data-extensions', icon: Database, order: 0, permission: 'pmo.admin' },
-      { id: 'pmo-admin-form-templates', label: 'Form Templates', path: '/platform/admin/form-templates', icon: FileText, order: 1, permission: 'form_template.manage' },
-      { id: 'pmo-admin-org-settings', label: 'Organisation Settings', path: '/platform/pmo-admin/settings', icon: Settings2, order: 2, permission: 'pmo.admin' },
-      { id: 'pmo-admin-users', label: 'User Management', path: '/platform/pmo-admin/users', icon: Shield, order: 3, permission: 'pmo.admin' },
-      { id: 'pmo-admin-role-menu-access', label: 'Role Menu Access', path: '/platform/pmo/role-menu-access', icon: ShieldCheck, order: 4, permission: 'pmo.admin' },
-      { id: 'pmo-admin-project-types', label: 'Project Types', path: '/platform/pmo-admin/project-types', icon: Layers, order: 5, permission: 'pmo.admin' },
-      { id: 'pmo-admin-funding-sources', label: 'Funding Sources', path: '/platform/pmo-admin/funding-sources', icon: DollarSign, order: 6, permission: 'pmo.admin' },
-      { id: 'pmo-admin-budget-categories', label: 'Budget Categories', path: '/platform/pmo-admin/budget-categories', icon: DollarSign, order: 7, permission: 'pmo.admin' },
-      { id: 'pmo-admin-rfp', label: 'RFP Register', path: '/pmo/procurement/rfp', icon: ShoppingCart, order: 8, permission: 'pmo.admin' },
-      { id: 'pmo-admin-rfp-load', label: 'Load RFP', path: '/pmo/rfp/create', icon: FilePlus, order: 9, permission: 'pmo.admin' },
-      { id: 'pmo-admin-rfp-drafts', label: 'RFP Drafts', path: '/pmo/rfp/on-hold', icon: Pause, order: 10, permission: 'pmo.admin' },
-      { id: 'pmo-admin-subscription', label: 'Subscription', path: '/platform/pmo-admin/subscription', icon: Settings2, order: 11, permission: 'system.admin' },
-      { id: 'pmo-admin-branding', label: 'Branding', path: '/platform/pmo-admin/branding', icon: Settings2, order: 12, permission: 'system.admin' },
-    ]
+      {
+        id: 'pmo-admin-org-access',
+        label: 'Organisation & Access',
+        path: null,
+        icon: Building2,
+        order: 1,
+        children: [
+          { id: 'pmo-admin-org-settings', label: 'Organisation Settings', path: '/platform/pmo-admin/settings', icon: Settings2, order: 1, permission: 'pmo.admin' },
+          { id: 'pmo-admin-users', label: 'User Management', path: '/platform/pmo-admin/users', icon: Shield, order: 2, permission: 'pmo.admin' },
+          { id: 'pmo-admin-role-menu-access', label: 'Role Menu Access', path: '/platform/pmo/role-menu-access', icon: ShieldCheck, order: 3, permission: 'pmo.admin' },
+          { id: 'pmo-admin-branding-identity', label: 'Branding & Identity', path: '/platform/organisation/branding', icon: Sparkles, order: 4, permission: 'system.admin' },
+        ],
+      },
+      {
+        id: 'pmo-admin-project-config',
+        label: 'Project Configuration',
+        path: null,
+        icon: Layers,
+        order: 2,
+        children: [
+          { id: 'pmo-admin-project-types', label: 'Project Types', path: '/platform/pmo-admin/project-types', icon: Layers, order: 1, permission: 'pmo.admin' },
+          { id: 'pmo-admin-project-statuses', label: 'Project Statuses', path: '/platform/pmo-admin/project-statuses', icon: Layers, order: 2, permission: 'pmo.admin' },
+          { id: 'pmo-admin-funding-sources', label: 'Funding Sources', path: '/platform/pmo-admin/funding-sources', icon: DollarSign, order: 3, permission: 'pmo.admin' },
+          { id: 'pmo-admin-budget-categories', label: 'Budget Categories', path: '/platform/pmo-admin/budget-categories', icon: DollarSign, order: 4, permission: 'pmo.admin' },
+        ],
+      },
+      {
+        id: 'pmo-admin-extensions',
+        label: 'Extensions & Integrations',
+        path: null,
+        icon: Plug,
+        order: 3,
+        children: [
+          { id: 'pmo-admin-local-data-extensions', label: 'Local Data Extensions', path: '/app/local-data-extensions', icon: Database, order: 1, permission: 'pmo.admin' },
+          { id: 'pmo-admin-form-templates', label: 'Form Templates', path: '/platform/admin/form-templates', icon: FileText, order: 2, permission: 'form_template.manage' },
+          { id: 'pmo-admin-integrations', label: 'Integrations Hub', path: '/pmo/admin/integrations', icon: Plug, order: 3, permission: 'pmo.admin' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'pmo-system-admin',
+    label: 'System Administration',
+    path: null,
+    icon: Shield,
+    section: 'System Administration',
+    order: 14,
+    children: [
+      { id: 'pmo-sys-platform-settings', label: 'Platform Settings', path: '/platform/settings', icon: Settings2, order: 1, permission: 'system.admin' },
+      { id: 'pmo-sys-pwa-settings', label: 'PWA Settings', path: '/platform/pwa-settings', icon: Settings2, order: 2, permission: 'system.admin' },
+    ],
   },
   {
     id: 'pmo-email-notifications',
@@ -639,6 +889,10 @@ const pmoMenuConfig = [
       { id: 'pmo-email-sender-profiles', label: 'Sender Profiles', path: '/platform/admin/email-sender-profiles', icon: AtSign, order: 2, permission: 'pmo.admin' },
       { id: 'pmo-email-invitation-templates', label: 'Invitation Templates', path: '/app/settings/invitation-templates', icon: FileText, order: 3, permission: 'pmo.admin' },
       { id: 'pmo-email-invitation-expiry', label: 'Invitation Expiry', path: '/platform/admin/invitation-settings', icon: Clock, order: 4, permission: 'pmo.admin' },
+      { id: 'pmo-comms-messages', label: 'Messages', path: '/platform/comms/messages', icon: Mail, order: 5, permission: 'pmo.admin' },
+      { id: 'pmo-comms-direct', label: 'Direct Messages', path: '/platform/comms/direct', icon: Mail, order: 6, permission: 'pmo.admin' },
+      { id: 'pmo-comms-meetings', label: 'Meetings', path: '/platform/comms/meetings', icon: ClipboardList, order: 7, permission: 'pmo.admin' },
+      { id: 'pmo-comms-pending-ai', label: 'Pending AI Reviews', path: '/platform/comms/pending-review', icon: Sparkles, order: 8, permission: 'pmo.admin' },
     ],
   },
   {
@@ -654,8 +908,10 @@ const pmoMenuConfig = [
       { id: 'pmo-people-assignment-settings', label: 'Assignment Settings', path: '/platform/pmo-admin/manager-assignment-settings', icon: Settings2, order: 3, permission: 'pmo.admin' },
       { id: 'pmo-people-invitation-tracker', label: 'Invitation Tracker', path: '/platform/admin/invitation-tracker', icon: MailCheck, order: 4, permission: 'pmo.admin' },
       { id: 'pmo-people-send-invites', label: 'Send Invitations', path: '/platform/admin/send-role-invites', icon: Send, order: 5, permission: 'pmo.admin' },
-      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 6, permission: 'pmo.admin' },
-      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 7, permission: 'pmo.admin' },
+      { id: 'pmo-people-assign-roles', label: 'Assign Roles to Projects', path: '/platform/admin/assign-roles-to-projects', icon: Shield, order: 6, permission: 'pmo.admin' },
+      { id: 'pmo-people-add-users', label: 'Add users to project', path: '/platform/project-members', icon: Users, order: 7, permission: 'pmo.admin' },
+      { id: 'pmo-people-resource-directory', label: 'Resource Directory', path: '/platform/teams/directory', icon: Users, order: 8, permission: 'pmo.admin' },
+      { id: 'pmo-people-team-capacity', label: 'Team Capacity', path: '/platform/teams/capacity', icon: BarChart3, order: 9, permission: 'pmo.admin' },
     ],
   },
 ];

@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
-import { lazy, Suspense, useState, useEffect } from 'react'
+﻿import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom'
+import { Suspense, useState, useEffect } from 'react'
 import { Toaster } from 'react-hot-toast'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppToPlatformRedirect from './components/AppToPlatformRedirect'
@@ -8,6 +8,7 @@ import { RecordLifecycleRouteElements } from './modules/record-lifecycle/routes/
 import OfflineIndicator from './components/pwa/OfflineIndicator'
 import PWAUpdatePrompt from './components/pwa/PWAUpdatePrompt'
 
+import * as LP from './routes/lazyImports'
 const LOADING_TIMEOUT_MS = 10000
 
 /** Shows spinner first; after LOADING_TIMEOUT_MS shows "Taking too long? Refresh" so the page never hangs forever. */
@@ -49,858 +50,203 @@ function RedirectProjectsTemplatesToLibrary() {
   return <Navigate to={{ pathname: `/platform/templates${suffix}`, search, hash }} replace />
 }
 
-// Lazy load landing page so initial bundle is minimal and "/" loads in milliseconds
-const NidusHomepage = lazy(() => import('./pages/NidusHomepage'))
 
-// Lazy load ALL other components to prevent blocking
-// ThemeProvider is preloaded for critical routes
-const ThemeProvider = lazy(() => import('./context/ThemeContext').then(m => ({ default: m.ThemeProvider })))
-// Preload ThemeProvider for faster initial load
-if (typeof window !== 'undefined') {
-  import('./context/ThemeContext').catch(() => {});
-}
-const ToastProvider = lazy(() => import('./context/ToastContext').then(m => ({ default: m.ToastProvider })))
-const Layout = lazy(() => import('./components/Layout'))
-const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'))
-const Home = lazy(() => import('./pages/Home'))
-const PlatformHomepage = lazy(() => import('./pages/PlatformHomepage'))
-const SimulatorHomepage = lazy(() => import('./pages/SimulatorHomepage'))
-const Documentation = lazy(() => import('./pages/Documentation'))
-const FeaturesPage = lazy(() => import('./pages/FeaturesPage'))
-const BlogPage = lazy(() => import('./pages/BlogPage'))
-const ResourcesPage = lazy(() => import('./pages/ResourcesPage'))
-const PricingPage = lazy(() => import('./pages/PricingPage'))
-const PlatformPricing = lazy(() => import('./pages/PlatformPricing'))
-const BundlePricing = lazy(() => import('./pages/BundlePricing'))
-const SimulatorPricing = lazy(() => import('./pages/SimulatorPricing'))
-const AboutPage = lazy(() => import('./pages/AboutPage'))
-const ContactPage = lazy(() => import('./pages/ContactPage'))
-const PlatformRequestDemoPage = lazy(() => import('./pages/PlatformRequestDemoPage'))
-const SimulatorRequestDemoPage = lazy(() => import('./pages/SimulatorRequestDemoPage'))
-
-// Lazy load all other pages
-const Projects = lazy(() => import('./pages/Projects'))
-const ProjectsCreate = lazy(() => import('./pages/ProjectsCreate'))
-const ProjectsDetail = lazy(() => import('./pages/ProjectsDetail'))
-const LocalDataExtensionsRoutes = lazy(() => import('./features/local-data-extensions/pages/LocalDataExtensionsRoutes'))
-const SimulatorLocalDataExtensionsRoutes = lazy(() => import('./features/local-data-extensions/pages/SimulatorLocalDataExtensionsRoutes'))
-const ProjectsEdit = lazy(() => import('./pages/ProjectsEdit'))
-const ScopeManagementPlanPage = lazy(() => import('./pages/scope/ScopeManagementPlan'))
-const ScopeStatementPage = lazy(() => import('./pages/scope/ScopeStatement'))
-const RequirementsRegisterPage = lazy(() => import('./pages/scope/RequirementsRegister'))
-const RequirementDetailPage = lazy(() => import('./pages/scope/RequirementDetail'))
-const TraceabilityMatrixPage = lazy(() => import('./pages/scope/TraceabilityMatrix'))
-const WBSBuilderPage = lazy(() => import('./pages/scope/WBSBuilder'))
-const ScheduleManagementPlanPage = lazy(() => import('./pages/schedule/ScheduleManagementPlan'))
-const ActivityListPage = lazy(() => import('./pages/schedule/ActivityList'))
-const ActivityDetailPage = lazy(() => import('./pages/schedule/ActivityDetail'))
-const ActivitySequencingPage = lazy(() => import('./pages/schedule/ActivitySequencing'))
-const GanttChartPage = lazy(() => import('./pages/schedule/GanttChart'))
-// Draft Queue / On Hold Pages
-const ProjectsOnHold = lazy(() => import('./pages/projects/ProjectsOnHold'))
-const BenefitsOnHold = lazy(() => import('./pages/benefits/BenefitsOnHold'))
-const StakeholdersOnHold = lazy(() => import('./pages/platform-app/StakeholdersOnHold'))
-const IssuesOnHold = lazy(() => import('./pages/issues/IssuesOnHold'))
-const RisksOnHold = lazy(() => import('./pages/risks/RisksOnHold'))
-const QualityOnHold = lazy(() => import('./pages/quality/QualityOnHold'))
-const DraftExpiryConfig = lazy(() => import('./pages/admin/DraftExpiryConfig'))
-const Tasks = lazy(() => import('./pages/Tasks'))
-const TasksBoard = lazy(() => import('./pages/TasksBoard'))
-const TasksCalendar = lazy(() => import('./pages/TasksCalendar'))
-const TasksCreate = lazy(() => import('./pages/TasksCreate'))
-const TasksDetail = lazy(() => import('./pages/TasksDetail'))
-const MethodologySelection = lazy(() => import('./pages/MethodologySelection'))
-// Platform and Simulator Dashboards (new structure)
-const PlatformDashboard = lazy(() => import('./pages/platform-app/Dashboard'))
-const SimulatorDashboard = lazy(() => import('./pages/simulator-app/Dashboard'))
-const SimulationSetup = lazy(() => import('./pages/simulator/SimulationSetup'))
-const SimulationRunDashboard = lazy(() => import('./pages/simulator/SimulationRunDashboard'))
-const SimEventInbox = lazy(() => import('./pages/simulator/SimEventInbox'))
-const SimStageGateReview = lazy(() => import('./pages/simulator/SimStageGateReview'))
-const SimExceptionReportFlow = lazy(() => import('./pages/simulator/SimExceptionReportFlow'))
-const SimEVMDashboard = lazy(() => import('./pages/simulator/SimEVMDashboard'))
-const SimulationRunHistory = lazy(() => import('./pages/simulator/SimulationRunHistory'))
-const SimulationDebrief = lazy(() => import('./pages/simulator/SimulationDebrief'))
-const SimLiveRunRedirect = lazy(() => import('./pages/simulator/SimLiveRunRedirect'))
-const SimAIWorkspace = lazy(() => import('./pages/simulator/SimAIWorkspace'))
-const AIWorkspace = lazy(() => import('./pages/platform-app/AIWorkspace'))
-const SubmitFeedback = lazy(() => import('./pages/support/SubmitFeedback'))
-// PMO and PM Independent Dashboards
-const PMODashboard = lazy(() => import('./pages/pmo/PMODashboard'))
-const PMDashboard = lazy(() => import('./pages/pm/PMDashboard'))
-const PMOLayout = lazy(() => import('./components/pmo/PMOLayout'))
-const PMLayout = lazy(() => import('./components/pm/PMLayout'))
-// PMO Page Wrappers
-const PMOGovernanceMandateTemplate = lazy(() => import('./pages/pmo/PMOGovernanceMandateTemplate'))
-const PMOGovernanceCMS = lazy(() => import('./pages/pmo/PMOGovernanceCMS'))
-const PMOGovernanceConfigMS = lazy(() => import('./pages/pmo/PMOGovernanceConfigMS'))
-const PMOGovernanceQMS = lazy(() => import('./pages/pmo/PMOGovernanceQMS'))
-const PMOGovernanceRMS = lazy(() => import('./pages/pmo/PMOGovernanceRMS'))
-const PMOInitiationBusinessCase = lazy(() => import('./pages/pmo/PMOInitiationBusinessCase'))
-const PMOInitiationProjectBrief = lazy(() => import('./pages/pmo/PMOInitiationProjectBrief'))
-const PMOInitiationBenefitsReviewPlan = lazy(() => import('./pages/pmo/PMOInitiationBenefitsReviewPlan'))
-const PMOOversightRiskRegister = lazy(() => import('./pages/pmo/PMOOversightRiskRegister'))
-const PMOOversightIssueRegister = lazy(() => import('./pages/pmo/PMOOversightIssueRegister'))
-const PMOOversightQualityRegister = lazy(() => import('./pages/pmo/PMOOversightQualityRegister'))
-const PMOOversightLessonsLog = lazy(() => import('./pages/pmo/PMOOversightLessonsLog'))
-const PMOOversightScope = lazy(() => import('./pages/pmo/PMOOversightScope'))
-const PMOOversightSchedules = lazy(() => import('./pages/pmo/PMOOversightSchedules'))
-const PMOReportingHighlight = lazy(() => import('./pages/pmo/PMOReportingHighlight'))
-const PMOReportingException = lazy(() => import('./pages/pmo/PMOReportingException'))
-const PMOReportingEndStage = lazy(() => import('./pages/pmo/PMOReportingEndStage'))
-const PMOReportingEndProject = lazy(() => import('./pages/pmo/PMOReportingEndProject'))
-const PMOProcurementRFP = lazy(() => import('./pages/pmo/PMOProcurementRFP'))
-const PMORFPView = lazy(() => import('./pages/pmo/PMORFPView'))
-const PMORFPCreate = lazy(() => import('./pages/pmo/PMORFPCreate'))
-const PMORFPEdit = lazy(() => import('./pages/pmo/PMORFPEdit'))
-const PMORFPBulkImport = lazy(() => import('./pages/pmo/PMORFPBulkImport'))
-const PMORFPPrint = lazy(() => import('./pages/pmo/PMORFPPrint'))
-const PMORFPOnHold = lazy(() => import('./pages/pmo/PMORFPOnHold'))
-// PM Page Wrappers
-const PMGovernanceMandateTemplate = lazy(() => import('./pages/pm/PMGovernanceMandateTemplate'))
-const PMGovernanceCMS = lazy(() => import('./pages/pm/PMGovernanceCMS'))
-const PMGovernanceConfigMS = lazy(() => import('./pages/pm/PMGovernanceConfigMS'))
-const PMGovernanceQMS = lazy(() => import('./pages/pm/PMGovernanceQMS'))
-const PMGovernanceRMS = lazy(() => import('./pages/pm/PMGovernanceRMS'))
-const PMInitiationBusinessCase = lazy(() => import('./pages/pm/PMInitiationBusinessCase'))
-const PMInitiationProjectBrief = lazy(() => import('./pages/pm/PMInitiationProjectBrief'))
-const PMInitiationPID = lazy(() => import('./pages/pm/PMInitiationPID'))
-const PMInitiationBenefitsReviewPlan = lazy(() => import('./pages/pm/PMInitiationBenefitsReviewPlan'))
-const PMDeliveryWorkPackages = lazy(() => import('./pages/pm/PMDeliveryWorkPackages'))
-const PMDeliveryProductDescription = lazy(() => import('./pages/pm/PMDeliveryProductDescription'))
-const PMDeliveryProjectProductDescription = lazy(() => import('./pages/pm/PMDeliveryProjectProductDescription'))
-const PMDeliveryProductStatusAccount = lazy(() => import('./pages/pm/PMDeliveryProductStatusAccount'))
-const PMDeliveryDailyLog = lazy(() => import('./pages/pm/PMDeliveryDailyLog'))
-const PMControlsRiskRegister = lazy(() => import('./pages/pm/PMControlsRiskRegister'))
-const PMControlsIssueRegister = lazy(() => import('./pages/pm/PMControlsIssueRegister'))
-const PMControlsQualityRegister = lazy(() => import('./pages/pm/PMControlsQualityRegister'))
-const PMControlsConfigItems = lazy(() => import('./pages/pm/PMControlsConfigItems'))
-const PMControlsLessonsLog = lazy(() => import('./pages/pm/PMControlsLessonsLog'))
-const PMReportingCheckpoint = lazy(() => import('./pages/pm/PMReportingCheckpoint'))
-const PMReportingHighlight = lazy(() => import('./pages/pm/PMReportingHighlight'))
-const PMReportingIssueReports = lazy(() => import('./pages/pm/PMReportingIssueReports'))
-const PMReportingException = lazy(() => import('./pages/pm/PMReportingException'))
-const PMReportingEndStage = lazy(() => import('./pages/pm/PMReportingEndStage'))
-const PMClosureLessonsReport = lazy(() => import('./pages/pm/PMClosureLessonsReport'))
-const PMClosureEndProjectReport = lazy(() => import('./pages/pm/PMClosureEndProjectReport'))
-// Legacy Dashboard (for backward compatibility)
-const Dashboard = lazy(() => import('./pages/Dashboard'))
-// Platform Module Pages
-const Teams = lazy(() => import('./pages/platform-app/Teams'))
-const MyTeam = lazy(() => import('./pages/platform-app/MyTeam'))
-const Governance = lazy(() => import('./pages/platform-app/Governance'))
-const Portfolio = lazy(() => import('./pages/platform-app/Portfolio'))
-const PortfolioCreatePage = lazy(() => import('./pages/platform-app/PortfolioCreatePage'))
-const PortfolioFormPage = lazy(() => import('./pages/platform-app/PortfolioFormPage'))
-const PortfolioDashboard = lazy(() => import('./pages/platform-app/PortfolioDashboard'))
-const PortfolioProjects = lazy(() => import('./pages/platform-app/PortfolioProjects'))
-const PortfolioResources = lazy(() => import('./pages/platform-app/PortfolioResources'))
-const PortfolioFinancial = lazy(() => import('./pages/platform-app/PortfolioFinancial'))
-const PortfolioReports = lazy(() => import('./pages/platform-app/PortfolioReports'))
-const PortfolioGovernance = lazy(() => import('./pages/platform-app/PortfolioGovernance'))
-const PortfolioCategories = lazy(() => import('./pages/platform-app/PortfolioCategories'))
-const Programme = lazy(() => import('./pages/platform-app/Programme'))
-const ProgrammeDetailPage = lazy(() => import('./pages/platform-app/ProgrammeDetailPage'))
-const ProgrammeCreatePage = lazy(() => import('./pages/platform-app/ProgrammeCreatePage'))
-const ProgrammeEditPage = lazy(() => import('./pages/platform-app/ProgrammeEditPage'))
-const ProgrammeDashboardOverview = lazy(() => import('./pages/platform-app/ProgrammeDashboardOverview'))
-const ProgrammeProjectsPage = lazy(() => import('./pages/platform-app/ProgrammeProjects'))
-const ProgrammeDependenciesPage = lazy(() => import('./pages/platform-app/ProgrammeDependencies'))
-const ProgrammeBenefitsPage = lazy(() => import('./pages/platform-app/ProgrammeBenefits'))
-const ProgrammeTimelinePage = lazy(() => import('./pages/platform-app/ProgrammeTimeline'))
-const ProgrammeReportsPage = lazy(() => import('./pages/platform-app/ProgrammeReports'))
-const Strategy = lazy(() => import('./pages/platform-app/Strategy'))
-const StrategicObjectives = lazy(() => import('./pages/StrategicObjectives'))
-const StrategicAlignment = lazy(() => import('./pages/StrategicAlignment'))
-const StrategicContribution = lazy(() => import('./pages/StrategicContribution'))
-const StrategicPortfolio = lazy(() => import('./pages/StrategicPortfolio'))
-const StrategicReports = lazy(() => import('./pages/StrategicReports'))
-const Quality = lazy(() => import('./pages/platform-app/Quality'))
-const QualityManagement = lazy(() => import('./pages/QualityManagement'))
-const QualityReviews = lazy(() => import('./pages/QualityReviews'))
-const QualityInspections = lazy(() => import('./pages/QualityInspections'))
-const QualityReports = lazy(() => import('./pages/QualityReports'))
-const QualityActivityView = lazy(() => import('./pages/QualityActivityView'))
-const MyQualityActions = lazy(() => import('./pages/MyQualityActions'))
-const Stakeholders = lazy(() => import('./pages/platform-app/Stakeholders'))
-const StakeholderRegisterPage = lazy(() => import('./pages/platform-app/StakeholderRegisterPage'))
-const StakeholderFormPage = lazy(() => import('./pages/platform-app/StakeholderFormPage'))
-const StakeholderProfilePage = lazy(() => import('./pages/platform-app/StakeholderProfilePage'))
-const StakeholderAnalysisPage = lazy(() => import('./pages/platform-app/StakeholderAnalysisPage'))
-const StakeholderEngagementPage = lazy(() => import('./pages/platform-app/StakeholderEngagementPage'))
-const CommunicationPlanPage = lazy(() => import('./pages/platform-app/CommunicationPlanPage'))
-const StakeholderMonitoringPage = lazy(() => import('./pages/platform-app/StakeholderMonitoringPage'))
-const StakeholderAssessmentMatrixPage = lazy(() => import('./pages/platform-app/StakeholderAssessmentMatrixPage'))
-const StakeholdersAssessmentMatrixOnHold = lazy(() => import('./pages/platform-app/StakeholdersAssessmentMatrixOnHold'))
-const TestDashboard = lazy(() => import('./pages/testing/TestDashboard'))
-const TestSuites = lazy(() => import('./pages/testing/TestSuites'))
-const TestSuiteDetail = lazy(() => import('./pages/testing/TestSuiteDetail'))
-const TestCases = lazy(() => import('./pages/testing/TestCases'))
-const TestCaseCreate = lazy(() => import('./pages/testing/TestCaseCreate'))
-const TestCaseDetail = lazy(() => import('./pages/testing/TestCaseDetail'))
-const TestCaseBulkUpload = lazy(() => import('./pages/testing/TestCaseBulkUpload'))
-const TestRuns = lazy(() => import('./pages/testing/TestRuns'))
-const TestRunDetail = lazy(() => import('./pages/testing/TestRunDetail'))
-const TestRunExecute = lazy(() => import('./pages/testing/TestRunExecute'))
-const DefectListPage = lazy(() => import('./pages/testing/DefectList'))
-const DefectDetailPage = lazy(() => import('./pages/testing/DefectDetail'))
-const DefectDashboardPage = lazy(() => import('./pages/testing/DefectDashboard'))
-const SimTestDashboard = lazy(() => import('./pages/sim/testing/SimTestDashboard'))
-const SimTestSuites = lazy(() => import('./pages/sim/testing/SimTestSuites'))
-const SimTestSuiteDetail = lazy(() => import('./pages/sim/testing/SimTestSuiteDetail'))
-const SimTestCases = lazy(() => import('./pages/sim/testing/SimTestCases'))
-const SimTestCaseCreate = lazy(() => import('./pages/sim/testing/SimTestCaseCreate'))
-const SimTestCaseDetail = lazy(() => import('./pages/sim/testing/SimTestCaseDetail'))
-const SimTestCaseBulkUpload = lazy(() => import('./pages/sim/testing/SimTestCaseBulkUpload'))
-const SimTestRuns = lazy(() => import('./pages/sim/testing/SimTestRuns'))
-const SimTestRunDetail = lazy(() => import('./pages/sim/testing/SimTestRunDetail'))
-const SimTestRunExecute = lazy(() => import('./pages/sim/testing/SimTestRunExecute'))
-const SimDefectListPage = lazy(() => import('./pages/sim/testing/SimDefectList'))
-const SimDefectDetailPage = lazy(() => import('./pages/sim/testing/SimDefectDetail'))
-const SimDefectDashboardPage = lazy(() => import('./pages/sim/testing/SimDefectDashboard'))
-const BrandingSettings = lazy(() => import('./pages/platform-app/organisation/BrandingSettings'))
-const BrandingHistory  = lazy(() => import('./pages/platform-app/organisation/BrandingHistory'))
-const PMOAdmin = lazy(() => import('./pages/platform-app/PMOAdmin'))
-const ProjectTypes = lazy(() => import('./pages/platform-app/ProjectTypes'))
-const ProjectStatuses = lazy(() => import('./pages/platform-app/ProjectStatuses'))
-const FundingSources = lazy(() => import('./pages/platform-app/FundingSources'))
-const BudgetCategories = lazy(() => import('./pages/platform-app/BudgetCategories'))
-const ManagerAssignments = lazy(() => import('./pages/pmo/ManagerAssignments'))
-const AppointmentDashboard = lazy(() => import('./pages/pmo/AppointmentDashboard'))
-const MyAppointments = lazy(() => import('./pages/app/MyAppointments'))
-const TeamAppointmentDashboard = lazy(() => import('./pages/app/TeamAppointmentDashboard'))
-const MyTeamAppointments = lazy(() => import('./pages/app/MyTeamAppointments'))
-const SimAppointmentDashboard = lazy(() => import('./pages/sim/pmo/SimAppointmentDashboard'))
-const SimMyAppointments = lazy(() => import('./pages/sim/app/SimMyAppointments'))
-const SimTeamAppointmentDashboard = lazy(() => import('./pages/sim/app/SimTeamAppointmentDashboard'))
-const SimMyTeamAppointments = lazy(() => import('./pages/sim/app/SimMyTeamAppointments'))
-const PortfolioManagerAssignments = lazy(() => import('./pages/portfolio-manager/PortfolioManagerAssignments'))
-const ProgrammeManagerAssignments = lazy(() => import('./pages/programme-manager/ProgrammeManagerAssignments'))
-const ManagerAssignmentSettings = lazy(() => import('./pages/pmo/ManagerAssignmentSettings'))
-const PMORoleMenuManagement = lazy(() => import('./pages/pmo/PMORoleMenuManagement'))
-const AdminRoleMenuManagement = lazy(() => import('./pages/admin/AdminRoleMenuManagement'))
-const ProjectCostManagement = lazy(() => import('./pages/platform-app/ProjectCostManagement'))
-const ProjectBudgetBaseline = lazy(() => import('./pages/platform-app/ProjectBudgetBaseline'))
-const ProjectEVMPage = lazy(() => import('./pages/platform-app/ProjectEVMPage'))
-const ProgrammeEVMPage = lazy(() => import('./pages/platform-app/ProgrammeEVMPage'))
-const PortfolioEVMPage = lazy(() => import('./pages/platform-app/PortfolioEVMPage'))
-const ProgrammeFinancialDashboard = lazy(() => import('./pages/platform-app/ProgrammeFinancialDashboard'))
-const ProjectProfitability = lazy(() => import('./pages/platform-app/ProjectProfitability'))
-const MyExpenses = lazy(() => import('./pages/platform-app/MyExpenses'))
-const ExpenseApproval = lazy(() => import('./pages/platform-app/ExpenseApproval'))
-const ExpenseApprovalThresholds = lazy(() => import('./pages/platform-app/ExpenseApprovalThresholds'))
-const FinancialReportingHub = lazy(() => import('./pages/platform-app/FinancialReportingHub'))
-const SimProjectCostManagement = lazy(() => import('./pages/simulator/SimProjectCostManagement'))
-const SimProjectBudgetBaseline = lazy(() => import('./pages/simulator/SimProjectBudgetBaseline'))
-const SimProjectEVMPage = lazy(() => import('./pages/simulator/SimProjectEVMPage'))
-const SimProgrammeEVMPage = lazy(() => import('./pages/simulator/SimProgrammeEVMPage'))
-const SimPortfolioEVMPage = lazy(() => import('./pages/simulator/SimPortfolioEVMPage'))
-const SimProgrammeFinancialDashboard = lazy(() => import('./pages/simulator/SimProgrammeFinancialDashboard'))
-const SimProjectProfitability = lazy(() => import('./pages/simulator/SimProjectProfitability'))
-const SimMyExpenses = lazy(() => import('./pages/simulator/SimMyExpenses'))
-const SimExpenseApproval = lazy(() => import('./pages/simulator/SimExpenseApproval'))
-const SimExpenseApprovalThresholds = lazy(() => import('./pages/simulator/SimExpenseApprovalThresholds'))
-const SimFinancialReportingHub = lazy(() => import('./pages/simulator/SimFinancialReportingHub'))
-const SimSprintMetricsDashboard = lazy(() => import('./pages/simulator/SimSprintMetricsDashboard'))
-const SimAgileTemplates = lazy(() => import('./pages/simulator/SimAgileTemplates'))
-const SimStoryMap = lazy(() => import('./pages/simulator/SimStoryMap'))
-const SimAgileReleases = lazy(() => import('./pages/simulator/SimAgileReleases'))
-const SimAgileReleaseDetail = lazy(() => import('./pages/simulator/SimAgileReleaseDetail'))
-const SimAgileRoadmap = lazy(() => import('./pages/simulator/SimAgileRoadmap'))
-const SimXPDashboard = lazy(() => import('./pages/simulator/SimXPDashboard'))
-const SimValueStreamMap = lazy(() => import('./pages/simulator/SimValueStreamMap'))
-const SimKaizenBoard = lazy(() => import('./pages/simulator/SimKaizenBoard'))
-const SimLeanMetrics = lazy(() => import('./pages/simulator/SimLeanMetrics'))
-const SimScrumOfScrums = lazy(() => import('./pages/simulator/SimScrumOfScrums'))
-const SimAgileMetricsHub = lazy(() => import('./pages/simulator/SimAgileMetricsHub'))
-const SimKanbanMetrics = lazy(() => import('./pages/simulator/SimKanbanMetrics'))
-const LifecycleTemplates = lazy(() => import('./pages/platform-app/LifecycleTemplates'))
-const Reports = lazy(() => import('./pages/platform-app/Reports'))
-const OrgKnowledgeHub = lazy(() => import('./pages/org-knowledge/OrgKnowledgeHub'))
-const EEFList = lazy(() => import('./pages/eef/EEFList'))
-const EEFCreate = lazy(() => import('./pages/eef/EEFCreate'))
-const EEFDetail = lazy(() => import('./pages/eef/EEFDetail'))
-const EEFEdit = lazy(() => import('./pages/eef/EEFEdit'))
-const EEFOnHold = lazy(() => import('./pages/eef/EEFOnHold'))
-const EEFBulkUpload = lazy(() => import('./pages/eef/EEFBulkUpload'))
-const ITTOTemplateList = lazy(() => import('./pages/itto/ITTOTemplateList'))
-const ProjectITTOList = lazy(() => import('./pages/itto/ProjectITTOList'))
-const ITTODraftsQueue = lazy(() => import('./pages/itto/ITTODraftsQueue'))
-const IndustryTemplateList = lazy(() => import('./pages/pmo/IndustryTemplateList'))
-const PMOInvitationTracker = lazy(() => import('./pages/pmo/InvitationTracker'))
-const PMInvitationTracker = lazy(() => import('./pages/pm/InvitationTracker'))
-const InvitationDetailPage = lazy(() => import('./components/invitations/InvitationDetailPage'))
-const IndustryTemplateForm = lazy(() => import('./pages/pmo/IndustryTemplateForm'))
-const IndustryTemplateDetail = lazy(() => import('./pages/pmo/IndustryTemplateDetail'))
-const IndustryTemplateOnHold = lazy(() => import('./pages/pmo/IndustryTemplateOnHold'))
-const IndustryTemplateBrowser = lazy(() => import('./pages/app/IndustryTemplateBrowser'))
-const IndustryPlanCopyWizard = lazy(() => import('./pages/app/IndustryPlanCopyWizard'))
-const ProjectIndustryPlanView = lazy(() => import('./pages/app/ProjectIndustryPlanView'))
-const SimIndustryTemplateBrowser = lazy(() => import('./pages/simulator/IndustryTemplateBrowser'))
-const SimIndustryPlanCopy = lazy(() => import('./pages/simulator/IndustryPlanCopy'))
-const SimPracticeIndustryPlan = lazy(() => import('./pages/simulator/PracticeIndustryPlan'))
-const SimITTOTemplateList = lazy(() => import('./pages/sim/itto/SimITTOTemplateList'))
-const SimProjectITTOList = lazy(() => import('./pages/sim/itto/SimProjectITTOList'))
-const SimITTODraftsQueue = lazy(() => import('./pages/sim/itto/SimITTODraftsQueue'))
-const DelayRegister = lazy(() => import('./pages/delays/DelayRegister'))
-const DelayTemplates = lazy(() => import('./pages/pmo/DelayTemplates'))
-const SimDelayRegister = lazy(() => import('./pages/sim/delays/SimDelayRegister'))
-const SimDelayTemplates = lazy(() => import('./pages/sim/pmo/SimDelayTemplates'))
-const PlanningHub = lazy(() => import('./pages/planning/PlanningHub'))
-const PlanningIntelligenceDashboard = lazy(() => import('./pages/planning/intelligence/PlanningIntelligenceDashboard'))
-const ScenarioList = lazy(() => import('./pages/planning/scenarios/ScenarioList'))
-const PBSBuilder = lazy(() => import('./pages/planning/pbs/PBSBuilder'))
-const PlanHealthDashboard = lazy(() => import('./pages/planning/health/PlanHealthDashboard'))
-const AIPlanGenerator = lazy(() => import('./pages/planning/ai/AIPlanGenerator'))
-const ExecutivePlanView = lazy(() => import('./pages/planning/executive/ExecutivePlanView'))
-const PortfolioCollisionDashboard = lazy(() => import('./pages/planning/portfolio/PortfolioCollisionDashboard'))
-const RecoveryPlanningView = lazy(() => import('./pages/planning/recovery/RecoveryPlanningView'))
-const ConfidenceForecastView = lazy(() => import('./pages/planning/confidence/ConfidenceForecastView'))
-const GovernanceGateChecklist = lazy(() => import('./pages/planning/governance/GovernanceGateChecklist'))
-const MicroPlanList = lazy(() => import('./pages/planning/microplans/MicroPlanList'))
-const MicroPlanDetail = lazy(() => import('./pages/planning/microplans/MicroPlanDetail'))
-const MicroPlanDraftQueue = lazy(() => import('./pages/planning/microplans/MicroPlanDraftQueue'))
-const MicroPlanForm = lazy(() => import('./pages/planning/microplans/MicroPlanForm'))
-const TeamCharterPage = lazy(() => import('./pages/platform-app/TeamCharterPage'))
-const TeamCharterEditPage = lazy(() => import('./pages/platform-app/TeamCharterEditPage'))
-const DecisionLogPage = lazy(() => import('./pages/platform-app/DecisionLogPage'))
-const DecisionLogForm = lazy(() => import('./pages/platform-app/DecisionLogForm'))
-const DecisionLogDetail = lazy(() => import('./pages/platform-app/DecisionLogDetail'))
-const MyTimesheetsPage = lazy(() => import('./pages/platform-app/timesheets/MyTimesheetsPage'))
-const TimesheetEntryForm = lazy(() => import('./pages/platform-app/timesheets/TimesheetEntryForm'))
-const TimesheetEntryDetail = lazy(() => import('./pages/platform-app/timesheets/TimesheetEntryDetail'))
-const TeamTimesheetsPage = lazy(() => import('./pages/platform-app/timesheets/TeamTimesheetsPage'))
-const TeamChatPage = lazy(() => import('./pages/platform-app/communications/TeamChatPage'))
-const VideoCallsPage = lazy(() => import('./pages/platform-app/communications/VideoCallsPage'))
-const VoiceCallsPage = lazy(() => import('./pages/platform-app/communications/VoiceCallsPage'))
-const OPAList = lazy(() => import('./pages/opa/OPAList'))
-const OPACreate = lazy(() => import('./pages/opa/OPACreate'))
-const OPADetail = lazy(() => import('./pages/opa/OPADetail'))
-const OPAEdit = lazy(() => import('./pages/opa/OPAEdit'))
-const OPAOnHold = lazy(() => import('./pages/opa/OPAOnHold'))
-const OPABulkUpload = lazy(() => import('./pages/opa/OPABulkUpload'))
-const SimEEFList = lazy(() => import('./pages/simulator/eef/SimEEFList'))
-const SimEEFCreate = lazy(() => import('./pages/simulator/eef/SimEEFCreate'))
-const SimEEFDetail = lazy(() => import('./pages/simulator/eef/SimEEFDetail'))
-const SimEEFEdit = lazy(() => import('./pages/simulator/eef/SimEEFEdit'))
-const SimEEFOnHold = lazy(() => import('./pages/simulator/eef/SimEEFOnHold'))
-const SimEEFBulkUpload = lazy(() => import('./pages/simulator/eef/SimEEFBulkUpload'))
-const SimOPAList = lazy(() => import('./pages/simulator/opa/SimOPAList'))
-const SimOPACreate = lazy(() => import('./pages/simulator/opa/SimOPACreate'))
-const SimOPADetail = lazy(() => import('./pages/simulator/opa/SimOPADetail'))
-const SimOPAEdit = lazy(() => import('./pages/simulator/opa/SimOPAEdit'))
-const SimOPAOnHold = lazy(() => import('./pages/simulator/opa/SimOPAOnHold'))
-const SimOPABulkUpload = lazy(() => import('./pages/simulator/opa/SimOPABulkUpload'))
-const TemplateLibraryList = lazy(() => import('./pages/templates/TemplateLibraryList'))
-const TemplateLibraryManage = lazy(() => import('./pages/templates/TemplateLibraryManage'))
-const TemplateCreate = lazy(() => import('./pages/templates/TemplateCreate'))
-const TemplateEdit = lazy(() => import('./pages/templates/TemplateEdit'))
-const TemplateDetail = lazy(() => import('./pages/templates/TemplateDetail'))
-const TemplateMasterVersionHistory = lazy(() => import('./pages/templates/TemplateMasterVersionHistory'))
-const TemplateCategories = lazy(() => import('./pages/templates/TemplateCategories'))
-const TemplateBulkUpload = lazy(() => import('./pages/templates/TemplateBulkUpload'))
-const TemplateUpdateNotifications = lazy(() => import('./pages/templates/TemplateUpdateNotifications'))
-const ProjectTemplateCopyList = lazy(() => import('./pages/templates/ProjectTemplateCopyList'))
-const ProjectTemplateCopyCreate = lazy(() => import('./pages/templates/ProjectTemplateCopyCreate'))
-const ProjectTemplateCopyEdit = lazy(() => import('./pages/templates/ProjectTemplateCopyEdit'))
-const ProjectTemplateCopyDetail = lazy(() => import('./pages/templates/ProjectTemplateCopyDetail'))
-const ProjectTemplateCopyVersionHistory = lazy(() => import('./pages/templates/ProjectTemplateCopyVersionHistory'))
-const ProjectOPATemplates = lazy(() => import('./pages/app/ProjectOPATemplates'))
-const ProjectOPACopy = lazy(() => import('./pages/app/ProjectOPACopy'))
-const ProjectOPACustomisationDetail = lazy(() => import('./pages/app/ProjectOPACustomisationDetail'))
-const TemplateOnHold = lazy(() => import('./pages/templates/TemplateOnHold'))
-const SimTemplateLibraryList = lazy(() => import('./pages/simulator/templates/SimTemplateLibraryList'))
-const SimTemplateLibraryManage = lazy(() => import('./pages/simulator/templates/SimTemplateLibraryManage'))
-const SimTemplateCreate = lazy(() => import('./pages/simulator/templates/SimTemplateCreate'))
-const SimTemplateEdit = lazy(() => import('./pages/simulator/templates/SimTemplateEdit'))
-const SimTemplateDetail = lazy(() => import('./pages/simulator/templates/SimTemplateDetail'))
-const SimTemplateMasterVersionHistory = lazy(() => import('./pages/simulator/templates/SimTemplateMasterVersionHistory'))
-const SimTemplateCategories = lazy(() => import('./pages/simulator/templates/SimTemplateCategories'))
-const SimTemplateBulkUpload = lazy(() => import('./pages/simulator/templates/SimTemplateBulkUpload'))
-const SimTemplateUpdateNotifications = lazy(() => import('./pages/simulator/templates/SimTemplateUpdateNotifications'))
-const SimProjectTemplateCopyList = lazy(() => import('./pages/simulator/templates/SimProjectTemplateCopyList'))
-const SimProjectTemplateCopyCreate = lazy(() => import('./pages/simulator/templates/SimProjectTemplateCopyCreate'))
-const SimProjectTemplateCopyEdit = lazy(() => import('./pages/simulator/templates/SimProjectTemplateCopyEdit'))
-const SimProjectTemplateCopyDetail = lazy(() => import('./pages/simulator/templates/SimProjectTemplateCopyDetail'))
-const SimProjectTemplateCopyVersionHistory = lazy(() => import('./pages/simulator/templates/SimProjectTemplateCopyVersionHistory'))
-const SimTemplateOnHold = lazy(() => import('./pages/simulator/templates/SimTemplateOnHold'))
-const CommsHub = lazy(() => import('./pages/comms/CommsHub'))
-const DirectMessages = lazy(() => import('./pages/comms/DirectMessages'))
-const ChannelView = lazy(() => import('./pages/comms/ChannelView'))
-const MeetingList = lazy(() => import('./pages/comms/MeetingList'))
-const MeetingSchedule = lazy(() => import('./pages/comms/MeetingSchedule'))
-const MeetingRoom = lazy(() => import('./pages/comms/MeetingRoom'))
-const MeetingDetail = lazy(() => import('./pages/comms/MeetingDetail'))
-const MeetingSummaryView = lazy(() => import('./pages/comms/MeetingSummaryView'))
-const PendingAIReview = lazy(() => import('./pages/comms/PendingAIReview'))
-const MeetingExtractionReview = lazy(() => import('./pages/comms/MeetingExtractionReview'))
-const ExtractedIssueEnrich = lazy(() => import('./pages/comms/ExtractedIssueEnrich'))
-const ExtractedRiskEnrich = lazy(() => import('./pages/comms/ExtractedRiskEnrich'))
-const DocumentGovernance = lazy(() => import('./pages/platform-app/DocumentGovernance'))
-const DocumentRegister = lazy(() => import('./pages/platform-app/DocumentRegister'))
-const DocumentCompliance = lazy(() => import('./pages/platform-app/DocumentCompliance'))
-const ProgrammeDocuments = lazy(() => import('./pages/platform-app/ProgrammeDocuments'))
-const MethodologyDashboard = lazy(() => import('./pages/MethodologyDashboard'))
-const StartingUpProject = lazy(() => import('./pages/structured/StartingUpProject'))
-const InitiatingProject = lazy(() => import('./pages/structured/InitiatingProject'))
-const StageGates = lazy(() => import('./pages/structured/StageGates'))
-const ControllingStage = lazy(() => import('./pages/structured/ControllingStage'))
-const ManagingProductDelivery = lazy(() => import('./pages/structured/ManagingProductDelivery'))
-const DirectingProject = lazy(() => import('./pages/structured/DirectingProject'))
-// Plan Documentation Pages
-const PlansDashboard = lazy(() => import('./pages/plans/PlansDashboard'))
-const ProjectPlanCreate = lazy(() => import('./pages/plans/ProjectPlanCreate'))
-const ProjectPlanEdit = lazy(() => import('./pages/plans/ProjectPlanEdit'))
-const ProjectPlanViewPage = lazy(() => import('./pages/plans/ProjectPlanViewPage'))
-const StagePlanCreate = lazy(() => import('./pages/plans/StagePlanCreate'))
-const StagePlanEdit = lazy(() => import('./pages/plans/StagePlanEdit'))
-const StagePlanViewPage = lazy(() => import('./pages/plans/StagePlanViewPage'))
-// Product Description Pages
-const ProductDescriptionList = lazy(() => import('./pages/productDescription/ProductDescriptionList'))
-const ProductDescriptionCreate = lazy(() => import('./pages/productDescription/ProductDescriptionCreate'))
-const ProductDescriptionEdit = lazy(() => import('./pages/productDescription/ProductDescriptionEdit'))
-const ProductDescriptionViewPage = lazy(() => import('./pages/productDescription/ProductDescriptionViewPage'))
-const ProductDescriptionTemplates = lazy(() => import('./pages/productDescription/ProductDescriptionTemplates'))
-// Product Status Account Pages
-const ProductStatusAccountList = lazy(() => import('./pages/productStatusAccount/ProductStatusAccountList'))
-const ProductStatusAccountViewPage = lazy(() => import('./pages/productStatusAccount/ProductStatusAccountViewPage'))
-const ProductStatusAccountCreate = lazy(() => import('./pages/productStatusAccount/ProductStatusAccountCreate'))
-const ProductStatusAccountEdit = lazy(() => import('./pages/productStatusAccount/ProductStatusAccountEdit'))
-const ProductStatusAccountDashboard = lazy(() => import('./pages/productStatusAccount/ProductStatusAccountDashboard'))
-const Issues = lazy(() => import('./pages/Issues'))
-const IssueRegisterView = lazy(() => import('./pages/IssueRegisterView'))
-const IssueDetailView = lazy(() => import('./pages/IssueDetailView'))
-const IssueAnalytics = lazy(() => import('./pages/IssueAnalytics'))
-const MyIssueActions = lazy(() => import('./pages/MyIssueActions'))
-const PendingDecisions = lazy(() => import('./pages/PendingDecisions'))
-const IssueScaleConfig = lazy(() => import('./pages/IssueScaleConfig'))
-const IssueReportCreate = lazy(() => import('./pages/IssueReportCreate'))
-const IssueReportEdit = lazy(() => import('./pages/IssueReportEdit'))
-const IssueReportView = lazy(() => import('./pages/IssueReportView'))
-const IssueReportsList = lazy(() => import('./pages/IssueReportsList'))
-const PPDView = lazy(() => import('./pages/PPDView'))
-const PPDList = lazy(() => import('./pages/PPDList'))
-const PIDView = lazy(() => import('./pages/pid/PIDView'))
-const WorkPackageView = lazy(() => import('./pages/workpackage/WorkPackageView'))
-const CheckpointReportList = lazy(() => import('./pages/structured/CheckpointReportList'))
-const CheckpointReportCreate = lazy(() => import('./pages/structured/CheckpointReportCreate'))
-const CheckpointReportView = lazy(() => import('./pages/structured/CheckpointReportView'))
-const CheckpointReportEdit = lazy(() => import('./pages/structured/CheckpointReportEdit'))
-const ClosingProject = lazy(() => import('./pages/structured/ClosingProject'))
-const EndProjectReportView = lazy(() => import('./pages/structured/EndProjectReportView'))
-const EndProjectReportWizard = lazy(() => import('./pages/structured/EndProjectReportWizard'))
-const EPRComparisonView = lazy(() => import('./pages/structured/EPRComparisonView'))
-const StageBoundaries = lazy(() => import('./pages/structured/StageBoundaries'))
-const EndStageReportView = lazy(() => import('./pages/structured/EndStageReportView'))
-const EndStageReportCreate = lazy(() => import('./pages/structured/EndStageReportCreate'))
-const EndStageReportEdit = lazy(() => import('./pages/structured/EndStageReportEdit'))
-const ExceptionReportList = lazy(() => import('./pages/structured/ExceptionReportList'))
-const ExceptionReportCreate = lazy(() => import('./pages/structured/ExceptionReportCreate'))
-const ExceptionReportEdit = lazy(() => import('./pages/structured/ExceptionReportEdit'))
-const ExceptionReportView = lazy(() => import('./pages/structured/ExceptionReportView'))
-const ExceptionReportDashboard = lazy(() => import('./pages/structured/ExceptionReportDashboard'))
-const HighlightReportCreate = lazy(() => import('./pages/structured/HighlightReportCreate'))
-const HighlightReportView = lazy(() => import('./pages/structured/HighlightReportView'))
-const HighlightReportEdit = lazy(() => import('./pages/structured/HighlightReportEdit'))
-const AcceptanceTestingPage = lazy(() => import('./pages/AcceptanceTestingPage'))
-const QMSView = lazy(() => import('./pages/QMSView'))
-const QMSList = lazy(() => import('./pages/QMSList'))
-const QMSTemplates = lazy(() => import('./pages/QMSTemplates'))
-const RMSView = lazy(() => import('./pages/RMSView'))
-const RMSList = lazy(() => import('./pages/RMSList'))
-const CMSView = lazy(() => import('./pages/CMSView'))
-const CMSCreate = lazy(() => import('./pages/CMSCreate'))
-const CMSEdit = lazy(() => import('./pages/CMSEdit'))
-const CMSList = lazy(() => import('./pages/CMSList'))
-const CMSTemplates = lazy(() => import('./pages/CMSTemplates'))
-const CommunicationActivitiesCalendar = lazy(() => import('./pages/CommunicationActivitiesCalendar'))
-const ConfigurationMSView = lazy(() => import('./pages/ConfigurationMSView'))
-const ConfigurationMSCreate = lazy(() => import('./pages/ConfigurationMSCreate'))
-const ConfigurationMSEdit = lazy(() => import('./pages/ConfigurationMSEdit'))
-const ConfigurationMSList = lazy(() => import('./pages/ConfigurationMSList'))
-const ConfigurationItemRegister = lazy(() => import('./pages/ConfigurationItemRegister'))
-const ConfigurationItemRecordView = lazy(() => import('./pages/ConfigurationItemRecordView'))
-const ConfigurationItemRecordCreate = lazy(() => import('./pages/ConfigurationItemRecordCreate'))
-const ConfigurationItemRecordEdit = lazy(() => import('./pages/ConfigurationItemRecordEdit'))
-const Risks = lazy(() => import('./pages/Risks'))
-const RiskDetail = lazy(() => import('./pages/RiskDetail'))
-const RAIDLog = lazy(() => import('./pages/RAIDLog'))
-const ProductBacklog = lazy(() => import('./pages/scrum/ProductBacklog'))
-const SprintPlanning = lazy(() => import('./pages/scrum/SprintPlanning'))
-const SprintBoard = lazy(() => import('./pages/scrum/SprintBoard'))
-const DailyScrum = lazy(() => import('./pages/scrum/DailyScrum'))
-const SprintReview = lazy(() => import('./pages/scrum/SprintReview'))
-const SprintRetrospective = lazy(() => import('./pages/scrum/SprintRetrospective'))
-const SprintMetricsDashboard = lazy(() => import('./pages/scrum/SprintMetricsDashboard'))
-const AgileTemplates = lazy(() => import('./pages/scrum/AgileTemplates'))
-const StoryMap = lazy(() => import('./pages/scrum/StoryMap'))
-const AgileReleases = lazy(() => import('./pages/scrum/AgileReleases'))
-const AgileReleaseDetail = lazy(() => import('./pages/scrum/AgileReleaseDetail'))
-const AgileRoadmap = lazy(() => import('./pages/scrum/AgileRoadmap'))
-const ScrumOfScrums = lazy(() => import('./pages/scrum/ScrumOfScrums'))
-const XPDashboard = lazy(() => import('./pages/xp/XPDashboard'))
-const ValueStreamMap = lazy(() => import('./pages/lean/ValueStreamMap'))
-const KaizenBoard = lazy(() => import('./pages/lean/KaizenBoard'))
-const LeanMetrics = lazy(() => import('./pages/lean/LeanMetrics'))
-const AgileMetricsHub = lazy(() => import('./pages/agile/AgileMetricsHub'))
-const KanbanBoards = lazy(() => import('./pages/kanban/KanbanBoards'))
-const KanbanBoard = lazy(() => import('./pages/kanban/KanbanBoard'))
-const MetricsDashboard = lazy(() => import('./pages/kanban/MetricsDashboard'))
-const Resources = lazy(() => import('./pages/Resources'))
-const ResourceCapacity = lazy(() => import('./pages/ResourceCapacity'))
-const ResourceDetail = lazy(() => import('./pages/ResourceDetail'))
-const ResourceConflicts = lazy(() => import('./pages/ResourceConflicts'))
-const ReportBuilder = lazy(() => import('./pages/ReportBuilder'))
-const AnalyticsDashboard = lazy(() => import('./pages/AnalyticsDashboard'))
-const Benefits = lazy(() => import('./pages/platform-app/Benefits'))
-const BenefitsRegisterPage = lazy(() => import('./pages/benefits/Benefits'))
-const BenefitsRealizationPage = lazy(() => import('./pages/benefits/BenefitsRealization'))
-const BenefitMeasurementsPage = lazy(() => import('./pages/benefits/BenefitMeasurements'))
-const BenefitCreatePage = lazy(() => import('./pages/platform-app/BenefitCreatePage'))
-const BenefitDetailPage = lazy(() => import('./pages/platform-app/BenefitDetailPage'))
-const BenefitsReviewPlan = lazy(() => import('./pages/BenefitsReviewPlan'))
-const Dependencies = lazy(() => import('./pages/platform-app/Dependencies'))
-const DependencyCreatePage = lazy(() => import('./pages/platform-app/DependencyCreatePage'))
-const DependencyMap = lazy(() => import('./pages/DependencyMap'))
-const DependencyImpacts = lazy(() => import('./pages/DependencyImpacts'))
-const BenefitsRealization = lazy(() => import('./pages/BenefitsRealization')) // Legacy
-const DependenciesLegacy = lazy(() => import('./pages/Dependencies')) // Legacy
-const IntegrationSync = lazy(() => import('./pages/IntegrationSync'))
-const Login = lazy(() => import('./pages/auth/Login'))
-const PlatformLogin = lazy(() => import('./pages/auth/PlatformLogin'))
-const SimulatorLogin = lazy(() => import('./pages/auth/SimulatorLogin'))
-const Register = lazy(() => import('./pages/auth/Register'))
-const PlatformRegister = lazy(() => import('./pages/auth/PlatformRegister'))
-const SimulatorRegister = lazy(() => import('./pages/auth/SimulatorRegister'))
-const EmailConfirmation = lazy(() => import('./pages/auth/EmailConfirmation'))
-const InvitationAccept = lazy(() => import('./pages/auth/InvitationAccept'))
-const RoleSelection = lazy(() => import('./pages/onboarding/RoleSelection'))
-const PlatformAccountSetup = lazy(() => import('./pages/onboarding/PlatformAccountSetup'))
-const PlatformChoice = lazy(() => import('./pages/onboarding/PlatformChoice'))
-const OrganisationSetup = lazy(() => import('./pages/onboarding/OrganisationSetup'))
-const OrganisationVerificationNotice = lazy(() => import('./pages/onboarding/OrganisationVerificationNotice'))
-const VerifyOrganisation = lazy(() => import('./pages/onboarding/VerifyOrganisation'))
-const ProjectTypeSelection = lazy(() => import('./pages/onboarding/ProjectTypeSelection'))
-const TrialProjectSetup = lazy(() => import('./pages/onboarding/TrialProjectSetup'))
-const PaidProjectSetup = lazy(() => import('./pages/onboarding/PaidProjectSetup'))
-const FreeTrialDashboard = lazy(() => import('./pages/dashboard/FreeTrialDashboard'))
-const TrialUpgrade = lazy(() => import('./pages/trial/TrialUpgrade'))
-const RoleAssignment = lazy(() => import('./pages/admin/RoleAssignment'))
-const AssignRolesToProjects = lazy(() => import('./pages/admin/AssignRolesToProjects'))
-const SendRoleInvites = lazy(() => import('./pages/admin/SendRoleInvites'))
-const InvitationExpirySettingsPage = lazy(() => import('./pages/admin/InvitationExpirySettingsPage'))
-const EmailSettings = lazy(() => import('./pages/platform-app/EmailSettings'))
-const EmailSenderProfiles = lazy(() => import('./pages/platform-app/EmailSenderProfiles'))
-const ChangeLogPage = lazy(() => import('./pages/change/ChangeLogPage'))
-const WorkAuthorisationListPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationListPage'))
-const WorkAuthorisationDraftsPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationDraftsPage'))
-const WorkAuthorisationCreatePage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationCreatePage'))
-const WorkAuthorisationDetailPage = lazy(() => import('./pages/workAuthorisation/WorkAuthorisationDetailPage'))
-const TestingCentreRoutesPlatform = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesPlatform })))
-const TestingCentreRoutesPm = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesPm })))
-const TestingCentreRoutesPmo = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesPmo })))
-const TestingCentreRoutesSim = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSim })))
-const TestingCentreRoutesSimPm = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSimPm })))
-const TestingCentreRoutesSimPmo = lazy(() => import('./pages/testingCentre/TestingCentreRoutes').then((m) => ({ default: m.TestingCentreRoutesSimPmo })))
-const ProcessTemplatesRoutesPmo = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesPmo })))
-const ProcessTemplatesRoutesPm = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesPm })))
-const ProcessTemplatesRoutesSimPmo = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesSimPmo })))
-const ProcessTemplatesRoutesSimPm = lazy(() => import('./pages/processTemplates/ProcessTemplatesRoutes').then((m) => ({ default: m.ProcessTemplatesRoutesSimPm })))
-const FormsGallery = lazy(() => import('./pages/forms/FormsGallery'))
-const FormNew = lazy(() => import('./pages/forms/FormNew'))
-const FormEdit = lazy(() => import('./pages/forms/FormEdit'))
-const FormView = lazy(() => import('./pages/forms/FormView'))
-const FormTemplateAdmin = lazy(() => import('./pages/forms/FormTemplateAdmin'))
-const ProjectMemberInvitation = lazy(() => import('./pages/projects/ProjectMemberInvitation'))
-const Settings = lazy(() => import('./pages/Settings'))
-const PWASettings = lazy(() => import('./pages/app/PWASettings'))
-const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt'))
-// Business Case pages (Platform)
-const BusinessCaseListPage = lazy(() => import('./pages/businessCase/BusinessCaseListPage'))
-const BusinessCaseCreate = lazy(() => import('./pages/businessCase/BusinessCaseCreate'))
-const BusinessCaseViewPage = lazy(() => import('./pages/businessCase/BusinessCaseViewPage'))
-const BusinessCaseEdit = lazy(() => import('./pages/businessCase/BusinessCaseEdit'))
-// Mandate pages (Platform)
-const ProjectMandateCreate = lazy(() => import('./pages/mandate/ProjectMandateCreate'))
-const ProjectMandateView = lazy(() => import('./pages/mandate/ProjectMandateView'))
-const ProjectMandateEdit = lazy(() => import('./pages/mandate/ProjectMandateEdit'))
-const MandateList = lazy(() => import('./pages/mandate/MandateList'))
-const UnlinkedMandatesList = lazy(() => import('./pages/mandate/UnlinkedMandatesList'))
-const ProjectCreationWizard = lazy(() => import('./pages/mandate/ProjectCreationWizard'))
-const MandateApprovalDashboard = lazy(() => import('./pages/mandate/MandateApprovalDashboard'))
-// Simulator mandate pages (Learning/Practice)
-const SimMandateCreate = lazy(() => import('./pages/simulator/SimMandateCreate'))
-const SimMandateView = lazy(() => import('./pages/simulator/SimMandateView'))
-const SimMandateEdit = lazy(() => import('./pages/simulator/SimMandateEdit'))
-const SimMandateList = lazy(() => import('./pages/simulator/SimMandateList'))
-// Simulator PM planning (scope & schedule)
-const SimScopeManagementPlanPage = lazy(() => import('./pages/simulator/scope/ScopeManagementPlan'))
-const SimScopeStatementPage = lazy(() => import('./pages/simulator/scope/ScopeStatement'))
-const SimRequirementsRegisterPage = lazy(() => import('./pages/simulator/scope/RequirementsRegister'))
-const SimRequirementDetailPage = lazy(() => import('./pages/simulator/scope/RequirementDetail'))
-const SimTraceabilityMatrixPage = lazy(() => import('./pages/simulator/scope/TraceabilityMatrix'))
-const SimWBSBuilderPage = lazy(() => import('./pages/simulator/scope/WBSBuilder'))
-const SimScheduleManagementPlanPage = lazy(() => import('./pages/simulator/schedule/ScheduleManagementPlan'))
-const SimActivityListPage = lazy(() => import('./pages/simulator/schedule/ActivityList'))
-const SimActivityDetailPage = lazy(() => import('./pages/simulator/schedule/ActivityDetail'))
-const SimActivitySequencingPage = lazy(() => import('./pages/simulator/schedule/ActivitySequencing'))
-const SimGanttChartPage = lazy(() => import('./pages/simulator/schedule/GanttChart'))
-// Practice Projects
-const PracticeProjects = lazy(() => import('./pages/simulator/PracticeProjects'))
-const SimProjectMembers = lazy(() => import('./pages/simulator/SimProjectMembers'))
-const ProjectUsers = lazy(() => import('./pages/app/ProjectUsers'))
-const InvitationTemplatesPage = lazy(() =>
-  import('./features/invitation-templates/pages/InvitationTemplatesPage'),
-)
-const PracticeProjectCreate = lazy(() => import('./pages/simulator/PracticeProjectCreate'))
-const PracticeProjectDetail = lazy(() => import('./pages/simulator/PracticeProjectDetail'))
-const PracticeTasks = lazy(() => import('./pages/simulator/PracticeTasks'))
-const PracticeTaskDetail = lazy(() => import('./pages/simulator/PracticeTaskDetail'))
-// Practice Briefs
-const PracticeBriefList = lazy(() => import('./pages/simulator/PracticeBriefList'))
-const PracticeBriefCreate = lazy(() => import('./pages/simulator/PracticeBriefCreate'))
-const PracticeBriefView = lazy(() => import('./pages/simulator/PracticeBriefView'))
-const PracticeBriefEdit = lazy(() => import('./pages/simulator/PracticeBriefEdit'))
-// Practice Business Cases
-const PracticeBusinessCaseList = lazy(() => import('./pages/simulator/PracticeBusinessCaseList'))
-const PracticeBusinessCaseCreate = lazy(() => import('./pages/simulator/PracticeBusinessCaseCreate'))
-const PracticeBusinessCaseView = lazy(() => import('./pages/simulator/PracticeBusinessCaseView'))
-const PracticeBusinessCaseEdit = lazy(() => import('./pages/simulator/PracticeBusinessCaseEdit'))
-// Practice PIDs
-const PracticePIDList = lazy(() => import('./pages/simulator/PracticePIDList'))
-const PracticePIDCreate = lazy(() => import('./pages/simulator/PracticePIDCreate'))
-const PracticePIDView = lazy(() => import('./pages/simulator/PracticePIDView'))
-// Practice Benefits Review Plan
-const PracticeBenefitsReviewPlan = lazy(() => import('./pages/simulator/PracticeBenefitsReviewPlan'))
-const PracticeBenefitsReviewPlanList = lazy(() => import('./pages/simulator/PracticeBenefitsReviewPlanList'))
-const PracticeBenefitsReviewPlanViewPage = lazy(() => import('./pages/simulator/PracticeBenefitsReviewPlanViewPage'))
-const PracticeBenefitsReviewPlanEditPage = lazy(() => import('./pages/simulator/PracticeBenefitsReviewPlanEditPage'))
-// Practice Work Packages
-const PracticeWorkPackageList = lazy(() => import('./pages/simulator/PracticeWorkPackageList'))
-const PracticeWorkPackageCreate = lazy(() => import('./pages/simulator/PracticeWorkPackageCreate'))
-const PracticeWorkPackageView = lazy(() => import('./pages/simulator/PracticeWorkPackageView'))
-const PracticeWorkPackageEdit = lazy(() => import('./pages/simulator/PracticeWorkPackageEdit'))
-// Practice Product Descriptions
-const PracticeProductDescriptionList = lazy(() => import('./pages/simulator/PracticeProductDescriptionList'))
-const PracticeProductDescriptionCreate = lazy(() => import('./pages/simulator/PracticeProductDescriptionCreate'))
-const PracticeProductDescriptionView = lazy(() => import('./pages/simulator/PracticeProductDescriptionView'))
-// Practice PPDs
-const PracticePPDList = lazy(() => import('./pages/simulator/PracticePPDList'))
-const PracticePPDView = lazy(() => import('./pages/simulator/PracticePPDView'))
-// Practice PSAs
-const PracticePSAList = lazy(() => import('./pages/simulator/PracticePSAList'))
-const PracticePSAView = lazy(() => import('./pages/simulator/PracticePSAView'))
-// Practice Plans
-const PracticePlanList = lazy(() => import('./pages/simulator/PracticePlanList'))
-const PracticePlanCreate = lazy(() => import('./pages/simulator/PracticePlanCreate'))
-const PracticePlanView = lazy(() => import('./pages/simulator/PracticePlanView'))
-const PracticePlanEdit = lazy(() => import('./pages/simulator/PracticePlanEdit'))
-const SimPlansDashboard = lazy(() => import('./pages/simulator/plans/SimPlansDashboard'))
-const SimProjectPlanView = lazy(() => import('./pages/simulator/plans/SimProjectPlanView'))
-const SimProjectPlanCreate = lazy(() => import('./pages/simulator/plans/SimProjectPlanCreate'))
-const SimStagePlanCreate = lazy(() => import('./pages/simulator/plans/SimStagePlanCreate'))
-// Practice Daily Log
-const PracticeDailyLog = lazy(() => import('./pages/simulator/PracticeDailyLog'))
-const PracticeDailyLogEntry = lazy(() => import('./pages/simulator/PracticeDailyLogEntry'))
-// Practice Risk Register
-const PracticeRiskRegister = lazy(() => import('./pages/simulator/PracticeRiskRegister'))
-const PracticeRiskDetail = lazy(() => import('./pages/simulator/PracticeRiskDetail'))
-// Practice RMS
-const PracticeRMSList = lazy(() => import('./pages/simulator/PracticeRMSList'))
-const PracticeRMSCreate = lazy(() => import('./pages/simulator/PracticeRMSCreate'))
-const PracticeRMSView = lazy(() => import('./pages/simulator/PracticeRMSView'))
-// Practice Issue Register
-const PracticeIssueRegister = lazy(() => import('./pages/simulator/PracticeIssueRegister'))
-const PracticeIssueDetail = lazy(() => import('./pages/simulator/PracticeIssueDetail'))
-// Practice Issue Reports
-const PracticeIssueReportList = lazy(() => import('./pages/simulator/PracticeIssueReportList'))
-const PracticeIssueReportCreate = lazy(() => import('./pages/simulator/PracticeIssueReportCreate'))
-const PracticeIssueReportView = lazy(() => import('./pages/simulator/PracticeIssueReportView'))
-// Practice Quality Register
-const PracticeQualityRegister = lazy(() => import('./pages/simulator/PracticeQualityRegister'))
-const PracticeQualityActivityView = lazy(() => import('./pages/simulator/PracticeQualityActivityView'))
-const PracticeQualityReviews = lazy(() => import('./pages/simulator/PracticeQualityReviews'))
-const PracticeQualityInspections = lazy(() => import('./pages/simulator/PracticeQualityInspections'))
-const PracticeQualityReports = lazy(() => import('./pages/simulator/PracticeQualityReports'))
-// Practice QMS
-const PracticeQMSList = lazy(() => import('./pages/simulator/PracticeQMSList'))
-const PracticeQMSCreate = lazy(() => import('./pages/simulator/PracticeQMSCreate'))
-const PracticeQMSView = lazy(() => import('./pages/simulator/PracticeQMSView'))
-// Practice Lessons Log
-const PracticeLessonsLog = lazy(() => import('./pages/simulator/PracticeLessonsLog'))
-const PracticeLessonDetail = lazy(() => import('./pages/simulator/PracticeLessonDetail'))
-// Practice Config Items
-const PracticeConfigItemList = lazy(() => import('./pages/simulator/PracticeConfigItemList'))
-const PracticeConfigItemCreate = lazy(() => import('./pages/simulator/PracticeConfigItemCreate'))
-const PracticeConfigItemView = lazy(() => import('./pages/simulator/PracticeConfigItemView'))
-// Practice CMS
-const PracticeCMSList = lazy(() => import('./pages/simulator/PracticeCMSList'))
-const PracticeCMSCreate = lazy(() => import('./pages/simulator/PracticeCMSCreate'))
-const PracticeCMSView = lazy(() => import('./pages/simulator/PracticeCMSView'))
-const PracticeCMSEdit = lazy(() => import('./pages/simulator/PracticeCMSEdit'))
-// Practice Config MS
-const PracticeConfigMSList = lazy(() => import('./pages/simulator/PracticeConfigMSList'))
-const PracticeConfigMSCreate = lazy(() => import('./pages/simulator/PracticeConfigMSCreate'))
-const PracticeConfigMSView = lazy(() => import('./pages/simulator/PracticeConfigMSView'))
-const PracticeConfigMSEdit = lazy(() => import('./pages/simulator/PracticeConfigMSEdit'))
-// Practice Checkpoint Reports
-const PracticeCheckpointReportList = lazy(() => import('./pages/simulator/PracticeCheckpointReportList'))
-const PracticeCheckpointReportCreate = lazy(() => import('./pages/simulator/PracticeCheckpointReportCreate'))
-const PracticeCheckpointReportView = lazy(() => import('./pages/simulator/PracticeCheckpointReportView'))
-// Practice Highlight Reports
-const PracticeHighlightReportList = lazy(() => import('./pages/simulator/PracticeHighlightReportList'))
-const PracticeHighlightReportCreate = lazy(() => import('./pages/simulator/PracticeHighlightReportCreate'))
-const PracticeHighlightReportView = lazy(() => import('./pages/simulator/PracticeHighlightReportView'))
-// Practice Exception Reports
-const PracticeExceptionReportList = lazy(() => import('./pages/simulator/PracticeExceptionReportList'))
-const PracticeExceptionReportCreate = lazy(() => import('./pages/simulator/PracticeExceptionReportCreate'))
-const PracticeExceptionReportView = lazy(() => import('./pages/simulator/PracticeExceptionReportView'))
-// Practice End Stage Reports
-const PracticeEndStageReportList = lazy(() => import('./pages/simulator/PracticeEndStageReportList'))
-const PracticeEndStageReportCreate = lazy(() => import('./pages/simulator/PracticeEndStageReportCreate'))
-const PracticeEndStageReportView = lazy(() => import('./pages/simulator/PracticeEndStageReportView'))
-// Practice End Project Reports
-const PracticeEndProjectReportList = lazy(() => import('./pages/simulator/PracticeEndProjectReportList'))
-const PracticeEndProjectReportCreate = lazy(() => import('./pages/simulator/PracticeEndProjectReportCreate'))
-const PracticeEndProjectReportView = lazy(() => import('./pages/simulator/PracticeEndProjectReportView'))
-// Practice Lessons Reports
-const PracticeLessonsReportList = lazy(() => import('./pages/simulator/PracticeLessonsReportList'))
-const PracticeLessonsReportCreate = lazy(() => import('./pages/simulator/PracticeLessonsReportCreate'))
-const PracticeLessonsReportView = lazy(() => import('./pages/simulator/PracticeLessonsReportView'))
-// Practice Lifecycle
-const PracticeStartingUp = lazy(() => import('./pages/simulator/PracticeStartingUp'))
-const PracticeInitiating = lazy(() => import('./pages/simulator/PracticeInitiating'))
-const PracticeControllingStage = lazy(() => import('./pages/simulator/PracticeControllingStage'))
-const PracticeManagingDelivery = lazy(() => import('./pages/simulator/PracticeManagingDelivery'))
-const PracticeStageBoundaries = lazy(() => import('./pages/simulator/PracticeStageBoundaries'))
-const PracticeClosingProject = lazy(() => import('./pages/simulator/PracticeClosingProject'))
-// Practice Portfolio & Governance
-const PracticePortfolio = lazy(() => import('./pages/simulator/PracticePortfolio'))
-const PracticePortfolioCreate = lazy(() => import('./pages/simulator/PracticePortfolioCreate'))
-const PracticeProgramme = lazy(() => import('./pages/simulator/PracticeProgramme'))
-const PracticeProgrammeDashboardOverview = lazy(() => import('./pages/simulator/PracticeProgrammeDashboardOverview'))
-const PracticeProgrammeProjectsPage = lazy(() => import('./pages/simulator/PracticeProgrammeProjects'))
-const PracticeProgrammeDependenciesPage = lazy(() => import('./pages/simulator/PracticeProgrammeDependencies'))
-const PracticeProgrammeBenefitsPage = lazy(() => import('./pages/simulator/PracticeProgrammeBenefits'))
-const PracticeProgrammeTimelinePage = lazy(() => import('./pages/simulator/PracticeProgrammeTimeline'))
-const PracticeBenefitsAll = lazy(() => import('./pages/simulator/PracticeBenefitsAll'))
-const PracticeBenefitsRegister = lazy(() => import('./pages/simulator/PracticeBenefitsRegister'))
-const PracticeBenefitsMeasurements = lazy(() => import('./pages/simulator/PracticeBenefitsMeasurements'))
-const PracticeBenefitsRealization = lazy(() => import('./pages/simulator/PracticeBenefitsRealization'))
-const PracticeBenefitsRedirectPage = lazy(() => import('./pages/simulator/PracticeBenefitsRedirectPage'))
-const PracticeProgrammeCreate = lazy(() => import('./pages/simulator/PracticeProgrammeCreate'))
-const PracticeProgrammeDetail = lazy(() => import('./pages/simulator/PracticeProgrammeDetail'))
-const PracticeDependencies = lazy(() => import('./pages/simulator/PracticeDependencies'))
-const PracticeStakeholders = lazy(() => import('./pages/simulator/PracticeStakeholders'))
-const PracticeStakeholderRegisterPage = lazy(() => import('./pages/simulator/PracticeStakeholderRegisterPage'))
-const PracticeStakeholderAnalysis = lazy(() => import('./pages/simulator/PracticeStakeholderAnalysis'))
-const PracticeEngagementPlanning = lazy(() => import('./pages/simulator/PracticeEngagementPlanning'))
-const PracticeCommunicationPlans = lazy(() => import('./pages/simulator/PracticeCommunicationPlans'))
-const PracticeStakeholderMonitoring = lazy(() => import('./pages/simulator/PracticeStakeholderMonitoring'))
-const PracticeStakeholderSEAM = lazy(() => import('./pages/simulator/PracticeStakeholderSEAM'))
-const PracticeStakeholderAssessmentMatrixPage = lazy(() => import('./pages/simulator/PracticeStakeholderAssessmentMatrixPage'))
-const PracticeStakeholdersAssessmentMatrixOnHold = lazy(() => import('./pages/simulator/PracticeStakeholdersAssessmentMatrixOnHold'))
-const PracticeEngagementActionsPage = lazy(() => import('./pages/simulator/PracticeEngagementActionsPage'))
-const PracticeSaliencePage = lazy(() => import('./pages/simulator/PracticeSaliencePage'))
-const PracticeStakeholdersOnHold = lazy(() => import('./pages/simulator/PracticeStakeholdersOnHold'))
-const PracticeStakeholderCreatePage = lazy(() => import('./pages/simulator/PracticeStakeholderCreatePage'))
-const PracticeTeams = lazy(() => import('./pages/simulator/PracticeTeams'))
-const SimMyTeam = lazy(() => import('./pages/simulator/SimMyTeam'))
-const PracticeGovernance = lazy(() => import('./pages/simulator/PracticeGovernance'))
-const SimPortfolioCategories = lazy(() => import('./pages/simulator/SimPortfolioCategories'))
-const SimPortfolioDashboard = lazy(() => import('./pages/simulator/SimPortfolioDashboard'))
-const SimPortfolioProjects = lazy(() => import('./pages/simulator/SimPortfolioProjects'))
-const SimPortfolioResources = lazy(() => import('./pages/simulator/SimPortfolioResources'))
-const SimPortfolioFinancial = lazy(() => import('./pages/simulator/SimPortfolioFinancial'))
-const SimPortfolioReports = lazy(() => import('./pages/simulator/SimPortfolioReports'))
-const SimPortfolioGovernance = lazy(() => import('./pages/simulator/SimPortfolioGovernance'))
-// Simulator PMO and PM Dashboards
-const SimulatorPMODashboard = lazy(() => import('./pages/simulator/pmo/SimulatorPMODashboard'))
-const SimManagerAssignments = lazy(() => import('./pages/sim/pmo/SimManagerAssignments'))
-const SimPortfolioManagerAssignments = lazy(() => import('./pages/sim/portfolio-manager/SimPortfolioManagerAssignments'))
-const SimProgrammeManagerAssignments = lazy(() => import('./pages/sim/programme-manager/SimProgrammeManagerAssignments'))
-const SimManagerAssignmentSettings = lazy(() => import('./pages/sim/pmo/SimManagerAssignmentSettings'))
-const SimulatorPMDashboard = lazy(() => import('./pages/simulator/pm/SimulatorPMDashboard'))
-const SimulatorPMOLayout = lazy(() => import('./components/sim/pmo/SimulatorPMOLayout'))
-const SimulatorPMOInvitationTracker = lazy(() => import('./pages/simulator/pmo/SimulatorPMOInvitationTracker'))
-const SimulatorPMLayout = lazy(() => import('./components/sim/pm/SimulatorPMLayout'))
-const SimulatorTMLayout = lazy(() => import('./components/sim/tm/SimulatorTMLayout'))
-const SimulatorTMDashboard = lazy(() => import('./pages/simulator/tm/SimulatorTMDashboard'))
-const SimVoiceCallsPage = lazy(() => import('./pages/simulator/tm/communications/SimVoiceCallsPage'))
-const SimulatorPMInvitationTracker = lazy(() => import('./pages/simulator/pm/SimulatorPMInvitationTracker'))
-// Simulator PMO Page Wrappers
-const SimulatorPMOGovernanceMandateTemplate = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceMandateTemplate'))
-const SimulatorPMOGovernanceCMS = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceCMS'))
-const SimulatorPMOGovernanceConfigMS = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceConfigMS'))
-const SimulatorPMOGovernanceQMS = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceQMS'))
-const SimulatorPMOGovernanceRMS = lazy(() => import('./pages/simulator/pmo/SimulatorPMOGovernanceRMS'))
-const SimulatorPMOInitiationBusinessCase = lazy(() => import('./pages/simulator/pmo/SimulatorPMOInitiationBusinessCase'))
-const SimulatorPMOInitiationProjectBrief = lazy(() => import('./pages/simulator/pmo/SimulatorPMOInitiationProjectBrief'))
-const SimulatorPMOInitiationBenefitsReviewPlan = lazy(() => import('./pages/simulator/pmo/SimulatorPMOInitiationBenefitsReviewPlan'))
-const SimulatorPMOOversightRiskRegister = lazy(() => import('./pages/simulator/pmo/SimulatorPMOOversightRiskRegister'))
-const SimulatorPMOOversightIssueRegister = lazy(() => import('./pages/simulator/pmo/SimulatorPMOOversightIssueRegister'))
-const SimulatorPMOOversightQualityRegister = lazy(() => import('./pages/simulator/pmo/SimulatorPMOOversightQualityRegister'))
-const SimulatorPMOOversightLessonsLog = lazy(() => import('./pages/simulator/pmo/SimulatorPMOOversightLessonsLog'))
-const SimulatorPMOReportingHighlight = lazy(() => import('./pages/simulator/pmo/SimulatorPMOReportingHighlight'))
-const SimulatorPMOReportingException = lazy(() => import('./pages/simulator/pmo/SimulatorPMOReportingException'))
-const SimulatorPMOReportingEndStage = lazy(() => import('./pages/simulator/pmo/SimulatorPMOReportingEndStage'))
-const SimulatorPMOReportingEndProject = lazy(() => import('./pages/simulator/pmo/SimulatorPMOReportingEndProject'))
-const SimulatorPMOProcurementRFP = lazy(() => import('./pages/simulator/pmo/SimulatorPMOProcurementRFP'))
-const SimulatorPMORFPView = lazy(() => import('./pages/simulator/pmo/SimulatorPMORFPView'))
-const SimulatorPMORFPCreate = lazy(() => import('./pages/simulator/pmo/SimulatorPMORFPCreate'))
-const SimulatorPMORFPEdit = lazy(() => import('./pages/simulator/pmo/SimulatorPMORFPEdit'))
-const SimulatorPMORFPBulkImport = lazy(() => import('./pages/simulator/pmo/SimulatorPMORFPBulkImport'))
-const SimulatorPMORFPPrint = lazy(() => import('./pages/simulator/pmo/SimulatorPMORFPPrint'))
-const SimulatorPMORFPOnHold = lazy(() => import('./pages/simulator/pmo/SimulatorPMORFPOnHold'))
-// Simulator PM Page Wrappers
-const SimulatorPMGovernanceMandateTemplate = lazy(() => import('./pages/simulator/pm/SimulatorPMGovernanceMandateTemplate'))
-const SimulatorPMGovernanceCMS = lazy(() => import('./pages/simulator/pm/SimulatorPMGovernanceCMS'))
-const SimulatorPMGovernanceConfigMS = lazy(() => import('./pages/simulator/pm/SimulatorPMGovernanceConfigMS'))
-const SimulatorPMGovernanceQMS = lazy(() => import('./pages/simulator/pm/SimulatorPMGovernanceQMS'))
-const SimulatorPMGovernanceRMS = lazy(() => import('./pages/simulator/pm/SimulatorPMGovernanceRMS'))
-const SimulatorPMInitiationBusinessCase = lazy(() => import('./pages/simulator/pm/SimulatorPMInitiationBusinessCase'))
-const SimulatorPMInitiationProjectBrief = lazy(() => import('./pages/simulator/pm/SimulatorPMInitiationProjectBrief'))
-const SimulatorPMInitiationPID = lazy(() => import('./pages/simulator/pm/SimulatorPMInitiationPID'))
-const SimulatorPMInitiationBenefitsReviewPlan = lazy(() => import('./pages/simulator/pm/SimulatorPMInitiationBenefitsReviewPlan'))
-const SimulatorPMDeliveryWorkPackages = lazy(() => import('./pages/simulator/pm/SimulatorPMDeliveryWorkPackages'))
-const SimulatorPMDeliveryProductDescription = lazy(() => import('./pages/simulator/pm/SimulatorPMDeliveryProductDescription'))
-const SimulatorPMDeliveryProjectProductDescription = lazy(() => import('./pages/simulator/pm/SimulatorPMDeliveryProjectProductDescription'))
-const SimulatorPMDeliveryProductStatusAccount = lazy(() => import('./pages/simulator/pm/SimulatorPMDeliveryProductStatusAccount'))
-const SimulatorPMDeliveryDailyLog = lazy(() => import('./pages/simulator/pm/SimulatorPMDeliveryDailyLog'))
-const SimulatorPMControlsRiskRegister = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsRiskRegister'))
-const SimulatorPMControlsIssueRegister = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsIssueRegister'))
-const SimulatorPMControlsQualityRegister = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsQualityRegister'))
-const SimulatorPMControlsConfigItems = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsConfigItems'))
-const SimulatorPMControlsLessonsLog = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsLessonsLog'))
-const SimulatorPMControlsWorkAuthorisation = lazy(() => import('./pages/simulator/pm/SimulatorPMControlsWorkAuthorisation'))
-const SimulatorPMReportingCheckpoint = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingCheckpoint'))
-const SimulatorPMReportingHighlight = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingHighlight'))
-const SimulatorPMReportingIssueReports = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingIssueReports'))
-const SimulatorPMReportingException = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingException'))
-const SimulatorPMReportingEndStage = lazy(() => import('./pages/simulator/pm/SimulatorPMReportingEndStage'))
-const SimulatorPMClosureLessonsReport = lazy(() => import('./pages/simulator/pm/SimulatorPMClosureLessonsReport'))
-const SimulatorPMClosureEndProjectReport = lazy(() => import('./pages/simulator/pm/SimulatorPMClosureEndProjectReport'))
-// Brief pages (Platform)
-const ProjectBriefCreate = lazy(() => import('./pages/brief/ProjectBriefCreate'))
-const ProjectBriefView = lazy(() => import('./pages/brief/ProjectBriefView'))
-const ProjectBriefEdit = lazy(() => import('./pages/brief/ProjectBriefEdit'))
-const BriefList = lazy(() => import('./pages/brief/BriefList'))
-const BriefApprovalDashboard = lazy(() => import('./pages/brief/BriefApprovalDashboard'))
-// Daily Log pages
-const DailyLogView = lazy(() => import('./pages/DailyLogView'))
-const MyDailyLogEntries = lazy(() => import('./pages/MyDailyLogEntries'))
-// Lessons Log pages
-const LessonsLogView = lazy(() => import('./pages/LessonsLogView'))
-const LessonDetailView = lazy(() => import('./pages/LessonDetailView'))
-const CorporateLessonsLibrary = lazy(() => import('./pages/CorporateLessonsLibrary'))
-const MyLessonActions = lazy(() => import('./pages/MyLessonActions'))
-const LessonsReport = lazy(() => import('./pages/LessonsReport'))
-const LessonsReportCreate = lazy(() => import('./pages/LessonsReportCreate'))
-const LessonsReportEdit = lazy(() => import('./pages/LessonsReportEdit'))
-const LessonsReportView = lazy(() => import('./pages/LessonsReportView'))
-const LessonsReportsList = lazy(() => import('./pages/LessonsReportsList'))
-// Risk Register pages
-const RiskRegisterView = lazy(() => import('./pages/RiskRegisterView'))
+const {
+  NidusHomepage, ThemeProvider, ToastProvider, Layout, ProtectedRoute, Home, PlatformHomepage,
+  SimulatorHomepage, Documentation, FeaturesPage, BlogPage, ResourcesPage, PricingPage,
+  PlatformPricing, BundlePricing, SimulatorPricing, AboutPage, ContactPage, PlatformRequestDemoPage,
+  SimulatorRequestDemoPage, Projects, ProjectsCreate, ProjectsDetail, LocalDataExtensionsRoutes,
+  SimulatorLocalDataExtensionsRoutes, ProjectsEdit, ScopeManagementPlanPage, ScopeStatementPage,
+  RequirementsRegisterPage, RequirementDetailPage, TraceabilityMatrixPage, WBSBuilderPage,
+  ScheduleManagementPlanPage, ActivityListPage, ActivityDetailPage, ActivitySequencingPage,
+  GanttChartPage, ProjectsOnHold, BenefitsOnHold, StakeholdersOnHold, IssuesOnHold, RisksOnHold,
+  QualityOnHold, DraftExpiryConfig, Tasks, TasksBoard, TasksCalendar, TasksCreate, TasksDetail,
+  MethodologySelection, PlatformDashboard, SimulatorDashboard, SimulationSetup,
+  SimulationRunDashboard, SimEventInbox, SimStageGateReview, SimExceptionReportFlow, SimEVMDashboard,
+  SimulationRunHistory, SimulationDebrief, SimLiveRunRedirect, SimAIWorkspace, AIWorkspace,
+  SubmitFeedback, PMODashboard, PMDashboard, PMOLayout, PMLayout, PMOGovernanceMandateTemplate,
+  PMOGovernanceCMS, PMOGovernanceConfigMS, PMOGovernanceQMS, PMOGovernanceRMS,
+  PMOInitiationBusinessCase, PMOInitiationProjectBrief, PMOInitiationBenefitsReviewPlan,
+  PMOOversightRiskRegister, PMOOversightIssueRegister, PMOOversightQualityRegister,
+  PMOOversightChangeRegister, PMOOversightLessonsLog, PMOOversightScope, PMOOversightSchedules,
+  PMOReportingHighlight, PMOReportingException, PMOReportingEndStage, PMOReportingEndProject,
+  PMOProcurementRFP, PMORFPView, PMORFPCreate, PMORFPEdit, PMORFPBulkImport, PMORFPPrint,
+  PMORFPOnHold, PMGovernanceMandateTemplate, PMGovernanceCMS, PMGovernanceConfigMS, PMGovernanceQMS,
+  PMGovernanceRMS, PMInitiationBusinessCase, PMInitiationProjectBrief, PMInitiationPID,
+  PMInitiationBenefitsReviewPlan, PMDeliveryWorkPackages, PMDeliveryProductDescription,
+  PMDeliveryProjectProductDescription, PMDeliveryProductStatusAccount, PMDeliveryDailyLog,
+  PMControlsRiskRegister, PMControlsIssueRegister, PMControlsQualityRegister, PMControlsConfigItems,
+  PMControlsLessonsLog, PMReportingCheckpoint, PMReportingHighlight, PMReportingIssueReports,
+  PMReportingException, PMReportingEndStage, PMClosureLessonsReport, PMClosureEndProjectReport,
+  Dashboard, Teams, MyTeam, Governance, Portfolio, PortfolioCreatePage, PortfolioFormPage,
+  PortfolioDashboard, PortfolioProjects, PortfolioResources, PortfolioFinancial, PortfolioReports,
+  PortfolioGovernance, PortfolioCategories, Programme, ProgrammeDetailPage, ProgrammeCreatePage,
+  ProgrammeEditPage, ProgrammeDashboardOverview, ProgrammeProjectsPage, ProgrammeDependenciesPage,
+  ProgrammeBenefitsPage, ProgrammeTimelinePage, ProgrammeReportsPage, Strategy, StrategicObjectives,
+  StrategicAlignment, StrategicContribution, StrategicPortfolio, StrategicReports, Quality,
+  QualityManagement, QualityReviews, QualityInspections, QualityReports, QualityActivityView,
+  MyQualityActions, Stakeholders, StakeholderRegisterPage, StakeholderFormPage,
+  StakeholderProfilePage, StakeholderAnalysisPage, StakeholderEngagementPage, CommunicationPlanPage,
+  StakeholderMonitoringPage, StakeholderAssessmentMatrixPage, StakeholdersAssessmentMatrixOnHold,
+  TestDashboard, TestSuites, TestSuiteDetail, TestCases, TestCaseCreate, TestCaseDetail,
+  TestCaseBulkUpload, TestRuns, TestRunDetail, TestRunExecute, DefectListPage, DefectDetailPage,
+  DefectDashboardPage, SimTestDashboard, SimTestSuites, SimTestSuiteDetail, SimTestCases,
+  SimTestCaseCreate, SimTestCaseDetail, SimTestCaseBulkUpload, SimTestRuns, SimTestRunDetail,
+  SimTestRunExecute, SimDefectListPage, SimDefectDetailPage, SimDefectDashboardPage,
+  BrandingSettings, BrandingHistory, PMOAdmin, ProjectTypes, ProjectStatuses, FundingSources,
+  BudgetCategories, ManagerAssignments, AppointmentDashboard, MyAppointments,
+  TeamAppointmentDashboard, MyTeamAppointments, SimAppointmentDashboard, SimMyAppointments,
+  SimTeamAppointmentDashboard, SimMyTeamAppointments, PortfolioManagerAssignments,
+  ProgrammeManagerAssignments, ManagerAssignmentSettings, PMORoleMenuManagement,
+  AdminRoleMenuManagement, AuthenticationSettings, SecuritySettings, PWASettingsV675,
+  ExecutiveDashboard, SubscriptionManagement, OrganisationProfile, StageGateList, StageGateForm,
+  StageGateView, GovernanceFrameworkList, GovernanceFrameworkForm, PoliciesComplianceList,
+  PoliciesComplianceForm, PoliciesComplianceView, IntelligenceRulesPage, GovernanceRulesConfigPage,
+  CustomMetricsPage, WorkstreamPlanList, WorkstreamPlanForm, LeaderboardAdmin, CertificateAdmin,
+  ScenarioAdmin, SimUserManagement, ProjectCostManagement, ProjectBudgetBaseline, ProjectEVMPage, ProjectsEVMLandingPage,
+  ProgrammeEVMPage, ProgrammeEVMLandingPage, PortfolioEVMPage, ProgrammeFinancialDashboard, ProjectProfitability, MyExpenses,
+  ExpenseApproval, ExpenseApprovalThresholds, FinancialReportingHub, SimProjectCostManagement,
+  SimProjectBudgetBaseline, SimProjectEVMPage, SimProgrammeEVMPage, SimPortfolioEVMPage,
+  SimProgrammeFinancialDashboard, SimProjectProfitability, SimMyExpenses, SimExpenseApproval,
+  SimExpenseApprovalThresholds, SimFinancialReportingHub, SimSprintMetricsDashboard,
+  SimAgileTemplates, SimStoryMap, SimAgileReleases, SimAgileReleaseDetail, SimAgileRoadmap,
+  SimXPDashboard, SimValueStreamMap, SimKaizenBoard, SimLeanMetrics, SimScrumOfScrums,
+  SimAgileMetricsHub, SimKanbanMetrics, LifecycleTemplates, Reports, OrgKnowledgeHub, EEFList,
+  EEFCreate, EEFDetail, EEFEdit, EEFOnHold, EEFBulkUpload, ITTOTemplateList, ProjectITTOList,
+  ITTODraftsQueue, IndustryTemplateList, PMOInvitationTracker, PMInvitationTracker,
+  InvitationDetailPage, IndustryTemplateForm, IndustryTemplateDetail, IndustryTemplateOnHold,
+  IndustryTemplateBrowser, IndustryPlanCopyWizard, ProjectIndustryPlanView,
+  SimIndustryTemplateBrowser, SimIndustryPlanCopy, SimPracticeIndustryPlan, SimITTOTemplateList,
+  SimProjectITTOList, SimITTODraftsQueue, DelayRegister, DelayTemplates, SimDelayRegister,
+  SimDelayTemplates, PlanningHub, PlanningIntelligenceDashboard, ScenarioList, PBSBuilder,
+  PlanHealthDashboard, AIPlanGenerator, ExecutivePlanView, PortfolioCollisionDashboard,
+  RecoveryPlanningView, ConfidenceForecastView, GovernanceGateChecklist, MicroPlanList,
+  MicroPlanDetail, MicroPlanDraftQueue, MicroPlanForm, TeamCharterPage, TeamCharterEditPage,
+  DecisionLogPage, DecisionLogForm, DecisionLogDetail, MyTimesheetsPage, TimesheetEntryForm,
+  TimesheetEntryDetail, TeamTimesheetsPage, TeamChatPage, VideoCallsPage, VoiceCallsPage, OPAList,
+  OPACreate, OPADetail, OPAEdit, OPAOnHold, OPABulkUpload, SimEEFList, SimEEFCreate, SimEEFDetail,
+  SimEEFEdit, SimEEFOnHold, SimEEFBulkUpload, SimOPAList, SimOPACreate, SimOPADetail, SimOPAEdit,
+  SimOPAOnHold, SimOPABulkUpload, TemplateLibraryList, TemplateLibraryManage, TemplateCreate,
+  TemplateEdit, TemplateDetail, TemplateMasterVersionHistory, TemplateCategories, TemplateBulkUpload,
+  TemplateUpdateNotifications, ProjectTemplateCopyList, ProjectTemplateCopyCreate,
+  ProjectTemplateCopyEdit, ProjectTemplateCopyDetail, ProjectTemplateCopyVersionHistory,
+  ProjectOPATemplates, ProjectOPACopy, ProjectOPACustomisationDetail, TemplateOnHold,
+  SimTemplateLibraryList, SimTemplateLibraryManage, SimTemplateCreate, SimTemplateEdit,
+  SimTemplateDetail, SimTemplateMasterVersionHistory, SimTemplateCategories, SimTemplateBulkUpload,
+  SimTemplateUpdateNotifications, SimProjectTemplateCopyList, SimProjectTemplateCopyCreate,
+  SimProjectTemplateCopyEdit, SimProjectTemplateCopyDetail, SimProjectTemplateCopyVersionHistory,
+  SimTemplateOnHold, CommsHub, DirectMessages, ChannelView, MeetingList, MeetingSchedule,
+  MeetingRoom, MeetingDetail, MeetingSummaryView, PendingAIReview, MeetingExtractionReview,
+  ExtractedIssueEnrich, ExtractedRiskEnrich, DocumentGovernance, DocumentRegister,
+  DocumentCompliance, ProgrammeDocuments, MethodologyDashboard, StartingUpProject, InitiatingProject,
+  StageGates, ControllingStage, ManagingProductDelivery, DirectingProject, PlansDashboard,
+  ProjectPlanCreate, ProjectPlanEdit, ProjectPlanViewPage, StagePlanCreate, StagePlanEdit,
+  StagePlanViewPage, ProductDescriptionList, ProductDescriptionCreate, ProductDescriptionEdit,
+  ProductDescriptionViewPage, ProductDescriptionTemplates, ProductStatusAccountList,
+  ProductStatusAccountViewPage, ProductStatusAccountCreate, ProductStatusAccountEdit,
+  ProductStatusAccountDashboard, Issues, IssueRegisterView, IssueDetailView, IssueAnalytics,
+  MyIssueActions, PendingDecisions, IssueScaleConfig, IssueReportCreate, IssueReportEdit,
+  IssueReportView, IssueReportsList, PPDView, PPDList, PIDView, WorkPackageView,
+  CheckpointReportList, CheckpointReportCreate, CheckpointReportView, CheckpointReportEdit,
+  ClosingProject, EndProjectReportView, EndProjectReportWizard, EPRComparisonView, StageBoundaries,
+  EndStageReportView, EndStageReportCreate, EndStageReportEdit, ExceptionReportList,
+  ExceptionReportCreate, ExceptionReportEdit, ExceptionReportView, ExceptionReportDashboard,
+  HighlightReportCreate, HighlightReportView, HighlightReportEdit, AcceptanceTestingPage, QMSView,
+  QMSList, QMSTemplates, RMSView, RMSList, CMSView, CMSCreate, CMSEdit, CMSList, CMSTemplates,
+  CommunicationActivitiesCalendar, ConfigurationMSView, ConfigurationMSCreate, ConfigurationMSEdit,
+  ConfigurationMSList, ConfigurationItemRegister, ConfigurationItemRecordView,
+  ConfigurationItemRecordCreate, ConfigurationItemRecordEdit, Risks, RiskDetail, RAIDLog,
+  ProductBacklog, SprintPlanning, SprintBoard, DailyScrum, SprintReview, SprintRetrospective,
+  SprintMetricsDashboard, AgileTemplates, StoryMap, AgileReleases, AgileReleaseDetail, AgileRoadmap,
+  ScrumOfScrums, XPDashboard, ValueStreamMap, KaizenBoard, LeanMetrics, AgileMetricsHub,
+  KanbanBoards, KanbanBoard, MetricsDashboard, Resources, ResourceCapacity, ResourceDetail,
+  ResourceConflicts, ReportBuilder, AnalyticsDashboard, Benefits, BenefitsRegisterPage,
+  BenefitsRealizationPage, BenefitMeasurementsPage, BenefitCreatePage, BenefitDetailPage,
+  BenefitsReviewPlan, Dependencies, DependencyCreatePage, DependencyMap, DependencyImpacts,
+  BenefitsRealization, DependenciesLegacy, IntegrationSync, Login, PlatformLogin, SimulatorLogin,
+  Register, PlatformRegister, SimulatorRegister, EmailConfirmation, InvitationAccept, RoleSelection,
+  PlatformAccountSetup, PlatformChoice, OrganisationSetup, OrganisationVerificationNotice,
+  VerifyOrganisation, ProjectTypeSelection, TrialProjectSetup, PaidProjectSetup, FreeTrialDashboard,
+  TrialUpgrade, RoleAssignment, AssignRolesToProjects, SendRoleInvites, InvitationExpirySettingsPage,
+  EmailSettings, EmailSenderProfiles, ChangeLogPage, WorkAuthorisationListPage,
+  WorkAuthorisationDraftsPage, WorkAuthorisationCreatePage, WorkAuthorisationDetailPage,
+  TestingCentreRoutesPlatform, TestingCentreRoutesPm, TestingCentreRoutesPmo, TestingCentreRoutesSim,
+  TestingCentreRoutesSimPm, TestingCentreRoutesSimPmo, ProcessTemplatesRoutesPmo,
+  ProcessTemplatesRoutesPm, ProcessTemplatesRoutesSimPmo, ProcessTemplatesRoutesSimPm, FormsGallery,
+  FormNew, FormEdit, FormView, FormTemplateAdmin, ProjectMemberInvitation, Settings, PWASettings,
+  PWAInstallPrompt, BusinessCaseListPage, BusinessCaseCreate, BusinessCaseViewPage, BusinessCaseEdit,
+  ProjectMandateCreate, ProjectMandateView, ProjectMandateEdit, MandateList, UnlinkedMandatesList,
+  ProjectCreationWizard, MandateApprovalDashboard, SimMandateCreate, SimMandateView, SimMandateEdit,
+  SimMandateList, SimScopeManagementPlanPage, SimScopeStatementPage, SimRequirementsRegisterPage,
+  SimRequirementDetailPage, SimTraceabilityMatrixPage, SimWBSBuilderPage,
+  SimScheduleManagementPlanPage, SimActivityListPage, SimActivityDetailPage,
+  SimActivitySequencingPage, SimGanttChartPage, PracticeProjects, SimProjectMembers, ProjectUsers,
+  InvitationTemplatesPage, PracticeProjectCreate, PracticeProjectDetail, PracticeTasks,
+  PracticeTaskDetail, PracticeBriefList, PracticeBriefCreate, PracticeBriefView, PracticeBriefEdit,
+  PracticeBusinessCaseList, PracticeBusinessCaseCreate, PracticeBusinessCaseView,
+  PracticeBusinessCaseEdit, PracticePIDList, PracticePIDCreate, PracticePIDView,
+  PracticeBenefitsReviewPlan, PracticeBenefitsReviewPlanList, PracticeBenefitsReviewPlanViewPage,
+  PracticeBenefitsReviewPlanEditPage, PracticeWorkPackageList, PracticeWorkPackageCreate,
+  PracticeWorkPackageView, PracticeWorkPackageEdit, PracticeProductDescriptionList,
+  PracticeProductDescriptionCreate, PracticeProductDescriptionView, PracticePPDList, PracticePPDView,
+  PracticePSAList, PracticePSAView, PracticePlanList, PracticePlanCreate, PracticePlanView,
+  PracticePlanEdit, SimPlansDashboard, SimProjectPlanView, SimProjectPlanCreate, SimStagePlanCreate,
+  PracticeDailyLog, PracticeDailyLogEntry, PracticeRiskRegister, PracticeRiskDetail, PracticeRMSList,
+  PracticeRMSCreate, PracticeRMSView, PracticeIssueRegister, PracticeIssueDetail,
+  PracticeIssueReportList, PracticeIssueReportCreate, PracticeIssueReportView,
+  PracticeQualityRegister, PracticeQualityActivityView, PracticeQualityReviews,
+  PracticeQualityInspections, PracticeQualityReports, PracticeQMSList, PracticeQMSCreate,
+  PracticeQMSView, PracticeLessonsLog, PracticeLessonDetail, PracticeConfigItemList,
+  PracticeConfigItemCreate, PracticeConfigItemView, PracticeCMSList, PracticeCMSCreate,
+  PracticeCMSView, PracticeCMSEdit, PracticeConfigMSList, PracticeConfigMSCreate,
+  PracticeConfigMSView, PracticeConfigMSEdit, PracticeCheckpointReportList,
+  PracticeCheckpointReportCreate, PracticeCheckpointReportView, PracticeHighlightReportList,
+  PracticeHighlightReportCreate, PracticeHighlightReportView, PracticeExceptionReportList,
+  PracticeExceptionReportCreate, PracticeExceptionReportView, PracticeEndStageReportList,
+  PracticeEndStageReportCreate, PracticeEndStageReportView, PracticeEndProjectReportList,
+  PracticeEndProjectReportCreate, PracticeEndProjectReportView, PracticeLessonsReportList,
+  PracticeLessonsReportCreate, PracticeLessonsReportView, PracticeStartingUp, PracticeInitiating,
+  PracticeControllingStage, PracticeManagingDelivery, PracticeStageBoundaries,
+  PracticeClosingProject, PracticePortfolio, PracticePortfolioCreate, PracticeProgramme,
+  PracticeProgrammeDashboardOverview, PracticeProgrammeProjectsPage,
+  PracticeProgrammeDependenciesPage, PracticeProgrammeBenefitsPage, PracticeProgrammeTimelinePage,
+  PracticeBenefitsAll, PracticeBenefitsRegister, PracticeBenefitsMeasurements,
+  PracticeBenefitsRealization, PracticeBenefitsRedirectPage, PracticeProgrammeCreate,
+  PracticeProgrammeDetail, PracticeDependencies, PracticeStakeholders,
+  PracticeStakeholderRegisterPage, PracticeStakeholderAnalysis, PracticeEngagementPlanning,
+  PracticeCommunicationPlans, PracticeStakeholderMonitoring, PracticeStakeholderSEAM,
+  PracticeStakeholderAssessmentMatrixPage, PracticeStakeholdersAssessmentMatrixOnHold,
+  PracticeEngagementActionsPage, PracticeSaliencePage, PracticeStakeholdersOnHold,
+  PracticeStakeholderCreatePage, PracticeTeams, SimMyTeam, PracticeGovernance,
+  SimPortfolioCategories, SimPortfolioDashboard, SimPortfolioProjects, SimPortfolioResources,
+  SimPortfolioFinancial, SimPortfolioReports, SimPortfolioGovernance, SimulatorPMODashboard,
+  SimManagerAssignments, SimPortfolioManagerAssignments, SimProgrammeManagerAssignments,
+  SimManagerAssignmentSettings, SimulatorPMDashboard, SimulatorPMOLayout,
+  SimulatorPMOInvitationTracker, SimulatorPMLayout, SimulatorTMLayout, SimulatorTMDashboard,
+  SimVoiceCallsPage, SimulatorPMInvitationTracker, SimulatorPMOGovernanceMandateTemplate,
+  SimulatorPMOGovernanceCMS, SimulatorPMOGovernanceConfigMS, SimulatorPMOGovernanceQMS,
+  SimulatorPMOGovernanceRMS, SimulatorPMOInitiationBusinessCase, SimulatorPMOInitiationProjectBrief,
+  SimulatorPMOInitiationBenefitsReviewPlan, SimulatorPMOOversightRiskRegister,
+  SimulatorPMOOversightIssueRegister, SimulatorPMOOversightQualityRegister,
+  SimulatorPMOOversightLessonsLog, SimulatorPMOReportingHighlight, SimulatorPMOReportingException,
+  SimulatorPMOReportingEndStage, SimulatorPMOReportingEndProject, SimulatorPMOProcurementRFP,
+  SimulatorPMORFPView, SimulatorPMORFPCreate, SimulatorPMORFPEdit, SimulatorPMORFPBulkImport,
+  SimulatorPMORFPPrint, SimulatorPMORFPOnHold, SimulatorPMGovernanceMandateTemplate,
+  SimulatorPMGovernanceCMS, SimulatorPMGovernanceConfigMS, SimulatorPMGovernanceQMS,
+  SimulatorPMGovernanceRMS, SimulatorPMInitiationBusinessCase, SimulatorPMInitiationProjectBrief,
+  SimulatorPMInitiationPID, SimulatorPMInitiationBenefitsReviewPlan, SimulatorPMDeliveryWorkPackages,
+  SimulatorPMDeliveryProductDescription, SimulatorPMDeliveryProjectProductDescription,
+  SimulatorPMDeliveryProductStatusAccount, SimulatorPMDeliveryDailyLog,
+  SimulatorPMControlsRiskRegister, SimulatorPMControlsIssueRegister,
+  SimulatorPMControlsQualityRegister, SimulatorPMControlsConfigItems, SimulatorPMControlsLessonsLog,
+  SimulatorPMControlsWorkAuthorisation, SimulatorPMReportingCheckpoint,
+  SimulatorPMReportingHighlight, SimulatorPMReportingIssueReports, SimulatorPMReportingException,
+  SimulatorPMReportingEndStage, SimulatorPMClosureLessonsReport, SimulatorPMClosureEndProjectReport,
+  ProjectBriefCreate, ProjectBriefView, ProjectBriefEdit, BriefList, BriefApprovalDashboard,
+  DailyLogView, MyDailyLogEntries, LessonsLogView, LessonDetailView, CorporateLessonsLibrary,
+  MyLessonActions, LessonsReport, LessonsReportCreate, LessonsReportEdit, LessonsReportView,
+  LessonsReportsList, RiskRegisterView
+} = LP
 
 // Loading fallback: spinner first, then "Refresh page" after timeout so the app never hangs forever
 const LoadingFallback = () => <LoadingFallbackWithTimeout />
@@ -1287,6 +633,14 @@ function App() {
                           </Suspense>
                         } />
                         <Route path="opa/new" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <OPACreate />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        {/* Alias: DB menu items seeded with /create before the path was standardised to /new */}
+                        <Route path="opa/create" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <OPACreate />
@@ -1748,6 +1102,13 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+                        <Route path="programme/evm" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProgrammeEVMLandingPage />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
                         <Route path="programme/:id/evm" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -2035,7 +1396,7 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
-                        {/* Organisation Settings – Branding (pmo_admin / super_admin) */}
+                        {/* Organisation Settings â€“ Branding (pmo_admin / super_admin) */}
                         <Route path="organisation/branding" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -2068,6 +1429,13 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <PMOAdmin />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="pmo-admin/users" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <LP.PmoAdminUserManagement />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -2271,6 +1639,13 @@ function App() {
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
                               <ProjectBudgetBaseline />
+                            </ProtectedRoute>
+                          </Suspense>
+                        } />
+                        <Route path="projects/evm" element={
+                          <Suspense fallback={<LoadingFallback />}>
+                            <ProtectedRoute>
+                              <ProjectsEVMLandingPage />
                             </ProtectedRoute>
                           </Suspense>
                         } />
@@ -2994,7 +2369,7 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
-                        {/* Project-scoped URLs (code or UUID) — same screens as top-level routes */}
+                        {/* Project-scoped URLs (code or UUID) â€” same screens as top-level routes */}
                         <Route path="projects/:projectId/structured/starting-up" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3356,7 +2731,7 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
-                        {/* PM planning — scope & schedule */}
+                        {/* PM planning â€” scope & schedule */}
                         <Route path="projects/:projectId/scope/management-plan" element={
                           <Suspense fallback={<LoadingFallback />}>
                             <ProtectedRoute>
@@ -3881,6 +3256,53 @@ function App() {
                             </ProtectedRoute>
                           </Suspense>
                         } />
+
+                        {/* v675: new admin routes */}
+                        <Route path="admin/authentication-settings" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><AuthenticationSettings /></ProtectedRoute></Suspense>} />
+                        <Route path="admin/security-settings" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SecuritySettings /></ProtectedRoute></Suspense>} />
+                        <Route path="admin/pwa-settings-v2" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PWASettingsV675 /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Executive Dashboard */}
+                        <Route path="platform/executive/dashboard" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><ExecutiveDashboard /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Subscription */}
+                        <Route path="platform/subscription" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/subscription/upgrade" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/subscription/billing-history" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/subscription/payment-methods" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Organisation Profile */}
+                        <Route path="platform/organisation/profile" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><OrganisationProfile /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Stage Gate Reviews */}
+                        <Route path="platform/stage-gates" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateList /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/stage-gates/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateForm /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/stage-gates/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateView /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/stage-gates/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateForm /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Governance Framework */}
+                        <Route path="platform/governance/framework" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkList /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/governance/framework/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkForm /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/governance/framework/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkForm /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Policies & Compliance */}
+                        <Route path="platform/governance/policies" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceList /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/governance/policies/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceForm /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/governance/policies/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceView /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/governance/policies/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceForm /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Intelligence & Governance Rules */}
+                        <Route path="pmo/planning/intelligence-rules" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><IntelligenceRulesPage /></ProtectedRoute></Suspense>} />
+                        <Route path="pmo/planning/governance-rules" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceRulesConfigPage /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Custom Metrics */}
+                        <Route path="platform/analytics/custom-metrics" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><CustomMetricsPage /></ProtectedRoute></Suspense>} />
+
+                        {/* v675: Workstream Plans */}
+                        <Route path="platform/workstream-plans" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanList /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/workstream-plans/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanForm /></ProtectedRoute></Suspense>} />
+                        <Route path="platform/workstream-plans/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanForm /></ProtectedRoute></Suspense>} />
+
                       </Routes>
                     </Layout>
                   </Suspense>
@@ -4468,6 +3890,19 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+          <Route path="pmo/registers/changes" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute>
+                    <PMOLayout>
+                      <PMOOversightChangeRegister />
+                    </PMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
           <Route path="pmo/oversight/quality-register" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -4922,9 +4357,9 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
-          {/* v631 PMIS gap features — GAP-01 through GAP-29 */}
-          <PmisGapRouteElements />
-          <RecordLifecycleRouteElements />
+          {/* v631 PMIS gap features â€” GAP-01 through GAP-29 */}
+          {PmisGapRouteElements()}
+          {RecordLifecycleRouteElements()}
           <Route path="pm/itto/templates" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -5160,7 +4595,7 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
-          {/* ── Team Member Plans Routes ──────────────────────────────── */}
+          {/* â”€â”€ Team Member Plans Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <Route path="platform/plans/my-plans" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider><ToastProvider>
@@ -5190,7 +4625,7 @@ function App() {
             </Suspense>
           } />
 
-          {/* ── Team Charter Routes ───────────────────────────────────── */}
+          {/* â”€â”€ Team Charter Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <Route path="platform/team-charter" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider><ToastProvider>
@@ -5220,7 +4655,7 @@ function App() {
             </Suspense>
           } />
 
-          {/* ── Decision Log Routes ───────────────────────────────────── */}
+          {/* â”€â”€ Decision Log Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <Route path="platform/governance/decisions" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider><ToastProvider>
@@ -5250,7 +4685,7 @@ function App() {
             </Suspense>
           } />
 
-          {/* ── Timesheets Routes ─────────────────────────────────────── */}
+          {/* â”€â”€ Timesheets Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <Route path="platform/timesheets" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider><ToastProvider>
@@ -5287,7 +4722,7 @@ function App() {
             </Suspense>
           } />
 
-          {/* ── Communications Routes ─────────────────────────────────── */}
+          {/* â”€â”€ Communications Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <Route path="platform/communications/chat" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider><ToastProvider>
@@ -6623,7 +6058,7 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
-          {/* PWA manifest shortcut / legacy “scenario library” URL → practice projects */}
+          {/* PWA manifest shortcut / legacy â€œscenario libraryâ€ URL â†’ practice projects */}
           <Route path="simulator/scenarios" element={<Navigate to="/simulator/practice-projects" replace />} />
           <Route path="simulator/pwa-settings" element={
             <Suspense fallback={<LoadingFallback />}>
@@ -6638,6 +6073,12 @@ function App() {
               </ThemeProvider>
             </Suspense>
           } />
+
+          {/* v675: Simulator admin routes */}
+          <Route path="simulator/admin/leaderboard" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><LeaderboardAdmin /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+          <Route path="simulator/admin/certificates" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><CertificateAdmin /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+          <Route path="simulator/admin/scenarios" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><ScenarioAdmin /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+          <Route path="simulator/admin/users" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><SimUserManagement /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
           <Route path="simulator/ai" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
@@ -10095,6 +9536,19 @@ function App() {
             </Suspense>
           } />
           <Route path="simulator/pmo/oversight/issue-register" element={
+            <Suspense fallback={<LoadingFallback />}>
+              <ThemeProvider>
+                <ToastProvider>
+                  <ProtectedRoute requiredPlatform="simulator">
+                    <SimulatorPMOLayout>
+                      <SimulatorPMOOversightIssueRegister />
+                    </SimulatorPMOLayout>
+                  </ProtectedRoute>
+                </ToastProvider>
+              </ThemeProvider>
+            </Suspense>
+          } />
+          <Route path="simulator/pmo/registers/changes" element={
             <Suspense fallback={<LoadingFallback />}>
               <ThemeProvider>
                 <ToastProvider>

@@ -100,6 +100,8 @@ export function createProcessTemplateService(config, { sim = false } = {}) {
       is_master: false,
       master_id: masterId,
       copied_by: copiedBy,
+      created_by: copiedBy,
+      updated_by: copiedBy,
       status: 'draft',
       [titleField]: `${master[titleField] || 'Copy'} (Copy)`,
     })

@@ -19,8 +19,7 @@ export async function getQualityRegister(filters = {}) {
       project:project_id (
         id,
         project_name,
-        project_code,
-        project_status
+        project_code
       ),
       quality_owner:quality_owner_user_id (id, email, full_name),
       sign_off_by:sign_off_by_user_id (id, email, full_name)

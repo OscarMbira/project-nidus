@@ -13,6 +13,7 @@ import { platformDb } from './supabase/supabaseClient';
 import { assignSystemRole, getUserSystemRoles } from './roleService';
 import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess';
 import { sendEmail } from './emailIntegrationService';
+import { buildProjectInvitationUrls } from '../utils/invitationUrlUtils';
 import {
   escapeHtml,
   formatInvitationPersonalMessageHtml,
@@ -340,9 +341,8 @@ export async function inviteUserWithRole(email, roleName, inviterAuthUserId, mes
     
     // Send invitation email with signup link
     try {
-      // Link to Platform signup with invitation token
-      // User will signup → email confirmation → login → role assignment
-      const signupLink = `${window.location.origin}/platform/register?invitation=${invitationToken}`;
+      const { acceptUrl } = buildProjectInvitationUrls({ invitationToken })
+      const signupLink = acceptUrl || `${window.location.origin}/i/${encodeURIComponent(invitationToken)}`
       await sendEmail(
         email,
         `Invitation to join ${org.account_name}`,

@@ -17,6 +17,7 @@ import DelayCard from '../../components/delays/DelayCard'
 import DelaySummaryStats from '../../components/delays/DelaySummaryStats'
 import DelaySeverityBadge from '../../components/delays/DelaySeverityBadge'
 import DelayForm from './DelayForm'
+import { resolveOversightFormVariant } from '../../components/ui/FormSurface'
 import { DELAY_SOURCE_TYPES } from '../../constants/delayConstants'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
@@ -36,6 +37,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
   const isSim = isSimProp ?? location.pathname.includes('/simulator/')
   const draftsOnly = location.pathname.includes('/drafts')
   const pmoOversight = location.pathname.includes('oversight')
+  const delayFormVariant = resolveOversightFormVariant(location.pathname)
   const platformView = location.pathname.includes('/platform/')
 
   const {
@@ -363,6 +365,8 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
         </div>
       </div>
 
+      {!(formOpen && delayFormVariant === 'page') && (
+      <>
       <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
         <label className="block">
           <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{projectLabel}</span>
@@ -505,6 +509,9 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
         </div>
       )}
 
+      </>
+      )}
+
       {pickerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
           <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-slate-900 border border-slate-600 p-4">
@@ -534,6 +541,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
 
       <DelayForm
         open={formOpen}
+        variant={delayFormVariant}
         onClose={() => {
           setFormOpen(false)
           setEditRow(null)

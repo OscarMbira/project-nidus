@@ -13,6 +13,7 @@ import { useSortableTable } from '../../hooks/useSortableTable'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { useDelayPermissions } from '../../hooks/useDelayPermissions'
 import DelayTemplateForm from './DelayTemplateForm'
+import { resolveOversightFormVariant } from '../../components/ui/FormSurface'
 import { DELAY_CATEGORIES, TEMPLATE_STATUSES } from '../../constants/delayConstants'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 import RowNumberBadge from '../../components/ui/RowNumberBadge'
@@ -30,6 +31,7 @@ export default function DelayTemplates({ isSim = false }) {
   const location = useLocation()
   const isPmoRoute =
     location.pathname.includes('/pmo/delays') || location.pathname.includes('/simulator/pmo/delays')
+  const templateFormVariant = resolveOversightFormVariant(location.pathname)
 
   const { loading: permLoading, canManageTemplates } = useDelayPermissions()
   const canEdit = canManageTemplates && isPmoRoute
@@ -174,6 +176,8 @@ export default function DelayTemplates({ isSim = false }) {
         </div>
       </div>
 
+      {!(formOpen && templateFormVariant === 'page') && (
+      <>
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="flex items-center gap-2 rounded-lg border border-slate-600 bg-white dark:bg-slate-900 px-3 py-2">
           <Search className="h-4 w-4 text-slate-500" />
@@ -265,9 +269,12 @@ export default function DelayTemplates({ isSim = false }) {
           </table>
         </div>
       )}
+      </>
+      )}
 
       <DelayTemplateForm
         open={formOpen}
+        variant={templateFormVariant}
         onClose={() => { setFormOpen(false); setEditRow(null); }}
         onSaved={() => load()}
         initial={editRow}

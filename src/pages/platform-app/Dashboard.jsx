@@ -13,8 +13,9 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { platformDb } from '../../services/supabase/supabaseClient';
+import { resolveAccountIdForAuthUser } from '../../utils/accountResolution';
 import { getExecutiveSummary, getKPIs, getPmoExtendedMetrics } from '../../services/dashboardService';
 import { Shield } from 'lucide-react';
 import PMODashboardScopeTabs from '../../components/app/dashboard/PMODashboardScopeTabs';
@@ -33,19 +34,30 @@ const ComponentLoader = memo(() => (
 ComponentLoader.displayName = 'ComponentLoader';
 
 const PlatformDashboard = memo(function PlatformDashboard() {
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [accountStatus, setAccountStatus] = useState('loading'); // loading | ready | missing
   const [organizationId, setOrganizationId] = useState(null);
-  const [userId, setUserId] = useState(null);
+  const [profileLinked, setProfileLinked] = useState(true);
   const [userName, setUserName] = useState('');
   const [isOrgAdmin, setIsOrgAdmin] = useState(false);
   const navigate = useNavigate();
 
-  // Memoize user loading function to prevent recreation on every render
+  const checkIsOrgAdmin = useCallback(async (authUserId) => {
+    try {
+      const { data, error } = await platformDb.rpc('is_user_pmo_admin', {
+        p_auth_uuid: authUserId,
+      });
+      if (!error) return data === true;
+    } catch {
+      // fall through
+    }
+    return false;
+  }, []);
+
   const loadUserAndOrganization = useCallback(async () => {
     try {
-      setLoading(true);
+      setAccountStatus('loading');
 
-      // Get current user
       const { data: { user }, error: userError } = await platformDb.auth.getUser();
       if (userError || !user) {
         console.error('Error getting user:', userError);
@@ -53,9 +65,9 @@ const PlatformDashboard = memo(function PlatformDashboard() {
         return;
       }
 
-      setUserId(user.id);
+      setUserName(user.email || '');
+      setAuthReady(true);
 
-      // Get user details
       let { data: userRecord } = await platformDb
         .from('users')
         .select('id, full_name')
@@ -63,7 +75,6 @@ const PlatformDashboard = memo(function PlatformDashboard() {
         .maybeSingle();
 
       if (!userRecord) {
-        // auth_user_id not linked yet (invited user) — call SECURITY DEFINER repair then retry
         await platformDb.rpc('link_auth_account');
         const { data: retried } = await platformDb
           .from('users')
@@ -75,119 +86,33 @@ const PlatformDashboard = memo(function PlatformDashboard() {
 
       if (!userRecord) {
         console.error('Error getting user record: auth_user_id not linked');
-        setLoading(false);
+        setProfileLinked(false);
+        setAccountStatus('missing');
         return;
       }
 
+      setProfileLinked(true);
       setUserName(userRecord.full_name || user.email);
 
-      // Helper function to get account_id with fallback strategy
-      const getAccountId = async () => {
-        // Try 1: Get account where user is owner (most common case)
-        const { data: ownedAccount } = await platformDb
-          .from('accounts')
-          .select('id')
-          .eq('owner_user_id', userRecord.id)
-          .eq('is_active', true)
-          .eq('is_deleted', false)
-          .maybeSingle();
-        
-        if (ownedAccount?.id) return ownedAccount.id;
-        
-        // Try 2: Get account from user_roles -> projects (user is member of a project)
-        const { data: userRole } = await platformDb
-          .from('user_roles')
-          .select('projects!inner(account_id)')
-          .eq('user_id', userRecord.id)
-          .eq('is_active', true)
-          .eq('is_deleted', false)
-          .not('projects.account_id', 'is', null)
-          .limit(1)
-          .maybeSingle();
-        
-        if (userRole?.projects?.account_id) return userRole.projects.account_id;
-        
-        // Try 3: Get account from projects where user is project manager
-        const { data: project } = await platformDb
-          .from('projects')
-          .select('account_id')
-          .eq('project_manager_user_id', userRecord.id)
-          .not('account_id', 'is', null)
-          .eq('is_deleted', false)
-          .limit(1)
-          .maybeSingle();
-        
-        return project?.account_id || null;
-      };
-
-      // Helper function to check org admin permission
-      const checkOrgAdminPermission = async () => {
-        try {
-          // Get user's roles in parallel with permission lookup
-          const [rolesResult, permissionsResult] = await Promise.all([
-            platformDb
-              .from('user_roles')
-              .select('role_id')
-              .eq('user_id', userRecord.id)
-              .eq('is_active', true)
-              .eq('is_deleted', false),
-            platformDb
-              .from('permissions')
-              .select('id, permission_code')
-              .eq('permission_code', 'org.admin')
-              .eq('is_active', true)
-              .eq('is_deleted', false)
-              .maybeSingle()
-          ]);
-
-          const { data: userRoles, error: rolesError } = rolesResult;
-          const { data: orgAdminPermission, error: permError } = permissionsResult;
-
-          if (rolesError || !userRoles || userRoles.length === 0 || permError || !orgAdminPermission) {
-            return false;
-          }
-
-          const roleIds = userRoles.map(ur => ur.role_id);
-
-          // Check if any of user's roles have org.admin permission
-          const { data: rolePermissions, error: rpError } = await platformDb
-            .from('role_permissions')
-            .select('role_id')
-            .in('role_id', roleIds)
-            .eq('permission_id', orgAdminPermission.id)
-            .eq('is_active', true)
-            .eq('is_deleted', false)
-            .limit(1);
-
-          return !rpError && rolePermissions && rolePermissions.length > 0;
-        } catch (error) {
-          console.warn('Error checking org admin permission:', error);
-          return false;
-        }
-      };
-
-      // Parallel fetch for account_id and permissions
-      const [accountResult, permissionResult] = await Promise.allSettled([
-        getAccountId(),
-        checkOrgAdminPermission()
+      const [accountId, orgAdmin] = await Promise.all([
+        resolveAccountIdForAuthUser(user.id, userRecord.id),
+        checkIsOrgAdmin(user.id),
       ]);
 
-      // Set account_id from parallel fetch
-      if (accountResult.status === 'fulfilled' && accountResult.value) {
-        setOrganizationId(accountResult.value);
+      if (accountId) {
+        setOrganizationId(accountId);
+        setAccountStatus('ready');
+      } else {
+        setOrganizationId(null);
+        setAccountStatus('missing');
       }
 
-      // Set org admin status from parallel fetch
-      if (permissionResult.status === 'fulfilled') {
-        setIsOrgAdmin(permissionResult.value);
-      }
-
-      setLoading(false);
+      setIsOrgAdmin(orgAdmin);
     } catch (error) {
       console.error('Error loading user and organization:', error);
-      setLoading(false);
+      setAccountStatus('missing');
     }
-  }, [navigate]);
+  }, [navigate, checkIsOrgAdmin]);
 
   useEffect(() => {
     loadUserAndOrganization();
@@ -285,22 +210,55 @@ const PlatformDashboard = memo(function PlatformDashboard() {
     };
   }, [memoizedOrgId]);
 
-  if (loading) {
+  if (!authReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
-  if (!organizationId) {
+  if (accountStatus === 'missing') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">No organization found. Please complete your profile setup.</p>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4">
+        <div className="text-center max-w-md space-y-4">
+          <p className="text-gray-600 dark:text-gray-400">
+            {!profileLinked
+              ? 'Your login is not linked to a platform user profile yet.'
+              : 'No organisation account is linked to your user yet.'}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            {!profileLinked
+              ? 'Complete account linking, then set up or join an organisation.'
+              : 'Create an organisation if you are the account owner, or ask your PMO admin to add you to a project.'}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {!profileLinked ? (
+              <button
+                type="button"
+                onClick={() => loadUserAndOrganization()}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              >
+                Retry profile link
+              </button>
+            ) : (
+              <Link
+                to="/onboarding/organisation-setup"
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              >
+                Set up organisation
+              </Link>
+            )}
+            <Link
+              to="/platform/projects"
+              className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              Go to projects
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -309,9 +267,14 @@ const PlatformDashboard = memo(function PlatformDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header - Memoized */}
         {headerContent}
 
+        {accountStatus === 'loading' ? (
+          <div className="space-y-8">
+            <ComponentLoader />
+            <ComponentLoader />
+          </div>
+        ) : (
         <PMODashboardScopeTabs
           organizationId={memoizedOrgId}
           analyticsBundle={pmoAnalyticsStatus === 'ok' ? pmoAnalyticsBundle : null}
@@ -367,6 +330,7 @@ const PlatformDashboard = memo(function PlatformDashboard() {
             </div>
           </>
         </PMODashboardScopeTabs>
+        )}
       </div>
     </div>
   );

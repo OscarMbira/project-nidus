@@ -6,11 +6,13 @@
  *
  * Sections:
  * 1. Governance Reference & Tailoring
- * 2. Initiation & Business Justification
+ * 2. Business Justification
  * 3. Delivery Management
  * 4. Controls & Registers
  * 5. Reporting
  * 6. Project Closure
+ *
+ * @see projectplan/v671 — PM layout sections map to structured / pmbok / agile tracks in useMenu.js
  */
 
 import {
@@ -85,13 +87,13 @@ const pmDashboardMenuConfig = [
     ],
   },
 
-  // Team & Members — invite Team Manager/Lead and Team Members (v399, PM dashboard shell)
+  // Team & People — merged Team & Members + People & Assignments (v659)
   {
-    id: 'pm-team-members',
-    label: 'Team & Members',
+    id: 'pm-team-people',
+    label: 'Team & People',
     path: null,
     icon: Users,
-    section: 'Team & Members',
+    section: 'Team & People',
     order: 1,
     children: [
       {
@@ -109,72 +111,53 @@ const pmDashboardMenuConfig = [
         order: 2,
       },
       {
-        id: 'pm-invitation-tracker',
-        label: 'Invitation Tracker',
-        path: '/platform/invitation-tracker',
-        icon: MailCheck,
-        order: 3,
-      },
-      {
         id: 'pm-pending-invitations',
         label: 'Pending Invitations',
         path: '/pm/team-members?tab=pending',
         icon: Mail,
-        order: 4,
+        order: 3,
       },
       {
         id: 'pm-my-team-appointments',
         label: 'My Assignment',
         path: '/platform/my-team-appointments',
         icon: ClipboardList,
-        order: 5,
+        order: 4,
       },
-    ],
-  },
-
-  // People & Assignments — decoupled manager/member assignment (v592)
-  {
-    id: 'pm-people-assignments',
-    label: 'People & Assignments',
-    path: null,
-    icon: UserCog,
-    section: 'People & Assignments',
-    order: 2,
-    children: [
       {
         id: 'pm-portfolio-assign-managers',
         label: 'Assign Managers (Portfolio)',
         path: '/platform/portfolio-manager/assignments',
         icon: UserCog,
-        order: 1,
+        order: 5,
       },
       {
         id: 'pm-programme-assign-pm',
         label: 'Assign Project Managers (Programme)',
         path: '/platform/programme-manager/assignments',
         icon: UserCog,
-        order: 2,
+        order: 6,
       },
       {
-        id: 'pm-people-invitation-status',
+        id: 'pm-invitation-tracker',
         label: 'Invitation Tracker',
         path: '/platform/invitation-tracker',
         icon: MailCheck,
-        order: 3,
+        order: 7,
       },
       {
         id: 'pm-my-appointments',
         label: 'My Appointments',
         path: '/platform/my-appointments',
         icon: UserCog,
-        order: 4,
+        order: 8,
       },
       {
         id: 'pm-team-appointments',
         label: 'Team Appointments',
         path: '/platform/app/team-appointments',
         icon: Users,
-        order: 5,
+        order: 9,
       },
     ],
   },
@@ -226,13 +209,13 @@ const pmDashboardMenuConfig = [
     ]
   },
 
-  // Section 2: Initiation & Business Justification
+  // Section 2: Business Justification
   {
     id: 'pm-initiation',
-    label: 'Initiation & Business Justification',
+    label: 'Business Justification',
     path: null,
     icon: Briefcase,
-    section: 'Initiation & Business Justification',
+    section: 'Business Justification',
     order: 2,
     children: [
       {
@@ -567,37 +550,61 @@ const pmDashboardMenuConfig = [
     ],
   },
 
-  // Section 8: Reporting & Closure (merged)
+  // Section 12: Reporting
   {
-    id: 'pm-reporting-closure',
-    label: 'Reporting & Closure',
+    id: 'pm-reporting',
+    label: 'Reporting',
     path: null,
     icon: BarChart3,
-    section: 'Reporting & Closure',
-    order: 8,
+    section: 'Reporting',
+    order: 12,
     children: [
       { id: 'pm-report-checkpoint', label: 'Checkpoint Reports', path: '/pm/reporting/checkpoint-reports', icon: Flag, order: 1 },
       { id: 'pm-report-highlight', label: 'Highlight Reports', path: '/pm/reporting/highlight-reports', icon: Flag, order: 2 },
       { id: 'pm-report-issue-reports', label: 'Issue Reports', path: '/pm/reporting/issue-reports', icon: AlertCircle, order: 3 },
       { id: 'pm-report-exception', label: 'Exception Reports', path: '/pm/reporting/exception-reports', icon: FileWarning, order: 4 },
       { id: 'pm-report-end-stage', label: 'End Stage Report', path: '/pm/reporting/end-stage-reports', icon: FileClock, order: 5 },
-      { id: 'pm-fin-my-expenses', label: 'My Expenses', path: '/platform/expenses/my', icon: Receipt, order: 6 },
-      { id: 'pm-fin-exp-approvals', label: 'Expense Approvals', path: '/platform/expenses/approvals', icon: ClipboardCheck, order: 7 },
-      { id: 'pm-fin-reports', label: 'Financial Reports', path: '/platform/financial-reports', icon: DollarSign, order: 8 },
-      { id: 'pm-fin-portfolio-evm', label: 'Portfolio EVM', path: '/platform/portfolio/evm', icon: TrendingUp, order: 9 },
       {
         id: 'pm-closure-lessons-report',
         label: 'Lessons Report',
         path: '/pm/closure/lessons-report',
         icon: GraduationCap,
-        order: 10
+        order: 6
       },
+    ]
+  },
+
+  // Section 13: Financial
+  {
+    id: 'pm-financial',
+    label: 'Financial',
+    path: null,
+    icon: DollarSign,
+    section: 'Financial',
+    order: 13,
+    children: [
+      { id: 'pm-fin-my-expenses', label: 'My Expenses', path: '/platform/expenses/my', icon: Receipt, order: 1 },
+      { id: 'pm-fin-exp-approvals', label: 'Expense Approvals', path: '/platform/expenses/approvals', icon: ClipboardCheck, order: 2 },
+      { id: 'pm-fin-reports', label: 'Financial Reports', path: '/platform/financial-reports', icon: DollarSign, order: 3 },
+      { id: 'pm-fin-portfolio-evm', label: 'Portfolio EVM', path: '/platform/portfolio/evm', icon: TrendingUp, order: 4 },
+    ]
+  },
+
+  // Section 14: Project Closure
+  {
+    id: 'pm-project-closure',
+    label: 'Project Closure',
+    path: null,
+    icon: FolderClosed,
+    section: 'Project Closure',
+    order: 14,
+    children: [
       {
         id: 'pm-closure-end-project-report',
         label: 'End Project Report',
         path: '/pm/closure/end-project-report',
         icon: FileCheck,
-        order: 11
+        order: 1
       }
     ]
   }

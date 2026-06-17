@@ -6,8 +6,8 @@
  * at runtime without rebuilding Tailwind.
  */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { platformDb } from '../services/supabaseClient'
 import { getBranding, getDefaultBranding } from '../services/brandingService'
+import { getCurrentUserAccountId } from '../utils/accountResolution'
 
 const BrandingContext = createContext(null)
 
@@ -251,68 +251,8 @@ export function BrandingProvider({ children }) {
   useEffect(() => {
     async function loadAccount() {
       try {
-        const { data: { user } } = await platformDb.auth.getUser()
-        if (!user) { setIsLoading(false); return }
-
-        // Resolve internal users.id from auth_user_id
-        const { data: userRow } = await platformDb
-          .from('users')
-          .select('id')
-          .eq('auth_user_id', user.id)
-          .maybeSingle()
-
-        if (!userRow?.id) { setIsLoading(false); return }
-
-        // 1) Account where user is owner
-        const { data: accountRow, error: accountError } = await platformDb
-          .from('accounts')
-          .select('id')
-          .eq('owner_user_id', userRow.id)
-          .eq('is_deleted', false)
-          .maybeSingle()
-        if (!accountError && accountRow?.id) {
-          setAccountId(accountRow.id)
-          return
-        }
-
-        // 2) Any project owned by user → use that project's account_id
-        const { data: projAsOwner } = await platformDb
-          .from('projects')
-          .select('account_id')
-          .eq('owner_user_id', userRow.id)
-          .not('account_id', 'is', null)
-          .eq('is_deleted', false)
-          .limit(1)
-          .maybeSingle()
-        if (projAsOwner?.account_id) {
-          setAccountId(projAsOwner.account_id)
-          return
-        }
-
-        // 3) Any project where user is member (user_projects) → use that project's account_id
-        const { data: memberRows } = await platformDb
-          .from('user_projects')
-          .select('project_id')
-          .eq('user_id', userRow.id)
-          .eq('is_deleted', false)
-          .limit(5)
-        if (memberRows?.length) {
-          const projectIds = memberRows.map((r) => r.project_id)
-          const { data: proj } = await platformDb
-            .from('projects')
-            .select('account_id')
-            .in('id', projectIds)
-            .not('account_id', 'is', null)
-            .eq('is_deleted', false)
-            .limit(1)
-            .maybeSingle()
-          if (proj?.account_id) {
-            setAccountId(proj.account_id)
-            return
-          }
-        }
-
-        setAccountId(null)
+        const resolved = await getCurrentUserAccountId()
+        setAccountId(resolved)
       } catch (err) {
         console.error('[BrandingContext] loadAccount error:', err)
         setAccountId(null)

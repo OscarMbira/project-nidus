@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
-import { X, Save, User, Calendar, AlertTriangle, Package } from 'lucide-react'
+import { Save, User, Calendar, AlertTriangle, Package } from 'lucide-react'
+import FormSurface from './ui/FormSurface'
 import { getOrCreateIssueRegister } from '../services/issueRegisterService'
 import { createIssue, updateIssue } from '../services/issueService'
 import { validateIssueForm, validateStatusTransition } from '../utils/issueValidation'
 import { HoldButton } from './ui/HoldButton'
 
 import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
-export default function IssueForm({ issue, projectId, issueRegisterId, onSave, onCancel, linkedTaskId, linkedWorkPackageId, linkedUserStoryId, linkedKanbanCardId }) {
+export default function IssueForm({
+  issue,
+  projectId,
+  issueRegisterId,
+  onSave,
+  onCancel,
+  linkedTaskId,
+  linkedWorkPackageId,
+  linkedUserStoryId,
+  linkedKanbanCardId,
+  variant = 'modal',
+}) {
   const [formData, setFormData] = useState({
     issue_title: '',
     issue_description: '',
@@ -348,21 +360,13 @@ export default function IssueForm({ issue, projectId, issueRegisterId, onSave, o
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {issue ? 'Edit Issue' : 'Create Issue'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <FormSurface
+      variant={variant}
+      title={issue ? 'Edit Issue' : 'Create Issue'}
+      icon={AlertTriangle}
+      onClose={onCancel}
+    >
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -961,9 +965,8 @@ export default function IssueForm({ issue, projectId, issueRegisterId, onSave, o
               {saving ? 'Saving...' : issue ? 'Update' : 'Create'} Issue
             </button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </FormSurface>
   )
 }
 

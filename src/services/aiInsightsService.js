@@ -6,6 +6,7 @@
  */
 
 import { platformDb } from './supabase/supabaseClient'
+import { isValidAccountId } from '../utils/accountResolution'
 
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta'
@@ -136,7 +137,7 @@ async function generateGeminiNarrative(ruleBasedText) {
 
 /** Get org insights_mode (template | gemini) */
 async function getOrgInsightsMode(orgId) {
-  if (!orgId) return 'template'
+  if (!isValidAccountId(orgId)) return 'template'
   try {
     const { data } = await platformDb
       .from('ai_settings')
@@ -221,7 +222,7 @@ export async function refreshInsights(userId, orgId = null) {
 
 /** Check if org has insights enabled (for panel visibility) */
 export async function getOrgInsightsEnabled(orgId) {
-  if (!orgId) return true
+  if (!isValidAccountId(orgId)) return true
   try {
     const { data } = await platformDb
       .from('ai_settings')

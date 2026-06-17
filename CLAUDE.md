@@ -53,6 +53,11 @@
    - Include `#` in list exports via `ExportListMenu` / `withExportRowNumbers()` (rule 38).
    - **Platform–Simulator parity applies** (rule 34.1). See `Documentation/Table_Row_Numbers_Guide.md`.
 
+45) **App.jsx / lazyImports.js split — never break this boundary.** `src/App.jsx` must stay **below 500 KB** to avoid Babel's deoptimisation warning. All lazy-loaded page components are declared in `src/routes/lazyImports.js` (exported as named `export const X = lazy(...)`). App.jsx imports them via `import * as LP from './routes/lazyImports'` and destructures them at module level. Rules:
+   - **Never add a new `const X = lazy(...)` directly in `App.jsx`.** Always add it to `src/routes/lazyImports.js` instead, using a `../`-relative path.
+   - After adding to `lazyImports.js`, add the name to the destructuring block near the top of `App.jsx` (the `const { ..., YourNewComponent } = LP` block).
+   - If `App.jsx` ever approaches 480 KB again, extract another section of Route JSX into a separate route-group file under `src/routes/`.
+
 ## Simulator Module Architecture Rules
 
 The platform contains ONE unified application with TWO major domains that must be kept strictly separate:

@@ -160,6 +160,7 @@ export default function PMOOversightRiskRegister() {
 
   const projectLabel = (risk) =>
     risk.project_name || risk.project?.project_name || (risk.project_code ? `(${risk.project_code})` : '—');
+  const formVariant = 'page';
 
   return (
     <DocumentGovernanceProvider>
@@ -174,6 +175,7 @@ export default function PMOOversightRiskRegister() {
           onProjectChange={setSelectedProjectId}
         />
 
+        {!showForm && (
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -200,8 +202,9 @@ export default function PMOOversightRiskRegister() {
             disabled={!risks.length}
           />
         </div>
+        )}
 
-        {loading ? (
+        {!showForm && (loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
           </div>
@@ -227,8 +230,7 @@ export default function PMOOversightRiskRegister() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                   {risks.length === 0 ? (
                     <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                      <td colSpan={selectedProjectId ? 7 : 8} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                      <td colSpan={selectedProjectId ? 8 : 9} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                         {selectedProjectId ? 'No risks for this project.' : 'No risks. Select a project or add risks from a project.'}
                       </td>
                     </tr>
@@ -271,10 +273,11 @@ export default function PMOOversightRiskRegister() {
               </table>
             </div>
           </div>
-        )}
+        ))}
 
         {showForm && (
           <EnhancedRiskForm
+            variant={formVariant}
             risk={selectedRisk}
             projectId={selectedProjectId || selectedRisk?.project_id}
             riskRegisterId={selectedRisk?.risk_register_id}

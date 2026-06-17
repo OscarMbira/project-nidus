@@ -41,6 +41,14 @@ export default function BenefitsReviewPlan() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [coverage, setCoverage] = useState([]);
+  const [resources, setResources] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [disBenefits, setDisBenefits] = useState([]);
+  const [revisions, setRevisions] = useState([]);
+  const [approvals, setApprovals] = useState([]);
+  const [distribution, setDistribution] = useState([]);
 
   useEffect(() => {
     fetchPlan();

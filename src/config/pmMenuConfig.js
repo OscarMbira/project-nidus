@@ -75,18 +75,6 @@ export const pmMenuConfig = [
         permission: 'user.invite',
       },
       {
-        id: 'platform-projects-invitation-templates',
-        label: 'Invitation Templates',
-        path: '/app/settings/invitation-templates',
-        permission: 'project.view',
-      },
-      {
-        id: 'platform-projects-local-data-extensions',
-        label: 'Local Data Extensions',
-        path: '/app/local-data-extensions',
-        permission: 'project.view',
-      },
-      {
         id: 'platform-projects-daily-log',
         label: 'Daily Log',
         path: null, // Dynamic path based on selected project
@@ -110,10 +98,6 @@ export const pmMenuConfig = [
         path: null, // Dynamic path based on selected project
         permission: 'project.view',
       },
-      { id: 'forms-reg-risks', label: 'Risk Register', path: '/platform/projects/:projectId/registers/risks', permission: 'form.view' },
-      { id: 'forms-reg-issues', label: 'Issue Log', path: '/platform/projects/:projectId/registers/issues', permission: 'form.view' },
-      { id: 'forms-reg-changes', label: 'Change Log', path: '/platform/projects/:projectId/registers/changes', permission: 'form.view' },
-      { id: 'forms-reg-reqs', label: 'Requirements Register', path: '/platform/projects/:projectId/registers/requirements', permission: 'form.view' },
       { id: 'forms-status-report', label: 'Status Reports', path: '/platform/projects/:projectId/reports/status', permission: 'form.view' },
     ],
   },
@@ -236,51 +220,83 @@ export const pmMenuConfig = [
   },
 
   {
-    id: 'platform-itto',
-    label: 'ITTO Management',
-    path: '/platform/itto/templates',
-    icon: 'git-branch',
-    permission: 'itto.view',
+    id: 'platform-controls-registers',
+    label: 'Controls & Registers',
+    path: null,
+    icon: 'clipboard-list',
+    permission: 'project.view',
     children: [
       {
-        id: 'platform-itto-templates',
-        label: 'ITTO Templates',
-        path: '/platform/itto/templates',
-        permission: 'itto.view',
-      },
-      {
-        id: 'platform-itto-project',
-        label: 'Project ITTOs',
-        path: '/platform/itto/project',
-        permission: 'itto.view',
-      },
-      {
-        id: 'platform-itto-drafts',
-        label: 'ITTO Drafts',
-        path: '/platform/itto/drafts',
-        permission: 'itto.create',
-      },
-    ],
-  },
-
-  {
-    id: 'platform-delays',
-    label: 'Delays',
-    path: '/platform/delays',
-    icon: 'clock-alert',
-    permission: 'delay.view',
-    children: [
-      {
-        id: 'platform-delays-register',
+        id: 'platform-controls-delays-register',
         label: 'Delay Register',
         path: '/platform/delays',
         permission: 'delay.view',
       },
       {
-        id: 'platform-delays-drafts',
+        id: 'platform-controls-delays-drafts',
         label: 'Delay Drafts',
         path: '/platform/delays/drafts',
         permission: 'delay.create',
+      },
+      {
+        id: 'platform-controls-itto-templates',
+        label: 'ITTO Templates',
+        path: '/platform/itto/templates',
+        permission: 'itto.view',
+      },
+      {
+        id: 'platform-controls-itto-project',
+        label: 'Project ITTOs',
+        path: '/platform/itto/project',
+        permission: 'itto.view',
+      },
+      {
+        id: 'platform-controls-itto-drafts',
+        label: 'ITTO Drafts',
+        path: '/platform/itto/drafts',
+        permission: 'itto.create',
+      },
+      {
+        id: 'platform-controls-risk-register',
+        label: 'Risk Register',
+        path: '/platform/projects/:projectId/registers/risks',
+        permission: 'form.view',
+      },
+      {
+        id: 'platform-controls-issue-log',
+        label: 'Issue Log',
+        path: '/platform/projects/:projectId/registers/issues',
+        permission: 'form.view',
+      },
+      {
+        id: 'platform-controls-change-log',
+        label: 'Change Log',
+        path: '/platform/projects/:projectId/registers/changes',
+        permission: 'form.view',
+      },
+      {
+        id: 'platform-controls-requirements-register',
+        label: 'Requirements Register',
+        path: '/platform/projects/:projectId/registers/requirements',
+        permission: 'form.view',
+      },
+      {
+        id: 'platform-controls-eef-list',
+        label: 'Environment Factors',
+        path: '/platform/eef',
+        permission: 'governance.view',
+      },
+      {
+        id: 'platform-controls-eef-new',
+        label: 'Add EEF',
+        path: '/platform/eef/new',
+        permission: 'governance.manage',
+      },
+      {
+        id: 'platform-controls-eef-drafts',
+        label: 'EEF Drafts',
+        path: '/platform/eef/on-hold',
+        permission: 'governance.view',
       },
     ],
   },
@@ -421,29 +437,63 @@ export const pmMenuConfig = [
           },
         ],
       },
-      // PMO Governance strategies (visible to pmo_admin only)
+    ],
+  },
+
+  // Business Justification (moved out of PMO Admin)
+  {
+    id: 'platform-initiation',
+    label: 'Business Justification',
+    path: null,
+    icon: 'briefcase',
+    permission: 'pmo.admin',
+    children: [
       {
-        id: 'platform-gov-communication-strategy',
-        label: 'Communication Strategy',
-        path: '/pmo/governance/communication-strategy',
+        id: 'platform-init-business-cases',
+        label: 'Business Cases',
+        path: '/pmo/initiation/business-case',
         permission: 'pmo.admin',
       },
       {
-        id: 'platform-gov-configuration-strategy',
-        label: 'Configuration Strategy',
-        path: '/pmo/governance/configuration-strategy',
+        id: 'platform-init-benefits-review-plans',
+        label: 'Benefits Review Plans',
+        path: '/pmo/initiation/benefits-review-plan',
         permission: 'pmo.admin',
       },
       {
-        id: 'platform-gov-quality-strategy',
-        label: 'Quality Management Strategy',
-        path: '/pmo/governance/quality-strategy',
+        id: 'platform-init-mandates',
+        label: 'Project Mandates',
+        path: '/platform/mandates/list',
         permission: 'pmo.admin',
       },
       {
-        id: 'platform-gov-risk-strategy',
-        label: 'Risk Management Strategy',
-        path: '/pmo/governance/risk-strategy',
+        id: 'platform-init-briefs',
+        label: 'Project Briefs',
+        path: '/platform/briefs/list',
+        permission: 'pmo.admin',
+      },
+      {
+        id: 'platform-init-pids',
+        label: 'PIDs',
+        path: '/pm/initiation/pid',
+        permission: 'pmo.admin',
+      },
+      {
+        id: 'platform-init-ppds',
+        label: 'PPDs',
+        path: '/app/ppd/list',
+        permission: 'pmo.admin',
+      },
+      {
+        id: 'platform-init-product-descriptions',
+        label: 'Product Descriptions',
+        path: '/platform/pmo-admin/product-description-templates',
+        permission: 'pmo.admin',
+      },
+      {
+        id: 'platform-init-draft-queue',
+        label: 'Draft Queue',
+        path: '/platform/pmo-admin/drafts',
         permission: 'pmo.admin',
       },
     ],
@@ -544,18 +594,6 @@ export const pmMenuConfig = [
         id: 'platform-programme-projects',
         label: 'Programme Projects',
         path: '/platform/programme/projects',
-        permission: 'programme.view',
-      },
-      {
-        id: 'platform-programme-dependencies',
-        label: 'Dependencies',
-        path: '/platform/programme/dependencies',
-        permission: 'programme.view',
-      },
-      {
-        id: 'platform-programme-benefits',
-        label: 'Benefits',
-        path: '/platform/programme/benefits',
         permission: 'programme.view',
       },
     ],
@@ -928,135 +966,6 @@ export const pmMenuConfig = [
         label: 'Document Governance',
         path: '/platform/document-governance',
         permission: 'pmo.admin',
-      },
-      // PMO Initiation documents
-      {
-        id: 'platform-pmo-business-case-section',
-        label: 'Business Cases',
-        path: null,
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-business-case-list',
-            label: 'All Business Cases',
-            path: '/pmo/initiation/business-case',
-            permission: 'pmo.admin',
-          },
-        ],
-      },
-      {
-        id: 'platform-pmo-benefits-review-plan-section',
-        label: 'Benefits Review Plans',
-        path: null,
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-benefits-review-plan-list',
-            label: 'All Benefits Review Plans',
-            path: '/pmo/initiation/benefits-review-plan',
-            permission: 'pmo.admin',
-          },
-        ],
-      },
-      {
-        id: 'platform-pmo-mandates-section',
-        label: 'Project Mandates',
-        path: null,
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-mandates-create',
-            label: 'Create Mandate',
-            path: '/platform/mandates/create',
-            permission: 'pmo.admin',
-          },
-          {
-            id: 'platform-pmo-mandates-all',
-            label: 'All Mandates',
-            path: '/platform/mandates/list',
-            permission: 'pmo.admin',
-          },
-          {
-            id: 'platform-pmo-mandates-unlinked',
-            label: 'Unlinked Mandates',
-            path: '/platform/mandates/unlinked',
-            permission: 'pmo.admin',
-          },
-          {
-            id: 'platform-pmo-mandates-pending-approvals',
-            label: 'Pending Approvals',
-            path: '/platform/mandates/approvals',
-            permission: 'pmo.admin',
-          },
-        ],
-      },
-      {
-        id: 'platform-pmo-briefs-section',
-        label: 'Project Briefs',
-        path: null, // This makes it a collapsible section
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-briefs-all',
-            label: 'All Briefs',
-            path: '/platform/briefs/list',
-            permission: 'pmo.admin',
-          },
-          {
-            id: 'platform-pmo-briefs-pending-approvals',
-            label: 'Pending Approvals',
-            path: '/platform/briefs/approvals',
-            permission: 'pmo.admin',
-          },
-        ],
-      },
-      {
-        id: 'platform-pmo-ppd-section',
-        label: 'Project Product Descriptions',
-        path: null, // This makes it a collapsible section
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-ppd-all',
-            label: 'All PPDs',
-            path: '/app/ppd/list',
-            permission: 'pmo.admin',
-          },
-        ],
-      },
-      {
-        id: 'platform-pmo-pd-section',
-        label: 'Product Descriptions',
-        path: null, // This makes it a collapsible section
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-pd-templates',
-            label: 'Templates',
-            path: '/platform/pmo-admin/product-description-templates',
-            permission: 'pmo.admin',
-          },
-        ],
-      },
-      {
-        id: 'platform-pmo-draft-queue-section',
-        label: 'Draft Queue',
-        path: null,
-        permission: 'pmo.admin',
-        children: [
-          {
-            id: 'platform-pmo-draft-expiry-config',
-            label: 'Expiry Settings',
-            path: '/platform/pmo-admin/draft-expiry-config',
-            permission: 'pmo.admin',
-          },
-          {
-            id: 'platform-pmo-org-drafts',
-            label: 'Organisation Drafts',
-            path: '/platform/pmo-admin/drafts',
-            permission: 'pmo.admin',
-          },
-        ],
       },
     ],
   },

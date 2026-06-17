@@ -19,6 +19,8 @@ import { buildProjectInvitationUrls } from '../utils/invitationUrlUtils'
 import {
   formatProjectContextBlockHtml,
   formatProjectContextBlockPlain,
+  formatOrganisationContextBlockHtml,
+  formatOrganisationContextBlockPlain,
 } from '../utils/invitationEmailBlocks'
 import { loadInvitationProjectContext } from './invitationProjectContextService'
 import { resolveInvitationTemplatePlaceholders } from '../features/invitation-templates/utils/resolveInvitationTemplatePlaceholders'
@@ -314,6 +316,103 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
   }
 }
 
+/**
+ * Send organisation-scoped PMO Administrator invitation email (non-blocking on failure).
+ */
+export async function dispatchOrganisationPmoAdminInvitationEmail(email, invitationData) {
+  const organisationName =
+    String(invitationData.organisationName ?? invitationData.orgLabel ?? '').trim() || 'your organisation'
+  const roleName = invitationData.roleName || 'PMO Administrator'
+  const inviterName = invitationData.inviterName || 'A team member'
+  const inviterJobTitle = String(invitationData.inviterJobTitle ?? '').trim()
+  const expiryDays = invitationData.expiryDays || 7
+  const invitationToken = invitationData.invitationToken || null
+
+  const { acceptUrl, declineUrl } = buildProjectInvitationUrls({
+    invitationToken,
+    origin: invitationData.origin,
+  })
+  const invitationUrl = acceptUrl || invitationData.invitationUrl || invitationData.inviteUrl || ''
+  const resolvedDeclineUrl = declineUrl || null
+
+  let personalMessage = invitationData.message || ''
+  if (personalMessage) {
+    personalMessage = resolveInvitationTemplatePlaceholders(personalMessage, {
+      organisationName,
+      roleDisplayName: roleName,
+      inviterName,
+      invitationExpiryDays: expiryDays,
+      inviteeFirstName: invitationData.inviteeFirstName,
+      inviteeLastName: invitationData.inviteeLastName,
+    })
+  }
+  personalMessage = personalizeInvitationMessage(personalMessage, {
+    inviteeFirstName: invitationData.inviteeFirstName,
+    inviteeLastName: invitationData.inviteeLastName,
+  })
+  personalMessage = personalMessage
+    ? normalizeInvitationMessageOrganisation(personalMessage, organisationName)
+    : null
+
+  const orgContextHtml = formatOrganisationContextBlockHtml({
+    organisationName,
+    roleName,
+    billingAccess: Boolean(invitationData.billingAccess),
+  })
+  const orgContextPlain = formatOrganisationContextBlockPlain({
+    organisationName,
+    roleName,
+    billingAccess: Boolean(invitationData.billingAccess),
+  })
+
+  try {
+    const emailBody = {
+      to: email,
+      subject: `You've been invited to join ${organisationName} on Project Nidus`,
+      html: buildInvitationEmailHtml({
+        email,
+        projectName: organisationName,
+        roleName,
+        inviterName,
+        inviterJobTitle,
+        organisationName,
+        personalMessage,
+        projectContextHtml: orgContextHtml,
+        invitationUrl,
+        declineUrl: resolvedDeclineUrl,
+        expiryDays,
+        invitationScope: 'organisation',
+      }),
+      text: buildInvitationEmailText({
+        email,
+        projectName: organisationName,
+        roleName,
+        inviterName,
+        inviterJobTitle,
+        organisationName,
+        personalMessage,
+        projectContextPlain: orgContextPlain,
+        invitationUrl,
+        declineUrl: resolvedDeclineUrl,
+        expiryDays,
+        invitationScope: 'organisation',
+      }),
+      template_id: 'organisation_pmo_admin_invite',
+    }
+
+    const { error: emailError } = await withTimeout(
+      appDb.functions.invoke('send-email', { body: emailBody }),
+      SEND_EMAIL_TIMEOUT_MS,
+      'send-email',
+    )
+    if (emailError) {
+      console.warn('[dispatchOrganisationPmoAdminInvitationEmail] Email send failed:', emailError)
+    }
+  } catch (emailErr) {
+    console.warn('[dispatchOrganisationPmoAdminInvitationEmail] Email function threw:', emailErr?.message)
+  }
+}
+
 const APPT_FREQ_LABELS = {
   weekly: 'Weekly',
   fortnightly: 'Fortnightly',
@@ -468,6 +567,7 @@ function buildInvitationEmailHtml({
   invitationUrl,
   expiryDays,
   declineUrl = null,
+  invitationScope = 'project',
 }) {
   const actionBlock =
     invitationUrl && declineUrl
@@ -522,6 +622,21 @@ function buildInvitationEmailHtml({
        </tr>`
     : ''
 
+  const isOrganisationInvite = invitationScope === 'organisation'
+  const introTarget = isOrganisationInvite
+    ? escapeHtml(organisationName || projectName)
+    : escapeHtml(projectName)
+
+  const projectRow = isOrganisationInvite
+    ? `<tr>
+         <td style="padding:4px 0;color:#6b7280;font-size:13px;">Scope</td>
+         <td style="padding:4px 0;color:#111827;font-size:13px;">Organisation-wide PMO access</td>
+       </tr>`
+    : `<tr>
+         <td style="padding:4px 0;color:#6b7280;font-size:13px;">Project</td>
+         <td style="padding:4px 0;color:#111827;font-size:13px;">${escapeHtml(projectName)}</td>
+       </tr>`
+
   const orgRow = organisationName
     ? `<tr>
          <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">Organisation</td>
@@ -539,10 +654,7 @@ function buildInvitationEmailHtml({
         </tr>
         ${jobTitleRow}
         ${orgRow}
-        <tr>
-          <td style="padding:4px 0;color:#6b7280;font-size:13px;">Project</td>
-          <td style="padding:4px 0;color:#111827;font-size:13px;">${escapeHtml(projectName)}</td>
-        </tr>
+        ${projectRow}
       </table>
     </div>`
 
@@ -563,7 +675,7 @@ function buildInvitationEmailHtml({
           <h2 style="margin:0 0 16px;color:#111827;font-size:20px;">You've been invited!</h2>
           <p style="color:#374151;line-height:1.6;margin:0 0 16px;">
             <strong>${escapeHtml(inviterName)}</strong> has invited you to join
-            <strong>${escapeHtml(projectName)}</strong> as a <strong>${escapeHtml(roleName)}</strong>.
+            <strong>${introTarget}</strong> as a <strong>${escapeHtml(roleName)}</strong>.
           </p>
           ${messageBlock}
           ${apptBlock}
@@ -602,11 +714,15 @@ function buildInvitationEmailText({
   invitationUrl,
   declineUrl = null,
   expiryDays,
+  invitationScope = 'project',
 }) {
+  const isOrganisationInvite = invitationScope === 'organisation'
+  const targetName = isOrganisationInvite ? (organisationName || projectName) : projectName
+
   const lines = [
-    `You've been invited to join ${projectName} on Project Nidus`,
+    `You've been invited to join ${targetName} on Project Nidus`,
     '',
-    `${inviterName} has invited you to join ${projectName} as a ${roleName}.`,
+    `${inviterName} has invited you to join ${targetName} as a ${roleName}.`,
   ]
   if (personalMessage) {
     const formatted = formatInvitationPersonalMessagePlain(personalMessage, {
@@ -638,7 +754,11 @@ function buildInvitationEmailText({
   )
   if (inviterJobTitle) lines.push(`Job Title:    ${inviterJobTitle}`)
   if (organisationName) lines.push(`Organisation: ${organisationName}`)
-  lines.push(`Project:      ${projectName}`)
+  if (isOrganisationInvite) {
+    lines.push('Scope:        Organisation-wide PMO access')
+  } else {
+    lines.push(`Project:      ${projectName}`)
+  }
   lines.push('─────────────────────────────')
   return lines.join('\n')
 }
@@ -830,13 +950,59 @@ export async function getInvitationByToken(token) {
       `)
       .eq('invitation_token', token)
       .eq('is_deleted', false)
-      .single()
+      .maybeSingle()
 
     if (error) throw error
 
+    if (data) {
+      return {
+        success: true,
+        data: data,
+        error: null,
+      }
+    }
+
+    const { data: orgInvite, error: orgError } = await appDb
+      .from('organisation_invitations')
+      .select(`
+        id,
+        invitation_token,
+        invitation_status,
+        invited_email,
+        invitation_message,
+        invitation_metadata,
+        role:roles(
+          id,
+          role_name,
+          role_display_name
+        )
+      `)
+      .eq('invitation_token', token)
+      .eq('is_deleted', false)
+      .maybeSingle()
+
+    if (orgError) throw orgError
+
+    if (!orgInvite) {
+      return {
+        success: false,
+        data: null,
+        error: 'Invitation not found',
+      }
+    }
+
     return {
       success: true,
-      data: data,
+      data: {
+        id: orgInvite.id,
+        invitation_token: orgInvite.invitation_token,
+        invitation_status: orgInvite.invitation_status,
+        invited_email: orgInvite.invited_email,
+        invitation_message: orgInvite.invitation_message,
+        invited_first_name: orgInvite.invitation_metadata?.first_name ?? null,
+        invited_last_name: orgInvite.invitation_metadata?.last_name ?? null,
+        role: orgInvite.role,
+      },
       error: null,
     }
   } catch (error) {
@@ -877,16 +1043,26 @@ async function enrichInvitationAcceptRow(row) {
     String(mergedRow.invited_last_name ?? '').trim()
   if (!hasDbNames && mergedRow.invitation_id) {
     try {
+      const table = mergedRow.project_id ? 'project_invitations' : 'organisation_invitations'
+      const selectFields = mergedRow.project_id
+        ? 'invited_first_name, invited_last_name, invitation_message'
+        : 'invitation_message, invitation_metadata'
       const { data: nameRow } = await appDb
-        .from('project_invitations')
-        .select('invited_first_name, invited_last_name, invitation_message')
+        .from(table)
+        .select(selectFields)
         .eq('id', mergedRow.invitation_id)
         .maybeSingle()
       if (nameRow) {
         mergedRow = {
           ...mergedRow,
-          invited_first_name: nameRow.invited_first_name ?? mergedRow.invited_first_name,
-          invited_last_name: nameRow.invited_last_name ?? mergedRow.invited_last_name,
+          invited_first_name:
+            nameRow.invited_first_name ??
+            nameRow.invitation_metadata?.first_name ??
+            mergedRow.invited_first_name,
+          invited_last_name:
+            nameRow.invited_last_name ??
+            nameRow.invitation_metadata?.last_name ??
+            mergedRow.invited_last_name,
           invitation_message: nameRow.invitation_message ?? mergedRow.invitation_message,
         }
       }

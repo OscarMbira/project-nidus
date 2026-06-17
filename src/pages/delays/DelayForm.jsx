@@ -17,6 +17,7 @@ export default function DelayForm({
   readOnly,
   saveFns,
   fetchOwnerHistory,
+  variant = 'modal',
 }) {
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -73,9 +74,12 @@ export default function DelayForm({
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 text-slate-100 shadow-xl">
+  const panel = (
+      <div
+        className={`w-full max-w-lg overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 text-slate-100 shadow-xl ${
+          variant === 'page' ? 'max-w-4xl' : 'max-h-[90vh]'
+        }`}
+      >
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
           <h2 className="text-lg font-semibold">{form.id ? 'Edit delay' : 'Log delay'}</h2>
           <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800" aria-label="Close">
@@ -334,6 +338,15 @@ export default function DelayForm({
           )}
         </div>
       </div>
+  )
+
+  if (variant === 'page') {
+    return <div className="mt-6">{panel}</div>
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+      {panel}
     </div>
   )
 }

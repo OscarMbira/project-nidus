@@ -15,7 +15,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 5,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     is_container: true,
     registry_fallback: true,
   },
@@ -28,7 +28,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 1,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     registry_fallback: true,
   },
   {
@@ -40,7 +40,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 2,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     registry_fallback: true,
   },
   {
@@ -52,7 +52,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 3,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     registry_fallback: true,
   },
   {
@@ -64,7 +64,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 4,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     registry_fallback: true,
   },
   {
@@ -76,7 +76,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 5,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     registry_fallback: true,
   },
   {
@@ -88,7 +88,7 @@ export const RECORD_LIFECYCLE_MENU_REGISTRY = [
     sort_order: 6,
     domain: 'platform',
     roles: ['pmo_admin', 'system_admin'],
-    category: 'pmo-cat-governance',
+    category: 'pmo-cat-workflows-approvals',
     registry_fallback: true,
   },
 

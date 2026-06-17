@@ -811,14 +811,13 @@ export async function validateInvitationToken(token) {
  */
 export async function acceptInvitation(token, userId) {
   try {
-    const { data, error } = await appDb.rpc('accept_project_invitation', {
+    const { data: projectAccepted, error: projectError } = await appDb.rpc('accept_project_invitation', {
       p_token: token,
       p_accepting_user_id: userId,
     })
 
-    if (error) {
-      // Check if it's a seat limit error
-      if (error.message && error.message.includes('No available seats')) {
+    if (projectError) {
+      if (projectError.message && projectError.message.includes('No available seats')) {
         return {
           success: false,
           data: null,
@@ -826,10 +825,25 @@ export async function acceptInvitation(token, userId) {
           code: 'SEAT_LIMIT_EXCEEDED',
         }
       }
-      throw error
+      throw projectError
     }
 
-    if (!data) {
+    if (projectAccepted === true) {
+      return {
+        success: true,
+        data: { accepted: true },
+        error: null,
+      }
+    }
+
+    const { data: orgAccepted, error: orgError } = await appDb.rpc('accept_organisation_invitation', {
+      p_token: token,
+      p_accepting_user_id: userId,
+    })
+
+    if (orgError) throw orgError
+
+    if (orgAccepted !== true) {
       return {
         success: false,
         data: null,
@@ -839,7 +853,7 @@ export async function acceptInvitation(token, userId) {
 
     return {
       success: true,
-      data: { accepted: true },
+      data: { accepted: true, scope: 'organisation' },
       error: null,
     }
   } catch (error) {
@@ -894,13 +908,27 @@ export async function declineInvitation(invitationId) {
  */
 export async function declineInvitationByToken(token) {
   try {
-    const { data, error } = await appDb.rpc('decline_project_invitation', {
+    const { data: projectDeclined, error: projectError } = await appDb.rpc('decline_project_invitation', {
       p_token: token,
     })
 
-    if (error) throw error
+    if (projectError) throw projectError
 
-    if (data !== true) {
+    if (projectDeclined === true) {
+      return {
+        success: true,
+        data: { declined: true },
+        error: null,
+      }
+    }
+
+    const { data: orgDeclined, error: orgError } = await appDb.rpc('decline_organisation_invitation', {
+      p_token: token,
+    })
+
+    if (orgError) throw orgError
+
+    if (orgDeclined !== true) {
       return {
         success: false,
         data: null,

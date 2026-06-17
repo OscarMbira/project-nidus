@@ -95,6 +95,7 @@ export const createOrganisation = async (organisationData) => {
     country_code: organisationData.country,
     primary_phone: organisationData.phone || null,
     primary_email: organisationData.email || null,
+    billing_email: organisationData.billingEmail || organisationData.email || null,
     business_registration_number: organisationData.registrationReference || null,
     // Address fields
     address_line1: addressParts.address_line1,
@@ -210,15 +211,19 @@ export const createOrganisation = async (organisationData) => {
   }
   */
 
-  // Assign PMO Admin role to organisation creator
+  // Assign founder roles: legal account owner + operational PMO admin
   try {
+    const ownerResult = await assignSystemRole(authUser.id, 'account_owner');
+    if (!ownerResult.success) {
+      console.warn('Failed to assign Account Owner role. User may need to be assigned manually.');
+    }
     const roleResult = await assignSystemRole(authUser.id, 'pmo_admin');
     if (!roleResult.success) {
       console.warn('Failed to assign PMO Admin role. User may need to be assigned manually.');
     }
   } catch (roleError) {
-    console.error('Error assigning PMO Admin role:', roleError);
-    // Don't throw - organisation is created, role can be assigned later
+    console.error('Error assigning founder roles:', roleError);
+    // Don't throw - organisation is created, roles can be assigned later
   }
 
   // Return data (email verification disabled)
@@ -420,13 +425,24 @@ export const getUserOrganisation = async () => {
     throw new Error('User not authenticated');
   }
 
+  const { data: userRecord, error: userRecordError } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', user.id)
+    .maybeSingle();
+
+  if (userRecordError || !userRecord?.id) {
+    return null;
+  }
+
   const { data, error } = await platformDb
     .from('accounts')
     .select('*')
-    .eq('owner_user_id', user.id)
-    .single();
+    .eq('owner_user_id', userRecord.id)
+    .eq('is_deleted', false)
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
+  if (error && error.code !== 'PGRST116') {
     console.error('Error fetching user organisation:', error);
     throw new Error(error.message || 'Failed to fetch organisation');
   }
@@ -485,6 +501,7 @@ const updateExistingOrganisation = async (organisationId, organisationData, user
     country_code: organisationData.country,
     primary_phone: organisationData.phone || null,
     primary_email: organisationData.email || null,
+    billing_email: organisationData.billingEmail || organisationData.email || null,
     business_registration_number: organisationData.registrationReference || null,
     // Address fields
     address_line1: addressParts.address_line1,
@@ -550,18 +567,18 @@ const updateExistingOrganisation = async (organisationId, organisationData, user
     // Don't throw - organisation is updated, email can be resent
   }
 
-  // Assign PMO Admin role if not already assigned
+  // Assign founder roles if not already assigned
   try {
     const { data: { user: authUser } } = await platformDb.auth.getUser();
     if (authUser) {
+      await assignSystemRole(authUser.id, 'account_owner');
       const roleResult = await assignSystemRole(authUser.id, 'pmo_admin');
       if (!roleResult.success) {
         console.warn('Failed to assign PMO Admin role. User may need to be assigned manually.');
       }
     }
   } catch (roleError) {
-    console.error('Error assigning PMO Admin role:', roleError);
-    // Don't throw - organisation is updated, role can be assigned later
+    console.error('Error assigning founder roles:', roleError);
   }
 
   return data;

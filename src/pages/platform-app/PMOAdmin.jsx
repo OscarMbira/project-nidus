@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Settings, Users, Database, Building2, Key, Bell, FileText, UserCheck } from 'lucide-react';
 import { platformDb } from '../../services/supabase/supabaseClient';
 import { getAccountById } from '../../services/accountService';
+import OrganisationMethodologySettings from '../../components/platform/OrganisationMethodologySettings';
 
 const cardClass =
   'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm';
@@ -231,8 +232,13 @@ export default function PMOAdmin() {
           </div>
         )}
 
+        {activeTab === 'settings' && (
+          <div className={`${cardClass} p-6`}>
+            <OrganisationMethodologySettings accountId={organizationId} />
+          </div>
+        )}
+
         {(activeTab === 'users' ||
-          activeTab === 'settings' ||
           activeTab === 'security' ||
           activeTab === 'billing' ||
           activeTab === 'data') && (
@@ -244,7 +250,6 @@ export default function PMOAdmin() {
               />
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
                 {activeTab === 'users' && 'User Management'}
-                {activeTab === 'settings' && 'Organization Settings'}
                 {activeTab === 'security' && 'Security Settings'}
                 {activeTab === 'billing' && 'Billing & Subscription'}
                 {activeTab === 'data' && 'Data Management'}

@@ -10,6 +10,7 @@ import { getAllProjects } from '../../services/pmoAdminService';
 import { getLessonsByProject, deleteLesson } from '../../services/lessonService';
 import PMOOversightHeader from '../../components/pmo/PMOOversightHeader';
 import LessonForm from '../../components/lessonsLog/LessonForm';
+import FormSurface from '../../components/ui/FormSurface';
 import ExportListMenu from '../../components/ui/ExportListMenu';
 import { useToastContext } from '../../context/ToastContext';
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
@@ -171,6 +172,8 @@ export default function PMOOversightLessonsLog() {
   const projectLabel = (lesson) =>
     lesson.project_name || lesson.project?.project_name || (lesson.project_code ? `(${lesson.project_code})` : '—');
 
+  const formVariant = 'page';
+
   return (
     <DocumentGovernanceProvider>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -184,6 +187,7 @@ export default function PMOOversightLessonsLog() {
           onProjectChange={setSelectedProjectId}
         />
 
+        {!showForm && (
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -223,8 +227,9 @@ export default function PMOOversightLessonsLog() {
             disabled={!filteredByTab.length}
           />
         </div>
+        )}
 
-        {loading ? (
+        {!showForm && (loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
           </div>
@@ -249,8 +254,7 @@ export default function PMOOversightLessonsLog() {
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                   {filteredByTab.length === 0 ? (
                     <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                      <td colSpan={selectedProjectId ? 8 : 9} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
+                      <td colSpan={selectedProjectId ? 9 : 10} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                         No lessons match.
                       </td>
                     </tr>
@@ -292,15 +296,24 @@ export default function PMOOversightLessonsLog() {
               </table>
             </div>
           </div>
-        )}
+        ))}
 
         {showForm && (
-          <LessonForm
-            lesson={selectedLesson}
-            projectId={selectedProjectId || selectedLesson?.project_id}
-            onSave={handleSave}
-            onCancel={() => { setShowForm(false); setSelectedLesson(null); }}
-          />
+          <FormSurface
+            variant={formVariant}
+            title={selectedLesson ? 'Edit Lesson' : 'Add Lesson'}
+            icon={BookOpen}
+            onClose={() => { setShowForm(false); setSelectedLesson(null); }}
+          >
+            <div className="p-6">
+              <LessonForm
+                lesson={selectedLesson}
+                projectId={selectedProjectId || selectedLesson?.project_id}
+                onSave={handleSave}
+                onCancel={() => { setShowForm(false); setSelectedLesson(null); }}
+              />
+            </div>
+          </FormSurface>
         )}
       </div>
     </DocumentGovernanceProvider>
