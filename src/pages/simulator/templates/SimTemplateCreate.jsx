@@ -43,7 +43,6 @@ export default function TemplateCreate() {
     const schema = defaultContentSchemaForType(form.template_type_code)
     const empty = emptyContentFromSchema(schema)
     setForm((f) => ({ ...f, contentJson: JSON.stringify(empty, null, 2) }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset JSON when type changes
   }, [form.template_type_code])
 
   const submit = async () => {

@@ -1,0 +1,28 @@
+name: Platform DB Migration
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'supabase/migrations/platform/**'
+      - 'supabase/migrations/shared/**'
+
+jobs:
+  migrate-platform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Apply platform migrations
+        run: |
+          for f in supabase/migrations/shared/*.sql supabase/migrations/platform/*.sql; do
+            [ -f "$f" ] || continue
+            echo "Would apply: $f"
+          done
+          if [ -n "${{ secrets.PLATFORM_DATABASE_URL }}" ]; then
+            supabase db push --db-url "${{ secrets.PLATFORM_DATABASE_URL }}"
+          else
+            echo "PLATFORM_DATABASE_URL not set — dry run only"
+          fi

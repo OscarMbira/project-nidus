@@ -53,14 +53,70 @@
    - Include `#` in list exports via `ExportListMenu` / `withExportRowNumbers()` (rule 38).
    - **Platform–Simulator parity applies** (rule 34.1). See `Documentation/Table_Row_Numbers_Guide.md`.
 
-45) **App.jsx / lazyImports.js split — never break this boundary.** `src/App.jsx` must stay **below 500 KB** to avoid Babel's deoptimisation warning. All lazy-loaded page components are declared in `src/routes/lazyImports.js` (exported as named `export const X = lazy(...)`). App.jsx imports them via `import * as LP from './routes/lazyImports'` and destructures them at module level. Rules:
-   - **Never add a new `const X = lazy(...)` directly in `App.jsx`.** Always add it to `src/routes/lazyImports.js` instead, using a `../`-relative path.
-   - After adding to `lazyImports.js`, add the name to the destructuring block near the top of `App.jsx` (the `const { ..., YourNewComponent } = LP` block).
-   - If `App.jsx` ever approaches 480 KB again, extract another section of Route JSX into a separate route-group file under `src/routes/`.
+45) **App.jsx / lazyImports.js split — never break this boundary.** This rule applies in its current form during **Phase: Monolith (pre-v729)**. It evolves across architecture phases as follows:
+
+   **Phase: Monolith (current — pre v729)**
+   - `src/App.jsx` must stay **below 500 KB**. All lazy-loaded page components are declared in `src/routes/lazyImports.js` (exported as named `export const X = lazy(...)`). App.jsx imports them via `import * as LP from './routes/lazyImports'` and destructures them at module level.
+   - **Never add a new `const X = lazy(...)` directly in `App.jsx`.** Always add it to `src/routes/lazyImports.js` instead.
+   - If `App.jsx` ever approaches 480 KB, extract a section of Route JSX into a separate route-group file under `src/routes/`.
+
+   **Phase: Option B (v729 — multi-entry Vite)**
+   - App.jsx is reduced to a thin orchestrator importing from `src/routes/platformRoutes.jsx`, `src/routes/simulatorRoutes.jsx`, `src/routes/authRoutes.jsx`, and `src/routes/publicRoutes.jsx`.
+   - New Platform pages → add lazy import to `src/routes/platformRoutes.jsx` only.
+   - New Simulator pages → add lazy import to `src/routes/simulatorRoutes.jsx` only.
+   - **Never add a Platform route to simulatorRoutes.jsx or vice versa.**
+
+   **Phase: Option A (v730 — Turborepo monorepo)**
+   - There is no single `src/App.jsx`. Each app has its own: `apps/platform/src/App.jsx` and `apps/simulator/src/App.jsx`.
+   - New Platform pages → add to `apps/platform/src/routes/platformRoutes.jsx`.
+   - New Simulator pages → add to `apps/simulator/src/routes/simulatorRoutes.jsx`.
+   - Lazy imports within each app still use `React.lazy()` but paths are local to that app.
+
+   **Phase: Module Federation (v731)**
+   - Shell route files use `lazy(() => import('module_name/routes'))` — a remote import, not a file path.
+   - New domain modules are registered in `packages/modules/<module-name>/` and declared in the shell's `moduleConfig.js`.
+   - **Never bundle a module's pages into the shell.** All domain code lives in its own remote package.
+
+46) **Cross-domain import ban — Platform and Simulator code must never import from each other.**
+   - **Monolith/Option B:** Platform pages (`src/pages/platform-app/`, `src/pages/app/`, `src/components/app/`) must not import from Simulator-only folders (`src/pages/simulator/`, `src/pages/sim/`, `src/components/sim/`, `src/services/sim/`). The reverse also applies.
+   - **Option A+:** `apps/platform/**` must not import from `apps/simulator/**` and vice versa. Shared code belongs in `packages/*` only.
+   - **Module Federation (v731):** Platform modules must not import from Simulator modules and vice versa. Cross-domain shared logic must be promoted to `packages/shared/`.
+   - ESLint `no-restricted-imports` rules enforce this boundary automatically — do not bypass them.
+
+47) **Build script conventions — always use the scope-appropriate build command.**
+   - **Monolith (pre-v729):** `npm run build` — builds everything.
+   - **Option B (v729):** `npm run build:platform` for Platform only · `npm run build:simulator` for Simulator only · `npm run build:all` for both. Never run `npm run build` (full build) when only one app changed.
+   - **Option A (v730):** `pnpm turbo build --filter=@nidus/platform-app` · `pnpm turbo build --filter=@nidus/simulator-app` · `pnpm turbo build` for all. Turborepo caches unchanged packages automatically.
+   - **Module Federation (v731):** `pnpm turbo build --filter=@nidus/<module-name>` to build and deploy a single module. The shell does NOT need to be rebuilt when a module changes.
+   - **Never run a broader build than necessary** — it defeats the purpose of independent deployments.
+
+48) **New file placement — always create files in the location matching the active architecture phase.**
+   - Determine the active phase from the Architecture Roadmap table above before creating any new file.
+   - **Monolith/Option B:** Platform pages → `src/pages/platform-app/` · Simulator pages → `src/pages/simulator/` · Shared components → `src/components/ui/` · Shared utils → `src/utils/`.
+   - **Option A:** Platform pages → `apps/platform/src/pages/` · Simulator pages → `apps/simulator/src/pages/` · Shared components → `packages/ui/src/` · Shared utils → `packages/shared/src/utils/`.
+   - **Module Federation (v731):** New domain module → `packages/modules/<module-name>/` with its own `package.json` and `vite.config.js`. Register it in both shell `moduleConfig.js` files and create a dedicated CI/CD workflow file.
+   - **Never create Platform-specific files inside the Simulator app folder or vice versa**, regardless of phase.
+
+49) **Shared package import convention — use `@nidus/*` package names once Option A is active.**
+   - **Monolith/Option B:** Relative imports are acceptable: `../../components/ui/Button`, `../../utils/formatCurrency`.
+   - **Option A+:** All imports of shared code must use package names: `import { Button } from '@nidus/ui'` · `import { formatCurrency } from '@nidus/shared/utils/formatCurrency'` · `import { platformDb } from '@nidus/supabase'`. Relative paths that cross app or package boundaries will break builds.
+   - **Never use a relative path (`../../../packages/...`) to reach a workspace package.** Always use the registered package name.
+   - When adding a new export to a shared package, update that package's `index.js` exports and bump its version if it introduces a breaking change.
+
+50) **Module Federation registration — every new domain module must be fully registered.**
+   When creating a new domain module under `packages/modules/` (v731+):
+   - Copy `packages/modules/_template/` as the starting point.
+   - Add the module's remote URL env var to both `apps/platform/.env` and `apps/simulator/.env` (or whichever shell loads it).
+   - Register the remote in the relevant shell's `vite.config.js` `remotes` block.
+   - Add the lazy remote import to the shell's route file (`platformRoutes.jsx` or `simulatorRoutes.jsx`).
+   - Wrap the route in `<ModuleErrorBoundary>` — a broken module must never crash the shell.
+   - Create a dedicated CI/CD workflow file: `.github/workflows/module-<name>.yml`.
+   - Assign the module a unique local dev server port (see v731 plan for the port registry).
+   - If the new module is a Platform module, check rule 34 — create the Simulator equivalent if applicable.
 
 ## Simulator Module Architecture Rules
 
-The platform contains ONE unified application with TWO major domains that must be kept strictly separate:
+The platform contains ONE unified application with TWO major domains that must be kept strictly separate. **The folder paths below reflect the current active phase — see the Architecture Roadmap section for how these paths evolve.**
 
 ### Domain Separation
 1. **Platform (Project Management Application)**
@@ -68,16 +124,16 @@ The platform contains ONE unified application with TWO major domains that must b
    - Uses **Supabase `public` schema**
    - Uses **`platformDb` client** (legacy: `appDb` for backward compatibility)
    - UI routes start with: `/app/...`
-   - Components in: `src/components/app/`
-   - Modules in: `src/modules/platform/`
+   - **Monolith/Option B:** Components in `src/components/app/` · Modules in `src/modules/platform/`
+   - **Option A+:** Components in `apps/platform/src/components/` · Modules in `apps/platform/src/modules/`
 
 2. **Simulator (Project Management Simulator)**
    - Simulation scenarios, runs, and AI events
    - Uses **Supabase `sim` schema**
    - Uses **`simDb` client**
    - UI routes start with: `/simulator/...`
-   - Components in: `src/components/sim/`
-   - Modules in: `src/modules/sim/`
+   - **Monolith/Option B:** Components in `src/components/sim/` · Modules in `src/modules/sim/`
+   - **Option A+:** Components in `apps/simulator/src/components/` · Modules in `apps/simulator/src/modules/`
 
 ### Critical Rules for Simulator Development
 - **NEVER mix Platform and Simulator components, modules, or database calls**
@@ -88,23 +144,81 @@ The platform contains ONE unified application with TWO major domains that must b
 - Always place simulation logic in `modules/sim`
 - Always generate RLS-enabled SQL for new sim tables
 
-### Simulator Folder Structure
+### Folder Structure by Phase
+
+**Phase: Monolith / Option B (current — pre v730)**
 ```
 src/
-  app/
-    app/                    # Main Platform system routes
-    simulator/              # Simulation system routes
+  routes/
+    lazyImports.js          # All lazy page imports
+    platformRoutes.jsx      # Platform-only routes  [Option B: extracted here]
+    simulatorRoutes.jsx     # Simulator-only routes [Option B: extracted here]
+    authRoutes.jsx          # Auth/onboarding routes
+    publicRoutes.jsx        # Public/homepage routes
+  pages/
+    platform-app/           # Platform pages
+    app/                    # Platform app pages
+    simulator/              # Simulator pages
+    sim/                    # Simulator pages
+  components/
+    ui/                     # Shared UI components
+    app/                    # Platform-specific components
+    sim/                    # Simulator-specific components
   modules/
-    core/                   # Shared logic (auth, subscriptions, roles)
     platform/               # Platform logic (public schema)
     sim/                    # Simulator logic (sim schema)
   services/
     supabase/
       supabaseClient.js     # Exports platformDb and simDb
-  components/
-    ui/                     # Shared UI components
-    app/                    # Platform-specific components
-    sim/                    # Simulator-specific components
+    sim/                    # Simulator-specific services
+```
+
+**Phase: Option A — Turborepo Monorepo (v730+)**
+```
+apps/
+  platform/                 # Deployable: platform.nidus.com
+    src/
+      App.jsx               # Platform router only
+      moduleConfig.js       # Remote module URL registry [v731]
+      pages/                # Platform-only pages
+      components/           # Platform-only components
+      modules/              # Platform-only modules
+      routes/
+        platformRoutes.jsx
+      services/             # Platform-only services
+  simulator/                # Deployable: simulator.nidus.com
+    src/
+      App.jsx               # Simulator router only
+      moduleConfig.js       # Remote module URL registry [v731]
+      pages/                # Simulator-only pages
+      components/           # Simulator-only components
+      modules/              # Simulator-only modules
+      routes/
+        simulatorRoutes.jsx
+      services/             # Simulator-only services
+packages/
+  supabase/                 # @nidus/supabase — platformDb + simDb clients
+  ui/                       # @nidus/ui — shared UI components
+  shared/                   # @nidus/shared — utils, hooks, contexts, constants
+  config/                   # @nidus/config — menu registries
+  modules/                  # Domain modules [v731 Module Federation]
+    _template/              # Scaffold template for new modules
+    planning-hub/           # @nidus/planning-hub
+    risk-module/            # @nidus/risk-module
+    quality-module/         # @nidus/quality-module
+    financial-module/       # @nidus/financial-module
+    change-module/          # @nidus/change-module
+    stakeholder-module/     # @nidus/stakeholder-module
+    delays-module/          # @nidus/delays-module
+    stage-gates-module/     # @nidus/stage-gates-module
+    pmo-module/             # @nidus/pmo-module
+    portfolio-module/       # @nidus/portfolio-module
+    programme-module/       # @nidus/programme-module
+    sim-planning-module/    # @nidus/sim-planning-module
+    sim-risk-module/        # @nidus/sim-risk-module
+    sim-pmo-module/         # @nidus/sim-pmo-module
+    sim-scenarios-module/   # @nidus/sim-scenarios-module
+    ... (all domain modules follow this pattern)
 ```
 
 ### Supabase Client Configuration
@@ -152,6 +266,38 @@ The SIM module integrates with existing PM monetization and must support:
 - Scenario Packs (industry-specific)
 - Certificate sales
 - Corporate licensing
+
+## Architecture Roadmap & Active Phase
+
+The codebase is migrating from a monolith to a modular architecture in three sequential phases. **Always check which phase is currently active before creating new files, imports, or build commands.** Each phase's plan file is in `projectplan/`.
+
+### Phase Status
+
+| Phase | Plan | Status | Description |
+|-------|------|--------|-------------|
+| **Monolith** | (current) | ✅ Active | Single `src/`, single build, single deploy |
+| **Option B** | v729 | ⏳ Pending | Multi-entry Vite + CI/CD pipelines. Zero file moves. |
+| **Option A** | v730 | ⏳ Pending | Turborepo monorepo. `apps/` + `packages/`. Independent builds. |
+| **Module Federation** | v731 | ⏳ Pending | Each domain module deploys independently. Shell is thin host. |
+
+> **Update this table** when a phase completes — change ⏳ Pending to ✅ Active or ✔ Complete.
+
+### What Each Phase Unlocks
+
+- **Option B (v729):** `npm run build:platform` and `npm run build:simulator` build independently. CI/CD deploys Platform without touching Simulator and vice versa.
+- **Option A (v730):** `pnpm turbo build --filter=@nidus/platform-app` builds Platform only. All shared code lives in `packages/*` and is imported via `@nidus/*` package names. No relative imports across app boundaries.
+- **Module Federation (v731):** `pnpm turbo build --filter=@nidus/planning-hub` deploys only the Planning Hub module. Shell picks up the new version at runtime — no shell redeploy needed. Roll back any module in under 60 seconds by updating its CDN URL.
+
+### Rules That Change Per Phase
+
+| Rule | Monolith | Option B | Option A | v731 |
+|------|----------|----------|----------|------|
+| New Platform page location | `src/pages/platform-app/` | same | `apps/platform/src/pages/` | `packages/modules/<name>/src/pages/` |
+| New Simulator page location | `src/pages/simulator/` | same | `apps/simulator/src/pages/` | `packages/modules/sim-<name>/src/pages/` |
+| Lazy import location | `src/routes/lazyImports.js` | `src/routes/platformRoutes.jsx` or `simulatorRoutes.jsx` | app-local routes file | `lazy(() => import('module_name/routes'))` |
+| Shared code location | `src/utils/`, `src/components/ui/` | same | `packages/shared/`, `packages/ui/` | same as Option A |
+| Import style for shared code | relative `../../utils/x` | relative | `@nidus/shared`, `@nidus/ui` | `@nidus/shared`, `@nidus/ui` |
+| Build command | `npm run build` | `npm run build:platform` / `build:simulator` | `pnpm turbo build --filter=...` | `pnpm turbo build --filter=@nidus/<module>` |
 
 ## Database Table Registration Rule
 Whenever a new database table is created in the system, you MUST register it in the database_tables table for the ID Generation Rules system:

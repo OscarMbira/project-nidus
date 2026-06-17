@@ -1,0 +1,42 @@
+name: Shared Code Changed — Rebuild Both
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'src/shared/**'
+      - 'src/services/supabase/**'
+      - 'src/context/**'
+      - 'src/hooks/**'
+      - 'src/utils/**'
+      - 'src/components/ui/**'
+      - 'src/routes/routeCommon.jsx'
+      - 'src/routes/publicRoutes.jsx'
+      - 'src/routes/authRoutes.jsx'
+      - 'vite.base.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+
+  pull_request:
+    paths:
+      - 'src/shared/**'
+      - 'src/services/supabase/**'
+      - 'src/context/**'
+      - 'src/hooks/**'
+      - 'src/utils/**'
+      - 'src/components/ui/**'
+
+jobs:
+  rebuild-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:all
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.PLATFORM_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PLATFORM_SUPABASE_ANON_KEY }}

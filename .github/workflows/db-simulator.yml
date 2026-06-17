@@ -1,0 +1,28 @@
+name: Simulator DB Migration
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'supabase/migrations/simulator/**'
+      - 'supabase/migrations/shared/**'
+
+jobs:
+  migrate-simulator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Apply simulator migrations
+        run: |
+          for f in supabase/migrations/shared/*.sql supabase/migrations/simulator/*.sql; do
+            [ -f "$f" ] || continue
+            echo "Would apply: $f"
+          done
+          if [ -n "${{ secrets.SIMULATOR_DATABASE_URL }}" ]; then
+            supabase db push --db-url "${{ secrets.SIMULATOR_DATABASE_URL }}"
+          else
+            echo "SIMULATOR_DATABASE_URL not set — dry run only"
+          fi

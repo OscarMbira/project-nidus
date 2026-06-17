@@ -585,8 +585,6 @@ export default function ProjectUsers() {
         document.getElementById('pending-invitations-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 150)
     }
-  // Only fire when loading resolves or qpAction/qpTab change — not on every re-render
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, effectiveProjectId, qpAction, qpTab])
 
   return (

@@ -1,0 +1,54 @@
+name: Simulator — Build & Deploy
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'src/pages/simulator/**'
+      - 'src/pages/sim/**'
+      - 'src/components/sim/**'
+      - 'src/services/sim/**'
+      - 'src/modules/sim/**'
+      - 'src/routes/simulatorRoutes.jsx'
+      - 'src/SimulatorApp.jsx'
+      - 'src/simulator-main.jsx'
+      - 'simulator/**'
+      - 'vite.simulator.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+
+  pull_request:
+    paths:
+      - 'src/pages/simulator/**'
+      - 'src/pages/sim/**'
+      - 'src/services/sim/**'
+      - 'src/routes/simulatorRoutes.jsx'
+      - 'src/SimulatorApp.jsx'
+      - 'simulator/**'
+      - 'vite.simulator.config.js'
+
+jobs:
+  build-simulator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:simulator
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SIMULATOR_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SIMULATOR_SUPABASE_ANON_KEY }}
+      - name: Upload simulator build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulator-dist
+          path: dist/simulator
+      - name: Deploy to Vercel (Simulator)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: npx vercel deploy dist/simulator --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.SIMULATOR_VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

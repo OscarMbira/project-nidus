@@ -7,12 +7,12 @@ import PWAUpdatePrompt from './components/pwa/PWAUpdatePrompt'
 import { PublicRouteElements } from './routes/publicRoutes'
 import { AuthRouteElements } from './routes/authRoutes'
 import { PlatformRouteElements } from './routes/platformRoutes'
-import { SimulatorRouteElements } from './routes/simulatorRoutes'
 import * as RC from './routes/routeCommon'
 
 const { PWAInstallPrompt } = RC
 
-function App() {
+/** Platform-only SPA shell — excludes Simulator routes (v729 Option B). */
+export default function PlatformApp() {
   return (
     <ErrorBoundary>
       <Toaster
@@ -31,8 +31,7 @@ function App() {
           <PublicRouteElements />
           <PlatformRouteElements />
           <AuthRouteElements />
-          <SimulatorRouteElements />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/platform" replace />} />
         </Routes>
         <Suspense fallback={null}>
           <PWAInstallPrompt />
@@ -41,5 +40,3 @@ function App() {
     </ErrorBoundary>
   )
 }
-
-export default App

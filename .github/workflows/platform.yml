@@ -1,0 +1,53 @@
+name: Platform — Build & Deploy
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'src/pages/app/**'
+      - 'src/pages/platform-app/**'
+      - 'src/components/app/**'
+      - 'src/modules/platform/**'
+      - 'src/routes/platformRoutes.jsx'
+      - 'src/PlatformApp.jsx'
+      - 'src/platform-main.jsx'
+      - 'platform/**'
+      - 'vite.platform.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+
+  pull_request:
+    paths:
+      - 'src/pages/app/**'
+      - 'src/pages/platform-app/**'
+      - 'src/components/app/**'
+      - 'src/routes/platformRoutes.jsx'
+      - 'src/PlatformApp.jsx'
+      - 'platform/**'
+      - 'vite.platform.config.js'
+
+jobs:
+  build-platform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build:platform
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.PLATFORM_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PLATFORM_SUPABASE_ANON_KEY }}
+      - name: Upload platform build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-dist
+          path: dist/platform
+      - name: Deploy to Vercel (Platform)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: npx vercel deploy dist/platform --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.PLATFORM_VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
