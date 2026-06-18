@@ -1,202 +1,198 @@
 /**
- * Documentation Service
- * Loads and manages markdown documentation files
+ * Documentation Service — v733
+ * Fetches guide index from Supabase DB and content from Supabase Storage.
+ * Falls back to /Documentation/{filename} (public/) if Storage is unreachable.
  */
+import { platformDb } from './supabase/supabaseClient';
 
-// Map documentation files to their paths and platforms
-const DOCUMENTATION_MAP = {
-  // Platform Documentation
-  'platform': {
-    platform: 'platform',
-    name: 'Platform',
-    guides: [
-      {
-        id: 'getting-started',
-        title: 'Getting Started',
-        file: 'Platform_Getting_Started.md',
-        category: 'Getting Started'
-      },
-      {
-        id: 'project-manager-guide',
-        title: 'Project Manager Guide',
-        file: 'Project_Manager_Guide.md',
-        category: 'Role Guides'
-      },
-      {
-        id: 'team-lead-guide',
-        title: 'Team Lead Guide',
-        file: 'Team_Lead_Guide.md',
-        category: 'Role Guides'
-      },
-      {
-        id: 'team-member-guide',
-        title: 'Team Member Guide',
-        file: 'Team_Member_Guide.md',
-        category: 'Role Guides'
-      },
-      {
-        id: 'gantt-chart-guide',
-        title: 'Gantt Chart Guide',
-        file: 'Gantt_Chart_User_Guide.md',
-        category: 'Features'
-      },
-      {
-        id: 'kanban-guide',
-        title: 'Kanban Board Guide',
-        file: 'Kanban_User_Guide.md',
-        category: 'Features'
-      },
-      {
-        id: 'risk-management',
-        title: 'Risk Management Guide',
-        file: 'Risk_Management_Guide.md',
-        category: 'Features'
-      },
-      {
-        id: 'issue-management',
-        title: 'Issue Management Guide',
-        file: 'Issue_Management_Guide.md',
-        category: 'Features'
-      },
-      {
-        id: 'raid-log',
-        title: 'RAID Log Guide',
-        file: 'RAID_Log_User_Guide.md',
-        category: 'Features'
-      },
-      {
-        id: 'structured-pm-cs',
-        title: 'Structured PM - Controlling a Stage',
-        file: 'Structured_PM_CS_Guide.md',
-        category: 'Methodologies'
-      },
-      {
-        id: 'structured-pm-mp',
-        title: 'Structured PM - Managing Product Delivery',
-        file: 'Structured_PM_MP_Guide.md',
-        category: 'Methodologies'
-      },
-      {
-        id: 'scrum-events',
-        title: 'Scrum Events Guide',
-        file: 'Scrum_Events_Guide.md',
-        category: 'Methodologies'
-      },
-      {
-        id: 'sprint-board',
-        title: 'Sprint Board Guide',
-        file: 'Sprint_Board_User_Guide.md',
-        category: 'Methodologies'
-      }
-    ]
-  },
-  // Simulator Documentation
-  'simulator': {
-    platform: 'simulator',
-    name: 'Simulator',
-    guides: [
-      {
-        id: 'getting-started',
-        title: 'Getting Started',
-        file: 'User_Guide.md',
-        category: 'Getting Started'
-      },
-      {
-        id: 'help-content',
-        title: 'FAQ & Help',
-        file: 'Help_Content.md',
-        category: 'Help'
-      },
-      {
-        id: 'scenario-guide',
-        title: 'Scenario Guide',
-        file: 'PRD_Project_Management_Simulator.md',
-        category: 'Guides'
-      }
-    ]
-  }
-};
+const STORAGE_BASE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documentation`;
+
+/** Build the Supabase Storage public URL for a guide file. */
+function storageUrl(system, module, fileName) {
+  return `${STORAGE_BASE}/${system}/${module}/${fileName}`;
+}
 
 /**
- * Load a markdown file from the Documentation folder
+ * Fetch all distinct modules for a system, ordered by the minimum sort_order
+ * of their guides. Returns an array of module slug strings.
  */
-export async function loadDocumentationFile(filename) {
-  // Try multiple paths - in Vite, files in public/ are served at root
-  const paths = [
-    `/Documentation/${filename}`,  // Production (public/Documentation/)
-    `/docs/${filename}`,            // Alternative path
-    `../Documentation/${filename}`, // Development fallback
-  ];
+export async function getModules(system) {
+  const normalizedSystem = normalizeSystem(system);
+  const { data, error } = await platformDb
+    .from('documentation_guides')
+    .select('module, sort_order')
+    .eq('system', normalizedSystem)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
 
-  for (const path of paths) {
+  if (error) throw new Error(`Failed to fetch modules: ${error.message}`);
+
+  // Deduplicate preserving first-seen order (already sorted by sort_order)
+  const seen = new Set();
+  return (data || [])
+    .map(r => r.module)
+    .filter(m => { if (seen.has(m)) return false; seen.add(m); return true; });
+}
+
+/**
+ * Fetch all active guides for a system, optionally filtered by module.
+ * Returns the raw rows from documentation_guides.
+ */
+export async function getDocumentationGuides(system, module = null) {
+  const normalizedSystem = normalizeSystem(system);
+  let query = platformDb
+    .from('documentation_guides')
+    .select('*')
+    .eq('system', normalizedSystem)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
+
+  if (module) query = query.eq('module', module);
+
+  const { data, error } = await query;
+  if (error) throw new Error(`Failed to fetch guides: ${error.message}`);
+  return data || [];
+}
+
+/**
+ * Fetch a single guide by its slug and system.
+ */
+export async function getGuideById(system, guideId) {
+  const normalizedSystem = normalizeSystem(system);
+  const { data, error } = await platformDb
+    .from('documentation_guides')
+    .select('*')
+    .eq('system', normalizedSystem)
+    .eq('guide_id', guideId)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (error) throw new Error(`Failed to fetch guide: ${error.message}`);
+  return data;
+}
+
+/**
+ * Fetch distinct categories for a system + module combination.
+ */
+export async function getCategories(system, module = null) {
+  const guides = await getDocumentationGuides(system, module);
+  const seen = new Set();
+  return guides
+    .map(g => g.category)
+    .filter(c => { if (seen.has(c)) return false; seen.add(c); return true; });
+}
+
+/**
+ * Load the markdown content of a guide.
+ * Primary: Supabase Storage public URL.
+ * Fallback: /Documentation/{fileName} (public/ static files).
+ */
+export async function loadDocumentationFile(fileName, system = 'platform', module = 'general') {
+  const primaryUrl = storageUrl(system, module, fileName);
+  const fallbackUrl = `/Documentation/${fileName}`;
+
+  for (const url of [primaryUrl, fallbackUrl]) {
     try {
-      const response = await fetch(path);
-      if (response.ok) {
-        const content = await response.text();
-        // Verify it's not HTML (like index.html fallback)
-        if (content.trim().startsWith('<!DOCTYPE') || content.trim().startsWith('<!doctype') || content.trim().startsWith('<html')) {
-          console.warn(`Received HTML instead of markdown for ${filename} at path ${path}`);
-          continue; // Try next path
-        }
-        return content;
-      }
-    } catch (error) {
-      // Continue to next path
-      console.warn(`Failed to load ${filename} from ${path}:`, error);
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const text = await res.text();
+      if (text.trim().startsWith('<!') || text.trim().startsWith('<html')) continue;
+      return text;
+    } catch {
       continue;
     }
   }
 
-  // If all paths fail, throw error
-  throw new Error(`Failed to load documentation file: ${filename}. Please ensure the Documentation folder is in the public directory.`);
+  throw new Error(`Documentation file not found: ${fileName}`);
 }
 
 /**
- * Get all documentation guides for a platform
+ * Upsert a guide row in documentation_guides.
+ * Used by the admin editor.
  */
-export function getDocumentationGuides(platform) {
-  // Handle both old 'pm' and new 'platform' identifiers for backward compatibility
-  const normalizedPlatform = platform === 'pm' || platform === 'pm-platform' ? 'platform' : platform;
-  const platformKey = normalizedPlatform === 'platform' ? 'platform' : 'simulator';
-  return DOCUMENTATION_MAP[platformKey] || null;
+export async function saveGuideMetadata(guide) {
+  const { data, error } = await platformDb
+    .from('documentation_guides')
+    .upsert(guide, { onConflict: 'guide_id,system' })
+    .select()
+    .single();
+
+  if (error) throw new Error(`Failed to save guide: ${error.message}`);
+  return data;
 }
 
 /**
- * Get a specific guide by ID
+ * Soft-delete: set is_active = false.
  */
-export function getGuideById(platform, guideId) {
-  const platformData = getDocumentationGuides(platform);
-  if (!platformData) return null;
-  
-  return platformData.guides.find(guide => guide.id === guideId) || null;
+export async function deactivateGuide(id) {
+  const { error } = await platformDb
+    .from('documentation_guides')
+    .update({ is_active: false })
+    .eq('id', id);
+
+  if (error) throw new Error(`Failed to deactivate guide: ${error.message}`);
 }
 
 /**
- * Get guides by category
+ * Hard-delete: remove the DB row.
+ * Caller is responsible for also deleting the Storage file.
  */
-export function getGuidesByCategory(platform, category) {
-  const platformData = getDocumentationGuides(platform);
-  if (!platformData) return [];
-  
-  return platformData.guides.filter(guide => guide.category === category);
+export async function deleteGuide(id) {
+  const { error } = await platformDb
+    .from('documentation_guides')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw new Error(`Failed to delete guide: ${error.message}`);
 }
 
 /**
- * Get all unique categories for a platform
+ * Upload a .md file to Supabase Storage.
+ * Requires a service-role key — call only from admin context.
  */
-export function getCategories(platform) {
-  const platformData = getDocumentationGuides(platform);
-  if (!platformData) return [];
-  
-  const categories = [...new Set(platformData.guides.map(guide => guide.category))];
-  return categories;
+export async function uploadDocumentationFile(system, module, fileName, content) {
+  const path = `${system}/${module}/${fileName}`;
+  const { error } = await platformDb.storage
+    .from('documentation')
+    .upload(path, new Blob([content], { type: 'text/markdown' }), {
+      upsert: true,
+      contentType: 'text/markdown',
+    });
+
+  if (error) throw new Error(`Failed to upload file: ${error.message}`);
+  return storageUrl(system, module, fileName);
+}
+
+/**
+ * Delete a file from Supabase Storage.
+ */
+export async function deleteDocumentationFile(system, module, fileName) {
+  const path = `${system}/${module}/${fileName}`;
+  const { error } = await platformDb.storage
+    .from('documentation')
+    .remove([path]);
+
+  if (error) throw new Error(`Failed to delete file from Storage: ${error.message}`);
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function normalizeSystem(system) {
+  if (system === 'pm' || system === 'pm-platform') return 'platform';
+  return system === 'simulator' ? 'simulator' : 'platform';
 }
 
 export default {
-  loadDocumentationFile,
+  getModules,
   getDocumentationGuides,
   getGuideById,
-  getGuidesByCategory,
-  getCategories
+  getCategories,
+  loadDocumentationFile,
+  saveGuideMetadata,
+  deactivateGuide,
+  deleteGuide,
+  uploadDocumentationFile,
+  deleteDocumentationFile,
 };
-

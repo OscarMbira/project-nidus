@@ -1,0 +1,83 @@
+name: Module — Financial — Build & Deploy
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'packages/modules/financial-module/**'
+      - 'packages/shared/**'
+      - 'packages/ui/**'
+      - 'packages/supabase/**'
+      - 'pnpm-lock.yaml'
+
+  pull_request:
+    paths:
+      - 'packages/modules/financial-module/**'
+
+env:
+  MODULE_NAME: financial-module
+  CDN_PATH: modules/financial-module
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Get module version
+        id: version
+        run: echo "version=$(node -p "require('./packages/modules/$MODULE_NAME/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Build module
+        run: pnpm turbo build --filter=@nidus/financial-module
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+      - name: Upload module build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.MODULE_NAME }}-dist
+          path: packages/modules/${{ env.MODULE_NAME }}/dist
+
+      - name: Deploy to CDN (versioned path)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: |
+          echo "Deploy packages/modules/$MODULE_NAME/dist to CDN path $CDN_PATH/v${{ steps.version.outputs.version }}/"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Sync module docs to Supabase Storage
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: |
+          DOCS_DIR="packages/modules/$MODULE_NAME/docs"
+          if [ ! -d "$DOCS_DIR" ]; then exit 0; fi
+          for file in "$DOCS_DIR"/*.md; do
+            [ -f "$file" ] || continue
+            filename=$(basename "$file")
+            [ "$filename" = "README.md" ] && continue
+            curl -sf -X PUT \
+              "$SUPABASE_URL/storage/v1/object/documentation/platform/$MODULE_NAME/$filename" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+              -H "Content-Type: text/markdown" \
+              --data-binary "@$file" \
+              && echo "Synced $filename" || echo "WARN: failed to sync $filename"
+          done
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

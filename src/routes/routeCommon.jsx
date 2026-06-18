@@ -2,6 +2,8 @@ import { Navigate, useParams, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import * as LP from './lazyImports'
 
+const LOADING_TIMEOUT_MS = 10000
+
 /** Shows spinner first; after LOADING_TIMEOUT_MS shows "Taking too long? Refresh" so the page never hangs forever. */
 function LoadingFallbackWithTimeout() {
   const [timedOut, setTimedOut] = useState(false)
@@ -107,7 +109,7 @@ const {
   DefectDashboardPage, SimTestDashboard, SimTestSuites, SimTestSuiteDetail, SimTestCases,
   SimTestCaseCreate, SimTestCaseDetail, SimTestCaseBulkUpload, SimTestRuns, SimTestRunDetail,
   SimTestRunExecute, SimDefectListPage, SimDefectDetailPage, SimDefectDashboardPage,
-  BrandingSettings, BrandingHistory, PMOAdmin, ProjectTypes, ProjectStatuses, FundingSources,
+  BrandingSettings, BrandingHistory, PMOAdmin, PmoAdminUserManagement, ProjectTypes, ProjectStatuses, FundingSources,
   BudgetCategories, ManagerAssignments, AppointmentDashboard, MyAppointments,
   TeamAppointmentDashboard, MyTeamAppointments, SimAppointmentDashboard, SimMyAppointments,
   SimTeamAppointmentDashboard, SimMyTeamAppointments, PortfolioManagerAssignments,
@@ -117,7 +119,8 @@ const {
   StageGateView, GovernanceFrameworkList, GovernanceFrameworkForm, PoliciesComplianceList,
   PoliciesComplianceForm, PoliciesComplianceView, IntelligenceRulesPage, GovernanceRulesConfigPage,
   CustomMetricsPage, WorkstreamPlanList, WorkstreamPlanForm, LeaderboardAdmin, CertificateAdmin,
-  ScenarioAdmin, SimUserManagement, ProjectCostManagement, ProjectBudgetBaseline, ProjectEVMPage, ProjectsEVMLandingPage,
+  ScenarioAdmin, SimUserManagement, DocumentationAdminList, DocumentationAdminEditor,
+  ProjectCostManagement, ProjectBudgetBaseline, ProjectEVMPage, ProjectsEVMLandingPage,
   ProgrammeEVMPage, ProgrammeEVMLandingPage, PortfolioEVMPage, ProgrammeFinancialDashboard, ProjectProfitability, MyExpenses,
   ExpenseApproval, ExpenseApprovalThresholds, FinancialReportingHub, SimProjectCostManagement,
   SimProjectBudgetBaseline, SimProjectEVMPage, SimProgrammeEVMPage, SimPortfolioEVMPage,
@@ -463,6 +466,7 @@ export {
   BrandingSettings,
   BrandingHistory,
   PMOAdmin,
+  PmoAdminUserManagement,
   ProjectTypes,
   ProjectStatuses,
   FundingSources,
@@ -504,6 +508,8 @@ export {
   CertificateAdmin,
   ScenarioAdmin,
   SimUserManagement,
+  DocumentationAdminList,
+  DocumentationAdminEditor,
   ProjectCostManagement,
   ProjectBudgetBaseline,
   ProjectEVMPage,
