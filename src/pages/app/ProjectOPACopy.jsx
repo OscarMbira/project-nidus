@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, PauseCircle } from 'lucide-react'
 import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
-import { getOPAById } from '../../services/opaService'
-import { getOPAById as getSimOPAById } from '../../services/sim/simOPAService'
+import { getOPAService } from '../../services/resolvers/opaServiceResolver'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
@@ -81,8 +80,8 @@ export default function ProjectOPACopy() {
     if (!opaId || editId) return
     let cancelled = false
     ;(async () => {
-      const fetcher = isSim ? getSimOPAById : getOPAById
-      const { data, error } = await fetcher(opaId)
+      const opaSvc = getOPAService(isSim)
+      const { data, error } = await opaSvc.getOPAById(opaId)
       if (cancelled) return
       if (error) setErr(error.message)
       else {
@@ -334,7 +333,8 @@ export default function ProjectOPACopy() {
             <h2 className="font-semibold mb-3">Live preview</h2>
             <dl className="text-sm space-y-2">
               {visibleFields.map((f, index) => (
-                <div key={f.field_key}>                  <dt className="text-gray-500">{f.custom_label || f.field_label}</dt>
+                <div key={f.field_key}>
+                  <dt className="text-gray-500">{f.custom_label || f.field_label}</dt>
                   <dd>
                     {f.field_key === 'tags' && Array.isArray(previewSource.tags)
                       ? previewSource.tags.join(', ') || '—'

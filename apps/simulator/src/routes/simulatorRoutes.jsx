@@ -4,6 +4,8 @@ import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
+import { V734RoleRouteElements } from './v734RoleRoutes.jsx'
+import { SimPmoFederated, SimPmoTemplateLibraryFederated, SimPmoOrganisationalTemplatesFederated } from './SimPmoFederatedOutlet.jsx'
 import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
@@ -63,6 +65,8 @@ import {
   SimulatorDashboard,
   SimulationSetup,
   SimulationRunDashboard,
+  TeamSeatsDashboard,
+  TeamSeatClaimPage,
   SimEventInbox,
   SimStageGateReview,
   SimExceptionReportFlow,
@@ -573,10 +577,12 @@ import {
   ProcessTemplatesRoutesSimPmo,
   ProcessTemplatesRoutesSimPm,
   FormsGallery,
+  ProjectFieldTemplates,
   FormNew,
   FormEdit,
   FormView,
   FormTemplateAdmin,
+  FormTemplateBuilder,
   ProjectMemberInvitation,
   Settings,
   PWASettings,
@@ -854,6 +860,32 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <SimulationSetup />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/team/dashboard" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <TeamSeatsDashboard />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/team/claim" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <TeamSeatClaimPage />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4461,6 +4493,9 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/pmo/field-templates/*" element={<SimPmoFederated />} />
+                <Route path="simulator/pmo/template-library/*" element={<SimPmoTemplateLibraryFederated />} />
+                <Route path="simulator/pmo/organisational-templates/*" element={<SimPmoOrganisationalTemplatesFederated />} />
                 <Route path="simulator/pmo/forms" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -4468,6 +4503,32 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <SimulatorPMOLayout>
                             <FormTemplateAdmin mode="sim" />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/forms/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <FormTemplateBuilder mode="sim" />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/forms/:templateCode/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <FormTemplateBuilder mode="sim" />
                           </SimulatorPMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4737,6 +4798,7 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
                 <Route path="simulator/pm/projects/:projectId/forms" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormsGallery mode="sim" basePath="/simulator/pm/projects" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/pm/projects/:projectId/field-templates" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><ProjectFieldTemplates /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/pm/projects/:projectId/forms/:templateCode/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormNew mode="sim" basePath="/simulator/pm/projects" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/edit" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormEdit mode="sim" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/view" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormView mode="sim" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
@@ -5747,6 +5809,7 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                {V734RoleRouteElements()}
     </>
   )
 }

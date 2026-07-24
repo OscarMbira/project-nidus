@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useMenu } from '../hooks/useMenu'
+import { SidebarNavTier } from '@nidus/ui'
+import { getSidebarNestedItemPadding } from '@nidus/shared/utils/sidebarNavUtils'
 
 function MenuItem({ menuItem, level = 0 }) {
   const location = useLocation()
@@ -53,7 +55,7 @@ function MenuItem({ menuItem, level = 0 }) {
         href={menuItem.external_url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        className={`block ${getSidebarNestedItemPadding(level, { base: 'px-3', nested: 'pr-3' })} py-2 rounded-md text-sm font-medium transition-colors ${
           isActive
             ? 'bg-blue-600 text-white'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -74,7 +76,7 @@ function MenuItem({ menuItem, level = 0 }) {
       <Link
         to={menuItem.route_path || '#'}
         onClick={handleClick}
-        className={`block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+        className={`block ${getSidebarNestedItemPadding(level, { base: 'px-3', nested: 'pr-3' })} py-2 rounded-md text-sm font-medium transition-colors ${
           isActive
             ? 'bg-blue-600 text-white'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -84,11 +86,11 @@ function MenuItem({ menuItem, level = 0 }) {
         {menuContent}
       </Link>
       {hasChildren && isExpanded && (
-        <div className={`ml-4 mt-1 space-y-1 border-l-2 ${isActive ? 'border-blue-600' : 'border-gray-200 dark:border-gray-700'}`}>
+        <SidebarNavTier borderClassName={isActive ? 'border-blue-600' : 'border-gray-200 dark:border-gray-700'}>
           {menuItem.children.map((child) => (
             <MenuItem key={child.id} menuItem={child} level={level + 1} />
           ))}
-        </div>
+        </SidebarNavTier>
       )}
     </div>
   )

@@ -1,0 +1,70 @@
+{
+  "F004": {
+    "stakeholder_name": {
+      "help": "Enter the stakeholder’s full name (or group name) as used in organisational records.",
+      "sample": "Priya Nair — Head of Shared Services"
+    },
+    "current_engagement": {
+      "help": "Select how engaged this stakeholder is today (unaware → leading). Base this on recent behaviour, not aspiration.",
+      "sample": "neutral"
+    },
+    "desired_engagement": {
+      "help": "Select the engagement level required for project success by the next major milestone.",
+      "sample": "supportive"
+    },
+    "key_requirements": {
+      "help": "Summarise what this stakeholder needs from the project (outcomes, constraints, non-negotiables). Be factual and specific.",
+      "sample": "Retain department file structures; SSO before pilot; weekly status for Shared Services leadership."
+    },
+    "engagement_strategy": {
+      "help": "Describe how you will move them from current to desired engagement (forums, sponsors, incentives, escalation).",
+      "sample": "Bi-weekly working sessions with Shared Services SMEs; COO sponsorship message at kick-off."
+    },
+    "communication_approach": {
+      "help": "State channel, frequency, content, and owner for communications with this stakeholder.",
+      "sample": "Monthly steering pack (email + 30-min call); owner: Project Manager."
+    },
+    "engagement_actions": {
+      "help": "List near-term actions, owners, and due dates that will improve engagement.",
+      "sample": "1) Schedule discovery workshop by 05 Sep 2026 (PM). 2) Share draft RACI for review (BA)."
+    },
+    "responsible_person": {
+      "help": "Name the team member accountable for managing this stakeholder relationship.",
+      "sample": "Jordan Lee — Project Manager"
+    },
+    "review_date": {
+      "help": "Enter the next date this engagement assessment will be reviewed and updated.",
+      "sample": "2026-09-30"
+    }
+  },
+  "F050": {
+    "change_id": {
+      "help": "Enter the unique change identifier used in the change log / change request process (e.g. CR-2026-014).",
+      "sample": "CR-2026-014"
+    },
+    "change_summary": {
+      "help": "Summarise what is changing in one or two sentences: scope, deliverable, or baseline impacted.",
+      "sample": "Extend pilot from 200 to 500 users in Finance to validate SSO under peak load."
+    },
+    "status": {
+      "help": "Select the current decision status of this change (submitted, approved, rejected, or deferred).",
+      "sample": "approved"
+    },
+    "decision_date": {
+      "help": "Enter the date the CCB / sponsor decision was recorded.",
+      "sample": "2026-10-12"
+    },
+    "corrective_actions": {
+      "help": "List actions to correct the issue that triggered the change, with owners and due dates.",
+      "sample": "Increase IdP connection pool — Owner: IT Ops — Due: 20 Oct 2026."
+    },
+    "preventive_actions": {
+      "help": "List actions to prevent recurrence (process, monitoring, training), with owners and due dates.",
+      "sample": "Add load test gate before each pilot expansion — Owner: QA Lead — Due: 25 Oct 2026."
+    },
+    "verification_date": {
+      "help": "Enter the date corrective/preventive actions were (or will be) verified as complete.",
+      "sample": "2026-10-28"
+    }
+  }
+}

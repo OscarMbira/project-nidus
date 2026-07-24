@@ -51,6 +51,7 @@ const Layout = ({ children }) => {
     path.startsWith('/app/project-members') ||
     path.startsWith('/app/project-users') ||
     path.startsWith('/app/local-data-extensions') ||
+    path.startsWith('/app/pmo') ||
     path.startsWith('/app/settings/invitation-templates') ||
     path.startsWith('/app/invitation-tracker') ||
     path.startsWith('/platform/invitation-tracker') ||

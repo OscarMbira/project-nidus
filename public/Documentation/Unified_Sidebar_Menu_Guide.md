@@ -94,6 +94,18 @@ Remove `registry_fallback` and client injection once SQL is applied in productio
 | `npm run validate:menus` | Verify registry routes exist in App.jsx |
 | `npm run audit:menus-static` | Export static config audit CSV |
 
+## Renaming menu labels (no SQL)
+
+System Admins can rename sidebar labels from the **Role Menu Access** admin page (`RoleMenuCustomiser`, `variant="admin"`) in both Platform and Simulator — no hand-written SQL migration required for label-only changes.
+
+- Open **Admin → Role Menu Access** (System Admin variant only; PMO Admin pages do not show rename controls).
+- Click the pencil icon next to a non-system menu item, edit the label, then press Enter or blur to save.
+- Saves call `public.rename_menu_item` (`SQL/v749_menu_item_label_rename.sql`), which updates `menu_items.menu_label` only — structural columns (`route_path`, `menu_code`, `parent_menu_id`) cannot be changed via this RPC.
+- System-protected rows (`is_system_menu = TRUE`) remain read-only in the UI and are rejected by the RPC.
+- After a successful rename, the editor clears the local sidebar menu cache and reloads the menu tree; other users see the new label after cache expiry.
+
+For new items or structural changes, continue using SQL migrations and `menuRegistry.js` as described above.
+
 ## SQL versions (v638 migration)
 
 | File | Purpose |

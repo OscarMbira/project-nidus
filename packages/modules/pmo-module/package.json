@@ -1,0 +1,31 @@
+{
+  "name": "@nidus/pmo-module",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.jsx",
+    "./routes": "./src/routes.jsx",
+    "./pages/*": "./src/pages/*"
+  },
+  "scripts": {
+    "dev": "vite --port 5209 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5209 --strictPort",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@nidus/config": "workspace:*",
+    "@nidus/shared": "workspace:*",
+    "@nidus/supabase": "workspace:*",
+    "@nidus/ui": "workspace:*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^7.2.6"
+  }
+}

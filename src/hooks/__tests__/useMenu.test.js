@@ -19,8 +19,8 @@ describe('resolveVisibleTracks', () => {
   })
 
   it('hybrid org with a project track returns only that project track', () => {
-    const result = resolveVisibleTracks('hybrid', 'pmbok', true, null)
-    expect([...result]).toEqual(['pmbok'])
+    const result = resolveVisibleTracks('hybrid', 'standards_based', true, null)
+    expect([...result]).toEqual(['standards_based'])
   })
 
   it('hybrid org with user pref returns only that preferred track', () => {
@@ -29,20 +29,20 @@ describe('resolveVisibleTracks', () => {
   })
 
   it('hybrid org: user pref takes priority over project track', () => {
-    const result = resolveVisibleTracks('hybrid', 'pmbok', true, 'structured')
+    const result = resolveVisibleTracks('hybrid', 'standards_based', true, 'structured')
     expect([...result]).toEqual(['structured'])
   })
 
   it('structured org with override=false ignores differing project track', () => {
-    const result = resolveVisibleTracks('structured', 'pmbok', false, null)
+    const result = resolveVisibleTracks('structured', 'standards_based', false, null)
     expect([...result]).toEqual(['structured'])
-    expect([...result]).not.toContain('pmbok')
+    expect([...result]).not.toContain('standards_based')
     expect([...result]).not.toContain('agile')
   })
 
-  it('pmbok org with override=false ignores differing project track', () => {
-    const result = resolveVisibleTracks('pmbok', 'agile', false, null)
-    expect([...result]).toEqual(['pmbok'])
+  it('standards_based org with override=false ignores differing project track', () => {
+    const result = resolveVisibleTracks('standards_based', 'agile', false, null)
+    expect([...result]).toEqual(['standards_based'])
     expect([...result]).not.toContain('structured')
     expect([...result]).not.toContain('agile')
   })
@@ -52,10 +52,10 @@ describe('resolveVisibleTracks', () => {
     expect([...result]).toEqual(['agile'])
   })
 
-  it('structured org with override=true and project=pmbok includes both', () => {
-    const result = resolveVisibleTracks('structured', 'pmbok', true, null)
+  it('structured org with override=true and project=standards_based includes both', () => {
+    const result = resolveVisibleTracks('structured', 'standards_based', true, null)
     expect([...result]).toContain('structured')
-    expect([...result]).toContain('pmbok')
+    expect([...result]).toContain('standards_based')
     expect([...result]).not.toContain('agile')
   })
 
@@ -63,7 +63,7 @@ describe('resolveVisibleTracks', () => {
     const result = resolveVisibleTracks('agile', 'structured', true, null)
     expect([...result]).toContain('agile')
     expect([...result]).toContain('structured')
-    expect([...result]).not.toContain('pmbok')
+    expect([...result]).not.toContain('standards_based')
   })
 
   it('hybrid org with hybrid project track returns all tracks', () => {
@@ -181,19 +181,19 @@ describe('filterMenuTreeByVisibleTracks', () => {
   const tree = [
     universalNode,
     makeTrackHeader('structured'),
-    makeTrackHeader('pmbok'),
+    makeTrackHeader('standards_based'),
     makeTrackHeader('agile'),
   ]
 
   it('all tracks visible returns full tree', () => {
-    const result = filterMenuTreeByVisibleTracks(tree, new Set(['structured', 'pmbok', 'agile']))
+    const result = filterMenuTreeByVisibleTracks(tree, new Set(['structured', 'standards_based', 'agile']))
     expect(result).toHaveLength(4)
   })
 
-  it('pmbok-only removes structured and agile track headers', () => {
-    const result = filterMenuTreeByVisibleTracks(tree, new Set(['pmbok']))
+  it('standards_based-only removes structured and agile track headers', () => {
+    const result = filterMenuTreeByVisibleTracks(tree, new Set(['standards_based']))
     const codes = result.map((n) => n.methodology_track || n.menu_code)
-    expect(codes).toContain('pmbok')
+    expect(codes).toContain('standards_based')
     expect(codes).not.toContain('structured')
     expect(codes).not.toContain('agile')
     expect(result.some((n) => n.menu_code === 'pmo-cat-exec')).toBe(true)
@@ -202,7 +202,7 @@ describe('filterMenuTreeByVisibleTracks', () => {
   it('structured-only keeps structured track and universal nodes', () => {
     const result = filterMenuTreeByVisibleTracks(tree, new Set(['structured']))
     expect(result.some((n) => n.methodology_track === 'structured')).toBe(true)
-    expect(result.some((n) => n.methodology_track === 'pmbok')).toBe(false)
+    expect(result.some((n) => n.methodology_track === 'standards_based')).toBe(false)
     expect(result.some((n) => n.methodology_track === 'agile')).toBe(false)
     expect(result.some((n) => n.menu_code === 'pmo-cat-exec')).toBe(true)
   })

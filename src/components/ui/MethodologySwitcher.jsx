@@ -8,7 +8,7 @@ import {
 const OPTIONS = [
   { value: '', label: 'All tracks (expand)' },
   { value: 'structured', label: 'Structured focus' },
-  { value: 'pmbok', label: 'PMBOK focus' },
+  { value: 'standards_based', label: 'Standards-Based focus' },
   { value: 'agile', label: 'Agile focus' },
 ]
 

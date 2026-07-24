@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense } from 'react'
 import { Toaster } from 'react-hot-toast'
+import { UnsavedChangesProvider } from '@nidus/shared/context/UnsavedChangesContext'
+import { LanguageProvider } from '@nidus/shared/context/LanguageContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import OfflineIndicator from './components/pwa/OfflineIndicator'
 import PWAUpdatePrompt from './components/pwa/PWAUpdatePrompt'
@@ -25,17 +27,21 @@ export default function App() {
         }}
       />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <OfflineIndicator />
-        <PWAUpdatePrompt />
-        <Routes>
-          {PublicRouteElements()}
-          {AuthRouteElements()}
-          {SimulatorRouteElements()}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        <Suspense fallback={null}>
-          <PWAInstallPrompt />
-        </Suspense>
+        <LanguageProvider>
+          <UnsavedChangesProvider>
+            <OfflineIndicator />
+            <PWAUpdatePrompt />
+            <Routes>
+              {PublicRouteElements()}
+              {AuthRouteElements()}
+              {SimulatorRouteElements()}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <Suspense fallback={null}>
+              <PWAInstallPrompt />
+            </Suspense>
+          </UnsavedChangesProvider>
+        </LanguageProvider>
       </BrowserRouter>
     </ErrorBoundary>
   )

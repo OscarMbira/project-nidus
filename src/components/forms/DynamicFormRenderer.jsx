@@ -17,7 +17,7 @@ export default function DynamicFormRenderer({ schema, values = {}, rows = {}, on
         <FormSectionCard key={section.key} title={section.title}>
           {(section.fields || []).map((field) => (
             <div key={field.key} className="space-y-1">
-              <label className="text-xs text-gray-300">{field.label}</label>
+              <label className="text-xs text-gray-600 dark:text-gray-300">{field.label}</label>
               <FormFieldRenderer field={field} value={values[field.key]} onChange={onValueChange} />
             </div>
           ))}

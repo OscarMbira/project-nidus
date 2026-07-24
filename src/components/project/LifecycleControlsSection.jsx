@@ -64,7 +64,7 @@ export default function LifecycleControlsSection({
               <option value="">Select Methodology...</option>
               <option value="hybrid">Hybrid (all tracks)</option>
               <option value="structured">Structured / Traditional</option>
-              <option value="pmbok">PMBOK Process Groups</option>
+              <option value="standards_based">Standards-Based Process Groups</option>
               <option value="agile">Agile & Lean</option>
               <option value="Structured">Structured (legacy)</option>
               <option value="Agile">Agile (legacy)</option>

@@ -58,7 +58,7 @@ describe('menuRegistry', () => {
 describe('pmoSidebarCategories methodology (v671)', () => {
   it('exports three methodology track definitions', () => {
     expect(METHODOLOGY_TRACK_DEFS.length).toBe(3)
-    expect(METHODOLOGY_TRACK_DEFS.map((d) => d.track).sort()).toEqual(['agile', 'pmbok', 'structured'])
+    expect(METHODOLOGY_TRACK_DEFS.map((d) => d.track).sort()).toEqual(['agile', 'standards_based', 'structured'])
   })
 })
 

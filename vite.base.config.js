@@ -70,11 +70,21 @@ function pwaRuntimeCaching() {
   ]
 }
 
-/** Shared Vite settings for all entry points (legacy, platform, simulator). */
-export function createBaseViteConfig({ appRoot, outDir, pwaScope, pwaManifest, manualChunksExtra = {} }) {
+/** Shared Vite settings for all entry points (legacy, platform, simulator, monorepo apps). */
+export function createBaseViteConfig({
+  appRoot,
+  srcDir,
+  publicDir,
+  outDir,
+  pwaScope,
+  pwaManifest,
+  manualChunksExtra = {},
+}) {
+  const resolvedSrc = srcDir || path.resolve(appRoot, 'src')
+  const resolvedPublic = publicDir || path.resolve(__dirname, 'public')
   return defineConfig({
     root: appRoot,
-    publicDir: path.resolve(__dirname, 'public'),
+    publicDir: resolvedPublic,
     plugins: [
       react({ jsxRuntime: 'automatic' }),
       nodePolyfills({ include: ['stream'] }),
@@ -122,8 +132,8 @@ export function createBaseViteConfig({ appRoot, outDir, pwaScope, pwaManifest, m
     resolve: {
       dedupe: ['react', 'react-dom', 'react-router-dom'],
       alias: {
-        '@': path.resolve(__dirname, 'src'),
-        '@shared': path.resolve(__dirname, 'src/shared'),
+        '@': resolvedSrc,
+        '@shared': path.resolve(resolvedSrc, 'shared'),
       },
     },
     server: {

@@ -43,3 +43,16 @@ Use git to checkout the previous function version before redeploying.
 - `db-simulator.yml` runs on changes to `supabase/migrations/simulator/**` or `shared/**`
 
 Always test migrations on a staging Supabase project before merging to `main`.
+
+---
+
+## v730 Monorepo note (single Supabase project)
+
+During development, Platform and Simulator share **one Supabase project** (`public` + `sim` schemas).  
+Rollback steps above apply to the same project until a post-launch split to separate projects.
+
+When splitting (future):
+
+- `supabase-platform/` — Platform project migrations + Edge Functions
+- `supabase-simulator/` — Simulator project migrations + Edge Functions
+- Roll back each project independently via its CI workflow (`db-platform.yml`, `db-simulator.yml`)

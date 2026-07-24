@@ -1,0 +1,178 @@
+import { useState, useEffect } from 'react';
+import { Users, Calendar, FileCheck, AlertCircle, TrendingUp, CheckCircle, Clock } from 'lucide-react';
+import { getBoardDashboardStats } from '../../../services/directingProjectService';
+
+export default function ProjectBoardDashboard({ boardId }) {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (boardId) {
+      loadDashboardStats();
+    }
+  }, [boardId]);
+
+  const loadDashboardStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getBoardDashboardStats(boardId);
+      setStats(data);
+    } catch (err) {
+      console.error('Error loading dashboard stats:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+        <div className="flex items-center gap-2 text-red-800 dark:text-red-300">
+          <AlertCircle className="h-5 w-5" />
+          <span className="font-medium">Error loading dashboard: {error}</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
+
+  const statCards = [
+    {
+      title: 'Board Members',
+      value: stats.totalMembers,
+      subtitle: `${stats.activeMembers} active`,
+      icon: Users,
+      color: 'blue',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      borderColor: 'border-blue-200 dark:border-blue-800'
+    },
+    {
+      title: 'Meetings',
+      value: stats.totalMeetings,
+      subtitle: `${stats.upcomingMeetings} upcoming`,
+      icon: Calendar,
+      color: 'green',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
+      iconColor: 'text-green-600 dark:text-green-400',
+      borderColor: 'border-green-200 dark:border-green-800'
+    },
+    {
+      title: 'Decisions',
+      value: stats.totalDecisions,
+      subtitle: `${stats.pendingDecisions} pending`,
+      icon: CheckCircle,
+      color: 'purple',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      borderColor: 'border-purple-200 dark:border-purple-800'
+    },
+    {
+      title: 'Authorizations',
+      value: stats.totalAuthorizations,
+      subtitle: `${stats.activeAuthorizations} active`,
+      icon: FileCheck,
+      color: 'orange',
+      bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      borderColor: 'border-orange-200 dark:border-orange-800'
+    }
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Project Board Dashboard
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Overview of project governance activities
+          </p>
+        </div>
+        <button
+          onClick={loadDashboardStats}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+        >
+          Refresh
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {statCards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <div
+              key={index}
+              className={`${card.bgColor} border ${card.borderColor} rounded-lg p-6 transition-all hover:shadow-md`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className={`p-3 rounded-lg ${card.iconColor} bg-white dark:bg-gray-800`}>
+                  <Icon className="h-6 w-6" />
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  {card.title}
+                </p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {card.subtitle}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Activity Summary */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          Recent Activity
+        </h3>
+        <div className="space-y-3">
+          {stats.upcomingMeetings > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {stats.upcomingMeetings} upcoming {stats.upcomingMeetings === 1 ? 'meeting' : 'meetings'} scheduled
+              </span>
+            </div>
+          )}
+          {stats.pendingDecisions > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {stats.pendingDecisions} {stats.pendingDecisions === 1 ? 'decision' : 'decisions'} awaiting resolution
+              </span>
+            </div>
+          )}
+          {stats.activeAuthorizations > 0 && (
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {stats.activeAuthorizations} active project {stats.activeAuthorizations === 1 ? 'authorization' : 'authorizations'}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

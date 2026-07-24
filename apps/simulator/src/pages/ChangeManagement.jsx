@@ -1,0 +1,254 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { simDb } from '@nidus/supabase';
+import {
+  LayoutDashboard,
+  List,
+  ArrowLeft,
+  Settings
+} from 'lucide-react';
+import {
+  fetchChangeRequests
+} from '../services/changeManagementService';
+import ChangeManagementDashboard from '../components/change/ChangeManagementDashboard';
+import ChangeRequestForm from '../components/change/ChangeRequestForm';
+import ChangeRequestList from '../components/change/ChangeRequestList';
+import ChangeAssessmentForm from '../components/change/ChangeAssessmentForm';
+import { useViewMode } from '@nidus/shared/hooks/useViewMode';
+import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
+import { CHANGE_REQUEST_CATEGORY } from '../features/local-data-extensions/components/InheritedChangeRequestFields';
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam';
+
+export default function ChangeManagement() {
+  const { projectId, routeKey } = usePlatformProjectId();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [project, setProject] = useState(null);
+  const [accountId, setAccountId] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const [requests, setRequests] = useState([]);
+
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+
+  const [editingRequest, setEditingRequest] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-management-requests', 'grid');
+
+  useEffect(() => {
+    if (projectId) {
+      loadProjectData();
+      loadChangeData();
+    }
+  }, [projectId]);
+
+  const loadProjectData = async () => {
+    try {
+      const [aid, projectRes] = await Promise.all([
+        getCurrentUserAccountId(),
+        simDb
+          .from('practice_projects')
+          .select('id, project_name, project_code, project_status')
+          .eq('id', projectId)
+          .maybeSingle(),
+      ]);
+      setAccountId(aid || null);
+      if (projectRes.error) throw projectRes.error;
+      setProject(projectRes.data);
+    } catch (error) {
+      console.error('Error loading project:', error);
+    }
+  };
+
+  const loadChangeData = async () => {
+    try {
+      setLoading(true);
+      const requestsData = await fetchChangeRequests(projectId);
+      setRequests(requestsData);
+    } catch (error) {
+      console.error('Error loading change data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    navigate(platformProjectPath(routeKey || projectId));
+  };
+
+  const handleRequestSuccess = () => {
+    loadChangeData();
+    setShowRequestForm(false);
+    setEditingRequest(null);
+  };
+
+  const handleAssessmentSuccess = () => {
+    loadChangeData();
+    setShowAssessmentForm(false);
+    setSelectedRequest(null);
+  };
+
+  const handleEditRequest = (request) => {
+    setEditingRequest(request);
+    setShowRequestForm(true);
+  };
+
+  const handleSelectRequest = (request) => {
+    setSelectedRequest(request);
+    setShowAssessmentForm(true);
+  };
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'requests', label: 'Change Requests', icon: List },
+    { id: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <ChangeManagementDashboard projectId={projectId} />;
+
+      case 'requests':
+        return (
+          <ChangeRequestList
+            requests={requests}
+            onEdit={handleEditRequest}
+            onRefresh={loadChangeData}
+            onAdd={() => {
+              setEditingRequest(null);
+              setShowRequestForm(true);
+            }}
+            onSelect={handleSelectRequest}
+            viewMode={changeRequestViewMode}
+            onViewModeChange={setChangeRequestViewMode}
+          />
+        );
+
+      case 'settings':
+        return (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+              Change Request field templates
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Inherit fields from PMO / portfolio / programme defaults for change requests, then disable
+              or add local fields for this project. Mandatory lock prevents lower tiers from turning a
+              field off.
+            </p>
+            {accountId && projectId ? (
+              <TierFieldCustomisationPanel
+                db={simDb}
+                accountId={accountId}
+                tier="project"
+                entityType="project"
+                entityId={projectId}
+                entityName={project?.project_name || 'Project'}
+                category={CHANGE_REQUEST_CATEGORY}
+              />
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Change Management
+                </h1>
+                {project && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {project.project_name} ({project.project_code})
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8 overflow-x-auto">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-1 py-4 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
+                    activeTab === tab.id
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {renderTabContent()}
+      </div>
+
+      {showRequestForm && (
+        <ChangeRequestForm
+          projectId={projectId}
+          request={editingRequest}
+          accountId={accountId}
+          onClose={() => {
+            setShowRequestForm(false);
+            setEditingRequest(null);
+          }}
+          onSuccess={handleRequestSuccess}
+        />
+      )}
+
+      {showAssessmentForm && selectedRequest && (
+        <ChangeAssessmentForm
+          projectId={projectId}
+          changeRequestId={selectedRequest.id}
+          accountId={accountId}
+          onClose={() => {
+            setShowAssessmentForm(false);
+            setSelectedRequest(null);
+          }}
+          onSuccess={handleAssessmentSuccess}
+        />
+      )}
+    </div>
+  );
+}

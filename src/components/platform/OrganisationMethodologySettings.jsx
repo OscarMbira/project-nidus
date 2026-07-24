@@ -4,7 +4,7 @@ import { platformDb } from '../../services/supabase/supabaseClient'
 const METHODOLOGY_OPTIONS = [
   { value: 'hybrid', label: 'Hybrid (all tracks visible)' },
   { value: 'structured', label: 'Structured / Traditional' },
-  { value: 'pmbok', label: 'PMBOK Process Groups' },
+  { value: 'standards_based', label: 'Standards-Based Process Groups' },
   { value: 'agile', label: 'Agile & Lean' },
 ]
 

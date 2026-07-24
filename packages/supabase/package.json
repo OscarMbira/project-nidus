@@ -1,0 +1,19 @@
+{
+  "name": "@nidus/supabase",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./platformRestSelect": "./src/platformRestSelect.js"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@nidus/supabase: no build step')\"",
+    "lint": "eslint src/",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.78.0"
+  }
+}

@@ -46,3 +46,11 @@ const { statusFilter, setStatusFilter, counts } = useRecordLifecycleFilter('risk
 ## Registry
 
 Table mappings: `src/config/recordLifecycleRegistry.js`
+
+## Approval justification, field lock (v751), and defer-apply (v752)
+
+Authorisers must enter mandatory justification before Approve/Reject in the Pending Approvals modal. Governed records in `unauthorised` status are read-only on detail/edit forms.
+
+Defer-apply (v752): when approval is active, field edits are staged in `record_pending_changes` — live rows keep last-approved values until validation merges proposed changes. The review modal shows **Current vs Proposed** diff via `PendingChangesDiff`.
+
+SQL: `v750`–`v752`. Helper: `@nidus/shared/utils/lifecycleGovernedUpdate`.

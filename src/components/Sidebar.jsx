@@ -85,7 +85,9 @@ import { useBranding } from '../context/BrandingContext'
 import { resolveMenuRoutePath, resolveMenuRoutePathForLayout, menuPathIsActive } from '../utils/sidebarRouteUtils'
 import { persistMenuLayoutScope } from '../utils/menuLayoutUtils'
 import { resolveSidebarThemeTokens } from '../utils/sidebarThemeUtils'
+import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import { useOpenPlanningFindingsCount } from '../hooks/useOpenPlanningFindingsCount'
+import { SidebarNavTier } from '@nidus/ui'
 import MethodologySwitcher from './ui/MethodologySwitcher'
 
 // Icon mapping for menu items
@@ -225,7 +227,7 @@ function SidebarMenuItem({
     }, [location.pathname, location.search, usesAccordion, isChildActive])
 
     const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
-    const trackIconMap = { structured: Shield, pmbok: Settings2, agile: Zap }
+    const trackIconMap = { structured: Shield, standards_based: Settings2, agile: Zap }
     const TrackIcon = trackIconMap[menuItem.methodology_track] || iconMap[menuItem.menu_icon] || Shield
     const accent = menuItem.menu_color || '#3B82F6'
     const badgeText = menuItem.badge_text || 'S'
@@ -242,7 +244,7 @@ function SidebarMenuItem({
     const sectionActiveStyle = isChildActive
       ? { backgroundColor: accent, color: tokens.activeTextColor }
       : {}
-    const sectionClassName = `group flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors w-full ${
+    const sectionClassName = `group flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors w-full ${
       isChildActive ? 'shadow-sm' : tokens.sectionParentClass
     }`
 
@@ -271,10 +273,8 @@ function SidebarMenuItem({
           )}
         </button>
         {hasChildren && expanded && (
-          <div
-            className={`ml-4 mt-1 space-y-1 border-l-2 pl-2 ${
-              isChildActive ? '' : tokens.childBorderClass
-            }`}
+          <SidebarNavTier
+            borderClassName={isChildActive ? '' : tokens.childBorderClass}
             style={isChildActive ? { borderLeftColor: accent } : undefined}
           >
             {(menuItem.children || []).map((child) => (
@@ -289,7 +289,7 @@ function SidebarMenuItem({
                 menuLayout={menuLayout}
               />
             ))}
-          </div>
+          </SidebarNavTier>
         )}
       </div>
     )
@@ -370,7 +370,7 @@ function SidebarMenuItem({
       ? { color: tokens.brandInactiveTextColor }
       : {}
 
-  const itemClassName = `group flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+  const itemClassName = `group flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
     isActive ? 'shadow-sm' : inactiveClass
   }`
 
@@ -436,10 +436,8 @@ function SidebarMenuItem({
         </Link>
       )}
       {hasChildren && expanded && (
-        <div
-          className={`ml-4 mt-1 space-y-1 border-l-2 pl-2 ${
-            isActive ? '' : tokens.childBorderClass
-          }`}
+        <SidebarNavTier
+          borderClassName={isActive ? '' : tokens.childBorderClass}
           style={isActive ? { borderColor: brandActiveColor } : {}}
         >
           {menuItem.children.map((child) => (
@@ -454,7 +452,7 @@ function SidebarMenuItem({
               menuLayout={menuLayout}
             />
           ))}
-        </div>
+        </SidebarNavTier>
       )}
     </div>
   )

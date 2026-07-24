@@ -5,6 +5,7 @@ import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
+import { PmoFederated } from './PmoFederatedOutlet.jsx'
 import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
@@ -300,6 +301,8 @@ import {
   ProjectITTOList,
   ITTODraftsQueue,
   IndustryTemplateList,
+  LegacyTemplateUploadPage,
+  LegacyReferenceTemplatesPage,
   PMOInvitationTracker,
   PMInvitationTracker,
   InvitationDetailPage,
@@ -577,10 +580,12 @@ import {
   ProcessTemplatesRoutesSimPmo,
   ProcessTemplatesRoutesSimPm,
   FormsGallery,
+  ProjectFieldTemplates,
   FormNew,
   FormEdit,
   FormView,
   FormTemplateAdmin,
+  FormTemplateBuilder,
   ProjectMemberInvitation,
   Settings,
   PWASettings,
@@ -3575,6 +3580,7 @@ export function PlatformRouteElements() {
                                 </Suspense>
                               } />
                               <Route path="projects/:projectId/forms" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormsGallery mode="platform" basePath="/platform/projects" /></ProtectedRoute></Suspense>} />
+                              <Route path="projects/:projectId/field-templates" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><ProjectFieldTemplates /></ProtectedRoute></Suspense>} />
                               <Route path="projects/:projectId/forms/:templateCode/new" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormNew mode="platform" basePath="/platform/projects" /></ProtectedRoute></Suspense>} />
                               <Route path="projects/:projectId/forms/:formInstanceId/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormEdit mode="platform" /></ProtectedRoute></Suspense>} />
                               <Route path="projects/:projectId/forms/:formInstanceId/view" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><FormView mode="platform" /></ProtectedRoute></Suspense>} />
@@ -3653,6 +3659,9 @@ export function PlatformRouteElements() {
                   </Suspense>
                 } />
       
+                {/* PMO field templates (v764 Phase 2) — before app/* redirect */}
+                <Route path="app/pmo/*" element={<PmoFederated />} />
+
                 {/*
                   Canonical app-area URL for Project Members (menu + SQL use /app/project-members).
                   Must be declared before app/* so it is not swallowed by AppToPlatformRedirect.
@@ -3829,6 +3838,32 @@ export function PlatformRouteElements() {
                         <ProtectedRoute>
                           <PMOLayout>
                             <IndustryTemplateList />
+                          </PMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="pmo/legacy-templates/upload" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <PMOLayout>
+                            <LegacyTemplateUploadPage />
+                          </PMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="pmo/legacy-templates" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <PMOLayout>
+                            <LegacyReferenceTemplatesPage />
                           </PMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4377,6 +4412,32 @@ export function PlatformRouteElements() {
                         <ProtectedRoute>
                           <PMOLayout>
                             <FormTemplateAdmin mode="platform" />
+                          </PMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="pmo/forms/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <PMOLayout>
+                            <FormTemplateBuilder mode="platform" />
+                          </PMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="pmo/forms/:templateCode/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <PMOLayout>
+                            <FormTemplateBuilder mode="platform" />
                           </PMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>

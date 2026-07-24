@@ -100,17 +100,17 @@ const TRACK_CATEGORY_CODES = new Set([
   // Platform methodology track categories (v676)
   'pmo-cat-initiation',
   'pmo-cat-governance-standards',
-  'pmo-cat-pmbok',
+  'pmo-cat-standards-based',
   'pmo-cat-agile-lean',
   // Simulator PMO methodology track categories (v677)
   'sim_pmo_cat_initiation',
   'sim_pmo_cat_governance',
-  'sim_pmo_cat_pmbok',
+  'sim_pmo_cat_standards_based',
   'sim_pmo_cat_agile',
   // Simulator PM methodology track categories (v677)
   'sim_pm_cat_initiation',
   'sim_pm_cat_governance',
-  'sim_pm_cat_pmbok',
+  'sim_pm_cat_standards_based',
   'sim_pm_cat_agile',
 ])
 

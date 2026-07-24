@@ -4,6 +4,8 @@ import { Menu, X, Home, LayoutDashboard, FolderKanban, Settings, HelpCircle, Log
 import { useMenu } from '../hooks/useMenu'
 import { supabase } from '../services/supabaseClient'
 import { resolveMenuRoutePath, menuPathIsActive } from '../utils/sidebarRouteUtils'
+import { SidebarNavTier } from '@nidus/ui'
+import { getSidebarNestedItemPadding } from '@nidus/shared/utils/sidebarNavUtils'
 
 export default function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false)
@@ -295,7 +297,7 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
           href={item.external_url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-3 ${getSidebarNestedItemPadding(level, { base: 'px-4', nested: 'pr-4' })} py-3 rounded-lg text-sm font-medium transition-colors ${
             isActive
               ? 'bg-blue-600 text-white'
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -309,7 +311,7 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
         <Link
           to={linkTo}
           onClick={handleClick}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-3 ${getSidebarNestedItemPadding(level, { base: 'px-4', nested: 'pr-4' })} py-3 rounded-lg text-sm font-medium transition-colors ${
             isActive
               ? 'bg-blue-600 text-white'
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -333,7 +335,7 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
       )}
       
       {hasChildren && isExpanded && (
-        <div className={`ml-4 mt-1 space-y-1 border-l-2 ${isActive ? 'border-blue-600' : 'border-gray-200 dark:border-gray-700'}`}>
+        <SidebarNavTier borderClassName={isActive ? 'border-blue-600' : 'border-gray-200 dark:border-gray-700'}>
           {children.map((child) => (
             <MobileMenuItem
               key={child.id}
@@ -343,7 +345,7 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
               level={level + 1}
             />
           ))}
-        </div>
+        </SidebarNavTier>
       )}
     </div>
   )

@@ -15,7 +15,8 @@ Run SQL scripts on Supabase in order:
 7. `SQL/v422_financial_menu_items.sql`
 8. `SQL/v423_resolve_expense_approval_chain_full.sql` — full **`resolve_expense_approval_chain`** (Platform + Simulator)
 9. `SQL/v424_programme_financial_rollups_view.sql` — view **`programme_financial_rollups`**
-10. *(Optional dev/demo)* `SQL/v425_financial_management_seed_data.sql` — ≥22 tagged rows per financial table that **exists** (`FM-SEED v425` markers). Uses `to_regclass()` and **dynamic `EXECUTE`** for inserts and row counts so missing tables (e.g. **v420** expense tables) do not cause parse errors; run v417–v421 for full seed. Requires existing projects, users, and accounts. If there are no active `sim.practice_projects`, the script inserts one bootstrap row (`project_code` **FM-SEED-v425-PP**) with `user_id` = **`public.users.auth_user_id`** where that id still exists in **`auth.users`**. Safe re-run: deletes prior v425 seed rows first (bootstrap practice project is left in place).
+10. *(Optional dev/demo)* `SQL/v425_financial_management_seed_data.sql` — bulk volume seed (≥22 rows per table, `FM-SEED v425` markers).
+11. *(Recommended demo)* `SQL/v722_financial_management_logical_seed.sql` — **logical** seed aligned to **Financial Management** menu items: costs/revenue/baselines (Financial Reports), monthly EVM on portfolio→programme→project chains (Portfolio / Programme / Project EVM), workflow-mixed expense claims (Expense Approvals), and four approval bands (Expense Thresholds). Uses `SEED334-*` projects when v334 is applied; otherwise bootstraps `FM-v722-*` portfolio/programme/projects. Safe re-run: deletes prior `FM-SEED v722` rows first.
 
 Earlier planning documents referred to versions v293–v300; the repository ships the same logical content under **v416–v424** (plus optional **v425** seed) to avoid filename clashes.
 
@@ -28,6 +29,8 @@ Earlier planning documents referred to versions v293–v300; the repository ship
 | Expense approvals | `/platform/expenses/approvals` | `/simulator/expenses/approvals` |
 | PMO expense thresholds | `/platform/pmo-admin/expense-thresholds` | `/simulator/pmo/expense-thresholds` |
 | Portfolio EVM | `/platform/portfolio/evm` | `/simulator/practice-portfolio/evm` |
+| Programme EVM (org-wide) | `/platform/programme/evm` | — |
+| Project EVM (org-wide) | `/platform/projects/evm` | — |
 
 ## Project-scoped routes
 

@@ -1,0 +1,35 @@
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    include: [
+      'src/constants/**/*.test.js',
+      'src/utils/__tests__/unsavedChangesUtils.test.js',
+      'src/utils/__tests__/lifecycleGovernedUpdate.test.js',
+      'src/utils/__tests__/formTemplateFieldDefaults.test.js',
+      'src/utils/__tests__/formTemplateExportUtils.test.js',
+      'src/utils/__tests__/v781CuratedGuidanceSamples.test.js',
+      'src/utils/__tests__/formSelectOptions.test.js',
+      'src/utils/__tests__/formProcessGroupFilters.test.js',
+      'src/utils/__tests__/formTemplateFieldOverrides.test.js',
+      'src/utils/__tests__/formValidation.test.js',
+      'src/utils/__tests__/localeFormat.test.js',
+      'src/utils/__tests__/formTranslations.test.js',
+      'src/utils/__tests__/legacyTemplateParse.test.js',
+      'src/utils/__tests__/industryPlanGridColumns.test.js',
+      'src/utils/__tests__/industryPlanCustomColumns.test.js',
+      'src/utils/__tests__/industryPlanGridUtilsOutline.test.js',
+      'src/services/__tests__/pmTemplateInheritanceService.test.js',
+      'src/services/__tests__/pmTemplateCreateInheritance.test.js',
+      'src/services/__tests__/pmTemplateNodeService.test.js',
+      'src/services/__tests__/industryTemplateTierService.test.js',
+      'src/services/__tests__/entityDeliveryMethodologyService.test.js',
+      'src/services/__tests__/pmTemplateCopyService.test.js',
+      'src/services/__tests__/pmTemplateOverrideService.test.js',
+      'src/services/__tests__/pmTemplateContentService.test.js',
+      'src/services/__tests__/menuLabelService.test.js',
+      'src/__tests__/idGenerationMigration.test.js',
+    ],
+  },
+});

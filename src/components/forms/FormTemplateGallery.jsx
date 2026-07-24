@@ -13,10 +13,10 @@ export default function FormTemplateGallery({ templates = [], onSelect, userRole
           type="button"
           key={template.id || template.template_code}
           onClick={() => onSelect?.(template)}
-          className="rounded-lg border border-gray-700 bg-gray-900 p-4 text-left hover:border-blue-500"
+          className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 text-left hover:border-blue-500"
         >
-          <p className="text-sm font-semibold text-gray-100">{template.name}</p>
-          <p className="text-xs text-gray-400">{template.template_code} • {template.process_group}</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{template.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{template.template_code} • {template.process_group}</p>
         </button>
       ))}
     </div>

@@ -1,0 +1,62 @@
+name: Platform Shell — Build & Deploy
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/platform/**'
+      - 'pnpm-lock.yaml'
+      - 'turbo.json'
+      - 'pnpm-workspace.yaml'
+
+  pull_request:
+    paths:
+      - 'apps/platform/**'
+
+jobs:
+  build-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo build --filter=@nidus/platform-app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.PLATFORM_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PLATFORM_SUPABASE_ANON_KEY }}
+          VITE_FEDERATION_ENABLED: ${{ vars.VITE_FEDERATION_ENABLED || 'false' }}
+          VITE_MODULE_PLANNING_HUB_URL: ${{ secrets.MODULE_PLANNING_HUB_URL }}
+          VITE_MODULE_RISK_URL: ${{ secrets.MODULE_RISK_URL }}
+          VITE_MODULE_QUALITY_URL: ${{ secrets.MODULE_QUALITY_URL }}
+          VITE_MODULE_FINANCIAL_URL: ${{ secrets.MODULE_FINANCIAL_URL }}
+          VITE_MODULE_CHANGE_URL: ${{ secrets.MODULE_CHANGE_URL }}
+          VITE_MODULE_STAKEHOLDER_URL: ${{ secrets.MODULE_STAKEHOLDER_URL }}
+          VITE_MODULE_DELAYS_URL: ${{ secrets.MODULE_DELAYS_URL }}
+          VITE_MODULE_STAGE_GATES_URL: ${{ secrets.MODULE_STAGE_GATES_URL }}
+          VITE_MODULE_PMO_URL: ${{ secrets.MODULE_PMO_URL }}
+          VITE_MODULE_PORTFOLIO_URL: ${{ secrets.MODULE_PORTFOLIO_URL }}
+          VITE_MODULE_PROGRAMME_URL: ${{ secrets.MODULE_PROGRAMME_URL }}
+          VITE_MODULE_BENEFITS_URL: ${{ secrets.MODULE_BENEFITS_URL }}
+          VITE_MODULE_ISSUES_URL: ${{ secrets.MODULE_ISSUES_URL }}
+          VITE_MODULE_COMMUNICATIONS_URL: ${{ secrets.MODULE_COMMUNICATIONS_URL }}
+          VITE_MODULE_REPORTS_URL: ${{ secrets.MODULE_REPORTS_URL }}
+          VITE_MODULE_ADMIN_URL: ${{ secrets.MODULE_ADMIN_URL }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - name: Upload platform shell artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-shell-dist
+          path: apps/platform/dist
+      - name: Deploy to Vercel (Platform Shell)
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: pnpm dlx vercel deploy apps/platform/dist --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.PLATFORM_VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

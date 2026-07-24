@@ -16,7 +16,18 @@ export { default as SortToolbar } from './SortToolbar.jsx'
 export { default as RowNumberBadge } from './RowNumberBadge.jsx'
 export { default as ExportListMenu } from './ExportListMenu.jsx'
 export { default as SmartAmountInput } from './SmartAmountInput.jsx'
+export { default as FormTemplateExportMenu } from './FormTemplateExportMenu.jsx'
 export { ModuleErrorBoundary } from './ModuleErrorBoundary.jsx'
 export { default as ModuleLoadingFallback } from './ModuleLoadingFallback.jsx'
 export { default as SidebarNavTier } from './SidebarNavTier.jsx'
+export { default as PendingChangesDiff } from './PendingChangesDiff.jsx'
 export { default as DetachButton } from './DetachButton.jsx'
+export { default as TierFieldCustomisationPanel } from './TierFieldCustomisationPanel.jsx'
+export { default as ForkIndustryTemplatePanel } from './templates/ForkIndustryTemplatePanel.jsx'
+export { default as ForkLegacyTemplatePanel } from './templates/ForkLegacyTemplatePanel.jsx'
+export { IndustryPlanColumnChooser } from './industryPlan/IndustryPlanColumnChooser.jsx'
+export {
+  IndustryPlanEntityToolbar,
+  IndustryPlanWbsGrid,
+  IndustryPlanFlatEntityGrid,
+} from './industryPlan/IndustryPlanWizardGrids.jsx'

@@ -57,7 +57,7 @@ describe('useMenu methodology integration', () => {
     const tree = applyRoleSidebarRevamp(hierarchy, {
       layout: 'pmo',
       pmProfile: null,
-      visibleTracks: ['structured', 'pmbok', 'agile'],
+      visibleTracks: ['structured', 'standards_based', 'agile'],
     })
     // Governance category should be wrapped under a [S] Structured methodology header
     const structuredHeader = tree.find(n => n.is_methodology_header && n.methodology_track === 'structured')
@@ -84,7 +84,7 @@ describe('useMenu methodology integration', () => {
         ],
       },
     ]
-    const tree = applyRoleSidebarRevamp(legacy, { layout: 'pmo', visibleTracks: ['structured', 'pmbok', 'agile'] })
+    const tree = applyRoleSidebarRevamp(legacy, { layout: 'pmo', visibleTracks: ['structured', 'standards_based', 'agile'] })
     expect(tree.some(n => n.menu_code === 'pmo_section_initiation')).toBe(false)
     expect(tree.some(n => n.menu_code === 'pmo-cat-exec')).toBe(true)
   })
@@ -128,7 +128,7 @@ describe('useMenu methodology integration', () => {
         ],
       },
     ]
-    const hint = { layout: 'pmo', visibleTracks: ['structured', 'pmbok', 'agile'] }
+    const hint = { layout: 'pmo', visibleTracks: ['structured', 'standards_based', 'agile'] }
     const once = applyRoleSidebarRevamp(hierarchy, hint)
     const twice = applyRoleSidebarRevamp(once, hint)
     expect(once.length).toBeGreaterThan(0)
@@ -166,7 +166,7 @@ describe('useMenu methodology integration', () => {
     const tree = applyRoleSidebarRevamp(hierarchy, {
       layout: 'pm',
       pmProfile: 'executive',
-      visibleTracks: ['structured', 'pmbok', 'agile'],
+      visibleTracks: ['structured', 'standards_based', 'agile'],
     })
     const labels = tree.map((n) => n.menu_label)
     const reportingIdx = labels.indexOf('Reporting & Intelligence')
@@ -200,7 +200,7 @@ describe('useMenu methodology integration', () => {
     ]
     const tree = applyRoleSidebarRevamp(hierarchy, {
       layout: 'pmo',
-      visibleTracks: ['structured', 'pmbok', 'agile'],
+      visibleTracks: ['structured', 'standards_based', 'agile'],
     })
     const labels = tree.map((n) => n.menu_label)
     expect(labels[0]).toBe('Executive Overview')
@@ -222,7 +222,7 @@ describe('useMenu methodology integration', () => {
     ]
     const tree = applyRoleSidebarRevamp(flatOrphans, {
       layout: 'pmo',
-      visibleTracks: ['structured', 'pmbok', 'agile'],
+      visibleTracks: ['structured', 'standards_based', 'agile'],
     })
     expect(tree.some((n) => n.menu_code === 'pmo-cat-exec')).toBe(true)
     expect(tree.some((n) => n.menu_code === 'pmo-cat-system-admin')).toBe(true)
@@ -233,7 +233,7 @@ describe('useMenu methodology integration', () => {
     const hierarchy = [
       { id: 'task', menu_code: 'tm_my_tasks', menu_label: 'My Tasks', route_path: '/platform/tasks/mine', sort_order: 1, children: [] },
     ]
-    const tree = applyRoleSidebarRevamp(hierarchy, { layout: 'tm', visibleTracks: ['structured', 'pmbok', 'agile'] })
+    const tree = applyRoleSidebarRevamp(hierarchy, { layout: 'tm', visibleTracks: ['structured', 'standards_based', 'agile'] })
     expect(tree).toHaveLength(1)
     expect(tree[0].menu_code).toBe('tm_my_tasks')
     expect(tree.some(n => n.is_methodology_header)).toBe(false)

@@ -26,7 +26,7 @@ import { withRegistryMethodology } from './menuRegistryMethodology.js'
  * @property {string|null} [category] — PMO layout grouping hint (pmo-cat-*)
  * @property {boolean} [is_container]
  * @property {boolean} [registry_fallback] — catalogue/SQL seed hint only (not injected at runtime after v664)
- * @property {'structured'|'pmbok'|'agile'|'universal'} [methodology] — methodology track (v671)
+ * @property {'structured'|'standards_based'|'agile'|'universal'} [methodology] — methodology track (v671)
  */
 
 /** @type {MenuRegistryEntry[]} */

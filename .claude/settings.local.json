@@ -3,7 +3,24 @@
     "allow": [
       "Bash(curl *)",
       "Bash(node --input-type=module --eval ' *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git push *)",
+      "Read(//e/project-nidus-admin/**)",
+      "Bash(pnpm turbo *)",
+      "Bash(pnpm --filter @nidus-admin/shared exec vitest run src/__tests__)",
+      "Bash(grep -n \"SearchableSelect\\\\|MultiSearchableSelect\\\\|allowCreate\\\\|is_locked\\\\|Locked\" \"/e/project-nidus-admin/modules/content/src/pages/IndustryPlanGridViews.jsx\" | head -60)",
+      "Read(//e/project-nidus-admin/modules/content/src/pages/**)",
+      "Bash(grep -rl \"vi.mock.*supabase\\\\|vi.mock.*adminContext\" \"e:/project-nidus-admin/packages/shared/src/__tests__\" 2>/dev/null)",
+      "Read(//e/project-nidus-admin/packages/shared/src/__tests__/**)",
+      "Bash(git check-ignore *)",
+      "Bash(grep -rln \"from '\\\\.\\\\./\\\\.\\\\./services\\\\|from '\\\\.\\\\./services\" \"e:/project-nidus/packages/ui/src/\")",
+      "Bash(npx vitest *)",
+      "Bash(grep -iE \"\\\\.env\\($|\\\\.[a-z]+$\\)|credential|secret|\\\\.pem$|\\\\.key$|id_rsa|\\\\.p12$|service-account\")",
+      "Bash(git add *)",
+      "Bash(echo \"exit code: $?\")",
+      "Read(//tmp/**)",
+      "Read(//e/tmp/**)",
+      "Bash(tasklist //FI \"IMAGENAME eq git.exe\")"
     ],
     "deny": [],
     "ask": []

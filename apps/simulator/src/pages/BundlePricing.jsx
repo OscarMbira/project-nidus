@@ -1,0 +1,532 @@
+/**
+ * Bundle Pricing Page
+ *
+ * Displays bundle subscription options for Platform + Simulator.
+ * Bundles are not their own catalog rows — prices are derived live from
+ * the Platform and Simulator subscription_plans rows (the same catalog
+ * admin edits), so a price/deactivation change on either side is always
+ * reflected here instead of drifting out of sync.
+ */
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Check,
+  Briefcase,
+  Gamepad2,
+  Sparkles,
+  TrendingUp,
+  ArrowRight,
+  Gift,
+  Star,
+  Loader2,
+} from 'lucide-react';
+import { supabase } from '../services/supabaseClient';
+import { getSubscriptionSummary } from '../services/unifiedSubscriptionService';
+import { useToast } from '@nidus/shared/hooks/useToast';
+import { fetchPricingCatalogBundle } from '@nidus/shared/services/subscriptionPlanCatalogService';
+import {
+  BUNDLE_DISCOUNT_PERCENT,
+  getCatalogPlanFeatures,
+} from '@nidus/shared/services/subscriptionPreviewCatalog';
+import MainHeader from '../components/homepage/MainHeader';
+import Footer from '../components/homepage/Footer';
+
+// Structural/presentational metadata only (name, icon, color, ordering) —
+// no pricing or feature data. Prices and features are derived live below
+// from the matching Platform + Simulator subscription_plans rows.
+const BUNDLE_DEFS = [
+  {
+    id: 'starter_bundle',
+    name: 'Starter Bundle',
+    platformType: 'starter',
+    simulatorType: 'basic',
+    icon: Star,
+    color: 'blue',
+    popular: true,
+    isLifetime: false,
+  },
+  {
+    id: 'professional_bundle',
+    name: 'Professional Bundle',
+    platformType: 'professional',
+    simulatorType: 'professional',
+    icon: TrendingUp,
+    color: 'purple',
+    popular: false,
+    isLifetime: false,
+  },
+  {
+    id: 'lifetime_bundle',
+    name: 'Lifetime Bundle',
+    platformType: 'lifetime',
+    simulatorType: 'lifetime',
+    icon: Sparkles,
+    color: 'gold',
+    popular: false,
+    isLifetime: true,
+  },
+];
+
+function findPlan(dbPlans, planType, system, cycle) {
+  return dbPlans.find(
+    (p) => p.plan_type === planType && p.billing_cycle === cycle && p.catalog_scope === system,
+  ) || null;
+}
+
+function formatMoney(amount) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+export default function BundlePricing() {
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const [summary, setSummary] = useState(null);
+  const [user, setUser] = useState(null);
+  const [catalogLoading, setCatalogLoading] = useState(true);
+  const [dbPlans, setDbPlans] = useState([]);
+
+  const loadPricingData = useCallback(async () => {
+    setCatalogLoading(true);
+    try {
+      const { plans } = await fetchPricingCatalogBundle();
+      setDbPlans(plans);
+    } catch (error) {
+      console.error('Error loading subscription catalog:', error);
+    } finally {
+      setCatalogLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPricingData();
+  }, [loadPricingData]);
+
+  useEffect(() => {
+    loadSubscriptionData();
+  }, []);
+
+  const loadSubscriptionData = async () => {
+    try {
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      if (currentUser) {
+        setUser(currentUser);
+        const subscriptionSummary = await getSubscriptionSummary(currentUser.id);
+        setSummary(subscriptionSummary);
+      }
+    } catch (error) {
+      console.error('Error loading subscription data:', error);
+    }
+  };
+
+  const bundlePlans = useMemo(() => {
+    const cycle = billingCycle === 'yearly' ? 'yearly' : 'monthly';
+
+    return BUNDLE_DEFS.map((def) => {
+      const platformCycle = def.isLifetime ? 'lifetime' : cycle;
+      const platformPlan = findPlan(dbPlans, def.platformType, 'platform', platformCycle);
+      // Simulator catalog only has monthly + lifetime rows; a yearly bundle
+      // uses 12x the simulator monthly price as its yearly-equivalent share.
+      const simulatorPlan = findPlan(
+        dbPlans,
+        def.simulatorType,
+        'simulator',
+        def.isLifetime ? 'lifetime' : 'monthly',
+      );
+
+      if (!platformPlan || !simulatorPlan) return null;
+
+      const simulatorComponent = def.isLifetime || cycle !== 'yearly'
+        ? Number(simulatorPlan.price)
+        : Number(simulatorPlan.price) * 12;
+
+      const regularPrice = Number(platformPlan.price) + simulatorComponent;
+      const price = Math.round(regularPrice * (1 - BUNDLE_DISCOUNT_PERCENT / 100) * 100) / 100;
+      const savings = Math.round((regularPrice - price) * 100) / 100;
+
+      const platformFeatures = getCatalogPlanFeatures(def.platformType, 'platform', platformCycle, dbPlans);
+      const simulatorFeatures = getCatalogPlanFeatures(
+        def.simulatorType,
+        'simulator',
+        def.isLifetime ? 'lifetime' : 'monthly',
+        dbPlans,
+      );
+      const features = Array.from(new Set([...platformFeatures, ...simulatorFeatures]));
+
+      return {
+        ...def,
+        pmPlan: platformPlan.plan_name,
+        simPlan: simulatorPlan.plan_name,
+        pmPrice: Number(platformPlan.price),
+        simPrice: simulatorComponent,
+        price,
+        regularPrice,
+        savings,
+        features,
+      };
+    }).filter(Boolean);
+  }, [dbPlans, billingCycle]);
+
+  const professionalBundle = useMemo(
+    () => bundlePlans.find((bundle) => bundle.id === 'professional_bundle'),
+    [bundlePlans],
+  );
+
+  // Derived from the live yearly Platform catalog row (price vs original_price).
+  const yearlyDiscountPercent = useMemo(() => {
+    const yearlyPlan = dbPlans.find(
+      (plan) => plan.catalog_scope === 'platform' && plan.billing_cycle === 'yearly' && plan.original_price > 0 && plan.price != null,
+    );
+    if (!yearlyPlan) return null;
+    return Math.round((1 - Number(yearlyPlan.price) / Number(yearlyPlan.original_price)) * 100);
+  }, [dbPlans]);
+
+  const handleSelectBundle = async () => {
+    if (!user) {
+      navigate('/register');
+      return;
+    }
+
+    // Navigate to checkout
+    showToast('info', 'Stripe checkout integration coming soon!');
+
+    // TODO: Implement Stripe checkout
+    // const checkoutUrl = await createBundleCheckoutSession(user.id, bundleId, billingCycle);
+    // window.location.href = checkoutUrl;
+  };
+
+  const hasBundle = () => {
+    if (!summary) return false;
+    const hasPM = summary.registeredPlatforms?.includes('platform') || summary.registeredPlatforms?.includes('pm');
+    const hasSim = summary.registeredPlatforms?.includes('simulator');
+    return hasPM && hasSim;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <MainHeader />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 dark:from-slate-800 dark:via-slate-700 dark:to-slate-800 rounded-2xl p-8 md:p-12 shadow-xl border border-slate-500/20">
+          <div className="inline-flex items-center justify-center p-3 bg-white/10 dark:bg-white/5 rounded-full mb-4">
+            <Gift className="h-10 w-10 text-purple-300" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            Choose Your <span className="text-purple-300">Bundle</span> Plan
+          </h1>
+          <p className="text-xl text-slate-200 max-w-2xl mx-auto mb-2">
+            Get both Platform and Simulator together - Select the perfect bundle for maximum value
+          </p>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            Compare bundle options below and save {BUNDLE_DISCOUNT_PERCENT}% when you subscribe to both platforms
+          </p>
+        </div>
+
+        {/* Value Proposition */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-12 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-4">
+                  <Briefcase className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Platform</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Manage real projects
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  Full project lifecycle management
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  Team collaboration tools
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  Advanced analytics
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg mr-4">
+                  <Gamepad2 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Simulator</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Practice PM skills
+                  </p>
+                </div>
+              </div>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  Interactive simulations
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  AI-driven challenges
+                </li>
+                <li className="flex items-start">
+                  <Check className="h-4 w-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                  Progress tracking
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Billing Toggle (for non-lifetime plans) */}
+        <div className="flex justify-center mb-12">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-1 inline-flex shadow">
+            <button
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                billingCycle === 'monthly'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                billingCycle === 'yearly'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+            >
+              Yearly
+              {yearlyDiscountPercent > 0 && (
+                <span className="ml-2 text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded">
+                  Save {yearlyDiscountPercent}%
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {catalogLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          </div>
+        ) : (
+        <>
+        {/* Bundle Plans */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {bundlePlans.map((bundle) => {
+            const Icon = bundle.icon;
+
+            return (
+              <div
+                key={bundle.id}
+                className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-transform hover:scale-105 flex flex-col ${
+                  bundle.popular ? 'ring-2 ring-blue-600' : ''
+                } ${bundle.isLifetime ? 'bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/10 dark:to-orange-900/10' : ''}`}
+              >
+                {bundle.popular && (
+                  <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-bl-lg">
+                    BEST VALUE
+                  </div>
+                )}
+
+                <div className="p-8 flex flex-col h-full">
+                  {/* Icon */}
+                  <div
+                    className={`w-12 h-12 rounded-lg bg-${bundle.color}-100 dark:bg-${bundle.color}-900/30 flex items-center justify-center mb-4`}
+                  >
+                    <Icon
+                      className={`h-6 w-6 text-${bundle.color}-600 dark:text-${bundle.color}-400`}
+                    />
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                    {bundle.name}
+                  </h3>
+
+                  {/* Included Plans */}
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                    {bundle.pmPlan} + {bundle.simPlan}
+                  </p>
+
+                  {/* Price */}
+                  <div className="mb-6">
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                        {formatMoney(bundle.price)}
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-400 ml-2">
+                        {bundle.isLifetime
+                          ? 'one-time'
+                          : billingCycle === 'yearly'
+                          ? '/year'
+                          : '/month'}
+                      </span>
+                    </div>
+
+                    {/* Savings */}
+                    <div className="mt-2 flex items-center space-x-2">
+                      <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                        {formatMoney(bundle.regularPrice)}
+                      </span>
+                      <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                        Save {formatMoney(bundle.savings)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Features */}
+                  <ul className="space-y-3 mb-8 flex-grow">
+                    {bundle.features.map((feature) => (
+                      <li key={feature} className="flex items-start">
+                        <Check className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-700 dark:text-gray-300 text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA Button */}
+                  {hasBundle() ? (
+                    <button
+                      disabled
+                      className="w-full px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg font-medium cursor-not-allowed"
+                    >
+                      Already Subscribed
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleSelectBundle}
+                      className={`w-full px-6 py-3 rounded-lg font-medium transition-all ${
+                        bundle.popular || bundle.isLifetime
+                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                      }`}
+                    >
+                      {bundle.isLifetime ? 'Buy Lifetime Access' : 'Subscribe Now'}
+                      <ArrowRight className="inline-block ml-2 h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Comparison with Individual Plans */}
+        {professionalBundle && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 max-w-5xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            Why Bundle?
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Individual Plans */}
+            <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+                Separate Subscriptions
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-700 dark:text-gray-300">{professionalBundle.pmPlan}</span>
+                  <span className="font-semibold">
+                    {formatMoney(professionalBundle.pmPrice)}{billingCycle === 'yearly' ? '/yr' : '/mo'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-700 dark:text-gray-300">{professionalBundle.simPlan}</span>
+                  <span className="font-semibold">
+                    {formatMoney(professionalBundle.simPrice)}{billingCycle === 'yearly' ? '/yr' : '/mo'}
+                  </span>
+                </div>
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
+                  <span className="font-bold text-gray-900 dark:text-white">Total</span>
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    {formatMoney(professionalBundle.regularPrice)}{billingCycle === 'yearly' ? '/yr' : '/mo'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bundle */}
+            <div className="border-2 border-green-500 dark:border-green-600 rounded-xl p-6 bg-green-50 dark:bg-green-900/10">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+                Professional Bundle
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-700 dark:text-gray-300">{professionalBundle.pmPlan}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Included</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-700 dark:text-gray-300">{professionalBundle.simPlan}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Included</span>
+                </div>
+                <div className="border-t border-green-200 dark:border-green-700 pt-3">
+                  <div className="flex justify-between mb-2">
+                    <span className="font-bold text-gray-900 dark:text-white">Bundle Price</span>
+                    <span className="font-bold text-green-600 dark:text-green-400">
+                      {formatMoney(professionalBundle.price)}{billingCycle === 'yearly' ? '/yr' : '/mo'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-green-600 dark:text-green-400 font-semibold">
+                      You Save
+                    </span>
+                    <span className="text-green-600 dark:text-green-400 font-semibold">
+                      {formatMoney(professionalBundle.savings)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        )}
+        </>
+        )}
+
+        {/* FAQ/Help */}
+        <div className="mt-16 text-center">
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Not sure which bundle is right for you?
+          </p>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => navigate('/pricing')}
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              View PM Pricing
+            </button>
+            <button
+              onClick={() => navigate('/simulator/pricing')}
+              className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              View Simulator Pricing
+            </button>
+          </div>
+        </div>
+      </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}

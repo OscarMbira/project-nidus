@@ -7,7 +7,7 @@ Sidebars for Platform and Simulator now group items under three methodology trac
 | Badge | Track | Meaning |
 |-------|--------|---------|
 | [S] | Structured | Predictive – Structured/Traditional (mandates, briefs, governance strategies) |
-| [P] | PMBOK | Predictive – PMBOK process groups, ITTO, EEF |
+| [P] | Standards-Based | Predictive – Standards-Based (PMBOK) process groups, ITTO, EEF |
 | [A] | Agile | Agile & Lean tools, Scrum, Lean metrics |
 
 Universal sections (Executive Overview, Delivery Management, Reporting, Administration, etc.) stay outside track wrappers.

@@ -28,10 +28,10 @@ function App() {
         <OfflineIndicator />
         <PWAUpdatePrompt />
         <Routes>
-          <PublicRouteElements />
-          <PlatformRouteElements />
-          <AuthRouteElements />
-          <SimulatorRouteElements />
+          {PublicRouteElements()}
+          {PlatformRouteElements()}
+          {AuthRouteElements()}
+          {SimulatorRouteElements()}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Suspense fallback={null}>

@@ -1,0 +1,360 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useEntityId } from '@nidus/shared/hooks/useEntityId';
+import { ArrowLeft, Edit2, Settings, FolderKanban, Users, Target, DollarSign, AlertTriangle, Activity, Layers } from 'lucide-react';
+import { getPortfolio } from '../../services/portfolioService';
+import PortfolioDashboard from '../../components/portfolio/PortfolioDashboard';
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
+import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
+import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx';
+import ForkIndustryTemplatePanel from '@nidus/ui/templates/ForkIndustryTemplatePanel.jsx';
+import ForkLegacyTemplatePanel from '@nidus/ui/templates/ForkLegacyTemplatePanel.jsx';
+import { platformDb } from '../../services/supabase/supabaseClient';
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
+import {
+  forkIndustryTemplateForEntity,
+  forkLegacyTemplateForEntity,
+} from '@nidus/shared/services/industryTemplateTierService.js';
+import { duplicateTemplate } from '../../services/industryTemplateService';
+import {
+  duplicateLegacyDocumentTemplate,
+  duplicateStructuredListTemplate,
+} from '@nidus/shared/services/legacyTemplateService.js';
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
+
+const PORTFOLIO_VIEW_SECTIONS = [
+  { title: 'Portfolio', fields: [
+    { key: 'portfolio_name', label: 'Name' },
+    { key: 'portfolio_code', label: 'Code' },
+    { key: 'portfolio_description', label: 'Description' }
+  ]}
+];
+
+export default function PortfolioDetail() {
+  const { id } = useParams();
+  const { uuid: portfolioUuid, loading: idResolving, error: idResolveError } = useEntityId(id || '', 'portfolio');
+  const navigate = useNavigate();
+  const [portfolio, setPortfolio] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'projects', 'resources', 'financial', 'risks', 'reports', 'templates'
+  const [accountId, setAccountId] = useState(null);
+
+  useEffect(() => {
+    getCurrentUserAccountId().then(setAccountId);
+  }, []);
+
+  const fetchPortfolio = useCallback(async () => {
+    if (!portfolioUuid) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getPortfolio(portfolioUuid);
+      setPortfolio(data);
+    } catch (err) {
+      console.error('Error fetching portfolio:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [portfolioUuid]);
+
+  useEffect(() => {
+    if (!id) return;
+    if (idResolving) return;
+    if (!portfolioUuid || idResolveError === 'not_found') {
+      setLoading(false);
+      if (idResolveError === 'not_found') setError('Portfolio not found');
+      return;
+    }
+    fetchPortfolio();
+  }, [id, portfolioUuid, idResolving, idResolveError, fetchPortfolio]);
+
+  if (loading || idResolving) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Loading portfolio...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-red-800 dark:text-red-300">
+            <AlertTriangle className="h-5 w-5" />
+            <span className="font-medium">Error loading portfolio: {error}</span>
+          </div>
+          <button
+            onClick={() => navigate('/portfolio')}
+            className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+          >
+            Back to Portfolios
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!portfolio) {
+    return null;
+  }
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: Activity },
+    { id: 'projects', label: 'Projects', icon: FolderKanban },
+    { id: 'resources', label: 'Resources', icon: Users },
+    { id: 'financial', label: 'Financial', icon: DollarSign },
+    { id: 'risks', label: 'Risks', icon: AlertTriangle },
+    { id: 'objectives', label: 'Objectives', icon: Target },
+    { id: 'reports', label: 'Reports', icon: Settings },
+    { id: 'templates', label: 'Field Templates', icon: Layers },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={() => navigate('/portfolio')}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+          </button>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <FolderKanban className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {portfolio.portfolio_name}
+                </h1>
+                {portfolio.portfolio_code && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Code: {portfolio.portfolio_code}
+                  </p>
+                )}
+              </div>
+            </div>
+            {portfolio.portfolio_description && (
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                {portfolio.portfolio_description}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <ExportRecordButtons
+              onExportPPT={() => exportRecordToPPT(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportWord={() => exportRecordToWord(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportExcel={() => exportRecordToExcel(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportCSV={() => exportRecordToCSV(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportXML={() => exportRecordToXML(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportJSON={() => exportRecordToJSON(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+              onExportPrint={() => exportRecordToPrint(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
+            />
+            <button
+              onClick={() =>
+                navigate(
+                  `/portfolio/${encodeURIComponent(portfolio.portfolio_code?.trim() || portfolioUuid)}/edit`,
+                )
+              }
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="flex space-x-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`${
+                    activeTab === tab.id
+                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  } flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="mt-6">
+        {activeTab === 'dashboard' && (
+          <PortfolioDashboard portfolioId={portfolioUuid} />
+        )}
+        {activeTab === 'projects' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Portfolio Projects
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Projects view coming soon...
+            </p>
+          </div>
+        )}
+        {activeTab === 'resources' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Portfolio Resources
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Resources view coming soon...
+            </p>
+          </div>
+        )}
+        {activeTab === 'financial' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Financial Overview
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Financial view coming soon...
+            </p>
+          </div>
+        )}
+        {activeTab === 'risks' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Portfolio Risks
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Risks view coming soon...
+            </p>
+          </div>
+        )}
+        {activeTab === 'objectives' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Strategic Objectives
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Objectives view coming soon...
+            </p>
+          </div>
+        )}
+        {activeTab === 'reports' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Portfolio Reports
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Reports view coming soon...
+            </p>
+          </div>
+        )}
+        {activeTab === 'templates' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                Field Templates
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Fields inherited from the PMO default, with the option to override or add fields local to this portfolio.
+              </p>
+              {accountId ? (
+                <TierFieldCustomisationPanel
+                  db={platformDb}
+                  accountId={accountId}
+                  tier="portfolio"
+                  entityType="portfolio"
+                  entityId={portfolioUuid}
+                  entityName={portfolio.portfolio_name}
+                />
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+              )}
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                Form Templates
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Enable/disable and require fields on shared forms, or add fields local to this portfolio.
+              </p>
+              {accountId && (
+                <TierFormPolicyPanel
+                  mode="platform"
+                  accountId={accountId}
+                  tier="portfolio"
+                  entityType="portfolio"
+                  entityId={portfolioUuid}
+                  entityName={portfolio.portfolio_name}
+                />
+              )}
+            </div>
+            {accountId ? (
+              <>
+                <ForkIndustryTemplatePanel
+                  entityLabel="portfolio"
+                  forkIndustryTemplate={() =>
+                    forkIndustryTemplateForEntity(platformDb, {
+                      accountId,
+                      entityType: 'portfolio',
+                      entityId: portfolioUuid,
+                      tier: 'portfolio',
+                      entityName: portfolio.portfolio_name,
+                      duplicateTemplateFn: duplicateTemplate,
+                      catalogDb: platformDb,
+                    })
+                  }
+                />
+                <ForkLegacyTemplatePanel
+                  entityLabel="portfolio"
+                  domain="legacy_document"
+                  forkLegacyTemplate={() =>
+                    forkLegacyTemplateForEntity(platformDb, {
+                      accountId,
+                      entityType: 'portfolio',
+                      entityId: portfolioUuid,
+                      tier: 'portfolio',
+                      domain: 'legacy_document',
+                      entityName: portfolio.portfolio_name,
+                      duplicateFn: (id) => duplicateLegacyDocumentTemplate(platformDb, id, { accountId }),
+                      catalogDb: platformDb,
+                    })
+                  }
+                />
+                <ForkLegacyTemplatePanel
+                  entityLabel="portfolio"
+                  domain="structured_list"
+                  forkLegacyTemplate={() =>
+                    forkLegacyTemplateForEntity(platformDb, {
+                      accountId,
+                      entityType: 'portfolio',
+                      entityId: portfolioUuid,
+                      tier: 'portfolio',
+                      domain: 'structured_list',
+                      entityName: portfolio.portfolio_name,
+                      duplicateFn: (id) => duplicateStructuredListTemplate(platformDb, id, { accountId }),
+                      catalogDb: platformDb,
+                    })
+                  }
+                />
+              </>
+            ) : null}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

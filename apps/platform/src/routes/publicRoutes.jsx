@@ -1,5 +1,5 @@
 /** Public routes — extracted from App.jsx (v729 Option B) */
-import { Route, Navigate } from 'react-router-dom'
+import { Route, Navigate, useLocation } from 'react-router-dom'
 import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
@@ -28,7 +28,9 @@ import {
   AboutPage,
   ContactPage,
   PlatformRequestDemoPage,
+  PlatformAffiliatePage,
   SimulatorRequestDemoPage,
+  SimulatorAffiliatePage,
   Projects,
   ProjectsCreate,
   ProjectsDetail,
@@ -828,6 +830,11 @@ import {
 } from './routeCommon'
 
 
+function PlatformRootRedirect() {
+  const { search, hash } = useLocation()
+  return <Navigate to={{ pathname: '/', search, hash }} replace />
+}
+
 export function PublicRouteElements() {
   return (
     <>
@@ -840,7 +847,7 @@ export function PublicRouteElements() {
                   </Suspense>
                 } />
                 {/* Legacy /platform path redirects to root */}
-                <Route path="/platform" element={<Navigate to="/" replace />} />
+                <Route path="/platform" element={<PlatformRootRedirect />} />
                 <Route path="/project-management" element={<Navigate to="/" replace />} />
                 
                 {/* Documentation routes */}
@@ -986,6 +993,13 @@ export function PublicRouteElements() {
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <PlatformRequestDemoPage />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/platform/affiliate" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <PlatformAffiliatePage />
                     </ThemeProvider>
                   </Suspense>
                 } />

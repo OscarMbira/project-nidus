@@ -14,7 +14,7 @@
 
 const SIDEBAR_CACHE_VERSION = 36
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
-const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v6_${uid}_${layoutScope}`
+const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 
 // ---------------------------------------------------------------------------
 // Platform sidebar cache
@@ -63,7 +63,7 @@ export function clearSidebarCache(userId, layoutScope = null) {
     }
     if (userId) {
       const prefixes = [
-        `nidus_sidebar_v6_${userId}_`,
+        `nidus_sidebar_v7_${userId}_`,
         `nidus_sidebar_v5_${userId}_`,
         `nidus_sidebar_v4_${userId}`,
         `nidus_sidebar_v3_${userId}`,
@@ -88,7 +88,7 @@ export function clearSidebarCache(userId, layoutScope = null) {
         key?.startsWith('nidus_sidebar_v3_') ||
         key?.startsWith('nidus_sidebar_v4_') ||
         key?.startsWith('nidus_sidebar_v5_') ||
-        key?.startsWith('nidus_sidebar_v6_')
+        key?.startsWith('nidus_sidebar_v7_')
       ) {
         toRemove.push(key)
       }

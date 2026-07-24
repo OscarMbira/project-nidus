@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
 import { ChevronRight, ChevronDown, LogOut, X, Shield } from 'lucide-react'
+import { SidebarNavTier } from '@nidus/ui'
+import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import pmoMenuConfig from '../../config/pmoMenuConfig'
 
 function PMOSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null }) {
@@ -47,7 +49,7 @@ function PMOSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onTogg
       <Link
         to={menuItem.path || '#'}
         onClick={handleClick}
-        className={`flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+        className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
           isActive
             ? 'bg-indigo-600 text-white'
             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -66,13 +68,11 @@ function PMOSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onTogg
         )}
       </Link>
       {hasChildren && expanded && (
-        <div className={`ml-4 mt-1 space-y-1 border-l-2 pl-2 ${
-          isChildActive ? 'border-indigo-600' : 'border-gray-200 dark:border-gray-700'
-        }`}>
+        <SidebarNavTier borderClassName={isChildActive ? 'border-indigo-600' : 'border-gray-200 dark:border-gray-700'}>
           {menuItem.children.map((child) => (
             <PMOSidebarMenuItem key={child.id} menuItem={child} level={level + 1} expandedMenuId={expandedMenuId} onToggleExpand={onToggleExpand} />
           ))}
-        </div>
+        </SidebarNavTier>
       )}
     </div>
   )

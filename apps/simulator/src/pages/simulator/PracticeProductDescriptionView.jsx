@@ -1,0 +1,40 @@
+/**
+ * Practice Product Description View Page
+ */
+
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
+
+export default function PracticeProductDescriptionView() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const projectId = searchParams.get('projectId')
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Load product description
+    setLoading(false)
+  }, [id])
+
+  if (loading) return <div className="text-center py-12">Loading...</div>
+  if (!product) return <div className="text-center py-12">Product description not found</div>
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <button onClick={() => navigate(`/simulator/practice-product-desc?projectId=${projectId}`)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+        <ArrowLeft className="h-4 w-4 mr-2" /> Back
+      </button>
+      <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Product Description</h1>
+        <ExportRecordButtons onExportPPT={() => {}} onExportWord={() => {}} onExportExcel={() => {}} disabled />
+      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <p className="text-gray-500">Product description details coming soon</p>
+      </div>
+    </div>
+  )
+}

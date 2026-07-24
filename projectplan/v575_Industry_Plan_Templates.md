@@ -1,11 +1,12 @@
 # v575 — Industry Plan Templates
 
-**Objective:** Provide PMO-maintained, industry-specific project plan blueprints (phases, deliverables, risks, milestones, roles) that any PM can browse and copy into their own project as a customisable starting point. 30 industries are seeded. PMO can add, edit, and retire templates at any time.
+**Objective:** Provide PMO-maintained, industry-specific project plan blueprints (phases, deliverables, risks, milestones, roles) that any PM can browse and copy into their own project as a customisable starting point. **50 industries** are seeded (30 via v576 + 20 via v772b). PMO can add, edit, and retire templates at any time.
 
 **Version scope:**
 - `v575` — Database tables + RLS (Platform public schema)
-- `v576` — Seed data: 30 industry templates with phases, deliverables, risks, milestones, roles
+- `v576` — Seed data: first 30 industry templates with phases, deliverables, risks, milestones, roles
 - `v577` — Menu seed: PMO management entries + PM browse/copy entries (both Platform and Simulator)
+- `v772b` — Catalog expansion: industries 31–50 (`SQL/v772b_seed/`; draft `projectplan/v772c_new_industry_content_draft.md`)
 
 **Note:** This feature is DISTINCT from the existing `template_library` (document format templates). Industry Plan Templates define the *project methodology structure* for a given industry — they are not document format templates.
 
@@ -13,42 +14,63 @@
 
 ---
 
-## 1. Industries Covered (Seed Data — v576)
+## 1. Industries Covered (Seed Data — v576 + v772b)
 
-| # | `industry_code` | `industry_name` |
-|---|---|---|
-| 1 | `software_development` | Software Development & IT |
-| 2 | `construction` | Construction |
-| 3 | `management_consulting` | Management Consulting |
-| 4 | `infrastructure` | Infrastructure & Civil Engineering |
-| 5 | `research_development` | Research & Development (R&D) |
-| 6 | `hr_people` | HR & People Management |
-| 7 | `office_relocation` | Office Relocation |
-| 8 | `event_management` | Event Planning & Management |
-| 9 | `manufacturing` | Manufacturing & Product Development |
-| 10 | `healthcare_clinical` | Healthcare & Clinical Projects |
-| 11 | `marketing_campaigns` | Marketing & Campaign Management |
-| 12 | `financial_services` | Financial Services & Transformation |
-| 13 | `education_training` | Education & Training Programme |
-| 14 | `oil_gas_energy` | Oil, Gas & Energy |
-| 15 | `retail_commercial` | Retail & Commercial Fit-Out |
-| 16 | `telecommunications` | Telecommunications & Network Rollout |
-| 17 | `aerospace_defence` | Aerospace & Defence |
-| 18 | `pharmaceutical` | Pharmaceutical & Life Sciences |
-| 19 | `agriculture_food` | Agriculture & Food Production |
-| 20 | `logistics_supply_chain` | Logistics & Supply Chain |
-| 21 | `legal_services` | Legal Services & Compliance |
-| 22 | `nonprofit_charity` | Non-Profit & Charity Projects |
-| 23 | `government_public_sector` | Government & Public Sector |
-| 24 | `mining_natural_resources` | Mining & Natural Resources |
-| 25 | `hospitality_tourism` | Hospitality & Tourism |
-| 26 | `media_broadcasting` | Media & Broadcasting |
-| 27 | `real_estate_property` | Real Estate & Property Development |
-| 28 | `cybersecurity` | Cybersecurity & Information Security |
-| 29 | `digital_transformation` | Digital Transformation |
-| 30 | `sustainability_environment` | Sustainability & Environmental Projects |
+| # | `industry_code` | `industry_name` | Seed |
+|---|---|---|---|
+| 1 | `software_development` | Software Development & IT | v576 |
+| 2 | `construction` | Construction | v576 |
+| 3 | `management_consulting` | Management Consulting | v576 |
+| 4 | `infrastructure` | Infrastructure & Civil Engineering | v576 |
+| 5 | `research_development` | Research & Development (R&D) | v576 |
+| 6 | `hr_people` | HR & People Management | v576 |
+| 7 | `office_relocation` | Office Relocation | v576 |
+| 8 | `event_management` | Event Planning & Management | v576 |
+| 9 | `manufacturing` | Manufacturing & Product Development | v576 |
+| 10 | `healthcare_clinical` | Healthcare & Clinical Projects | v576 |
+| 11 | `marketing_campaigns` | Marketing & Campaign Management | v576 |
+| 12 | `financial_services` | Financial Services & Transformation | v576 |
+| 13 | `education_training` | Education & Training Programme | v576 |
+| 14 | `oil_gas_energy` | Oil, Gas & Energy | v576 |
+| 15 | `retail_commercial` | Retail & Commercial Fit-Out | v576 |
+| 16 | `telecommunications` | Telecommunications & Network Rollout | v576 |
+| 17 | `aerospace_defence` | Aerospace & Defence | v576 |
+| 18 | `pharmaceutical` | Pharmaceutical & Life Sciences | v576 |
+| 19 | `agriculture_food` | Agriculture & Food Production | v576 |
+| 20 | `logistics_supply_chain` | Logistics & Supply Chain | v576 |
+| 21 | `legal_services` | Legal Services & Compliance | v576 |
+| 22 | `nonprofit_charity` | Non-Profit & Charity Projects | v576 |
+| 23 | `government_public_sector` | Government & Public Sector | v576 |
+| 24 | `mining_natural_resources` | Mining & Natural Resources | v576 |
+| 25 | `hospitality_tourism` | Hospitality & Tourism | v576 |
+| 26 | `media_broadcasting` | Media & Broadcasting | v576 |
+| 27 | `real_estate_property` | Real Estate & Property Development | v576 |
+| 28 | `cybersecurity` | Cybersecurity & Information Security | v576 |
+| 29 | `digital_transformation` | Digital Transformation | v576 |
+| 30 | `sustainability_environment` | Sustainability & Environmental Projects | v576 |
+| 31 | `automotive_manufacturing` | Automotive Manufacturing & Engineering | v772b |
+| 32 | `insurance_underwriting` | Insurance & Underwriting Transformation | v772b |
+| 33 | `utilities_water_power` | Utilities — Water & Power | v772b |
+| 34 | `renewable_energy` | Renewable Energy (Solar/Wind) | v772b |
+| 35 | `rail_mass_transit` | Rail & Mass Transit | v772b |
+| 36 | `maritime_shipping_ports` | Maritime, Shipping & Ports | v772b |
+| 37 | `aviation_airports` | Aviation Operations & Airports | v772b |
+| 38 | `gaming_esports` | Gaming & Esports | v772b |
+| 39 | `publishing_print_media` | Publishing & Print Media | v772b |
+| 40 | `fashion_apparel` | Fashion, Apparel & Textiles | v772b |
+| 41 | `food_beverage_manufacturing` | Food & Beverage Manufacturing | v772b |
+| 42 | `chemical_process_manufacturing` | Chemical & Process Manufacturing | v772b |
+| 43 | `semiconductor_electronics` | Semiconductor & Electronics Manufacturing | v772b |
+| 44 | `biotechnology_genomics` | Biotechnology & Genomics | v772b |
+| 45 | `data_centres_cloud` | Data Centres & Cloud Infrastructure | v772b |
+| 46 | `waste_management_recycling` | Waste Management & Recycling | v772b |
+| 47 | `sports_recreation` | Sports & Recreation Facilities | v772b |
+| 48 | `museums_arts_heritage` | Museums, Arts & Cultural Heritage | v772b |
+| 49 | `veterinary_animal_health` | Veterinary & Animal Health Services | v772b |
+| 50 | `franchise_multisite_retail` | Franchise & Multi-Site Retail Rollout | v772b |
+| 51 | `ict` | ICT (Information & Communications Technology) | v775 |
 
-Each industry gets: phases, deliverables (linked to phases), risks, milestones, and recommended roles. See §8 for full seed content.
+Each industry gets: phases, deliverables (linked to phases), risks, milestones, and recommended roles. See §8 for full seed content. Apply `SQL/v576_seed/`, then `SQL/v772b_seed/batches/`, then `SQL/v775_ict_industry_template_seed.sql` for ICT.
 
 ---
 
@@ -466,7 +488,7 @@ See §9 Phase 3 (Menu Seed) for v577 implementation details.
 
 ---
 
-## 8. Seed Content (v576) — Per Industry
+## 8. Seed Content (v576 + v772b) — Per Industry
 
 > Full INSERT statements in v576. Summary below.
 
@@ -936,6 +958,351 @@ See §9 Phase 3 (Menu Seed) for v577 implementation details.
 **Risks:** Baseline data quality issues [medium/medium], Regulatory change (ESG reporting) [medium/high], Greenwashing accusations [low/high], Supply chain emissions data gaps [high/medium], Stakeholder resistance [medium/medium], Certification audit failure [medium/medium]  
 **Milestones:** Baseline Approved, Targets Set & Published, Key Initiatives Launched, Mid-Point Review, Verification Audit Complete, Certification Achieved, Annual Sustainability Report Published  
 **Roles:** Sustainability Director ★, Environmental Project Manager ★, ESG Data Analyst, Stakeholder Engagement Lead, Supply Chain Sustainability Manager, Communications Manager, Third-Party Verifier
+
+
+
+### Industries 31–50 (v772b expansion)
+
+Seeded via SQL/v772b_seed/ (generator: scripts/generate-v772b-industry-expansion.mjs). Content source: projectplan/v772c_new_industry_content_draft.md.
+
+### 31. Automotive Manufacturing & Engineering
+**Phases:** Concept & Feasibility (4–8w) → Design Engineering (12–20w) → Prototyping (8–16w) → Testing & Validation (8–12w) → Tooling & Pre-Production (12–20w) → Production Ramp-Up (6–10w) → Full Production (ongoing) → Post-Launch Review (2–4w)
+**Activities (per phase):**
+- *Concept & Feasibility:* Market & competitor benchmarking [task, 5–10d, 30h, Product Planner], Feasibility & cost target study [task, 5–8d, 24h, Program Mgr], Concept sign-off gate [approval, 1d, 4h, Program Mgr]
+- *Design Engineering:* CAD design & packaging [task, 15–25d, 100h, Design Eng], CAE simulation & crash analysis [task, 10–15d, 60h, CAE Eng], Design review (DFMEA) [review, 2d, 8h, Design Eng+Quality]
+- *Prototyping:* Prototype build [task, 15–20d, 120h, Build Team], Prototype bench testing [task, 5–10d, 40h, Test Eng], Prototype review with stakeholders [meeting, 1d, 4h, Program Mgr]
+- *Testing & Validation:* Durability & environmental testing [task, 10–20d, 80h, Test Eng], Regulatory homologation testing [task, 15–25d, 60h, Compliance Eng], Validation sign-off [approval, 1d, 4h, Quality Mgr]
+- *Tooling & Pre-Production:* Tooling design & fabrication [task, 20–40d, ongoing, Tooling Eng], Pre-production trial builds [task, 5–10d, 60h, Manufacturing Eng], PPAP submission [deliverable, 3–5d, 20h, Quality Eng]
+- *Production Ramp-Up:* Line trial runs [task, 5–10d, 60h, Manufacturing Eng], Operator training [task, 3–5d, 24h, Training Lead], Ramp-up readiness review [review, 1d, 4h, Plant Mgr]
+- *Full Production:* Daily production monitoring [task, ongoing, 2h/d, Line Supervisor], Quality audits [review, 1d/week, 4h, Quality Eng], Supplier performance review [meeting, 1d/month, 4h, Procurement]
+- *Post-Launch Review:* Warranty data analysis [task, 5–8d, 24h, Quality Eng], Lessons learned workshop [meeting, 1d, 4h, Program Mgr], Post-launch report [deliverable, 3–5d, 16h, Program Mgr]
+**Deliverables:** Product Requirements Document, CAD Design Package, DFMEA Report, Prototype Test Report, Homologation Certificate, PPAP Package, Production Control Plan, Post-Launch Review Report
+**Risks:** Supplier part delay [medium/high], Design change late-stage [medium/high], Regulatory approval delay [low/high], Tooling defect [medium/medium], Quality escape to field [low/high]
+**Milestones:** Concept Approval, Design Freeze, Prototype Build Complete, Validation Sign-Off, Start of Production
+**Roles:** Program Manager ★, Design Engineer ★, Quality Engineer ★, Manufacturing Engineer, CAE Engineer, Test Engineer, Procurement Lead, Tooling Engineer
+
+### 32. Insurance & Underwriting Transformation
+**Phases:** Discovery (2–4w) → Requirements & Rating Design (4–8w) → System Configuration (8–16w) → Integration (4–8w) → UAT (3–6w) → Regulatory Filing (4–12w) → Rollout (2–6w) → Post-Implementation Review (2–4w)
+**Activities (per phase):**
+- *Discovery:* Current-state process mapping [task, 5–8d, 32h, BA], Underwriting guideline review [task, 3–5d, 20h, Underwriter], Kick-off workshop [meeting, 1d, 4h, PM]
+- *Requirements & Rating Design:* Rating algorithm design [task, 10–15d, 60h, Actuary], Product & rules documentation [task, 5–10d, 30h, BA], Requirements sign-off [approval, 1d, 3h, Product Owner]
+- *System Configuration:* Policy admin system configuration [task, 20–30d, ongoing, Config Eng], Rating engine build [task, 15–20d, 80h, Dev], Configuration peer review [review, 2d, 8h, Tech Lead]
+- *Integration:* Third-party data feed integration (credit, MVR) [task, 5–10d, 40h, Integration Eng], Claims system integration [task, 5–10d, 40h, Integration Eng], Integration testing [task, 5–8d, 32h, QA]
+- *UAT:* UAT scenario preparation [task, 3–5d, 20h, BA], Underwriter UAT sessions [meeting, 5–10d, 40h, Underwriters], UAT defect triage [task, ongoing, 4h/d, QA]
+- *Regulatory Filing:* Rate & form filing preparation [deliverable, 5–10d, 40h, Compliance], State/regulator submission [task, ongoing, varies, Compliance], Filing approval tracking [task, ongoing, 2h/d, Compliance]
+- *Rollout:* Agent/broker training [task, 3–5d, 24h, Training Lead], Phased state rollout [task, 10–20d, ongoing, PM], Go-live support [task, 5d, 8h/d, Support Team]
+- *Post-Implementation Review:* Loss ratio monitoring [task, ongoing, 4h/week, Actuary], Stakeholder feedback review [meeting, 1d, 4h, PM], Close-out report [deliverable, 3d, 16h, PM]
+**Deliverables:** Business Requirements Document, Rating Algorithm Spec, Product Configuration Guide, Regulatory Filing Package, UAT Test Results, Training Materials, Go-Live Readiness Checklist, Post-Implementation Report
+**Risks:** Regulatory filing rejection [medium/high], Rating engine calculation error [low/high], Legacy data migration issue [medium/high], Agent adoption resistance [medium/medium], Third-party data feed outage [low/medium]
+**Milestones:** Requirements Sign-Off, Configuration Complete, UAT Sign-Off, Regulatory Approval, Go-Live
+**Roles:** Project Manager ★, Actuary ★, Underwriter, Business Analyst, Compliance Officer ★, Integration Engineer, QA Lead, Product Owner
+
+### 33. Utilities — Water & Power
+**Phases:** Planning & Feasibility (4–8w) → Regulatory Approval (8–16w) → Engineering Design (8–16w) → Procurement (4–8w) → Construction & Installation (16–40w) → Commissioning (4–8w) → Energisation/Go-Live (1–2w) → Handover & Close-Out (2–4w)
+**Activities (per phase):**
+- *Planning & Feasibility:* Load/demand forecasting study [task, 5–10d, 40h, Planning Eng], Route/site feasibility survey [task, 5–10d, 30h, Field Eng], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Regulatory Approval:* Environmental impact assessment [deliverable, 15–25d, 80h, Environmental Eng], Regulator submission & hearings [task, ongoing, varies, Regulatory Affairs], Permit approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Engineering Design:* Detailed engineering design [task, 15–25d, 100h, Design Eng], Design review & clash detection [review, 3d, 12h, Design Eng], Design freeze [approval, 1d, 4h, Chief Engineer]
+- *Procurement:* Long-lead equipment ordering [task, 5–10d, 20h, Procurement], Contractor tendering [task, 10–15d, 40h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction & Installation:* Civil works & excavation [task, 20–40d, ongoing, Contractor], Equipment installation [task, 20–40d, ongoing, Installation Team], Progress inspections [review, 1d/week, 4h, Site Eng]
+- *Commissioning:* System testing (dry/wet) [task, 5–10d, 40h, Commissioning Eng], Protection & control testing [task, 5–8d, 32h, Protection Eng], Commissioning sign-off [approval, 1d, 4h, Chief Engineer]
+- *Energisation/Go-Live:* Switching & energisation [task, 1–2d, 8h, Ops Team], Live monitoring [task, ongoing, 24h, Control Room], Go-live confirmation [approval, 1d, 2h, Ops Manager]
+- *Handover & Close-Out:* As-built documentation [deliverable, 5–8d, 24h, Design Eng], O&M manual handover [deliverable, 3–5d, 16h, Design Eng], Close-out meeting [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Feasibility Study, Environmental Impact Assessment, Detailed Design Package, Permit/License Approvals, Commissioning Test Reports, As-Built Drawings, O&M Manual, Handover Certificate
+**Risks:** Regulatory/permit delay [high/high], Weather/access delays [medium/medium], Equipment supply delay [medium/high], Public/community objection [low/medium], Safety incident during construction [low/high]
+**Milestones:** Feasibility Approved, Permits Granted, Design Freeze, Construction Complete, Energisation/Go-Live
+**Roles:** Program Manager ★, Chief Engineer ★, Design Engineer, Regulatory Affairs Lead ★, Commissioning Engineer, Site Engineer, Environmental Engineer, Procurement Lead
+
+### 34. Renewable Energy (Solar/Wind)
+**Phases:** Site Assessment (4–8w) → Permitting & Grid Connection (12–24w) → Financing & Contracts (6–12w) → Detailed Design (6–12w) → Procurement (6–10w) → Construction (12–30w) → Commissioning (3–6w) → Operations Handover (2–4w)
+**Activities (per phase):**
+- *Site Assessment:* Resource assessment (solar irradiance/wind) [task, 20–40d, ongoing, Resource Analyst], Site survey & geotechnical study [task, 5–10d, 40h, Site Eng], Site feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Permitting & Grid Connection:* Environmental & planning permit application [deliverable, 10–20d, 60h, Environmental Eng], Grid connection application & studies [task, ongoing, varies, Grid Eng], Permit approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Financing & Contracts:* PPA negotiation [task, 10–20d, 40h, Commercial Lead], EPC contract negotiation [task, 10–15d, 40h, Commercial Lead], Financial close [approval, 1d, 8h, Finance Director]
+- *Detailed Design:* Layout & yield modelling [task, 10–15d, 60h, Design Eng], Electrical design (SCADA, inverters/turbines) [task, 10–15d, 60h, Electrical Eng], Design review [review, 2d, 8h, Chief Engineer]
+- *Procurement:* Panel/turbine procurement [task, 5–10d, 20h, Procurement], BOP contractor tendering [task, 10–15d, 40h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction:* Civil & foundation works [task, 15–30d, ongoing, Contractor], Panel/turbine installation [task, 20–40d, ongoing, Installation Team], HSE inspections [review, 1d/week, 4h, HSE Officer]
+- *Commissioning:* String/turbine testing [task, 5–10d, 40h, Commissioning Eng], Grid synchronisation testing [task, 3–5d, 20h, Grid Eng], Commissioning sign-off [approval, 1d, 4h, Chief Engineer]
+- *Operations Handover:* Performance ratio verification [task, 5–8d, 24h, Performance Eng], O&M contract mobilisation [task, 3–5d, 16h, O&M Manager], Handover to asset management [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Resource Assessment Report, Environmental Permit, Grid Connection Agreement, PPA, Detailed Design Package, Commissioning Test Reports, Performance Ratio Report, O&M Handover Package
+**Risks:** Grid connection delay [high/high], Permitting delay [medium/high], Resource underperformance vs. forecast [low/medium], Equipment supply chain delay [medium/high], Extreme weather during construction [low/medium]
+**Milestones:** Site Assessment Complete, Permits Granted, Financial Close, Construction Complete, Commercial Operations Date
+**Roles:** Program Manager ★, Chief Engineer ★, Grid Engineer, Commercial Lead ★, Environmental Engineer, Commissioning Engineer, HSE Officer, O&M Manager
+
+### 35. Rail & Mass Transit
+**Phases:** Planning & Business Case (8–16w) → Design & Engineering (16–30w) → Land/Right-of-Way Acquisition (12–24w) → Procurement (8–16w) → Construction & Track-laying (30–80w) → Systems Integration & Testing (12–20w) → Trial Running (4–8w) → Revenue Service Handover (2–4w)
+**Activities (per phase):**
+- *Planning & Business Case:* Demand & ridership forecasting [task, 10–15d, 60h, Transport Planner], Route options assessment [task, 10–20d, 60h, Planning Eng], Business case approval [approval, 2d, 8h, Steering Committee]
+- *Design & Engineering:* Track & alignment design [task, 20–30d, ongoing, Rail Eng], Signalling & systems design [task, 20–30d, ongoing, Systems Eng], Design review gate [review, 3d, 12h, Chief Engineer]
+- *Land/Right-of-Way Acquisition:* Land survey & valuation [task, 10–15d, 40h, Land Surveyor], Compensation negotiation [task, ongoing, varies, Land Acquisition Officer], Acquisition sign-off [approval, ongoing, varies, Program Mgr]
+- *Procurement:* Rolling stock procurement [task, 15–20d, 40h, Procurement], Civil works contractor tender [task, 15–20d, 40h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction & Track-laying:* Earthworks & civil structures [task, 40–80d, ongoing, Contractor], Track-laying & ballasting [task, 30–60d, ongoing, Track Team], Progress & safety inspections [review, 1d/week, 4h, Site Eng]
+- *Systems Integration & Testing:* Signalling installation & testing [task, 15–25d, 80h, Systems Eng], Rolling stock delivery & static testing [task, 10–15d, 60h, Rolling Stock Eng], Interface testing [task, 10–15d, 60h, Systems Eng]
+- *Trial Running:* Dynamic testing & driver training [task, 10–15d, 60h, Operations], Trial running with simulated passengers [task, 5–10d, 40h, Safety Eng], Safety case approval [approval, 3d, 12h, Independent Safety Assessor]
+- *Revenue Service Handover:* Operational readiness review [review, 2d, 8h, Operations Director], Handover to operator [meeting, 1d, 4h, Program Mgr], Opening day support [task, 1d, 12h, Program Mgr]
+**Deliverables:** Business Case Report, Design Package, Land Acquisition Register, Rolling Stock Specification, Safety Case, Systems Integration Test Report, Trial Running Report, Operational Readiness Certificate
+**Risks:** Land acquisition delay [high/high], Signalling integration failure [medium/high], Safety certification delay [medium/high], Budget overrun on civil works [medium/high], Utility diversion delays [medium/medium]
+**Milestones:** Business Case Approved, Design Freeze, Track-laying Complete, Safety Case Approved, Revenue Service Start
+**Roles:** Program Manager ★, Chief Engineer ★, Systems Engineer, Safety Assessor ★, Rail Engineer, Land Acquisition Officer, Operations Director, Procurement Lead
+
+### 36. Maritime, Shipping & Ports
+**Phases:** Concept & Feasibility (4–8w) → Design & Engineering (8–16w) → Regulatory & Class Approval (8–16w) → Procurement & Contracting (6–10w) → Construction/Retrofit (20–60w) → Sea Trials & Testing (4–8w) → Commissioning (2–4w) → Handover & Operations (2–4w)
+**Activities (per phase):**
+- *Concept & Feasibility:* Traffic/cargo demand study [task, 5–10d, 30h, Port Planner], Site/berth feasibility assessment [task, 5–10d, 30h, Marine Eng], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Design & Engineering:* Structural/marine engineering design [task, 15–25d, 80h, Marine Eng], Dredging & hydrographic design [task, 10–15d, 50h, Hydrographic Eng], Design review [review, 2d, 8h, Chief Engineer]
+- *Regulatory & Class Approval:* Classification society submission [deliverable, 10–15d, 40h, Class Surveyor], Port authority/environmental approval [task, ongoing, varies, Regulatory Affairs], Approval sign-off [approval, ongoing, varies, Regulatory Affairs]
+- *Procurement & Contracting:* Shipyard/contractor tendering [task, 10–15d, 40h, Procurement], Equipment procurement (cranes, moorings) [task, 5–10d, 20h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction/Retrofit:* Dredging & civil works [task, 30–50d, ongoing, Contractor], Vessel construction/retrofit [task, 40–80d, ongoing, Shipyard], Progress & safety inspections [review, 1d/week, 4h, Site Eng]
+- *Sea Trials & Testing:* Builder's sea trials [task, 5–8d, 40h, Marine Eng], Equipment & systems testing [task, 5–8d, 32h, Systems Eng], Class surveyor sign-off [approval, 2d, 8h, Class Surveyor]
+- *Commissioning:* Operational commissioning [task, 5–10d, 40h, Commissioning Eng], Crew/operator training [task, 3–5d, 24h, Training Lead], Commissioning sign-off [approval, 1d, 4h, Chief Engineer]
+- *Handover & Operations:* Handover documentation [deliverable, 3–5d, 16h, Marine Eng], Operational readiness review [review, 1d, 4h, Operations Director], Handover meeting [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Feasibility Study, Marine Engineering Design, Classification Certificate, Dredging/Environmental Permit, Sea Trial Report, Commissioning Report, Crew Training Records, Handover Certificate
+**Risks:** Weather delays to marine works [medium/medium], Class/regulatory approval delay [medium/high], Dredging environmental objection [low/medium], Shipyard schedule slippage [medium/high], Equipment supply delay [medium/medium]
+**Milestones:** Feasibility Approved, Design Freeze, Class Approval, Sea Trials Complete, Handover to Operations
+**Roles:** Program Manager ★, Marine Engineer ★, Class Surveyor, Regulatory Affairs Lead, Commissioning Engineer ★, Hydrographic Engineer, Operations Director, Procurement Lead
+
+### 37. Aviation Operations & Airports
+**Phases:** Planning & Feasibility (6–10w) → Design & Engineering (12–20w) → Regulatory Approval (10–20w) → Procurement (6–10w) → Construction (20–50w) → Systems Integration & Testing (8–12w) → Operational Readiness (4–8w) → Go-Live & Handover (2–4w)
+**Activities (per phase):**
+- *Planning & Feasibility:* Capacity & traffic forecasting [task, 10–15d, 50h, Aviation Planner], Master plan development [task, 10–20d, 60h, Planning Eng], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Design & Engineering:* Terminal/airside design [task, 20–30d, ongoing, Design Eng], Airfield & navaid engineering [task, 15–25d, 80h, Airfield Eng], Design review gate [review, 3d, 12h, Chief Engineer]
+- *Regulatory Approval:* Civil aviation authority submission [deliverable, 10–15d, 40h, Regulatory Affairs], Safety case & environmental approval [task, ongoing, varies, Safety Officer], Approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Procurement:* Contractor & systems tendering [task, 10–15d, 40h, Procurement], Baggage/security systems procurement [task, 5–10d, 20h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction:* Airside/landside civil works [task, 40–80d, ongoing, Contractor], Terminal fit-out [task, 20–40d, ongoing, Contractor], Progress & safety inspections [review, 1d/week, 4h, Site Eng]
+- *Systems Integration & Testing:* Baggage handling system testing [task, 10–15d, 60h, Systems Eng], Security/screening systems testing [task, 10–15d, 60h, Security Eng], Integration testing [task, 5–10d, 40h, Systems Eng]
+- *Operational Readiness:* ORAT (operational readiness) trials [task, 10–20d, 60h, Operations Director], Staff training [task, 5–10d, 30h, Training Lead], Readiness review sign-off [approval, 2d, 8h, Operations Director]
+- *Go-Live & Handover:* Phased opening/switchover [task, 3–5d, ongoing, Program Mgr], Live monitoring & support [task, 5d, 12h/d, Support Team], Handover to operations [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Master Plan, Design Package, CAA/Regulatory Approval, Baggage & Security Systems Test Reports, ORAT Report, Staff Training Records, Go-Live Readiness Checklist, Handover Certificate
+**Risks:** Regulatory/CAA approval delay [medium/high], Systems integration failure [medium/high], Construction schedule slippage [medium/high], Airside safety incident [low/high], Stakeholder/airline coordination delay [medium/medium]
+**Milestones:** Master Plan Approved, Design Freeze, Regulatory Approval, ORAT Complete, Go-Live
+**Roles:** Program Manager ★, Chief Engineer ★, Operations Director ★, Airfield Engineer, Safety Officer, Systems Engineer, Regulatory Affairs Lead, Security Engineer
+
+### 38. Gaming & Esports
+**Phases:** Concept & Pre-Production (4–8w) → Pre-Production Design (6–10w) → Production (16–40w) → Alpha (4–6w) → Beta (4–8w) → Certification & Launch Prep (3–6w) → Launch (1–2w) → Live Operations (ongoing)
+**Activities (per phase):**
+- *Concept & Pre-Production:* Game concept & pitch document [deliverable, 5–8d, 24h, Creative Director], Market & competitor analysis [task, 3–5d, 16h, Product Manager], Concept sign-off [approval, 1d, 3h, Studio Head]
+- *Pre-Production Design:* Game design document (GDD) [deliverable, 10–15d, 60h, Game Designer], Art style & prototype [task, 10–15d, 50h, Art Director], Design review [review, 2d, 8h, Studio Head]
+- *Production:* Level/content build [task, ongoing, per sprint, Level Designers], Programming & feature development [task, ongoing, per sprint, Engineers], Sprint review [review, 1d/sprint, 4h, Producer]
+- *Alpha:* Alpha build compilation [task, 3–5d, 20h, Build Engineer], Internal playtesting [task, 5–10d, 30h, QA], Alpha sign-off [approval, 1d, 3h, Producer]
+- *Beta:* Closed/open beta deployment [task, 3–5d, 20h, Live Ops Eng], Player feedback analysis [task, ongoing, 4h/d, Community Manager], Beta bug triage [task, ongoing, 4h/d, QA]
+- *Certification & Launch Prep:* Platform certification submission [deliverable, 5–10d, 30h, QA Lead], Localization & compliance checks [task, 5–8d, 24h, Localization Lead], Launch readiness review [review, 1d, 4h, Producer]
+- *Launch:* Global release deployment [task, 1–2d, 8h, Live Ops Eng], Launch day monitoring [task, 1–2d, 12h/d, Live Ops Eng], Launch retrospective [meeting, 1d, 4h, Producer]
+- *Live Operations:* Content update cadence [task, ongoing, per cycle, Live Ops Team], Community/esports event management [task, ongoing, varies, Community Manager], KPI/analytics review [review, 1d/week, 3h, Product Manager]
+**Deliverables:** Concept Pitch Deck, Game Design Document, Alpha Build, Beta Build, Platform Certification Package, Localization Package, Launch Plan, Live Ops Content Roadmap
+**Risks:** Scope creep on features [high/medium], Platform certification rejection [medium/high], Server capacity issues at launch [medium/high], Key talent attrition [low/medium], Negative community reception [medium/medium]
+**Milestones:** Concept Approved, GDD Sign-Off, Alpha Complete, Beta Complete, Launch
+**Roles:** Producer ★, Game Designer ★, Creative Director, Engineering Lead ★, QA Lead, Community Manager, Live Ops Engineer, Localization Lead
+
+### 39. Publishing & Print Media
+**Phases:** Acquisition & Concept (2–4w) → Editorial Development (6–12w) → Design & Layout (4–8w) → Production & Pre-Press (2–4w) → Printing (1–3w) → Distribution Setup (2–4w) → Launch & Marketing (2–4w) → Post-Launch Review (2–4w)
+**Activities (per phase):**
+- *Acquisition & Concept:* Manuscript/content acquisition [task, 5–10d, 20h, Acquisitions Editor], Concept & market fit review [task, 3–5d, 12h, Publisher], Acquisition sign-off [approval, 1d, 3h, Publisher]
+- *Editorial Development:* Developmental editing [task, 10–20d, 60h, Editor], Copyediting & fact-checking [task, 5–10d, 30h, Copyeditor], Editorial sign-off [approval, 1d, 3h, Editor]
+- *Design & Layout:* Cover design [task, 5–8d, 20h, Designer], Interior layout & typesetting [task, 10–15d, 40h, Layout Artist], Design review [review, 2d, 6h, Art Director]
+- *Production & Pre-Press:* Proofreading & final corrections [task, 5–8d, 20h, Proofreader], Pre-press file preparation [task, 3–5d, 12h, Production Manager], Print-ready sign-off [approval, 1d, 3h, Production Manager]
+- *Printing:* Print run production [task, 5–10d, ongoing, Printer], Quality check of printed copies [review, 1–2d, 6h, Production Manager], Print delivery to warehouse [task, 2–3d, 8h, Logistics]
+- *Distribution Setup:* Distributor & retailer onboarding [task, 5–10d, 20h, Sales Manager], Metadata & catalog listing [task, 3–5d, 12h, Marketing Coordinator], Distribution readiness sign-off [approval, 1d, 3h, Sales Manager]
+- *Launch & Marketing:* Launch event/campaign execution [task, 3–5d, 20h, Marketing Manager], Media & press outreach [task, 5–8d, 20h, PR Lead], Launch day monitoring [task, 1d, 8h, Marketing Manager]
+- *Post-Launch Review:* Sales performance review [task, 3–5d, 12h, Sales Manager], Reader/reviewer feedback analysis [task, 3–5d, 12h, Marketing Coordinator], Post-launch report [deliverable, 2–3d, 10h, Publisher]
+**Deliverables:** Acquisition Agreement, Edited Manuscript, Cover & Interior Design Files, Print-Ready Files, Printed Stock, Distribution Agreement, Marketing/Launch Plan, Sales Performance Report
+**Risks:** Editorial schedule slippage [medium/medium], Printer capacity/delay [medium/medium], Rights/licensing dispute [low/high], Distribution channel rejection [low/medium], Weak sales uptake [medium/medium]
+**Milestones:** Acquisition Signed, Manuscript Finalised, Design Approved, Print Complete, Launch Day
+**Roles:** Publisher ★, Editor ★, Production Manager, Designer, Marketing Manager ★, Sales Manager, Proofreader, PR Lead
+
+### 40. Fashion, Apparel & Textiles
+**Phases:** Trend Research & Concept (3–6w) → Design & Development (6–10w) → Sourcing & Sampling (6–10w) → Production Planning (2–4w) → Manufacturing (8–16w) → Quality Inspection (2–4w) → Distribution & Retail Setup (3–6w) → Season Launch & Review (2–4w)
+**Activities (per phase):**
+- *Trend Research & Concept:* Trend & market research [task, 5–10d, 30h, Trend Analyst], Concept mood board development [task, 3–5d, 16h, Designer], Concept sign-off [approval, 1d, 3h, Creative Director]
+- *Design & Development:* Technical sketches & spec sheets [task, 10–15d, 50h, Designer], Fabric & trim selection [task, 5–8d, 20h, Sourcing Manager], Design review [review, 2d, 8h, Creative Director]
+- *Sourcing & Sampling:* Supplier sourcing & negotiation [task, 5–10d, 30h, Sourcing Manager], Sample development (proto/fit) [task, 10–15d, 50h, Pattern Maker], Fit approval [approval, 1–2d, 6h, Designer]
+- *Production Planning:* Costing & pricing finalisation [task, 3–5d, 16h, Merchandiser], Production schedule & capacity booking [task, 3–5d, 16h, Production Planner], Purchase order issuance [deliverable, 2–3d, 8h, Merchandiser]
+- *Manufacturing:* Bulk fabric cutting & production [task, 20–40d, ongoing, Factory], In-line quality checks [review, ongoing, 4h/d, QC Inspector], Production status tracking [task, ongoing, 2h/d, Production Planner]
+- *Quality Inspection:* Pre-shipment inspection [task, 3–5d, 20h, QC Inspector], Defect remediation [task, 3–5d, 16h, Factory], Final QC sign-off [approval, 1d, 4h, QC Manager]
+- *Distribution & Retail Setup:* Logistics & shipping coordination [task, 5–10d, 20h, Logistics Manager], Retail/wholesale allocation [task, 3–5d, 16h, Merchandiser], Visual merchandising setup [task, 3–5d, 16h, Visual Merchandiser]
+- *Season Launch & Review:* Marketing campaign & lookbook launch [task, 5–8d, 24h, Marketing Manager], Sell-through performance review [task, 3–5d, 12h, Merchandiser], Season retrospective [meeting, 1d, 4h, Creative Director]
+**Deliverables:** Trend/Concept Board, Tech Pack & Spec Sheets, Approved Samples, Purchase Orders, Pre-Shipment Inspection Report, Shipping/Logistics Plan, Lookbook & Marketing Assets, Sell-Through Report
+**Risks:** Fabric/material shortage [medium/high], Sample approval delay [medium/medium], Factory capacity/quality issue [medium/high], Shipping/customs delay [medium/medium], Weak sell-through [medium/medium]
+**Milestones:** Concept Approved, Samples Approved, Production Start, Quality Sign-Off, Season Launch
+**Roles:** Creative Director ★, Designer ★, Sourcing Manager, Merchandiser ★, Production Planner, QC Manager, Logistics Manager, Marketing Manager
+
+### 41. Food & Beverage Manufacturing
+**Phases:** Product Concept & R&D (4–8w) → Formulation & Recipe Development (6–10w) → Regulatory & Labelling Approval (4–8w) → Pilot Production (2–4w) → Line Setup & Scale-Up (4–8w) → Full Production Launch (2–4w) → Quality & Safety Certification (ongoing) → Post-Launch Review (2–4w)
+**Activities (per phase):**
+- *Product Concept & R&D:* Consumer/market research [task, 5–10d, 30h, Product Manager], Concept development & taste trials [task, 5–10d, 30h, R&D Scientist], Concept sign-off [approval, 1d, 3h, Product Manager]
+- *Formulation & Recipe Development:* Recipe/formulation development [task, 15–20d, 80h, Food Scientist], Shelf-life & stability testing [task, 15–25d, 60h, Food Scientist], Formulation sign-off [approval, 1d, 4h, R&D Director]
+- *Regulatory & Labelling Approval:* Nutritional analysis & labelling compliance [deliverable, 5–10d, 30h, Regulatory Affairs], Food safety/regulatory submission [task, ongoing, varies, Regulatory Affairs], Approval sign-off [approval, ongoing, varies, Regulatory Affairs]
+- *Pilot Production:* Pilot batch production [task, 3–5d, 24h, Production Eng], Sensory & QC testing [task, 3–5d, 20h, QC Analyst], Pilot sign-off [approval, 1d, 4h, Production Manager]
+- *Line Setup & Scale-Up:* Production line configuration [task, 10–15d, 60h, Production Eng], Equipment calibration & trial runs [task, 5–8d, 32h, Production Eng], Scale-up readiness review [review, 1d, 4h, Plant Manager]
+- *Full Production Launch:* Full-scale production run [task, ongoing, ongoing, Production Team], In-line quality monitoring [task, ongoing, 4h/d, QC Analyst], Production launch sign-off [approval, 1d, 4h, Plant Manager]
+- *Quality & Safety Certification:* HACCP/ISO audit preparation [task, 5–10d, 30h, Quality Manager], Third-party certification audit [task, 2–3d, 16h, Auditor], Certification sign-off [approval, 1d, 4h, Quality Manager]
+- *Post-Launch Review:* Sales & consumer feedback analysis [task, 3–5d, 16h, Product Manager], Cost & yield review [task, 3–5d, 16h, Finance], Post-launch report [deliverable, 2–3d, 12h, Product Manager]
+**Deliverables:** Concept Brief, Formulation Spec, Nutritional/Labelling Package, Pilot Batch Report, Production Line SOP, Full Production Batch Records, Certification Audit Report, Post-Launch Review
+**Risks:** Ingredient supply shortage [medium/high], Regulatory/labelling non-compliance [low/high], Shelf-life failure [low/high], Line changeover delay [medium/medium], Consumer taste rejection [medium/medium]
+**Milestones:** Concept Approved, Formulation Finalised, Regulatory Approval, Pilot Production Complete, Full Launch
+**Roles:** Product Manager ★, Food Scientist ★, Regulatory Affairs Lead, Production Engineer, Quality Manager ★, QC Analyst, Plant Manager, Procurement Lead
+
+### 42. Chemical & Process Manufacturing
+**Phases:** Process Concept & Feasibility (4–8w) → Process Design (8–16w) → HAZOP & Safety Review (2–4w) → Procurement & Fabrication (10–20w) → Plant Construction/Installation (16–40w) → Commissioning (4–8w) → Start-Up & Ramp-Up (2–6w) → Performance Review (2–4w)
+**Activities (per phase):**
+- *Process Concept & Feasibility:* Process route selection [task, 5–10d, 30h, Process Eng], Techno-economic feasibility study [task, 10–15d, 50h, Process Eng], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Process Design:* Process flow diagrams (PFDs) [task, 10–15d, 60h, Process Eng], Piping & instrumentation diagrams (P&IDs) [task, 15–20d, 80h, Design Eng], Design review [review, 3d, 12h, Chief Engineer]
+- *HAZOP & Safety Review:* HAZOP study facilitation [meeting, 3–5d, 24h, Safety Eng], Risk mitigation action tracking [task, ongoing, 4h/week, Safety Eng], HAZOP close-out sign-off [approval, 1d, 4h, Safety Manager]
+- *Procurement & Fabrication:* Long-lead equipment procurement [task, 10–15d, 30h, Procurement], Vessel/skid fabrication [task, 30–50d, ongoing, Fabricator], Fabrication inspection [review, 1d/week, 4h, QA Inspector]
+- *Plant Construction/Installation:* Civil & structural works [task, 30–60d, ongoing, Contractor], Equipment & piping installation [task, 40–80d, ongoing, Installation Team], Progress & safety inspections [review, 1d/week, 4h, Site Eng]
+- *Commissioning:* Pre-commissioning checks [task, 5–10d, 40h, Commissioning Eng], Loop & instrument testing [task, 5–10d, 40h, Instrumentation Eng], Commissioning sign-off [approval, 1d, 4h, Chief Engineer]
+- *Start-Up & Ramp-Up:* Cold/hot start-up [task, 3–5d, ongoing, Operations Team], Production ramp-up to nameplate [task, 5–15d, ongoing, Plant Manager], Ramp-up review [review, 1d, 4h, Plant Manager]
+- *Performance Review:* Performance test run [task, 3–5d, 24h, Process Eng], Yield/efficiency analysis [task, 3–5d, 16h, Process Eng], Performance sign-off report [deliverable, 2–3d, 12h, Program Mgr]
+**Deliverables:** Feasibility Study, PFDs & P&IDs, HAZOP Report, Fabrication Inspection Records, Commissioning Test Reports, Start-Up Log, Performance Test Report, As-Built Documentation
+**Risks:** HAZOP action non-closure [medium/high], Equipment fabrication delay [medium/high], Process safety incident [low/high], Start-up instability [medium/medium], Raw material spec deviation [low/medium]
+**Milestones:** Feasibility Approved, Design Freeze, HAZOP Closed, Mechanical Completion, Commercial Start-Up
+**Roles:** Program Manager ★, Process Engineer ★, Safety/HAZOP Lead ★, Design Engineer, Commissioning Engineer, Instrumentation Engineer, Plant Manager, Procurement Lead
+
+### 43. Semiconductor & Electronics Manufacturing
+**Phases:** Architecture & Feasibility (4–8w) → Design (RTL/Schematic) (10–20w) → Verification & Simulation (8–16w) → Prototype Fabrication (8–16w) → Testing & Characterization (4–8w) → Pilot Production (4–8w) → Volume Ramp (4–10w) → Yield & Quality Review (2–4w)
+**Activities (per phase):**
+- *Architecture & Feasibility:* Requirements & architecture definition [task, 10–15d, 60h, Systems Architect], Feasibility & cost modelling [task, 5–8d, 30h, Product Manager], Architecture sign-off [approval, 1d, 4h, Engineering Director]
+- *Design (RTL/Schematic):* RTL/circuit design [task, 20–30d, ongoing, Design Eng], PCB/layout design [task, 15–20d, 80h, Layout Eng], Design review [review, 2d, 8h, Chief Engineer]
+- *Verification & Simulation:* Functional simulation & verification [task, 15–25d, 100h, Verification Eng], DFT (design for test) implementation [task, 10–15d, 50h, DFT Eng], Verification sign-off [approval, 1d, 4h, Engineering Director]
+- *Prototype Fabrication:* Mask/tape-out submission [deliverable, 5–8d, 30h, Design Eng], Prototype wafer/board fabrication [task, 20–40d, ongoing, Fab Partner], Fabrication status tracking [task, ongoing, 2h/d, Program Mgr]
+- *Testing & Characterization:* Bring-up & functional testing [task, 5–10d, 40h, Test Eng], Electrical characterization [task, 5–10d, 40h, Test Eng], Characterization sign-off [approval, 1d, 4h, Engineering Director]
+- *Pilot Production:* Pilot lot production [task, 10–15d, ongoing, Fab Partner], Yield analysis [task, 5–8d, 30h, Yield Eng], Pilot sign-off [approval, 1d, 4h, Operations Director]
+- *Volume Ramp:* Production ramp planning [task, 5–10d, 30h, Operations Director], Volume production monitoring [task, ongoing, 4h/d, Production Eng], Ramp review [review, 1d/week, 4h, Operations Director]
+- *Yield & Quality Review:* Yield/defect root cause analysis [task, 5–8d, 30h, Yield Eng], Quality/reliability audit [task, 3–5d, 20h, Quality Eng], Final performance report [deliverable, 2–3d, 12h, Program Mgr]
+**Deliverables:** Architecture Spec, RTL/Schematic Design Package, Verification Report, Tape-Out Package, Test/Characterization Report, Pilot Yield Report, Volume Ramp Plan, Quality/Reliability Report
+**Risks:** Tape-out/mask defect [low/high], Yield below target [medium/high], Fab capacity constraint [medium/high], Design re-spin required [medium/high], Component/wafer supply shortage [medium/medium]
+**Milestones:** Architecture Approved, Design Freeze/Tape-Out, First Silicon, Pilot Production Complete, Volume Ramp Start
+**Roles:** Program Manager ★, Design Engineer ★, Verification Engineer, Test Engineer, Yield Engineer ★, Quality Engineer, Operations Director, Systems Architect
+
+### 44. Biotechnology & Genomics
+**Phases:** Discovery Research (12–24w) → Target Validation (8–16w) → Assay Development (8–12w) → Pre-Clinical Studies (20–40w) → Regulatory Submission (8–16w) → Clinical Trial Design (8–12w) → Trial Execution (ongoing) → Data Analysis & Reporting (4–8w)
+**Activities (per phase):**
+- *Discovery Research:* Literature & pathway research [task, 10–20d, 60h, Research Scientist], Candidate screening [task, 20–30d, ongoing, Research Scientist], Discovery review gate [review, 2d, 8h, R&D Director]
+- *Target Validation:* In-vitro validation studies [task, 15–25d, 80h, Research Scientist], Biomarker identification [task, 10–15d, 50h, Bioinformatician], Validation sign-off [approval, 1d, 4h, R&D Director]
+- *Assay Development:* Assay design & optimisation [task, 15–20d, 80h, Assay Scientist], Assay validation & QC [task, 10–15d, 50h, QC Scientist], Assay sign-off [approval, 1d, 4h, Lab Director]
+- *Pre-Clinical Studies:* In-vivo efficacy studies [task, 30–50d, ongoing, Study Director], Toxicology studies [task, 30–50d, ongoing, Toxicologist], Pre-clinical data review [review, 3d, 16h, R&D Director]
+- *Regulatory Submission:* IND/dossier preparation [deliverable, 15–25d, 100h, Regulatory Affairs], Regulator submission & queries [task, ongoing, varies, Regulatory Affairs], Submission approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Clinical Trial Design:* Protocol development [task, 10–15d, 60h, Clinical Scientist], Site & investigator selection [task, 10–15d, 40h, Clinical Ops Manager], Protocol sign-off [approval, 2d, 8h, Medical Director]
+- *Trial Execution:* Patient recruitment & enrolment [task, ongoing, varies, Clinical Ops Manager], Site monitoring visits [task, ongoing, 8h/visit, CRA], Adverse event tracking [task, ongoing, 4h/week, Pharmacovigilance]
+- *Data Analysis & Reporting:* Statistical analysis [task, 10–15d, 60h, Biostatistician], Clinical study report writing [deliverable, 10–15d, 60h, Medical Writer], Report sign-off [approval, 2d, 8h, Medical Director]
+**Deliverables:** Discovery Research Report, Target Validation Package, Assay Validation Report, Pre-Clinical Study Report, Regulatory Dossier (IND), Clinical Trial Protocol, Trial Monitoring Reports, Clinical Study Report
+**Risks:** Target/candidate failure [medium/high], Regulatory submission rejection [low/high], Adverse event during trial [low/high], Patient recruitment delay [medium/medium], Data integrity/GxP compliance issue [low/high]
+**Milestones:** Target Validated, Pre-Clinical Complete, IND Approval, First Patient Enrolled, Clinical Study Report Complete
+**Roles:** R&D Director ★, Clinical Scientist ★, Regulatory Affairs Lead ★, Biostatistician, Medical Director, Clinical Ops Manager, Research Scientist, Pharmacovigilance Lead
+
+### 45. Data Centres & Cloud Infrastructure
+**Phases:** Capacity Planning (2–4w) → Site Selection & Design (6–12w) → Permitting & Power Procurement (8–20w) → Build & Fit-Out (16–40w) → Network & Systems Installation (6–12w) → Commissioning & Testing (4–8w) → Migration/Onboarding (4–8w) → Operations Handover (2–4w)
+**Activities (per phase):**
+- *Capacity Planning:* Demand & capacity forecasting [task, 5–8d, 30h, Capacity Planner], Site requirements definition [task, 3–5d, 16h, Facilities Eng], Capacity plan sign-off [approval, 1d, 4h, Program Mgr]
+- *Site Selection & Design:* Site selection & due diligence [task, 10–15d, 50h, Facilities Eng], Data centre design (power/cooling) [task, 15–25d, 80h, MEP Eng], Design review [review, 2d, 8h, Chief Engineer]
+- *Permitting & Power Procurement:* Local permit applications [deliverable, 10–15d, 40h, Regulatory Affairs], Power/utility capacity agreements [task, ongoing, varies, Facilities Eng], Permit approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Build & Fit-Out:* Shell & core construction [task, 40–80d, ongoing, Contractor], MEP (power/cooling) installation [task, 30–50d, ongoing, MEP Contractor], Progress & safety inspections [review, 1d/week, 4h, Site Eng]
+- *Network & Systems Installation:* Rack & cabling installation [task, 10–15d, 60h, Installation Team], Network core/switch installation [task, 5–10d, 40h, Network Eng], Systems installation QC [review, 2d, 8h, Network Eng]
+- *Commissioning & Testing:* Power/cooling load testing [task, 5–10d, 40h, Commissioning Eng], Failover & redundancy testing [task, 5–10d, 40h, Systems Eng], Commissioning sign-off [approval, 1d, 4h, Chief Engineer]
+- *Migration/Onboarding:* Workload migration planning [task, 5–8d, 30h, Migration Lead], Customer/tenant onboarding [task, ongoing, varies, Migration Lead], Migration cutover [task, 2–3d, 12h, Migration Lead]
+- *Operations Handover:* Runbook & SOP handover [deliverable, 3–5d, 16h, Facilities Eng], Operational readiness review [review, 1d, 4h, Operations Director], Handover meeting [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Capacity Plan, Facility Design Package, Permits & Power Agreements, Commissioning Test Reports, Redundancy/Failover Test Report, Migration Runbook, SOPs, Handover Certificate
+**Risks:** Power capacity delay [medium/high], Permitting delay [medium/high], Cooling system underperformance [low/high], Migration cutover failure [medium/high], Equipment supply chain delay [medium/medium]
+**Milestones:** Site Selected, Design Freeze, Power Available, Commissioning Complete, Go-Live
+**Roles:** Program Manager ★, Facilities Engineer ★, MEP Engineer, Network Engineer, Commissioning Engineer ★, Migration Lead, Operations Director, Regulatory Affairs Lead
+
+### 46. Waste Management & Recycling
+**Phases:** Feasibility & Waste Stream Study (4–6w) → Regulatory & Environmental Approval (8–16w) → Facility/Process Design (6–12w) → Procurement (4–8w) → Construction/Installation (12–30w) → Commissioning (3–6w) → Operational Trial (2–4w) → Full Operations Handover (2–4w)
+**Activities (per phase):**
+- *Feasibility & Waste Stream Study:* Waste stream composition study [task, 5–10d, 30h, Environmental Eng], Site/technology feasibility assessment [task, 5–10d, 30h, Process Eng], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Regulatory & Environmental Approval:* Environmental permit application [deliverable, 10–20d, 60h, Environmental Eng], Community consultation [meeting, 2–3d, 12h, Program Mgr], Permit approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Facility/Process Design:* Process/sorting line design [task, 10–15d, 60h, Process Eng], Civil & structural design [task, 10–15d, 60h, Design Eng], Design review [review, 2d, 8h, Chief Engineer]
+- *Procurement:* Equipment procurement (sorting/shredding) [task, 5–10d, 20h, Procurement], Contractor tendering [task, 10–15d, 40h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction/Installation:* Civil works [task, 20–40d, ongoing, Contractor], Equipment installation [task, 20–30d, ongoing, Installation Team], Progress & safety inspections [review, 1d/week, 4h, Site Eng]
+- *Commissioning:* Equipment testing & calibration [task, 5–10d, 40h, Commissioning Eng], Throughput testing [task, 3–5d, 20h, Process Eng], Commissioning sign-off [approval, 1d, 4h, Chief Engineer]
+- *Operational Trial:* Trial operations run [task, 5–10d, ongoing, Operations Team], Output quality/contamination testing [task, 3–5d, 16h, QC Analyst], Trial sign-off [approval, 1d, 4h, Operations Manager]
+- *Full Operations Handover:* SOP & training handover [deliverable, 3–5d, 20h, Operations Manager], Operational readiness review [review, 1d, 4h, Operations Director], Handover meeting [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Waste Stream Study, Environmental Permit, Facility Design Package, Commissioning Test Reports, Throughput Test Report, Operating Procedures (SOPs), Staff Training Records, Handover Certificate
+**Risks:** Environmental permit delay/objection [medium/high], Equipment underperformance vs. design [medium/medium], Contamination/output quality issue [medium/medium], Construction schedule slippage [medium/medium], Waste supply variability [low/medium]
+**Milestones:** Feasibility Approved, Permits Granted, Construction Complete, Commissioning Complete, Full Operations Start
+**Roles:** Program Manager ★, Process Engineer ★, Environmental Engineer, Commissioning Engineer, Operations Manager ★, QC Analyst, Regulatory Affairs Lead, Procurement Lead
+
+### 47. Sports & Recreation Facilities
+**Phases:** Concept & Feasibility (4–8w) → Design & Planning Approval (8–16w) → Funding & Procurement (6–12w) → Construction (20–50w) → Fit-Out & Equipment Installation (6–10w) → Testing & Certification (2–4w) → Operational Readiness (3–6w) → Opening & Handover (2–4w)
+**Activities (per phase):**
+- *Concept & Feasibility:* Demand & usage study [task, 5–10d, 30h, Facilities Planner], Site feasibility assessment [task, 5–8d, 24h, Planning Eng], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Design & Planning Approval:* Architectural & facility design [task, 15–25d, 80h, Architect], Planning permission submission [deliverable, 5–10d, 30h, Regulatory Affairs], Design review [review, 2d, 8h, Program Mgr]
+- *Funding & Procurement:* Funding/grant applications [task, 10–15d, 40h, Finance Lead], Contractor tendering [task, 10–15d, 40h, Procurement], Contract award [approval, 2d, 8h, Program Mgr]
+- *Construction:* Groundworks & structural build [task, 40–80d, ongoing, Contractor], Progress & safety inspections [review, 1d/week, 4h, Site Eng], Building envelope completion [task, 10–15d, ongoing, Contractor]
+- *Fit-Out & Equipment Installation:* Sports surface/pitch installation [task, 10–15d, 60h, Specialist Contractor], Equipment & fixtures installation [task, 10–15d, 50h, Installation Team], Fit-out QC inspection [review, 2d, 8h, Site Eng]
+- *Testing & Certification:* Facility/equipment safety testing [task, 5–8d, 30h, Safety Officer], Federation/sport-specific certification [deliverable, 3–5d, 20h, Certification Body], Certification sign-off [approval, 1d, 4h, Facilities Manager]
+- *Operational Readiness:* Staff recruitment & training [task, 10–15d, 40h, Facilities Manager], Booking/operations systems setup [task, 5–8d, 24h, IT Coordinator], Readiness review [review, 1d, 4h, Facilities Manager]
+- *Opening & Handover:* Opening event coordination [task, 3–5d, 20h, Marketing Manager], Community/member onboarding [task, ongoing, varies, Facilities Manager], Handover to operations [meeting, 1d, 4h, Program Mgr]
+**Deliverables:** Feasibility Study, Design & Planning Approval, Funding Package, Construction Completion Certificate, Safety/Federation Certification, Staff Training Records, Operations Manual, Handover Certificate
+**Risks:** Planning approval delay [medium/high], Funding shortfall [medium/high], Weather delays to construction [medium/medium], Specialist surface/equipment delay [medium/medium], Certification failure [low/high]
+**Milestones:** Feasibility Approved, Planning Permission Granted, Construction Complete, Certification Achieved, Opening Day
+**Roles:** Program Manager ★, Architect, Facilities Manager ★, Safety Officer, Site Engineer, Finance Lead, Marketing Manager, Procurement Lead
+
+### 48. Museums, Arts & Cultural Heritage
+**Phases:** Concept & Curatorial Planning (4–8w) → Fundraising & Grant Approval (8–16w) → Design (Exhibition/Architectural) (8–16w) → Collection & Loan Acquisition (8–20w) → Fabrication & Installation (10–20w) → Conservation & Safety Review (2–4w) → Marketing & Launch Prep (4–6w) → Opening & Post-Launch Review (2–4w)
+**Activities (per phase):**
+- *Concept & Curatorial Planning:* Curatorial concept development [task, 10–15d, 50h, Curator], Stakeholder & community consultation [meeting, 2–3d, 12h, Program Mgr], Concept sign-off [approval, 1d, 4h, Director]
+- *Fundraising & Grant Approval:* Grant/funding application preparation [deliverable, 10–15d, 50h, Development Officer], Donor & sponsor negotiations [task, ongoing, varies, Development Officer], Funding sign-off [approval, ongoing, varies, Director]
+- *Design (Exhibition/Architectural):* Exhibition design & storyline [task, 15–20d, 80h, Exhibition Designer], Architectural/space design [task, 10–15d, 60h, Architect], Design review [review, 2d, 8h, Director]
+- *Collection & Loan Acquisition:* Object research & selection [task, 10–15d, 50h, Curator], Loan agreements & insurance [deliverable, 10–15d, 40h, Registrar], Condition reporting [task, 5–8d, 24h, Conservator]
+- *Fabrication & Installation:* Exhibit/display fabrication [task, 15–25d, ongoing, Fabricator], Object installation & mounting [task, 10–15d, 60h, Preparator], Installation QC [review, 2d, 8h, Conservator]
+- *Conservation & Safety Review:* Conservation condition checks [task, 3–5d, 20h, Conservator], Environmental/security review [task, 3–5d, 16h, Facilities Manager], Safety sign-off [approval, 1d, 4h, Director]
+- *Marketing & Launch Prep:* Marketing & PR campaign [task, 10–15d, 40h, Marketing Manager], Docent/guide training [task, 3–5d, 20h, Education Coordinator], Launch readiness review [review, 1d, 4h, Program Mgr]
+- *Opening & Post-Launch Review:* Opening event/gala [task, 2–3d, 16h, Marketing Manager], Visitor feedback & attendance analysis [task, 5–8d, 20h, Program Mgr], Post-launch report [deliverable, 3–5d, 16h, Director]
+**Deliverables:** Curatorial Concept Brief, Funding/Grant Package, Exhibition Design Package, Loan Agreements & Condition Reports, Fabricated Exhibits, Conservation Report, Marketing Materials, Post-Launch Report
+**Risks:** Funding shortfall [medium/high], Loan/object damage in transit [low/high], Fabrication delay [medium/medium], Low visitor turnout [medium/medium], Conservation/environmental non-compliance [low/high]
+**Milestones:** Concept Approved, Funding Secured, Design Freeze, Installation Complete, Opening Day
+**Roles:** Director ★, Curator ★, Exhibition Designer, Registrar, Conservator ★, Marketing Manager, Development Officer, Education Coordinator
+
+### 49. Veterinary & Animal Health Services
+**Phases:** Service/Facility Planning (3–6w) → Regulatory & Licensing (6–12w) → Facility Design & Fit-Out (8–16w) → Equipment & Systems Procurement (4–8w) → Staffing & Training (4–8w) → Systems & Compliance Testing (2–4w) → Soft Opening (2–4w) → Full Launch & Review (2–4w)
+**Activities (per phase):**
+- *Service/Facility Planning:* Service line & demand assessment [task, 5–8d, 24h, Practice Manager], Site/facility feasibility [task, 5–8d, 24h, Facilities Planner], Feasibility sign-off [approval, 1d, 4h, Program Mgr]
+- *Regulatory & Licensing:* Veterinary licensing/accreditation application [deliverable, 10–15d, 40h, Regulatory Affairs], Controlled substances licensing [task, 5–10d, 20h, Regulatory Affairs], Licensing approval tracking [task, ongoing, 2h/week, Regulatory Affairs]
+- *Facility Design & Fit-Out:* Clinical facility design (surgery/imaging) [task, 10–15d, 60h, Design Eng], Fit-out construction [task, 20–30d, ongoing, Contractor], Design/fit-out review [review, 2d, 8h, Practice Manager]
+- *Equipment & Systems Procurement:* Clinical equipment procurement (imaging/lab) [task, 5–10d, 20h, Procurement], Practice management system setup [task, 5–8d, 24h, IT Coordinator], Procurement sign-off [approval, 1d, 4h, Practice Manager]
+- *Staffing & Training:* Clinical staff recruitment [task, 10–20d, ongoing, HR Manager], Onboarding & protocol training [task, 5–8d, 30h, Head Veterinarian], Training sign-off [approval, 1d, 4h, Head Veterinarian]
+- *Systems & Compliance Testing:* Equipment calibration & testing [task, 3–5d, 20h, Biomedical Technician], Infection control/compliance audit [review, 2–3d, 12h, Compliance Officer], Compliance sign-off [approval, 1d, 4h, Head Veterinarian]
+- *Soft Opening:* Limited-capacity soft launch [task, 5–10d, ongoing, Practice Manager], Client feedback collection [task, ongoing, 2h/d, Practice Manager], Soft opening review [review, 1d, 4h, Practice Manager]
+- *Full Launch & Review:* Marketing & community outreach [task, 5–8d, 24h, Marketing Coordinator], Full-capacity operations start [task, 1–2d, 8h, Practice Manager], Post-launch performance review [deliverable, 3–5d, 16h, Practice Manager]
+**Deliverables:** Feasibility Study, Licensing/Accreditation Approval, Facility Design Package, Equipment Procurement Records, Staff Training Records, Compliance Audit Report, Soft Opening Feedback Report, Post-Launch Review
+**Risks:** Licensing/accreditation delay [medium/high], Clinical staff recruitment delay [medium/medium], Equipment delivery delay [medium/medium], Compliance/infection control failure [low/high], Low client uptake at launch [medium/medium]
+**Milestones:** Feasibility Approved, Licensing Granted, Fit-Out Complete, Compliance Sign-Off, Full Launch
+**Roles:** Program Manager ★, Head Veterinarian ★, Practice Manager ★, Regulatory Affairs Lead, Facilities Planner, Compliance Officer, HR Manager, Biomedical Technician
+
+### 50. Franchise & Multi-Site Retail Rollout
+**Phases:** Market & Site Feasibility (3–6w) → Franchise/Site Agreement (4–8w) → Design & Permitting (6–10w) → Fit-Out & Construction (8–16w) → Systems & Inventory Setup (2–4w) → Staff Recruitment & Training (3–6w) → Pre-Opening Marketing (2–4w) → Store Opening & Review (2–4w)
+**Activities (per phase):**
+- *Market & Site Feasibility:* Market/demographic analysis [task, 5–8d, 24h, Site Selection Analyst], Site visit & lease negotiation [task, 5–10d, 30h, Real Estate Manager], Feasibility sign-off [approval, 1d, 4h, Franchise Development Mgr]
+- *Franchise/Site Agreement:* Franchise/lease agreement drafting [deliverable, 5–10d, 30h, Legal Counsel], Agreement negotiation & sign-off [task, 5–10d, 20h, Franchise Development Mgr], Agreement execution [approval, 1d, 4h, Franchisee]
+- *Design & Permitting:* Store design & layout planning [task, 10–15d, 50h, Design Eng], Permit & signage approval [deliverable, 10–15d, 30h, Regulatory Affairs], Design sign-off [approval, 1d, 4h, Brand Standards Mgr]
+- *Fit-Out & Construction:* Store build-out & fit-out [task, 20–40d, ongoing, Contractor], Brand standards compliance inspection [review, 1d/week, 4h, Brand Standards Mgr], Fit-out completion sign-off [approval, 1d, 4h, Franchise Development Mgr]
+- *Systems & Inventory Setup:* POS/inventory systems installation [task, 3–5d, 20h, IT Coordinator], Initial stock ordering & merchandising [task, 5–8d, 24h, Store Manager], Systems readiness sign-off [approval, 1d, 4h, Store Manager]
+- *Staff Recruitment & Training:* Store staff recruitment [task, 10–15d, ongoing, HR Manager], Brand & operations training [task, 5–8d, 30h, Training Lead], Training sign-off [approval, 1d, 4h, Store Manager]
+- *Pre-Opening Marketing:* Local marketing campaign & launch promotions [task, 5–10d, 24h, Marketing Coordinator], Soft opening trial [task, 2–3d, 12h, Store Manager], Pre-opening readiness review [review, 1d, 4h, Franchise Development Mgr]
+- *Store Opening & Review:* Grand opening event [task, 1–2d, 12h, Marketing Coordinator], Opening-week sales monitoring [task, 5–7d, 4h/d, Store Manager], Post-opening performance review [deliverable, 3–5d, 16h, Franchise Development Mgr]
+**Deliverables:** Site Feasibility Report, Franchise/Lease Agreement, Store Design Package, Permits & Signage Approval, Fit-Out Completion Certificate, Staff Training Records, Marketing/Launch Plan, Post-Opening Performance Report
+**Risks:** Site/lease negotiation delay [medium/medium], Permit approval delay [medium/high], Brand standards non-compliance [low/medium], Staffing shortfall at opening [medium/medium], Weak opening-week sales [medium/medium]
+**Milestones:** Site Approved, Agreement Signed, Fit-Out Complete, Staff Trained, Store Opening
+**Roles:** Franchise Development Manager ★, Store Manager ★, Real Estate Manager, Brand Standards Manager, Legal Counsel, HR Manager, Marketing Coordinator, Design Engineer
+
+### Industry 51 (v775 — ICT)
+
+### 51. ICT (Information & Communications Technology)
+**Phases:** Demand & Portfolio Intake (2–4w) → Solution Architecture (3–6w) → Procurement & Vendor Contracting (3–8w) → Build & Systems Integration (8–20w) → Security & Compliance Assurance (3–6w) → UAT & Service Readiness (3–6w) → Cutover & Go-Live (1–3w) → Hypercare & Service Transition (4–8w)
+**Activities (per phase):**
+- *Demand & Portfolio Intake:* Business demand capture & prioritisation [task, 5–8d, 24h, ICT Portfolio Mgr], Stakeholder discovery workshops [meeting, 2–4d, 16h, BA], Intake gate approval [approval, 1d, 4h, ICT Steering]
+- *Solution Architecture:* Current-state ICT landscape assessment [task, 5–10d, 40h, Solution Architect], Target architecture & integration design [task, 8–12d, 48h, Solution Architect], Architecture review board [review, 2d, 8h, Enterprise Architect]
+- *Procurement & Vendor Contracting:* RFP / RFI package preparation [task, 5–10d, 30h, Procurement], Vendor evaluation & scoring [meeting, 3–5d, 20h, ICT PM+Architect], Contract & SLA award [approval, 2–3d, 8h, Commercial Lead]
+- *Build & Systems Integration:* Environment build & configuration [task, 10–20d, ongoing, Integration Eng], Application / platform configuration [task, 15–25d, ongoing, Config Eng], Interface & API integration [task, 10–15d, 60h, Integration Eng], Integration test cycles [task, 5–10d, 40h, QA]
+- *Security & Compliance Assurance:* Security design review [review, 2–3d, 12h, InfoSec], Vulnerability assessment & hardening [task, 5–8d, 32h, InfoSec], Compliance evidence pack [deliverable, 3–5d, 20h, Compliance]
+- *UAT & Service Readiness:* UAT script preparation [task, 3–5d, 20h, BA], Business UAT execution [meeting, 5–10d, 40h, Business Users], Service desk / ITSM readiness [task, 3–5d, 16h, Service Mgr], UAT sign-off [approval, 1d, 4h, Business Owner]
+- *Cutover & Go-Live:* Cutover runbook rehearsal [task, 2–3d, 16h, ICT PM], Production cutover [task, 1–2d, 16h, Ops Lead], Go-live confirmation [approval, 1d, 2h, ICT Steering]
+- *Hypercare & Service Transition:* Hypercare triage & incident response [task, ongoing, 4h/d, Support Lead], Knowledge transfer to BAU / managed service [task, 5–8d, 24h, Service Mgr], Service transition sign-off [approval, 1d, 4h, Service Owner]
+**Deliverables:** ICT Demand Brief, Solution Architecture Document, Vendor Evaluation Matrix, Integration Design Spec, Security & Compliance Pack, UAT Results, Cutover Runbook, Service Transition Report
+**Risks:** Integration dependency delay [medium/high], Vendor SLA under-delivery [medium/high], Security control gap [low/high], Data migration / cutover failure [medium/high], Service desk unreadiness [medium/medium], Scope creep across workstreams [high/high]
+**Milestones:** Intake Approved, Architecture Approved, Vendor Contracted, Integration Complete, UAT Signed Off, Go-Live, Service Transition Complete
+**Roles:** ICT Programme Manager ★, Solution Architect ★, Integration Engineer ★, Information Security Lead ★, Business Analyst, Procurement / Commercial Lead, Service Manager, Business Owner
+
 
 _★ = Key Role_
 

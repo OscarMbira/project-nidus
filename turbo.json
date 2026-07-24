@@ -1,0 +1,51 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "outputs": []
+    },
+    "type-check": {
+      "dependsOn": ["^build"]
+    }
+  },
+  "globalEnv": [
+    "VITE_SUPABASE_URL",
+    "VITE_SUPABASE_ANON_KEY",
+    "VITE_FEDERATION_ENABLED",
+    "VITE_MODULE_PLANNING_HUB_URL",
+    "VITE_MODULE_RISK_URL",
+    "VITE_MODULE_QUALITY_URL",
+    "VITE_MODULE_FINANCIAL_URL",
+    "VITE_MODULE_CHANGE_URL",
+    "VITE_MODULE_STAKEHOLDER_URL",
+    "VITE_MODULE_DELAYS_URL",
+    "VITE_MODULE_STAGE_GATES_URL",
+    "VITE_MODULE_PMO_URL",
+    "VITE_MODULE_PORTFOLIO_URL",
+    "VITE_MODULE_PROGRAMME_URL",
+    "VITE_MODULE_BENEFITS_URL",
+    "VITE_MODULE_ISSUES_URL",
+    "VITE_MODULE_COMMUNICATIONS_URL",
+    "VITE_MODULE_REPORTS_URL",
+    "VITE_MODULE_ADMIN_URL",
+    "VITE_MODULE_SIM_PLANNING_URL",
+    "VITE_MODULE_SIM_RISK_URL",
+    "VITE_MODULE_SIM_QUALITY_URL",
+    "VITE_MODULE_SIM_PMO_URL",
+    "VITE_MODULE_SIM_SCENARIOS_URL",
+    "VITE_MODULE_SIM_LEADERBOARD_URL",
+    "VITE_MODULE_SIM_ADMIN_URL"
+  ]
+}

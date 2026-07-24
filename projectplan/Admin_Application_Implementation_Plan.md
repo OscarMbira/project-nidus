@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation plan for a **separate standalone Admin application** (`project-nidus-admin`) that will centrally administer both the PM (Project Management) and Simulator applications. The Admin app will be located at `E:\Hifo\AI Business\project-nidus-admin` as a completely independent application.
+This document outlines the implementation plan for a **separate standalone Admin application** (`project-nidus-admin`) that will centrally administer both the PM (Project Management) and Simulator applications. The Admin app will be located at `E:\project-nidus-admin` as a completely independent application.
 
 ## Architecture Design
 

@@ -1,0 +1,399 @@
+/* Gantt Timeline Styles - Theme-aware */
+
+/* Container */
+.gantt-timeline-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.gantt-container {
+  min-height: 400px;
+  padding: 20px;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* ==================== LIGHT THEME ==================== */
+.gantt-light-theme {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.gantt-light-theme .grid-background {
+  fill: #fafafa;
+}
+
+.gantt-light-theme .grid-header {
+  fill: #f3f4f6;
+  stroke: #e5e7eb;
+}
+
+.gantt-light-theme .grid-row {
+  fill: #ffffff;
+}
+
+.gantt-light-theme .grid-row:nth-child(even) {
+  fill: #f9fafb;
+}
+
+.gantt-light-theme .row-line {
+  stroke: #e5e7eb;
+}
+
+.gantt-light-theme .tick {
+  stroke: #d1d5db;
+  stroke-width: 0.5;
+}
+
+.gantt-light-theme .tick.thick {
+  stroke: #9ca3af;
+  stroke-width: 1;
+}
+
+.gantt-light-theme .today-highlight {
+  fill: #dbeafe;
+  opacity: 0.3;
+}
+
+/* Task bars - Light theme */
+.gantt-light-theme .bar {
+  fill: #3b82f6;
+  stroke: #2563eb;
+  stroke-width: 1;
+}
+
+.gantt-light-theme .bar.critical-path {
+  fill: #ef4444;
+  stroke: #dc2626;
+}
+
+.gantt-light-theme .bar.completed {
+  fill: #10b981;
+  stroke: #059669;
+}
+
+.gantt-light-theme .bar-progress {
+  fill: #2563eb;
+  opacity: 0.3;
+}
+
+.gantt-light-theme .bar-label {
+  fill: #1f2937;
+  font-weight: 500;
+}
+
+/* Dependencies - Light theme */
+.gantt-light-theme .arrow {
+  stroke: #6b7280;
+  stroke-width: 1.5;
+  fill: none;
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+.gantt-light-theme .arrow:hover {
+  stroke-width: 2.5;
+  cursor: pointer;
+}
+
+.gantt-light-theme .arrow.critical-path {
+  stroke: #ef4444;
+  stroke-width: 2;
+}
+
+/* Dependency type colors - Light theme */
+.gantt-light-theme .arrow.dependency-fs {
+  stroke: #3b82f6; /* Blue - Finish-to-Start */
+}
+
+.gantt-light-theme .arrow.dependency-ss {
+  stroke: #10b981; /* Green - Start-to-Start */
+}
+
+.gantt-light-theme .arrow.dependency-ff {
+  stroke: #f59e0b; /* Orange - Finish-to-Finish */
+}
+
+.gantt-light-theme .arrow.dependency-sf {
+  stroke: #a855f7; /* Purple - Start-to-Finish */
+}
+
+/* Dependency labels */
+.dependency-label {
+  fill: #374151;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.dark .dependency-label {
+  fill: #d1d5db;
+}
+
+/* ==================== DARK THEME ==================== */
+.gantt-dark-theme {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+}
+
+.gantt-dark-theme .grid-background {
+  fill: #111827;
+}
+
+.gantt-dark-theme .grid-header {
+  fill: #1f2937;
+  stroke: #374151;
+}
+
+.gantt-dark-theme .grid-row {
+  fill: #1f2937;
+}
+
+.gantt-dark-theme .grid-row:nth-child(even) {
+  fill: #1a202c;
+}
+
+.gantt-dark-theme .row-line {
+  stroke: #374151;
+}
+
+.gantt-dark-theme .tick {
+  stroke: #4b5563;
+  stroke-width: 0.5;
+}
+
+.gantt-dark-theme .tick.thick {
+  stroke: #6b7280;
+  stroke-width: 1;
+}
+
+.gantt-dark-theme .today-highlight {
+  fill: #3b82f6;
+  opacity: 0.2;
+}
+
+/* Task bars - Dark theme */
+.gantt-dark-theme .bar {
+  fill: #3b82f6;
+  stroke: #60a5fa;
+  stroke-width: 1;
+}
+
+.gantt-dark-theme .bar.critical-path {
+  fill: #ef4444;
+  stroke: #f87171;
+}
+
+.gantt-dark-theme .bar.completed {
+  fill: #10b981;
+  stroke: #34d399;
+}
+
+.gantt-dark-theme .bar-progress {
+  fill: #60a5fa;
+  opacity: 0.4;
+}
+
+.gantt-dark-theme .bar-label {
+  fill: #f9fafb;
+  font-weight: 500;
+}
+
+/* Dependencies - Dark theme */
+.gantt-dark-theme .arrow {
+  stroke: #9ca3af;
+  stroke-width: 1.5;
+  fill: none;
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+.gantt-dark-theme .arrow:hover {
+  stroke-width: 2.5;
+  cursor: pointer;
+}
+
+.gantt-dark-theme .arrow.critical-path {
+  stroke: #f87171;
+  stroke-width: 2;
+}
+
+/* Dependency type colors - Dark theme */
+.gantt-dark-theme .arrow.dependency-fs {
+  stroke: #60a5fa; /* Blue - Finish-to-Start */
+}
+
+.gantt-dark-theme .arrow.dependency-ss {
+  stroke: #34d399; /* Green - Start-to-Start */
+}
+
+.gantt-dark-theme .arrow.dependency-ff {
+  stroke: #fbbf24; /* Orange - Finish-to-Finish */
+}
+
+.gantt-dark-theme .arrow.dependency-sf {
+  stroke: #c084fc; /* Purple - Start-to-Finish */
+}
+
+/* ==================== SHARED STYLES ==================== */
+
+/* Hover effects */
+.bar:hover {
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+.bar-wrapper:hover .bar-label {
+  font-weight: 600;
+}
+
+/* Handle for dragging */
+.handle {
+  cursor: ew-resize;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.bar-wrapper:hover .handle {
+  opacity: 1;
+}
+
+/* Popup styles */
+.gantt-popup {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+.dark .gantt-popup {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #f9fafb;
+}
+
+.gantt-popup-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.dark .gantt-popup-title {
+  color: #f9fafb;
+}
+
+.gantt-popup-dates {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.dark .gantt-popup-dates {
+  color: #9ca3af;
+}
+
+.gantt-popup-progress {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.progress-label {
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.dark .progress-label {
+  color: #d1d5db;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dark .progress-bar-container {
+  background-color: #4b5563;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #3b82f6;
+  transition: width 0.3s ease;
+}
+
+.dark .progress-bar {
+  background-color: #60a5fa;
+}
+
+.gantt-popup-milestone {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background-color: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.dark .gantt-popup-milestone {
+  background-color: #78350f;
+  color: #fef3c7;
+}
+
+/* Milestone markers */
+.bar.milestone {
+  transform: rotate(45deg);
+  border-radius: 0;
+}
+
+/* Loading state */
+.gantt-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #6b7280;
+}
+
+.dark .gantt-loading {
+  color: #9ca3af;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .gantt-container {
+    padding: 10px;
+  }
+
+  .bar-label {
+    font-size: 11px;
+  }
+
+  .gantt-popup {
+    min-width: 150px;
+    padding: 8px;
+  }
+
+  .gantt-popup-title {
+    font-size: 12px;
+  }
+
+  .gantt-popup-dates,
+  .gantt-popup-progress {
+    font-size: 11px;
+  }
+}
+
+/* Accessibility */
+.bar:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.dark .bar:focus {
+  outline-color: #60a5fa;
+}

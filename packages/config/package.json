@@ -1,0 +1,18 @@
+{
+  "name": "@nidus/config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/menuRegistry.js",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "build": "node -e \"console.log('@nidus/config: no build step')\"",
+    "lint": "eslint src/",
+    "test": "vitest run --config vitest.config.js --passWithNoTests"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  }
+}

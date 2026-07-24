@@ -1,0 +1,500 @@
+/**
+ * Risk Register View Page
+ * Main page for viewing and managing risk register
+ */
+
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { useOfflineQueue } from '@nidus/shared/hooks/useOfflineQueue';
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { AlertTriangle, Plus, BarChart3, Download, Settings, Grid3x3, Calendar } from 'lucide-react';
+import RiskMatrixChart from '../components/risks/RiskMatrixChart';
+import TopRisksWidget from '../components/risks/TopRisksWidget';
+import RisksByCategoryChart from '../components/risks/RisksByCategoryChart';
+import RisksByStatusChart from '../components/risks/RisksByStatusChart';
+import RiskExposureChart from '../components/risks/RiskExposureChart';
+import RiskAlerts from '../components/risks/RiskAlerts';
+import { getRiskRegisterByProject, updateRiskRegister } from '../services/riskRegisterService';
+import { getRisksByProject, createRisk, updateRisk, deleteRisk, closeRisk, getRiskSummary, getTopRisks } from '../services/riskService';
+import { escalateRiskToIssue } from '../services/riskService';
+import RisksList from '../components/risks/RisksList';
+import RisksFilters from '../components/risks/RisksFilters';
+import RiskCard from '../components/risks/RiskCard';
+import EnhancedRiskForm from '../components/risks/EnhancedRiskForm';
+import RiskExportMenu from '../components/risks/RiskExportMenu';
+import RiskReviewHistory from '../components/risks/RiskReviewHistory';
+import RiskPrintView from '../components/risks/RiskPrintView';
+import ExportListMenu from '@nidus/ui/ExportListMenu';
+import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
+import { RISK_REGISTER_CATEGORY } from '../features/local-data-extensions/components/InheritedRiskRegisterFields';
+import { platformDb } from '@nidus/supabase';
+import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
+import { platformRiskPath } from '@nidus/shared/utils/projectRouteParam';
+
+const RISK_COLUMNS = [
+  { key: 'risk_identifier', label: 'ID' },
+  { key: 'risk_title', label: 'Title' },
+  { key: 'risk_type', label: 'Type' },
+  { key: 'risk_category', label: 'Category' },
+  { key: 'status_enum', label: 'Status' },
+  { key: 'risk_level', label: 'Level' },
+  { key: 'proximity', label: 'Proximity' },
+  { key: 'pre_risk_score', label: 'Score' }
+];
+
+export default function RiskRegisterView() {
+  useOfflineQueue();
+  const { projectId, routeKey } = usePlatformProjectId();
+  const navigate = useNavigate();
+  
+  const [register, setRegister] = useState(null);
+  const [risks, setRisks] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [topRisks, setTopRisks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [showEnhancedForm, setShowEnhancedForm] = useState(false);
+  const [selectedRisk, setSelectedRisk] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list', 'matrix', 'analytics', 'reviews', 'settings'
+  const [showPrintView, setShowPrintView] = useState(false)
+  const [riskOrgAccountId, setRiskOrgAccountId] = useState(null);
+  const [projectName, setProjectName] = useState(null);
+  const [riskCfCols, setRiskCfCols] = useState([]);
+  const [riskCfMatrix, setRiskCfMatrix] = useState({});
+  const [filters, setFilters] = useState({
+    search: '',
+    risk_category: '',
+    risk_type: '',
+    status: '',
+    risk_level: '',
+    proximity: ''
+  });
+
+  useEffect(() => {
+    if (projectId) {
+      fetchData();
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    if (projectId) {
+      fetchRisks();
+    }
+  }, [projectId, filters]);
+
+  useEffect(() => {
+    if (!projectId) {
+      setRiskOrgAccountId(null);
+      setProjectName(null);
+      return;
+    }
+    let cancelled = false;
+    platformDb
+      .from('projects')
+      .select('account_id, project_name')
+      .eq('id', projectId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) {
+          setRiskOrgAccountId(data?.account_id || null);
+          setProjectName(data?.project_name || null);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!riskOrgAccountId || !risks?.length) {
+      setRiskCfCols([]);
+      setRiskCfMatrix({});
+      return;
+    }
+    let cancelled = false;
+    const ids = risks.map((r) => r.id).filter(Boolean);
+    (async () => {
+      const { columns, matrix } = await fetchBatchExportForEntities(platformDb, {
+        accountId: riskOrgAccountId,
+        entityType: 'risk',
+        entityIds: ids,
+        screenCode: 'risk_detail',
+      });
+      if (!cancelled) {
+        setRiskCfCols(columns || []);
+        setRiskCfMatrix(matrix || {});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [riskOrgAccountId, risks]);
+
+  const riskExportColumns = useMemo(() => [...RISK_COLUMNS, ...riskCfCols], [riskCfCols]);
+  const riskExportRows = useMemo(
+    () => risks.map((r) => ({ ...r, ...(riskCfMatrix[r.id] || {}) })),
+    [risks, riskCfMatrix]
+  );
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      let registerResult = await getRiskRegisterByProject(projectId);
+      
+      // Auto-create register if it doesn't exist
+      if (registerResult.success && !registerResult.data) {
+        const { createRiskRegister } = await import('../services/riskRegisterService');
+        const createResult = await createRiskRegister(projectId);
+        if (createResult.success) {
+          registerResult = await getRiskRegisterByProject(projectId);
+        }
+      }
+
+      const [summaryResult, topRisksResult] = await Promise.all([
+        getRiskSummary(projectId),
+        getTopRisks(projectId, 5)
+      ]);
+
+      if (registerResult.success) {
+        setRegister(registerResult.data);
+      }
+
+      if (summaryResult.success) {
+        setSummary(summaryResult.data);
+      }
+
+      if (topRisksResult.success) {
+        setTopRisks(topRisksResult.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching risk register data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRisks = async () => {
+    try {
+      const result = await getRisksByProject(projectId, filters);
+      if (result.success) {
+        setRisks(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching risks:', error);
+    }
+  };
+
+  const handleSaveRisk = async () => {
+    // Refresh data after save
+    await fetchRisks();
+    await fetchData();
+    setShowForm(false);
+    setShowEnhancedForm(false);
+    setSelectedRisk(null);
+  };
+
+  const handleSaveRiskOld = async (riskData) => {
+    try {
+      let result;
+      if (selectedRisk) {
+        result = await updateRisk(selectedRisk.id, riskData);
+      } else {
+        result = await createRisk({
+          ...riskData,
+          project_id: projectId
+        });
+      }
+
+      if (result.success) {
+        setShowForm(false);
+        setSelectedRisk(null);
+        fetchRisks();
+        fetchData();
+      } else {
+        alert('Error saving risk: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error saving risk:', error);
+      alert('Error saving risk: ' + error.message);
+    }
+  };
+
+  const handleEdit = (risk) => {
+    setSelectedRisk(risk);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (risk) => {
+    if (!confirm(`Delete risk "${risk.risk_title}"?`)) return;
+
+    try {
+      const result = await deleteRisk(risk.id);
+      if (result.success) {
+        fetchRisks();
+        fetchData();
+      } else {
+        alert('Error deleting risk: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error deleting risk:', error);
+      alert('Error deleting risk: ' + error.message);
+    }
+  };
+
+  const handleViewDetails = (risk) => {
+    const pk = routeKey || projectId;
+    navigate(platformRiskPath(pk, (risk.risk_code && String(risk.risk_code).trim()) || risk.id));
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Show print view if requested
+  if (showPrintView && register) {
+    return (
+      <RiskPrintView
+        register={register}
+        risks={risks}
+        onBack={() => setShowPrintView(false)}
+      />
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <AlertTriangle className="w-6 h-6" />
+            Risk Register
+          </h1>
+          {register && (
+            <p className="text-sm text-gray-500 mt-1">
+              Reference: {register.register_reference} • Version: {register.version_number || '1.0'}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <ExportListMenu columns={riskExportColumns} data={riskExportRows} baseFilename="RiskRegister" disabled={!risks?.length} />
+          <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('matrix')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'matrix'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Grid3x3 className="h-4 w-4 inline mr-1" />
+              Matrix
+            </button>
+            <button
+              onClick={() => setViewMode('analytics')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'analytics'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <BarChart3 className="h-4 w-4 inline mr-1" />
+              Analytics
+            </button>
+            {register && (
+              <button
+                onClick={() => setViewMode('reviews')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'reviews'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <Calendar className="h-4 w-4 inline mr-1" />
+                Reviews
+              </button>
+            )}
+            <button
+              onClick={() => setViewMode('settings')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'settings'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <Settings className="h-4 w-4 inline mr-1" />
+              Settings
+            </button>
+          </div>
+            {register && (
+              <RiskExportMenu
+                register={register}
+                risks={risks}
+                onPrint={() => setShowPrintView(true)}
+              />
+            )}
+          <button
+            onClick={() => {
+              setSelectedRisk(null);
+              setShowEnhancedForm(true);
+            }}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+          >
+            <Plus className="h-5 w-5" />
+            Add Risk
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      {summary && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-500">Total Risks</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_risks || 0}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-500">Active</p>
+            <p className="text-2xl font-bold text-blue-600">{summary.active_risks || 0}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-500">High/Very High</p>
+            <p className="text-2xl font-bold text-red-600">{summary.high_risks || 0}</p>
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <p className="text-sm text-gray-500">Overdue Responses</p>
+            <p className="text-2xl font-bold text-orange-600">{summary.overdue_responses || 0}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Risk Alerts */}
+      {viewMode === 'list' && <RiskAlerts projectId={projectId} />}
+
+      {/* Top Risks Widget (for list view) */}
+      {viewMode === 'list' && topRisks.length > 0 && (
+        <TopRisksWidget projectId={projectId} limit={3} showAll={false} />
+      )}
+
+      {/* Filters */}
+      <RisksFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        onClear={() => setFilters({
+          search: '',
+          risk_category: '',
+          risk_type: '',
+          status: '',
+          risk_level: '',
+          proximity: ''
+        })}
+      />
+
+      {/* Risk Form Modal */}
+      {showEnhancedForm && register && (
+        <EnhancedRiskForm
+          risk={selectedRisk}
+          projectId={projectId}
+          riskRegisterId={register.id}
+          onSave={handleSaveRisk}
+          onCancel={() => {
+            setShowEnhancedForm(false);
+            setSelectedRisk(null);
+          }}
+        />
+      )}
+
+
+      {/* Risks List */}
+      {viewMode === 'list' && (
+        <RisksList
+          risks={risks}
+          loading={false}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onEscalate={async (risk) => {
+            const result = await escalateRiskToIssue(risk.id);
+            if (result.success) {
+              alert('Risk escalated to issue successfully!');
+              fetchRisks();
+            }
+          }}
+          emptyMessage="No risks found. Click 'Add Risk' to get started."
+        />
+      )}
+
+      {/* Risk Matrix View */}
+      {viewMode === 'matrix' && register && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <RiskMatrixChart
+            projectId={projectId}
+            registerId={register.id}
+            prePostMode="pre"
+          />
+        </div>
+      )}
+
+      {/* Analytics View */}
+      {viewMode === 'analytics' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TopRisksWidget projectId={projectId} limit={5} showAll={true} />
+            <RiskExposureChart projectId={projectId} />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <RisksByCategoryChart projectId={projectId} chartType="bar" />
+            <RisksByStatusChart projectId={projectId} />
+          </div>
+        </div>
+      )}
+
+      {/* Reviews Tab */}
+      {viewMode === 'reviews' && register && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <RiskReviewHistory registerId={register.id} projectId={projectId} />
+        </div>
+      )}
+
+      {/* Field template settings (v785) */}
+      {viewMode === 'settings' && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+            Risk Register field templates
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Inherit fields from PMO / portfolio / programme defaults for this register, then disable or add local fields
+            for this project. Mandatory lock prevents lower tiers from turning a field off.
+          </p>
+          {riskOrgAccountId && projectId ? (
+            <TierFieldCustomisationPanel
+              db={platformDb}
+              accountId={riskOrgAccountId}
+              tier="project"
+              entityType="project"
+              entityId={projectId}
+              entityName={projectName || 'Project'}
+              category={RISK_REGISTER_CATEGORY}
+            />
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

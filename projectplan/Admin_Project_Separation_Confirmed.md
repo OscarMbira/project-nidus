@@ -13,7 +13,7 @@ The **Admin Application** has been confirmed as a **completely separate project*
 ## 📁 Project Structure (Final)
 
 ```
-E:\Hifo\AI Business\
+E:\
 │
 ├── Project Nidus/                    # Main Client Application
 │   ├── src/                          # React application source
@@ -125,7 +125,7 @@ Since SQL scripts are shared:
 
 #### Main App Team:
 ```bash
-cd "E:/Hifo/AI Business/Project Nidus"
+cd "E:/project-nidus"
 git pull
 npm install
 npm run dev
@@ -136,7 +136,7 @@ git push
 
 #### Admin Team:
 ```bash
-cd "E:/Hifo/AI Business/project-nidus-admin"
+cd "E:/project-nidus-admin"
 git pull
 npm install
 npm run dev
@@ -148,14 +148,14 @@ git push
 ### Database Changes:
 ```bash
 # Main app team creates SQL script
-cd "E:/Hifo/AI Business/Project Nidus"
+cd "E:/project-nidus"
 # Create: SQL/v08_new_feature.sql
 git add SQL/v08_new_feature.sql
 git commit -m "Add new feature table"
 git push
 
 # Admin team pulls SQL changes if needed
-cd "E:/Hifo/AI Business/Project Nidus"
+cd "E:/project-nidus"
 git pull
 # Review SQL/v08_new_feature.sql
 # Execute on Supabase if needed

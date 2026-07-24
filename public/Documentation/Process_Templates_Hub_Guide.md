@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Process Templates hub groups PMBOK-aligned templates, registers, and logs into **Pre-Project + 5 process groups**. It is available on Platform (PMO/PM) and Simulator (PMO/PM) with parity.
+The Process Templates hub groups Standards-Based templates, registers, and logs into **Pre-Project + 5 process groups**. It is available on Platform (PMO/PM) and Simulator (PMO/PM) with parity.
 
 ## Routes
 

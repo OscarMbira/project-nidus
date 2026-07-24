@@ -3,7 +3,7 @@ import { METHODOLOGY_TRACK_DEFS } from '../../config/methodologyMenuUtils'
 
 const ICON_BY_TRACK = {
   structured: Shield,
-  pmbok: Settings2,
+  standards_based: Settings2,
   agile: Zap,
 }
 

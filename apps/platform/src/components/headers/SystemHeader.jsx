@@ -7,14 +7,19 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone } from 'lucide-react'
+import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone, Globe } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
+import { getAuthenticatedUser } from '@nidus/shared/utils/authSession'
 import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
 import ThemeToggle from '../ThemeToggle'
 import { DetachButton } from '@nidus/ui/DetachButton'
 import { getUnreadCount } from '@nidus/shared/utils/notificationUtils'
 import { normalizeDashboardTab } from '@nidus/shared/utils/pmoDashboardTabs'
 import { useBranding } from '@nidus/shared/context/BrandingContext'
+import { useLanguageContext } from '@nidus/shared/context/LanguageContext'
+import { getActiveLanguages } from '@nidus/shared/utils/languages'
+import { getUserLanguage, updateUserLanguage } from '@nidus/shared/utils/userLanguage'
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import GlobalSearchModal, { useGlobalSearchShortcut } from '../../modules/pmis-gaps/components/GlobalSearchModal'
 
 export default function SystemHeader({
@@ -37,7 +42,11 @@ export default function SystemHeader({
   const navigate = useNavigate()
   const location = useLocation()
   const { branding } = useBranding()
+  const { languageCode, changeLanguage } = useLanguageContext()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false)
+  const [activeLanguages, setActiveLanguages] = useState([])
+  const [internalUserId, setInternalUserId] = useState(null)
   const [user, setUser] = useState(null)
   const [userInitials, setUserInitials] = useState('U')
   const [unreadCount, setUnreadCount] = useState(0)
@@ -50,34 +59,38 @@ export default function SystemHeader({
   useGlobalSearchShortcut(() => setGlobalSearchOpen(true))
 
   useEffect(() => {
+    initLanguage()
     fetchUser()
     fetchUnreadCount()
-    
-    // Refresh notification count every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000)
-    
-    // Close menu when clicking outside
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (userMenuOpen && !event.target.closest('.user-menu-container')) {
         setUserMenuOpen(false)
+      }
+      if (languageMenuOpen && !event.target.closest('.language-menu-container')) {
+        setLanguageMenuOpen(false)
       }
       if (mobileNavOpen && !event.target.closest('.mobile-nav-container')) {
         setMobileNavOpen(false)
       }
     }
-    
+
     document.addEventListener('mousedown', handleClickOutside)
     document.addEventListener('touchstart', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
-      clearInterval(interval)
     }
-  }, [userMenuOpen, mobileNavOpen])
+  }, [userMenuOpen, languageMenuOpen, mobileNavOpen])
 
   const fetchUser = async () => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      const { user: currentUser } = await getAuthenticatedUser()
       if (currentUser) {
         setUser(currentUser)
         // Get user initials from email or name
@@ -107,6 +120,30 @@ export default function SystemHeader({
     } catch (error) {
       console.error('Error fetching unread count:', error)
     }
+  }
+
+  const initLanguage = async () => {
+    try {
+      const mode = isSimulator ? 'sim' : 'platform'
+      const [languagesResult, userId] = await Promise.all([
+        getActiveLanguages(mode),
+        getCurrentUserInternalUserId(),
+      ])
+      if (languagesResult.success) setActiveLanguages(languagesResult.data)
+      if (userId) {
+        setInternalUserId(userId)
+        const savedLanguage = await getUserLanguage(userId)
+        if (savedLanguage && savedLanguage !== languageCode) changeLanguage(savedLanguage)
+      }
+    } catch (error) {
+      console.error('Error initialising language:', error)
+    }
+  }
+
+  const handleLanguageChange = (code) => {
+    setLanguageMenuOpen(false)
+    changeLanguage(code)
+    if (internalUserId) updateUserLanguage(internalUserId, code)
   }
 
   const handleLogout = async () => {
@@ -320,6 +357,43 @@ export default function SystemHeader({
             {/* Theme Toggle */}
             <div className="hidden sm:block">
               <ThemeToggle />
+            </div>
+
+            {/* Language Switcher */}
+            <div className="relative language-menu-container hidden sm:block">
+              <button
+                onClick={() => {
+                  setLanguageMenuOpen(!languageMenuOpen)
+                  setUserMenuOpen(false)
+                }}
+                className={`flex items-center gap-1 p-1.5 sm:p-2 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
+                aria-label="Change language"
+                aria-expanded={languageMenuOpen}
+                title="Change language"
+              >
+                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+
+              {languageMenuOpen && (
+                <div className={`absolute right-0 mt-2 w-56 rounded-lg shadow-xl border ${borderColor} ${headerBgClass} py-1 z-50 max-h-72 overflow-y-auto`}>
+                  {activeLanguages.length === 0 ? (
+                    <p className={`px-4 py-2 text-sm ${subtextColor}`}>No languages available</p>
+                  ) : (
+                    activeLanguages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleLanguageChange(lang.code)}
+                        className={`w-full flex items-center justify-between gap-3 px-4 py-2 text-sm text-left ${hoverBgClass} transition-colors ${
+                          lang.code === languageCode ? `${textColor} font-medium` : subtextColor
+                        }`}
+                      >
+                        <span>{lang.native_name || lang.name}</span>
+                        {lang.code === languageCode && <span className="text-blue-500 text-xs">✓</span>}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             {/* User Profile Menu */}
