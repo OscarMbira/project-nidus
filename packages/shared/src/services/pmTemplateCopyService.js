@@ -16,6 +16,10 @@ import {
   upsertFieldLink,
   getOrCreateEntityAssignment,
 } from './pmTemplateNodeService.js'
+import {
+  toProjectDocumentLabel,
+  withCustomNameSuffix,
+} from '../utils/projectDocumentNaming.js'
 
 const COPYABLE_DOMAINS = new Set(['fields', 'opa', 'process_template', 'form_template', 'portfolio_template', 'programme_template', 'project_template'])
 
@@ -77,18 +81,34 @@ async function duplicateProcessTemplateRow(db, sourceId, { accountId, projectId,
     updated_at: _u,
     is_master: _m,
     project_id: _p,
+    practice_project_id: _pp,
     account_id: _a,
+    is_deleted: _del,
     ...rest
   } = src
+  // public tables use project_id; sim tables use practice_project_id (v629/v842).
+  // Detect from the source row so the same helper works with platformDb and simDb.
+  const isSimSchema = Object.prototype.hasOwnProperty.call(src, 'practice_project_id')
+  // Project captures are project documents — drop "Template"/"Master"/(custom) from the title.
+  const baseTitle = rest.title || 'Process document'
+  const title = projectId
+    ? toProjectDocumentLabel(baseTitle) || 'Process document'
+    : withCustomNameSuffix(baseTitle, 'Process document')
+  const insertRow = {
+    ...rest,
+    title,
+    is_master: false,
+    is_deleted: false,
+    account_id: accountId,
+  }
+  if (isSimSchema) {
+    insertRow.practice_project_id = projectId || null
+  } else {
+    insertRow.project_id = projectId || null
+  }
   const { data, error: insErr } = await db
     .from(table)
-    .insert({
-      ...rest,
-      title: `${rest.title || 'Process document'}${nameSuffix}`,
-      is_master: false,
-      project_id: projectId || null,
-      account_id: accountId,
-    })
+    .insert(insertRow)
     .select()
     .single()
   if (insErr) throw insErr
@@ -124,7 +144,7 @@ async function duplicateOpaRow(db, sourceId, accountId, nameSuffix = ' (custom)'
     .from('organisational_process_assets')
     .insert({
       ...rest,
-      name: `${rest.name || 'OPA'}${nameSuffix}`,
+      name: withCustomNameSuffix(rest.name, 'OPA'),
       pm_template_node_id: null,
       created_by: authUser.id,
       organisation_id: accountId,
@@ -135,14 +155,22 @@ async function duplicateOpaRow(db, sourceId, accountId, nameSuffix = ' (custom)'
   return data
 }
 
-// form_templates RLS (SQL/v754 + v809) allows two shapes: a global master
-// (account_id NULL, PMO-admin-only write) or an account-level PMO customisation
-// (account_id = the org, created_by = the copying user, still PMO-admin gated) —
-// same account-copy shape as opa/process_template. template_code is unique, so
-// the copy needs a fresh one (reusing formEngineService.js's own "next F0xx"
-// convention rather than importing it — that file lives in apps/platform, which
-// packages/shared can't import from). The current published version's schema is
-// cloned too, otherwise the copy would open as an empty form.
+// form_templates RLS (SQL/v754 + v809 + v839) allows two shapes: a global master
+// (account_id NULL, PMO-admin-only write) or an account-scoped copy
+// (account_id = the org, created_by = the copying user — PMO admin OR the
+// creator with account access; v839 unblocks PM "copy down to my project").
+// template_code: insert blank and let Admin ID Generation assign FRM-/SFRM-
+// via SQL/v854 AFTER INSERT trigger (CLAUDE.md rule 16.2). Re-fetch after
+// insert because PostgREST RETURNING may still show '' before the trigger
+// update is visible on the returned row.
+// The current published version's schema is cloned too, otherwise the copy
+// would open as an empty form.
+async function refetchFormTemplate(db, id) {
+  const { data, error } = await db.from('form_templates').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data
+}
+
 async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' (custom)') {
   const { data: src, error } = await db
     .from('form_templates')
@@ -157,17 +185,6 @@ async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' 
   } = await db.auth.getUser()
   if (!authUser?.id) throw new Error('Not authenticated')
 
-  const { data: existingCodes, error: codesErr } = await db
-    .from('form_templates')
-    .select('template_code')
-  if (codesErr) throw codesErr
-  const maxNum = (existingCodes || []).reduce((max, row) => {
-    const match = String(row.template_code || '').trim().match(/^F(\d+)$/i)
-    const n = match ? Number(match[1]) : null
-    return n != null && n > max ? n : max
-  }, 0)
-  const newCode = `F${String(maxNum + 1).padStart(3, '0')}`
-
   const {
     id: _id,
     created_at: _c,
@@ -179,12 +196,12 @@ async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' 
     ...rest
   } = src
 
-  const { data, error: insErr } = await db
+  const { data: inserted, error: insErr } = await db
     .from('form_templates')
     .insert({
       ...rest,
-      template_code: newCode,
-      name: `${rest.name || 'Form template'}${nameSuffix}`,
+      template_code: '',
+      name: withCustomNameSuffix(rest.name, 'Form template'),
       account_id: accountId,
       created_by: authUser.id,
       pm_template_node_id: null,
@@ -192,6 +209,8 @@ async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' 
     .select()
     .single()
   if (insErr) throw insErr
+
+  const data = (await refetchFormTemplate(db, inserted.id)) || inserted
 
   const { data: currentVersion } = await db
     .from('form_template_versions')
@@ -211,6 +230,99 @@ async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' 
   if (verErr) throw verErr
 
   return data
+}
+
+/**
+ * Create a blank-origin local form (no source to copy): empty schema v1 +
+ * pm_template_nodes with parent_node_id NULL (PRD D1 / Phase 3.1).
+ *
+ * @param {object} db
+ * @param {object} opts
+ * @param {string} opts.accountId
+ * @param {string} [opts.tier='project']
+ * @param {string} [opts.scopeEntityType='project']
+ * @param {string|null} [opts.scopeEntityId]
+ * @param {string} opts.name
+ * @param {string|null} [opts.userId]
+ * @param {string} [opts.processGroup='planning']
+ */
+export async function createBlankFormTemplateNode(db, {
+  accountId,
+  tier = 'project',
+  scopeEntityType = 'project',
+  scopeEntityId = null,
+  name,
+  userId = null,
+  processGroup = 'planning',
+} = {}) {
+  if (!db) throw new Error('db is required')
+  if (!accountId) throw new Error('accountId is required')
+  const formName = String(name || '').trim()
+  if (!formName) throw new Error('name is required')
+  if (tier !== 'pmo' && !scopeEntityId) {
+    throw new Error('scopeEntityId is required for non-PMO tiers')
+  }
+
+  const {
+    data: { user: authUser },
+  } = await db.auth.getUser()
+  if (!authUser?.id) throw new Error('Not authenticated')
+
+  const { data: inserted, error: insErr } = await db
+    .from('form_templates')
+    .insert({
+      template_code: '',
+      name: formName,
+      process_group: processGroup || 'planning',
+      is_active: true,
+      account_id: accountId,
+      created_by: authUser.id,
+      pm_template_node_id: null,
+    })
+    .select()
+    .single()
+  if (insErr) throw insErr
+
+  const formRow = (await refetchFormTemplate(db, inserted.id)) || inserted
+
+  const { error: verErr } = await db
+    .from('form_template_versions')
+    .insert({
+      template_id: formRow.id,
+      version_number: 1,
+      schema: { sections: [] },
+      is_current: true,
+    })
+  if (verErr) throw verErr
+
+  const node = await createTierDocumentTemplateNode(db, {
+    accountId,
+    tier,
+    domain: 'form_template',
+    scopeEntityType: tier === 'pmo' ? 'account' : scopeEntityType,
+    scopeEntityId: tier === 'pmo' ? null : scopeEntityId,
+    name: formName,
+    parentNodeId: null,
+    domainRefId: formRow.id,
+    userId: userId || null,
+  })
+
+  await db
+    .from('form_templates')
+    .update({ pm_template_node_id: node.id, updated_at: new Date().toISOString() })
+    .eq('id', formRow.id)
+
+  if (scopeEntityType && scopeEntityType !== 'account' && scopeEntityId) {
+    await getOrCreateEntityAssignment(db, {
+      accountId,
+      entityType: scopeEntityType,
+      entityId: scopeEntityId,
+      domain: 'form_template',
+      nodeId: node.id,
+    })
+  }
+
+  return { node, formTemplate: { ...formRow, pm_template_node_id: node.id } }
 }
 
 /**
@@ -249,6 +361,31 @@ export async function copyTemplateNodeForAccount(db, {
     throw new Error(`Copy not supported for domain: ${source.domain}`)
   }
 
+  // v822: at most one current copy of a given source node per account/tier/scope. Checked
+  // here (before duplicating anything, e.g. form_templates/process_template/opa rows) rather
+  // than relying solely on the DB unique index — each copy duplicates its underlying document
+  // into a fresh row with its own id, so a DB constraint keyed on that document id can never
+  // catch a re-copy of the same source; parent_node_id is the only stable identity to check.
+  let existingScopeQuery = db
+    .from('pm_template_nodes')
+    .select('*')
+    .eq('account_id', accountId)
+    .eq('tier', tier)
+    .eq('scope_entity_type', scopeEntityType)
+    .eq('parent_node_id', sourceNodeId)
+    .eq('is_current', true)
+  existingScopeQuery = scopeEntityId
+    ? existingScopeQuery.eq('scope_entity_id', scopeEntityId)
+    : existingScopeQuery.is('scope_entity_id', null)
+  const { data: existingCopy, error: existingErr } = await existingScopeQuery.maybeSingle()
+  if (existingErr) throw existingErr
+  if (existingCopy) {
+    const err = new Error(`This template has already been copied for this ${tier === 'pmo' ? 'organisation' : tier}`)
+    err.code = 'ALREADY_COPIED'
+    err.existingNode = existingCopy
+    throw err
+  }
+
   let domainRefId = null
   let processTemplateTable = null
   if (source.domain === 'opa' && source.domain_ref_id) {
@@ -268,7 +405,11 @@ export async function copyTemplateNodeForAccount(db, {
     domainRefId = null
   }
 
-  const copyName = `${source.name} (custom)`
+  // Org copies already end in "(custom)"; project copy-down must not stack another.
+  const copyName =
+    tier === 'project' && source.domain === 'process_template'
+      ? toProjectDocumentLabel(source.name) || 'Document'
+      : withCustomNameSuffix(source.name, 'Custom template')
   let node
   if (source.domain === 'fields' && tier === 'pmo' && scopeEntityType === 'account') {
     node = await createPmoFieldTemplateNode(db, {

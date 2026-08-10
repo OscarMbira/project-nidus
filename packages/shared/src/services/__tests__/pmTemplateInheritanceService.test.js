@@ -3,9 +3,15 @@ import {
   buildNodeChainRootToLeaf,
   mergeFieldLinksByChain,
   listEnabledEffectiveFields,
+  hydrateFieldLabelsFromDefinitions,
   pickNearestPublishedDocumentMaster,
   checkAncestorFieldLock,
   resolveStartNodeId,
+  resolveNearestTierPerFamily,
+  filterProjectOwnTemplateNodes,
+  resolveOrgTemplatesForProject,
+  resolveOrgTemplatesAvailableToCopy,
+  resolveProjectTierAncestry,
 } from '../pmTemplateInheritanceService.js'
 
 // Minimal chainable query-builder mock — just enough to exercise
@@ -356,6 +362,72 @@ describe('pmTemplateInheritanceService', () => {
     })
   })
 
+  describe('hydrateFieldLabelsFromDefinitions', () => {
+    it('fills missing labels from custom_field_definitions for instance-local fields', async () => {
+      const fieldMap = mergeFieldLinksByChain([
+        [
+          {
+            node_id: 'n-proj',
+            custom_field_definition_id: 'def-local',
+            enabled: true,
+            is_local: true,
+            label_override: null,
+          },
+        ],
+      ])
+      expect(fieldMap.get('def-local').label).toBeNull()
+
+      const db = {
+        from: () => ({
+          select: () => ({
+            in: async () => ({
+              data: [
+                {
+                  id: 'def-local',
+                  field_code: 'local_note',
+                  label: 'Local project note',
+                  field_type: 'text',
+                },
+              ],
+              error: null,
+            }),
+          }),
+        }),
+      }
+
+      await hydrateFieldLabelsFromDefinitions(db, fieldMap)
+      expect(fieldMap.get('def-local').label).toBe('Local project note')
+      expect(fieldMap.get('def-local').field_code).toBe('local_note')
+      expect(fieldMap.get('def-local').field_type).toBe('text')
+    })
+
+    it('does not overwrite an existing label_override', async () => {
+      const fieldMap = mergeFieldLinksByChain([
+        [
+          {
+            node_id: 'n-pmo',
+            custom_field_definition_id: 'def-1',
+            enabled: true,
+            label_override: 'Purpose & Justification',
+          },
+        ],
+      ])
+      const db = {
+        from: () => ({
+          select: () => ({
+            in: async () => ({
+              data: [{ id: 'def-1', field_code: 'purpose', label: 'Purpose', field_type: 'text' }],
+              error: null,
+            }),
+          }),
+        }),
+      }
+      await hydrateFieldLabelsFromDefinitions(db, fieldMap)
+      expect(fieldMap.get('def-1').label).toBe('Purpose & Justification')
+      expect(fieldMap.get('def-1').field_code).toBe('purpose')
+    })
+  })
+
   describe('pickNearestPublishedDocumentMaster', () => {
     it('returns the leaf-most published node with domain_ref_id', () => {
       const master = pickNearestPublishedDocumentMaster([
@@ -491,6 +563,186 @@ describe('pmTemplateInheritanceService', () => {
       const { db, orderCalls } = makeMockDb()
       await resolveStartNodeId(db, 'project', 'proj-1', 'opa', { accountId: 'acct-1' })
       expect(orderCalls[0]).toEqual(['is_system_synced', { ascending: false }])
+    })
+  })
+
+  // v824: "PMO → Portfolio → Programme → Project, nearest tier wins" for a PM's project view.
+  describe('resolveNearestTierPerFamily', () => {
+    // One template family: Global → PMO copy → Portfolio fork → Project fork.
+    const pmoRow = { id: 'pmo-1', parent_node_id: 'global-1', tier: 'pmo', scope_entity_type: 'account', scope_entity_id: null }
+    const portfolioRow = { id: 'pf-1', parent_node_id: 'pmo-1', tier: 'portfolio', scope_entity_type: 'portfolio', scope_entity_id: 'portfolio-A' }
+    const projectRow = { id: 'proj-1', parent_node_id: 'pf-1', tier: 'project', scope_entity_type: 'project', scope_entity_id: 'project-X' }
+    // Unrelated second family: only a PMO copy exists.
+    const otherPmoRow = { id: 'pmo-2', parent_node_id: 'global-2', tier: 'pmo', scope_entity_type: 'account', scope_entity_id: null }
+
+    it('picks the PMO row when nothing more specific applies', () => {
+      const result = resolveNearestTierPerFamily([pmoRow, otherPmoRow], { projectId: 'project-X' })
+      expect(result.map((r) => r.id).sort()).toEqual(['pmo-1', 'pmo-2'])
+    })
+
+    it('prefers the project\'s own copy over its ancestors', () => {
+      const result = resolveNearestTierPerFamily([pmoRow, portfolioRow, projectRow], {
+        projectId: 'project-X',
+        portfolioId: 'portfolio-A',
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('proj-1')
+    })
+
+    it('prefers the portfolio tier over PMO when no project-specific copy exists', () => {
+      const result = resolveNearestTierPerFamily([pmoRow, portfolioRow], {
+        projectId: 'project-X',
+        portfolioId: 'portfolio-A',
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('pf-1')
+    })
+
+    it('excludes a portfolio-tier row scoped to a different portfolio than this project\'s', () => {
+      const result = resolveNearestTierPerFamily([pmoRow, portfolioRow], {
+        projectId: 'project-X',
+        portfolioId: 'portfolio-OTHER',
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('pmo-1')
+    })
+
+    it('excludes a project-tier row scoped to a different project', () => {
+      const result = resolveNearestTierPerFamily([pmoRow, projectRow], { projectId: 'project-OTHER' })
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('pmo-1')
+    })
+
+    it('returns an empty array for an empty input', () => {
+      expect(resolveNearestTierPerFamily([], { projectId: 'project-X' })).toEqual([])
+    })
+
+    it('v852: blank local forms cascade — portfolio blank applies until project has its own', () => {
+      const portfolioBlank = {
+        id: 'blank-pf',
+        parent_node_id: null,
+        tier: 'portfolio',
+        scope_entity_type: 'portfolio',
+        scope_entity_id: 'portfolio-A',
+        domain: 'form_template',
+      }
+      const projectBlank = {
+        id: 'blank-proj',
+        parent_node_id: null,
+        tier: 'project',
+        scope_entity_type: 'project',
+        scope_entity_id: 'project-X',
+        domain: 'form_template',
+      }
+      const atProjectWithoutOwn = resolveNearestTierPerFamily([portfolioBlank], {
+        projectId: 'project-X',
+        portfolioId: 'portfolio-A',
+      })
+      expect(atProjectWithoutOwn.map((r) => r.id)).toEqual(['blank-pf'])
+
+      const atProjectWithOwn = resolveNearestTierPerFamily([portfolioBlank, projectBlank], {
+        projectId: 'project-X',
+        portfolioId: 'portfolio-A',
+      })
+      // Separate families (both parent_node_id null) — both appear; project does not replace portfolio blank of a different family.
+      expect(atProjectWithOwn.map((r) => r.id).sort()).toEqual(['blank-pf', 'blank-proj'])
+    })
+  })
+
+  describe('filterProjectOwnTemplateNodes / resolveOrgTemplatesForProject (v844)', () => {
+    const pmoRow = {
+      id: 'pmo-1',
+      parent_node_id: null,
+      tier: 'pmo',
+      scope_entity_type: 'account',
+      scope_entity_id: null,
+    }
+    const projectRow = {
+      id: 'proj-1',
+      parent_node_id: 'pmo-1',
+      tier: 'project',
+      scope_entity_id: 'project-X',
+    }
+
+    it('filterProjectOwnTemplateNodes returns only this project\'s copies', () => {
+      expect(filterProjectOwnTemplateNodes([pmoRow, projectRow], 'project-X')).toEqual([projectRow])
+      expect(filterProjectOwnTemplateNodes([pmoRow, projectRow], 'project-OTHER')).toEqual([])
+      expect(filterProjectOwnTemplateNodes([pmoRow, projectRow], null)).toEqual([])
+    })
+
+    it('resolveOrgTemplatesForProject excludes project-own copies so PMO remains for copy-down', () => {
+      const result = resolveOrgTemplatesForProject([pmoRow, projectRow], { projectId: 'project-X' })
+      expect(result).toHaveLength(1)
+      expect(result[0].id).toBe('pmo-1')
+    })
+
+    it('resolveOrgTemplatesAvailableToCopy hides families already copied to the project', () => {
+      const otherPmo = {
+        id: 'pmo-2',
+        parent_node_id: 'global-2',
+        tier: 'pmo',
+        scope_entity_type: 'account',
+        scope_entity_id: null,
+      }
+      const result = resolveOrgTemplatesAvailableToCopy([pmoRow, projectRow, otherPmo], {
+        projectId: 'project-X',
+      })
+      expect(result.map((r) => r.id)).toEqual(['pmo-2'])
+    })
+  })
+
+  // v824 ancestry must use join tables — projects.programme_id does not exist (console 400/403).
+  describe('resolveProjectTierAncestry', () => {
+    function makeAncestryDb(rowsByTable) {
+      const queried = []
+      return {
+        queried,
+        db: {
+          from(table) {
+            queried.push(table)
+            const row = rowsByTable[table] ?? null
+            const node = {
+              select: () => node,
+              eq: () => node,
+              limit: () => node,
+              maybeSingle: async () => ({ data: row, error: null }),
+            }
+            return node
+          },
+        },
+      }
+    }
+
+    it('resolves public ancestry via programme_projects and portfolio_projects (not projects.programme_id)', async () => {
+      const { db, queried } = makeAncestryDb({
+        programme_projects: { programme_id: 'prog-1' },
+        portfolio_projects: { portfolio_id: 'pf-1' },
+      })
+      const result = await resolveProjectTierAncestry(db, 'proj-1', { schema: 'public' })
+      expect(result).toEqual({ programmeId: 'prog-1', portfolioId: 'pf-1' })
+      expect(queried).toContain('programme_projects')
+      expect(queried).toContain('portfolio_projects')
+      expect(queried).not.toContain('projects')
+    })
+
+    it('falls back to programmes.portfolio_id when portfolio_projects has no row', async () => {
+      const { db, queried } = makeAncestryDb({
+        programme_projects: { programme_id: 'prog-1' },
+        portfolio_projects: null,
+        programmes: { portfolio_id: 'pf-from-prog' },
+      })
+      const result = await resolveProjectTierAncestry(db, 'proj-1', { schema: 'public' })
+      expect(result).toEqual({ programmeId: 'prog-1', portfolioId: 'pf-from-prog' })
+      expect(queried).toContain('programmes')
+    })
+
+    it('returns nulls when the project has no programme/portfolio links', async () => {
+      const { db } = makeAncestryDb({
+        programme_projects: null,
+        portfolio_projects: null,
+      })
+      const result = await resolveProjectTierAncestry(db, 'proj-1', { schema: 'public' })
+      expect(result).toEqual({ programmeId: null, portfolioId: null })
     })
   })
 })

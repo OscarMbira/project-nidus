@@ -18,19 +18,27 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import {
   applySchemaFieldOverrides,
   buildFieldOverrideMap,
+  coalesceLength,
+  getFieldLabelForOrg,
+  getFieldLengthForOrg,
+  getFieldTypeForOrg,
   isFieldEnabledForOrg,
   isFieldRequiredForOrg,
   listCatalogFields,
 } from '@nidus/shared/utils/formTemplateFieldOverrides'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   buildDefaultValuesMap,
   buildGuidanceValuesMap,
   listDefaultContentEntries,
 } from '@nidus/shared/utils/formTemplateFieldDefaults'
 import { FormTemplateExportMenu } from '@nidus/ui'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import FormFieldRenderer from '../../components/forms/FormFieldRenderer'
 import FormSectionCard from '../../components/forms/FormSectionCard'
 import {
@@ -61,8 +69,12 @@ import {
   saveFormTemplate,
   setFieldDefaultForOrg,
   setFieldEnabledForOrg,
+  setFieldLabelForOrg,
+  setFieldLengthForOrg,
   setFieldRequiredForOrg,
+  setFieldTypeForOrg,
   suggestNextTemplateCode,
+  updateFieldAdditionOptions,
 } from '../../services/formEngineService'
 
 const PROCESS_GROUPS = [
@@ -104,7 +116,15 @@ const BUILDER_TABS = [
 
 /** isNew marks fields/sections added in this editing session (not yet part of the shared catalog) — local UI state only, stripped by schemaFromForm before saving. */
 function emptyField(index = 0) {
-  return { key: `field_${index + 1}`, label: `Field ${index + 1}`, type: 'text', options: [], isNew: true }
+  return {
+    key: `field_${index + 1}`,
+    label: `Field ${index + 1}`,
+    type: 'text',
+    options: [],
+    minLength: '',
+    maxLength: '',
+    isNew: true,
+  }
 }
 
 function emptySection(index = 0) {
@@ -140,6 +160,12 @@ function schemaFromForm(form) {
         if (field.type === 'select') {
           out.options = (field.options || []).map(parseOptionLine).filter(Boolean)
         }
+        if (field.type === 'text' || field.type === 'textarea') {
+          const minLength = coalesceLength(field.minLength)
+          const maxLength = coalesceLength(field.maxLength)
+          if (minLength != null) out.minLength = minLength
+          if (maxLength != null) out.maxLength = maxLength
+        }
         return out
       }),
     })),
@@ -158,6 +184,8 @@ function formFromTemplate(template) {
           type: field.type || 'text',
           required: Boolean(field.required),
           options: Array.isArray(field.options) ? field.options.map(optionToLine).filter(Boolean) : [],
+          minLength: field.minLength != null && field.minLength !== '' ? String(field.minLength) : '',
+          maxLength: field.maxLength != null && field.maxLength !== '' ? String(field.maxLength) : '',
         })),
       }))
     : [emptySection()]
@@ -173,6 +201,8 @@ function formFromTemplate(template) {
 
 const inputClass =
   'w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100'
+const tableInputClass =
+  'w-full min-w-[6rem] rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100'
 const labelClass = 'block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1'
 
 /** One draggable field card within a section's field list — drag the grip handle to reorder (rule 34.1 parity with Admin's field-row reordering). */
@@ -217,9 +247,11 @@ function SortableFieldCard({
             <div>
               <label className={labelClass}>Field key</label>
               <input
-                className={inputClass}
+                className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 value={field.key}
                 onChange={(e) => updateField(sectionIndex, fieldIndex, { key: e.target.value })}
+                disabled={!field.isNew}
+                title={!field.isNew ? 'Standard field — the key is fixed once published (it links overrides, translations, and submitted data). Only Label and Type can be changed.' : undefined}
                 required
               />
             </div>
@@ -237,7 +269,15 @@ function SortableFieldCard({
               <select
                 className={inputClass}
                 value={field.type}
-                onChange={(e) => updateField(sectionIndex, fieldIndex, { type: e.target.value })}
+                onChange={(e) => {
+                  const nextType = e.target.value
+                  const patch = { type: nextType }
+                  if (nextType !== 'text' && nextType !== 'textarea') {
+                    patch.minLength = ''
+                    patch.maxLength = ''
+                  }
+                  updateField(sectionIndex, fieldIndex, patch)
+                }}
               >
                 {FIELD_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -290,6 +330,37 @@ function SortableFieldCard({
           </div>
         </div>
       </div>
+      {(field.type === 'text' || field.type === 'textarea') && (
+        <div className="grid gap-3 md:grid-cols-4 pl-6">
+          <div>
+            <label className={labelClass} htmlFor={`field-min-${sectionIndex}-${fieldIndex}`}>Min chars</label>
+            <input
+              id={`field-min-${sectionIndex}-${fieldIndex}`}
+              type="number"
+              min={0}
+              className={inputClass}
+              value={field.minLength ?? ''}
+              placeholder="Optional"
+              onChange={(e) => updateField(sectionIndex, fieldIndex, { minLength: e.target.value })}
+            />
+          </div>
+          <div>
+            <label className={labelClass} htmlFor={`field-max-${sectionIndex}-${fieldIndex}`}>Max chars</label>
+            <input
+              id={`field-max-${sectionIndex}-${fieldIndex}`}
+              type="number"
+              min={0}
+              className={inputClass}
+              value={field.maxLength ?? ''}
+              placeholder="Optional"
+              onChange={(e) => updateField(sectionIndex, fieldIndex, { maxLength: e.target.value })}
+            />
+          </div>
+          <p className="md:col-span-2 self-end pb-2 text-xs text-gray-500 dark:text-gray-400">
+            Character limits for Text / Textarea. Saved with the template; lower tiers can only tighten them.
+          </p>
+        </div>
+      )}
       {field.type === 'select' && (
         <div>
           <label className={labelClass}>Options</label>
@@ -303,6 +374,168 @@ function SortableFieldCard({
         </div>
       )}
     </div>
+  )
+}
+
+/** Compact editable table row for Field catalog list view (rule 41). */
+function SortableFieldTableRow({
+  field,
+  section,
+  sectionIndex,
+  fieldIndex,
+  updateField,
+  removeField,
+  activeLanguages,
+  translations,
+  translationTargetLanguages,
+  isFieldKeyInUse,
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: field.key })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  const isTextLike = field.type === 'text' || field.type === 'textarea'
+  const isStandard = !field.isNew
+  const fieldLocked = isFieldKeyInUse(field.key)
+  const deleteDisabled = isStandard || fieldLocked
+  const deleteTitle = isStandard
+    ? 'Standard field — cannot be deleted. Use Field Behaviour to show or hide it for your organisation.'
+    : fieldLocked
+      ? 'Cannot delete — this field has recorded data in one or more forms.'
+      : 'Remove this field'
+  const coverage = activeLanguages.length > 0
+    ? getFieldTranslationCoverage(field, section.key, translations, translationTargetLanguages)
+    : null
+
+  return (
+    <>
+      <tr
+        ref={setNodeRef}
+        style={style}
+        className="align-middle border-t border-gray-100 dark:border-gray-800"
+      >
+        <TableRowNumberCell number={getDisplayRowNumber(fieldIndex)} />
+        <td className="px-1 py-1.5 w-8">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            title="Drag to reorder field"
+            className="cursor-move touch-none text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Drag to reorder field"
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        </td>
+        <td className="px-1.5 py-1.5">
+          <input
+            className={`${tableInputClass} disabled:cursor-not-allowed disabled:opacity-60`}
+            value={field.key}
+            onChange={(e) => updateField(sectionIndex, fieldIndex, { key: e.target.value })}
+            disabled={!field.isNew}
+            title={!field.isNew ? 'Standard field — the key is fixed once published.' : undefined}
+            required
+            aria-label="Field key"
+          />
+        </td>
+        <td className="px-1.5 py-1.5">
+          <input
+            className={tableInputClass}
+            value={field.label}
+            onChange={(e) => updateField(sectionIndex, fieldIndex, { label: e.target.value })}
+            required
+            aria-label="Label"
+          />
+        </td>
+        <td className="px-1.5 py-1.5">
+          <select
+            className={tableInputClass}
+            value={field.type}
+            aria-label="Type"
+            onChange={(e) => {
+              const nextType = e.target.value
+              const patch = { type: nextType }
+              if (nextType !== 'text' && nextType !== 'textarea') {
+                patch.minLength = ''
+                patch.maxLength = ''
+              }
+              updateField(sectionIndex, fieldIndex, patch)
+            }}
+          >
+            {FIELD_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </td>
+        <td className="px-1.5 py-1.5 text-center">
+          <input
+            type="checkbox"
+            checked={Boolean(field.required)}
+            onChange={(e) => updateField(sectionIndex, fieldIndex, { required: e.target.checked })}
+            aria-label="Required"
+            className="rounded border-gray-400 dark:border-gray-600"
+          />
+        </td>
+        <td className="px-1.5 py-1.5">
+          {isTextLike ? (
+            <input
+              type="number"
+              min={0}
+              className={tableInputClass}
+              value={field.minLength ?? ''}
+              placeholder="—"
+              onChange={(e) => updateField(sectionIndex, fieldIndex, { minLength: e.target.value })}
+              aria-label="Min chars"
+            />
+          ) : (
+            <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+          )}
+        </td>
+        <td className="px-1.5 py-1.5">
+          {isTextLike ? (
+            <input
+              type="number"
+              min={0}
+              className={tableInputClass}
+              value={field.maxLength ?? ''}
+              placeholder="—"
+              onChange={(e) => updateField(sectionIndex, fieldIndex, { maxLength: e.target.value })}
+              aria-label="Max chars"
+            />
+          ) : (
+            <span className="text-xs text-gray-400 dark:text-gray-500">—</span>
+          )}
+        </td>
+        <td className="px-1.5 py-1.5 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          {coverage ? `${coverage.translated}/${coverage.total}` : '—'}
+        </td>
+        <td className="px-1.5 py-1.5 text-right">
+          <button
+            type="button"
+            onClick={() => removeField(sectionIndex, fieldIndex)}
+            disabled={deleteDisabled}
+            title={deleteTitle}
+            className="text-red-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Remove field"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </td>
+      </tr>
+      {field.type === 'select' && (
+        <tr className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+          <td colSpan={10} className="px-3 py-2">
+            <label className={labelClass}>Options for {field.label || field.key}</label>
+            <SelectOptionsEditor
+              value={field.options || []}
+              onChange={(options) => updateField(sectionIndex, fieldIndex, { options })}
+            />
+          </td>
+        </tr>
+      )}
+    </>
   )
 }
 
@@ -322,13 +555,23 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
   const baselineRef = useRef(snapshotForm(defaultFormState()))
   const [templateId, setTemplateId] = useState(null)
   const [organisationId, setOrganisationId] = useState(null)
+  const [fieldsViewMode, setFieldsViewMode] = useViewMode(
+    mode === 'sim' ? 'sim-form-template-builder-fields' : 'form-template-builder-fields',
+    'list',
+  )
   const [internalUserId, setInternalUserId] = useState(null)
   const [overrideMap, setOverrideMap] = useState(() => new Map())
   const [overrideSavingKey, setOverrideSavingKey] = useState(null)
+  /** In-progress "Type → Select" edits not yet saved — keyed by `${sectionKey}::${fieldKey}`, holds { type: 'select', options } until Apply is clicked. */
+  const [typeOverrideDrafts, setTypeOverrideDrafts] = useState({})
   const [fieldAdditions, setFieldAdditions] = useState([])
-  const [newLocalField, setNewLocalField] = useState({ sectionKey: '', key: '', label: '', type: 'text', required: false, options: [] })
+  const [newLocalField, setNewLocalField] = useState({
+    sectionKey: '', key: '', label: '', type: 'text', required: false, options: [], minLength: '', maxLength: '',
+  })
   const [addingLocalField, setAddingLocalField] = useState(false)
   const [deletingAdditionKey, setDeletingAdditionKey] = useState(null)
+  /** In-progress "Edit options" edits for an existing local Select field — keyed by `${sectionKey}::${fieldKey}`, holds line-array until Apply. */
+  const [editOptionsDrafts, setEditOptionsDrafts] = useState({})
   const [defaultValues, setDefaultValues] = useState({})
   const [guidanceValues, setGuidanceValues] = useState({})
   const [defaultsSaving, setDefaultsSaving] = useState(false)
@@ -363,18 +606,14 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
     setError(null)
     setAccessDenied(false)
 
-    const { user, isPMOAdmin, authError } = await getSessionPMOAdminStatus()
-    if (authError || !user) {
-      navigate('/login')
-      return
-    }
-    if (!isPMOAdmin) {
-      setAccessDenied(true)
-      setLoading(false)
-      return
-    }
-
     try {
+      const { user, isPMOAdmin, authError } = await getSessionPMOAdminStatus()
+      if (authError || !user) {
+        console.error('[FormTemplateBuilder] getSessionPMOAdminStatus failed', authError)
+        navigate('/login')
+        return
+      }
+
       const internalId = await getCurrentUserInternalUserId()
       setInternalUserId(internalId)
 
@@ -386,6 +625,16 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       if (isEdit) {
         const result = await getFormTemplate(editCode, mode)
         if (!result.success) throw new Error(result.message || 'Template not found')
+        // v852: local-form creators (created_by) may edit their own account-scoped
+        // templates; creating brand-new masters stays PMO-admin-only.
+        const canEditAsCreator =
+          Boolean(result.data?.account_id)
+          && result.data?.created_by === user.id
+        if (!isPMOAdmin && !canEditAsCreator) {
+          setAccessDenied(true)
+          setLoading(false)
+          return
+        }
         const next = formFromTemplate(result.data)
         setForm(next)
         baselineRef.current = snapshotForm(next)
@@ -428,12 +677,18 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           }
         }
       } else {
+        if (!isPMOAdmin) {
+          setAccessDenied(true)
+          setLoading(false)
+          return
+        }
         const suggested = await suggestNextTemplateCode(mode)
         const next = defaultFormState(suggested.success ? suggested.data : 'F069')
         setForm(next)
         baselineRef.current = snapshotForm(next)
       }
     } catch (err) {
+      console.error('[FormTemplateBuilder] loadPage failed', err)
       setError(err.message || 'Failed to load template builder')
     } finally {
       setLoading(false)
@@ -525,10 +780,31 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
 
   const handleSave = async (event) => {
     event.preventDefault()
-    setSaving(true)
     setError(null)
     setSuccess(null)
 
+    for (const section of form.sections || []) {
+      for (const field of section.fields || []) {
+        if (field.type !== 'text' && field.type !== 'textarea') continue
+        const minLength = field.minLength === '' || field.minLength == null
+          ? null
+          : coalesceLength(field.minLength)
+        const maxLength = field.maxLength === '' || field.maxLength == null
+          ? null
+          : coalesceLength(field.maxLength)
+        if ((field.minLength !== '' && field.minLength != null && minLength == null)
+          || (field.maxLength !== '' && field.maxLength != null && maxLength == null)) {
+          setError(`Min/max length for "${field.label || field.key}" must be a non-negative whole number.`)
+          return
+        }
+        if (minLength != null && maxLength != null && maxLength < minLength) {
+          setError(`Max length cannot be less than min length for "${field.label || field.key}".`)
+          return
+        }
+      }
+    }
+
+    setSaving(true)
     const result = await saveFormTemplate(
       {
         templateCode: form.template_code,
@@ -646,6 +922,125 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
     })
   }
 
+  /** `label = ''` clears the override (reverts to the master schema's own label). */
+  const handleFieldLabelSave = async (sectionKey, fieldKey, label) => {
+    if (!templateId || !organisationId) {
+      setError('Could not resolve your organisation — label override cannot be saved.')
+      return
+    }
+    const savingKey = `${sectionKey}::${fieldKey}`
+    const nextLabel = label.trim() === '' ? null : label.trim()
+    if ((overrideMap.get(savingKey)?.label || null) === nextLabel) return
+    setOverrideSavingKey(savingKey)
+    setError(null)
+    const result = await setFieldLabelForOrg(
+      { organisationId, templateId, sectionKey, fieldKey, label: nextLabel, updatedByUserId: internalUserId },
+      mode,
+    )
+    setOverrideSavingKey(null)
+    if (!result.success) {
+      setError(result.message || 'Failed to update label override')
+      return
+    }
+    setOverrideMap((prev) => {
+      const next = new Map(prev)
+      const existing = next.get(savingKey) || { enabled: true, required: null, label: null, type: null, options: null }
+      next.set(savingKey, { ...existing, label: nextLabel })
+      return next
+    })
+  }
+
+  /** Save min/max length overrides. Empty string clears that bound (inherit master). */
+  const handleFieldLengthSave = async (sectionKey, fieldKey, minRaw, maxRaw) => {
+    if (!templateId || !organisationId) {
+      setError('Could not resolve your organisation — length override cannot be saved.')
+      return
+    }
+    const savingKey = `${sectionKey}::${fieldKey}`
+    let nextMin
+    let nextMax
+    try {
+      nextMin = minRaw === '' || minRaw == null ? null : coalesceLength(minRaw)
+      nextMax = maxRaw === '' || maxRaw == null ? null : coalesceLength(maxRaw)
+      if ((minRaw !== '' && minRaw != null && nextMin == null)
+        || (maxRaw !== '' && maxRaw != null && nextMax == null)) {
+        throw new Error('Min/max length must be a non-negative whole number')
+      }
+    } catch (e) {
+      setError(e.message || 'Invalid length')
+      return
+    }
+    const own = overrideMap.get(savingKey)
+    if ((own?.minLength ?? null) === nextMin && (own?.maxLength ?? null) === nextMax) return
+    if (nextMin != null && nextMax != null && nextMax < nextMin) {
+      setError('Max length cannot be less than min length')
+      return
+    }
+    setOverrideSavingKey(savingKey)
+    setError(null)
+    const result = await setFieldLengthForOrg(
+      {
+        organisationId,
+        templateId,
+        sectionKey,
+        fieldKey,
+        minLength: nextMin,
+        maxLength: nextMax,
+        updatedByUserId: internalUserId,
+      },
+      mode,
+    )
+    setOverrideSavingKey(null)
+    if (!result.success) {
+      setError(result.message || 'Failed to update length override')
+      return
+    }
+    setOverrideMap((prev) => {
+      const next = new Map(prev)
+      const existing = next.get(savingKey) || {
+        enabled: true, required: null, label: null, type: null, options: null, minLength: null, maxLength: null,
+      }
+      next.set(savingKey, { ...existing, minLength: nextMin, maxLength: nextMax })
+      return next
+    })
+  }
+
+  /** `fieldType = ''` clears both the type and options overrides (reverts to master). */
+  const handleFieldTypeSave = async (sectionKey, fieldKey, fieldType, options = null) => {
+    if (!templateId || !organisationId) {
+      setError('Could not resolve your organisation — type override cannot be saved.')
+      return
+    }
+    const savingKey = `${sectionKey}::${fieldKey}`
+    const nextType = fieldType || null
+    if (nextType === 'select' && !(Array.isArray(options) && options.filter(Boolean).length > 0)) {
+      setError('At least one option is required when overriding a field to Select.')
+      return
+    }
+    setOverrideSavingKey(savingKey)
+    setError(null)
+    const result = await setFieldTypeForOrg(
+      { organisationId, templateId, sectionKey, fieldKey, fieldType: nextType, options, updatedByUserId: internalUserId },
+      mode,
+    )
+    setOverrideSavingKey(null)
+    if (!result.success) {
+      setError(result.message || 'Failed to update type override')
+      return
+    }
+    setOverrideMap((prev) => {
+      const next = new Map(prev)
+      const existing = next.get(savingKey) || { enabled: true, required: null, label: null, type: null, options: null }
+      next.set(savingKey, { ...existing, type: nextType, options: nextType === 'select' ? options.filter(Boolean) : null })
+      return next
+    })
+    setTypeOverrideDrafts((prev) => {
+      const next = { ...prev }
+      delete next[savingKey]
+      return next
+    })
+  }
+
   const handleAddLocalField = async () => {
     if (!templateId || !organisationId) {
       setError('Could not resolve your organisation — field cannot be added.')
@@ -668,6 +1063,27 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
     if (newLocalField.type === 'select') {
       fieldDefinition.options = (newLocalField.options || []).map(parseOptionLine).filter(Boolean)
     }
+    if (newLocalField.type === 'text' || newLocalField.type === 'textarea') {
+      const minLength = coalesceLength(newLocalField.minLength)
+      const maxLength = coalesceLength(newLocalField.maxLength)
+      if (newLocalField.minLength !== '' && newLocalField.minLength != null && minLength == null) {
+        setError('Min length must be a non-negative whole number')
+        setAddingLocalField(false)
+        return
+      }
+      if (newLocalField.maxLength !== '' && newLocalField.maxLength != null && maxLength == null) {
+        setError('Max length must be a non-negative whole number')
+        setAddingLocalField(false)
+        return
+      }
+      if (minLength != null && maxLength != null && maxLength < minLength) {
+        setError('Max length cannot be less than min length')
+        setAddingLocalField(false)
+        return
+      }
+      if (minLength != null) fieldDefinition.minLength = minLength
+      if (maxLength != null) fieldDefinition.maxLength = maxLength
+    }
     const result = await addFieldForOrg(
       {
         organisationId,
@@ -684,7 +1100,9 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       return
     }
     setFieldAdditions((prev) => [...prev, result.data])
-    setNewLocalField({ sectionKey: '', key: '', label: '', type: 'text', required: false, options: [] })
+    setNewLocalField({
+      sectionKey: '', key: '', label: '', type: 'text', required: false, options: [], minLength: '', maxLength: '',
+    })
   }
 
   const handleDeleteLocalField = async (addition) => {
@@ -706,6 +1124,33 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       return
     }
     setFieldAdditions((prev) => prev.filter((a) => a.id !== addition.id))
+  }
+
+  /** Options-only edit on an existing local Select field (organisation-wide layer) — key/label/type/required stay locked. */
+  const handleEditAdditionOptions = async (addition, optionLines) => {
+    const options = (optionLines || []).map(parseOptionLine).filter(Boolean)
+    if (options.length === 0) {
+      setError('At least one option is required.')
+      return
+    }
+    const savingKey = `${addition.section_key}::${addition.field_key}`
+    setDeletingAdditionKey(savingKey)
+    setError(null)
+    const result = await updateFieldAdditionOptions(
+      { organisationId, templateId, sectionKey: addition.section_key, fieldKey: addition.field_key, options },
+      mode,
+    )
+    setDeletingAdditionKey(null)
+    if (!result.success) {
+      setError(result.message || 'Failed to update options')
+      return
+    }
+    setFieldAdditions((prev) => prev.map((a) => (a.id === addition.id ? result.data : a)))
+    setEditOptionsDrafts((prev) => {
+      const next = { ...prev }
+      delete next[savingKey]
+      return next
+    })
   }
 
   const refreshTranslations = async () => {
@@ -781,7 +1226,9 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
   if (accessDenied) {
     return (
       <div className="p-4 space-y-2 text-gray-900 dark:text-gray-100">
-        <p className="text-sm text-red-500">Only PMO Admin can access the form template builder.</p>
+        <p className="text-sm text-red-500">
+          You can only open the form template builder as a PMO Admin, or when editing a local form you created.
+        </p>
         <Link to={adminListPath} className="text-sm text-blue-500 hover:underline">Back to templates</Link>
       </div>
     )
@@ -905,7 +1352,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
         </div>
 
         <section className={`space-y-4 ${activeTab === 'fields' ? '' : 'hidden'}`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-sm font-semibold">Field catalog</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -915,13 +1362,20 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                 yet) can be deleted.
               </p>
             </div>
-            <button
-              type="button"
-              onClick={addSection}
-              className="inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add section
-            </button>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <ViewToggle
+                value={fieldsViewMode}
+                onChange={setFieldsViewMode}
+                ariaLabel="Field catalog layout"
+              />
+              <button
+                type="button"
+                onClick={addSection}
+                className="inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add section
+              </button>
+            </div>
           </div>
 
           {form.sections.map((section, sectionIndex) => (
@@ -986,23 +1440,61 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   items={section.fields.map((f) => f.key)}
                   strategy={verticalListSortingStrategy}
                 >
-                  <div className="space-y-3">
-                    {section.fields.map((field, fieldIndex) => (
-                      <SortableFieldCard
-                        key={field.key || `field-${sectionIndex}-${fieldIndex}`}
-                        field={field}
-                        section={section}
-                        sectionIndex={sectionIndex}
-                        fieldIndex={fieldIndex}
-                        updateField={updateField}
-                        removeField={removeField}
-                        activeLanguages={activeLanguages}
-                        translations={translations}
-                        translationTargetLanguages={translationTargetLanguages}
-                        isFieldKeyInUse={isFieldKeyInUse}
-                      />
-                    ))}
-                  </div>
+                  {fieldsViewMode === 'list' ? (
+                    <div className="overflow-x-auto rounded border border-gray-200 dark:border-gray-700">
+                      <table className="min-w-full text-sm">
+                        <thead className="bg-gray-50 dark:bg-gray-800/80">
+                          <tr>
+                            <TableRowNumberHeader className="!normal-case" />
+                            <th className="px-1 py-2 w-8" aria-label="Reorder" />
+                            <th className="px-1.5 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Key</th>
+                            <th className="px-1.5 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Label</th>
+                            <th className="px-1.5 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Type</th>
+                            <th className="px-1.5 py-2 text-center text-xs font-medium text-gray-700 dark:text-gray-300">Req</th>
+                            <th className="px-1.5 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Min</th>
+                            <th className="px-1.5 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Max</th>
+                            <th className="px-1.5 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300">Lang</th>
+                            <th className="px-1.5 py-2 text-right text-xs font-medium text-gray-700 dark:text-gray-300" aria-label="Actions" />
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white dark:bg-gray-900">
+                          {section.fields.map((field, fieldIndex) => (
+                            <SortableFieldTableRow
+                              key={field.key || `field-${sectionIndex}-${fieldIndex}`}
+                              field={field}
+                              section={section}
+                              sectionIndex={sectionIndex}
+                              fieldIndex={fieldIndex}
+                              updateField={updateField}
+                              removeField={removeField}
+                              activeLanguages={activeLanguages}
+                              translations={translations}
+                              translationTargetLanguages={translationTargetLanguages}
+                              isFieldKeyInUse={isFieldKeyInUse}
+                            />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {section.fields.map((field, fieldIndex) => (
+                        <SortableFieldCard
+                          key={field.key || `field-${sectionIndex}-${fieldIndex}`}
+                          field={field}
+                          section={section}
+                          sectionIndex={sectionIndex}
+                          fieldIndex={fieldIndex}
+                          updateField={updateField}
+                          removeField={removeField}
+                          activeLanguages={activeLanguages}
+                          translations={translations}
+                          translationTargetLanguages={translationTargetLanguages}
+                          isFieldKeyInUse={isFieldKeyInUse}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </SortableContext>
               </DndContext>
 
@@ -1022,9 +1514,11 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
             <div>
               <h2 className="text-sm font-semibold">Field behaviour for your organisation</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Enable/disable and require fields for your organisation only. Other organisations are
-                unaffected. Disabled fields are hidden when project managers create new form instances;
-                a disabled field's required setting is ignored while it stays disabled.
+                Enable/disable, require, relabel, retype, or set text min/max length for your organisation
+                only. Other organisations are unaffected. Disabled fields are hidden when project managers
+                create new form instances; a disabled field&apos;s required setting is ignored while it stays
+                disabled. Leave Label blank, Type on &quot;(inherit)&quot;, or Min/Max empty to keep the
+                shared catalog&apos;s own value.
               </p>
             </div>
             {!organisationId ? (
@@ -1038,50 +1532,186 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                   const enabled = isFieldEnabledForOrg(overrideMap, item.sectionKey, item.fieldKey)
                   const required = isFieldRequiredForOrg(overrideMap, item.sectionKey, item.fieldKey, item.baseRequired)
                   const saving = overrideSavingKey === mapKey
+                  const ownLabelOverride = overrideMap.get(mapKey)?.label || ''
+                  const ownLength = overrideMap.get(mapKey)
+                  const { type: effectiveType } = getFieldTypeForOrg(overrideMap, item.sectionKey, item.fieldKey, item.baseType, item.baseOptions)
+                  const { minLength: effectiveMin, maxLength: effectiveMax } = getFieldLengthForOrg(
+                    overrideMap,
+                    item.sectionKey,
+                    item.fieldKey,
+                    item.baseMinLength,
+                    item.baseMaxLength,
+                  )
+                  const typeDraft = typeOverrideDrafts[mapKey]
+                  const typeSelectValue = typeDraft?.type || overrideMap.get(mapKey)?.type || ''
+                  const usageWarning = isFieldKeyInUse(item.fieldKey)
+                  const showLengthControls = effectiveType === 'text' || effectiveType === 'textarea'
                   return (
                     <li
                       key={mapKey}
-                      className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm"
+                      className="flex flex-col gap-2 px-3 py-2 text-sm"
                     >
-                      <div>
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{item.fieldLabel}</span>
-                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                          {item.sectionTitle} · {item.fieldKey}
-                        </span>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <span className="font-medium text-gray-900 dark:text-gray-100">{item.fieldLabel}</span>
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                            {item.sectionTitle} · {item.fieldKey}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <input
+                              type="checkbox"
+                              checked={enabled}
+                              disabled={saving}
+                              onChange={(e) => handleFieldAvailabilityToggle(
+                                item.sectionKey,
+                                item.fieldKey,
+                                e.target.checked,
+                              )}
+                              className="rounded border-gray-600"
+                            />
+                            {saving ? 'Saving…' : enabled ? 'Enabled' : 'Disabled'}
+                          </label>
+                          <label
+                            className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
+                            title={!enabled ? 'Required is ignored while this field is disabled' : undefined}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={required}
+                              disabled={saving || !enabled}
+                              onChange={(e) => handleFieldRequiredToggle(
+                                item.sectionKey,
+                                item.fieldKey,
+                                e.target.checked,
+                              )}
+                              className="rounded border-gray-600"
+                            />
+                            Required
+                          </label>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-label-override`}>Label</label>
                           <input
-                            type="checkbox"
-                            checked={enabled}
+                            id={`${mapKey}-label-override`}
+                            className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 w-40"
+                            defaultValue={ownLabelOverride}
+                            placeholder={item.fieldLabel}
                             disabled={saving}
-                            onChange={(e) => handleFieldAvailabilityToggle(
-                              item.sectionKey,
-                              item.fieldKey,
-                              e.target.checked,
-                            )}
-                            className="rounded border-gray-600"
+                            onBlur={(e) => handleFieldLabelSave(item.sectionKey, item.fieldKey, e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
                           />
-                          {saving ? 'Saving…' : enabled ? 'Enabled' : 'Disabled'}
-                        </label>
-                        <label
-                          className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
-                          title={!enabled ? 'Required is ignored while this field is disabled' : undefined}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={required}
-                            disabled={saving || !enabled}
-                            onChange={(e) => handleFieldRequiredToggle(
-                              item.sectionKey,
-                              item.fieldKey,
-                              e.target.checked,
-                            )}
-                            className="rounded border-gray-600"
-                          />
-                          Required
-                        </label>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-type-override`}>Type</label>
+                          <select
+                            id={`${mapKey}-type-override`}
+                            className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100"
+                            value={typeSelectValue}
+                            disabled={saving}
+                            onChange={(e) => {
+                              const nextType = e.target.value
+                              if (nextType === 'select') {
+                                setTypeOverrideDrafts((prev) => ({
+                                  ...prev,
+                                  [mapKey]: { type: 'select', options: (overrideMap.get(mapKey)?.options || []).map(optionToLine) },
+                                }))
+                                return
+                              }
+                              setTypeOverrideDrafts((prev) => {
+                                const next = { ...prev }
+                                delete next[mapKey]
+                                return next
+                              })
+                              handleFieldTypeSave(item.sectionKey, item.fieldKey, nextType || null)
+                            }}
+                          >
+                            <option value="">
+                              {`(inherit — ${FIELD_TYPES.find((t) => t.value === item.baseType)?.label || 'Text'})`}
+                            </option>
+                            {FIELD_TYPES.map((t) => (
+                              <option key={t.value} value={t.value}>{t.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {showLengthControls && (
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-min-length`}>Min</label>
+                              <input
+                                id={`${mapKey}-min-length`}
+                                type="number"
+                                min={0}
+                                className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 w-20"
+                                defaultValue={ownLength?.minLength ?? ''}
+                                placeholder={item.baseMinLength != null ? String(item.baseMinLength) : (effectiveMin != null ? String(effectiveMin) : '')}
+                                disabled={saving}
+                                onBlur={(e) => {
+                                  const maxEl = document.getElementById(`${mapKey}-max-length`)
+                                  handleFieldLengthSave(item.sectionKey, item.fieldKey, e.target.value, maxEl?.value ?? '')
+                                }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                              />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <label className="text-xs text-gray-500 dark:text-gray-400" htmlFor={`${mapKey}-max-length`}>Max</label>
+                              <input
+                                id={`${mapKey}-max-length`}
+                                type="number"
+                                min={0}
+                                className="rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100 w-20"
+                                defaultValue={ownLength?.maxLength ?? ''}
+                                placeholder={item.baseMaxLength != null ? String(item.baseMaxLength) : (effectiveMax != null ? String(effectiveMax) : '')}
+                                disabled={saving}
+                                onBlur={(e) => {
+                                  const minEl = document.getElementById(`${mapKey}-min-length`)
+                                  handleFieldLengthSave(item.sectionKey, item.fieldKey, minEl?.value ?? '', e.target.value)
+                                }}
+                                onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                              />
+                            </div>
+                          </>
+                        )}
+                        {usageWarning && (effectiveType !== item.baseType || typeDraft) && (
+                          <span className="text-xs text-amber-500">
+                            Existing submissions have data in this field — changing its type only affects how it's edited going forward.
+                          </span>
+                        )}
                       </div>
+                      {typeDraft?.type === 'select' && (
+                        <div className="rounded border border-dashed border-gray-300 dark:border-gray-700 p-2">
+                          <label className={labelClass}>Options for this override</label>
+                          <SelectOptionsEditor
+                            value={typeDraft.options}
+                            onChange={(options) => setTypeOverrideDrafts((prev) => ({ ...prev, [mapKey]: { ...prev[mapKey], options } }))}
+                          />
+                          <div className="mt-2 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleFieldTypeSave(item.sectionKey, item.fieldKey, 'select', (typeDraft.options || []).map(parseOptionLine).filter(Boolean))}
+                              disabled={saving}
+                              className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+                            >
+                              Apply
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTypeOverrideDrafts((prev) => {
+                                const next = { ...prev }
+                                delete next[mapKey]
+                                return next
+                              })}
+                              disabled={saving}
+                              className="text-xs text-gray-500 hover:text-gray-400"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </li>
                   )
                 })}
@@ -1101,26 +1731,75 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                     const mapKey = `${addition.section_key}::${addition.field_key}`
                     const locked = isFieldKeyInUse(addition.field_key)
                     const deleting = deletingAdditionKey === mapKey
+                    const editOptionsDraft = editOptionsDrafts[mapKey]
                     return (
-                      <li key={addition.id} className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-900 dark:text-gray-100">
-                            {addition.field_definition?.label || addition.field_key}
-                          </span>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                            {addition.section_key} · {addition.field_key} · {addition.field_definition?.type}
-                            {addition.field_definition?.required ? ' · required' : ''}
-                          </span>
+                      <li key={addition.id} className="flex flex-col gap-2 px-3 py-2 text-sm">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                              {addition.field_definition?.label || addition.field_key}
+                            </span>
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                              {addition.section_key} · {addition.field_key} · {addition.field_definition?.type}
+                              {addition.field_definition?.required ? ' · required' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {addition.field_definition?.type === 'select' && (
+                              <button
+                                type="button"
+                                onClick={() => setEditOptionsDrafts((prev) => ({
+                                  ...prev,
+                                  [mapKey]: (addition.field_definition.options || []).map(optionToLine),
+                                }))}
+                                disabled={deleting}
+                                className="text-xs text-blue-500 hover:text-blue-400 disabled:opacity-40"
+                              >
+                                Edit options
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteLocalField(addition)}
+                              disabled={locked || deleting}
+                              title={locked ? 'Cannot delete — this field has recorded data in one or more forms.' : 'Delete this local field'}
+                              className="text-xs text-red-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                              {deleting ? 'Deleting…' : 'Delete'}
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLocalField(addition)}
-                          disabled={locked || deleting}
-                          title={locked ? 'Cannot delete — this field has recorded data in one or more forms.' : 'Delete this local field'}
-                          className="text-xs text-red-500 hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {deleting ? 'Deleting…' : 'Delete'}
-                        </button>
+                        {editOptionsDraft && (
+                          <div className="rounded border border-dashed border-gray-300 dark:border-gray-700 p-2">
+                            <label className={labelClass}>Edit options for {addition.field_definition?.label || addition.field_key}</label>
+                            <SelectOptionsEditor
+                              value={editOptionsDraft}
+                              onChange={(options) => setEditOptionsDrafts((prev) => ({ ...prev, [mapKey]: options }))}
+                            />
+                            <div className="mt-2 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEditAdditionOptions(addition, editOptionsDraft)}
+                                disabled={deleting}
+                                className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+                              >
+                                Apply
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditOptionsDrafts((prev) => {
+                                  const next = { ...prev }
+                                  delete next[mapKey]
+                                  return next
+                                })}
+                                disabled={deleting}
+                                className="text-xs text-gray-500 hover:text-gray-400"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </li>
                     )
                   })}
@@ -1179,6 +1858,32 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                     Required
                   </label>
                 </div>
+                {(newLocalField.type === 'text' || newLocalField.type === 'textarea') && (
+                  <>
+                    <div>
+                      <label className={labelClass}>Min chars</label>
+                      <input
+                        type="number"
+                        min={0}
+                        className={inputClass}
+                        value={newLocalField.minLength}
+                        onChange={(e) => setNewLocalField((prev) => ({ ...prev, minLength: e.target.value }))}
+                        placeholder="Optional"
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Max chars</label>
+                      <input
+                        type="number"
+                        min={0}
+                        className={inputClass}
+                        value={newLocalField.maxLength}
+                        onChange={(e) => setNewLocalField((prev) => ({ ...prev, maxLength: e.target.value }))}
+                        placeholder="Optional"
+                      />
+                    </div>
+                  </>
+                )}
                 {newLocalField.type === 'select' && (
                   <div className="md:col-span-5">
                     <label className={labelClass}>Options</label>

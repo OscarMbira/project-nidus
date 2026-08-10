@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { copyTemplateNodeForAccount } from '../pmTemplateCopyService.js'
+import {
+  copyTemplateNodeForAccount,
+  createBlankFormTemplateNode,
+} from '../pmTemplateCopyService.js'
 
 vi.mock('../pmTemplateNodeService.js', () => ({
   getTemplateNode: vi.fn(),
@@ -16,7 +19,20 @@ import {
   createTierDocumentTemplateNode,
   listFieldLinksForNode,
   upsertFieldLink,
+  getOrCreateEntityAssignment,
 } from '../pmTemplateNodeService.js'
+
+/** Chainable stub for pm_template_nodes (v822 existing-copy guard + methodology update). */
+function existingCopyQueryStub(existing = null) {
+  const node = {
+    select: () => node,
+    eq: () => node,
+    is: () => node,
+    maybeSingle: async () => ({ data: existing, error: null }),
+    update: () => ({ eq: async () => ({ error: null }) }),
+  }
+  return node
+}
 
 describe('pmTemplateCopyService', () => {
   beforeEach(() => {
@@ -25,9 +41,12 @@ describe('pmTemplateCopyService', () => {
 
   it('copies a system-synced fields node and clones field links', async () => {
     const db = {
-      from: vi.fn(() => ({
-        update: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
-      })),
+      from: vi.fn((table) => {
+        if (table === 'pm_template_nodes') return existingCopyQueryStub()
+        return {
+          update: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
+        }
+      }),
     }
     getTemplateNode.mockResolvedValue({
       id: 'src-1',
@@ -79,9 +98,12 @@ describe('pmTemplateCopyService', () => {
 
   it('allows forking your own organisational template into a narrower scope (v805 Phase 4)', async () => {
     const db = {
-      from: vi.fn(() => ({
-        update: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
-      })),
+      from: vi.fn((table) => {
+        if (table === 'pm_template_nodes') return existingCopyQueryStub()
+        return {
+          update: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
+        }
+      }),
     }
     getTemplateNode.mockResolvedValue({
       id: 'org-copy-1',
@@ -100,7 +122,7 @@ describe('pmTemplateCopyService', () => {
     expect(node.id).toBe('project-copy-1')
   })
 
-  function mockFormTemplateDb({ sourceRow, existingCodes = [], currentVersionSchema = { title: 'Original' } }) {
+  function mockFormTemplateDb({ sourceRow, currentVersionSchema = { title: 'Original' }, assignedCode = 'FRM-0001' }) {
     const insertedTemplateRows = []
     const insertedVersionRows = []
     const updatedTemplateRows = []
@@ -109,11 +131,24 @@ describe('pmTemplateCopyService', () => {
       from: vi.fn((table) => {
         if (table === 'form_templates') {
           return {
-            select: (cols) => {
-              // suggestNextTemplateCode-style lookup: awaited directly, no .eq()
-              if (cols === 'template_code') return Promise.resolve({ data: existingCodes, error: null })
-              return { eq: () => ({ maybeSingle: async () => ({ data: sourceRow, error: null }) }) }
-            },
+            select: () => ({
+              eq: (col, val) => ({
+                maybeSingle: async () => {
+                  // source lookup by id OR post-insert refetch for assigned Admin code
+                  if (col === 'id' && val === 'ft-new-1') {
+                    return {
+                      data: {
+                        ...insertedTemplateRows[0],
+                        id: 'ft-new-1',
+                        template_code: assignedCode,
+                      },
+                      error: null,
+                    }
+                  }
+                  return { data: sourceRow, error: null }
+                },
+              }),
+            }),
             insert: (row) => {
               insertedTemplateRows.push(row)
               return { select: () => ({ single: async () => ({ data: { ...row, id: 'ft-new-1' } }) }) }
@@ -135,13 +170,14 @@ describe('pmTemplateCopyService', () => {
             },
           }
         }
+        if (table === 'pm_template_nodes') return existingCopyQueryStub()
         return { update: () => ({ eq: vi.fn(async () => ({ error: null })) }) }
       }),
     }
     return { db, insertedTemplateRows, insertedVersionRows, updatedTemplateRows }
   }
 
-  it('form_template copy creates an account-owned row with a fresh template_code and clones the current schema', async () => {
+  it('form_template copy inserts blank template_code (Admin trigger assigns) and clones the current schema', async () => {
     const { db, insertedTemplateRows, insertedVersionRows, updatedTemplateRows } = mockFormTemplateDb({
       sourceRow: {
         id: 'ft-src-1',
@@ -152,8 +188,8 @@ describe('pmTemplateCopyService', () => {
         account_id: null,
         created_by: null,
       },
-      existingCodes: [{ template_code: 'F007' }, { template_code: 'F012' }],
       currentVersionSchema: { title: 'Benefits Review Plan', sections: [] },
+      assignedCode: 'FRM-0042',
     })
     getTemplateNode.mockResolvedValue({
       id: 'src-1',
@@ -168,7 +204,7 @@ describe('pmTemplateCopyService', () => {
 
     expect(node.id).toBe('node-1')
     expect(insertedTemplateRows[0]).toMatchObject({
-      template_code: 'F013',
+      template_code: '',
       name: 'Benefits Review Plan (custom)',
       account_id: 'my-account-1',
       created_by: 'auth-user-1',
@@ -182,10 +218,85 @@ describe('pmTemplateCopyService', () => {
     expect(updatedTemplateRows[0]).toMatchObject({ pm_template_node_id: 'node-1' })
   })
 
+  it('createBlankFormTemplateNode creates empty schema, null parent, and entity assignment', async () => {
+    const { db, insertedTemplateRows, insertedVersionRows, updatedTemplateRows } = mockFormTemplateDb({
+      sourceRow: null,
+      assignedCode: 'FRM-0007',
+    })
+    createTierDocumentTemplateNode.mockResolvedValue({
+      id: 'blank-node-1',
+      domain: 'form_template',
+      parent_node_id: null,
+      tier: 'project',
+    })
+    getOrCreateEntityAssignment.mockResolvedValue({ id: 'assign-1' })
+
+    const { node, formTemplate } = await createBlankFormTemplateNode(db, {
+      accountId: 'acct-1',
+      tier: 'project',
+      scopeEntityType: 'project',
+      scopeEntityId: 'proj-1',
+      name: 'Weekly Status',
+    })
+
+    expect(insertedTemplateRows[0]).toMatchObject({
+      template_code: '',
+      name: 'Weekly Status',
+      process_group: 'planning',
+      account_id: 'acct-1',
+      created_by: 'auth-user-1',
+    })
+    expect(insertedVersionRows[0]).toMatchObject({
+      template_id: 'ft-new-1',
+      version_number: 1,
+      schema: { sections: [] },
+      is_current: true,
+    })
+    expect(createTierDocumentTemplateNode).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        accountId: 'acct-1',
+        tier: 'project',
+        domain: 'form_template',
+        scopeEntityType: 'project',
+        scopeEntityId: 'proj-1',
+        name: 'Weekly Status',
+        parentNodeId: null,
+        domainRefId: 'ft-new-1',
+      }),
+    )
+    expect(getOrCreateEntityAssignment).toHaveBeenCalledWith(
+      db,
+      expect.objectContaining({
+        accountId: 'acct-1',
+        entityType: 'project',
+        entityId: 'proj-1',
+        domain: 'form_template',
+        nodeId: 'blank-node-1',
+      }),
+    )
+    expect(node.parent_node_id).toBeNull()
+    expect(formTemplate.template_code).toBe('FRM-0007')
+    expect(updatedTemplateRows[0]).toMatchObject({ pm_template_node_id: 'blank-node-1' })
+  })
+
+  it('createBlankFormTemplateNode rejects missing name and missing project scope', async () => {
+    const db = {
+      auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'auth-user-1' } } })) },
+    }
+    await expect(
+      createBlankFormTemplateNode(db, { accountId: 'a', scopeEntityId: 'p', name: '  ' }),
+    ).rejects.toThrow(/name is required/)
+    await expect(
+      createBlankFormTemplateNode(db, { accountId: 'a', tier: 'project', name: 'X' }),
+    ).rejects.toThrow(/scopeEntityId/)
+  })
+
   function mockProcessTemplateDb(sourceRow) {
     const insertedRows = []
     const db = {
       from: vi.fn((table) => {
+        if (table === 'pm_template_nodes') return existingCopyQueryStub()
         if (table === 'process_template_node_links') {
           return {
             select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null }) }) }),
@@ -263,6 +374,39 @@ describe('pmTemplateCopyService', () => {
       project_id: 'proj-1',
       account_id: 'my-account-1',
     })
+    expect(insertedRows[0].practice_project_id).toBeUndefined()
+  })
+
+  it('process_template copy on sim schema sets practice_project_id (not project_id)', async () => {
+    const { db, insertedRows } = mockProcessTemplateDb({
+      id: 'pt-src-1',
+      title: 'Backlog Management Approach',
+      is_master: true,
+      practice_project_id: null,
+      account_id: 'staff-account-id',
+    })
+    getTemplateNode.mockResolvedValue({
+      id: 'src-1',
+      name: 'Backlog Management Approach',
+      domain: 'process_template',
+      is_system_synced: true,
+      domain_ref_id: 'pt-src-1',
+    })
+    createTierDocumentTemplateNode.mockResolvedValue({ id: 'node-1', domain: 'process_template' })
+
+    await copyTemplateNodeForAccount(db, {
+      accountId: 'my-account-1',
+      sourceNodeId: 'src-1',
+      scopeEntityType: 'project',
+      scopeEntityId: 'practice-proj-1',
+    })
+
+    expect(insertedRows[0]).toMatchObject({
+      is_master: false,
+      practice_project_id: 'practice-proj-1',
+      account_id: 'my-account-1',
+    })
+    expect(insertedRows[0].project_id).toBeUndefined()
   })
 
   it('opa copy sets created_by/organisation_id to the copying user/account, not the source master', async () => {
@@ -291,6 +435,7 @@ describe('pmTemplateCopyService', () => {
             update: () => ({ eq: vi.fn(async () => ({ error: null })) }),
           }
         }
+        if (table === 'pm_template_nodes') return existingCopyQueryStub()
         return { update: () => ({ eq: vi.fn(async () => ({ error: null })) }) }
       }),
     }

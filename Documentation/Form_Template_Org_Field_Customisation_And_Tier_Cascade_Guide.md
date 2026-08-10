@@ -1,8 +1,11 @@
-# Form Template: Organisation & Tier Field Customisation (v808)
+# Form Template: Organisation & Tier Field Customisation (v808, extended v815)
 
 Covers the full policy-layering flow on top of a staff-authored form template's master
 schema: PMO-admin org-wide customisation, Portfolio/Programme/Project tier cascading, and
 "completed example" authoring/copying. Applies identically to Platform and Simulator.
+
+> **Related (v852):** Managers can also create **blank-origin local forms** (independent
+> schemas via node fork, not overrides). See [PM_Local_Forms_v852_Guide.md](./PM_Local_Forms_v852_Guide.md).
 
 ## The problem this solves
 
@@ -24,6 +27,9 @@ without ever touching it, so other organisations are unaffected.
    and only while no submitted record has data in it yet.
 5. **Author a completed example.** A fully filled-in reference form (not a blank schema) that
    downstream tiers can copy as their own starting point instead of starting blank.
+6. **Relabel or retype a standard field (v815).** Override a master-schema field's Label and/or
+   Type for your organisation (or a specific tier within it), without touching the shared master
+   or any other organisation's copy.
 
 ## Required-field enforcement (prerequisite)
 
@@ -128,6 +134,69 @@ ever disable a field its Programme, Portfolio, or the Org added.
   (`getFormTemplateFieldUsage`) reads usage by field key across the whole template, not scoped
   per tier.
 
+## Label & Type overrides (v815)
+
+Both **Field Behaviour** (org level, `FormTemplateBuilder.jsx`) and `TierFormPolicyPanel.jsx`
+(Portfolio/Programme/Project) show a **Label** text box and a **Type** dropdown next to each
+standard field's Enabled/Required controls:
+- **Label** — blank = inherit whatever the chain resolved to so far (shown as the input's
+  placeholder); typing a value and blurring saves it as this tier's own override.
+- **Type** — first option is always `"(inherit — {current type})"`; picking a concrete type
+  (Text/Textarea/Date/Number/Money/Select) saves immediately. Picking **Select** opens an inline
+  options editor (same `SelectOptionsEditor` component used everywhere else) — at least one
+  option is required before **Apply** is enabled.
+
+**No ratchet, unlike Required.** A label or type is presentation, not policy — the closest tier
+to the field always wins, and a tier can freely revert to whatever an ancestor set by clearing
+its own override back to blank/`(inherit)`. This is the one place this cascade behaves
+differently from the Required ratchet described above.
+
+**Existing data is never at risk.** Overriding a field's type when submissions already have data
+in it only changes the input control used going forward — a warning banner says so, but the
+action is never blocked (unlike deleting a field, which *is* blocked while data exists).
+
+**Scope: standard/master fields only.** Org-added local fields (`form_template_field_additions`)
+already get free-form label/type at creation time; editing them again after creation is still a
+distinct, unbuilt feature (out of scope here, same as it was in v808).
+
+**Field Key is locked once a field is standard.** In the master **Fields** tab itself
+(`FormTemplateBuilder.jsx`'s `SortableFieldCard`), a field's Key input is disabled the moment
+it's no longer new in this editing session (`!field.isNew` — the same flag that already gated
+the Delete button) — `field_key` is the join key used by overrides, additions, translations, and
+submitted-data usage-tracking everywhere else in this system, so it can never be changed once a
+field has been published. Label and Type remain freely editable there, as before.
+
+### Schema
+- `SQL/v815_form_template_field_label_type_override.sql`: `label_override TEXT NULL`,
+  `field_type_override TEXT NULL`, `options_override JSONB NULL` added to the existing
+  `form_template_field_overrides` table — same nullable-override pattern as `is_required`, same
+  scope columns from `v812` apply (org-wide default row, or a specific tier's own row).
+- `formEngineService.js`: `setFieldLabelForOrg`, `setFieldTypeForOrg` (mirrors
+  `setFieldRequiredForOrg`'s shape — one concern per call, not combined).
+- `formTemplateFieldOverrides.js`: `getFieldLabelForOrg`, `getFieldTypeForOrg` (single-scope
+  reads, mirroring `isFieldRequiredForOrg`); `mergeOverrideChain` now also resolves label/type/
+  options across a tier chain — leaf-most non-null value wins, no ratchet.
+
+## Min / Max character length (v847)
+
+Text and textarea fields can carry **min** and **max character length** at each tier
+(Org → Portfolio → Programme → Project), with the same tighten-only cascade as Required:
+
+- Raise min / lower max only — descendants cannot loosen an ancestor’s bounds.
+- Blank = inherit (master schema `field.minLength` / `field.maxLength`, or an ancestor override).
+- UI: **Min** / **Max** columns in `TierFormPolicyPanel` (both Non-customise and Customise tabs),
+  and **Field Behaviour** in `FormTemplateBuilder` — editable for text/textarea (blank = inherit).
+  Local additions store lengths on `field_definition` when created.
+- Submit: `validateSchemaFieldLengths` / `validateSchemaFields` in `formValidation.js` (wired in
+  `FormEdit.jsx`) enforces the effective lengths after required checks.
+
+### Schema
+- `SQL/v847_form_template_field_min_max_length.sql`: `min_length_override` /
+  `max_length_override` (nullable INT) on `public` + `sim.form_template_field_overrides`,
+  row CHECK, and extended `trg_form_template_field_overrides_ratchet`.
+- `formEngineService.js`: `setFieldLengthForOrg`.
+- See also `Documentation/Form_Field_Min_Max_Length_v847.md`.
+
 ## Completed examples — authored anywhere in the chain, copied by descendants
 
 Any tier (Org, Portfolio, Programme, Project) can publish its own completed example via the
@@ -146,6 +215,25 @@ example never affects the other.
   `form_instance_values`/`form_instance_rows` already use, so copying is a straight duplication,
   not a format conversion. No usage-gate on deletion — once copied, a new instance's data is
   independent of the example it came from.
+
+## Process-document data capture (v848)
+
+For **process-template** documents (Project Charter, PID, etc. — the 24 catalog tables linked
+via `process_template_node_links`), the **Project Templates** page
+(`/platform/templates/project/:id`, Simulator: `/simulator/pm/templates/project/:id`) is the
+supported **project data-capture** surface — not only a template shell editor. After a PM
+copies a template down, the detail page's document-data fields read/write the project's own
+catalog row (`project_id` / `practice_project_id` set by `copyTemplateNodeForAccount`).
+
+- **Project Templates** detail copy clarifies: these fields are this project's real values —
+  fill in and save.
+- **Organisational Templates** detail copy clarifies: the same block is the org default that
+  becomes the starting point when copied into a project.
+- The older **Process Templates Hub** landings (`/pm/process-templates`, `/pmo/process-templates`,
+  and Simulator `simulator/pm|pmo/process-templates`) now **redirect** to Project Templates for
+  the current project (v823-style), so a second disconnected copy path is not opened from those
+  entry points. Deeper Hub sub-routes (`t/:slug`, create/edit/detail) remain mounted but are not
+  the recommended capture path; the orphaned `pm_pt_hub` menu grant stays unrestored.
 
 ## Organisational Template display IDs
 
@@ -183,4 +271,5 @@ reference or the raw UUID and normalise the URL to the reference once resolved
 | Tier cascade panel | `apps/platform/src/components/ui/TierFormPolicyPanel.jsx` | mirrors | — |
 | Completed-example authoring | `apps/platform/src/components/ui/CompletedExampleManager.jsx` | mirrors | — |
 | "Start from example" picker | `apps/platform/src/pages/forms/FormNew.jsx` | mirrors | — |
-| SQL | `SQL/v810`–`v814`, `v811` (display IDs) | same files, `sim.*` mirror tables in the same migration | — |
+| Label/Type override UI (v815) | `FormTemplateBuilder.jsx`, `TierFormPolicyPanel.jsx` | mirrors | `TierFormPolicyPanel.jsx` also lives at `packages/ui/src/` (not directly loaded — same convention as `CompletedExampleManager.jsx`) |
+| SQL | `SQL/v810`–`v815`, `v811` (display IDs) | same files, `sim.*` mirror tables in the same migration | — |

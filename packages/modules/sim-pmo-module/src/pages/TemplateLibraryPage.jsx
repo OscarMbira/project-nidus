@@ -21,6 +21,11 @@ import {
   METHODOLOGY_TRACK_DEFS,
   normalizeProjectDeliveryTrack,
 } from '@nidus/config/methodologyMenuUtils.js'
+import {
+  normalizeDomainGroup,
+  filterRowsByDomainGroup,
+  domainGroupHeadingSuffix,
+} from '@nidus/shared/utils/templateDomainGroup.js'
 
 const EXPORT_COLS = [
   { key: '_rowNumber', label: '#' },
@@ -63,6 +68,7 @@ export default function TemplateLibraryPage() {
   const [search, setSearch] = useState(() => searchParams.get('q') || '')
   const [tierFilter, setTierFilter] = useState(() => searchParams.get('tierFilter') || '')
   const [domainFilter, setDomainFilter] = useState(() => searchParams.get('domain') || '')
+  const domainGroup = normalizeDomainGroup(searchParams.get('domainGroup'))
   const [methodologyFilter, setMethodologyFilter] = useState(() => searchParams.get('methodology') || '')
   const [copyingId, setCopyingId] = useState(null)
   const [bulkCopying, setBulkCopying] = useState(false)
@@ -82,15 +88,29 @@ export default function TemplateLibraryPage() {
 
   // Keep filters deep-linkable/bookmarkable (mirrors Admin's ?methodology=… pattern) without
   // touching the entityType/entityId/tier context params already used for copy scoping.
+  // v851/v852: preserve domainGroup from the Forms/Templates submenu.
   useEffect(() => {
     const next = new URLSearchParams(searchParams)
     if (search) next.set('q', search); else next.delete('q')
     if (tierFilter) next.set('tierFilter', tierFilter); else next.delete('tierFilter')
-    if (domainFilter) next.set('domain', domainFilter); else next.delete('domain')
+    if (domainGroup) {
+      next.set('domainGroup', domainGroup)
+      next.delete('domain')
+    } else {
+      next.delete('domainGroup')
+      if (domainFilter) next.set('domain', domainFilter); else next.delete('domain')
+    }
     if (methodologyFilter) next.set('methodology', methodologyFilter); else next.delete('methodology')
     setSearchParams(next, { replace: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tierFilter, domainFilter, methodologyFilter])
+  }, [search, tierFilter, domainFilter, methodologyFilter, domainGroup])
+
+  // Sidebar Forms/Templates leaves change domainGroup without remounting — sync domain dropdown.
+  useEffect(() => {
+    if (domainGroup === 'forms') setDomainFilter('form_template')
+    else if (domainGroup === 'templates') setDomainFilter('')
+    else setDomainFilter(searchParams.get('domain') || '')
+  }, [domainGroup, searchParams])
 
   const loadContext = useCallback(async () => {
     let orgMethodology = 'hybrid'
@@ -136,6 +156,13 @@ export default function TemplateLibraryPage() {
     return { tracks, focus }
   }, [entityType, entityId])
 
+  // v822: resolved once and reused by both the override lookup and the copy call itself —
+  // "does an override already exist" and "what scope does Copy create one in" must always
+  // agree, or the disabled-button state and the actual copy could target different scopes.
+  const resolvedTier = tierParam || (entityType ? entityType.replace('practice_', '') : 'pmo')
+  const resolvedScopeEntityType = entityType || 'account'
+  const resolvedScopeEntityId = entityId || null
+
   const loadRows = useCallback(async () => {
     setLoading(true)
     try {
@@ -150,6 +177,9 @@ export default function TemplateLibraryPage() {
       const overrideMap = await resolveAccountTemplateOverrideBatch(simDb, {
         accountId,
         globalNodeIds: data.map((row) => row.id),
+        tier: resolvedTier,
+        scopeEntityType: resolvedScopeEntityType,
+        scopeEntityId: resolvedScopeEntityId,
       })
       setOverrides(Object.fromEntries(overrideMap))
     } catch (e) {
@@ -158,7 +188,8 @@ export default function TemplateLibraryPage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resolvedTier, resolvedScopeEntityType, resolvedScopeEntityId])
 
   useEffect(() => {
     loadContext()
@@ -183,15 +214,22 @@ export default function TemplateLibraryPage() {
     }
   }, [loadContext])
 
+  // An explicit methodology chosen in this page's own filter always wins over the
+  // sidebar-wide "Methodology Focus" preference — that switcher declutters primary
+  // navigation, but this page exists specifically to browse/copy any published track.
+  const effectiveTracksForDisplay = useMemo(() => {
+    if (!methodologyFilter) return effectiveTracks
+    return new Set([...effectiveTracks, methodologyFilter])
+  }, [effectiveTracks, methodologyFilter])
+
   const annotated = useMemo(
-    () => annotateTemplateRowsByMethodology(rows, effectiveTracks),
-    [rows, effectiveTracks],
+    () => annotateTemplateRowsByMethodology(rows, effectiveTracksForDisplay),
+    [rows, effectiveTracksForDisplay],
   )
 
   const preMethodologyFiltered = useMemo(() => {
-    let list = annotated
+    let list = filterRowsByDomainGroup(annotated, { domainGroup, domainFilter })
     if (tierFilter) list = list.filter((r) => r.tier === tierFilter)
-    if (domainFilter) list = list.filter((r) => r.domain === domainFilter)
     if (methodologyFilter) list = list.filter((r) => r.methodology === methodologyFilter)
     const q = search.trim().toLowerCase()
     if (q) {
@@ -201,7 +239,9 @@ export default function TemplateLibraryPage() {
       )
     }
     return list
-  }, [annotated, tierFilter, domainFilter, methodologyFilter, search])
+  }, [annotated, domainGroup, domainFilter, tierFilter, methodologyFilter, search])
+
+  const headingTitle = `${pageTitle}${domainGroupHeadingSuffix(domainGroup)}`
 
   // Non-matching templates are hidden, not greyed — common (methodology=null) rows
   // always pass since annotateTemplateRowsByMethodology never marks them disabled.
@@ -244,7 +284,6 @@ export default function TemplateLibraryPage() {
   }
 
   const copyOneRow = async (row, accountId) => {
-    const tier = tierParam || (entityType ? entityType.replace('practice_', '') : 'pmo')
     // Downstream tiers inherit the org's own customisation, not the raw Global row —
     // fork from the override (if one exists) whenever this copy is scoped to a specific
     // portfolio/programme/project, rather than the account-wide default (v805 Phase 4).
@@ -253,9 +292,9 @@ export default function TemplateLibraryPage() {
     const { node } = await copyTemplateNodeForAccount(simDb, {
       accountId,
       sourceNodeId: source.id,
-      tier: ['portfolio', 'programme', 'project', 'pmo'].includes(tier) ? tier : 'pmo',
-      scopeEntityType: entityType || 'account',
-      scopeEntityId: entityId || null,
+      tier: ['portfolio', 'programme', 'project', 'pmo'].includes(resolvedTier) ? resolvedTier : 'pmo',
+      scopeEntityType: resolvedScopeEntityType,
+      scopeEntityId: resolvedScopeEntityId,
     })
     return node
   }
@@ -268,7 +307,16 @@ export default function TemplateLibraryPage() {
       toast.success(`Copied as "${node.name}" (${node.template_reference || node.id})`)
       await loadRows()
     } catch (e) {
-      toast.error(e.message || 'Copy failed')
+      // v822: belt-and-braces — the button is already disabled once `overrides` shows a
+      // match, but a stale client state (e.g. two tabs) could still reach the service; the
+      // DB-level unique index is the real backstop, this just gives a clean message instead
+      // of a raw constraint-violation toast.
+      if (e.code === 'ALREADY_COPIED') {
+        toast.error('Already copied for this scope.')
+        await loadRows()
+      } else {
+        toast.error(e.message || 'Copy failed')
+      }
     } finally {
       setCopyingId(null)
     }
@@ -284,6 +332,7 @@ export default function TemplateLibraryPage() {
     if (!selected.length) return
     setBulkCopying(true)
     let copied = 0
+    const alreadyCopied = []
     const skipped = []
     const failed = []
     try {
@@ -291,16 +340,27 @@ export default function TemplateLibraryPage() {
       // Sequential, not parallel — some domains fail by design (form_template) or by
       // permission gap; a clean per-row report beats one aborted Promise.all batch.
       for (const row of selected) {
+        // v822: skip rows already copied at this scope up front — no point calling the
+        // service (and no risk of it ever creating a duplicate) when the UI already knows.
+        if (overrides[row.id]) {
+          alreadyCopied.push(row.name)
+          continue
+        }
         try {
           await copyOneRow(row, accountId)
           copied += 1
         } catch (e) {
+          if (e.code === 'ALREADY_COPIED') {
+            alreadyCopied.push(row.name)
+            continue
+          }
           const msg = e.message || 'Copy failed'
           if (/not supported for domain/.test(msg)) skipped.push(row.name)
           else failed.push(`${row.name}: ${msg}`)
         }
       }
       const parts = [`${copied} copied`]
+      if (alreadyCopied.length) parts.push(`${alreadyCopied.length} already copied`)
       if (skipped.length) parts.push(`${skipped.length} skipped (not supported)`)
       if (failed.length) parts.push(`${failed.length} failed`)
       if (failed.length) {
@@ -318,7 +378,7 @@ export default function TemplateLibraryPage() {
     <div className="mx-auto max-w-6xl space-y-4 p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{pageTitle}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{headingTitle}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Browse published Global Templates by level and methodology. Copy — one at a time or in bulk — to
             create your organisation's own customisable version.
@@ -358,20 +418,22 @@ export default function TemplateLibraryPage() {
             <option key={k} value={k}>{v}</option>
           ))}
         </select>
-        <select
-          className="rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          value={domainFilter}
-          onChange={(e) => setDomainFilter(e.target.value)}
-        >
-          <option value="">All domains</option>
-          <option value="fields">Fields</option>
-          <option value="form_template">Forms</option>
-          <option value="process_template">Process docs</option>
-          <option value="portfolio_template">Portfolio templates</option>
-          <option value="programme_template">Programme templates</option>
-          <option value="project_template">Project templates</option>
-          <option value="opa">OPA</option>
-        </select>
+        {!domainGroup && (
+          <select
+            className="rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            value={domainFilter}
+            onChange={(e) => setDomainFilter(e.target.value)}
+          >
+            <option value="">All domains</option>
+            <option value="fields">Fields</option>
+            <option value="form_template">Forms</option>
+            <option value="process_template">Process docs</option>
+            <option value="portfolio_template">Portfolio templates</option>
+            <option value="programme_template">Programme templates</option>
+            <option value="project_template">Project templates</option>
+            <option value="opa">OPA</option>
+          </select>
+        )}
         <select
           className="rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           value={methodologyFilter}
@@ -500,12 +562,15 @@ export default function TemplateLibraryPage() {
                         </Link>
                         <button
                           type="button"
-                          disabled={copyingId === row.id}
+                          disabled={copyingId === row.id || !!override}
+                          title={override ? 'Already copied for this scope' : undefined}
                           onClick={() => handleCopy(row)}
-                          className="inline-flex items-center gap-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-60"
+                          className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-white disabled:opacity-60 ${
+                            override ? 'bg-gray-400 dark:bg-gray-600' : 'bg-blue-600 hover:bg-blue-700'
+                          }`}
                         >
                           <Copy className="h-3 w-3" />
-                          {copyingId === row.id ? 'Copying…' : override ? 'Copy again' : 'Copy'}
+                          {copyingId === row.id ? 'Copying…' : override ? 'Already copied' : 'Copy'}
                         </button>
                       </div>
                     </td>
@@ -557,12 +622,15 @@ export default function TemplateLibraryPage() {
                   </Link>
                   <button
                     type="button"
-                    disabled={copyingId === row.id}
+                    disabled={copyingId === row.id || !!override}
+                    title={override ? 'Already copied for this scope' : undefined}
                     onClick={() => handleCopy(row)}
-                    className="inline-flex items-center gap-1 rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-60"
+                    className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-white disabled:opacity-60 ${
+                      override ? 'bg-gray-400 dark:bg-gray-600' : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
                   >
                     <Copy className="h-3 w-3" />
-                    {override ? 'Copy again' : 'Copy to customise'}
+                    {copyingId === row.id ? 'Copying…' : override ? 'Already copied' : 'Copy to customise'}
                   </button>
                 </div>
               </article>

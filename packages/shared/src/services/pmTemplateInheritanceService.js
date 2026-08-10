@@ -385,9 +385,40 @@ export async function resolveEffectiveFields(db, entityType, entityId, options =
 
   const linksByTier = nodeIds.map((id) => linksByNode.get(id) || [])
   const fieldMap = mergeFieldLinksByChain(linksByTier)
+  await hydrateFieldLabelsFromDefinitions(db, fieldMap)
   const fields = listEnabledEffectiveFields(fieldMap)
 
   return { chain, fields, fieldMap, startNodeId }
+}
+
+/**
+ * Fill missing link labels from custom_field_definitions so instance-local fields
+ * (created without label_override) show a human name instead of a bare UUID.
+ * Also attaches field_code / field_type for UI display.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} db
+ * @param {Map<string, object>} fieldMap
+ */
+export async function hydrateFieldLabelsFromDefinitions(db, fieldMap) {
+  if (!db || !fieldMap?.size) return fieldMap
+  const ids = [...fieldMap.keys()]
+  const { data, error } = await db
+    .from('custom_field_definitions')
+    .select('id, field_code, label, field_type')
+    .in('id', ids)
+  if (error) throw error
+
+  const byId = new Map((data || []).map((d) => [d.id, d]))
+  for (const [id, field] of fieldMap) {
+    const def = byId.get(id)
+    if (!def) continue
+    if (field.label == null || field.label === '') {
+      field.label = def.label || null
+    }
+    if (field.field_code == null) field.field_code = def.field_code || null
+    if (field.field_type == null) field.field_type = def.field_type || null
+  }
+  return fieldMap
 }
 
 /**
@@ -408,4 +439,219 @@ export async function resolveEffectiveDocumentMaster(db, entityType, entityId, d
 
   const chain = await fetchNodeChain(db, startNodeId)
   return pickNearestPublishedDocumentMaster(chain)
+}
+
+/**
+ * Resolve a project's Programme/Portfolio ancestry — the extra tier scopes (beyond "always
+ * PMO" and "this project itself") that apply when picking its nearest-tier template per
+ * domain (v824).
+ *
+ * Platform (`public`) and Simulator (`sim`) both use join tables (there is no
+ * `projects.programme_id` column — see v606a / v705). Platform:
+ * `programme_projects` / `portfolio_projects`. Simulator: `practice_programme_projects` /
+ * `practice_portfolio_projects`. A project may link to more than one programme/portfolio;
+ * this takes the first match, which is enough for nearest-tier template resolution.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} db - platformDb or simDb
+ * @param {string} projectId
+ * @param {{ schema?: 'public'|'sim' }} [options]
+ * @returns {Promise<{ programmeId: string|null, portfolioId: string|null }>}
+ */
+export async function resolveProjectTierAncestry(db, projectId, { schema = 'public' } = {}) {
+  if (!db || !projectId) return { programmeId: null, portfolioId: null }
+
+  if (schema === 'sim') {
+    const [{ data: programmeLink }, { data: portfolioLink }] = await Promise.all([
+      db.from('practice_programme_projects').select('practice_programme_id').eq('practice_project_id', projectId).limit(1).maybeSingle(),
+      db.from('practice_portfolio_projects').select('practice_portfolio_id').eq('practice_project_id', projectId).limit(1).maybeSingle(),
+    ])
+    const programmeId = programmeLink?.practice_programme_id || null
+    let portfolioId = portfolioLink?.practice_portfolio_id || null
+    if (!portfolioId && programmeId) {
+      const { data: programme } = await db
+        .from('practice_programmes')
+        .select('practice_portfolio_id')
+        .eq('id', programmeId)
+        .maybeSingle()
+      portfolioId = programme?.practice_portfolio_id || null
+    }
+    return { programmeId, portfolioId }
+  }
+
+  // public: join tables only — projects.programme_id does not exist
+  const [{ data: programmeLink, error: programmeLinkErr }, { data: portfolioLink, error: portfolioLinkErr }] =
+    await Promise.all([
+      db.from('programme_projects').select('programme_id').eq('project_id', projectId).limit(1).maybeSingle(),
+      db.from('portfolio_projects').select('portfolio_id').eq('project_id', projectId).limit(1).maybeSingle(),
+    ])
+  if (programmeLinkErr) throw programmeLinkErr
+  if (portfolioLinkErr) throw portfolioLinkErr
+
+  const programmeId = programmeLink?.programme_id || null
+  let portfolioId = portfolioLink?.portfolio_id || null
+
+  if (!portfolioId && programmeId) {
+    const { data: programme, error: programmeErr } = await db
+      .from('programmes')
+      .select('portfolio_id')
+      .eq('id', programmeId)
+      .maybeSingle()
+    if (programmeErr) throw programmeErr
+    portfolioId = programme?.portfolio_id || null
+  }
+
+  return { programmeId, portfolioId }
+}
+
+/**
+ * Group already-loaded org template nodes into "families" (same underlying template at
+ * different tiers), then keep only the nearest tier applicable to a given project — the
+ * "PMO → Portfolio → Programme → Project, nearest wins" model (v824). Client-side, over rows
+ * already fetched via listTemplateLibraryNodes — no extra DB round-trips.
+ *
+ * A Project-tier fork's parent_node_id points at whatever it was forked *from* (often the PMO
+ * copy, not the original Global master) — so two rows can be "the same template" at different
+ * tiers. Family key = walk each row's parent_node_id chain as far as it stays within the
+ * candidate set; where that walk stops (parent is outside the set — i.e. Global, or none) is
+ * the family's key.
+ *
+ * @param {object[]} rows - pm_template_nodes rows (is_system_synced=false)
+ * @param {{ projectId: string, programmeId?: string|null, portfolioId?: string|null }} scope
+ * @returns {object[]} nearest-tier-per-family rows, applicable to this project
+ */
+const TIER_PRIORITY = { project: 3, programme: 2, portfolio: 1, pmo: 0 }
+
+export function resolveNearestTierPerFamily(rows = [], { projectId, programmeId = null, portfolioId = null } = {}) {
+  const applies = (row) => {
+    if (row.tier === 'pmo') return row.scope_entity_type === 'account' || !row.scope_entity_id
+    if (row.tier === 'project') return row.scope_entity_id === projectId
+    if (row.tier === 'programme') return !!programmeId && row.scope_entity_id === programmeId
+    if (row.tier === 'portfolio') return !!portfolioId && row.scope_entity_id === portfolioId
+    return false
+  }
+
+  const candidates = (rows || []).filter(applies)
+  const byId = new Map(candidates.map((r) => [r.id, r]))
+
+  const familyKeyOf = (row) => {
+    let current = row
+    const seen = new Set()
+    while (current?.parent_node_id && byId.has(current.parent_node_id) && !seen.has(current.id)) {
+      seen.add(current.id)
+      current = byId.get(current.parent_node_id)
+    }
+    return current.id
+  }
+
+  const nearestByFamily = new Map()
+  for (const row of candidates) {
+    const key = familyKeyOf(row)
+    const existing = nearestByFamily.get(key)
+    if (!existing || TIER_PRIORITY[row.tier] > TIER_PRIORITY[existing.tier]) {
+      nearestByFamily.set(key, row)
+    }
+  }
+
+  return [...nearestByFamily.values()]
+}
+
+/** Project Templates list — only copies owned by this project (tier = project). */
+export function filterProjectOwnTemplateNodes(rows = [], projectId) {
+  if (!projectId) return []
+  return (rows || []).filter((r) => r.tier === 'project' && r.scope_entity_id === projectId)
+}
+
+/**
+ * Organisational Templates in PM project context — nearest tier per family, excluding
+ * this project's own copies (those belong under Project Templates).
+ *
+ * Note: the org/PMO *source* of an already-copied family is intentionally kept here so
+ * callers that only need "nearest without project rows" still see lineage. For copy-down
+ * / capture UIs use {@link resolveOrgTemplatesAvailableToCopy} instead.
+ */
+export function resolveOrgTemplatesForProject(
+  rows = [],
+  { projectId, programmeId = null, portfolioId = null } = {},
+) {
+  const withoutProjectOwn = (rows || []).filter(
+    (r) => !(r.tier === 'project' && r.scope_entity_id === projectId),
+  )
+  return resolveNearestTierPerFamily(withoutProjectOwn, { projectId, programmeId, portfolioId })
+}
+
+/**
+ * Drop org/PMO candidates that already have a project copy in the same template family.
+ * Copy-down is rejected with ALREADY_COPIED for those families — they must not stay listed
+ * as available on Organisational Templates or Project Documents.
+ *
+ * @param {object[]} candidates
+ * @param {object[]} projectCopies
+ * @param {object[]} allRows
+ * @returns {object[]}
+ */
+export function excludeAlreadyCopiedTemplateFamilies(candidates = [], projectCopies = [], allRows = []) {
+  if (!candidates.length || !projectCopies.length) return candidates
+
+  const byId = new Map()
+  for (const r of [...allRows, ...candidates, ...projectCopies]) {
+    if (r?.id) byId.set(r.id, r)
+  }
+
+  const blockedIds = new Set()
+  const copiedFamilyRoots = new Set()
+
+  for (const copy of projectCopies) {
+    let current = copy
+    const seen = new Set()
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id)
+      blockedIds.add(current.id)
+      const parentId = current.parent_node_id
+      if (!parentId) {
+        copiedFamilyRoots.add(current.id)
+        break
+      }
+      if (byId.has(parentId)) {
+        current = byId.get(parentId)
+      } else {
+        // Parent is outside the account set (typically Global) — shared family key.
+        copiedFamilyRoots.add(parentId)
+        break
+      }
+    }
+  }
+
+  return candidates.filter((candidate) => {
+    if (blockedIds.has(candidate.id)) return false
+    let current = candidate
+    const seen = new Set()
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id)
+      if (blockedIds.has(current.id)) return false
+      const parentId = current.parent_node_id
+      if (!parentId) return !copiedFamilyRoots.has(current.id)
+      if (byId.has(parentId)) {
+        current = byId.get(parentId)
+      } else {
+        return !copiedFamilyRoots.has(parentId)
+      }
+    }
+    return true
+  })
+}
+
+/**
+ * Organisational templates still available to copy down for this project (excludes families
+ * that already have a project-owned copy under Project Templates / Project Documents).
+ */
+export function resolveOrgTemplatesAvailableToCopy(
+  rows = [],
+  { projectId, programmeId = null, portfolioId = null } = {},
+) {
+  const scope = { projectId, programmeId, portfolioId }
+  return excludeAlreadyCopiedTemplateFamilies(
+    resolveOrgTemplatesForProject(rows, scope),
+    filterProjectOwnTemplateNodes(rows, projectId),
+    rows,
+  )
 }
