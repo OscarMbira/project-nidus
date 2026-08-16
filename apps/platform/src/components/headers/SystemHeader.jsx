@@ -7,12 +7,14 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone, Globe } from 'lucide-react'
+import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone, Globe, ShieldCheck } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { getAuthenticatedUser } from '@nidus/shared/utils/authSession'
 import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
+import { getUserSystemRoles, getUserProjectRoles } from '../../services/roleService'
 import ThemeToggle from '../ThemeToggle'
 import { DetachButton } from '@nidus/ui/DetachButton'
+import UserAvatarBadge from '@nidus/ui/UserAvatarBadge'
 import { getUnreadCount } from '@nidus/shared/utils/notificationUtils'
 import { normalizeDashboardTab } from '@nidus/shared/utils/pmoDashboardTabs'
 import { useBranding } from '@nidus/shared/context/BrandingContext'
@@ -44,11 +46,15 @@ export default function SystemHeader({
   const { branding } = useBranding()
   const { languageCode, changeLanguage } = useLanguageContext()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [rolesMenuOpen, setRolesMenuOpen] = useState(false)
+  const [systemRoles, setSystemRoles] = useState([])
+  const [projectRoles, setProjectRoles] = useState([])
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false)
   const [activeLanguages, setActiveLanguages] = useState([])
   const [internalUserId, setInternalUserId] = useState(null)
   const [user, setUser] = useState(null)
   const [userInitials, setUserInitials] = useState('U')
+  const [avatarPath, setAvatarPath] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [searchOpen, setSearchOpen] = useState(false)
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false)
@@ -57,6 +63,14 @@ export default function SystemHeader({
 
   const isSimulator = systemName === 'Simulator'
   useGlobalSearchShortcut(() => setGlobalSearchOpen(true))
+
+  // Single badge label — a system role (Account Owner, PMO Admin, ...) wins when present since
+  // it applies everywhere; otherwise fall back to a project role, or "Multiple roles" once more
+  // than one project role exists (a single badge can't represent per-project roles at a glance —
+  // the dropdown below lists the full breakdown).
+  const primaryRoleLabel = systemRoles[0]?.roles?.role_display_name
+    || (projectRoles.length > 1 ? 'Multiple roles' : projectRoles[0]?.project_roles?.role_display_name)
+    || 'Member'
 
   useEffect(() => {
     initLanguage()
@@ -72,6 +86,9 @@ export default function SystemHeader({
       if (userMenuOpen && !event.target.closest('.user-menu-container')) {
         setUserMenuOpen(false)
       }
+      if (rolesMenuOpen && !event.target.closest('.roles-menu-container')) {
+        setRolesMenuOpen(false)
+      }
       if (languageMenuOpen && !event.target.closest('.language-menu-container')) {
         setLanguageMenuOpen(false)
       }
@@ -86,7 +103,7 @@ export default function SystemHeader({
       document.removeEventListener('mousedown', handleClickOutside)
       document.removeEventListener('touchstart', handleClickOutside)
     }
-  }, [userMenuOpen, languageMenuOpen, mobileNavOpen])
+  }, [userMenuOpen, rolesMenuOpen, languageMenuOpen, mobileNavOpen])
 
   const fetchUser = async () => {
     try {
@@ -107,9 +124,34 @@ export default function SystemHeader({
         } else if (email) {
           setUserInitials(email.substring(0, 2).toUpperCase())
         }
+
+        // Roles are visible in the header at all times (not just on the Profile page) so a
+        // user working across multiple projects with different roles always knows which
+        // role(s) apply to them, without navigating away from whatever they're doing.
+        fetchRoles(currentUser.id)
+
+        supabase
+          .from('users')
+          .select('avatar_url')
+          .eq('auth_user_id', currentUser.id)
+          .maybeSingle()
+          .then(({ data }) => setAvatarPath(data?.avatar_url || null))
       }
     } catch (error) {
       console.error('Error fetching user:', error)
+    }
+  }
+
+  const fetchRoles = async (authUserId) => {
+    try {
+      const [systemResult, projectResult] = await Promise.all([
+        getUserSystemRoles(authUserId),
+        getUserProjectRoles(authUserId),
+      ])
+      if (systemResult.success) setSystemRoles(systemResult.data.filter((r) => r.roles))
+      if (projectResult.success) setProjectRoles(projectResult.data.filter((r) => r.project_roles))
+    } catch (error) {
+      console.error('Error fetching roles:', error)
     }
   }
 
@@ -365,6 +407,7 @@ export default function SystemHeader({
                 onClick={() => {
                   setLanguageMenuOpen(!languageMenuOpen)
                   setUserMenuOpen(false)
+                  setRolesMenuOpen(false)
                 }}
                 className={`flex items-center gap-1 p-1.5 sm:p-2 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
                 aria-label="Change language"
@@ -396,20 +439,72 @@ export default function SystemHeader({
               )}
             </div>
 
+            {/* My Roles — always-visible so a user working across multiple projects with
+                different roles never has to navigate to Profile just to check which role
+                applies to them right now. */}
+            <div className="relative roles-menu-container">
+              <button
+                onClick={() => {
+                  setRolesMenuOpen(!rolesMenuOpen)
+                  setUserMenuOpen(false)
+                  setLanguageMenuOpen(false)
+                }}
+                className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm font-medium ${subtextColor} ${hoverBgClass} rounded-lg transition-colors max-w-[14rem]`}
+                aria-label={`My role: ${primaryRoleLabel}`}
+                aria-expanded={rolesMenuOpen}
+                title={primaryRoleLabel}
+              >
+                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{primaryRoleLabel}</span>
+              </button>
+
+              {rolesMenuOpen && (
+                <div className={`absolute right-0 mt-2 w-72 rounded-lg shadow-xl border ${borderColor} ${headerBgClass} py-1 z-50 max-h-96 overflow-y-auto`}>
+                  <div className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide ${subtextColor}`}>
+                    System Role{systemRoles.length === 1 ? '' : 's'}
+                  </div>
+                  {systemRoles.length === 0 ? (
+                    <p className={`px-4 pb-2 text-sm ${subtextColor}`}>None</p>
+                  ) : (
+                    systemRoles.map((r) => (
+                      <p key={r.id} className={`px-4 pb-2 text-sm ${textColor}`}>{r.roles.role_display_name}</p>
+                    ))
+                  )}
+
+                  <div className={`my-1 border-t ${borderColor}`}></div>
+
+                  <div className={`px-4 py-2 text-xs font-semibold uppercase tracking-wide ${subtextColor}`}>
+                    Project Roles
+                  </div>
+                  {projectRoles.length === 0 ? (
+                    <p className={`px-4 pb-2 text-sm ${subtextColor}`}>Not a member of any project yet</p>
+                  ) : (
+                    projectRoles.map((r) => (
+                      <div key={r.id} className="px-4 pb-2">
+                        <p className={`text-sm ${textColor}`}>{r.project_roles.role_display_name}</p>
+                        <p className={`text-xs ${subtextColor} truncate`}>
+                          {r.projects?.project_name || r.projects?.project_code || 'Project'}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* User Profile Menu */}
             <div className="relative user-menu-container">
               <button
                 onClick={() => {
                   setUserMenuOpen(!userMenuOpen)
                   setMobileNavOpen(false)
+                  setRolesMenuOpen(false)
                 }}
                 className={`flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
                 aria-label="User menu"
                 aria-expanded={userMenuOpen}
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center shadow-md">
-                  <span className="text-white text-xs sm:text-sm font-medium">{userInitials}</span>
-                </div>
+                <UserAvatarBadge db={supabase} avatarPath={avatarPath} initials={userInitials} />
                 <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform hidden sm:block ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 

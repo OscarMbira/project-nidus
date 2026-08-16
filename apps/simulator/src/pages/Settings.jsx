@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { platformDb } from '../services/supabaseClient'
 import { updateUserProfile } from '../services/userProfileService'
-import { 
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import { ProfilePictureSection, ProfileSignatureSection } from '@nidus/ui'
+import {
   User, 
   Bell, 
   Shield, 
@@ -22,6 +24,7 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [user, setUser] = useState(null)
   const [organisation, setOrganisation] = useState(null)
+  const [accountId, setAccountId] = useState(null)
   const [activeTab, setActiveTab] = useState('profile')
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
@@ -62,7 +65,16 @@ export default function Settings() {
 
   useEffect(() => {
     loadUserData()
+    getCurrentUserAccountId().then(setAccountId)
   }, [])
+
+  const getInitialsFromName = (name) => {
+    const trimmed = String(name || '').trim()
+    if (!trimmed) return 'U'
+    const parts = trimmed.split(' ').filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    return trimmed.substring(0, 2).toUpperCase()
+  }
 
   useEffect(() => {
     if (profileOnly) setActiveTab('profile')
@@ -351,6 +363,8 @@ export default function Settings() {
                   </button>
                 </div>
               </div>
+              <ProfilePictureSection db={platformDb} accountId={accountId} initials={getInitialsFromName(profileData.full_name)} />
+              <ProfileSignatureSection db={platformDb} accountId={accountId} />
             </div>
           )}
 

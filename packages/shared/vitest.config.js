@@ -1,10 +1,24 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
 
+// react() enables the automatic JSX runtime (no `import React` needed per-file) for the
+// handful of .jsx hook tests that render components (e.g. useSuccessModal.test.jsx, which
+// pulls in packages/ui components via '@vitest-environment jsdom' override below) — matches
+// packages/ui's own vitest.config.js. Every other (plain .js, environment: 'node') test in
+// this package is unaffected.
 export default defineConfig({
+  plugins: [react()],
   test: {
     environment: 'node',
     include: [
       'src/constants/**/*.test.js',
+      'src/utils/__tests__/exportUtils.test.js',
+      'src/utils/__tests__/sidebarNavUtils.test.js',
+      'src/hooks/__tests__/useSuccessModal.test.jsx',
+      'src/hooks/__tests__/usePlatformProjectId.test.jsx',
+      'src/hooks/__tests__/useEntityDetailParams.test.jsx',
+      'src/utils/__tests__/entityRouteParam.test.js',
+      'src/utils/__tests__/entityUrlUtils.test.js',
       'src/utils/__tests__/unsavedChangesUtils.test.js',
       'src/utils/__tests__/lifecycleGovernedUpdate.test.js',
       'src/utils/__tests__/formTemplateFieldDefaults.test.js',
@@ -13,6 +27,8 @@ export default defineConfig({
       'src/utils/__tests__/formSelectOptions.test.js',
       'src/utils/__tests__/formProcessGroupFilters.test.js',
       'src/utils/__tests__/formTemplateFieldOverrides.test.js',
+      'src/utils/__tests__/formTemplateSaveSummary.test.js',
+      'src/utils/__tests__/auditDisplayUtils.test.js',
       'src/utils/__tests__/formValidation.test.js',
       'src/utils/__tests__/localeFormat.test.js',
       'src/utils/__tests__/formTranslations.test.js',
@@ -20,6 +36,17 @@ export default defineConfig({
       'src/utils/__tests__/industryPlanGridColumns.test.js',
       'src/utils/__tests__/industryPlanCustomColumns.test.js',
       'src/utils/__tests__/industryPlanGridUtilsOutline.test.js',
+      'src/utils/__tests__/checkpointReportRoutes.test.js',
+      'src/utils/__tests__/pdfCanvasPagination.test.js',
+      'src/utils/__tests__/issueExportExcel.test.js',
+      'src/utils/__tests__/roleScopeResolution.test.js',
+      'src/utils/__tests__/organisationalTemplateRoutes.test.js',
+      'src/utils/__tests__/formInstanceRegisterUtils.test.js',
+      'src/utils/__tests__/projectDocumentNaming.test.js',
+      'src/utils/__tests__/templateDomainGroup.test.js',
+      'src/utils/__tests__/orgTemplateBulkSelection.test.js',
+      'src/utils/__tests__/formExcelImportUtils.test.js',
+      'src/hooks/__tests__/useRoleScopeGuard.test.js',
       'src/services/__tests__/pmTemplateInheritanceService.test.js',
       'src/services/__tests__/pmTemplateCreateInheritance.test.js',
       'src/services/__tests__/pmTemplateNodeService.test.js',
@@ -29,6 +56,11 @@ export default defineConfig({
       'src/services/__tests__/pmTemplateOverrideService.test.js',
       'src/services/__tests__/pmTemplateContentService.test.js',
       'src/services/__tests__/menuLabelService.test.js',
+      'src/services/__tests__/projectFormTemplateCatalog.test.js',
+      'src/services/__tests__/projectDocumentsRegisterService.test.js',
+      'src/services/__tests__/processTemplateAttachmentService.test.js',
+      'src/services/__tests__/processTemplateSignatoryService.test.js',
+      'src/services/__tests__/userAvatarService.test.js',
       'src/__tests__/idGenerationMigration.test.js',
     ],
   },
