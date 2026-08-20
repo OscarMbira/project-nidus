@@ -539,6 +539,7 @@ import {
   PlatformRegister,
   SimulatorRegister,
   EmailConfirmation,
+  VerifyEmail,
   InvitationAccept,
   RoleSelection,
   PlatformAccountSetup,
@@ -546,6 +547,7 @@ import {
   OrganisationSetup,
   IndustrySelectionStep,
   ProfessionalRoleStep,
+  EmailVerificationStep,
   RegistrationReviewStep,
   WorkspaceSetupStep,
   OrganisationVerificationNotice,
@@ -878,6 +880,13 @@ export function AuthRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="auth/verify-email" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <VerifyEmail />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
       
 
                 <Route path="onboarding/platform-account-setup" element={
@@ -922,6 +931,15 @@ export function AuthRouteElements() {
                     <ThemeProvider>
                       <ProtectedRoute>
                         <ProfessionalRoleStep />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="onboarding/email-verification" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <EmailVerificationStep />
                       </ProtectedRoute>
                     </ThemeProvider>
                   </Suspense>

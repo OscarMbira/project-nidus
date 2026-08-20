@@ -8,6 +8,132 @@ import { sendEmail } from './emailIntegrationService';
 import { getBranding, buildBrandedEmailHeader, buildBrandedEmailFooter } from './brandingService';
 
 /**
+ * v918-adjacent (see PlatformRegister.jsx/SimulatorRegister.jsx): whether real,
+ * token-based account email verification (sendAccountVerificationEmail below,
+ * backed by SQL/v929_account_email_verification.sql) is active. ACTIVE
+ * (soft-gate design, confirmed): provisioning is never blocked on
+ * verification — EmailVerificationStep.jsx sends the link and lets the user
+ * continue immediately; GettingStarted.jsx shows a persistent reminder banner
+ * until is_verified is true. Matches the brief's target onboarding model
+ * (Documentation/SaaS_Industry_Tenant_Provisioning_Revamp_Brief.md §1), which
+ * places Email Verification between Professional Role and Tenant Provisioning.
+ */
+export const ACCOUNT_EMAIL_VERIFICATION_ENABLED = true
+
+/**
+ * Send a simple "Welcome to Project Nidus" email after signup. Always
+ * non-blocking/best-effort from the caller's side — never throws in a way
+ * that should stop registration; callers should fire-and-forget or catch.
+ * @param {string} userEmail
+ * @param {string} firstName
+ * @returns {Promise<{success: boolean, error: string|null}>}
+ */
+export async function sendWelcomeEmail(userEmail, firstName) {
+  try {
+    const subject = 'Welcome to Project Nidus'
+    const body = generateWelcomeEmail(firstName)
+    const result = await sendEmail(userEmail, subject, body, 'welcome')
+    return {
+      success: result.success || false,
+      error: result.success ? null : (result.message || 'Failed to send email'),
+    }
+  } catch (error) {
+    console.error('Error sending welcome email:', error)
+    return { success: false, error: error.message || 'Failed to send welcome email' }
+  }
+}
+
+/**
+ * Reads the current user's is_verified flag (soft-gate check — never blocks
+ * anything by itself, callers decide what to show based on the result), plus
+ * email/first_name so callers (e.g. a "resend" banner) don't need a second query.
+ * @returns {Promise<{success: boolean, isVerified: boolean, email: string|null, firstName: string|null, error: string|null}>}
+ */
+export async function getMyVerificationStatus() {
+  try {
+    const { data: { user: authUser } } = await platformDb.auth.getUser()
+    if (!authUser) return { success: true, isVerified: false, email: null, firstName: null, error: null }
+    const { data, error } = await platformDb
+      .from('users')
+      .select('is_verified, email, first_name')
+      .eq('auth_user_id', authUser.id)
+      .maybeSingle()
+    if (error) throw error
+    return {
+      success: true,
+      isVerified: Boolean(data?.is_verified),
+      email: data?.email || authUser.email || null,
+      firstName: data?.first_name || null,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error reading verification status:', error)
+    return { success: false, isVerified: false, email: null, firstName: null, error: error.message || 'Failed to read verification status' }
+  }
+}
+
+/**
+ * Requests a fresh verification token for the CURRENTLY authenticated user
+ * (SQL/v929's request_email_verification() resolves auth.uid() itself — no
+ * user id param, so a caller can only ever request their own token).
+ * @returns {Promise<{success: boolean, token: string|null, error: string|null}>}
+ */
+export async function requestEmailVerificationToken() {
+  try {
+    const { data, error } = await platformDb.rpc('request_email_verification')
+    if (error) throw error
+    return { success: true, token: data, error: null }
+  } catch (error) {
+    console.error('Error requesting email verification token:', error)
+    return { success: false, token: null, error: error.message || 'Failed to request verification token' }
+  }
+}
+
+/**
+ * Verifies an email-verification token (SQL/v929's verify_email_token()).
+ * Token-only — no session required, since the browser clicking the link may
+ * not be the same session that requested it.
+ * @param {string} token
+ * @returns {Promise<{success: boolean, userEmail: string|null, error: string|null}>}
+ */
+export async function verifyEmailToken(token) {
+  try {
+    const { data, error } = await platformDb.rpc('verify_email_token', { p_token: token })
+    if (error) throw error
+    const row = Array.isArray(data) ? data[0] : data
+    return { success: Boolean(row?.success), userEmail: row?.user_email || null, error: null }
+  } catch (error) {
+    console.error('Error verifying email token:', error)
+    return { success: false, userEmail: null, error: error.message || 'Failed to verify email' }
+  }
+}
+
+/**
+ * Send the real account-verification email (token-based, SQL/v929). Only
+ * meaningful once ACCOUNT_EMAIL_VERIFICATION_ENABLED is true and the caller
+ * has already obtained a token via the request_email_verification() RPC.
+ * @param {string} userEmail
+ * @param {string} firstName
+ * @param {string} verificationToken
+ * @returns {Promise<{success: boolean, error: string|null}>}
+ */
+export async function sendAccountVerificationEmail(userEmail, firstName, verificationToken) {
+  try {
+    const verificationLink = `${window.location.origin}/auth/verify-email?token=${verificationToken}`
+    const subject = 'Verify your Project Nidus account'
+    const body = generateAccountVerificationEmail(firstName, verificationLink)
+    const result = await sendEmail(userEmail, subject, body, 'account-verification')
+    return {
+      success: result.success || false,
+      error: result.success ? null : (result.message || 'Failed to send email'),
+    }
+  } catch (error) {
+    console.error('Error sending account verification email:', error)
+    return { success: false, error: error.message || 'Failed to send verification email' }
+  }
+}
+
+/**
  * Send organisation verification email
  * @param {string} accountId - Account ID
  * @param {string} userEmail - User email address
@@ -199,6 +325,83 @@ export async function sendPaymentSuccessEmail(
 // ============================================================================
 // EMAIL TEMPLATE GENERATORS
 // ============================================================================
+
+/**
+ * Generate welcome email HTML
+ */
+function generateWelcomeEmail(firstName, branding = null) {
+  const btnColor = branding?.primary_color || '#667eea'
+  const dashboardLink = `${window.location.origin}/platform/getting-started`
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      ${buildBrandedEmailHeader(branding, 'Welcome to Project Nidus')}
+
+      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p>Hi ${firstName || 'there'},</p>
+
+        <p>Your Project Nidus account is ready. You can jump straight into setting up your workspace.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${dashboardLink}" target="_blank" rel="noopener noreferrer" style="background: ${btnColor}; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Get Started
+          </a>
+        </div>
+
+        <p>If you didn't create this account, you can safely ignore this email.</p>
+
+        ${buildBrandedEmailFooter(branding)}
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Generate account verification email HTML (v929 — inactive until
+ * ACCOUNT_EMAIL_VERIFICATION_ENABLED is true)
+ */
+function generateAccountVerificationEmail(firstName, verificationLink, branding = null) {
+  const btnColor = branding?.primary_color || '#667eea'
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      ${buildBrandedEmailHeader(branding, 'Verify Your Account')}
+
+      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <p>Hi ${firstName || 'there'},</p>
+
+        <p>Please verify your email address to finish setting up your Project Nidus account:</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationLink}" target="_blank" rel="noopener noreferrer" style="background: ${btnColor}; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+            Verify Email
+          </a>
+        </div>
+
+        <p>Or copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: ${btnColor};">${verificationLink}</p>
+
+        <p><strong>This link will expire in 24 hours.</strong></p>
+
+        <p>If you didn't create this account, please ignore this email.</p>
+
+        ${buildBrandedEmailFooter(branding)}
+      </div>
+    </body>
+    </html>
+  `
+}
 
 /**
  * Generate organisation verification email HTML
@@ -393,6 +596,11 @@ function generatePaymentSuccessEmail(projectName, subscriptionDetails, dashboard
 }
 
 export default {
+  sendWelcomeEmail,
+  sendAccountVerificationEmail,
+  requestEmailVerificationToken,
+  verifyEmailToken,
+  getMyVerificationStatus,
   sendOrganisationVerificationEmail,
   sendTrialExpiryWarning3Days,
   sendTrialExpiryWarning1Day,

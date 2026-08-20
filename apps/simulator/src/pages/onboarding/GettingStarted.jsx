@@ -6,26 +6,50 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Rocket, Loader } from 'lucide-react';
+import { CheckCircle2, Rocket, Loader, MailWarning } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import { getGettingStartedSummary } from '../../services/organisationIndustryService';
+import {
+  getMyVerificationStatus,
+  requestEmailVerificationToken,
+  sendAccountVerificationEmail,
+} from '../../services/registrationEmailService';
 
 export default function GettingStarted() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [packs, setPacks] = useState([]);
+  const [verification, setVerification] = useState(null);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const accountId = await getCurrentUserAccountId();
-      const result = await getGettingStartedSummary(accountId);
+      const [result, verificationResult] = await Promise.all([
+        getGettingStartedSummary(accountId),
+        getMyVerificationStatus(),
+      ]);
       if (cancelled) return;
       if (result.success) setPacks(result.data);
+      setVerification(verificationResult);
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    const tokenResult = await requestEmailVerificationToken();
+    if (tokenResult.success && tokenResult.token && verification?.email) {
+      await sendAccountVerificationEmail(verification.email, verification.firstName, tokenResult.token);
+      toast.success('Verification email sent.');
+    } else {
+      toast.error(tokenResult.error || 'Could not send verification email.');
+    }
+    setResending(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4 py-12">
@@ -37,6 +61,23 @@ export default function GettingStarted() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Project Nidus</h1>
           <p className="text-gray-600 dark:text-gray-400">Your workspace is ready. Here's what's included.</p>
         </div>
+
+        {!loading && verification && !verification.isVerified && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <MailWarning className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+            <p className="flex-1 text-sm text-amber-800 dark:text-amber-200">
+              Verify your email to unlock full access. Check your inbox for the verification link.
+            </p>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resending}
+              className="text-sm font-medium text-amber-800 dark:text-amber-200 underline hover:no-underline disabled:opacity-50 whitespace-nowrap"
+            >
+              {resending ? 'Sending...' : 'Resend email'}
+            </button>
+          </div>
+        )}
 
         <div className="space-y-4">
           <div className="flex items-start gap-3">

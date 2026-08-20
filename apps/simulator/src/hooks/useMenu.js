@@ -276,13 +276,16 @@ const MENU_LOAD_TIMEOUT_MS = 45000
 const MENU_HYDRATE_MAX_ROUNDS = 12
 const LINK_AUTH_TIMEOUT_MS = 8000
 
-// v918/v924 — SaaS Industry-Aware Tenant Provisioning: temporary local kill-switch for the new
+// v918/v924 — SaaS Industry-Aware Tenant Provisioning: local kill-switch for the
 // org-industry-availability filter, until admin.feature_flags is actually wired into
 // Platform/Simulator (CLAUDE.md documents that exception but the audit for this initiative
 // found it unimplemented — this is the first real consumer of it, tracked as a follow-up).
-// Defaults OFF: with this false, useMenu.js's behavior is byte-for-byte identical to before
-// this initiative — no risk to existing sidebar rendering until explicitly enabled for testing.
-const INDUSTRY_MENU_AVAILABILITY_ENABLED = false
+// ACTIVE (confirmed): matches the brief's target onboarding model (Documentation/
+// SaaS_Industry_Tenant_Provisioning_Revamp_Brief.md §1), where Industry Capability Pack is an
+// unconditional contributor to "Resolved User Menu". Fail-open design (see
+// applyOrgMenuAvailabilityFilter below) bounds the blast radius to only menu items actually
+// classified into industry_pack_menu_items — everything else stays visible exactly as before.
+const INDUSTRY_MENU_AVAILABILITY_ENABLED = true
 
 /**
  * Pure fail-open filter: narrow menuIds to whatever the org-availability RPC allows, but never

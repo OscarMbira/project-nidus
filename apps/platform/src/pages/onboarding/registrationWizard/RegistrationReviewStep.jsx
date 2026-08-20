@@ -1,8 +1,8 @@
 /**
- * Registration wizard — Step 5: Verify (v918, CLAUDE.md Phase 5)
- * Read-only summary of everything entered in steps 2-4. No DB write here — actual submission
- * happens on the next (Workspace Setup) step. Email verification stays disabled per decision
- * at implementation time; this step is the review/confirm gate in its place.
+ * Registration wizard — Step 6: Review (v918, CLAUDE.md Phase 5)
+ * Read-only summary of everything entered in steps 2-5 (including whether email verification
+ * was requested in the previous step). No DB write here — actual submission happens on the
+ * next (Workspace Setup) step.
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -43,7 +43,7 @@ export default function RegistrationReviewStep() {
   };
 
   const handleBack = () => {
-    navigate('/onboarding/professional-role', { state: { orgFormData, industrySelection, professionalRoleId } });
+    navigate('/onboarding/email-verification', { state: { orgFormData, industrySelection, professionalRoleId } });
   };
 
   return (

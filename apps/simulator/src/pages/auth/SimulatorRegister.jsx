@@ -11,6 +11,12 @@ import { normalizeSupabaseAuthError } from '@nidus/shared/utils/authErrorMessage
 import { Mail, Lock, User, AlertCircle, Loader, UserPlus, Gamepad2, CheckCircle2 } from 'lucide-react'
 import { registerForPlatform, PLATFORMS } from '../../services/unifiedSubscriptionService'
 import { recordSignupConversion } from '@nidus/shared/services/affiliateService'
+import {
+  sendWelcomeEmail,
+  ACCOUNT_EMAIL_VERIFICATION_ENABLED,
+  requestEmailVerificationToken,
+  sendAccountVerificationEmail,
+} from '../../services/registrationEmailService'
 import MainHeader from '../../components/homepage/MainHeader'
 import SimulatorFooter from '../../components/homepage/SimulatorFooter'
 
@@ -157,6 +163,28 @@ export default function SimulatorRegister() {
         if (data.user && !data.session) {
           setSuccess(true)
         } else if (data.session) {
+          // Best-effort — never blocks registration if the email hiccups.
+          // Sent via the reliable send-email/Resend-API path (same one invitations
+          // use), not Supabase's own SMTP integration.
+          try {
+            await sendWelcomeEmail(email, firstName.trim())
+          } catch (emailErr) {
+            console.warn('Welcome email not sent:', emailErr)
+          }
+
+          // Inactive until ACCOUNT_EMAIL_VERIFICATION_ENABLED is flipped on — see
+          // registrationEmailService.js.
+          if (ACCOUNT_EMAIL_VERIFICATION_ENABLED) {
+            try {
+              const tokenResult = await requestEmailVerificationToken()
+              if (tokenResult.success && tokenResult.token) {
+                await sendAccountVerificationEmail(email, firstName.trim(), tokenResult.token)
+              }
+            } catch (verifyErr) {
+              console.warn('Account verification email not sent:', verifyErr)
+            }
+          }
+
           navigate('/simulator', { replace: true })
         }
       }

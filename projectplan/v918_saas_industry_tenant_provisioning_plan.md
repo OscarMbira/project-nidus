@@ -3,9 +3,17 @@
 PRD: `projectprd/v918_saas_industry_tenant_provisioning_PRD.md`
 Source brief: `Documentation/SaaS_Industry_Tenant_Provisioning_Revamp_Brief.md`
 
-**Status: Approved and implemented (Phases 1-11 complete).** See the Review section at the end
-of this file. `INDUSTRY_MENU_AVAILABILITY_ENABLED` remains deliberately `false` pending manual
-verification — see `Documentation/v918_SaaS_Industry_Tenant_Provisioning_Manual_Test_Guide.md`.
+**Status: Approved and implemented (Phases 1-11 complete), with a post-review follow-up.** See
+the Review section at the end of this file. **Post-review addendum**: comparing the shipped
+Phase 5 wizard against the source brief's own target onboarding model (§1) surfaced that Email
+Verification had been implemented as non-gating (a plain review screen) rather than as its own
+step, and `INDUSTRY_MENU_AVAILABILITY_ENABLED` was still off — both deviations from the brief's
+explicit sequence. Both are now fixed: a real `EmailVerificationStep` (soft-gate — sends the
+verification email, never blocks continuing) was inserted into the wizard between Professional
+Role and Review, and `INDUSTRY_MENU_AVAILABILITY_ENABLED` / `ACCOUNT_EMAIL_VERIFICATION_ENABLED`
+are both now `true` in both apps. See `Documentation/v918_SaaS_Industry_Tenant_Provisioning_Manual_Test_Guide.md`
+(updated) for the current manual verification checklist — this still needs to be walked through
+against the live app; nothing here has been browser-tested.
 
 ## Naming decided during this plan
 

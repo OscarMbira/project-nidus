@@ -13,6 +13,9 @@ plan for the phases that can't be automated from here.
   regression tests.
 - `apps/{platform,simulator}/src/hooks/__tests__/applyOrgMenuAvailabilityFilter.test.js` — 6/6
   each, pure fail-open filter logic extracted from `useMenu.js`/`useSimMenu.js`.
+- `apps/{platform,simulator}/src/services/__tests__/registrationEmailService.test.js` — 10/10
+  each, mocking the email/RPC layer: welcome email, verification token request/check, and the
+  `ACCOUNT_EMAIL_VERIFICATION_ENABLED` flag's current value.
 - `apps/{platform,simulator}/src/pages/auth/__tests__/InvitationAccept.test.jsx` — 31/31 each,
   including 2 new v918 tests (job_title never set from role; professional role save fires).
 - `packages/shared/src/utils/__tests__/invitationInviteeFormat.test.js` — 13/13, including the
@@ -44,17 +47,31 @@ already-mocked component behavior, not real RPC/RLS/auth behavior against a live
    sub-industry dropdown appears only for industries that actually have segments.
 3. Submit → **Professional Role** step. Confirm the list is DB-driven (matches
    `professional_roles` rows, not a hardcoded array).
-4. Submit → **Verify** step. Confirm the summary matches everything entered; industry names
+4. Submit → **Email Verification** step (new — matches the brief's target onboarding model §1,
+   inserted between Professional Role and Review). Confirm a verification email is sent
+   automatically on arrival (via the reliable send-email/Resend path, not Supabase's native
+   SMTP). Confirm **Continue** is always clickable — this is a soft gate, never blocks. Confirm
+   **Resend email** and **I've verified — check status** both work. Click the link in the actual
+   email and confirm it lands on `/auth/verify-email`, shows success, and that returning to the
+   wizard (if still open) or reloading Getting Started reflects the verified state.
+5. Submit → **Review** step. Confirm the summary matches everything entered; industry names
    resolve correctly (not raw UUIDs).
-5. Confirm → **Workspace Setup**. Confirm a spinner appears, then the success modal, then
+6. Confirm → **Workspace Setup**. Confirm a spinner appears, then the success modal, then
    redirect to `/platform/getting-started`.
-6. In Supabase, confirm: one `accounts` row (not two), `account_industries` rows matching your
+7. On Getting Started, if you did **not** click the verification link yet, confirm the amber
+   "Verify your email" banner appears with a working **Resend email** button; confirm it does
+   **not** appear if you already verified.
+8. In Supabase, confirm: one `accounts` row (not two), `account_industries` rows matching your
    selection with exactly one `is_primary = true`, `users.professional_role_id` set,
-   `tenant_provisioning_log` has one `'complete'`/`'completed'` row for this account.
-7. **Retry safety**: on the Workspace Setup screen, if you can force a failure (e.g. disconnect
+   `tenant_provisioning_log` has one `'complete'`/`'completed'` row for this account, and (once
+   the link is clicked) `users.is_verified = true` with `email_verification_token` cleared.
+9. **Retry safety**: on the Workspace Setup screen, if you can force a failure (e.g. disconnect
    network mid-request), confirm clicking Retry does not create a second `accounts` row.
-8. Repeat steps 1-6 for Simulator's registration entry point — same shared `public` schema
-   flow, same end state expected.
+10. Repeat steps 1-9 for Simulator's registration entry point — same shared `public` schema
+    flow, same end state expected. Confirm `/platform/getting-started` also resolves correctly
+    when reached from within the Simulator app (this route had to be separately wired into
+    Simulator's own router — it was missed in the original Phase 9 pass and fixed alongside
+    this Email Verification work).
 
 ## 3. Invitation flow (Phase 6)
 
@@ -103,32 +120,31 @@ For each of Professional Roles, Industry Categories, Industry Segments, Industry
    selections writes the exact diff to `industry_pack_menu_items` (add the ones you newly
    checked, remove the ones you unchecked, leave the rest alone).
 
-## 6. Menu resolution (Phase 4 + Phase 10) — requires flipping a flag first
+## 6. Menu resolution (Phase 4 + Phase 10) — flag is now ON, needs verification
 
-**`INDUSTRY_MENU_AVAILABILITY_ENABLED` is still `false`** in both
-`apps/platform/src/hooks/useMenu.js` and `apps/simulator/src/hooks/useMenu.js` — this was a
-deliberate safety gate from Phase 4 and was never flipped on during this session (a decision
-affecting every user's sidebar rendering shouldn't happen without an explicit go-ahead once
-you've verified everything above works). To test this phase:
+**`INDUSTRY_MENU_AVAILABILITY_ENABLED` is now `true`** in both `apps/platform/src/hooks/useMenu.js`
+and `apps/simulator/src/hooks/useMenu.js` — confirmed explicitly (this was the Phase 4 safety
+gate; flipping it matches the brief's target onboarding model §1, where Industry Capability
+Pack is an unconditional contributor to "Resolved User Menu"). **This has not been browser-
+tested** — walk through the checks below before trusting it in production:
 
-1. Set the flag to `true` in **both** files.
-2. As an org with industry X selected, confirm the sidebar still shows every item it showed
+1. As an org with industry X selected, confirm the sidebar still shows every item it showed
    before (Generic PM + industry X's pack + anything never classified into any pack — fail-open).
-3. In Organisation Settings, disable a specific capability that's actually in industry X's pack
+2. In Organisation Settings, disable a specific capability that's actually in industry X's pack
    and currently visible. Reload the sidebar — confirm that specific item disappears.
-4. Re-enable it — confirm it reappears.
-5. Confirm an item that was **never** classified into any `industry_pack_menu_items` row (most
+3. Re-enable it — confirm it reappears.
+4. Confirm an item that was **never** classified into any `industry_pack_menu_items` row (most
    of the menu tree, per the seed's own scope) is **always** visible regardless of industry
    selection or capability toggles — this is the fail-open guarantee and the single most
    important property of `get_account_available_menu_item_ids` (v924).
-6. Confirm a role that doesn't grant a given item still doesn't see it, even if the org's
+5. Confirm a role that doesn't grant a given item still doesn't see it, even if the org's
    industry pack includes it — role grants and org availability are independent AND-ed filters,
    this layer only narrows, never expands, what the role already grants.
-7. Simulate an RPC failure (e.g. temporarily revoke EXECUTE, or block the network call) and
+6. Simulate an RPC failure (e.g. temporarily revoke EXECUTE, or block the network call) and
    confirm the sidebar falls back to showing the unfiltered role-granted set rather than
    erroring or going blank.
-8. Once satisfied, decide explicitly whether to leave the flag `true` (feature live) or set it
-   back to `false` — don't leave it in whatever state a test session happens to end in.
+7. If any of the above fail, set `INDUSTRY_MENU_AVAILABILITY_ENABLED` back to `false` in both
+   apps' `useMenu.js` until fixed — don't leave a broken filter live.
 
 ## 7. Existing-tenant compatibility
 

@@ -43,7 +43,7 @@ export default function ProfessionalRoleStep() {
       toast.error('Select your professional role to continue.');
       return;
     }
-    navigate('/onboarding/review', {
+    navigate('/onboarding/email-verification', {
       state: { orgFormData, industrySelection, professionalRoleId: selectedRoleId },
     });
   };

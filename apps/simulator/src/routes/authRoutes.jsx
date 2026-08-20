@@ -539,6 +539,7 @@ import {
   PlatformRegister,
   SimulatorRegister,
   EmailConfirmation,
+  VerifyEmail,
   InvitationAccept,
   RoleSelection,
   PlatformAccountSetup,
@@ -546,8 +547,10 @@ import {
   OrganisationSetup,
   IndustrySelectionStep,
   ProfessionalRoleStep,
+  EmailVerificationStep,
   RegistrationReviewStep,
   WorkspaceSetupStep,
+  GettingStarted,
   OrganisationVerificationNotice,
   VerifyOrganisation,
   ProjectTypeSelection,
@@ -878,6 +881,13 @@ export function AuthRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="auth/verify-email" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <VerifyEmail />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
       
 
                 <Route path="onboarding/platform-account-setup" element={
@@ -926,6 +936,15 @@ export function AuthRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="onboarding/email-verification" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <EmailVerificationStep />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="onboarding/review" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -940,6 +959,15 @@ export function AuthRouteElements() {
                     <ThemeProvider>
                       <ProtectedRoute>
                         <WorkspaceSetupStep />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="platform/getting-started" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <GettingStarted />
                       </ProtectedRoute>
                     </ThemeProvider>
                   </Suspense>

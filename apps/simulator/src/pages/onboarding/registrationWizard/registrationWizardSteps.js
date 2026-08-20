@@ -7,6 +7,7 @@ export const REGISTRATION_WIZARD_STEPS = [
   { id: 'organisation', label: 'Your Organisation' },
   { id: 'industry', label: 'Industry' },
   { id: 'professional-role', label: 'Professional Role' },
-  { id: 'review', label: 'Verify' },
+  { id: 'email-verification', label: 'Email Verification' },
+  { id: 'review', label: 'Review' },
   { id: 'workspace-setup', label: 'Workspace Setup' },
 ]
