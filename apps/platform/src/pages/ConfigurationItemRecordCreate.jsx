@@ -75,7 +75,7 @@ export default function ConfigurationItemRecordCreate() {
       }
       
       toast.success('Configuration Item created successfully')
-      navigate(platformProjectPath(routeKey, 'configuration-items', '${newItem.id}'))
+      navigate(platformProjectPath(routeKey, 'configuration-items', newItem.configuration_item_identifier || newItem.id))
     } catch (error) {
       console.error('Error creating Configuration Item:', error)
       toast.error('Error creating Configuration Item: ' + error.message)

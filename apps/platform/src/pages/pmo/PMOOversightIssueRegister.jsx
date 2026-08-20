@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { AlertCircle, Plus, Pencil, Trash2 } from 'lucide-react';
+import { useInitialFilterFromQuery } from '@nidus/shared/hooks/useInitialFilterFromQuery';
 import { DocumentGovernanceProvider } from '@nidus/shared/context/DocumentGovernanceContext';
 import { getAllProjects } from '../../services/pmoAdminService';
 import { getIssues, deleteIssue } from '../../services/issueService';
@@ -45,6 +46,13 @@ export default function PMOOversightIssueRegister() {
   const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [filters, setFilters] = useState({ search: '', status: '' });
+  const [openOnly, setOpenOnly] = useState(false); // client-side — keeps stats accurate against the full fetch
+
+  const initialQueryFilter = useInitialFilterFromQuery(['filter']);
+  useEffect(() => {
+    if (initialQueryFilter.filter === 'open') setOpenOnly(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQueryFilter.filter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -92,9 +100,10 @@ export default function PMOOversightIssueRegister() {
   }, [selectedProjectId, filters.search, filters.status]);
 
   const filteredByTab = useMemo(() => {
-    if (activeTab === 'all') return issues;
-    return issues.filter((i) => (i.issue_type || '') === activeTab);
-  }, [issues, activeTab]);
+    let list = activeTab === 'all' ? issues : issues.filter((i) => (i.issue_type || '') === activeTab);
+    if (openOnly) list = list.filter((i) => i.status === 'open');
+    return list;
+  }, [issues, activeTab, openOnly]);
 
   const stats = useMemo(() => {
     const open = issues.filter((i) => i.status === 'open').length;
@@ -102,11 +111,11 @@ export default function PMOOversightIssueRegister() {
     const offSpec = issues.filter((i) => i.issue_type === 'off_specification').length;
     const problem = issues.filter((i) => i.issue_type === 'problem_concern').length;
     return [
-      { label: 'Total Issues', value: issues.length },
-      { label: 'Open', value: open },
-      { label: 'RFCs', value: rfc },
-      { label: 'Off-Spec', value: offSpec },
-      { label: 'Problems', value: problem },
+      { label: 'Total Issues', value: issues.length, onClick: () => { setActiveTab('all'); setOpenOnly(false); } },
+      { label: 'Open', value: open, onClick: () => { setActiveTab('all'); setOpenOnly(true); } },
+      { label: 'RFCs', value: rfc, onClick: () => { setActiveTab('request_for_change'); setOpenOnly(false); } },
+      { label: 'Off-Spec', value: offSpec, onClick: () => { setActiveTab('off_specification'); setOpenOnly(false); } },
+      { label: 'Problems', value: problem, onClick: () => { setActiveTab('problem_concern'); setOpenOnly(false); } },
     ];
   }, [issues]);
 

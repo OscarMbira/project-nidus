@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createEEF, listEEFCategories, listProjectsForOrganisation } from '../../services/eefService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
-import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const initial = {
   title: '',
   description: '',
@@ -22,6 +22,7 @@ const initial = {
 
 export default function EEFCreate() {
   const navigate = useNavigate()
+  const [formTab, setFormTab] = useState('wizard')
   const [step, setStep] = useState(1)
   const [accountId, setAccountId] = useState(null)
   const [categories, setCategories] = useState([])
@@ -32,16 +33,24 @@ export default function EEFCreate() {
   const [success, setSuccess] = useState(null)
 
   useEffect(() => {
+    let cancelled = false
     ;(async () => {
-      const id = await getCurrentUserAccountId()
-      setAccountId(id)
-      if (id) {
-        const c = await listEEFCategories(id)
+      try {
+        const id = await getCurrentUserAccountId()
+        if (cancelled) return
+        setAccountId(id)
+        if (!id) return
+        const [c, p] = await Promise.all([listEEFCategories(id), listProjectsForOrganisation(id)])
+        if (cancelled) return
         setCategories(c.data || [])
-        const p = await listProjectsForOrganisation(id)
         setProjects(p.data || [])
+      } catch (err) {
+        if (!cancelled) setError(err?.message || 'Could not load form options')
       }
     })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
@@ -106,6 +115,24 @@ export default function EEFCreate() {
         <ArrowLeft className="h-4 w-4" /> Back to list
       </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">New Enterprise Environment Factor</h1>
+
+      <div className="mb-4">
+        <DetailAuditTabList
+          activeTab={formTab}
+          onChange={setFormTab}
+          tabs={[
+            { value: 'wizard', label: 'Wizard' },
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
+      </div>
+
+      {formTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this EEF record is saved.</p>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         Step {step} of 2 — {step === 1 ? 'Basics' : 'Impact & links'}
       </p>
@@ -272,6 +299,8 @@ export default function EEFCreate() {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   )

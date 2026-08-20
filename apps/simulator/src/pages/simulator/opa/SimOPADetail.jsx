@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getOPAById, deleteOPA } from '../../../services/sim/simOPAService'
+import { RowActionButton } from '@nidus/ui'
 import { simDb } from '@nidus/supabase'
 import { resolveTemplateProvenanceBatch } from '@nidus/shared/services/pmTemplateOverrideService.js'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function SimOPADetail() {
   const { id } = useParams()
@@ -10,6 +17,16 @@ export default function SimOPADetail() {
   const [row, setRow] = useState(null)
   // v807 Gap 4: if this OPA was copied from a Global template, link back to it.
   const [provenance, setProvenance] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [row.created_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     ;(async () => {
@@ -42,20 +59,35 @@ export default function SimOPADetail() {
           Copied from Global Template: {provenance.name} →
         </Link>
       )}
-      <button type="button" onClick={() => navigate(`/simulator/opa/${id}/edit`)} className="mr-2 px-4 py-2 border rounded-lg">
-        Edit
-      </button>
-      <button
-        type="button"
+      <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`/simulator/opa/${id}/edit`)} />
+      <RowActionButton
+        variant="delete"
+        label="Delete OPA"
         onClick={async () => {
           if (!window.confirm('Delete?')) return
           const { error } = await deleteOPA(id)
           if (!error) navigate('/simulator/opa')
         }}
-        className="px-4 py-2 border border-red-500 text-red-400 rounded-lg"
-      >
-        Delete
-      </button>
+      />
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this Organisational Process Asset.">
+          <AuditCard title="Identity" description="How this OPA is labelled.">
+            <AuditField label="Title" value={row.title} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this OPA is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(row.opa_type)} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this OPA was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
     </div>
   )
 }

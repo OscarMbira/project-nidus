@@ -7,6 +7,12 @@ import { getBudgetCategories } from '../../services/budgetCategoryService';
 import { getFundingSources } from '../../services/fundingSourceService';
 import { SmartAmountInput } from '../ui/SmartAmountInput';
 import SearchableSelect from '../ui/SearchableSelect';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLayout = true, readOnly = false }) {
   const [formData, setFormData] = useState({
@@ -380,6 +386,7 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
                 { id: 'ownership', label: 'Ownership & Management' },
                 { id: 'timeline', label: 'Timeline' },
                 { id: 'budget', label: 'Budget' },
+                { id: 'audit', label: 'Audit details' },
               ].map((tab, index) => (
                 <button
                   key={tab.id}
@@ -397,6 +404,31 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             </nav>
           </div>
 
+          {activeSection === 'audit' && (
+            !portfolio?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this portfolio is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this portfolio, and how it is classified.">
+                <AuditCard title="Identity" description="How this portfolio is labelled and tracked.">
+                  <AuditField label="Code" value={portfolio.portfolio_code} />
+                  <AuditField label="Name" value={formData.portfolio_name || portfolio.portfolio_name} />
+                  <AuditField label="Status" value={humanizeAuditToken(portfolio.portfolio_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this portfolio sits.">
+                  <AuditField label="Owner" value={users.find((u) => u.id === (formData.portfolio_owner_user_id || portfolio.portfolio_owner_user_id))?.full_name} />
+                  <AuditField label="Manager" value={users.find((u) => u.id === (formData.portfolio_manager_user_id || portfolio.portfolio_manager_user_id))?.full_name} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this portfolio was created and last changed.">
+                  <AuditField label="Created by" value={users.find((u) => u.id === portfolio.created_by)?.full_name} />
+                  <AuditTimestampPair dateLabel="Created at" value={portfolio.created_at} />
+                  <AuditField label="Updated by" value={users.find((u) => u.id === portfolio.updated_by)?.full_name} />
+                  <AuditTimestampPair dateLabel="Last updated" value={portfolio.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {activeSection !== 'audit' && (
           <fieldset disabled={readOnly} className="disabled:opacity-90 border-0 p-0 m-0 min-w-0">
           {/* Basic Information */}
           {activeSection === 'basic' && (
@@ -1025,6 +1057,7 @@ export default function PortfolioForm({ portfolio, onSave, onCancel, useModalLay
             )}
           </div>
           </fieldset>
+          )}
         </form>
   );
 

@@ -4,17 +4,22 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 import { useOfflineQueue } from '@nidus/shared/hooks/useOfflineQueue';
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { AlertTriangle, Plus, BarChart3, Download, Settings, Grid3x3, Calendar } from 'lucide-react';
+import { AlertTriangle, Plus, BarChart3, Settings, Grid3x3, Calendar, LayoutDashboard, List } from 'lucide-react';
 import RiskMatrixChart from '../components/risks/RiskMatrixChart';
 import TopRisksWidget from '../components/risks/TopRisksWidget';
 import RisksByCategoryChart from '../components/risks/RisksByCategoryChart';
 import RisksByStatusChart from '../components/risks/RisksByStatusChart';
 import RiskExposureChart from '../components/risks/RiskExposureChart';
 import RiskAlerts from '../components/risks/RiskAlerts';
+import { RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui';
+
+// Statuses that count as "active" per get_risk_summary() (v172): everything except closed/expired.
+const RISK_ACTIVE_STATUSES = ['identified', 'assessing', 'responding', 'monitoring', 'occurred'];
+const RISK_EMPTY_FILTERS = { search: '', risk_category: '', risk_type: '', status: '', risk_level: '', proximity: '' };
 import { getRiskRegisterByProject, updateRiskRegister } from '../services/riskRegisterService';
 import { getRisksByProject, createRisk, updateRisk, deleteRisk, closeRisk, getRiskSummary, getTopRisks } from '../services/riskService';
 import { escalateRiskToIssue } from '../services/riskService';
@@ -25,11 +30,11 @@ import EnhancedRiskForm from '../components/risks/EnhancedRiskForm';
 import RiskExportMenu from '../components/risks/RiskExportMenu';
 import RiskReviewHistory from '../components/risks/RiskReviewHistory';
 import RiskPrintView from '../components/risks/RiskPrintView';
-import ExportListMenu from '@nidus/ui/ExportListMenu';
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
+import { useViewMode } from '@nidus/shared/hooks/useViewMode';
+import ViewToggle from '@nidus/ui/ViewToggle';
 import { RISK_REGISTER_CATEGORY } from '../features/local-data-extensions/components/InheritedRiskRegisterFields';
-import { platformDb, simDb } from '@nidus/supabase';
-import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
+import { platformDb } from '@nidus/supabase';
 import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
 import { platformRiskPath } from '@nidus/shared/utils/projectRouteParam';
 
@@ -40,14 +45,17 @@ const RISK_COLUMNS = [
   { key: 'risk_category', label: 'Category' },
   { key: 'status_enum', label: 'Status' },
   { key: 'risk_level', label: 'Level' },
+  { key: 'pre_risk_score', label: 'Score' },
   { key: 'proximity', label: 'Proximity' },
-  { key: 'pre_risk_score', label: 'Score' }
+  { key: 'response_category', label: 'Risk Response' },
+  { key: 'pre_impact', label: 'Impact' }
 ];
 
 export default function RiskRegisterView() {
   useOfflineQueue();
   const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [register, setRegister] = useState(null);
   const [risks, setRisks] = useState([]);
@@ -57,7 +65,9 @@ export default function RiskRegisterView() {
   const [showForm, setShowForm] = useState(false);
   const [showEnhancedForm, setShowEnhancedForm] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState(null);
-  const [viewMode, setViewMode] = useState('list'); // 'list', 'matrix', 'analytics', 'reviews', 'settings'
+  // 'dashboard' = summary/alerts/top risks; 'register' = filters + list/table
+  const [viewMode, setViewMode] = useState('dashboard'); // 'dashboard' | 'register' | 'matrix' | 'analytics' | 'reviews' | 'settings'
+  const [riskListLayout, setRiskListLayout] = useViewMode('pm-risk-register', 'list')
   const [showPrintView, setShowPrintView] = useState(false)
   const [riskOrgAccountId, setRiskOrgAccountId] = useState(null);
   const [projectName, setProjectName] = useState(null);
@@ -91,16 +101,16 @@ export default function RiskRegisterView() {
       return;
     }
     let cancelled = false;
-    getCurrentUserAccountId().then((id) => {
-      if (!cancelled) setRiskOrgAccountId(id);
-    });
-    simDb
-      .from('practice_projects')
-      .select('project_name')
+    platformDb
+      .from('projects')
+      .select('account_id, project_name')
       .eq('id', projectId)
       .maybeSingle()
       .then(({ data }) => {
-        if (!cancelled) setProjectName(data?.project_name || null);
+        if (!cancelled) {
+          setRiskOrgAccountId(data?.account_id || null);
+          setProjectName(data?.project_name || null);
+        }
       });
     return () => {
       cancelled = true;
@@ -223,7 +233,7 @@ export default function RiskRegisterView() {
 
   const handleEdit = (risk) => {
     setSelectedRisk(risk);
-    setShowForm(true);
+    setShowEnhancedForm(true);
   };
 
   const handleDelete = async (risk) => {
@@ -245,7 +255,11 @@ export default function RiskRegisterView() {
 
   const handleViewDetails = (risk) => {
     const pk = routeKey || projectId;
-    navigate(platformRiskPath(pk, (risk.risk_code && String(risk.risk_code).trim()) || risk.id));
+    const riskKey =
+      (risk.risk_identifier && String(risk.risk_identifier).trim()) ||
+      (risk.risk_code && String(risk.risk_code).trim()) ||
+      risk.id;
+    navigate(platformRiskPath(pk, riskKey));
   };
 
   if (loading) {
@@ -267,6 +281,39 @@ export default function RiskRegisterView() {
     )
   }
 
+  const handleCancelEnhancedForm = () => {
+    setShowEnhancedForm(false);
+    setSelectedRisk(null);
+  };
+
+  // Full-page create/edit — replaces the register list (never a modal overlay).
+  if (showEnhancedForm) {
+    const listHref = `${location.pathname}${location.search || ''}`;
+    return (
+      <div className="w-full space-y-4">
+        <Link
+          to={listHref}
+          replace
+          onClick={(e) => {
+            e.preventDefault();
+            handleCancelEnhancedForm();
+          }}
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          ← Back to risk list
+        </Link>
+        <EnhancedRiskForm
+          variant="page"
+          risk={selectedRisk}
+          projectId={projectId}
+          riskRegisterId={register?.id}
+          onSave={handleSaveRisk}
+          onCancel={handleCancelEnhancedForm}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -282,20 +329,37 @@ export default function RiskRegisterView() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <ExportListMenu columns={riskExportColumns} data={riskExportRows} baseFilename="RiskRegister" disabled={!risks?.length} />
-          <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {viewMode === 'register' && (
+            <ViewToggle value={riskListLayout} onChange={setRiskListLayout} ariaLabel="Risk list layout" />
+          )}
+          <div className="flex flex-wrap items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
             <button
-              onClick={() => setViewMode('list')}
+              type="button"
+              onClick={() => setViewMode('dashboard')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                viewMode === 'list'
+                viewMode === 'dashboard'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
             >
-              List
+              <LayoutDashboard className="h-4 w-4 inline mr-1" />
+              Dashboard
             </button>
             <button
+              type="button"
+              onClick={() => setViewMode('register')}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                viewMode === 'register'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <List className="h-4 w-4 inline mr-1" />
+              Register
+            </button>
+            <button
+              type="button"
               onClick={() => setViewMode('matrix')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 viewMode === 'matrix'
@@ -307,6 +371,7 @@ export default function RiskRegisterView() {
               Matrix
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('analytics')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 viewMode === 'analytics'
@@ -319,6 +384,7 @@ export default function RiskRegisterView() {
             </button>
             {register && (
               <button
+                type="button"
                 onClick={() => setViewMode('reviews')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                   viewMode === 'reviews'
@@ -331,6 +397,7 @@ export default function RiskRegisterView() {
               </button>
             )}
             <button
+              type="button"
               onClick={() => setViewMode('settings')}
               className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                 viewMode === 'settings'
@@ -342,14 +409,18 @@ export default function RiskRegisterView() {
               Settings
             </button>
           </div>
-            {register && (
-              <RiskExportMenu
-                register={register}
-                risks={risks}
-                onPrint={() => setShowPrintView(true)}
-              />
-            )}
+          {register && (
+            <RiskExportMenu
+              register={register}
+              risks={risks}
+              columns={riskExportColumns}
+              data={riskExportRows}
+              baseFilename="RiskRegister"
+              onPrint={() => setShowPrintView(true)}
+            />
+          )}
           <button
+            type="button"
             onClick={() => {
               setSelectedRisk(null);
               setShowEnhancedForm(true);
@@ -362,81 +433,103 @@ export default function RiskRegisterView() {
         </div>
       </div>
 
-      {/* Summary Stats */}
-      {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Total Risks</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_risks || 0}</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Active</p>
-            <p className="text-2xl font-bold text-blue-600">{summary.active_risks || 0}</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">High/Very High</p>
-            <p className="text-2xl font-bold text-red-600">{summary.high_risks || 0}</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Overdue Responses</p>
-            <p className="text-2xl font-bold text-orange-600">{summary.overdue_responses || 0}</p>
-          </div>
+      {/* Risk Dashboard — summary, alerts, top risks */}
+      {viewMode === 'dashboard' && (
+        <div className="space-y-6">
+          {summary && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <DashboardStatCard
+                label="Total Risks"
+                value={summary.total_risks || 0}
+                onClick={() => { setFilters(RISK_EMPTY_FILTERS); setViewMode('register'); }}
+              />
+              <DashboardStatCard
+                label="Active"
+                value={summary.active_risks || 0}
+                accentClassName="text-blue-600 dark:text-blue-400"
+                onClick={() => { setFilters({ ...RISK_EMPTY_FILTERS, status_in: RISK_ACTIVE_STATUSES }); setViewMode('register'); }}
+              />
+              <DashboardStatCard
+                label="High/Very High"
+                value={summary.high_risks || 0}
+                accentClassName="text-red-600 dark:text-red-400"
+                onClick={() => { setFilters({ ...RISK_EMPTY_FILTERS, risk_level_in: ['high', 'very_high'] }); setViewMode('register'); }}
+              />
+              <DashboardStatCard
+                label="Overdue Responses"
+                value={summary.overdue_responses || 0}
+                accentClassName="text-orange-600 dark:text-orange-400"
+                onClick={() => { setFilters({ ...RISK_EMPTY_FILTERS, overdue_responses_only: true }); setViewMode('register'); }}
+              />
+            </div>
+          )}
+          <RiskAlerts projectId={projectId} />
+          <RegisterOpenItemsWidget
+            title="Top Risks"
+            icon={AlertTriangle}
+            rows={topRisks}
+            columns={[
+              { key: 'risk_identifier', label: 'Reference', className: 'font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+              { key: 'title', label: 'Title', className: 'font-medium text-gray-900 dark:text-white' },
+              {
+                key: 'risk_score',
+                label: 'Risk Score',
+                render: (r) => (
+                  <span className="px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                    {r.risk_score || '—'}
+                  </span>
+                ),
+              },
+              {
+                key: 'expected_value',
+                label: 'Expected Value',
+                sortAccessor: (r) => Number(r.expected_value) || 0,
+                render: (r) => (r.expected_value != null ? Number(r.expected_value).toLocaleString() : '—'),
+                className: 'text-gray-500 dark:text-gray-400 whitespace-nowrap',
+              },
+            ]}
+            rowKey={(r) => r.risk_id}
+            searchFields={['risk_identifier', 'title']}
+            onRowClick={(r) => handleViewDetails({ risk_identifier: r.risk_identifier, id: r.risk_id })}
+            onViewAll={() => setViewMode('register')}
+            viewAllLabel="Open full Risk Register"
+            emptyMessage="No open risks"
+          />
         </div>
       )}
 
-      {/* Risk Alerts */}
-      {viewMode === 'list' && <RiskAlerts projectId={projectId} />}
-
-      {/* Top Risks Widget (for list view) */}
-      {viewMode === 'list' && topRisks.length > 0 && (
-        <TopRisksWidget projectId={projectId} limit={3} showAll={false} />
-      )}
-
-      {/* Filters */}
-      <RisksFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        onClear={() => setFilters({
-          search: '',
-          risk_category: '',
-          risk_type: '',
-          status: '',
-          risk_level: '',
-          proximity: ''
-        })}
-      />
-
-      {/* Risk Form Modal */}
-      {showEnhancedForm && register && (
-        <EnhancedRiskForm
-          risk={selectedRisk}
-          projectId={projectId}
-          riskRegisterId={register.id}
-          onSave={handleSaveRisk}
-          onCancel={() => {
-            setShowEnhancedForm(false);
-            setSelectedRisk(null);
-          }}
-        />
-      )}
-
-
-      {/* Risks List */}
-      {viewMode === 'list' && (
-        <RisksList
-          risks={risks}
-          loading={false}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onEscalate={async (risk) => {
-            const result = await escalateRiskToIssue(risk.id);
-            if (result.success) {
-              alert('Risk escalated to issue successfully!');
-              fetchRisks();
-            }
-          }}
-          emptyMessage="No risks found. Click 'Add Risk' to get started."
-        />
+      {/* Risk Register — filters + list/table */}
+      {viewMode === 'register' && (
+        <div className="space-y-6">
+          <RisksFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClear={() => setFilters({
+              search: '',
+              risk_category: '',
+              risk_type: '',
+              status: '',
+              risk_level: '',
+              proximity: ''
+            })}
+          />
+          <RisksList
+            risks={risks}
+            loading={false}
+            onView={handleViewDetails}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onEscalate={async (risk) => {
+              const result = await escalateRiskToIssue(risk.id);
+              if (result.success) {
+                alert('Risk escalated to issue successfully!');
+                fetchRisks();
+              }
+            }}
+            emptyMessage="No risks found. Click 'Add Risk' to get started."
+            viewMode={riskListLayout}
+          />
+        </div>
       )}
 
       {/* Risk Matrix View */}
@@ -483,7 +576,7 @@ export default function RiskRegisterView() {
           </p>
           {riskOrgAccountId && projectId ? (
             <TierFieldCustomisationPanel
-              db={simDb}
+              db={platformDb}
               accountId={riskOrgAccountId}
               tier="project"
               entityType="project"

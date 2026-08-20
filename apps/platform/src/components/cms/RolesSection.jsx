@@ -62,10 +62,11 @@ export default function RolesSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateRole(editingId, formData)
+        await updateRole(editingId, editableFields)
       } else {
-        await addRole(cmsId, formData)
+        await addRole(cmsId, editableFields)
       }
       await loadRoles()
       setShowForm(false)
@@ -79,6 +80,8 @@ export default function RolesSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (role) => {
     setFormData({
+      id: role.id,
+      created_at: role.created_at,
       role_name: role.role_name || '',
       role_type: role.role_type || '',
       role_description: role.role_description || '',

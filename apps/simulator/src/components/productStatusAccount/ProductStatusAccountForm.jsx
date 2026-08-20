@@ -9,6 +9,12 @@ import { createProductStatusAccount, updateProductStatusAccount, getProductStatu
 import { supabase } from '../../services/supabaseClient'
 import PSAStatusIndicator from './PSAStatusIndicator'
 import PSAProgressIndicator from './PSAProgressIndicator'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function ProductStatusAccountForm({
   projectId,
@@ -57,6 +63,17 @@ export default function ProductStatusAccountForm({
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     if (psaId && mode !== 'create') {
@@ -75,6 +92,7 @@ export default function ProductStatusAccountForm({
       const result = await getProductStatusAccountById(psaId)
       if (result.success && result.data) {
         const data = result.data
+        setRecord(data)
         setFormData({
           report_date: data.report_date || new Date().toISOString().split('T')[0],
           product_name: data.product_name || '',
@@ -148,16 +166,18 @@ export default function ProductStatusAccountForm({
 
   const loadTeamMembers = async () => {
     try {
-      const { data } = await supabase
-        .from('project_members')
+      const { data, error } = await supabase
+        .from('project_memberships')
         .select(`
-          *,
+          id,
+          user_id,
           user:user_id(id, full_name, email)
         `)
         .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
 
-      setTeamMembers(data || [])
+      if (error) throw error
+      setTeamMembers((data || []).filter((m) => m.user_id))
     } catch (error) {
       console.error('Error loading team members:', error)
     }
@@ -224,6 +244,35 @@ export default function ProductStatusAccountForm({
           {mode === 'create' ? 'Create Product Status Account' : 'Edit Product Status Account'}
         </h2>
 
+        <div className="mb-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          <div className="mb-6">
+            {!record ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this product status account is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this product status account, and how it is classified.">
+                <AuditCard title="Identity" description="How this record is labelled and tracked.">
+                  <AuditField label="Product name" value={record.product_name} />
+                  <AuditField label="Status" value={humanizeAuditToken(record.current_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this record is categorised.">
+                  <AuditField label="Product type" value={humanizeAuditToken(record.product_type)} />
+                  <AuditField label="Progress indicator" value={humanizeAuditToken(record.progress_indicator)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this record was created and last changed.">
+                  <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                  <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
+        <>
         {/* Basic Information */}
         <div className="space-y-4 mb-6">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">Basic Information</h3>
@@ -578,6 +627,8 @@ export default function ProductStatusAccountForm({
             />
           </div>
         </div>
+        </>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">

@@ -3,11 +3,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import PMOOversightHeader from '../../components/pmo/PMOOversightHeader'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -26,6 +27,7 @@ const STMT_COLS = [
 ]
 
 export default function PMOOversightScope() {
+  const navigate = useNavigate()
   const [plans, setPlans] = useState([])
   const [stmts, setStmts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -109,12 +111,11 @@ export default function PMOOversightScope() {
                       <td className="p-3 text-xs">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
                       <td className="p-3">
                         {r.project?.id ? (
-                          <Link
-                            to={`/platform/projects/${r.project.id}/scope/management-plan`}
-                            className="text-blue-600 hover:underline dark:text-blue-400"
-                          >
-                            View
-                          </Link>
+                          <RowActionButton
+                            variant="view"
+                            label="View scope management plan"
+                            onClick={() => navigate(`/platform/projects/${r.project.id}/scope/management-plan`)}
+                          />
                         ) : (
                           '—'
                         )}
@@ -153,12 +154,11 @@ export default function PMOOversightScope() {
                       <td className="p-3 text-xs">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
                       <td className="p-3">
                         {r.project?.id ? (
-                          <Link
-                            to={`/platform/projects/${r.project.id}/scope/statement`}
-                            className="text-blue-600 hover:underline dark:text-blue-400"
-                          >
-                            View
-                          </Link>
+                          <RowActionButton
+                            variant="view"
+                            label="View scope statement"
+                            onClick={() => navigate(`/platform/projects/${r.project.id}/scope/statement`)}
+                          />
                         ) : (
                           '—'
                         )}

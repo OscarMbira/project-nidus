@@ -12,6 +12,14 @@ import BusinessCaseApprovals from './BusinessCaseApprovals'
 import BusinessCaseRevisionHistory from './BusinessCaseRevisionHistory'
 import BusinessCaseDistribution from './BusinessCaseDistribution'
 import BusinessCaseStatusBadge from './BusinessCaseStatusBadge'
+import { useState, useEffect } from 'react'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const RISK_COLORS = {
   low: 'text-green-600 dark:text-green-400',
@@ -49,6 +57,19 @@ export default function BusinessCaseViewComponent({
   canApprove = false,
   onRefresh,
 }) {
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !businessCase) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [businessCase.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, businessCase])
+
   if (!businessCase) return null
 
   const OPTION_LABELS = {
@@ -60,6 +81,30 @@ export default function BusinessCaseViewComponent({
 
   return (
     <div className="space-y-4">
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Business case sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this business case, and how it is classified.">
+          <AuditCard title="Identity" description="How this business case is labelled and tracked.">
+            <AuditField label="Reference" value={businessCase.case_reference} />
+            <AuditField label="Title" value={businessCase.case_title} />
+            <AuditField label="Status" value={humanizeAuditToken(businessCase.document_status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this business case sits.">
+            <AuditField label="Overall risk rating" value={humanizeAuditToken(businessCase.overall_risk_rating)} />
+            <AuditField label="Recommended option" value={OPTION_LABELS[businessCase.recommended_option] || humanizeAuditToken(businessCase.recommended_option)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this business case was created and last changed.">
+            <AuditField label="Created by" value={businessCase.creator ? [businessCase.creator.first_name, businessCase.creator.last_name].filter(Boolean).join(' ') || businessCase.creator.email : null} />
+            <AuditTimestampPair dateLabel="Created at" value={businessCase.created_at} />
+            <AuditField label="Updated by" value={businessCase.updated_by ? auditUserLabels[businessCase.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={businessCase.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
+      <>
       {/* Header Info */}
       <Section title="Document Information">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
@@ -192,6 +237,8 @@ export default function BusinessCaseViewComponent({
       <Section title="Distribution List">
         <BusinessCaseDistribution caseId={businessCase.id} readOnly />
       </Section>
+      </>
+      )}
     </div>
   )
 }

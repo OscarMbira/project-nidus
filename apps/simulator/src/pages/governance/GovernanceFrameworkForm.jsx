@@ -6,6 +6,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Shield, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const inp = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl = 'block text-sm font-medium text-gray-300 mb-1';
@@ -16,17 +22,31 @@ export default function GovernanceFrameworkForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);
+  const [record, setRecord] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(null);
   const [loading, setLoading] = useState(isEdit);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
 
   useEffect(() => {
     if (!isEdit) return;
     platformDb.from('governance_frameworks').select('*').eq('id',id).maybeSingle().then(({data})=>{
-      if(data) setForm({name:data.name??'',version:data.version??'1.0',status:data.status??'draft',description:data.description??'',principles:data.principles??'',escalation_path:data.escalation_path??'',notes:data.notes??''});
+      if(data) {
+        setForm({name:data.name??'',version:data.version??'1.0',status:data.status??'draft',description:data.description??'',principles:data.principles??'',escalation_path:data.escalation_path??'',notes:data.notes??''});
+        setRecord(data);
+      }
       setLoading(false);
     });
   },[id,isEdit]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, record]);
 
   const set = f => e => setForm(p=>({...p,[f]:e.target.value}));
 
@@ -51,6 +71,31 @@ export default function GovernanceFrameworkForm() {
       <button onClick={()=>navigate('/platform/governance/framework')} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5"><ArrowLeft size={15}/>Back</button>
       <div className="flex items-center gap-3 mb-6"><Shield size={22} className="text-blue-400"/><h1 className="text-2xl font-bold">{isEdit?'Edit':'New'} Governance Framework</h1></div>
       {saved && <div className="mb-5 rounded-lg bg-green-900/50 border border-green-700 px-4 py-3 text-green-300 text-sm">Framework <strong>{saved.id}</strong> {saved.operation.toLowerCase()} successfully.<button onClick={()=>navigate('/platform/governance/framework')} className="ml-3 underline">Back to list</button></div>}
+      <div className="mb-4"><DetailAuditTabList activeTab={formTab} onChange={setFormTab} /></div>
+      {formTab === 'audit' ? (
+        <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+          {!record ? (
+            <p className="text-sm text-gray-400">Audit details appear after this framework is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this governance framework, and how it is classified.">
+              <AuditCard title="Identity" description="How this framework is labelled and tracked.">
+                <AuditField label="Name" value={record.name} />
+                <AuditField label="Version" value={record.version} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this framework sits.">
+                <AuditField label="Escalation path" value={record.escalation_path} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this framework was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <form onSubmit={handleSave} className="rounded-lg border border-gray-700 bg-gray-800 p-6 space-y-4">
         <div><label className={lbl}>Name <span className="text-red-400">*</span></label><input className={inp} value={form.name} onChange={set('name')} required/></div>
         <div className="grid grid-cols-2 gap-4">
@@ -66,6 +111,7 @@ export default function GovernanceFrameworkForm() {
           <button type="button" onClick={()=>navigate('/platform/governance/framework')} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm">Cancel</button>
         </div>
       </form>
+      )}
     </div>
   );
 }

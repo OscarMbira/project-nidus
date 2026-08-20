@@ -3,6 +3,12 @@ import { platformDb } from '@nidus/supabase'
 import { X, Save, FileText, Settings, Target, BarChart3, Shield, Users, Calendar, CheckCircle, ArrowRight, ArrowLeft, AlertTriangle } from 'lucide-react'
 import { createRMS, updateRMS, createRMSForProject, createRMSFromTemplate } from '../../services/riskManagementStrategyService'
 import { HoldButton } from '../ui/HoldButton'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComplete }) {
   const [formData, setFormData] = useState({
@@ -29,6 +35,18 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [activeStep, setActiveStep] = useState(1)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !rms) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [rms.created_by, rms.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, rms])
 
   const steps = [
     { id: 1, title: 'Introduction', icon: FileText },
@@ -605,6 +623,38 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
           </button>
         </div>
 
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' && (
+          <div className="p-6">
+            {!rms?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this strategy is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this risk management strategy, and how it is classified.">
+                <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+                  <AuditField label="Status" value={humanizeAuditToken(rms.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this strategy sits.">
+                  <AuditField label="Project" value={rms.project?.project_name} />
+                  <AuditField label="Author" value={rms.author?.full_name || rms.author?.email} />
+                  <AuditField label="Owner" value={rms.owner?.full_name || rms.owner?.email} />
+                  <AuditField label="Client" value={rms.client?.full_name || rms.client?.email} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this strategy was created and last changed.">
+                  <AuditField label="Created by" value={rms.created_by ? auditUserLabels[rms.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={rms.created_at} />
+                  <AuditField label="Updated by" value={rms.updated_by ? auditUserLabels[rms.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={rms.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'wizard' && (
+        <>
         {/* Progress Bar */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
@@ -685,6 +735,8 @@ export default function RMSForm({ rms, projectId, onSave, onCancel, onHoldComple
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

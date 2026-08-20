@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Plus, Trash2, GripVertical } from 'lucide-react'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { platformDb, simDb } from '@nidus/supabase'
+import { Plus, Trash2, GripVertical, FileSpreadsheet } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -37,6 +38,15 @@ import {
   listDefaultContentEntries,
 } from '@nidus/shared/utils/formTemplateFieldDefaults'
 import { FormTemplateExportMenu } from '@nidus/ui'
+import AuditField from '@nidus/ui/AuditField'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import {
+  humanizeAuditToken,
+  resolveScopeReferenceLabel,
+} from '@nidus/shared/utils/auditDisplayUtils.js'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import FormFieldRenderer from '../../components/forms/FormFieldRenderer'
@@ -51,11 +61,21 @@ import {
   optionToLine,
   parseOptionLine,
 } from '@nidus/shared/utils/formSelectOptions'
+import {
+  resolveFormTemplateBuilderBasePath,
+  resolveFormTemplateBuilderListPath,
+} from '@nidus/shared/utils/organisationalTemplateRoutes'
+import {
+  summarizeFormTemplateDefaultsSave,
+  summarizeFormTemplateSaveChanges,
+} from '@nidus/shared/utils/formTemplateSaveSummary'
 import SelectOptionsEditor from '../../components/ui/SelectOptionsEditor'
 import CompletedExampleManager from '../../components/ui/CompletedExampleManager'
-import CrudSuccessBanner from '../../components/stakeholders/CrudSuccessBanner'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import FormTranslationBulkImport from '../../components/forms/FormTranslationBulkImport'
+import FormExcelSchemaImportModal from '../../components/forms/FormExcelSchemaImportModal'
 import { getSessionPMOAdminStatus } from '../../services/pmoAdminService'
+import { DEFAULT_MAX_FILES_PER_FIELD, HARD_MAX_FILES_CEILING } from '../../services/formFieldAttachmentService'
 import {
   addFieldForOrg,
   clearFieldDefaultForOrg,
@@ -103,6 +123,7 @@ const FIELD_TYPES = [
   { value: 'number', label: 'Number' },
   { value: 'money', label: 'Money' },
   { value: 'select', label: 'Select' },
+  { value: 'attachment', label: 'Attachment (image/file)' },
 ]
 
 /** requiresEdit tabs need a persisted template — hidden while creating a brand-new one. */
@@ -123,6 +144,8 @@ function emptyField(index = 0) {
     options: [],
     minLength: '',
     maxLength: '',
+    accept: 'any',
+    maxFiles: DEFAULT_MAX_FILES_PER_FIELD,
     isNew: true,
   }
 }
@@ -166,6 +189,10 @@ function schemaFromForm(form) {
           if (minLength != null) out.minLength = minLength
           if (maxLength != null) out.maxLength = maxLength
         }
+        if (field.type === 'attachment') {
+          out.accept = field.accept === 'image' ? 'image' : 'any'
+          out.maxFiles = Math.min(Number(field.maxFiles) || DEFAULT_MAX_FILES_PER_FIELD, HARD_MAX_FILES_CEILING)
+        }
         return out
       }),
     })),
@@ -186,6 +213,8 @@ function formFromTemplate(template) {
           options: Array.isArray(field.options) ? field.options.map(optionToLine).filter(Boolean) : [],
           minLength: field.minLength != null && field.minLength !== '' ? String(field.minLength) : '',
           maxLength: field.maxLength != null && field.maxLength !== '' ? String(field.maxLength) : '',
+          accept: field.accept === 'image' ? 'image' : 'any',
+          maxFiles: field.maxFiles != null ? Number(field.maxFiles) : DEFAULT_MAX_FILES_PER_FIELD,
         })),
       }))
     : [emptySection()]
@@ -373,6 +402,35 @@ function SortableFieldCard({
           </p>
         </div>
       )}
+      {field.type === 'attachment' && (
+        <div className="grid gap-3 md:grid-cols-4 pl-6">
+          <div>
+            <label className={labelClass}>Accepted files</label>
+            <select
+              className={inputClass}
+              value={field.accept === 'image' ? 'image' : 'any'}
+              onChange={(e) => updateField(sectionIndex, fieldIndex, { accept: e.target.value })}
+            >
+              <option value="any">Any file (images + documents)</option>
+              <option value="image">Images only</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Max files</label>
+            <input
+              type="number"
+              min={1}
+              max={HARD_MAX_FILES_CEILING}
+              className={inputClass}
+              value={field.maxFiles ?? DEFAULT_MAX_FILES_PER_FIELD}
+              onChange={(e) => updateField(sectionIndex, fieldIndex, { maxFiles: e.target.value })}
+            />
+          </div>
+          <p className="md:col-span-2 self-end pb-2 text-xs text-gray-500 dark:text-gray-400">
+            Each attachment is capped at 10MB. Max files per field cannot exceed {HARD_MAX_FILES_CEILING}.
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -535,6 +593,39 @@ function SortableFieldTableRow({
           </td>
         </tr>
       )}
+      {field.type === 'attachment' && (
+        <tr className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+          <td colSpan={10} className="px-3 py-2">
+            <div className="flex flex-wrap items-end gap-3">
+              <div>
+                <label className={labelClass}>Accepted files</label>
+                <select
+                  className={tableInputClass}
+                  value={field.accept === 'image' ? 'image' : 'any'}
+                  onChange={(e) => updateField(sectionIndex, fieldIndex, { accept: e.target.value })}
+                >
+                  <option value="any">Any file (images + documents)</option>
+                  <option value="image">Images only</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Max files</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={HARD_MAX_FILES_CEILING}
+                  className={tableInputClass}
+                  value={field.maxFiles ?? DEFAULT_MAX_FILES_PER_FIELD}
+                  onChange={(e) => updateField(sectionIndex, fieldIndex, { maxFiles: e.target.value })}
+                />
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Each attachment is capped at 10MB. Max files per field cannot exceed {HARD_MAX_FILES_CEILING}.
+              </p>
+            </div>
+          </td>
+        </tr>
+      )}
     </>
   )
 }
@@ -542,18 +633,34 @@ function SortableFieldTableRow({
 export default function FormTemplateBuilder({ mode = 'platform' }) {
   const { templateCode: editCode } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const [searchParams] = useSearchParams()
   const isEdit = Boolean(editCode)
-  const adminListPath = mode === 'sim' ? '/simulator/pmo/forms' : '/pmo/forms'
-  const editBasePath = adminListPath
+  const editBasePath = resolveFormTemplateBuilderBasePath(location.pathname, mode)
+  const onPmTemplatesSurface =
+    location.pathname.includes('/platform/templates/') ||
+    location.pathname.includes('/simulator/pm/templates/')
+
+  const [returnContext, setReturnContext] = useState(() => ({
+    tier: searchParams.get('tier') || '',
+    entityType: searchParams.get('entityType') || '',
+    entityId: searchParams.get('entityId') || '',
+  }))
+  // Tier-aware Back: PMO → Organisational; portfolio/programme → entity-scoped org list; project → Project Templates.
+  const adminListPath = resolveFormTemplateBuilderListPath(location.pathname, mode, returnContext)
 
   const [loading, setLoading] = useState(true)
   const [accessDenied, setAccessDenied] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  const [success, setSuccess] = useState(null)
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [form, setForm] = useState(defaultFormState())
   const baselineRef = useRef(snapshotForm(defaultFormState()))
   const [templateId, setTemplateId] = useState(null)
+  const [auditMeta, setAuditMeta] = useState(null)
+  const [detailTab, setDetailTab] = useState('details')
+  const [scopeReferenceLabel, setScopeReferenceLabel] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const [organisationId, setOrganisationId] = useState(null)
   const [fieldsViewMode, setFieldsViewMode] = useViewMode(
     mode === 'sim' ? 'sim-form-template-builder-fields' : 'form-template-builder-fields',
@@ -567,6 +674,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
   const [fieldAdditions, setFieldAdditions] = useState([])
   const [newLocalField, setNewLocalField] = useState({
     sectionKey: '', key: '', label: '', type: 'text', required: false, options: [], minLength: '', maxLength: '',
+    accept: 'any', maxFiles: DEFAULT_MAX_FILES_PER_FIELD,
   })
   const [addingLocalField, setAddingLocalField] = useState(false)
   const [deletingAdditionKey, setDeletingAdditionKey] = useState(null)
@@ -580,6 +688,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
   const [activeLanguages, setActiveLanguages] = useState([])
   const [translations, setTranslations] = useState([])
   const [activeTab, setActiveTab] = useState('fields')
+  const [excelSchemaModalOpen, setExcelSchemaModalOpen] = useState(false)
 
   const translationTargetLanguages = useMemo(
     () => getTranslationTargetLanguages(activeLanguages),
@@ -592,14 +701,47 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
     || section.fields.some((f) => fieldUsage.fieldKeysInUse.has(f.key))
   )
 
-  const isDirty = useMemo(
-    () => snapshotForm(form) !== baselineRef.current,
-    [form],
-  )
+  // Compare every render — baselineRef is updated on save/load without changing `form`,
+  // so a useMemo([form]) would keep a stale isDirty=true after a successful save.
+  const isDirty = snapshotForm(form) !== baselineRef.current
   const { confirmDiscard } = useUnsavedChangesGuard(
     isDirty,
     'You have unsaved template changes.',
   )
+
+  useEffect(() => {
+    let cancelled = false
+    const scopeType = auditMeta?.scope_entity_type
+    const scopeId = auditMeta?.scope_entity_id
+    if (!scopeId) {
+      setScopeReferenceLabel(null)
+      return
+    }
+    const db = mode === 'sim' ? simDb : platformDb
+    resolveScopeReferenceLabel(db, { scopeType, scopeId }).then((label) => {
+      if (!cancelled) setScopeReferenceLabel(label)
+    })
+    return () => { cancelled = true }
+  }, [auditMeta?.scope_entity_type, auditMeta?.scope_entity_id, mode])
+
+  useEffect(() => {
+    const id = String(auditMeta?.created_by || '').trim()
+    if (!id) {
+      setAuditUserLabels({})
+      return
+    }
+    let cancelled = false
+    platformDb
+      .from('users')
+      .select('id, full_name, email')
+      .eq('id', id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) return
+        setAuditUserLabels({ [data.id]: data.full_name || data.email || data.id })
+      })
+    return () => { cancelled = true }
+  }, [auditMeta?.created_by])
 
   const loadPage = useCallback(async () => {
     setLoading(true)
@@ -640,12 +782,32 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
         baselineRef.current = snapshotForm(next)
         setTemplateId(result.data.id)
         setTemplatePersisted(true)
+        setAuditMeta({
+          template_code: result.data.template_code,
+          name: result.data.name,
+          process_group: result.data.process_group,
+          is_active: result.data.is_active,
+          account_id: result.data.account_id,
+          created_by: result.data.created_by,
+          created_at: result.data.created_at,
+          updated_at: result.data.updated_at,
+          version_number: result.data.current_version?.version_number,
+          tier: null,
+          scope_entity_type: null,
+          scope_entity_id: null,
+        })
 
         if (result.data.id) {
-          const [usage, langs, fieldTranslations] = await Promise.all([
+          const [usage, langs, fieldTranslations, nodeResult] = await Promise.all([
             getFormTemplateFieldUsage(result.data.id, mode),
             getActiveLanguages(mode),
             getFieldTranslations(result.data.id, mode),
+            (mode === 'sim' ? simDb : platformDb)
+              .from('pm_template_nodes')
+              .select('tier, scope_entity_type, scope_entity_id')
+              .eq('domain', 'form_template')
+              .eq('domain_ref_id', result.data.id)
+              .maybeSingle(),
           ])
           if (usage.success) {
             setFieldUsage({
@@ -655,6 +817,22 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           }
           if (langs.success) setActiveLanguages(langs.data)
           if (fieldTranslations.success) setTranslations(fieldTranslations.data)
+          const node = nodeResult?.data
+          if (node?.tier) {
+            setReturnContext((prev) => ({
+              tier: prev.tier || node.tier || '',
+              entityType: prev.entityType || node.scope_entity_type || '',
+              entityId: prev.entityId || node.scope_entity_id || '',
+            }))
+          }
+          if (node) {
+            setAuditMeta((prev) => ({
+              ...(prev || {}),
+              tier: node.tier || null,
+              scope_entity_type: node.scope_entity_type || null,
+              scope_entity_id: node.scope_entity_id || null,
+            }))
+          }
         }
 
         if (accountId && result.data.id) {
@@ -781,7 +959,6 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
   const handleSave = async (event) => {
     event.preventDefault()
     setError(null)
-    setSuccess(null)
 
     for (const section of form.sections || []) {
       for (const field of section.fields || []) {
@@ -822,12 +999,24 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       return
     }
 
+    let previousForm = null
+    try {
+      previousForm = JSON.parse(baselineRef.current)
+    } catch {
+      previousForm = null
+    }
+    const changeSummary = summarizeFormTemplateSaveChanges(previousForm, form, {
+      isCreate: !isEdit,
+      templateCode: result.data.template_code,
+      versionNumber: result.data.version_number,
+    })
+
     baselineRef.current = snapshotForm(form)
     setTemplatePersisted(true)
-    setSuccess({
-      template_code: result.data.template_code,
-      version_number: result.data.version_number,
+    showSuccess({
+      recordId: result.data.template_code,
       operation: isEdit ? 'updated' : 'created',
+      message: changeSummary,
     })
 
     if (!isEdit) {
@@ -1084,6 +1273,10 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       if (minLength != null) fieldDefinition.minLength = minLength
       if (maxLength != null) fieldDefinition.maxLength = maxLength
     }
+    if (newLocalField.type === 'attachment') {
+      fieldDefinition.accept = newLocalField.accept === 'image' ? 'image' : 'any'
+      fieldDefinition.maxFiles = Math.min(Number(newLocalField.maxFiles) || DEFAULT_MAX_FILES_PER_FIELD, HARD_MAX_FILES_CEILING)
+    }
     const result = await addFieldForOrg(
       {
         organisationId,
@@ -1175,7 +1368,6 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
 
     setDefaultsSaving(true)
     setError(null)
-    setSuccess(null)
 
     const entries = listDefaultContentEntries(defaultValues, guidanceValues, enabledDefaultSchema)
     const operations = entries.map((entry) => {
@@ -1207,9 +1399,13 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
       return
     }
 
-    setSuccess({
-      template_code: form.template_code,
-      operation: 'defaults_saved',
+    showSuccess({
+      recordId: form.template_code,
+      operation: 'updated',
+      message: summarizeFormTemplateDefaultsSave({
+        templateCode: form.template_code,
+        entries,
+      }),
     })
   }
 
@@ -1255,18 +1451,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
         </div>
       </div>
 
-      <CrudSuccessBanner
-        message={
-          success
-            ? success.operation === 'defaults_saved'
-              ? `Template ${success.template_code} default content saved successfully.`
-              : `Template ${success.template_code} ${success.operation} successfully (version ${success.version_number}).`
-            : null
-        }
-        recordId={success?.template_code}
-        operation={success?.operation}
-        onDismiss={() => setSuccess(null)}
-      />
+      {successModal}
 
       {error && (
         <div className="rounded border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-200">
@@ -1274,6 +1459,60 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
         </div>
       )}
 
+      <DetailAuditTabList
+        activeTab={detailTab}
+        onChange={setDetailTab}
+        detailsLabel="Form details"
+        ariaLabel="Form template sections"
+      />
+
+      {detailTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this form template, and how it is classified.">
+          <AuditCard title="Identity" description="How this record is labelled and versioned.">
+            <AuditField label="Template code" value={form.template_code || auditMeta?.template_code} />
+            <AuditField label="Name" value={form.name || auditMeta?.name} />
+            <AuditField
+              label="Status"
+              value={form.is_active ? 'Active' : 'Draft'}
+            />
+            <AuditField
+              label="Version"
+              value={auditMeta?.version_number != null ? String(auditMeta.version_number) : null}
+            />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this template sits.">
+            <AuditField label="Process group" value={humanizeAuditToken(form.process_group || auditMeta?.process_group)} />
+            <AuditField label="Tier" value={humanizeAuditToken(auditMeta?.tier || returnContext.tier)} />
+            <AuditField
+              label="Scope type"
+              value={humanizeAuditToken(auditMeta?.scope_entity_type || returnContext.entityType)}
+            />
+            <AuditField
+              label="Scope reference"
+              value={
+                scopeReferenceLabel
+                || auditMeta?.scope_entity_id
+                || returnContext.entityId
+                || null
+              }
+            />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this template was created and last changed.">
+            <AuditField
+              label="Created by"
+              value={
+                auditMeta?.created_by
+                  ? (auditUserLabels[auditMeta.created_by] || auditMeta.created_by)
+                  : null
+              }
+            />
+            <AuditTimestampPair dateLabel="Created at" value={auditMeta?.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={auditMeta?.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {detailTab === 'details' && (
       <form onSubmit={handleSave} className="space-y-6">
         <section className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 space-y-4">
           <h2 className="text-sm font-semibold">Template details</h2>
@@ -1368,6 +1607,13 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                 onChange={setFieldsViewMode}
                 ariaLabel="Field catalog layout"
               />
+              <button
+                type="button"
+                onClick={() => setExcelSchemaModalOpen(true)}
+                className="inline-flex items-center gap-1 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5" /> Import from Excel
+              </button>
               <button
                 type="button"
                 onClick={addSection}
@@ -1893,6 +2139,32 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
                     />
                   </div>
                 )}
+                {newLocalField.type === 'attachment' && (
+                  <>
+                    <div>
+                      <label className={labelClass}>Accepted files</label>
+                      <select
+                        className={inputClass}
+                        value={newLocalField.accept}
+                        onChange={(e) => setNewLocalField((prev) => ({ ...prev, accept: e.target.value }))}
+                      >
+                        <option value="any">Any file</option>
+                        <option value="image">Images only</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Max files</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={HARD_MAX_FILES_CEILING}
+                        className={inputClass}
+                        value={newLocalField.maxFiles}
+                        onChange={(e) => setNewLocalField((prev) => ({ ...prev, maxFiles: e.target.value }))}
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="md:col-span-5">
                   <button
                     type="button"
@@ -2023,6 +2295,13 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           </section>
         )}
 
+        <FormExcelSchemaImportModal
+          isOpen={excelSchemaModalOpen}
+          onClose={() => setExcelSchemaModalOpen(false)}
+          sections={form.sections}
+          onApply={(nextSections) => updateForm({ sections: nextSections })}
+        />
+
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
@@ -2040,9 +2319,13 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           </button>
           {isEdit && (
             <Link
-              to={`${editBasePath}?group=${encodeURIComponent(
-                PROCESS_GROUPS.find((g) => g.value === form.process_group)?.label?.replace(' & Controlling', '') || 'Planning',
-              )}`}
+              to={
+                onPmTemplatesSurface
+                  ? adminListPath
+                  : `${adminListPath}?group=${encodeURIComponent(
+                    PROCESS_GROUPS.find((g) => g.value === form.process_group)?.label?.replace(' & Controlling', '') || 'Planning',
+                  )}`
+              }
               className="rounded border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               View in gallery
@@ -2050,6 +2333,7 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           )}
         </div>
       </form>
+      )}
     </div>
   )
 }

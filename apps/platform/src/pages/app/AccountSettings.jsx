@@ -6,7 +6,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { getAccountById, updateAccount, getAccountProjects, getAccountSubscription, isAccountOwner } from '../../services/accountService'
-import { Briefcase, Users, CreditCard, Settings, Edit2, Save, X, Loader } from 'lucide-react'
+import { Briefcase, Users, CreditCard, Settings, Save, X, Loader } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { useToast } from '@nidus/shared/hooks/useToast'
 
 export default function AccountSettings() {
@@ -133,13 +134,13 @@ export default function AccountSettings() {
           </p>
         </div>
         {isOwner && (
-          <button
-            onClick={() => (editing ? handleSave() : setEditing(true))}
-            disabled={saving}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {editing ? (
-              saving ? (
+          editing ? (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? (
                 <>
                   <Loader className="h-4 w-4 animate-spin mr-2" />
                   Saving...
@@ -149,14 +150,16 @@ export default function AccountSettings() {
                   <Save className="h-4 w-4 mr-2" />
                   Save Changes
                 </>
-              )
-            ) : (
-              <>
-                <Edit2 className="h-4 w-4 mr-2" />
-                Edit
-              </>
-            )}
-          </button>
+              )}
+            </button>
+          ) : (
+            <RowActionButton
+              variant="edit"
+              label="Edit account"
+              onClick={() => setEditing(true)}
+              disabled={saving}
+            />
+          )
         )}
       </div>
 

@@ -12,6 +12,7 @@ vi.mock('@nidus/shared/services/processTemplateSignatoryService', () => ({
   saveSignatureImage: (...args) => saveSignatureImage(...args),
   deleteSavedSignature: (...args) => deleteSavedSignature(...args),
   getSignatureSignedUrl: (...args) => getSignatureSignedUrl(...args),
+  peekSignatureDisplayUrl: () => null,
   validateSignatureFile: (file) => {
     if (!file) return 'No file selected.'
     if (file.size > 2 * 1024 * 1024) return 'File is too large'

@@ -4,6 +4,12 @@ import { ArrowLeft, Save, CheckCircle, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { getTimesheetEntry, createTimesheetEntry, updateTimesheetEntry } from '../../../services/timesheetService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const EMPTY = {
   entry_date: new Date().toISOString().slice(0, 10),
@@ -32,6 +38,8 @@ export default function TimesheetEntryForm() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(isEdit)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (!isEdit) return
@@ -39,6 +47,7 @@ export default function TimesheetEntryForm() {
       setLoading(true)
       try {
         const data = await getTimesheetEntry(id)
+        setRecord(data)
         setForm({
           entry_date: data.entry_date || '',
           hours_worked: String(data.hours_worked || ''),
@@ -119,6 +128,31 @@ export default function TimesheetEntryForm() {
           </h1>
         </div>
 
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' ? (
+          <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-5">
+            {!record ? (
+              <p className="text-sm text-slate-400">Audit details appear after this entry is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="How this time entry is classified, and when it was created.">
+                <AuditCard title="Identity" description="How this entry is labelled and tracked.">
+                  <AuditField label="Date" value={record.entry_date} />
+                  <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this entry is categorised.">
+                  <AuditField label="Work category" value={humanizeAuditToken(record.work_category)} />
+                  <AuditField label="Hours worked" value={record.hours_worked} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this entry was created and last changed.">
+                  <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                  <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
+        <>
         {/* Form */}
         <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-5 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -165,6 +199,8 @@ export default function TimesheetEntryForm() {
             </div>
           )}
         </div>
+        </>
+        )}
 
         {/* Action buttons */}
         <div className="flex flex-wrap items-center justify-end gap-3">

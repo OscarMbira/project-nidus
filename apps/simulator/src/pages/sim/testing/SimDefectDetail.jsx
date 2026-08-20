@@ -8,6 +8,7 @@ import DefectHistoryTimeline from '../../../components/testing/DefectHistoryTime
 import DefectStatusBadge from '../../../components/testing/DefectStatusBadge'
 import DefectSeverityBadge from '../../../components/testing/DefectSeverityBadge'
 import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import { RowActionButton } from '@nidus/ui'
 import {
   getPracticeDefectById,
   createPracticeDefect,
@@ -30,6 +31,13 @@ import {
 } from '../../../utils/exportUtils'
 import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DEFECT_EXPORT_SECTIONS = [
   {
@@ -66,10 +74,20 @@ function Detail({ defectId, isNew, projectId }) {
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
   const [uid, setUid] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     resolveSimInternalUserId().then(setUid)
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [row.created_by, row.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     setEditing(isNew)
@@ -166,16 +184,38 @@ function Detail({ defectId, isNew, projectId }) {
               }
               onExportPrint={() => exportRecordToPrint(DEFECT_EXPORT_SECTIONS, record)}
             />
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-600 text-sm text-white"
-            >
-              Edit
-            </button>
+            <RowActionButton variant="edit" label="Edit defect" onClick={() => setEditing(true)} />
           </div>
         </div>
       )}
+      {!isNew && row && (
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      )}
+
+      {activeTab === 'audit' && !isNew && row ? (
+        <>
+          <AuditDetailsPanel description="Who created or changed this defect.">
+            <AuditCard title="Identity" description="How this defect is labelled.">
+              <AuditField label="Title" value={row.title} />
+              <AuditField label="Reference" value={row.defect_ref} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this defect is triaged.">
+              <AuditField label="Severity" value={humanizeAuditToken(row.severity)} />
+              <AuditField label="Priority" value={humanizeAuditToken(row.priority)} />
+              <AuditField label="Type" value={humanizeAuditToken(row.defect_type)} />
+              <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this defect was created and last changed.">
+              <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+              <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+          <DefectHistoryTimeline defectId={row.id} getHistory={getPracticeDefectHistory} />
+        </>
+      ) : (
+      <>
       {(isNew || editing) && (
         <DefectForm
           defect={isNew ? null : row}
@@ -212,8 +252,9 @@ function Detail({ defectId, isNew, projectId }) {
             }
             deleteAttachment={deletePracticeDefectAttachment}
           />
-          <DefectHistoryTimeline defectId={row.id} getHistory={getPracticeDefectHistory} />
         </>
+      )}
+      </>
       )}
     </div>
   )

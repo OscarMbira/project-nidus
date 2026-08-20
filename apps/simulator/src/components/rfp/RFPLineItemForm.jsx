@@ -6,6 +6,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 const PRIORITY_OPTIONS = [
   { value: 'must_have', label: 'Must Have' },
   { value: 'should_have', label: 'Should Have' },
@@ -38,6 +45,21 @@ const emptyItem = {
 
 export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSave, onCancel }) {
   const [form, setForm] = useState(emptyItem)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !item) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        item.created_by,
+        item.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, item])
 
   useEffect(() => {
     if (item) {
@@ -101,6 +123,35 @@ export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSav
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !item?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this line item is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this line item, and how it is classified.">
+                <AuditCard title="Identity" description="How this line item is labelled and tracked.">
+                  <AuditField label="S/No" value={item.item_number} />
+                  <AuditField label="Reference number" value={item.reference_number} />
+                  <AuditField label="Description" value={form.description || item.description} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this line item sits.">
+                  <AuditField label="Priority" value={humanizeAuditToken(form.priority || item.priority)} />
+                  <AuditField label="Requirement type" value={humanizeAuditToken(form.requirement_type || item.requirement_type)} />
+                  <AuditField label="Mandatory" value={(form.is_mandatory ?? item.is_mandatory) ? 'Yes' : 'No'} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this line item was created and last changed.">
+                  <AuditField label="Created by" value={item.created_by ? auditUserLabels[item.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={item.created_at} />
+                  <AuditField label="Updated by" value={item.updated_by ? auditUserLabels[item.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={item.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">S/No *</label>
@@ -159,6 +210,8 @@ export default function RFPLineItemForm({ item = null, nextItemNumber = 1, onSav
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estimated Effort</label>
             <input name="estimated_effort" value={form.estimated_effort} onChange={handleChange} placeholder="e.g. 5 days" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
           </div>
+          </>
+          )}
           <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button type="button" onClick={onCancel} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">Cancel</button>
             <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save</button>

@@ -4,6 +4,7 @@
 
 import { Package, CheckCircle, Clock, AlertCircle, XCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 
 const STATUS_COLORS = {
   not_started: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
@@ -47,13 +48,13 @@ const PROGRESS_INDICATOR_ICONS = {
   ahead_of_schedule: TrendingUp
 }
 
-export default function ProductStatusAccountCard({ psa, projectId }) {
+export default function ProductStatusAccountCard({ psa, projectId, routeKey }) {
   const navigate = useNavigate()
   const StatusIcon = STATUS_ICONS[psa.current_status] || Package
   const ProgressIcon = PROGRESS_INDICATOR_ICONS[psa.progress_indicator] || Minus
 
   const handleClick = () => {
-    navigate(`/app/projects/${projectId}/product-status-accounts/${psa.id}`)
+    navigate(platformProjectPath(routeKey || projectId, 'product-status-accounts', psa.psa_reference || psa.id))
   }
 
   return (

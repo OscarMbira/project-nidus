@@ -238,6 +238,23 @@ describe('pmoMenuSemanticDedupe', () => {
     expect(merged[0].menu_code).toBe('pmo-gov-communication-strategy')
   })
 
+  it('maps PMO and PM Manage Roles leaves to the same semantic key', () => {
+    expect(
+      pmoMenuLeafSemanticKey({
+        menu_code: 'pmo-people-manage-roles',
+        menu_label: 'Manage Roles',
+        route_path: '/platform/admin/manage-roles',
+      })
+    ).toBe('people:manage-roles')
+    expect(
+      pmoMenuLeafSemanticKey({
+        menu_code: 'plat_pm_manage_roles',
+        menu_label: 'Manage Roles',
+        route_path: '/platform/admin/manage-roles',
+      })
+    ).toBe('people:manage-roles')
+  })
+
   it('nestV671TrackCategories groups Initiation Hub into subsections', () => {
     const trackCategoryNodes = [
       {

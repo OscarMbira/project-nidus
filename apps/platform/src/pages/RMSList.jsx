@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { platformDb } from '@nidus/supabase'
-import { AlertTriangle, Search, Filter, Eye, CheckCircle, Clock, Plus, Edit2, Trash2 } from 'lucide-react'
+import { AlertTriangle, Search, Filter, CheckCircle, Clock, Plus } from 'lucide-react'
 import { getRMSByProject, deleteRMS, createRMSForProject } from '../services/riskManagementStrategyService'
 import RMSForm from '../components/rms/RMSForm'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { useCurrentProject } from '../context/CurrentProjectContext'
 
 const RMS_COLUMNS = [
   { key: 'rms_reference', label: 'Reference' },
@@ -14,8 +17,36 @@ const RMS_COLUMNS = [
   { key: 'purpose', label: 'Purpose' }
 ]
 
+/** Shorten seed-style RMS-YYYY-<32hex> to RMS-YYYY-#### (last 4); full ref stays in title. */
+function formatRmsReferenceDisplay(ref) {
+  if (!ref) return 'N/A'
+  const m = String(ref).match(/^(RMS-\d{4}-)([A-Fa-f0-9]{20,})$/)
+  if (m) return `${m[1]}${m[2].slice(-4).toUpperCase()}`
+  if (ref.length > 18) return `${ref.slice(0, 12)}…${ref.slice(-4)}`
+  return ref
+}
+
+/** List-friendly purpose: avoid single-line mid-word cut; clarify generic seed boilerplate. */
+function formatRmsPurposeDisplay(rms) {
+  const purpose = (rms.purpose || '').trim()
+  const projectName = rms.project?.project_name
+  if (!purpose) {
+    return projectName
+      ? `Risk management approach for ${projectName}`
+      : 'No purpose defined'
+  }
+  if (/^to define how risk management/i.test(purpose) && projectName) {
+    return `Defines how risks are identified, assessed and controlled for ${projectName}.`
+  }
+  return purpose
+}
+
 export default function RMSList() {
   const navigate = useNavigate()
+  const location = useLocation()
+  // Inside /pm/* (CurrentProjectProvider): scope list to the header project selector.
+  // Outside (e.g. PMO): currentProjectId is null → show all accessible strategies.
+  const { currentProjectId, currentProject, loading: projectCtxLoading } = useCurrentProject()
   const [rmsList, setRmsList] = useState([])
   const [projects, setProjects] = useState([])
   const [availableProjects, setAvailableProjects] = useState([]) // Projects user can create RMS for
@@ -29,13 +60,14 @@ export default function RMSList() {
   const [deletingRMS, setDeletingRMS] = useState(null)
 
   useEffect(() => {
+    if (projectCtxLoading) return
     fetchRMSList()
     fetchAvailableProjects()
-  }, [statusFilter])
+  }, [statusFilter, currentProjectId, projectCtxLoading])
 
   const fetchAvailableProjects = async () => {
     try {
-      // Get projects the user is a member of (for creating RMS)
+      // Projects the user can create RMS for (live membership = project_memberships)
       const { data: { user } } = await platformDb.auth.getUser()
       if (!user) return
 
@@ -48,7 +80,39 @@ export default function RMSList() {
 
       if (!userData) return
 
-      // Get projects where user has owner/admin access via user_projects
+      const projectIdSet = new Set()
+
+      // project_memberships has project_role_id (not "role") — join project_roles
+      const { data: memberships, error: memError } = await platformDb
+        .from('project_memberships')
+        .select(`
+          project_id,
+          project_roles:project_role_id ( role_name, role_display_name )
+        `)
+        .eq('user_id', userData.id)
+        .eq('is_active', true)
+
+      if (memError) throw memError
+      ;(memberships || []).forEach((m) => {
+        const role = String(
+          m.project_roles?.role_name || m.project_roles?.role_display_name || ''
+        ).toLowerCase()
+        // Any active membership can open create; prefer manager-like roles when present
+        if (!m.project_id) return
+        if (
+          !role ||
+          role.includes('owner') ||
+          role.includes('admin') ||
+          role.includes('project_manager') ||
+          role.includes('manager') ||
+          role === 'pm' ||
+          role.includes('pmo')
+        ) {
+          projectIdSet.add(m.project_id)
+        }
+      })
+
+      // Legacy fallback: user_projects
       const { data: userProjectsData, error: upError } = await platformDb
         .from('user_projects')
         .select('project_id')
@@ -56,16 +120,18 @@ export default function RMSList() {
         .in('access_level', ['owner', 'admin'])
         .eq('is_deleted', false)
 
-      if (upError) throw upError
+      if (!upError) {
+        ;(userProjectsData || []).forEach((up) => {
+          if (up.project_id) projectIdSet.add(up.project_id)
+        })
+      }
 
-      if (!userProjectsData || userProjectsData.length === 0) {
+      const projectIds = [...projectIdSet]
+      if (projectIds.length === 0) {
         setAvailableProjects([])
         return
       }
 
-      const projectIds = userProjectsData.map(up => up.project_id).filter(Boolean)
-
-      // Fetch project details
       const { data: projectsData, error: projectsError } = await platformDb
         .from('projects')
         .select('id, project_name, project_code, is_deleted')
@@ -76,7 +142,7 @@ export default function RMSList() {
 
       setAvailableProjects(projectsData || [])
     } catch (error) {
-      console.error('Error fetching available projects:', error)
+      console.error('Error fetching available projects:', error?.message || error)
       setAvailableProjects([])
     }
   }
@@ -85,18 +151,17 @@ export default function RMSList() {
     try {
       setLoading(true)
 
-      // Get all RMS (PMO Admin can see all)
+      // Avoid ambiguous users!* embeds (many FKs to users → PostgREST 400).
+      // Load RMS rows, then attach project names in a second query.
       let query = platformDb
         .from('risk_management_strategies')
-        .select(`
-          *,
-          project:projects(id, project_name, project_code),
-          author:author_id(id, full_name, email),
-          owner:owner_id(id, full_name, email)
-        `)
+        .select('*')
         .eq('is_deleted', false)
 
-      // Apply status filter
+      if (currentProjectId) {
+        query = query.eq('project_id', currentProjectId)
+      }
+
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter)
       }
@@ -105,17 +170,40 @@ export default function RMSList() {
 
       if (error) throw error
 
-      setRmsList(data || [])
+      const rows = data || []
+      const projectIds = [...new Set(rows.map((r) => r.project_id).filter(Boolean))]
+      let projectById = {}
+      if (projectIds.length > 0) {
+        const { data: projectsData, error: projectsError } = await platformDb
+          .from('projects')
+          .select('id, project_name, project_code')
+          .in('id', projectIds)
+        if (!projectsError && projectsData) {
+          projectById = Object.fromEntries(projectsData.map((p) => [p.id, p]))
+        }
+      }
+
+      setRmsList(
+        rows.map((r) => ({
+          ...r,
+          project: projectById[r.project_id] || null,
+        }))
+      )
     } catch (error) {
-      console.error('Error fetching RMS list:', error)
-      alert('Error: ' + error.message)
+      console.error('Error fetching RMS list:', error?.message || error)
+      alert('Error: ' + (error?.message || 'Failed to load Risk Management Strategies'))
+      setRmsList([])
     } finally {
       setLoading(false)
     }
   }
 
   const handleCreateRMS = () => {
-    // If user has projects, show selector, otherwise navigate to projects page
+    // PM header project already selected → create for that project directly
+    if (currentProjectId) {
+      handleProjectSelected(currentProjectId)
+      return
+    }
     if (availableProjects.length > 0) {
       setShowProjectSelector(true)
     } else {
@@ -213,7 +301,9 @@ export default function RMSList() {
             Risk Management Strategies
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            View and manage all risk management strategies across all projects
+            {currentProjectId
+              ? `Strategies for ${currentProject?.projectName || 'the selected project'}`
+              : 'View and manage all risk management strategies across all projects'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -319,8 +409,11 @@ export default function RMSList() {
                   <tr key={rms.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {rms.rms_reference || 'N/A'}
+                      <div
+                        className="text-sm font-medium text-gray-900 dark:text-white font-mono"
+                        title={rms.rms_reference || undefined}
+                      >
+                        {formatRmsReferenceDisplay(rms.rms_reference)}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         v{rms.version_number || '1.0'}
@@ -336,10 +429,13 @@ export default function RMSList() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 dark:text-white max-w-md truncate">
-                        {rms.purpose || 'No purpose defined'}
-                      </div>
+                    <td className="px-6 py-4 max-w-xs sm:max-w-sm lg:max-w-md">
+                      <p
+                        className="text-sm text-gray-900 dark:text-white line-clamp-2 leading-snug"
+                        title={rms.purpose || undefined}
+                      >
+                        {formatRmsPurposeDisplay(rms)}
+                      </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(rms.status)}`}>
@@ -351,33 +447,33 @@ export default function RMSList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => navigate(`/app/projects/${rms.project_id}/rms`)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
-                          title="View RMS"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
+                        <RowActionButton
+                          variant="view"
+                          label="View RMS"
+                          onClick={() => {
+                            const key = rms.project?.project_code || rms.project_id
+                            const listReturn =
+                              location.pathname.includes('/pm/')
+                                ? `${location.pathname}${currentProjectId ? `?projectId=${currentProjectId}` : ''}`
+                                : null
+                            navigate(platformProjectPath(key, 'rms'), {
+                              state: listReturn ? { from: listReturn } : undefined,
+                            })
+                          }}
+                        />
                         {rms.status === 'draft' && (
                           <>
-                            <button
+                            <RowActionButton
+                              variant="edit"
+                              label="Edit RMS"
                               onClick={() => handleEditRMS(rms)}
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1 transition-colors"
-                              title="Edit RMS"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                              Edit
-                            </button>
-                            <button
+                            />
+                            <RowActionButton
+                              variant="delete"
+                              label="Delete RMS"
                               onClick={() => handleDeleteRMS(rms)}
                               disabled={deletingRMS === rms.id}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 transition-colors disabled:opacity-50"
-                              title="Delete RMS"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </button>
+                            />
                           </>
                         )}
                       </div>

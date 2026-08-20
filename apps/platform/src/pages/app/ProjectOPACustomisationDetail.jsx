@@ -1,33 +1,48 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Archive, Pencil } from 'lucide-react'
-import { useOPATailoringContext } from '@nidus/shared/hooks/useOPATailoringContext'
+import { ArrowLeft, Archive } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ProjectOPACustomisationDetail() {
   const navigate = useNavigate()
-  const { customisationId, base, sourceOpaPath, svc, normalizeFieldConfigs } = useOPATailoringContext()
+  const { projectId, customisationId, base, sourceOpaPath, svc, normalizeFieldConfigs } = useOPATailoringContext()
   const [row, setRow] = useState(null)
   const [fieldConfigs, setFieldConfigs] = useState([])
   const [err, setErr] = useState(null)
+  const [resolvedId, setResolvedId] = useState(null)
 
   useEffect(() => {
-    if (!customisationId) return
+    if (!customisationId || !projectId) return
     ;(async () => {
-      const { data, error } = await svc.getCustomisationById(customisationId)
+      const id = isLikelyDatabaseUuid(customisationId)
+        ? customisationId
+        : await resolveEntityId('opaCustomisation', customisationId, projectId)
+      if (!id) {
+        setErr('OPA customisation not found')
+        return
+      }
+      setResolvedId(id)
+      const { data, error } = await svc.getCustomisationById(id)
       if (error) setErr(error.message)
       else setRow(data)
-      const { data: fields } = await svc.getFieldConfigs(customisationId)
+      const { data: fields } = await svc.getFieldConfigs(id)
       setFieldConfigs(fields || [])
+      if (data?.opa_reference && data.opa_reference !== customisationId) {
+        navigate(`${base}/${data.opa_reference}`, { replace: true })
+      }
     })()
-  }, [customisationId, svc])
+  }, [customisationId, projectId, svc])
 
   const normalized = useMemo(() => normalizeFieldConfigs(fieldConfigs), [fieldConfigs, normalizeFieldConfigs])
 
   async function handleArchive() {
     if (!window.confirm('Archive this template?')) return
-    const { error } = await svc.archiveCustomisation(customisationId)
+    const { error } = await svc.archiveCustomisation(resolvedId || customisationId)
     if (error) setErr(error.message)
     else navigate(base)
   }
@@ -65,13 +80,11 @@ export default function ProjectOPACustomisationDetail() {
           >
             Export PPT
           </button>
-          <button
-            type="button"
-            onClick={() => navigate(`${base}/${customisationId}/edit`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 text-white min-h-[44px]"
-          >
-            <Pencil className="h-4 w-4" /> Edit
-          </button>
+          <RowActionButton
+            variant="edit"
+            label="Edit OPA customisation"
+            onClick={() => navigate(`${base}/${row?.opa_reference || customisationId}/edit`)}
+          />
           <button
             type="button"
             onClick={handleArchive}

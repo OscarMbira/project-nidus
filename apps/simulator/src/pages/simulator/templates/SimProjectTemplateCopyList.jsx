@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { listCopiesForAccount } from '../../../services/sim/simProjectTemplateCopyService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 import ExportListMenu from '../../../components/ui/ExportListMenu'
@@ -167,9 +168,11 @@ export default function SimProjectTemplateCopyList() {
                   <TableCell>{r.current_version}</TableCell>
                   <TableCell className="text-sm text-gray-600">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</TableCell>
                   <TableCell className="text-right">
-                    <button type="button" className="text-violet-600 text-sm" onClick={() => navigate(`${BASE}/copies/${r.id}`)}>
-                      View
-                    </button>
+                    <RowActionButton
+                      variant="view"
+                      label="View template copy"
+                      onClick={() => navigate(`${BASE}/copies/${r.id}`)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

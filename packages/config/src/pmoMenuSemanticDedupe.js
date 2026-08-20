@@ -182,6 +182,9 @@ function peopleLeafSemanticKey(node = {}) {
   if (/send invitation|send-role-inv|send_role_inv|platform_teams_send/.test(text)) {
     return 'people:send-invitations'
   }
+  if (/manage roles|manage-roles|pmo-people-manage-roles|pmo_people_manage_roles|plat_pm_manage_roles/.test(text)) {
+    return 'people:manage-roles'
+  }
   if (/assign roles|assign-roles|platform_teams_assign_roles|pmo_people_assign_roles/.test(text)) {
     return 'people:assign-roles'
   }

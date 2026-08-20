@@ -11,7 +11,8 @@
 
 import { platformDb } from './supabase/supabaseClient';
 import { assignSystemRole, getUserSystemRoles } from './roleService';
-import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess';
+import { PMO_SUITE_ADMIN_ROLE_NAMES } from './pmoSuiteRoleAccess';
+import { userHasAnyRole } from '@nidus/shared/utils/menuLayoutUtils';
 import { sendEmail } from './emailIntegrationService';
 import { buildProjectInvitationUrls } from '@nidus/shared/utils/invitationUrlUtils';
 import {
@@ -64,17 +65,7 @@ export async function getAssignableRoles() {
  */
 export async function isPmoAdmin(authUserId) {
   try {
-    const rolesResult = await getUserSystemRoles(authUserId);
-    
-    if (!rolesResult.success || !rolesResult.data) {
-      return false;
-    }
-
-    const isAdmin = rolesResult.data.some((assignment) =>
-      matchesPmoSuiteAdminRole(assignment.roles?.role_name),
-    )
-
-    return isAdmin
+    return await userHasAnyRole({ id: authUserId }, PMO_SUITE_ADMIN_ROLE_NAMES)
   } catch (error) {
     console.error('Error checking PMO Admin role:', error);
     return false;

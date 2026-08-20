@@ -4,21 +4,29 @@
  */
 
 import { platformDb, supabase } from './supabaseClient';
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam.js';
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid.js';
 
 /**
- * Get Configuration Item by ID
- * @param {string} itemId - Configuration Item ID
+ * Get Configuration Item by ID or configuration_item_identifier (friendly URL, v882).
+ * @param {string} itemIdOrCode - Configuration Item UUID or its configuration_item_identifier
+ * @param {string} [projectId] - project UUID, required to resolve a code (codes are project-scoped)
  * @returns {Promise<Object>} Configuration Item
  */
-export async function getConfigurationItemById(itemId) {
+export async function getConfigurationItemById(itemIdOrCode, projectId) {
   try {
+    const itemId = isLikelyDatabaseUuid(itemIdOrCode)
+      ? itemIdOrCode
+      : await resolveEntityId('configurationItem', itemIdOrCode, projectId);
+    if (!itemId) return null;
+
     const { data, error } = await platformDb
       .from('configuration_items')
       .select(`
         *,
         project:project_id(id, project_name, project_code),
         cfg_ms:cfg_ms_id(id, cms_reference),
-        product:product_id(id, product_name),
+        product:product_id(id, product_title),
         item_type:item_type_id(id, item_type_name, item_type_code),
         current_status:current_status_id(id, status_name, status_code),
         version_scheme:version_scheme_id(id, procedure_name, version_scheme),
@@ -52,7 +60,7 @@ export async function getConfigurationItemsByProject(projectId) {
       .select(`
         *,
         project:project_id(id, project_name, project_code),
-        product:product_id(id, product_name),
+        product:product_id(id, product_title),
         item_type:item_type_id(id, item_type_name),
         current_status:current_status_id(id, status_name, status_code),
         latest_version:latest_version_id(id, version_number)
@@ -81,7 +89,7 @@ export async function getConfigurationItemsByStrategy(cfgMsId) {
       .select(`
         *,
         project:project_id(id, project_name, project_code),
-        product:product_id(id, product_name),
+        product:product_id(id, product_title),
         item_type:item_type_id(id, item_type_name),
         current_status:current_status_id(id, status_name, status_code)
       `)
@@ -217,7 +225,7 @@ export async function updateConfigurationItem(itemId, updates) {
         *,
         project:project_id(id, project_name, project_code),
         cfg_ms:cfg_ms_id(id, cms_reference),
-        product:product_id(id, product_name),
+        product:product_id(id, product_title),
         item_type:item_type_id(id, item_type_name),
         current_status:current_status_id(id, status_name, status_code),
         updated_by_user:updated_by(id, full_name, email)

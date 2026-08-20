@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addReportingArrangement, updateReportingArrangement } from '../../services/wpReportingArrangementsService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function WPReportingArrangementForm({ wpId, arrangement = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -22,6 +28,18 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
   const [teamMembers, setTeamMembers] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !arrangement) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [arrangement.created_by, arrangement.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, arrangement])
 
   useEffect(() => {
     loadTeamMembers()
@@ -123,6 +141,33 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !arrangement?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this reporting arrangement is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this reporting arrangement, and how it is classified.">
+              <AuditCard title="Identity" description="How this reporting arrangement is labelled and tracked.">
+                <AuditField label="Report type" value={humanizeAuditToken(arrangement.report_type)} />
+                <AuditField label="Report format" value={humanizeAuditToken(arrangement.report_format)} />
+                <AuditField label="Frequency" value={arrangement.report_frequency} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Who owns this reporting arrangement.">
+                <AuditField label="Report owner" value={teamMembers.find((m) => m.id === (formData.report_owner || arrangement.report_owner))?.full_name} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this reporting arrangement was created and last changed.">
+                <AuditField label="Created by" value={arrangement.created_by ? auditUserLabels[arrangement.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={arrangement.created_at} />
+                <AuditField label="Updated by" value={arrangement.updated_by ? auditUserLabels[arrangement.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={arrangement.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -234,6 +279,8 @@ export default function WPReportingArrangementForm({ wpId, arrangement = null, m
             placeholder="Description of the reporting arrangement..."
           />
         </div>
+        </>
+        )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {onCancel && (

@@ -28,6 +28,7 @@ import {
   exportRecordToPrint,
   exportRecordToPDF,
 } from '@nidus/shared/utils/exportUtils'
+import { useBranding } from '@nidus/shared/context/BrandingContext'
 import {
   buildExportSections,
   buildBlankRecord,
@@ -98,9 +99,11 @@ export default function FormTemplateExportMenu({
   defaultRows = [],
   templateName = 'Form Template',
   templateCode = '',
-  branding = null,
+  branding: brandingProp = null,
   disabled = false,
 }) {
+  const { branding: contextBranding } = useBranding()
+  const branding = brandingProp || contextBranding
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState('mode')
   const [mode, setMode] = useState(null)

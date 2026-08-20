@@ -142,7 +142,7 @@ const TableRowNumberHeader = forwardRef(({ className = '', ...props }, ref) => {
       ref={ref}
       scope="col"
       aria-label="Row number"
-      className={`w-12 min-w-[3rem] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider ${className}`}
+      className={`w-12 min-w-[3rem] px-3 py-3 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider ${className}`}
       {...props}
     >
       #
@@ -157,7 +157,7 @@ const TableRowNumberCell = forwardRef(({ number, className = '', ...props }, ref
     <td
       ref={ref}
       aria-label={number != null ? `Row ${number}` : undefined}
-      className={`w-12 min-w-[3rem] px-3 py-4 text-sm tabular-nums text-gray-500 dark:text-gray-400 ${className}`}
+      className={`w-12 min-w-[3rem] px-3 py-4 text-sm tabular-nums text-gray-600 dark:text-gray-300 ${className}`}
       {...props}
     >
       {number}

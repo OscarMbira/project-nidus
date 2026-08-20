@@ -39,17 +39,17 @@ export default function TagInput({ tags = [], onChange, placeholder = 'Add tags.
   };
 
   return (
-    <div className="flex flex-wrap gap-2 items-center p-2 border border-gray-300 rounded-md min-h-[42px] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+    <div className="flex flex-wrap gap-2 items-center p-2 border border-gray-300 dark:border-gray-600 rounded-md min-h-[42px] bg-white dark:bg-gray-900 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
       {tags.map((tag, index) => (
         <span
           key={index}
-          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm"
+          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200 rounded text-sm"
         >
           {tag}
           <button
             type="button"
             onClick={() => removeTag(index)}
-            className="hover:text-blue-900"
+            className="hover:text-blue-900 dark:hover:text-blue-100"
             title="Remove tag"
           >
             <X className="w-3 h-3" />
@@ -63,7 +63,7 @@ export default function TagInput({ tags = [], onChange, placeholder = 'Add tags.
         onKeyDown={handleKeyDown}
         onBlur={handleInputBlur}
         placeholder={tags.length === 0 ? placeholder : ''}
-        className="flex-1 min-w-[120px] outline-none bg-transparent"
+        className="flex-1 min-w-[120px] outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
       />
     </div>
   );

@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { X, Save, Link2, FolderKanban, Target, AlertTriangle } from 'lucide-react';
 import { saveInterProjectDependency, checkCircularDependency } from '../../services/dependencyService';
 import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function DependencyForm({ dependency, onSave, onCancel, usePageLayout = false }) {
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
   const [formData, setFormData] = useState({
     dependency_code: '',
     dependency_name: '',
@@ -67,6 +75,14 @@ export default function DependencyForm({ dependency, onSave, onCancel, usePageLa
     }
     fetchLookupData();
   }, [dependency]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !dependency) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [dependency.created_by, dependency.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, dependency]);
 
   useEffect(() => {
     // Check for circular dependencies when source/target changes
@@ -214,6 +230,40 @@ export default function DependencyForm({ dependency, onSave, onCancel, usePageLa
           </button>
         </div>
 
+        <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' && !dependency && (
+          <div className="p-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this dependency is saved.</p>
+          </div>
+        )}
+
+        {formTab === 'audit' && dependency && (
+          <div className="p-6">
+            <AuditDetailsPanel description="Who created or changed this dependency, and how it is classified.">
+              <AuditCard title="Identity" description="How this dependency is labelled and tracked.">
+                <AuditField label="Code" value={dependency.dependency_code} />
+                <AuditField label="Name" value={dependency.dependency_name} />
+                <AuditField label="Status" value={humanizeAuditToken(dependency.dependency_status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this dependency is structured.">
+                <AuditField label="Type" value={humanizeAuditToken(dependency.dependency_type)} />
+                <AuditField label="Strength" value={humanizeAuditToken(dependency.dependency_strength)} />
+                <AuditField label="Criticality" value={humanizeAuditToken(dependency.dependency_criticality)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this dependency was created and last changed.">
+                <AuditField label="Created by" value={dependency.created_by ? auditUserLabels[dependency.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={dependency.created_at} />
+                <AuditField label="Updated by" value={dependency.updated_by ? auditUserLabels[dependency.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={dependency.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          </div>
+        )}
+
+        {formTab === 'details' && (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
           <div className="space-y-4">
@@ -650,6 +700,7 @@ export default function DependencyForm({ dependency, onSave, onCancel, usePageLa
             </button>
           </div>
         </form>
+        )}
       </div>
   );
 

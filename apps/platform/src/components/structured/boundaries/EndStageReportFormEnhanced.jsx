@@ -8,6 +8,13 @@ import { supabase } from '../../../services/supabaseClient'
 import EndStageReportDocumentInfoSection from './EndStageReportDocumentInfoSection'
 import EndStageReportProjectReviewSection from './EndStageReportProjectReviewSection'
 import EndStageReportBusinessCaseSection from './EndStageReportBusinessCaseSection'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const FORM_STEPS = [
   { id: 'document', label: 'Document Info', icon: FileText, description: 'Document metadata' },
@@ -34,6 +41,9 @@ export default function EndStageReportFormEnhanced({
 }) {
   const { theme } = useThemeContext()
   const [activeStep, setActiveStep] = useState(0)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
   const [formData, setFormData] = useState({
     report_title: '',
     report_date: new Date().toISOString().split('T')[0],
@@ -58,6 +68,19 @@ export default function EndStageReportFormEnhanced({
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [completeness, setCompleteness] = useState(null)
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !reportId) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        formData.created_by,
+        formData.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, reportId, formData.created_by, formData.updated_by])
 
   useEffect(() => {
     if (reportId && mode !== 'create') {
@@ -359,6 +382,38 @@ export default function EndStageReportFormEnhanced({
 
   return (
     <div className="space-y-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+      </div>
+
+      {formTab === 'audit' && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          {!reportId ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this end stage report, and how it is classified.">
+              <AuditCard title="Identity" description="How this report is labelled and tracked.">
+                <AuditField label="Reference" value={formData.report_reference} />
+                <AuditField label="Title" value={formData.report_title} />
+                <AuditField label="Status" value={humanizeAuditToken(formData.approval_status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this report sits.">
+                <AuditField label="Stage" value={formData.stage_name} />
+                <AuditField label="Stage status" value={humanizeAuditToken(formData.stage_status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this report was created and last changed.">
+                <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+                <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       {/* Progress Indicator */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between mb-2">
@@ -478,6 +533,8 @@ export default function EndStageReportFormEnhanced({
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -9,18 +9,29 @@
 
 /**
  * @param {object} db - platformDb or simDb
- * @param {{ accountId: string, globalNodeId: string }} opts
+ * @param {{ accountId: string, globalNodeId: string, tier?: string, scopeEntityType?: string, scopeEntityId?: string|null }} opts
+ *   `tier`/`scopeEntityType`/`scopeEntityId` narrow the match to a specific tier instance
+ *   (e.g. one Project, one Portfolio) rather than "this account has a copy anywhere" — pass
+ *   all three (matching what copyTemplateNodeForAccount was called with) to correctly tell a
+ *   PMO-wide copy apart from a copy scoped to one specific project. Omit for the old
+ *   any-scope behaviour.
  * @returns {Promise<object|null>} the account's override node, or null if none exists
  */
-export async function resolveAccountTemplateOverride(db, { accountId, globalNodeId } = {}) {
+export async function resolveAccountTemplateOverride(db, { accountId, globalNodeId, tier, scopeEntityType, scopeEntityId } = {}) {
   if (!db || !accountId || !globalNodeId) return null
-  const { data, error } = await db
+  let query = db
     .from('pm_template_nodes')
     .select('*')
     .eq('account_id', accountId)
     .eq('parent_node_id', globalNodeId)
     .eq('is_system_synced', false)
     .eq('is_current', true)
+  if (tier) query = query.eq('tier', tier)
+  if (scopeEntityType) {
+    query = query.eq('scope_entity_type', scopeEntityType)
+    query = scopeEntityId ? query.eq('scope_entity_id', scopeEntityId) : query.is('scope_entity_id', null)
+  }
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -44,19 +55,27 @@ export async function resolveAccountTemplateOverride(db, { accountId, globalNode
  * in JS, which is a tiny in-memory filter over a small result set.
  *
  * @param {object} db - platformDb or simDb
- * @param {{ accountId: string, globalNodeIds: string[] }} opts
+ * @param {{ accountId: string, globalNodeIds: string[], tier?: string, scopeEntityType?: string, scopeEntityId?: string|null }} opts
+ *   `tier`/`scopeEntityType`/`scopeEntityId` narrow every match to one specific tier instance
+ *   (see resolveAccountTemplateOverride) — omit for the old any-scope behaviour.
  * @returns {Promise<Map<string, object>>} keyed by globalNodeId -> the account's override node
  */
-export async function resolveAccountTemplateOverrideBatch(db, { accountId, globalNodeIds = [] } = {}) {
+export async function resolveAccountTemplateOverrideBatch(db, { accountId, globalNodeIds = [], tier, scopeEntityType, scopeEntityId } = {}) {
   const ids = new Set((globalNodeIds || []).filter(Boolean))
   if (!db || !accountId || !ids.size) return new Map()
 
-  const { data, error } = await db
+  let query = db
     .from('pm_template_nodes')
     .select('*')
     .eq('account_id', accountId)
     .eq('is_system_synced', false)
     .eq('is_current', true)
+  if (tier) query = query.eq('tier', tier)
+  if (scopeEntityType) {
+    query = query.eq('scope_entity_type', scopeEntityType)
+    query = scopeEntityId ? query.eq('scope_entity_id', scopeEntityId) : query.is('scope_entity_id', null)
+  }
+  const { data, error } = await query
     .not('parent_node_id', 'is', null)
     .order('created_at', { ascending: false })
   if (error) throw error

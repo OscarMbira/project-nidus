@@ -47,10 +47,11 @@ export default function AudienceGroupsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateAudienceGroup(editingId, formData)
+        await updateAudienceGroup(editingId, editableFields)
       } else {
-        await addAudienceGroup(cmsId, formData)
+        await addAudienceGroup(cmsId, editableFields)
       }
       await loadGroups()
       setShowForm(false)
@@ -64,6 +65,8 @@ export default function AudienceGroupsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (group) => {
     setFormData({
+      id: group.id,
+      created_at: group.created_at,
       group_name: group.group_name || '',
       group_type: group.group_type || '',
       group_description: group.group_description || '',

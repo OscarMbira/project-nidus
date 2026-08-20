@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getPracticePlan } from '../../../services/sim/practicePlanService'
 import { createPracticeStagePlan } from '../../../services/sim/practiceStageplanService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimStagePlanCreate() {
   const { projectId } = useParams()
@@ -19,6 +20,7 @@ export default function SimStagePlanCreate() {
     tolerance_cost: '',
     tolerance_scope: '',
   })
+  const [formTab, setFormTab] = useState('details')
   const base = `/simulator/practice-projects/${projectId}/plans`
 
   useEffect(() => {
@@ -68,6 +70,12 @@ export default function SimStagePlanCreate() {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back to plans
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create stage plan</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this stage plan is saved.</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -109,6 +117,7 @@ export default function SimStagePlanCreate() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

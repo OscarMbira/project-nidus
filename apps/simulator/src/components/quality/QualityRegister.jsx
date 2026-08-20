@@ -6,6 +6,8 @@ import ExportListMenu from '../ui/ExportListMenu';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
+import RowNumberBadge from '../ui/RowNumberBadge';
+import { RowActionButton } from '@nidus/ui';
 
 const QUALITY_REGISTER_COLUMNS = [
   { key: 'product_name', label: 'Product Name' },
@@ -469,7 +471,7 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
       )}
       {activeTab === 'register' && registerViewMode === 'list' && (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="min-w-[64rem] w-full">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
               <TableRowNumberHeader className="!normal-case" />
@@ -521,22 +523,22 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
               >
                 Review Date
               </TableHeaderCell>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky right-0 min-w-[8.5rem] bg-gray-50 dark:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {displayRegisterItems.map((item, index) => (
-              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 group">
                 <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                       {item.product_name}
                     </div>
                     {item.product_reference && (
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm font-mono text-gray-500 dark:text-gray-400">
                         {item.product_reference}
                       </div>
                     )}
@@ -599,34 +601,35 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
                     'Not scheduled'
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2">
-                    {onView && (
-                      <button
-                        onClick={() => onView(item)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="View Details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    )}
-                    {onEdit && (
-                      <button
-                        onClick={() => onEdit(item)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Edit"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                    )}
-                    <button
+                <td
+                  className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 min-w-[8.5rem] bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="inline-flex items-center justify-end gap-1">
+                    <RowActionButton
+                      variant="view"
+                      label="View quality item"
+                      onClick={() => {
+                        if (typeof onView === 'function') onView(item)
+                        else if (item.product_reference) {
+                          window.location.href = `/platform/quality/${item.product_reference}`
+                        }
+                      }}
+                    />
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit quality item"
+                      onClick={() => {
+                        if (typeof onEdit === 'function') onEdit(item)
+                        else if (typeof onView === 'function') onView(item)
+                      }}
+                    />
+                    <RowActionButton
+                      variant="delete"
+                      label="Delete quality item"
                       onClick={() => handleDelete(item)}
                       disabled={deleting === item.id}
-                      className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                      title="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    />
                   </div>
                 </td>
               </tr>

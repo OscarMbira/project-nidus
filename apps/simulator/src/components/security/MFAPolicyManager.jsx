@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { ShieldCheck, Save, X } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 
 export default function MFAPolicyManager() {
   const [policies, setPolicies] = useState([])
@@ -343,18 +344,8 @@ export default function MFAPolicyManager() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <button
-                  onClick={() => handleEdit(policy)}
-                  className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded transition-colors"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(policy.id)}
-                  className="px-3 py-1 text-sm bg-red-600 hover:bg-red-700 text-white font-medium rounded transition-colors"
-                >
-                  Delete
-                </button>
+                <RowActionButton variant="edit" label="Edit policy" onClick={() => handleEdit(policy)} />
+                <RowActionButton variant="delete" label="Delete policy" onClick={() => handleDelete(policy.id)} />
               </div>
             </div>
           ))

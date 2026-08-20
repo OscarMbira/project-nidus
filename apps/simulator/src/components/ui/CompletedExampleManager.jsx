@@ -5,6 +5,7 @@ import {
   deleteInstanceTemplate,
   listInstanceTemplatesForScope,
 } from '../../services/formEngineService'
+import RowActionButton from './RowActionButton'
 
 /**
  * Author "completed" example instances for a shared form template — reused at every tier
@@ -102,14 +103,12 @@ export default function CompletedExampleManager({
                   <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">{example.description}</span>
                 )}
               </div>
-              <button
-                type="button"
+              <RowActionButton
+                variant="delete"
+                label={`Delete example ${example.name}`}
                 onClick={() => handleDelete(example.id)}
                 disabled={busy}
-                className="text-xs text-red-500 hover:text-red-400 disabled:opacity-40"
-              >
-                Delete
-              </button>
+              />
             </li>
           ))}
           {examples.length === 0 && (

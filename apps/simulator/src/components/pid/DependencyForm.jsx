@@ -5,6 +5,13 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { addDependency, updateDependency } from '../../services/pidDependenciesService'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const TYPES = ['external', 'internal', 'organizational', 'technical', 'resource', 'regulatory', 'other']
@@ -25,6 +32,16 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !dependency) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [dependency.created_by, dependency.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, dependency])
 
   useEffect(() => {
     if (dependency && mode === 'edit') {
@@ -97,6 +114,31 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
           {error}
         </p>
       )}
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+      {formTab === 'audit' ? (
+        !dependency ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this dependency is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this dependency, and how it is classified.">
+            <AuditCard title="Identity" description="How this dependency is labelled and tracked.">
+              <AuditField label="Name" value={dependency.dependency_name} />
+              <AuditField label="Status" value={humanizeAuditToken(dependency.dependency_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this dependency is structured.">
+              <AuditField label="Type" value={humanizeAuditToken(dependency.dependency_type)} />
+              <AuditField label="Owner" value={dependency.dependency_owner} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this dependency was created and last changed.">
+              <AuditField label="Created by" value={dependency.created_by ? auditUserLabels[dependency.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={dependency.created_at} />
+              <AuditField label="Updated by" value={dependency.updated_by ? auditUserLabels[dependency.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={dependency.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <label className="block">
@@ -200,6 +242,7 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

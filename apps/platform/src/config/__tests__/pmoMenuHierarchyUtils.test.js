@@ -3,6 +3,7 @@ import {
   applyCategoryPresentationLabels,
   applyPmLayoutSanitization,
   applyPmoSectionNesting,
+  filterPmLayoutMenuItems,
   inferPmoCategoryId,
   LEGACY_CATEGORY_SHELL_TARGETS,
   nestExecutiveOverviewSections,
@@ -12,6 +13,89 @@ import {
   reorganizeMenuRoots,
   reorganizePmoMenuRoots,
 } from '../pmoMenuHierarchyUtils'
+
+describe('applyPmLayoutSanitization organisational templates', () => {
+  it('promotes Templates out of Projects to a top-level Organisational Templates row', () => {
+    const { universalNodes } = applyPmLayoutSanitization(
+      [
+        {
+          menu_code: 'plat_grp_pm_projects',
+          menu_label: 'Projects',
+          route_path: null,
+          children: [
+            {
+              menu_code: 'plat_pm_all_projects',
+              menu_label: 'All Projects',
+              route_path: '/platform/projects',
+              children: [],
+            },
+            {
+              menu_code: 'plat_pm_templates',
+              menu_label: 'Templates',
+              route_path: '/platform/templates',
+              children: [],
+            },
+          ],
+        },
+      ],
+      []
+    )
+
+    const projects = universalNodes.find((n) => n.menu_code === 'plat_grp_pm_projects')
+    const orgTemplates = universalNodes.find((n) => n.menu_code === 'plat_pm_templates')
+
+    expect(projects?.children?.some((c) => c.menu_code === 'plat_pm_templates')).toBe(false)
+    expect(orgTemplates?.route_path).toBe('/platform/templates')
+    expect(orgTemplates?.children || []).toEqual([])
+  })
+})
+
+describe('filterPmLayoutMenuItems dashboard leaf', () => {
+  it('removes Executive Dashboard and keeps Dashboard as a direct link', () => {
+    const filtered = filterPmLayoutMenuItems([
+      {
+        menu_code: 'plat_pm_dashboard',
+        menu_label: 'Dashboard',
+        route_path: '/platform/dashboard',
+        children: [
+          {
+            menu_code: 'plat_exec_dashboard',
+            menu_label: 'Executive Dashboard',
+            route_path: '/platform/executive/dashboard',
+            children: [],
+          },
+        ],
+      },
+    ])
+
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].menu_label).toBe('Dashboard')
+    expect(filtered[0].route_path).toBe('/platform/dashboard')
+    expect(filtered[0].children).toEqual([])
+  })
+
+  it('promotes a lone child route onto a Dashboard shell with no own route', () => {
+    const filtered = filterPmLayoutMenuItems([
+      {
+        menu_code: 'plat_pm_dashboard',
+        menu_label: 'Dashboard',
+        route_path: null,
+        children: [
+          {
+            menu_code: 'plat_pm_dashboard_leaf',
+            menu_label: 'Dashboard',
+            route_path: '/pm/dashboard',
+            children: [],
+          },
+        ],
+      },
+    ])
+
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].route_path).toBe('/pm/dashboard')
+    expect(filtered[0].children).toEqual([])
+  })
+})
 
 describe('inferPmoCategoryId', () => {
   it('maps security admin routes to system admin category', () => {

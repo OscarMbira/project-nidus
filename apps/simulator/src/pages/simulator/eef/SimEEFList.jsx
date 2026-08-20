@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, Search, Eye, Pencil, PauseCircle } from 'lucide-react'
+import { Plus, Search, PauseCircle } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { listEEFs } from '../../../services/sim/simEEFService'
 import { ensureEefOpaSampleForAccount } from '../../../services/eefService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
@@ -180,12 +181,8 @@ export default function SimEEFList() {
                 {r.title}
               </button>
               <div className="mt-2 flex gap-2 text-sm">
-                <button type="button" className="text-sky-600" onClick={() => navigate(`${base}/${r.id}`)}>
-                  <Eye className="h-4 w-4 inline" /> View
-                </button>
-                <button type="button" className="text-gray-700 dark:text-gray-300" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                  <Pencil className="h-4 w-4 inline" /> Edit
-                </button>
+                <RowActionButton variant="view" label="View EEF" onClick={() => navigate(`${base}/${r.id}`)} />
+                <RowActionButton variant="edit" label="Edit EEF" onClick={() => navigate(`${base}/${r.id}/edit`)} />
               </div>
             </div>
           ))}
@@ -214,12 +211,8 @@ export default function SimEEFList() {
                   <TableCell>{r.eef_type}</TableCell>
                   <TableCell>{r.status}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <button type="button" className="text-sky-600 text-sm" onClick={() => navigate(`${base}/${r.id}`)}>
-                      View
-                    </button>
-                    <button type="button" className="text-sm" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                      Edit
-                    </button>
+                    <RowActionButton variant="view" label="View EEF" onClick={() => navigate(`${base}/${r.id}`)} />
+                    <RowActionButton variant="edit" label="Edit EEF" onClick={() => navigate(`${base}/${r.id}/edit`)} />
                   </TableCell>
                 </TableRow>
               ))}

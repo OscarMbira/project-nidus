@@ -2,11 +2,32 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Calendar, DollarSign, Target, Users, Shield } from 'lucide-react';
 import { createNextStagePlan, updateNextStagePlan, fetchStageBoundaries } from '../../../services/stageBoundariesService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [stageBoundaries, setStageBoundaries] = useState([]);
   const [activeSection, setActiveSection] = useState('basic');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (activeSection !== 'audit' || !plan) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        plan.created_by,
+        plan.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeSection, plan]);
   const [formData, setFormData] = useState({
     plan_title: plan?.plan_title || '',
     plan_date: plan?.plan_date || new Date().toISOString().split('T')[0],
@@ -117,25 +138,42 @@ export default function NextStagePlanForm({ projectId, plan, onClose, onSuccess 
           </button>
         </div>
 
-        <div className="flex gap-2 px-6 pt-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`px-4 py-2 font-medium text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
-                  activeSection === section.id
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {section.label}
-              </button>
-            );
-          })}
+        <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+          <DetailAuditTabList
+            activeTab={activeSection}
+            onChange={setActiveSection}
+            ariaLabel="Next stage plan sections"
+            tabs={[
+              ...sections.map((s) => ({ value: s.id, label: s.label })),
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
+
+        {activeSection === 'audit' && (
+          <div className="p-6 max-h-[calc(100vh-300px)] overflow-y-auto">
+            {!plan?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this next stage plan, and how it is classified.">
+                <AuditCard title="Identity" description="How this plan is labelled and tracked.">
+                  <AuditField label="Title" value={formData.plan_title || plan.plan_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.approval_status || plan.approval_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this plan sits.">
+                  <AuditField label="Next stage" value={formData.next_stage_name || plan.next_stage_name} />
+                  <AuditField label="Planned start date" value={formData.planned_start_date || plan.planned_start_date} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this plan was created and last changed.">
+                  <AuditField label="Created by" value={plan.created_by ? auditUserLabels[plan.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={plan.created_at} />
+                  <AuditField label="Updated by" value={plan.updated_by ? auditUserLabels[plan.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={plan.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">
           {activeSection === 'basic' && (

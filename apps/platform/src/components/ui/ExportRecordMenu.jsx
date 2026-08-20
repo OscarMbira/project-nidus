@@ -5,7 +5,7 @@
  */
 
 import { useState, useMemo, useEffect } from 'react'
-import { Download, ChevronDown, Presentation, FileText, Table2, FileSpreadsheet, Code, Braces, Printer, FileDown } from 'lucide-react'
+import { Download, ChevronDown, Presentation, FileText, Table2, FileSpreadsheet, Code, Braces, Printer, FileDown, Eye } from 'lucide-react'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -16,6 +16,8 @@ import {
   exportRecordToPrint,
   exportRecordToPDF,
 } from '@nidus/shared/utils/exportUtils'
+import { useBranding } from '@nidus/shared/context/BrandingContext'
+import RecordPreviewModal from './RecordPreviewModal'
 
 /**
  * Flatten sections to a list of { key, label } for the field selector.
@@ -47,10 +49,19 @@ export default function ExportRecordMenu({
   sections = [],
   record,
   baseFilename = 'Record',
-  disabled = false
+  disabled = false,
+  // Optional override; defaults to organisation branding from BrandingContext (section bars / headers).
+  branding: brandingProp = null,
+  // Optional: { [fieldKey]: Array<{ file_name, caption, mime_type, url }> } — image attachments
+  // to embed inline in Word/PPT/Print/PDF (v863). Fields not present here still export fine via
+  // the plain-text value already in `record` (e.g. resolveAttachmentFieldsForExport's textValues).
+  attachmentAssets = {},
 }) {
+  const { branding: contextBranding } = useBranding()
+  const branding = brandingProp || contextBranding
   const [open, setOpen] = useState(false)
   const [fieldModal, setFieldModal] = useState(null) // 'word' | 'ppt' | null
+  const [previewOpen, setPreviewOpen] = useState(false)
   const flatFields = useMemo(() => flattenSectionFields(sections), [sections])
   const allKeys = useMemo(() => flatFields.map((f) => f.key), [flatFields])
   const [selectedKeys, setSelectedKeys] = useState(() => allKeys)
@@ -83,7 +94,7 @@ export default function ExportRecordMenu({
     if (selectedSections.length === 0 || !record) return
     setExporting(true)
     try {
-      await exportRecordToWord(selectedSections, record, baseFilename)
+      await exportRecordToWord(selectedSections, record, baseFilename, branding, '—', attachmentAssets)
       setFieldModal(null)
     } finally {
       setExporting(false)
@@ -94,7 +105,7 @@ export default function ExportRecordMenu({
     if (selectedSections.length === 0 || !record) return
     setExporting(true)
     try {
-      exportRecordToPPT(selectedSections, record, baseFilename)
+      await exportRecordToPPT(selectedSections, record, baseFilename, branding, '—', attachmentAssets)
       setFieldModal(null)
     } finally {
       setExporting(false)
@@ -105,7 +116,7 @@ export default function ExportRecordMenu({
     if (!record || sections.length === 0) return
     setExporting(true)
     try {
-      await exportRecordToPDF(sections, record, baseFilename)
+      await exportRecordToPDF(sections, record, baseFilename, branding, '—', attachmentAssets)
       setOpen(false)
     } finally {
       setExporting(false)
@@ -117,7 +128,18 @@ export default function ExportRecordMenu({
 
   return (
     <>
-      <div className="relative inline-block">
+      <div className="inline-flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setPreviewOpen(true)}
+          disabled={disabled || !record || sections.length === 0}
+          className={btnBase}
+          title="View"
+        >
+          <Eye className="w-4 h-4" />
+          View
+        </button>
+        <div className="relative inline-block">
         <button
           type="button"
           onClick={() => setOpen(!open)}
@@ -146,7 +168,7 @@ export default function ExportRecordMenu({
               <button
                 type="button"
                 onClick={() => {
-                  exportRecordToExcel(sections, record, baseFilename)
+                  exportRecordToExcel(sections, record, baseFilename, branding)
                   setOpen(false)
                 }}
                 disabled={!record}
@@ -202,7 +224,7 @@ export default function ExportRecordMenu({
               </button>
               <button
                 type="button"
-                onClick={() => { exportRecordToPrint(sections, record, baseFilename); setOpen(false) }}
+                onClick={() => { exportRecordToPrint(sections, record, baseFilename, branding, '—', attachmentAssets); setOpen(false) }}
                 disabled={!record}
                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
               >
@@ -211,7 +233,18 @@ export default function ExportRecordMenu({
             </div>
           </>
         )}
+        </div>
       </div>
+
+      <RecordPreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        sections={sections}
+        record={record}
+        baseFilename={baseFilename}
+        branding={branding}
+        attachmentAssets={attachmentAssets}
+      />
 
       {/* Field selector modal for Word / PowerPoint — record view: no max, Select all available */}
       {fieldModal && (

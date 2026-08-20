@@ -78,6 +78,8 @@ describe('Issue Validation Utilities', () => {
       expect(validateIssueType('request_for_change').valid).toBe(true)
       expect(validateIssueType('off_specification').valid).toBe(true)
       expect(validateIssueType('problem_concern').valid).toBe(true)
+      expect(validateIssueType('bug').valid).toBe(true)
+      expect(validateIssueType('enhancement').valid).toBe(true)
     })
 
     it('should reject invalid issue types', () => {
@@ -107,6 +109,9 @@ describe('Issue Validation Utilities', () => {
       expect(validateSeverity('major').valid).toBe(true)
       expect(validateSeverity('moderate').valid).toBe(true)
       expect(validateSeverity('minor').valid).toBe(true)
+      expect(validateSeverity('high').valid).toBe(true)
+      expect(validateSeverity('medium').valid).toBe(true)
+      expect(validateSeverity('low').valid).toBe(true)
     })
 
     it('should reject invalid severities', () => {

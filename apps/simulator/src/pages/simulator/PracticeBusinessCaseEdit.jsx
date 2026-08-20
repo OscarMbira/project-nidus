@@ -7,6 +7,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ChevronLeft } from 'lucide-react'
 import { getPracticeBusinessCaseById, updatePracticeBusinessCase } from '../../services/sim/practiceBusinessCaseService'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -35,6 +42,9 @@ export default function PracticeBusinessCaseEdit() {
   const [fetchLoading, setFetchLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeSection, setActiveSection] = useState(0)
+  const [formTab, setFormTab] = useState('wizard')
+  const [record, setRecord] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const [newOption, setNewOption] = useState({ title: '', description: '', is_recommended: false })
   const [formData, setFormData] = useState({
     case_title: '',
@@ -58,12 +68,21 @@ export default function PracticeBusinessCaseEdit() {
 
   useEffect(() => { loadCase() }, [id])
 
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record])
+
   const loadCase = async () => {
     try {
       setFetchLoading(true)
       const result = await getPracticeBusinessCaseById(id)
       if (result.success && result.data) {
         const d = result.data
+        setRecord(d)
         setFormData({
           case_title: d.case_title || '',
           case_description: d.case_description || '',
@@ -160,6 +179,37 @@ export default function PracticeBusinessCaseEdit() {
         </div>
       )}
 
+      <DetailAuditTabList
+        activeTab={formTab}
+        onChange={setFormTab}
+        tabs={[{ value: 'wizard', label: 'Wizard' }, { value: 'audit', label: 'Audit details' }]}
+      />
+
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this business case is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this Business Case.">
+              <AuditCard title="Identity" description="How this business case is labelled.">
+                <AuditField label="Title" value={record.case_title} />
+                <AuditField label="Reference" value={record.case_reference} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this business case sits in its lifecycle.">
+                <AuditField label="Status" value={humanizeAuditToken(record.lifecycle_stage)} />
+                <AuditField label="Approved" value={record.is_approved ? 'Yes' : 'No'} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this business case was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
+      <>
       {/* Section tabs */}
       <div className="flex gap-1 mb-6 overflow-x-auto">
         {SECTIONS.map((s, i) => (
@@ -343,6 +393,8 @@ export default function PracticeBusinessCaseEdit() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

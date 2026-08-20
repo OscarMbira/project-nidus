@@ -6,6 +6,9 @@
  * Normalise so both match.
  */
 
+/** Exact role names this suite-admin check matches — reused by userHasAnyRole() callers. */
+export const PMO_SUITE_ADMIN_ROLE_NAMES = ['pmo_admin', 'org_admin', 'system_admin', 'super_admin']
+
 /**
  * @param {string | null | undefined} roleName - roles.role_name from user_roles embed
  * @returns {boolean}

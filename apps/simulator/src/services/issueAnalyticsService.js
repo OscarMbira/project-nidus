@@ -10,7 +10,52 @@ import { supabase } from './supabaseClient';
  * @param {string} projectId - Project ID
  * @returns {Promise<Object>} Summary statistics
  */
+const EMPTY_ISSUE_SUMMARY = {
+  total_issues: 0,
+  open_issues: 0,
+  rfcs_count: 0,
+  off_specs_count: 0,
+  problems_count: 0,
+  critical_issues: 0,
+  overdue_actions: 0,
+  issues_by_status: {}
+};
+
+/** Client-side summary when RPC is unavailable (network/CORS/503). */
+async function computeIssueSummaryFallback(projectId) {
+  const { data: issues, error } = await supabase
+    .from('issues')
+    .select('id, issue_type, status, priority, severity')
+    .eq('project_id', projectId)
+    .eq('is_deleted', false);
+
+  if (error) throw error;
+
+  const rows = issues || [];
+  const openStatuses = new Set([
+    'draft', 'raised', 'under_assessment', 'awaiting_decision',
+    'approved', 'in_progress', 'open', 'pending', 'escalated', 'reopened'
+  ]);
+
+  const summary = { ...EMPTY_ISSUE_SUMMARY, issues_by_status: {} };
+  summary.total_issues = rows.length;
+
+  for (const issue of rows) {
+    if (openStatuses.has(issue.status)) summary.open_issues += 1;
+    if (issue.issue_type === 'request_for_change') summary.rfcs_count += 1;
+    if (issue.issue_type === 'off_specification') summary.off_specs_count += 1;
+    if (issue.issue_type === 'problem_concern') summary.problems_count += 1;
+    if (issue.priority === 'critical' || issue.severity === 'critical') summary.critical_issues += 1;
+    const statusKey = issue.status || 'unknown';
+    summary.issues_by_status[statusKey] = (summary.issues_by_status[statusKey] || 0) + 1;
+  }
+
+  return summary;
+}
+
 export async function getIssueSummary(projectId) {
+  if (!projectId) return { ...EMPTY_ISSUE_SUMMARY };
+
   try {
     const { data, error } = await supabase.rpc('get_issue_summary', {
       p_project_id: projectId
@@ -18,19 +63,29 @@ export async function getIssueSummary(projectId) {
 
     if (error) throw error;
 
-    return data && data.length > 0 ? data[0] : {
-      total_issues: 0,
-      open_issues: 0,
-      rfcs_count: 0,
-      off_specs_count: 0,
-      problems_count: 0,
-      critical_issues: 0,
-      overdue_actions: 0,
-      issues_by_status: {}
-    };
+    const row = data && data.length > 0 ? data[0] : { ...EMPTY_ISSUE_SUMMARY };
+    if (
+      row.issues_by_status &&
+      typeof row.issues_by_status === 'object' &&
+      Object.keys(row.issues_by_status).length > 0
+    ) {
+      return row;
+    }
+    // RPC may omit issues_by_status — fill from table so Dashboard New/In Progress/etc. work
+    try {
+      const fallback = await computeIssueSummaryFallback(projectId);
+      return { ...fallback, ...row, issues_by_status: fallback.issues_by_status };
+    } catch {
+      return { ...EMPTY_ISSUE_SUMMARY, ...row, issues_by_status: {} };
+    }
   } catch (error) {
-    console.error('Error fetching issue summary:', error);
-    throw error;
+    console.warn('get_issue_summary RPC failed; using table fallback:', error?.message || error);
+    try {
+      return await computeIssueSummaryFallback(projectId);
+    } catch (fallbackError) {
+      console.error('Error fetching issue summary:', fallbackError);
+      return { ...EMPTY_ISSUE_SUMMARY };
+    }
   }
 }
 

@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Printer } from 'lucide-react'
+import { ArrowLeft, Printer } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { getBriefByProject } from '../../services/projectBriefService'
@@ -136,13 +137,11 @@ export default function ProjectBriefView() {
             onExportPrint={() => exportRecordToPrint(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
           />
           {canEdit && (
-            <button
+            <RowActionButton
+              variant="edit"
+              label="Edit brief"
               onClick={() => navigate(platformProjectPath(routeKey || brief.project_id, 'brief', 'edit'))}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </button>
+            />
           )}
           <button
             onClick={handlePrint}

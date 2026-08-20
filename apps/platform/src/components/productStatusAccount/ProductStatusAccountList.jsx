@@ -15,7 +15,7 @@ const PSA_COLUMNS = [
   { key: 'current_status', label: 'Status' }
 ]
 
-export default function ProductStatusAccountList({ projectId, onCreate, reportDate = null }) {
+export default function ProductStatusAccountList({ projectId, routeKey, onCreate, reportDate = null }) {
   const [psas, setPsas] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -169,7 +169,7 @@ export default function ProductStatusAccountList({ projectId, onCreate, reportDa
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPSAs.map((psa, index) => (
-            <ProductStatusAccountCard key={psa.id} psa={psa} projectId={projectId} />
+            <ProductStatusAccountCard key={psa.id} psa={psa} projectId={projectId} routeKey={routeKey} />
           ))}
         </div>
       )}

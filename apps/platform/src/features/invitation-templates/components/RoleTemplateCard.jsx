@@ -3,6 +3,13 @@ import { Save, RotateCcw, Shield } from 'lucide-react'
 import TemplatePreviewPanel from './TemplatePreviewPanel'
 import { upsertTemplate, resetTemplateToDefault } from '../api/invitationTemplatesApi'
 import { resolveInvitationTemplatePlaceholders } from '../utils/resolveInvitationTemplatePlaceholders'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 /**
  * @param {{
@@ -33,6 +40,8 @@ export default function RoleTemplateCard({
   const [active, setActive] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     setLabel(template?.template_label || displayName)
@@ -40,6 +49,16 @@ export default function RoleTemplateCard({
     setBody(template?.message_body || '')
     setActive(template?.is_active !== false)
   }, [template, displayName])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !template?.id) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [template.created_by, template.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, template])
 
   const handleSave = async () => {
     if (readOnly || !accountId || !roleName) return
@@ -112,6 +131,30 @@ export default function RoleTemplateCard({
         </label>
       </div>
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        !template?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this invitation template.">
+            <AuditCard title="Identity" description="How this template is labelled.">
+              <AuditField label="Label" value={template.template_label} />
+              <AuditField label="Role" value={displayName} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this template is used.">
+              <AuditField label="Active" value={template.is_active !== false ? 'Yes' : 'No'} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this template was created and last changed.">
+              <AuditField label="Created by" value={template.created_by ? auditUserLabels[template.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={template.created_at} />
+              <AuditField label="Updated by" value={template.updated_by ? auditUserLabels[template.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={template.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      ) : (
+      <>
       <div>
         <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Label</label>
         <input
@@ -155,6 +198,8 @@ export default function RoleTemplateCard({
         </p>
         <TemplatePreviewPanel messageBody={body} sampleContext={samplePreviewContext} />
       </div>
+      </>
+      )}
 
       {message && (
         <div

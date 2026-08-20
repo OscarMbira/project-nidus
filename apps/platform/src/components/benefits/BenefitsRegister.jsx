@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Target, Plus, Edit2, Trash2, CheckCircle, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
-import { deleteBenefit, calculateBenefitRealization } from '../../services/benefitsService';
+import { useNavigate } from 'react-router-dom';
+import { Target, CheckCircle, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { deleteBenefit } from '../../services/benefitsService';
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { RowActionButton } from '@nidus/ui'
 
 export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
+  const navigate = useNavigate();
   const [deleting, setDeleting] = useState(null);
 
   const handleDelete = async (benefit) => {
@@ -93,29 +96,32 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="min-w-[72rem] w-full">
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <TableRowNumberHeader className="!normal-case" />
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">
+                  Record ID
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Benefit
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Context
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Progress
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Value
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider sticky right-0 min-w-[8.5rem] bg-gray-50 dark:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]">
                   Actions
                 </th>
               </tr>
@@ -128,18 +134,16 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
                   : 0;
 
                 return (
-                  <tr key={benefit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <tr key={benefit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 group">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap font-mono text-xs text-gray-700 dark:text-gray-300">
+                      {benefit.benefit_code || '—'}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {benefit.benefit_name}
                         </div>
-                        {benefit.benefit_code && (
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {benefit.benefit_code}
-                          </div>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -206,27 +210,30 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
+                    <td
+                      className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 min-w-[8.5rem] bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="inline-flex items-center justify-end gap-1">
+                        <RowActionButton
+                          variant="view"
+                          label="View benefit"
+                          onClick={() => navigate(`/platform/benefits/${benefit.id}`)}
+                        />
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit benefit"
                           onClick={() => {
-                            if (onEdit) {
-                              onEdit(benefit);
-                            }
+                            if (onEdit) onEdit(benefit);
+                            else navigate(`/platform/benefits/${benefit.id}/edit`);
                           }}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="Edit"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </button>
-                        <button
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Delete benefit"
                           onClick={() => handleDelete(benefit)}
                           disabled={deleting === benefit.id}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        />
                       </div>
                     </td>
                   </tr>

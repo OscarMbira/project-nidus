@@ -4,7 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { MessageSquare, Plus, Edit } from 'lucide-react'
+import { MessageSquare, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeCMS, createPracticeCMS, updatePracticeCMS } from '../../services/sim/practiceCMSService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
@@ -77,9 +78,7 @@ export default function PracticeCMSList() {
         <div className="flex gap-2">
           {cms && <ExportListMenu columns={PRACTICE_CMS_COLUMNS} data={[cms]} baseFilename="PracticeCMS" />}
           {cms && !editing && (
-          <button onClick={() => setEditing(true)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+            <RowActionButton variant="edit" label="Edit CMS" onClick={() => setEditing(true)} />
           )}
         </div>
       </div>

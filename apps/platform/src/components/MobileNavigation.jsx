@@ -4,7 +4,7 @@ import { Menu, X, Home, LayoutDashboard, FolderKanban, Settings, HelpCircle, Log
 import { useMenu } from '@nidus/shared/hooks/useMenu'
 import { supabase } from '../services/supabaseClient'
 import { resolveMenuRoutePath, menuPathIsActive } from '@nidus/shared/utils/sidebarRouteUtils'
-import { SidebarNavTier } from '@nidus/ui'
+import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 import { getSidebarNestedItemPadding } from '@nidus/shared/utils/sidebarNavUtils'
 
 export default function MobileNavigation() {
@@ -293,45 +293,49 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
   return (
     <div>
       {item.external_url ? (
-        <a
-          href={item.external_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`flex items-center gap-3 ${getSidebarNestedItemPadding(level, { base: 'px-4', nested: 'pr-4' })} py-3 rounded-lg text-sm font-medium transition-colors ${
-            isActive
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
-          style={isActive && item.menu_color ? { backgroundColor: item.menu_color } : {}}
-        >
-          <span className="text-lg">{item.menu_icon || '•'}</span>
-          <span className="flex-1">{item.menu_label}</span>
-        </a>
+        <SidebarNavNestedRow level={level}>
+          <a
+            href={item.external_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center gap-3 ${getSidebarNestedItemPadding(level, { base: 'px-4', nested: 'pr-4' })} py-3 rounded-lg text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            style={isActive && item.menu_color ? { backgroundColor: item.menu_color } : {}}
+          >
+            <span className="text-lg">{item.menu_icon || '•'}</span>
+            <span className="flex-1">{item.menu_label}</span>
+          </a>
+        </SidebarNavNestedRow>
       ) : (
-        <Link
-          to={linkTo}
-          onClick={handleClick}
-          className={`flex items-center gap-3 ${getSidebarNestedItemPadding(level, { base: 'px-4', nested: 'pr-4' })} py-3 rounded-lg text-sm font-medium transition-colors ${
-            isActive
-              ? 'bg-blue-600 text-white'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-          }`}
-          style={isActive && item.menu_color ? { backgroundColor: item.menu_color } : {}}
-        >
-          <span className="text-lg">{item.menu_icon || '•'}</span>
-          <span className="flex-1">{item.menu_label}</span>
-          {item.badge_text && (
-            <span
-              className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
-              style={{ backgroundColor: item.badge_color || '#EF4444' }}
-            >
-              {item.badge_text}
-            </span>
-          )}
-          {hasChildren && (
-            <span className="text-xs">{isExpanded ? '▼' : '▶'}</span>
-          )}
-        </Link>
+        <SidebarNavNestedRow level={level}>
+          <Link
+            to={linkTo}
+            onClick={handleClick}
+            className={`flex items-center gap-3 ${getSidebarNestedItemPadding(level, { base: 'px-4', nested: 'pr-4' })} py-3 rounded-lg text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            style={isActive && item.menu_color ? { backgroundColor: item.menu_color } : {}}
+          >
+            <span className="text-lg">{item.menu_icon || '•'}</span>
+            <span className="flex-1">{item.menu_label}</span>
+            {item.badge_text && (
+              <span
+                className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
+                style={{ backgroundColor: item.badge_color || '#EF4444' }}
+              >
+                {item.badge_text}
+              </span>
+            )}
+            {hasChildren && (
+              <span className="text-xs">{isExpanded ? '▼' : '▶'}</span>
+            )}
+          </Link>
+        </SidebarNavNestedRow>
       )}
       
       {hasChildren && isExpanded && (

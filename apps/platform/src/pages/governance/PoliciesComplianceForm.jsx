@@ -6,6 +6,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, FileCheck, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const inp = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl = 'block text-sm font-medium text-gray-300 mb-1';
@@ -15,17 +21,31 @@ export default function PoliciesComplianceForm() {
   const {id} = useParams(); const isEdit=Boolean(id);
   const navigate=useNavigate();
   const [form,setForm]=useState(EMPTY);
+  const [record,setRecord]=useState(null);
   const [saving,setSaving]=useState(false);
   const [saved,setSaved]=useState(null);
   const [loading,setLoading]=useState(isEdit);
+  const [formTab,setFormTab]=useState('details');
+  const [auditUserLabels,setAuditUserLabels]=useState({});
 
   useEffect(()=>{
     if(!isEdit) return;
     platformDb.from('policies_compliance').select('*').eq('id',id).maybeSingle().then(({data})=>{
-      if(data) setForm({policy_name:data.policy_name??'',category:data.category??'',status:data.status??'draft',compliance_owner:data.compliance_owner??'',review_date:data.review_date??'',description:data.description??'',requirements:data.requirements??'',notes:data.notes??''});
+      if(data) {
+        setForm({policy_name:data.policy_name??'',category:data.category??'',status:data.status??'draft',compliance_owner:data.compliance_owner??'',review_date:data.review_date??'',description:data.description??'',requirements:data.requirements??'',notes:data.notes??''});
+        setRecord(data);
+      }
       setLoading(false);
     });
   },[id,isEdit]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, record]);
 
   const set=f=>e=>setForm(p=>({...p,[f]:e.target.value}));
 
@@ -44,6 +64,31 @@ export default function PoliciesComplianceForm() {
       <button onClick={()=>navigate('/platform/governance/policies')} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5"><ArrowLeft size={15}/>Back</button>
       <div className="flex items-center gap-3 mb-6"><FileCheck size={22} className="text-blue-400"/><h1 className="text-2xl font-bold">{isEdit?'Edit':'New'} Policy</h1></div>
       {saved && <div className="mb-5 rounded-lg bg-green-900/50 border border-green-700 px-4 py-3 text-green-300 text-sm">Policy <strong>{saved.id}</strong> {saved.operation.toLowerCase()} successfully.<button onClick={()=>navigate('/platform/governance/policies')} className="ml-3 underline">Back to list</button></div>}
+      <div className="mb-4"><DetailAuditTabList activeTab={formTab} onChange={setFormTab} /></div>
+      {formTab === 'audit' ? (
+        <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
+          {!record ? (
+            <p className="text-sm text-gray-400">Audit details appear after this policy is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this policy, and how it is classified.">
+              <AuditCard title="Identity" description="How this policy is labelled and tracked.">
+                <AuditField label="Policy name" value={record.policy_name} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this policy is categorised.">
+                <AuditField label="Category" value={record.category} />
+                <AuditField label="Compliance owner" value={record.compliance_owner} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this policy was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <form onSubmit={handleSave} className="rounded-lg border border-gray-700 bg-gray-800 p-6 space-y-4">
         <div><label className={lbl}>Policy Name <span className="text-red-400">*</span></label><input className={inp} value={form.policy_name} onChange={set('policy_name')} required/></div>
         <div className="grid grid-cols-2 gap-4">
@@ -62,6 +107,7 @@ export default function PoliciesComplianceForm() {
           <button type="button" onClick={()=>navigate('/platform/governance/policies')} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm">Cancel</button>
         </div>
       </form>
+      )}
     </div>
   );
 }

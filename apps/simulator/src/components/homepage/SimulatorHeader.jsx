@@ -47,7 +47,7 @@ const SimulatorHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-green-900 via-emerald-800 to-teal-900 shadow-md border-b border-green-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
         <Link to="/" className="flex items-center gap-3">
           <Zap className="h-6 w-6 text-green-300" />
           <div className="flex flex-col">
@@ -61,62 +61,62 @@ const SimulatorHeader = () => {
             </div>
           </div>
         </Link>
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-3 lg:gap-4 ml-6 lg:ml-10 shrink-0">
           <button
             type="button"
             onClick={handleHomeClick}
-            className="font-medium text-green-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
-            style={{ fontSize: '16px' }}
+            className="whitespace-nowrap font-medium text-green-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+            style={{ fontSize: '14px' }}
           >
             Home
           </button>
           <Link
             to="/simulator/features"
-            className="font-medium text-green-200 hover:text-white transition-colors"
-            style={{ fontSize: '16px' }}
+            className="whitespace-nowrap font-medium text-green-200 hover:text-white transition-colors"
+            style={{ fontSize: '14px' }}
           >
             Features
           </Link>
           <Link
             to="/simulator/blog"
-            className="font-medium text-green-200 hover:text-white transition-colors"
-            style={{ fontSize: '16px' }}
+            className="whitespace-nowrap font-medium text-green-200 hover:text-white transition-colors"
+            style={{ fontSize: '14px' }}
           >
             Blog
           </Link>
           <Link
             to="/simulator/resources"
-            className="font-medium text-green-200 hover:text-white transition-colors"
-            style={{ fontSize: '16px' }}
+            className="whitespace-nowrap font-medium text-green-200 hover:text-white transition-colors"
+            style={{ fontSize: '14px' }}
           >
             Resources
           </Link>
           <Link
             to="/simulator/pricing"
-            className="font-medium text-green-200 hover:text-white transition-colors"
-            style={{ fontSize: '16px' }}
+            className="whitespace-nowrap font-medium text-green-200 hover:text-white transition-colors"
+            style={{ fontSize: '14px' }}
           >
             Pricing
           </Link>
           <Link
             to="/documentation/simulator"
-            className="font-medium text-green-200 hover:text-white transition-colors"
-            style={{ fontSize: '16px' }}
+            className="whitespace-nowrap font-medium text-green-200 hover:text-white transition-colors"
+            style={{ fontSize: '14px' }}
           >
             Documentation
           </Link>
+        </nav>
+        <div className="flex items-center gap-2 ml-auto shrink-0">
           <Link
             to="/simulator/affiliate"
-            className="font-medium text-green-200 hover:text-white transition-colors"
-            style={{ fontSize: '16px' }}
+            className="hidden whitespace-nowrap md:inline-flex font-medium text-green-200 hover:text-white transition-colors"
+            style={{ fontSize: '14px' }}
           >
             Become an Affiliate
           </Link>
-        </nav>
-        <div className="flex items-center gap-3">
           <Link
             to="/simulator/request-demo"
-            className="hidden md:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md"
+            className="hidden whitespace-nowrap md:inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md"
           >
             Request Demo
           </Link>
@@ -124,11 +124,11 @@ const SimulatorHeader = () => {
           <button
             type="button"
             onClick={() => navigate('/simulator/login')}
-            className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md bg-transparent"
+            className="hidden whitespace-nowrap sm:inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md bg-transparent"
           >
             Log in
           </button>
-          <Button asChild className="bg-green-600 hover:bg-green-500 text-white shadow-lg">
+          <Button size="sm" asChild className="whitespace-nowrap bg-green-600 hover:bg-green-500 text-white shadow-lg">
             <Link to="/simulator/register">Signup</Link>
           </Button>
         </div>

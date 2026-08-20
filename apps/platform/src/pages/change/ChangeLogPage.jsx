@@ -6,7 +6,7 @@ export default function ChangeLogPage() {
   const navigate = useNavigate()
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="mx-auto w-full max-w-[96rem] px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-2">
           <button
@@ -21,7 +21,7 @@ export default function ChangeLogPage() {
               Change Request Log
             </h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Immutable audit trail of all Change Request (CR) lifecycle events across projects, programmes and portfolios
+              Scan log type, category, priority, CR status, role, and comments in the list before opening an entry
             </p>
           </div>
         </div>

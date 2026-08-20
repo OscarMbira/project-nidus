@@ -75,6 +75,12 @@ async function duplicateProcessTemplateRow(db, sourceId, { accountId, projectId,
   const { data: src, error } = await db.from(table).select('*').eq('id', sourceId).maybeSingle()
   if (error) throw error
   if (!src) throw new Error(`${table} row not found`)
+
+  const {
+    data: { user: authUser },
+  } = await db.auth.getUser()
+  if (!authUser?.id) throw new Error('Not authenticated')
+
   const {
     id: _id,
     created_at: _c,
@@ -84,6 +90,9 @@ async function duplicateProcessTemplateRow(db, sourceId, { accountId, projectId,
     practice_project_id: _pp,
     account_id: _a,
     is_deleted: _del,
+    created_by: _cb,
+    updated_by: _ub,
+    copied_by: _copied,
     ...rest
   } = src
   // public tables use project_id; sim tables use practice_project_id (v629/v842).
@@ -100,6 +109,12 @@ async function duplicateProcessTemplateRow(db, sourceId, { accountId, projectId,
     is_master: false,
     is_deleted: false,
     account_id: accountId,
+    // Catalog tables FK created_by/updated_by to auth.users (v629), not public.users.
+    created_by: authUser.id,
+    updated_by: authUser.id,
+  }
+  if (Object.prototype.hasOwnProperty.call(src, 'copied_by')) {
+    insertRow.copied_by = authUser.id
   }
   if (isSimSchema) {
     insertRow.practice_project_id = projectId || null
@@ -192,6 +207,7 @@ async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' 
     template_code: _tc,
     account_id: _a,
     created_by: _cb,
+    updated_by: _ub,
     pm_template_node_id: _n,
     ...rest
   } = src
@@ -204,6 +220,7 @@ async function duplicateFormTemplateRow(db, sourceId, accountId, nameSuffix = ' 
       name: withCustomNameSuffix(rest.name, 'Form template'),
       account_id: accountId,
       created_by: authUser.id,
+      updated_by: authUser.id,
       pm_template_node_id: null,
     })
     .select()
@@ -277,6 +294,7 @@ export async function createBlankFormTemplateNode(db, {
       is_active: true,
       account_id: accountId,
       created_by: authUser.id,
+      updated_by: authUser.id,
       pm_template_node_id: null,
     })
     .select()
@@ -309,7 +327,11 @@ export async function createBlankFormTemplateNode(db, {
 
   await db
     .from('form_templates')
-    .update({ pm_template_node_id: node.id, updated_at: new Date().toISOString() })
+    .update({
+      pm_template_node_id: node.id,
+      updated_at: new Date().toISOString(),
+      updated_by: authUser.id,
+    })
     .eq('id', formRow.id)
 
   if (scopeEntityType && scopeEntityType !== 'account' && scopeEntityId) {
@@ -476,9 +498,17 @@ export async function copyTemplateNodeForAccount(db, {
     if (linkErr) throw linkErr
   }
   if (domainRefId && source.domain === 'form_template') {
+    const {
+      data: { user: linkUser },
+    } = await db.auth.getUser()
+    const linkPatch = {
+      pm_template_node_id: node.id,
+      updated_at: new Date().toISOString(),
+    }
+    if (linkUser?.id) linkPatch.updated_by = linkUser.id
     await db
       .from('form_templates')
-      .update({ pm_template_node_id: node.id, updated_at: new Date().toISOString() })
+      .update(linkPatch)
       .eq('id', domainRefId)
   }
 

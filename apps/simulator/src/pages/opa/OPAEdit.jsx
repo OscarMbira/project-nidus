@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getOPAById, listOPACategories, listProjectsForOrganisation, updateOPA } from '../../services/opaService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const OPA_TYPES = ['template', 'guideline', 'standard', 'procedure', 'policy', 'historical_info', 'lessons_learned', 'other']
@@ -13,9 +20,20 @@ export default function OPAEdit() {
   const [categories, setCategories] = useState([])
   const [projects, setProjects] = useState([])
   const [form, setForm] = useState(null)
+  const [record, setRecord] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     ;(async () => {
@@ -31,6 +49,7 @@ export default function OPAEdit() {
         setError(e?.message || 'Not found')
         return
       }
+      setRecord(data)
       setForm({
         title: data.title || '',
         description: data.description || '',
@@ -110,6 +129,29 @@ export default function OPAEdit() {
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit OPA</h1>
+
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created this OPA record, and how it is classified.">
+          <AuditCard title="Identity" description="How this OPA record is labelled and tracked.">
+            <AuditField label="Title" value={record?.title} />
+            <AuditField label="Status" value={humanizeAuditToken(record?.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this OPA record is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(record?.opa_type)} />
+            <AuditField label="Version" value={record?.version} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this OPA record was created and last changed.">
+            <AuditField label="Created by" value={record?.created_by ? auditUserLabels[record.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={record?.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={record?.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       {error && (
         <p className="text-red-600 dark:text-red-400 mb-4" role="alert">
           {error}
@@ -263,6 +305,8 @@ export default function OPAEdit() {
           </button>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

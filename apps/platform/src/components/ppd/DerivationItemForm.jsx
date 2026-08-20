@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addDerivation, updateDerivation } from '../../services/ppdDerivationsService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function DerivationItemForm({ ppdId, derivation = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -21,6 +27,18 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
   const [mandates, setMandates] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !derivation) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [derivation.created_by, derivation.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, derivation])
 
   useEffect(() => {
     if (derivation) {
@@ -119,6 +137,33 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !derivation?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this derivation is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this derivation, and how it is classified.">
+              <AuditCard title="Identity" description="How this derivation is labelled and tracked.">
+                <AuditField label="Title" value={formData.derivation_title || derivation.derivation_title} />
+                <AuditField label="Type" value={humanizeAuditToken(derivation.derivation_type)} />
+                <AuditField label="Reference" value={derivation.derivation_reference} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this derivation sits.">
+                <AuditField label="Linked mandate" value={mandates.find((m) => m.id === (formData.mandate_id || derivation.mandate_id))?.mandate_title} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this derivation was created and last changed.">
+                <AuditField label="Created by" value={derivation.created_by ? auditUserLabels[derivation.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={derivation.created_at} />
+                <AuditField label="Updated by" value={derivation.updated_by ? auditUserLabels[derivation.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={derivation.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Derivation Type <span className="text-red-500">*</span>
@@ -206,6 +251,8 @@ export default function DerivationItemForm({ ppdId, derivation = null, mode = 'c
               ))}
             </select>
           </div>
+        )}
+        </>
         )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">

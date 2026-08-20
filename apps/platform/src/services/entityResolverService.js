@@ -103,15 +103,22 @@ export async function resolveRiskId(codeOrUuid, projectId) {
   const cacheKey = `${pid}:${key}`
   const hit = cacheGet('risk', cacheKey)
   if (hit) return hit
-  const { data, error } = await platformDb
-    .from('risks')
-    .select('id')
-    .eq('project_id', pid)
-    .eq('risk_code', key)
-    .eq('is_deleted', false)
-    .maybeSingle()
-  if (error && error.code !== 'PGRST116') console.warn('resolveRiskId', error.message)
-  const id = data?.id || null
+
+  const tryMatch = async (column) => {
+    const { data, error } = await platformDb
+      .from('risks')
+      .select('id')
+      .eq('project_id', pid)
+      .eq(column, key)
+      .eq('is_deleted', false)
+      .maybeSingle()
+    if (error && error.code !== 'PGRST116') console.warn('resolveRiskId', column, error.message)
+    return data?.id || null
+  }
+
+  // Prefer risk_code; also accept risk_identifier (Admin display ID / register ref)
+  let id = await tryMatch('risk_code')
+  if (!id) id = await tryMatch('risk_identifier')
   if (id) cacheSet('risk', cacheKey, id)
   return id
 }

@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Flag, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const input  = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const label  = 'block text-sm font-medium text-gray-300 mb-1';
@@ -22,10 +28,13 @@ export default function StageGateForm() {
   const isEdit  = Boolean(id);
   const navigate = useNavigate();
   const [form, setForm]     = useState(EMPTY);
+  const [record, setRecord] = useState(null);
   const [projects, setProjects] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(null);
   const [loading, setLoading] = useState(isEdit);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
 
   useEffect(() => {
     async function load() {
@@ -34,12 +43,25 @@ export default function StageGateForm() {
 
       if (isEdit) {
         const { data } = await platformDb.from('stage_gate_reviews').select('*').eq('id', id).maybeSingle();
-        if (data) setForm({ gate_name: data.gate_name ?? '', stage: data.stage ?? '', status: data.status ?? 'draft', decision_date: data.decision_date ?? '', outcome: data.outcome ?? '', notes: data.notes ?? '', project_id: data.project_id ?? '' });
+        if (data) {
+          setRecord(data);
+          setForm({ gate_name: data.gate_name ?? '', stage: data.stage ?? '', status: data.status ?? 'draft', decision_date: data.decision_date ?? '', outcome: data.outcome ?? '', notes: data.notes ?? '', project_id: data.project_id ?? '' });
+        }
         setLoading(false);
       }
     }
     load();
   }, [id, isEdit]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, record]);
 
   const set = (f) => (e) => setForm((prev) => ({ ...prev, [f]: e.target.value }));
 
@@ -47,12 +69,13 @@ export default function StageGateForm() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload = { ...form, updated_at: new Date().toISOString() };
+      const { data: { user } } = await platformDb.auth.getUser();
+      const payload = { ...form, updated_at: new Date().toISOString(), updated_by: user?.id ?? null };
       if (isEdit) {
         await platformDb.from('stage_gate_reviews').update(payload).eq('id', id);
         setSaved({ operation: 'Updated', id });
       } else {
-        const { data } = await platformDb.from('stage_gate_reviews').insert({ ...payload, is_deleted: false, created_at: new Date().toISOString() }).select('id').single();
+        const { data } = await platformDb.from('stage_gate_reviews').insert({ ...payload, is_deleted: false, created_at: new Date().toISOString(), created_by: user?.id ?? null }).select('id').single();
         setSaved({ operation: 'Created', id: data?.id });
       }
     } finally {
@@ -84,6 +107,32 @@ export default function StageGateForm() {
       )}
 
       <form onSubmit={handleSave} className={card}>
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !record?.id ? (
+            <p className="text-sm text-gray-400">Audit details appear after this stage gate review is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this stage gate review, and how it is classified.">
+              <AuditCard title="Identity" description="How this stage gate review is labelled and tracked.">
+                <AuditField label="Gate name" value={form.gate_name || record.gate_name} />
+                <AuditField label="Stage" value={record.stage} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this stage gate review sits.">
+                <AuditField label="Project" value={projects.find((p) => p.id === (form.project_id || record.project_id))?.project_name} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this stage gate review was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
         <div className="grid grid-cols-1 gap-5">
           <div>
             <label className={label}>Gate Name <span className="text-red-400">*</span></label>
@@ -124,6 +173,7 @@ export default function StageGateForm() {
             <textarea className={`${input} h-24 resize-none`} value={form.notes} onChange={set('notes')} placeholder="Gate review notes and decisions…" />
           </div>
         </div>
+        )}
 
         <div className="flex gap-3 mt-6">
           <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors">

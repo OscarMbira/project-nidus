@@ -4,7 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Edit } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeRiskById } from '../../services/sim/practiceRiskService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
@@ -12,6 +13,12 @@ import CustomFieldRenderer from '../../features/local-data-extensions/components
 import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge'
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
 import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRACTICE_RISK_VIEW_SECTIONS = [
   { title: 'Risk', fields: [
@@ -51,6 +58,16 @@ export default function PracticeRiskDetail() {
   const [risk, setRisk] = useState(null)
   const [loading, setLoading] = useState(true)
   const [ldeAccountId, setLdeAccountId] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !risk) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [risk.created_by, risk.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, risk])
 
   useEffect(() => {
     let cancelled = false
@@ -119,11 +136,35 @@ export default function PracticeRiskDetail() {
               exportRecordToPrint(sections, record, `PracticeRisk_${risk.risk_reference || id}`)
             }}
           />
-          <button onClick={() => navigate(`/simulator/practice-risk-register/${id}/edit?projectId=${projectId}`)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+          <RowActionButton
+            variant="edit"
+            label="Edit risk"
+            onClick={() => navigate(`/simulator/practice-risk-register/${id}/edit?projectId=${projectId}`)}
+          />
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this risk.">
+          <AuditCard title="Identity" description="How this risk is labelled.">
+            <AuditField label="Title" value={risk.risk_title} />
+            <AuditField label="Reference" value={risk.risk_reference} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this risk is scored.">
+            <AuditField label="Level" value={humanizeAuditToken(risk.risk_level)} />
+            <AuditField label="Score" value={risk.risk_score} />
+            <AuditField label="Status" value={humanizeAuditToken(risk.status)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this risk was created and last changed.">
+            <AuditField label="Created by" value={risk.created_by ? auditUserLabels[risk.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={risk.created_at} />
+            <AuditField label="Updated by" value={risk.updated_by ? auditUserLabels[risk.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={risk.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
           <h3 className="font-medium mb-2">Description</h3>
@@ -161,6 +202,7 @@ export default function PracticeRiskDetail() {
           screenCode="risk_detail"
         />
       </div>
+      )}
     </div>
   )
 }

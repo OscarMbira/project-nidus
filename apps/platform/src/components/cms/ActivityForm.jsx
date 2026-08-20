@@ -3,7 +3,17 @@
  * Add/edit scheduled communication activity form
  */
 
+import { useState } from 'react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
+
 export default function ActivityForm({ activityData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+  const [formTab, setFormTab] = useState('details')
+
   const handleChange = (field, value) => {
     if (onChange) {
       onChange({ ...activityData, [field]: value })
@@ -35,6 +45,27 @@ export default function ActivityForm({ activityData = {}, onChange, onCancel, on
       }}
       className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg space-y-4"
     >
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !activityData?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this activity is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this activity is labelled and classified, and when it was created.">
+            <AuditCard title="Identity" description="How this activity is labelled and tracked.">
+              <AuditField label="Activity name" value={activityData.activity_name} />
+              <AuditField label="Type" value={humanizeAuditToken(activityData.activity_type)} />
+              <AuditField label="Timing" value={humanizeAuditToken(activityData.activity_timing)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this activity was created.">
+              <AuditTimestampPair dateLabel="Created at" value={activityData.created_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -168,6 +199,8 @@ export default function ActivityForm({ activityData = {}, onChange, onCancel, on
             placeholder="What triggers this activity? (e.g., Milestone completion, Risk escalation)"
           />
         </div>
+      )}
+      </>
       )}
 
       <div className="flex gap-2 pt-4">

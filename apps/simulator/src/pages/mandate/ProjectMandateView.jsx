@@ -1,12 +1,19 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { ArrowLeft, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getMandateViewData } from '../../services/projectMandateService'
 import { submitForApproval } from '../../services/mandateWorkflowService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import ConstraintListItem from '../../components/constraints/ConstraintListItem'
 import MandateSubmitModal from '../../components/mandate/MandateSubmitModal'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 /** All mandate fields for export; Word/PPT let user choose up to 10. */
 const MANDATE_EXPORT_SECTIONS = [
@@ -57,6 +64,7 @@ export default function ProjectMandateView() {
   const [mandate, setMandate] = useState(null)
   const [loading, setLoading] = useState(true)
   const [canEdit, setCanEdit] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
   const [canCreate, setCanCreate] = useState(false)
   const [approvalPending, setApprovalPending] = useState(false)
   const [submittingForApproval, setSubmittingForApproval] = useState(false)
@@ -298,18 +306,39 @@ export default function ProjectMandateView() {
               </button>
             )}
             {canEdit && (
-              <button
+              <RowActionButton
+                variant="edit"
+                label="Edit mandate"
                 onClick={() => navigate(`${basePath}/${mandate.mandate_reference || mandate.id}/edit`)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </button>
+              />
             )}
           </div>
         </div>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this mandate, and how it is classified.">
+          <AuditCard title="Identity" description="How this mandate is labelled and tracked.">
+            <AuditField label="Reference" value={mandate.mandate_reference} />
+            <AuditField label="Title" value={mandate.mandate_title} />
+            <AuditField label="Status" value={humanizeAuditToken(mandate.document_status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this mandate sits.">
+            <AuditField label="Authority responsible" value={mandate.authority_responsible} />
+            <AuditField label="Quality priority" value={humanizeAuditToken(mandate.quality_priority)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this mandate was created and last changed.">
+            <AuditField label="Created by" value={mandate.creator?.full_name || mandate.creator?.email || null} />
+            <AuditTimestampPair dateLabel="Created at" value={mandate.created_at} />
+            <AuditField label="Updated by" value={mandate.updater?.full_name || mandate.updater?.email || null} />
+            <AuditTimestampPair dateLabel="Last updated" value={mandate.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <div className="space-y-6">
         {/* Status Badge */}
         <div className={`px-4 py-2 rounded-lg ${
@@ -607,6 +636,7 @@ export default function ProjectMandateView() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

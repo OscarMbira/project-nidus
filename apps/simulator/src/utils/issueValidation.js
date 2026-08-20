@@ -40,7 +40,7 @@ export function validateDescription(description) {
  */
 export function validateImpact(impact) {
   if (!impact || impact.trim().length === 0) {
-    return { valid: false, message: 'Impact description is required' }
+    return { valid: false, message: 'Please describe the impact of this issue' }
   }
   if (impact.trim().length < 20) {
     return { valid: false, message: 'Impact description must be at least 20 characters' }
@@ -54,7 +54,19 @@ export function validateImpact(impact) {
  * @returns {Object} Validation result
  */
 export function validateIssueType(type) {
-  const validTypes = ['request_for_change', 'off_specification', 'problem_concern']
+  // Register types (v174) plus legacy types still offered in IssueForm / v25 seeds
+  const validTypes = [
+    'request_for_change',
+    'off_specification',
+    'problem_concern',
+    'bug',
+    'enhancement',
+    'task',
+    'question',
+    'blocker',
+    'risk',
+    'other',
+  ]
   if (!type || !validTypes.includes(type)) {
     return { valid: false, message: 'Valid issue type is required' }
   }
@@ -80,7 +92,9 @@ export function validatePriority(priority) {
  * @returns {Object} Validation result
  */
 export function validateSeverity(severity) {
-  const validSeverities = ['critical', 'major', 'moderate', 'minor']
+  // Structured register: minor/moderate/major/critical
+  // Legacy / some seeds: low/medium/high/critical (v25)
+  const validSeverities = ['critical', 'major', 'moderate', 'minor', 'high', 'medium', 'low']
   if (!severity || !validSeverities.includes(severity)) {
     return { valid: false, message: 'Severity is required' }
   }

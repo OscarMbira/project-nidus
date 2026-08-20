@@ -15,6 +15,12 @@ import { getQualityExpectations } from '../../services/pdQualityExpectationsServ
 import { getSkills } from '../../services/pdSkillsRequiredService'
 import { getResponsibilities } from '../../services/pdAcceptanceResponsibilitiesService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import PDIntroductionSection from './PDIntroductionSection'
 import PDCompositionSection from './PDCompositionSection'
 import PDDerivationsSection from './PDDerivationsSection'
@@ -87,6 +93,8 @@ export default function ProductDescriptionForm({
   const [showTemplateSelector, setShowTemplateSelector] = useState(mode === 'create' && !pdId)
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [accountId, setAccountId] = useState(null)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (pdId && mode !== 'create') {
@@ -95,6 +103,16 @@ export default function ProductDescriptionForm({
       fetchAccountId()
     }
   }, [pdId, mode])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !pdId) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [formData.created_by, formData.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, pdId, formData.created_by, formData.updated_by])
 
   const fetchAccountId = async () => {
     try {
@@ -489,6 +507,35 @@ export default function ProductDescriptionForm({
           )}
         </div>
 
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !pdId ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this product description is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this product description, and how it is classified.">
+              <AuditCard title="Identity" description="How this product description is labelled and tracked.">
+                <AuditField label="Title" value={formData.product_title} />
+                <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this product description sits.">
+                <AuditField label="Project" value={formData.project?.project_name} />
+                <AuditField label="Author" value={formData.author?.full_name || formData.author?.email} />
+                <AuditField label="Owner" value={formData.owner?.full_name || formData.owner?.email} />
+                <AuditField label="Client" value={formData.client?.full_name || formData.client?.email} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this product description was created and last changed.">
+                <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+                <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'wizard' && (
+        <>
         <div className="mb-8">
           <div className="flex items-center justify-between">
             {FORM_STEPS.map((step, index) => {
@@ -582,6 +629,8 @@ export default function ProductDescriptionForm({
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

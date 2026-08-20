@@ -12,6 +12,12 @@ import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.j
 import InheritedWorkPackageFields, {
   WORK_PACKAGE_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedWorkPackageFields'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function PracticeWorkPackageEdit() {
   const { id } = useParams()
@@ -28,10 +34,21 @@ export default function PracticeWorkPackageEdit() {
     quality_criteria: '',
     acceptance_criteria: ''
   })
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) loadWorkPackage()
   }, [id])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     if (!projectId) {
@@ -58,7 +75,7 @@ export default function PracticeWorkPackageEdit() {
     try {
       setLoading(true)
       const result = await getPracticeWorkPackageById(id)
-      if (result.success) setFormData(result.data)
+      if (result.success) { setFormData(result.data); setRecord(result.data) }
     } catch (error) {
       console.error('Error loading work package:', error)
     } finally {
@@ -90,6 +107,30 @@ export default function PracticeWorkPackageEdit() {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </button>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Edit Practice Work Package</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this work package is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this work package.">
+              <AuditCard title="Identity" description="How this work package is labelled.">
+                <AuditField label="Name" value={record.work_package_name} />
+                <AuditField label="Code" value={record.work_package_code} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this work package sits.">
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this work package was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">Work Package Name *</label>
@@ -133,6 +174,7 @@ export default function PracticeWorkPackageEdit() {
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
         </div>
       </form>
+      )}
     </div>
   )
 }

@@ -5,6 +5,12 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { SmartAmountInput } from '../ui/SmartAmountInput'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const RESOURCE_TYPES = [
   { value: 'human', label: 'Human Resource' },
@@ -24,6 +30,7 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
     cost_per_unit: '',
     availability_constraints: ''
   })
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (resource) {
@@ -54,6 +61,30 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !resource?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this resource is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this resource is labelled and classified, and when it was created and last changed.">
+            <AuditCard title="Identity" description="How this resource is labelled and tracked.">
+              <AuditField label="Resource name" value={formData.resource_name || resource.resource_name} />
+              <AuditField label="Type" value={humanizeAuditToken(resource.resource_type)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Unit and quantity for this resource.">
+              <AuditField label="Unit of measure" value={resource.unit_of_measure} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this resource was created and last changed.">
+              <AuditTimestampPair dateLabel="Created at" value={resource.created_at} />
+              <AuditTimestampPair dateLabel="Last updated" value={resource.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -151,6 +182,8 @@ export default function ResourceForm({ resource, onSubmit, onCancel, planType })
           />
         </div>
       </div>
+      </>
+      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (

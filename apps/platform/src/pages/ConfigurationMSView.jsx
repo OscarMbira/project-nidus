@@ -9,7 +9,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
-import { ArrowLeft, Edit2, FileText } from 'lucide-react'
+import { ArrowLeft, FileText } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import ConfigurationMSViewComponent from '../components/cfg/ConfigurationMSView'
 import { getConfigurationMSByProject, createConfigurationMSForProject } from '../services/configurationManagementStrategyService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
@@ -147,13 +148,7 @@ export default function ConfigurationMSView() {
             onExportJSON={() => exportRecordToJSON(CFG_MS_VIEW_SECTIONS, cfgMs, `ConfigurationMS_${cfgMs.cms_reference || cfgMs.id}`)}
             onExportPrint={() => exportRecordToPrint(CFG_MS_VIEW_SECTIONS, cfgMs, `ConfigurationMS_${cfgMs.cms_reference || cfgMs.id}`)}
           />
-          <button
-            onClick={handleEdit}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit
-          </button>
+          <RowActionButton variant="edit" label="Edit configuration MS" onClick={handleEdit} />
         </div>
       </div>
       <ConfigurationMSViewComponent cfgMsId={cfgMs.id} onEdit={handleEdit} />

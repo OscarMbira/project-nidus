@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { DashboardStatCard } from '@nidus/ui'
 import { supabase } from '../../services/supabaseClient'
 import {
   Shield,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react'
 
 export default function PMODashboard() {
+  const navigate = useNavigate()
   const [stats, setStats] = useState({
     totalBaselines: 0,
     pendingReviews: 0,
@@ -32,7 +34,7 @@ export default function PMODashboard() {
     try {
       // Load summary counts; use allSettled so 403/RLS on any table doesn't break the whole dashboard
       const [projectsRes, risksRes, issuesRes] = await Promise.allSettled([
-        supabase.from('projects').select('id', { count: 'exact', head: true }),
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('record_status', 'live'),
         supabase.from('risks').select('id', { count: 'exact', head: true }).in('status', ['identified', 'assessed', 'mitigated', 'monitored']).eq('is_deleted', false),
         supabase.from('issues').select('id', { count: 'exact', head: true }).in('status', ['new', 'assigned', 'in_progress', 'resolved', 'reopened']).eq('is_deleted', false)
       ])
@@ -58,12 +60,15 @@ export default function PMODashboard() {
 
   const statCards = [
     {
+      // Fabricated placeholder count (not a real query) — leave as a plain navigation
+      // shortcut to the mandate doc, not a filtered-list card. See v893 plan notes.
       label: 'Governance Baselines',
       value: stats.totalBaselines,
       icon: Shield,
       color: 'text-indigo-600 dark:text-indigo-400',
       bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
-      link: '/pmo/governance/mandate'
+      link: '/pmo/governance/mandate',
+      calculated: true
     },
     {
       label: 'Active Projects',
@@ -71,7 +76,7 @@ export default function PMODashboard() {
       icon: FileText,
       color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      link: '/pmo/oversight/risk-register'
+      link: '/platform/projects/all'
     },
     {
       label: 'Open Risks',
@@ -79,7 +84,7 @@ export default function PMODashboard() {
       icon: AlertTriangle,
       color: 'text-amber-600 dark:text-amber-400',
       bgColor: 'bg-amber-50 dark:bg-amber-900/20',
-      link: '/pmo/oversight/risk-register'
+      link: '/pmo/oversight/risk-register?filter=open'
     },
     {
       label: 'Open Issues',
@@ -87,23 +92,27 @@ export default function PMODashboard() {
       icon: AlertCircle,
       color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-50 dark:bg-red-900/20',
-      link: '/pmo/oversight/issue-register'
+      link: '/pmo/oversight/issue-register?filter=open'
     },
     {
+      // pendingReviews is hardcoded to 0, never queried — pre-existing, out of scope here.
       label: 'Pending Reviews',
       value: stats.pendingReviews,
       icon: Clock,
       color: 'text-purple-600 dark:text-purple-400',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-      link: '/pmo/initiation/business-case'
+      link: '/pmo/initiation/business-case',
+      calculated: true
     },
     {
+      // reportsThisMonth is hardcoded to 0, never queried — pre-existing, out of scope here.
       label: 'Reports This Month',
       value: stats.reportsThisMonth,
       icon: BarChart3,
       color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
-      link: '/pmo/reporting/highlight-reports'
+      link: '/pmo/reporting/highlight-reports',
+      calculated: true
     }
   ]
 
@@ -130,28 +139,17 @@ export default function PMODashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {statCards.map((card) => {
-          const Icon = card.icon
-          return (
-            <Link
-              key={card.label}
-              to={card.link}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${card.bgColor}`}>
-                  <Icon className={`h-5 w-5 ${card.color}`} />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {loading ? '...' : card.value}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{card.label}</p>
-                </div>
-              </div>
-            </Link>
-          )
-        })}
+        {statCards.map((card) => (
+          <DashboardStatCard
+            key={card.label}
+            label={card.label}
+            value={loading ? '...' : card.value}
+            icon={card.icon}
+            iconClassName={card.color}
+            accentClassName="text-gray-900 dark:text-white"
+            onClick={() => navigate(card.link)}
+          />
+        ))}
       </div>
 
       {/* Quick Actions */}

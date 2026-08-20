@@ -4,6 +4,12 @@
 
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const MILESTONE_TYPES_PROJECT = [
   { value: 'project_start', label: 'Project Start' },
@@ -33,6 +39,7 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
     is_critical: false,
     dependencies: ''
   })
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (milestone) {
@@ -60,6 +67,28 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !milestone?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this milestone is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this milestone is labelled and classified, and when it was created and last changed.">
+            <AuditCard title="Identity" description="How this milestone is labelled and tracked.">
+              <AuditField label="Milestone name" value={formData.milestone_name || milestone.milestone_name} />
+              <AuditField label="Type" value={humanizeAuditToken(milestone.milestone_type)} />
+              <AuditField label="Critical" value={milestone.is_critical ? 'Yes' : 'No'} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this milestone was created and last changed.">
+              <AuditTimestampPair dateLabel="Created at" value={milestone.created_at} />
+              <AuditTimestampPair dateLabel="Last updated" value={milestone.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -145,6 +174,8 @@ export default function MilestoneForm({ milestone, onSubmit, onCancel, planType 
           />
         </div>
       </div>
+      </>
+      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (

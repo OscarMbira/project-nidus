@@ -3,7 +3,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Users, UserPlus, Edit, Trash2, Loader } from 'lucide-react'
+import { Users, UserPlus, Loader } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import {
   getSimUserPracticeProjects,
   getSimProjectMembers,
@@ -252,20 +253,16 @@ export default function SimProjectMembers() {
                   <div className="text-xs text-violet-600 dark:text-violet-400 mt-2">{m.role_name}</div>
                   <div className="flex gap-2 mt-3">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                    <button
-                      type="button"
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit member"
                       onClick={() => setEditRow(m)}
-                      className="inline-flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400"
-                    >
-                      <Edit className="w-4 h-4" /> Edit
-                    </button>
-                    <button
-                      type="button"
+                    />
+                    <RowActionButton
+                      variant="delete"
+                      label="Remove member"
                       onClick={() => onRemove(m)}
-                      className="inline-flex items-center gap-1 text-sm text-red-600 dark:text-red-400"
-                    >
-                      <Trash2 className="w-4 h-4" /> Remove
-                    </button>
+                    />
                   </div>
                 </div>
               ))}
@@ -306,12 +303,16 @@ export default function SimProjectMembers() {
                         {m.joined ? new Date(m.joined).toLocaleDateString() : '—'}
                       </td>
                       <td className="px-4 py-3 text-right space-x-2">
-                        <button type="button" className="text-blue-600 dark:text-blue-400" onClick={() => setEditRow(m)}>
-                          <Edit className="w-4 h-4 inline" />
-                        </button>
-                        <button type="button" className="text-red-600 dark:text-red-400" onClick={() => onRemove(m)}>
-                          <Trash2 className="w-4 h-4 inline" />
-                        </button>
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit member"
+                          onClick={() => setEditRow(m)}
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Remove member"
+                          onClick={() => onRemove(m)}
+                        />
                       </td>
                     </tr>
                   ))}

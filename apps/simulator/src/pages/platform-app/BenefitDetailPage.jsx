@@ -4,7 +4,15 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { ArrowLeft, Target, Edit2 } from 'lucide-react'
+import { ArrowLeft, Target } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { platformDb } from '@nidus/supabase'
 import { getBenefit } from '../../services/benefitsService'
 import BenefitForm from '../../components/benefits/BenefitForm'
 
@@ -15,7 +23,19 @@ export default function BenefitDetailPage() {
   const [benefit, setBenefit] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const isEditRoute = location.pathname.endsWith('/edit')
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !benefit) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [benefit.created_by, benefit.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, benefit])
 
   useEffect(() => {
     if (id) {
@@ -85,13 +105,11 @@ export default function BenefitDetailPage() {
           >
             <ArrowLeft className="h-4 w-4" /> Back to Benefits
           </button>
-          <button
-            type="button"
+          <RowActionButton
+            variant="edit"
+            label="Edit benefit"
             onClick={() => navigate(`/platform/benefits/${id}/edit`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-          >
-            <Edit2 className="h-4 w-4" /> Edit
-          </button>
+          />
         </div>
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           <div className="flex items-center gap-3 mb-6">
@@ -101,27 +119,57 @@ export default function BenefitDetailPage() {
               <p className="text-gray-400 text-sm">{benefit.benefit_code}</p>
             </div>
           </div>
-          {benefit.benefit_description && (
-            <p className="text-gray-300 mb-4">{benefit.benefit_description}</p>
+          <div className="mb-6">
+            <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+          </div>
+
+          {activeTab === 'details' && (
+            <>
+              {benefit.benefit_description && (
+                <p className="text-gray-300 mb-4">{benefit.benefit_description}</p>
+              )}
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <dt className="text-gray-500">Status</dt>
+                  <dd className="text-gray-200">{benefit.benefit_status || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Category</dt>
+                  <dd className="text-gray-200">{benefit.benefit_category || '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Expected realization</dt>
+                  <dd className="text-gray-200">{benefit.expected_realization_date ? new Date(benefit.expected_realization_date).toLocaleDateString() : '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-gray-500">Estimated value</dt>
+                  <dd className="text-gray-200">{benefit.estimated_value != null ? `${benefit.estimated_value} ${benefit.value_currency || ''}` : '—'}</dd>
+                </div>
+              </dl>
+            </>
           )}
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt className="text-gray-500">Status</dt>
-              <dd className="text-gray-200">{benefit.benefit_status || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-500">Category</dt>
-              <dd className="text-gray-200">{benefit.benefit_category || '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-500">Expected realization</dt>
-              <dd className="text-gray-200">{benefit.expected_realization_date ? new Date(benefit.expected_realization_date).toLocaleDateString() : '—'}</dd>
-            </div>
-            <div>
-              <dt className="text-gray-500">Estimated value</dt>
-              <dd className="text-gray-200">{benefit.estimated_value != null ? `${benefit.estimated_value} ${benefit.value_currency || ''}` : '—'}</dd>
-            </div>
-          </dl>
+
+          {activeTab === 'audit' && (
+            <AuditDetailsPanel description="Who created or changed this benefit, and how it is classified.">
+              <AuditCard title="Identity" description="How this benefit is labelled and tracked.">
+                <AuditField label="Code" value={benefit.benefit_code} />
+                <AuditField label="Name" value={benefit.benefit_name} />
+                <AuditField label="Status" value={humanizeAuditToken(benefit.benefit_status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this benefit sits.">
+                <AuditField label="Portfolio" value={benefit.portfolio?.portfolio_name} />
+                <AuditField label="Programme" value={benefit.programme?.programme_name} />
+                <AuditField label="Project" value={benefit.project?.project_name} />
+                <AuditField label="Benefit owner" value={benefit.benefit_owner?.full_name || benefit.benefit_owner?.email} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this benefit was created and last changed.">
+                <AuditField label="Created by" value={benefit.created_by ? auditUserLabels[benefit.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={benefit.created_at} />
+                <AuditField label="Updated by" value={benefit.updated_by ? auditUserLabels[benefit.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={benefit.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
         </div>
       </div>
     </div>

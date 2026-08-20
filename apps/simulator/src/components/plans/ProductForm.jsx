@@ -4,6 +4,12 @@
 
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRODUCT_TYPES = [
   { value: 'deliverable', label: 'Deliverable' },
@@ -23,6 +29,7 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
     linked_work_package_id: null,
     linked_ppd_composition_item_id: null
   })
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (product) {
@@ -53,6 +60,30 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !product?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this product is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this product is labelled and classified, and when it was created and last changed.">
+            <AuditCard title="Identity" description="How this product is labelled and tracked.">
+              <AuditField label="Product name" value={formData.product_name || product.product_name} />
+              <AuditField label="Type" value={humanizeAuditToken(product.product_type)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this product sits.">
+              <AuditField label="Linked work package" value={workPackages.find((wp) => wp.id === (formData.linked_work_package_id || product.linked_work_package_id))?.work_package_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this product was created and last changed.">
+              <AuditTimestampPair dateLabel="Created at" value={product.created_at} />
+              <AuditTimestampPair dateLabel="Last updated" value={product.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -159,6 +190,8 @@ export default function ProductForm({ product, onSubmit, onCancel, workPackages 
           />
         </div>
       </div>
+      </>
+      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (

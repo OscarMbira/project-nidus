@@ -3,6 +3,7 @@
  */
 
 import { platformDb } from './supabase/supabaseClient'
+import { getAssignableProjectRoles } from './organisationCustomRoleService'
 
 const DEFAULT_NEW_ROLE_PERMISSIONS = [
   'project.view',
@@ -36,16 +37,21 @@ export function deriveRoleSlug(rawValue, existingSlugs = []) {
  */
 export async function fetchAvailableRoles() {
   try {
-    const { data, error } = await platformDb
-      .from('project_roles')
-      .select('id, role_name, role_display_name, role_description, role_level, is_system_default')
-      .eq('is_active', true)
-      .eq('is_template', true)
-      .is('project_id', null)
-      .order('role_level', { ascending: false })
+    // v906/v908: level-restricted, org-custom-role-aware catalog from the shared RPC
+    // (replaces the old raw project_roles query, built-ins only).
+    const result = await getAssignableProjectRoles()
+    if (!result.success) throw new Error(result.error)
 
-    if (error) throw error
-    return { success: true, data: data || [], error: null }
+    const data = (result.data || []).map((r) => ({
+      id: r.id,
+      role_name: r.role_name,
+      role_display_name: r.role_display_name,
+      role_description: r.role_description,
+      role_level: r.role_level,
+      is_system_default: !r.account_id,
+    }))
+
+    return { success: true, data, error: null }
   } catch (err) {
     console.error('[fetchAvailableRoles]', err)
     return { success: false, data: [], error: err.message || 'Failed to load roles' }

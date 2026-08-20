@@ -10,8 +10,8 @@ function Section({ mode, projectBase }) {
     <Routes>
       <Route path=":projectId/forms" element={<FormsGallery mode={mode} basePath={projectBase} />} />
       <Route path=":projectId/forms/:templateCode/new" element={<FormNew mode={mode} basePath={projectBase} />} />
-      <Route path=":projectId/forms/:formInstanceId/edit" element={<FormEdit mode={mode} />} />
-      <Route path=":projectId/forms/:formInstanceId/view" element={<FormView mode={mode} />} />
+      <Route path=":projectId/forms/:formInstanceId/edit" element={<FormEdit mode={mode} basePath={projectBase} />} />
+      <Route path=":projectId/forms/:formInstanceId/view" element={<FormView mode={mode} basePath={projectBase} />} />
       <Route path="/admin/form-templates" element={<FormTemplateAdmin mode={mode} />} />
     </Routes>
   )

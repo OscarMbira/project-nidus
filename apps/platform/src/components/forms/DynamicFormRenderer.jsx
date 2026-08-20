@@ -9,7 +9,7 @@ import CalculatedMetricsSummary from '../ui/CalculatedMetricsSummary'
 
 export default function DynamicFormRenderer({
   schema, values = {}, rows = {}, onValueChange, onRowsChange, translations = [], languageCode,
-  showCalculated = false, errors = {},
+  showCalculated = false, errors = {}, formInstanceId = null, disabled = false, mode = 'platform',
 }) {
   const calculated = useMemo(() => ({
     risk_score: calculateRiskScore(values.probability, values.impact),
@@ -43,6 +43,9 @@ export default function DynamicFormRenderer({
                 onChange={onValueChange}
                 languageCode={languageCode}
                 resolveOptionLabel={(opt) => resolveOptionLabel(opt, translationIndex, section.key, field.key)}
+                formInstanceId={formInstanceId}
+                disabled={disabled}
+                mode={mode}
               />
               {errors[field.key] && (
                 <p className="text-xs text-red-600 dark:text-red-400">{errors[field.key]}</p>

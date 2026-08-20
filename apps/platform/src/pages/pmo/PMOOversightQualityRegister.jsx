@@ -72,6 +72,7 @@ export default function PMOOversightQualityRegister() {
   const [selectedInspection, setSelectedInspection] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [filters, setFilters] = useState({ search: '' });
+  const [statusQuickFilter, setStatusQuickFilter] = useState(''); // '' | 'passed' | 'failed' | 'review'
 
   const qFilters = useMemo(
     () => (selectedProjectId ? { ...filters, project_id: selectedProjectId } : filters),
@@ -135,12 +136,18 @@ export default function PMOOversightQualityRegister() {
     const failed = registerItems.filter((r) => (r.quality_status || '').toLowerCase() === 'failed').length;
     const inReview = registerItems.filter((r) => (r.quality_status || '').toLowerCase().includes('review')).length;
     return [
-      { label: 'Total Products', value: registerItems.length },
-      { label: 'Passed', value: passed },
-      { label: 'Failed', value: failed },
-      { label: 'In Review', value: inReview },
+      { label: 'Total Products', value: registerItems.length, onClick: () => { setActiveTab('register'); setStatusQuickFilter(''); } },
+      { label: 'Passed', value: passed, onClick: () => { setActiveTab('register'); setStatusQuickFilter('passed'); } },
+      { label: 'Failed', value: failed, onClick: () => { setActiveTab('register'); setStatusQuickFilter('failed'); } },
+      { label: 'In Review', value: inReview, onClick: () => { setActiveTab('register'); setStatusQuickFilter('review'); } },
     ];
   }, [registerItems]);
+
+  const displayRegisterItems = useMemo(() => {
+    if (!statusQuickFilter) return registerItems;
+    if (statusQuickFilter === 'review') return registerItems.filter((r) => (r.quality_status || '').toLowerCase().includes('review'));
+    return registerItems.filter((r) => (r.quality_status || '').toLowerCase() === statusQuickFilter);
+  }, [registerItems, statusQuickFilter]);
 
   const handleDeleteRegister = async (item) => {
     if (!window.confirm(`Delete "${item.product_name || item.product_reference}"?`)) return;
@@ -202,10 +209,10 @@ export default function PMOOversightQualityRegister() {
   };
 
   const exportData = useMemo(() => {
-    if (activeTab === 'register') return registerItems.map((r) => ({ ...r, project_name: projectLabel(r) }));
+    if (activeTab === 'register') return displayRegisterItems.map((r) => ({ ...r, project_name: projectLabel(r) }));
     if (activeTab === 'reviews') return reviews.map((r) => ({ ...r, project_name: projectLabel(r) }));
     return inspections.map((r) => ({ ...r, project_name: projectLabel(r) }));
-  }, [activeTab, registerItems, reviews, inspections]);
+  }, [activeTab, displayRegisterItems, reviews, inspections]);
 
   const exportColumns = activeTab === 'register' ? REGISTER_COLUMNS : activeTab === 'reviews' ? REVIEWS_COLUMNS : INSPECTIONS_COLUMNS;
   const formOpen = showRegisterForm || showReviewForm || showInspectionForm;
@@ -258,6 +265,17 @@ export default function PMOOversightQualityRegister() {
 
         )}
 
+        {activeTab === 'register' && statusQuickFilter && (
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 capitalize">
+              {statusQuickFilter} only
+            </span>
+            <button type="button" onClick={() => setStatusQuickFilter('')} className="text-blue-600 dark:text-blue-400 hover:underline">
+              Clear
+            </button>
+          </div>
+        )}
+
         {!formOpen && (loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent" />
@@ -279,12 +297,12 @@ export default function PMOOversightQualityRegister() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                    {registerItems.length === 0 ? (
+                    {displayRegisterItems.length === 0 ? (
                       <tr>
                         <td colSpan={selectedProjectId ? 6 : 7} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">No register items.</td>
                       </tr>
                     ) : (
-                      registerItems.map((r, index) => (
+                      displayRegisterItems.map((r, index) => (
                         <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                           <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{r.product_reference || '—'}</td>

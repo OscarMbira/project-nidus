@@ -208,6 +208,7 @@ describe('pmTemplateCopyService', () => {
       name: 'Benefits Review Plan (custom)',
       account_id: 'my-account-1',
       created_by: 'auth-user-1',
+      updated_by: 'auth-user-1',
       pm_template_node_id: null,
     })
     expect(insertedVersionRows[0]).toMatchObject({
@@ -245,6 +246,7 @@ describe('pmTemplateCopyService', () => {
       process_group: 'planning',
       account_id: 'acct-1',
       created_by: 'auth-user-1',
+      updated_by: 'auth-user-1',
     })
     expect(insertedVersionRows[0]).toMatchObject({
       template_id: 'ft-new-1',
@@ -295,6 +297,7 @@ describe('pmTemplateCopyService', () => {
   function mockProcessTemplateDb(sourceRow) {
     const insertedRows = []
     const db = {
+      auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'auth-user-1' } } })) },
       from: vi.fn((table) => {
         if (table === 'pm_template_nodes') return existingCopyQueryStub()
         if (table === 'process_template_node_links') {
@@ -342,6 +345,8 @@ describe('pmTemplateCopyService', () => {
       is_master: false,
       project_id: null,
       account_id: 'my-account-1',
+      created_by: 'auth-user-1',
+      updated_by: 'auth-user-1',
     })
   })
 

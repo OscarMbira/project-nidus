@@ -6,6 +6,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import LessonsReportForm from '../components/lessonsReport/LessonsReportForm'
 import { getLessonsReportById } from '../services/lessonsReportService'
 import { useState, useEffect } from 'react'
@@ -18,20 +19,20 @@ export default function LessonsReportEdit() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (reportId) {
+    if (reportId && projectId) {
       loadReport()
     }
-  }, [reportId])
+  }, [reportId, projectId])
 
   const loadReport = async () => {
     try {
       setLoading(true)
-      const result = await getLessonsReportById(reportId)
+      const result = await getLessonsReportById(reportId, projectId)
       if (result.success) {
         setReport(result.data)
       } else {
         alert('Report not found: ' + result.error)
-        navigate(`/app/projects/${projectId}/lessons/reports`)
+        navigate(platformProjectPath(routeKey, 'lessons', 'reports'))
       }
     } catch (error) {
       console.error('Error loading report:', error)
@@ -42,14 +43,14 @@ export default function LessonsReportEdit() {
   }
 
   const handleSave = async (report) => {
-    navigate(`/app/projects/${projectId}/lessons/reports/${report.id}`)
+    navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || report.id))
   }
 
   const handleCancel = () => {
     if (reportId) {
-      navigate(`/app/projects/${projectId}/lessons/reports/${reportId}`)
+      navigate(platformProjectPath(routeKey, 'lessons', 'reports', report?.report_reference || reportId))
     } else {
-      navigate(`/app/projects/${projectId}/lessons/reports`)
+      navigate(platformProjectPath(routeKey, 'lessons', 'reports'))
     }
   }
 
@@ -67,7 +68,7 @@ export default function LessonsReportEdit() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Report not found</p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Reports
@@ -89,7 +90,7 @@ export default function LessonsReportEdit() {
             This report is in "{report.report_status}" status and can only be viewed. Only draft and submitted reports can be edited.
           </p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/${reportId}`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || reportId))}
             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
           >
             View Report
@@ -101,11 +102,14 @@ export default function LessonsReportEdit() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* reportId is the real UUID (report.id), not the friendly route param — the form
+          and its children (HoldButton, completeness check, section queries) all key
+          their fetches on a real lessons_reports.id. */}
       <LessonsReportForm
         projectId={projectId}
         lessonsLogId={report.lessons_log_id}
         stageBoundaryId={report.stage_boundary_id}
-        reportId={reportId}
+        reportId={report.id}
         reportType={report.report_type}
         mode="edit"
         onSave={handleSave}

@@ -4,11 +4,18 @@
  */
 
 import { useState } from 'react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function AudienceGroupForm({ groupData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [channelInput, setChannelInput] = useState('')
   const [messageInput, setMessageInput] = useState('')
+  const [formTab, setFormTab] = useState('details')
 
   const handleChange = (field, value) => {
     if (onChange) {
@@ -80,6 +87,27 @@ export default function AudienceGroupForm({ groupData = {}, onChange, onCancel, 
       }}
       className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg space-y-4"
     >
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !groupData?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this audience group is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this audience group is labelled and classified, and when it was created.">
+            <AuditCard title="Identity" description="How this audience group is labelled and tracked.">
+              <AuditField label="Group name" value={groupData.group_name} />
+              <AuditField label="Type" value={humanizeAuditToken(groupData.group_type)} />
+              <AuditField label="Confidentiality" value={humanizeAuditToken(groupData.confidentiality_level)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this audience group was created.">
+              <AuditTimestampPair dateLabel="Created at" value={groupData.created_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -283,6 +311,8 @@ export default function AudienceGroupForm({ groupData = {}, onChange, onCancel, 
           placeholder="Link to stakeholder categories..."
         />
       </div>
+      </>
+      )}
 
       <div className="flex gap-2 pt-4">
         <button

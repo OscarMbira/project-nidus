@@ -12,11 +12,12 @@ import StakeholderRegister from '../../components/stakeholders/StakeholderRegist
 import StakeholderImportModal from '../../components/stakeholders/StakeholderImportModal'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
+import { DashboardRegisterTabBar } from '@nidus/ui'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { platformDb } from '@nidus/supabase'
 
-import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const EXPORT_COLUMNS = [
+  { key: 'stakeholder_reference', label: 'Record ID' },
   { key: 'stakeholder_name', label: 'Name' },
   { key: 'stakeholder_type', label: 'Type' },
   { key: 'stakeholder_organization', label: 'Organization' },
@@ -38,7 +39,8 @@ export default function StakeholderRegisterPage() {
   const [loadError, setLoadError] = useState(null)
   const [toast, setToast] = useState(null)
   const [showImportModal, setShowImportModal] = useState(false)
-  const [viewMode, setViewMode] = useViewMode('platform-stakeholder-register', 'grid')
+  const [pageTab, setPageTab] = useState('dashboard') // 'dashboard' | 'register'
+  const [viewMode, setViewMode] = useViewMode('platform-stakeholder-register', 'list')
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -130,7 +132,8 @@ export default function StakeholderRegisterPage() {
 
   const exportData = useMemo(
     () =>
-      stakeholders.map((s, index) => ({
+      stakeholders.map((s) => ({
+        stakeholder_reference: s.stakeholder_reference || '',
         stakeholder_name: s.stakeholder_name,
         stakeholder_type: s.stakeholder_type || '',
         stakeholder_organization: s.stakeholder_organization || '',
@@ -140,43 +143,86 @@ export default function StakeholderRegisterPage() {
     [stakeholders]
   )
 
+  const dashboardStats = useMemo(() => {
+    const byType = {}
+    let active = 0
+    let decisionMakers = 0
+    let influencers = 0
+    for (const s of stakeholders) {
+      const t = (s.stakeholder_type || 'other').toLowerCase()
+      byType[t] = (byType[t] || 0) + 1
+      if ((s.stakeholder_status || 'active') === 'active') active += 1
+      if (s.is_decision_maker) decisionMakers += 1
+      if (s.is_influencer) influencers += 1
+    }
+    return {
+      total: stakeholders.length,
+      active,
+      internal: byType.internal || 0,
+      external: byType.external || 0,
+      decisionMakers,
+      influencers,
+    }
+  }, [stakeholders])
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        <button onClick={() => navigate('/platform/stakeholders/register')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
-          <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users2 className="h-8 w-8 text-purple-500" />
-            Stakeholder Register
-          </h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">Identify and maintain stakeholder information</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <ExportListMenu
-            columns={EXPORT_COLUMNS}
-            data={exportData}
-            baseFilename="Stakeholder-Register"
-            disabled={stakeholders.length === 0}
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div className="flex items-start gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => navigate('/platform/stakeholders/register')}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shrink-0"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Users2 className="h-7 w-7 text-purple-500 shrink-0" />
+                Stakeholder Register
+              </h1>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                Identify and maintain stakeholder information
+              </p>
+            </div>
+          </div>
+          <DashboardRegisterTabBar
+            value={pageTab}
+            onChange={setPageTab}
+            registerLabel="Register"
+            ariaLabel="Stakeholder register sections"
           />
-          <button
-            onClick={() => navigate('/platform/stakeholders/register/new', { state: { projectId: projectId || undefined } })}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-            aria-label="Create new stakeholder"
-          >
-            <Plus className="h-5 w-5" />
-            Create new Stakeholder
-          </button>
-          <button
-            onClick={() => setShowImportModal(true)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
-            aria-label="Import stakeholders"
-          >
-            <Upload className="h-5 w-5" />
-            Import
-          </button>
         </div>
+        {pageTab === 'register' && (
+          <div className="flex flex-wrap gap-2 items-center justify-end">
+            <ExportListMenu
+              columns={EXPORT_COLUMNS}
+              data={exportData}
+              baseFilename="Stakeholder-Register"
+              disabled={stakeholders.length === 0}
+            />
+            <button
+              type="button"
+              onClick={() => navigate('/platform/stakeholders/register/new', { state: { projectId: projectId || undefined } })}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium min-h-[44px]"
+              aria-label="Create new stakeholder"
+            >
+              <Plus className="h-5 w-5" />
+              Create new Stakeholder
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 font-medium min-h-[44px]"
+              aria-label="Import stakeholders"
+            >
+              <Upload className="h-5 w-5" />
+              Import
+            </button>
+          </div>
+        )}
       </div>
 
       {toast && (
@@ -185,6 +231,26 @@ export default function StakeholderRegisterPage() {
         </div>
       )}
 
+      {pageTab === 'dashboard' && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" role="tabpanel" aria-label="Stakeholder dashboard">
+          {[
+            { label: 'Total', value: dashboardStats.total, accent: 'text-gray-900 dark:text-white' },
+            { label: 'Active', value: dashboardStats.active, accent: 'text-emerald-700 dark:text-emerald-300' },
+            { label: 'Internal', value: dashboardStats.internal, accent: 'text-blue-700 dark:text-blue-300' },
+            { label: 'External', value: dashboardStats.external, accent: 'text-purple-700 dark:text-purple-300' },
+            { label: 'Decision makers', value: dashboardStats.decisionMakers, accent: 'text-sky-700 dark:text-sky-300' },
+            { label: 'Influencers', value: dashboardStats.influencers, accent: 'text-amber-700 dark:text-amber-300' },
+          ].map((card) => (
+            <div key={card.label} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">{card.label}</p>
+              <p className={`text-2xl font-bold ${card.accent}`}>{loading ? '—' : card.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {pageTab === 'register' && (
+      <div role="tabpanel" aria-label="Stakeholder register">
       <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-end">
         <div className="flex-1 min-w-[200px] max-w-md">
           <label htmlFor="stakeholder-register-project" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
@@ -253,17 +319,20 @@ export default function StakeholderRegisterPage() {
             onDeleteSuccess={(s) => setToast({ type: 'success', message: `Stakeholder "${s.stakeholder_name}" (${s.stakeholder_reference || s.id}) deleted successfully.` })}
           />
         )}
-        {showImportModal && (
-          <StakeholderImportModal
-            projectId={projectId || undefined}
-            onClose={() => setShowImportModal(false)}
-            onImportComplete={() => {
-              setShowImportModal(false)
-              projectId ? loadStakeholders() : loadFirst50Stakeholders()
-            }}
-          />
-        )}
       </div>
+      </div>
+      )}
+
+      {showImportModal && (
+        <StakeholderImportModal
+          projectId={projectId || undefined}
+          onClose={() => setShowImportModal(false)}
+          onImportComplete={() => {
+            setShowImportModal(false)
+            projectId ? loadStakeholders() : loadFirst50Stakeholders()
+          }}
+        />
+      )}
     </div>
   )
 }

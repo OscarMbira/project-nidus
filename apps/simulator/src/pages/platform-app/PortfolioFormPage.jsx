@@ -6,7 +6,8 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit2, Trash2, Briefcase } from 'lucide-react'
+import { ArrowLeft, Briefcase } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPortfolio, deletePortfolio } from '../../services/portfolioService'
 import PortfolioForm from '../../components/portfolio/PortfolioForm'
 
@@ -108,22 +109,18 @@ export default function PortfolioFormPage() {
           {portfolio && (
             <div className="flex items-center gap-2">
               {viewOnly ? (
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit portfolio"
                   onClick={() => setViewOnly(false)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit
-                </button>
+                />
               ) : null}
-              <button
+              <RowActionButton
+                variant="delete"
+                label="Delete portfolio"
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex items-center gap-2 px-4 py-2 border border-red-500 text-red-400 hover:bg-red-500/20 rounded-lg font-medium disabled:opacity-50"
-              >
-                <Trash2 className="h-4 w-4" />
-                {deleting ? 'Deleting...' : 'Delete'}
-              </button>
+              />
             </div>
           )}
         </div>

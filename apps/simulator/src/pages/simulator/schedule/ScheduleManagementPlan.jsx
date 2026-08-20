@@ -13,6 +13,12 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '../../../utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SECTIONS = [
   {
@@ -36,6 +42,8 @@ export default function ScheduleManagementPlan() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(null)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
   const [form, setForm] = useState({
     scheduling_methodology: '',
     scheduling_tool: '',
@@ -55,6 +63,7 @@ export default function ScheduleManagementPlan() {
     const res = await simGetScheduleManagementPlan(projectId)
     if (res.success && res.data) {
       const d = res.data
+      setRecord(d)
       setForm({
         scheduling_methodology: d.scheduling_methodology || '',
         scheduling_tool: d.scheduling_tool || '',
@@ -110,6 +119,7 @@ export default function ScheduleManagementPlan() {
         }
       )
       if (!res.success) throw new Error(res.error)
+      setRecord(res.data)
       setSuccess({
         message: `Schedule management plan ${res.operation === 'created' ? 'created' : 'updated'} successfully.`,
         id: res.data?.id,
@@ -157,6 +167,28 @@ export default function ScheduleManagementPlan() {
       )}
       {success?.error && <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-200">{success.error}</div>}
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="When this schedule management plan was created and last changed.">
+              <AuditCard title="Identity" description="How this plan is versioned.">
+                <AuditField label="Version" value={record.version} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this plan sits.">
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this plan was created and last changed.">
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         {[
           ['scheduling_methodology', 'Scheduling methodology'],
@@ -231,6 +263,7 @@ export default function ScheduleManagementPlan() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

@@ -6,6 +6,13 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addResource, updateResource } from '../../services/wpResourcesService'
+import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function WPResourceForm({ wpId, resource = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -22,6 +29,18 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !resource) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [resource.created_by, resource.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, resource])
 
   useEffect(() => {
     if (resource) {
@@ -112,6 +131,33 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !resource?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this resource is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this resource, and how it is classified.">
+              <AuditCard title="Identity" description="How this resource is labelled and tracked.">
+                <AuditField label="Resource name" value={formData.resource_name || resource.resource_name} />
+                <AuditField label="Type" value={humanizeAuditToken(resource.resource_type)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Allocation of this resource.">
+                <AuditField label="Allocated" value={resource.allocated ? 'Yes' : 'No'} />
+                <AuditField label="Unit of measure" value={resource.unit_of_measure} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this resource was created and last changed.">
+                <AuditField label="Created by" value={resource.created_by ? auditUserLabels[resource.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={resource.created_at} />
+                <AuditField label="Updated by" value={resource.updated_by ? auditUserLabels[resource.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={resource.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -255,6 +301,8 @@ export default function WPResourceForm({ wpId, resource = null, mode = 'create',
             </div>
           )}
         </div>
+        </>
+        )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {onCancel && (

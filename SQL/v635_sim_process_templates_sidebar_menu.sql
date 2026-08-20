@@ -16,7 +16,7 @@ BEGIN
   ) VALUES (
     'sim_pmo_process_templates_section',
     'Process Templates',
-    'Simulator PMO — PMBOK process templates hub',
+    'Simulator PMO — Standards-Based process templates hub',
     NULL, 1, 75,
     NULL, 'layers', TRUE, TRUE
   )

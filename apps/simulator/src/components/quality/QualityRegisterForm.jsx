@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react';
 import { Save, FileText, Calendar, Target, CheckCircle } from 'lucide-react';
 import { saveQualityRegisterItem } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
-import { simDb } from '@nidus/supabase';
+import { simDb, platformDb } from '@nidus/supabase';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import FormSurface from '../ui/FormSurface';
 import InheritedQualityFields, {
   QUALITY_REGISTER_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedQualityFields';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function QualityRegisterForm({
   item,
@@ -42,6 +48,25 @@ export default function QualityRegisterForm({
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !item) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        item.created_by,
+        item.updated_by,
+        item.quality_owner_user_id,
+        item.sign_off_by_user_id,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [formTab, item]);
 
   useEffect(() => {
     if (item) {
@@ -149,6 +174,51 @@ export default function QualityRegisterForm({
       onClose={onCancel}
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !item?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this item is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this quality register item, and how it is classified.">
+                <AuditCard title="Identity" description="How this item is labelled and tracked.">
+                  <AuditField label="Product reference" value={item.product_reference} />
+                  <AuditField label="Product name" value={formData.product_name || item.product_name} />
+                  <AuditField label="Product type" value={humanizeAuditToken(formData.product_type || item.product_type)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this item sits.">
+                  <AuditField label="Product category" value={formData.product_category || item.product_category} />
+                  <AuditField label="Quality method" value={humanizeAuditToken(formData.quality_method || item.quality_method)} />
+                  <AuditField
+                    label="Quality owner"
+                    value={
+                      formData.quality_owner_user_id || item.quality_owner_user_id
+                        ? auditUserLabels[formData.quality_owner_user_id || item.quality_owner_user_id] || null
+                        : null
+                    }
+                  />
+                  <AuditField
+                    label="Sign-off by"
+                    value={
+                      formData.sign_off_by_user_id || item.sign_off_by_user_id
+                        ? auditUserLabels[formData.sign_off_by_user_id || item.sign_off_by_user_id] || null
+                        : null
+                    }
+                  />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this item was created and last changed.">
+                  <AuditField label="Created by" value={item.created_by ? auditUserLabels[item.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={item.created_at} />
+                  <AuditField label="Updated by" value={item.updated_by ? auditUserLabels[item.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={item.updated_at} />
+                  <AuditTimestampPair dateLabel="Planned review date" value={item.quality_review_planned_date || formData.quality_review_planned_date} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -423,6 +493,8 @@ export default function QualityRegisterForm({
               mode="edit"
               title="Quality register additional fields"
             />
+          )}
+          </>
           )}
 
           {/* Form Actions */}

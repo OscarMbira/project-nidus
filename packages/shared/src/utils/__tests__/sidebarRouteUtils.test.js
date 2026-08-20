@@ -85,12 +85,26 @@ describe('sidebarRouteUtils', () => {
     expect(menuPathIsActive('/platform/dashboard', '/platform/dashboard?tab=projects', '')).toBe(false)
   })
 
+  it('menuPathIsActive does not treat Project Templates as under Organizational Templates hub', () => {
+    expect(menuPathIsActive('/platform/templates/project', '/platform/templates')).toBe(false)
+    expect(menuPathIsActive('/platform/templates/project', '/platform/templates/project')).toBe(true)
+    expect(menuPathIsActive('/platform/templates/organisational', '/platform/templates')).toBe(true)
+    expect(menuPathIsActive('/platform/templates/organisational', '/platform/templates/organisational')).toBe(true)
+    expect(menuPathIsActive('/platform/templates/organisational', '/platform/templates/project')).toBe(false)
+  })
+
   it('resolveMenuRoutePathForLayout rewrites PM dashboard links', () => {
     expect(
       resolveMenuRoutePathForLayout('/platform/dashboard', '/platform/projects', 'pm')
     ).toBe('/pm/dashboard')
     expect(
+      resolveMenuRoutePathForLayout('/platform/executive/dashboard', '/platform/projects', 'pm')
+    ).toBe('/pm/dashboard')
+    expect(
       resolveMenuRoutePathForLayout('/platform/dashboard', '/platform/projects', 'pmo')
     ).toBe('/platform/dashboard')
+    expect(
+      resolveMenuRoutePathForLayout('/platform/executive/dashboard', '/platform/projects', 'pmo')
+    ).toBe('/platform/executive/dashboard')
   })
 })

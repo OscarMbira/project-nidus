@@ -51,6 +51,10 @@ vi.mock('../../../services/supabase/supabaseClient', () => ({
   },
 }))
 
+vi.mock('../../../services/postLoginRouter', () => ({
+  getPostLoginRoute: vi.fn().mockResolvedValue({ route: '/platform/dashboard' }),
+}))
+
 // ── Shared invitation data ────────────────────────────────────────────────────
 const BASE_INVITATION = {
   invitation_id: 'inv-uuid-1',
@@ -140,6 +144,44 @@ describe('InvitationAccept — authenticated user (already signed in)', () => {
     await user.click(screen.getByRole('button', { name: /Accept Invitation/i }))
 
     await waitFor(() => expect(mockAcceptInvitation).toHaveBeenCalledWith('tok-1', 'db-user-1'))
+  })
+
+  it('copies invitation name and role onto the user profile on accept', async () => {
+    const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    mockFrom.mockReturnValue({
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve({ data: { id: 'db-user-1' }, error: null }),
+          maybeSingle: () =>
+            Promise.resolve({
+              data: {
+                id: 'db-user-1',
+                full_name: 'invitee',
+                email: 'invitee@example.com',
+                job_title: null,
+                organization: null,
+              },
+              error: null,
+            }),
+        }),
+      }),
+      update: updateMock,
+    })
+
+    const user = userEvent.setup()
+    renderInvitation()
+    await waitFor(() => expect(screen.getByRole('button', { name: /Accept Invitation/i })).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /Accept Invitation/i }))
+
+    await waitFor(() => expect(mockAcceptInvitation).toHaveBeenCalledWith('tok-1', 'db-user-1'))
+    await waitFor(() => expect(updateMock).toHaveBeenCalled())
+    const payload = updateMock.mock.calls.find((c) => c[0]?.full_name || c[0]?.job_title)?.[0]
+    expect(payload).toMatchObject({
+      full_name: 'Jane Doe',
+      first_name: 'Jane',
+      last_name: 'Doe',
+      job_title: 'Quality Assurance (PM)',
+    })
   })
 
   it('opens decline confirmation and declines', async () => {

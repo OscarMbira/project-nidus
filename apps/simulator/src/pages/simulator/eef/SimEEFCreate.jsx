@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createEEF, listEEFCategories, listSimulationRunsForPicker } from '../../../services/sim/simEEFService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimEEFCreate() {
   const navigate = useNavigate()
@@ -25,6 +26,7 @@ export default function SimEEFCreate() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     ;(async () => {
@@ -92,6 +94,12 @@ export default function SimEEFCreate() {
       </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">New Simulator EEF</h1>
       {error && <p className="text-red-600 mb-4">{error}</p>}
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this EEF is saved.</p>
+        </div>
+      ) : (
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <label className="block">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Title *</span>
@@ -136,6 +144,7 @@ export default function SimEEFCreate() {
           </button>
         </div>
       </div>
+      )}
     </div>
   )
 }

@@ -208,6 +208,47 @@ export function validateRequiredSchemaFields(schema, values = {}) {
 }
 
 /**
+ * Enforce effective minLength / maxLength on text and textarea fields (post-override schema).
+ * Empty values are skipped (required validation covers those). Returns field.key -> message.
+ */
+export function validateSchemaFieldLengths(schema, values = {}) {
+  const errors = {}
+  for (const section of schema?.sections || []) {
+    for (const field of section.fields || []) {
+      const type = field.type || 'text'
+      if (type !== 'text' && type !== 'textarea') continue
+      const raw = values[field.key]
+      if (raw == null || raw === '') continue
+      if (typeof raw === 'string' && raw.trim() === '' && !field.required) continue
+      const text = String(raw)
+      const label = field.label || 'This field'
+      const minLength = field.minLength
+      const maxLength = field.maxLength
+      if (minLength != null && Number.isFinite(minLength) && text.length < minLength) {
+        errors[field.key] = `${label} must be at least ${minLength} characters`
+        continue
+      }
+      if (maxLength != null && Number.isFinite(maxLength) && text.length > maxLength) {
+        errors[field.key] = `${label} must be at most ${maxLength} characters`
+      }
+    }
+  }
+  return errors
+}
+
+/**
+ * Required + length validation for form submit. Required errors win when both apply.
+ */
+export function validateSchemaFields(schema, values = {}) {
+  const errors = validateRequiredSchemaFields(schema, values)
+  const lengthErrors = validateSchemaFieldLengths(schema, values)
+  for (const [key, message] of Object.entries(lengthErrors)) {
+    if (!errors[key]) errors[key] = message
+  }
+  return errors
+}
+
+/**
  * Combine multiple validators
  */
 export function validateField(value, validators, fieldName) {

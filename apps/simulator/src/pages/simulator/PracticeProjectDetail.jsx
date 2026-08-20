@@ -13,6 +13,11 @@ import CustomFieldRenderer from '../../features/local-data-extensions/components
 import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge'
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
 import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 const PRACTICE_PROJECT_VIEW_SECTIONS = [
@@ -50,6 +55,15 @@ export default function PracticeProjectDetail() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [ldeAccountId, setLdeAccountId] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !project) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [project.user_id])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, project])
 
   useEffect(() => {
     let cancelled = false
@@ -169,7 +183,7 @@ export default function PracticeProjectDetail() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
         <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
-            {['overview', 'tasks', 'briefs', 'risks', 'issues', 'quality'].map((tab, index) => (
+            {['overview', 'tasks', 'briefs', 'risks', 'issues', 'quality', 'audit'].map((tab, index) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -226,6 +240,22 @@ export default function PracticeProjectDetail() {
           {activeTab === 'risks' && <div className="text-center py-8 text-gray-500">Risks coming soon</div>}
           {activeTab === 'issues' && <div className="text-center py-8 text-gray-500">Issues coming soon</div>}
           {activeTab === 'quality' && <div className="text-center py-8 text-gray-500">Quality coming soon</div>}
+          {activeTab === 'audit' && (
+            <AuditDetailsPanel description="Who created this project.">
+              <AuditCard title="Identity" description="How this project is labelled.">
+                <AuditField label="Name" value={project.project_name} />
+                <AuditField label="Code" value={project.project_code} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this project is tracked.">
+                <AuditField label="Status" value={humanizeAuditToken(project.project_status?.status_name || project.project_status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this project was created and last changed.">
+                <AuditField label="Created by" value={project.user_id ? auditUserLabels[project.user_id] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={project.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={project.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
         </div>
       </div>
     </div>

@@ -5,11 +5,21 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FolderKanban, Plus, Search } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
+import { userHasAnyRole } from '@nidus/shared/utils/menuLayoutUtils';
 import { getMyProjects, getAllProjects, deleteProject } from '../services/projectService';
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam';
+import { PMO_SUITE_ADMIN_ROLE_NAMES } from '../services/pmoSuiteRoleAccess';
+
+/** Roles that should see organisation-wide projects by default (not PM-assigned only). */
+const ORG_WIDE_PROJECT_VIEWER_ROLES = [
+  ...PMO_SUITE_ADMIN_ROLE_NAMES,
+  'account_owner',
+  'portfolio_manager',
+];
 import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
@@ -59,6 +69,8 @@ function ProjectListSkeleton({ viewMode }) {
 
 export default function Projects() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAllProjectsRoute = /\/projects\/all\/?$/.test(location.pathname);
   const [projects, setProjects] = useState([]);
   const [resolvingSession, setResolvingSession] = useState(true);
   const [listLoading, setListLoading] = useState(false);
@@ -66,7 +78,11 @@ export default function Projects() {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [organizationId, setOrganizationId] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [activeView, setActiveView] = useState('my'); // 'my' or 'all'
+  /** PMO / org admins — default to org-wide list so Live counts match the table. */
+  const [orgWideViewer, setOrgWideViewer] = useState(false);
+  const orgWideDefaultAppliedRef = useRef(false);
+  // Menu link /platform/projects/all opens the org-wide list for PMO/PM.
+  const [activeView, setActiveView] = useState(isAllProjectsRoute ? 'all' : 'my'); // 'my' or 'all'
   const [viewMode, setViewMode] = useViewMode('platform-projects', 'grid');
   const loadGenRef = useRef(0);
   const [refreshNonce, setRefreshNonce] = useState(0);
@@ -115,6 +131,27 @@ export default function Projects() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Keep All tab when URL is /projects/all. Do not force My for org-wide roles on /projects
+  // (that was wiping the list while Live still showed org counts).
+  useEffect(() => {
+    if (isAllProjectsRoute) {
+      setActiveView('all');
+      return;
+    }
+    if (!orgWideViewer) {
+      setActiveView('my');
+    }
+  }, [isAllProjectsRoute, orgWideViewer]);
+
+  // First time we learn the user is PMO/org admin on /projects, open All Projects
+  // (replace URL so sidebar "All Projects" and Live counts stay consistent).
+  useEffect(() => {
+    if (!orgWideViewer || isAllProjectsRoute || orgWideDefaultAppliedRef.current) return;
+    orgWideDefaultAppliedRef.current = true;
+    setActiveView('all');
+    navigate('/platform/projects/all', { replace: true });
+  }, [orgWideViewer, isAllProjectsRoute, navigate]);
+
   const loadUserAndOrganization = useCallback(async () => {
     try {
       const { data: { session } } = await platformDb.auth.getSession();
@@ -132,28 +169,14 @@ export default function Projects() {
 
       if (userRecord) {
         setUserId(userRecord.id);
-
-        const { data: account } = await platformDb
-          .from('accounts')
-          .select('id')
-          .eq('owner_user_id', userRecord.id)
-          .single();
-
-        if (account) {
-          setOrganizationId(account.id);
-        } else {
-          const { data: project } = await platformDb
-            .from('projects')
-            .select('account_id')
-            .eq('owner_user_id', userRecord.id)
-            .eq('is_deleted', false)
-            .limit(1)
-            .single();
-
-          if (project?.account_id) {
-            setOrganizationId(project.account_id);
-          }
+        const [accountId, isOrgWide] = await Promise.all([
+          getCurrentUserAccountId(),
+          userHasAnyRole({ id: user.id }, ORG_WIDE_PROJECT_VIEWER_ROLES),
+        ]);
+        if (accountId) {
+          setOrganizationId(accountId);
         }
+        setOrgWideViewer(Boolean(isOrgWide));
       }
     } catch (error) {
       console.error('Error loading user and organization:', error);
@@ -166,17 +189,31 @@ export default function Projects() {
     loadUserAndOrganization();
   }, [loadUserAndOrganization]);
 
+  const goToMyProjects = () => {
+    setActiveView('my');
+    if (isAllProjectsRoute) {
+      navigate('/platform/projects');
+    }
+  };
+
+  const goToAllProjects = () => {
+    setActiveView('all');
+    if (!isAllProjectsRoute) {
+      navigate('/platform/projects/all');
+    }
+  };
+
   /** Only "All projects" refetches when search changes; "My projects" filters client-side */
   const serverSearchKey = activeView === 'all' ? debouncedSearchTerm : '';
   const serverSortKey =
     activeView === 'all' ? `${supabaseOrder.column}:${supabaseOrder.ascending ? '1' : '0'}` : '';
 
   useEffect(() => {
-    if (!userId) return;
+    if (resolvingSession || !userId) return;
 
+    // Wait for account id without wiping a previously good list (race that caused flaky empties).
     if (activeView === 'all' && !organizationId) {
-      setProjects([]);
-      setListLoading(false);
+      setListLoading(true);
       return;
     }
 
@@ -187,9 +224,7 @@ export default function Projects() {
       setListLoading(true);
       try {
         let result;
-        if (activeView === 'my') {
-          result = await getMyProjects(userId, {}, { signal: ac.signal });
-        } else {
+        if (activeView === 'all') {
           result = await getAllProjects(
             organizationId,
             {
@@ -199,6 +234,8 @@ export default function Projects() {
             },
             { signal: ac.signal }
           );
+        } else {
+          result = await getMyProjects(userId, {}, { signal: ac.signal });
         }
 
         if (ac.signal.aborted || gen !== loadGenRef.current) return;
@@ -217,7 +254,17 @@ export default function Projects() {
     })();
 
     return () => ac.abort();
-  }, [organizationId, userId, activeView, serverSearchKey, serverSortKey, refreshNonce]);
+  }, [
+    organizationId,
+    userId,
+    activeView,
+    serverSearchKey,
+    serverSortKey,
+    refreshNonce,
+    resolvingSession,
+    supabaseOrder.column,
+    supabaseOrder.ascending,
+  ]);
 
   /** Client-side filter (My tab: primary; All tab: refines server results, e.g. status name) */
   const filteredProjects = useMemo(() => {
@@ -281,8 +328,11 @@ export default function Projects() {
 
   const goToProject = useCallback(
     (project) => {
-      const segment = (project?.project_code && String(project.project_code).trim()) || project?.id;
-      if (!segment) return;
+      const code = project?.project_code != null ? String(project.project_code).trim() : '';
+      const id = project?.id != null ? String(project.id).trim() : '';
+      const segment = code || id;
+      // Guard template-literal "undefined"/"null" and empty keys before navigating.
+      if (!segment || segment === 'undefined' || segment === 'null') return;
       navigate(platformProjectPath(segment));
     },
     [navigate]
@@ -290,8 +340,10 @@ export default function Projects() {
 
   const goToEditProject = useCallback(
     (project) => {
-      const segment = (project?.project_code && String(project.project_code).trim()) || project?.id;
-      if (!segment) return;
+      const code = project?.project_code != null ? String(project.project_code).trim() : '';
+      const id = project?.id != null ? String(project.id).trim() : '';
+      const segment = code || id;
+      if (!segment || segment === 'undefined' || segment === 'null') return;
       navigate(platformProjectPath(segment, 'edit'));
     },
     [navigate]
@@ -373,7 +425,7 @@ export default function Projects() {
               <nav className="flex space-x-8" aria-label="Project scope">
                 <button
                   type="button"
-                  onClick={() => setActiveView('my')}
+                  onClick={goToMyProjects}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeView === 'my'
                       ? 'border-purple-500 text-purple-400'
@@ -384,7 +436,7 @@ export default function Projects() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActiveView('all')}
+                  onClick={goToAllProjects}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeView === 'all'
                       ? 'border-purple-500 text-purple-400'
@@ -512,7 +564,15 @@ export default function Projects() {
                       onSort={() => handleSort('planned_start')}
                       className="!text-gray-300 !normal-case"
                     >
-                      Dates
+                      Start
+                    </TableHeaderCell>
+                    <TableHeaderCell
+                      sortable
+                      sortDirection={getSortDirectionForColumn('planned_end')}
+                      onSort={() => handleSort('planned_end')}
+                      className="!text-gray-300 !normal-case"
+                    >
+                      End
                     </TableHeaderCell>
                     <TableHeaderCell
                       sortable={false}

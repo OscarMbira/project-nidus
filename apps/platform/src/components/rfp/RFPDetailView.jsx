@@ -6,13 +6,21 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2, FileDown, Upload, Paperclip, ExternalLink } from 'lucide-react'
+import { ArrowLeft, FileDown, Upload, Paperclip, ExternalLink } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import * as defaultRfpService from '../../services/rfpService'
 import { downloadRFPLineItemsCSV } from '../../services/rfpBulkImportService'
 import RFPStatusBadge from './RFPStatusBadge'
 import RFPLineItemsTable from './RFPLineItemsTable'
 import ExportRecordButtons from '../ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const RFP_VIEW_SECTIONS = [
   { title: 'RFP', fields: [
@@ -32,6 +40,21 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [statusChanging, setStatusChanging] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !rfp) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        rfp.created_by,
+        rfp.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, rfp])
 
   useEffect(() => {
     if (!id) return
@@ -116,9 +139,7 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
           />
           {!readOnly && (
             <>
-              <button onClick={handleEdit} className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                <Edit className="w-4 h-4 mr-2" /> Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit RFP" onClick={handleEdit} />
               {canEditStatus && (
                 <select
                   value={rfp.status}
@@ -132,9 +153,7 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
                   <option value="closed">Closed</option>
                 </select>
               )}
-              <button onClick={handleDelete} className="inline-flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20">
-                <Trash2 className="w-4 h-4 mr-2" /> Delete
-              </button>
+              <RowActionButton variant="delete" label="Delete RFP" onClick={handleDelete} />
             </>
           )}
           <button
@@ -152,6 +171,29 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
         </div>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="RFP sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this RFP, and how it is classified.">
+          <AuditCard title="Identity" description="How this RFP is labelled and tracked.">
+            <AuditField label="RFP reference" value={rfp.rfp_reference} />
+            <AuditField label="Title" value={rfp.rfp_title} />
+            <AuditField label="Status" value={humanizeAuditToken(rfp.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this RFP sits.">
+            <AuditField label="Category" value={rfp.rfp_category} />
+            <AuditField label="Service provider" value={rfp.service_provider_name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this RFP was created and last changed.">
+            <AuditField label="Created by" value={rfp.created_by ? auditUserLabels[rfp.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={rfp.created_at} />
+            <AuditField label="Updated by" value={rfp.updated_by ? auditUserLabels[rfp.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={rfp.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <div className="grid gap-6">
         <section className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">RFP Details</h2>
@@ -227,9 +269,11 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
                     <ExternalLink className="w-3 h-3 ml-1" />
                   </a>
                   {!readOnly && deleteAttachment && (
-                    <button onClick={() => handleDeleteAttachment(att.id)} className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <RowActionButton
+                      variant="delete"
+                      label="Delete attachment"
+                      onClick={() => handleDeleteAttachment(att.id)}
+                    />
                   )}
                 </li>
               ))}
@@ -237,6 +281,7 @@ export default function RFPDetailView({ readOnly = false, basePath = '/pmo', rfp
           )}
         </section>
       </div>
+      )}
     </div>
   )
 }

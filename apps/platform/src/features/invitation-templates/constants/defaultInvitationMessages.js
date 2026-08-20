@@ -13,6 +13,7 @@
 export const INVITATION_TEMPLATE_ROLE_NAMES = [
   'project_board_member',
   'project_sponsor',
+  'portfolio_manager',
   'programme_manager',
   'project_manager',
   'team_manager',
@@ -62,6 +63,13 @@ export const DEFAULT_INVITATION_MESSAGES_BY_ROLE = {
     subject_line: '',
     message_body: buildStandardInvitationBody(
       'Your sponsorship and executive support will be critical to the success of this project. Thank you for championing this initiative.',
+    ),
+  },
+  portfolio_manager: {
+    template_label: 'Portfolio Manager',
+    subject_line: '',
+    message_body: buildStandardInvitationBody(
+      'You will provide portfolio-level oversight, coordinating priorities, resources, and scope across multiple projects to support our strategic objectives. We look forward to your leadership.',
     ),
   },
   programme_manager: {

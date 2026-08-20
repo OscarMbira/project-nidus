@@ -7,6 +7,12 @@ import { getFundingSources } from '../../services/fundingSourceService';
 import { platformDb } from '@nidus/supabase';
 import SearchableSelect from '../ui/SearchableSelect';
 import { SmartAmountInput } from '../ui/SmartAmountInput';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function ProgrammeForm({ programme, onSave, onCancel, embedded = true }) {
   const [formData, setFormData] = useState({
@@ -49,8 +55,8 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
     return acc;
   }, {});
 
-  const TAB_IDS = ['basic', 'ownership', 'timeline', 'budget', 'governance'];
-  const TAB_LABELS = ['Basic Information', 'Ownership & Management', 'Timeline', 'Budget', 'Governance'];
+  const TAB_IDS = ['basic', 'ownership', 'timeline', 'budget', 'governance', 'audit'];
+  const TAB_LABELS = ['Basic Information', 'Ownership & Management', 'Timeline', 'Budget', 'Governance', 'Audit details'];
 
   useEffect(() => {
     if (programme) {
@@ -708,6 +714,31 @@ export default function ProgrammeForm({ programme, onSave, onCancel, embedded = 
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Tab 5: Audit details */}
+          <div style={{ display: activeTab === 5 ? 'block' : 'none' }}>
+            {!programme?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this programme is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this programme, and how it is classified.">
+                <AuditCard title="Identity" description="How this programme is labelled and tracked.">
+                  <AuditField label="Code" value={programme.programme_code} />
+                  <AuditField label="Name" value={formData.programme_name || programme.programme_name} />
+                  <AuditField label="Status" value={humanizeAuditToken(programme.programme_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this programme sits.">
+                  <AuditField label="Owner" value={users.find((u) => u.id === (formData.programme_owner_user_id || programme.programme_owner_user_id))?.full_name} />
+                  <AuditField label="Manager" value={users.find((u) => u.id === (formData.programme_manager_user_id || programme.programme_manager_user_id))?.full_name} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this programme was created and last changed.">
+                  <AuditField label="Created by" value={users.find((u) => u.id === programme.created_by)?.full_name} />
+                  <AuditTimestampPair dateLabel="Created at" value={programme.created_at} />
+                  <AuditField label="Updated by" value={users.find((u) => u.id === programme.updated_by)?.full_name} />
+                  <AuditTimestampPair dateLabel="Last updated" value={programme.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
           </div>
 
           {/* Form Actions */}

@@ -15,7 +15,8 @@ function Modal({
   ariaLabel,
   ariaLabelledBy,
   footer,
-  className = ''
+  className = '',
+  contentClassName = '',
 }) {
   const modalRef = useRef(null)
   const previousFocusRef = useRef(null)
@@ -84,12 +85,15 @@ function Modal({
       announcement.className = 'sr-only'
       announcement.textContent = `Modal opened: ${title}`
       document.body.appendChild(announcement)
-      
-      setTimeout(() => {
-        document.body.removeChild(announcement)
+
+      const timeoutId = setTimeout(() => {
+        if (document.body.contains(announcement)) {
+          document.body.removeChild(announcement)
+        }
       }, 1000)
 
       return () => {
+        clearTimeout(timeoutId)
         if (document.body.contains(announcement)) {
           document.body.removeChild(announcement)
         }
@@ -162,7 +166,7 @@ function Modal({
           )}
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+          <div className={`p-6 overflow-y-auto max-h-[calc(100vh-200px)] ${contentClassName}`}>
             {children}
           </div>
 

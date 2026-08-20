@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, CheckCircle, XCircle, AlertTriangle, Calendar, User } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import { getQualityInspections, deleteQualityInspection } from '../services/qualityManagementService';
 import QualityInspectionForm from '../components/quality/QualityInspectionForm';
 import ExportListMenu from '@nidus/ui/ExportListMenu';
@@ -386,21 +387,17 @@ export default function QualityInspections() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        <button
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit inspection"
                           onClick={() => handleEditInspection(inspection)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          title="Edit Inspection"
-                        >
-                          Edit
-                        </button>
-                        <button
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Delete inspection"
                           onClick={() => handleDelete(inspection)}
                           disabled={deleting === inspection.id}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                          title="Delete Inspection"
-                        >
-                          Delete
-                        </button>
+                        />
                       </div>
                     </td>
                   </tr>

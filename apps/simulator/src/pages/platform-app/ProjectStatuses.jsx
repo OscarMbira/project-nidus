@@ -16,6 +16,13 @@ import { toast } from 'react-hot-toast';
 import { getProjectStatuses, createProjectStatus, updateProjectStatus, deleteProjectStatus } from '../../services/projectStatusService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 // Memoized table row component to prevent unnecessary re-renders
 const StatusTableRow = memo(function StatusTableRow({ status, onEdit, onDelete }) {
@@ -91,6 +98,8 @@ export default function ProjectStatuses() {
   const [showForm, setShowForm] = useState(false);
   const [editingStatus, setEditingStatus] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
   const [formData, setFormData] = useState({
     status_code: '',
     status_name: '',
@@ -140,16 +149,26 @@ export default function ProjectStatuses() {
     loadProjectStatuses();
   }, [loadProjectStatuses]);
 
+  useEffect(() => {
+    if (formTab !== 'audit' || !editingStatus) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [editingStatus.created_by, editingStatus.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, editingStatus]);
+
   // Memoize handleAdd to prevent recreation
   const handleAdd = useCallback(() => {
     setEditingStatus(null);
     setFormData(defaultFormData);
+    setFormTab('details');
     setShowForm(true);
   }, [defaultFormData]);
 
   // Memoize handleEdit to prevent recreation
   const handleEdit = useCallback((status) => {
     setEditingStatus(status);
+    setFormTab('details');
     setFormData({
       status_code: status.status_code || '',
       status_name: status.status_name || '',
@@ -288,6 +307,32 @@ export default function ProjectStatuses() {
             <h2 className="text-xl font-semibold text-gray-100 mb-4">
               {editingStatus ? 'Edit Project Status' : 'Add Project Status'}
             </h2>
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+            {formTab === 'audit' ? (
+              <div className="mt-4">
+                {!editingStatus ? (
+                  <p className="text-sm text-gray-400">Audit details appear after this project status is saved.</p>
+                ) : (
+                  <AuditDetailsPanel description="Who created or changed this project status.">
+                    <AuditCard title="Identity" description="How this status is labelled.">
+                      <AuditField label="Status code" value={editingStatus.status_code} />
+                      <AuditField label="Status name" value={editingStatus.status_name} />
+                    </AuditCard>
+                    <AuditCard title="Classification" description="How this status behaves in the workflow.">
+                      <AuditField label="Initial status" value={editingStatus.is_initial_status ? 'Yes' : 'No'} />
+                      <AuditField label="Final status" value={editingStatus.is_final_status ? 'Yes' : 'No'} />
+                      <AuditField label="Active" value={editingStatus.is_active ? 'Yes' : 'No'} />
+                    </AuditCard>
+                    <AuditCard title="Record history" description="When this status was created and last changed.">
+                      <AuditField label="Created by" value={editingStatus.created_by ? auditUserLabels[editingStatus.created_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Created at" value={editingStatus.created_at} />
+                      <AuditField label="Updated by" value={editingStatus.updated_by ? auditUserLabels[editingStatus.updated_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Last updated" value={editingStatus.updated_at} />
+                    </AuditCard>
+                  </AuditDetailsPanel>
+                )}
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -439,6 +484,7 @@ export default function ProjectStatuses() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         )}
 

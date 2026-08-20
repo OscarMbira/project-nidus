@@ -17,6 +17,13 @@ import {
   exportRecordToPrint,
 } from '../../../utils/exportUtils'
 import { SIM_TESTING_BASE } from './simTestingPaths'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function SimTestRunDetail() {
   const { runId } = useParams()
@@ -31,6 +38,16 @@ function Detail({ runId }) {
   const [run, setRun] = useState(null)
   const [execs, setExecs] = useState([])
   const [err, setErr] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !run) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [run.created_by, run.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, run])
 
   useEffect(() => {
     if (!runId) return
@@ -88,6 +105,26 @@ function Detail({ runId }) {
           </Link>
         </div>
       </div>
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this test run.">
+          <AuditCard title="Identity" description="How this run is labelled.">
+            <AuditField label="Name" value={run.run_name} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this run is tracked.">
+            <AuditField label="Environment" value={humanizeAuditToken(run.environment)} />
+            <AuditField label="Status" value={humanizeAuditToken(run.status)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this run was created and last changed.">
+            <AuditField label="Created by" value={run.created_by ? auditUserLabels[run.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={run.created_at} />
+            <AuditField label="Updated by" value={run.updated_by ? auditUserLabels[run.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={run.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       <TestExecutionProgressBar summary={run.summary} />
       <p className="text-sm text-gray-400">
         {run.environment} · {run.status} · {run.run_date}
@@ -104,6 +141,8 @@ function Detail({ runId }) {
           </li>
         ))}
       </ul>
+      </>
+      )}
     </div>
   )
 }

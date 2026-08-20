@@ -18,7 +18,7 @@ import {
 
 const mockSupabase = {
   auth: {
-    getUser: vi.fn(() => Promise.resolve({ data: { user: { id: 'user-123' } }))
+    getUser: vi.fn(() => Promise.resolve({ data: { user: { id: 'user-123' } } }))
   },
   from: vi.fn(),
   rpc: vi.fn()
@@ -34,16 +34,9 @@ describe('End Stage Report Service', () => {
   })
 
   describe('generateReportReference', () => {
-    it('should generate report reference', async () => {
-      const mockRef = 'ESR-PROJ001-STAGE1-001'
-
-      mockSupabase.rpc.mockResolvedValueOnce({
-        data: mockRef,
-        error: null
-      })
-
+    it('returns null — reference is assigned by the Admin ID Generation trigger on save (v756b dropped the RPC)', async () => {
       const result = await generateReportReference('project-123', 1)
-      expect(result).toBe(mockRef)
+      expect(result).toBeNull()
     })
   })
 

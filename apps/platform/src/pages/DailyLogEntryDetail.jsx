@@ -7,7 +7,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { ArrowLeft, Edit2, Save, X, Trash2, AlertCircle, Clock, User, Tag, FileText, MessageSquare, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Save, X, AlertCircle, Clock, User, Tag, FileText, MessageSquare, TrendingUp } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import { getEntryById, updateEntry, deleteEntry, completeEntry } from '../services/dailyLogEntryService';
 import { escalateToIssue, escalateToRisk } from '../services/dailyLogEscalationService';
 import EntryCommentsSection from '../components/dailyLog/EntryCommentsSection';
@@ -17,6 +18,12 @@ import TagInput from '../components/dailyLog/TagInput';
 import PersonResponsibleSelector from '../components/dailyLog/PersonResponsibleSelector';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
 const DAILY_LOG_ENTRY_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -46,6 +53,7 @@ export default function DailyLogEntryDetail() {
   const [errors, setErrors] = useState({});
   const [showEscalateDialog, setShowEscalateDialog] = useState(false);
   const [escalateType, setEscalateType] = useState(null);
+  const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
     if (entryId) {
@@ -255,13 +263,11 @@ export default function DailyLogEntryDetail() {
             />
             {!editing ? (
               <>
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit entry"
                   onClick={() => setEditing(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Edit
-                </button>
+                />
                 {entry.status !== 'completed' && (
                   <button
                     onClick={handleComplete}
@@ -279,13 +285,11 @@ export default function DailyLogEntryDetail() {
                     Escalate
                   </button>
                 )}
-                <button
+                <RowActionButton
+                  variant="delete"
+                  label="Delete entry"
                   onClick={handleDelete}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
+                />
               </>
             ) : (
               <>
@@ -314,6 +318,26 @@ export default function DailyLogEntryDetail() {
         </div>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who logged or changed this entry, and how it is classified.">
+          <AuditCard title="Identity" description="How this entry is labelled and tracked.">
+            <AuditField label="Entry #" value={entry.entry_number} />
+            <AuditField label="Status" value={humanizeAuditToken(entry.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this entry is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(entry.entry_type)} />
+            <AuditField label="Priority" value={humanizeAuditToken(entry.priority)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this entry was created and last changed.">
+            <AuditField label="Created by" value={entry.created_by_user?.full_name || entry.created_by_user?.email} />
+            <AuditTimestampPair dateLabel="Created at" value={entry.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={entry.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Details */}
@@ -529,10 +553,11 @@ export default function DailyLogEntryDetail() {
           {/* Reminders Section */}
           <div className="bg-white rounded-lg shadow p-6">
             <ReminderSetup entryId={entryId} targetDate={entry.target_date} />
-            </div>
           </div>
         </div>
       </div>
+      </>
+      )}
 
       {/* Escalation Dialog */}
       {showEscalateDialog && (

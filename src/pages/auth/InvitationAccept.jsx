@@ -36,6 +36,7 @@ import {
   getInvitationScopeIntro,
   getInvitationTargetLabel,
 } from '../../utils/invitationScopeUtils'
+import { buildInvitationUserProfilePatch } from '../../utils/invitationInviteeFormat'
 
 // ── User detection states ─────────────────────────────────────────────────────
 // 'loading'        — RPC/auth check in progress
@@ -112,16 +113,29 @@ export default function InvitationAccept() {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  /** Fire-and-forget: link user to the inviting organisation. */
-  function _assignOrg(userId, organisationName) {
-    if (!userId || !organisationName) return
-    void supabase
-      .from('users')
-      .update({ organization: organisationName, updated_at: new Date().toISOString() })
-      .eq('id', userId)
-      .then(({ error: e }) => {
-        if (e) console.warn('[accept] org assignment skipped:', e.message)
-      })
+  /** Invitation NAME → Full Name, ROLE → Job Title; set organisation if blank. */
+  async function _applyInvitationUserDefaults(userId) {
+    if (!userId || !invitation) return
+    try {
+      const { data: row } = await supabase
+        .from('users')
+        .select('id, full_name, first_name, last_name, email, job_title, organization')
+        .eq('id', userId)
+        .maybeSingle()
+      if (!row) return
+
+      const updates = buildInvitationUserProfilePatch(invitation, row)
+      const orgName = String(invitation.organisation_name ?? '').trim()
+      if (orgName && !String(row.organization ?? '').trim()) {
+        updates.organization = orgName
+      }
+      if (Object.keys(updates).length === 0) return
+      updates.updated_at = new Date().toISOString()
+      const { error: e } = await supabase.from('users').update(updates).eq('id', userId)
+      if (e) console.warn('[accept] profile defaults skipped:', e.message)
+    } catch (err) {
+      console.warn('[accept] profile defaults skipped:', err?.message)
+    }
   }
 
   /** Run all appointment + membership acceptance for an already-authenticated user. */
@@ -157,7 +171,7 @@ export default function InvitationAccept() {
         throw new Error(res.error || 'Failed to accept invitation.')
       }
     }
-    _assignOrg(userId, invitation?.organisation_name)
+    await _applyInvitationUserDefaults(userId)
   }
 
   // ── Load invitation ────────────────────────────────────────────────────────
@@ -415,28 +429,19 @@ export default function InvitationAccept() {
           access_token: fnBody.session.access_token,
           refresh_token: fnBody.session.refresh_token,
         })
-        // Fire-and-forget org assignment for new user
-        void (async () => {
-          try {
-            const orgName = invitation.organisation_name || ''
-            if (!orgName) return
-            const { data: { user: newUser } } = await supabase.auth.getUser()
-            if (!newUser) return
+        try {
+          const { data: { user: newUser } } = await supabase.auth.getUser()
+          if (newUser) {
             const { data: uRow } = await supabase
               .from('users')
               .select('id')
               .eq('auth_user_id', newUser.id)
               .maybeSingle()
-            if (uRow?.id) {
-              await supabase
-                .from('users')
-                .update({ organization: orgName, updated_at: new Date().toISOString() })
-                .eq('id', uRow.id)
-            }
-          } catch (orgErr) {
-            console.warn('[accept] org assignment skipped:', orgErr?.message)
+            if (uRow?.id) await _applyInvitationUserDefaults(uRow.id)
           }
-        })()
+        } catch (profileErr) {
+          console.warn('[accept] profile defaults skipped:', profileErr?.message)
+        }
         const { data: { user: sessionUser } } = await supabase.auth.getUser()
         const { route } = sessionUser
           ? await getPostLoginRoute(sessionUser.id)

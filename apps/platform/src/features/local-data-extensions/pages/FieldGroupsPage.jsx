@@ -4,11 +4,13 @@ import { listGroups, upsertGroup } from '../api/customFieldGroupsApi'
 import { WORKFLOW_STATUS } from '../utils/customFieldConstants'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function FieldGroupsPage() {
   const { platformDb, accountId, userInternalId } = useLdeContext()
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
+  const [formTab, setFormTab] = useState('details')
   const [form, setForm] = useState({
     group_code: '',
     label: '',
@@ -66,6 +68,11 @@ export default function FieldGroupsPage() {
     <div className="space-y-8">
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800/40">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-3">Create repeating group</h2>
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        {formTab === 'audit' ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Audit details appear after this group is saved.</p>
+        ) : (
+        <>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input
             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
@@ -123,6 +130,8 @@ export default function FieldGroupsPage() {
         >
           Save group
         </button>
+        </>
+        )}
       </div>
 
       {loading ? (

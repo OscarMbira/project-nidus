@@ -180,6 +180,7 @@ export default function QualityReportBuilder({ projectId, dateRange = null }) {
             value={reportData.summary.totalRegisterItems || 0}
             displayFormat="number"
             status="neutral"
+            onClick={() => setFilters({ ...filters, quality_status: '' })}
           />
           <MetricCard
             title="Average Quality Score"

@@ -5,6 +5,12 @@ import { FileText, AlertTriangle, Target, TrendingUp } from 'lucide-react';
 import { createChangeRequest, updateChangeRequest } from '../../services/changeManagementService';
 import FormSurface from '../ui/FormSurface';
 import InheritedChangeRequestFields from '../../features/local-data-extensions/components/InheritedChangeRequestFields';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ChangeRequestForm({
@@ -37,10 +43,25 @@ export default function ChangeRequestForm({
     change_board_id: request?.change_board_id || '',
     notes: request?.notes || ''
   });
+  const [auditUserLabels, setAuditUserLabels] = useState({});
 
   useEffect(() => {
     fetchBoards();
   }, [projectId]);
+
+  useEffect(() => {
+    if (activeSection !== 'audit' || !request) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(supabase, [
+        request.created_by,
+        request.updated_by,
+        request.submitted_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeSection, request]);
 
   useEffect(() => {
     if (accountIdProp) {
@@ -460,31 +481,45 @@ export default function ChangeRequestForm({
     >
 
         {/* Section Navigation */}
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <nav className="flex overflow-x-auto">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
-                    activeSection === section.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {section.label}
-                </button>
-              );
-            })}
-          </nav>
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 px-2">
+          <DetailAuditTabList
+            activeTab={activeSection}
+            onChange={setActiveSection}
+            ariaLabel="Change request sections"
+            tabs={[...sections.map((s) => ({ value: s.id, label: s.label })), { value: 'audit', label: 'Audit details' }]}
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-6">
-            {renderSection()}
+            {activeSection === 'audit' ? (
+              !request?.id ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this change request is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who created or changed this change request, and how it is classified.">
+                  <AuditCard title="Identity" description="How this change request is labelled and tracked.">
+                    <AuditField label="Title" value={formData.change_title || request.change_title} />
+                    <AuditField label="Category" value={humanizeAuditToken(formData.change_category || request.change_category)} />
+                    <AuditField label="Type" value={humanizeAuditToken(formData.change_type || request.change_type)} />
+                    <AuditField label="Status" value={humanizeAuditToken(request.status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this change request sits.">
+                    <AuditField label="Priority" value={humanizeAuditToken(formData.priority || request.priority)} />
+                    <AuditField label="Urgency" value={humanizeAuditToken(formData.urgency || request.urgency)} />
+                    <AuditField label="Business criticality" value={humanizeAuditToken(formData.business_criticality || request.business_criticality)} />
+                    <AuditField label="Requestor" value={formData.requestor_name || request.requestor_name} />
+                    <AuditField label="Submitted by" value={request.submitted_by ? auditUserLabels[request.submitted_by] || null : null} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this change request was created and last changed.">
+                    <AuditField label="Created by" value={request.created_by ? auditUserLabels[request.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={request.created_at} />
+                    <AuditField label="Updated by" value={request.updated_by ? auditUserLabels[request.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={request.updated_at} />
+                    <AuditTimestampPair dateLabel="Submission date" value={request.submission_date || formData.submission_date} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )
+            ) : renderSection()}
             {request?.id && accountId && projectId && (
               <InheritedChangeRequestFields
                 db={platformDb}

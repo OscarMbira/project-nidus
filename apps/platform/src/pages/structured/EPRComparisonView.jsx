@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { ArrowLeft, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { getEndProjectReportById, getBusinessCaseForReview, calculateBenefitsVariance } from '../../services/endProjectReportService'
 import { getBenefitsComparison } from '../../services/eprBusinessCaseReviewService'
@@ -32,11 +35,18 @@ export default function EPRComparisonView() {
   const loadComparisonData = async () => {
     try {
       setLoading(true)
+      const resolvedId = isLikelyDatabaseUuid(reportId)
+        ? reportId
+        : await resolveEntityId('endProjectReport', reportId, projectId)
+      if (!resolvedId) {
+        setLoading(false)
+        return
+      }
       const [reportData, businessCaseData, benefitsData, varianceData] = await Promise.all([
-        getEndProjectReportById(reportId).catch(() => null),
+        getEndProjectReportById(resolvedId).catch(() => null),
         getBusinessCaseForReview(projectId).catch(() => null),
-        getBenefitsComparison(reportId).catch(() => []),
-        calculateBenefitsVariance(reportId).catch(() => null)
+        getBenefitsComparison(resolvedId).catch(() => []),
+        calculateBenefitsVariance(resolvedId).catch(() => null)
       ])
 
       setReport(reportData)
@@ -52,7 +62,7 @@ export default function EPRComparisonView() {
   }
 
   const handleBack = () => {
-    navigate(`/app/projects/${projectId}/closure/end-project-report/${reportId}`)
+    navigate(platformProjectPath(routeKey, 'closure', 'end-project-report', report?.document_ref || reportId))
   }
 
   const getVarianceIcon = (varianceValue) => {

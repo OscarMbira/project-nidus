@@ -1,4 +1,5 @@
 import { resolvePmProfile } from '@nidus/config/methodologyMenuUtils'
+import { platformDb } from '@nidus/supabase'
 
 export const PMO_LAYOUT_ROLES = new Set([
   'pmo_admin',
@@ -12,6 +13,11 @@ export const PM_LAYOUT_ROLES = new Set([
   'project_manager',
   'programme_manager',
   'portfolio_manager',
+  'team_manager',
+  'pm_project_manager',
+  'pm_programme_manager',
+  'pm_portfolio_manager',
+  'pm_team_manager',
   'executive',
   'project_sponsor',
   'project_board_member',
@@ -131,6 +137,7 @@ const PM_SHARED_PLATFORM_PREFIXES = [
   '/platform/daily-log',
   '/platform/lessons',
   '/platform/templates',
+  '/platform/documents',
   '/platform/testing',
   '/platform/change',
   '/platform/delays',
@@ -184,6 +191,9 @@ export function isSharedPmPlatformPath(pathname = '') {
 
 export function isPmoOnlyPlatformPath(pathname = '') {
   const p = String(pathname || '').toLowerCase()
+  // Shared by PMO Admin and the 4 manager creator tiers (v902). Keep PM users
+  // on the PM sidebar instead of swapping them onto the PMO People & Resources tree.
+  if (p.startsWith('/platform/admin/manage-roles')) return false
   return PMO_ONLY_PLATFORM_PREFIXES.some((prefix) => p.startsWith(prefix))
 }
 
@@ -208,7 +218,12 @@ export function resolveMenuLayoutScope(layoutScopeProp, pathname = '', roleNames
     return 'pmo'
   }
 
-  const names = roleNames || []
+  // Prefer explicit arg; otherwise reuse whatever useMenu already cached so Layout can pick
+  // the correct shell before (or without) being passed role names.
+  const cachedNames = _cachedUserMenuRoles.roleNames
+  const names = Array.isArray(roleNames)
+    ? roleNames
+    : (Array.isArray(cachedNames) && cachedNames.length ? cachedNames : [])
   const primaryFromRoles = names.length ? resolvePrimaryLayoutScopeFromRoles(names) : null
   if (primaryFromRoles === 'pm') {
     persistMenuLayoutScope('pm')
@@ -307,4 +322,72 @@ export function filterRolesForLayout(roleRows = [], layoutPreference = null) {
 export function menuStateKey(userId, layoutScope) {
   if (!userId || !layoutScope) return null
   return `${userId}:${layoutScope}`
+}
+
+/**
+ * Fetch this auth user's role names from the DB (users -> user_roles -> roles).
+ * Single source of truth — useMenu.js forks call this instead of keeping a private copy.
+ */
+export async function fetchUserRoleNamesForAuthUser(authUser) {
+  if (!authUser?.id) return []
+  const { data: userRow } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUser.id)
+    .maybeSingle()
+  if (!userRow?.id) return []
+
+  const { data: roleRows } = await platformDb
+    .from('user_roles')
+    .select('role_id, is_deleted, is_active')
+    .eq('user_id', userRow.id)
+    .eq('is_active', true)
+
+  const roleIds = (roleRows || [])
+    .filter((ur) => !ur.is_deleted)
+    .map((ur) => ur.role_id)
+    .filter(Boolean)
+  if (roleIds.length === 0) return []
+
+  const { data: roleDetails } = await platformDb
+    .from('roles')
+    .select('role_name')
+    .in('id', roleIds)
+
+  return (roleDetails || []).map((r) => r.role_name).filter(Boolean)
+}
+
+/**
+ * Resolve every layout scope ('pmo' | 'pm' | 'tm') this auth user's roles actually grant.
+ * Cache-first (reuses whatever useMenu.js already populated via cacheUserMenuRoles) so a
+ * warm in-app navigation never re-hits the DB. A user can hold more than one scope (e.g. a
+ * dual PM + PMO Admin account) — callers should treat this as "any of these", not pick one.
+ */
+export async function resolveUserRoleScopes(authUser) {
+  if (!authUser?.id) return []
+  const cached = getCachedUserMenuRoles(authUser.id)
+  const roleNames = cached ? cached.roleNames : await fetchUserRoleNamesForAuthUser(authUser)
+  if (!cached) cacheUserMenuRoles(authUser.id, roleNames)
+
+  const names = (roleNames || []).map(normalizeRoleName)
+  const scopes = []
+  if (names.some((r) => PMO_LAYOUT_ROLES.has(r))) scopes.push('pmo')
+  if (names.some((r) => PM_LAYOUT_ROLES.has(r))) scopes.push('pm')
+  if (names.some((r) => TM_LAYOUT_ROLES.has(r))) scopes.push('tm')
+  return scopes
+}
+
+/**
+ * Fine-grained role check — does this user hold ANY of the exact role names given?
+ * @param {object} authUser
+ * @param {string[]} roleNames - exact role names to match against (case/spacing-insensitive)
+ */
+export async function userHasAnyRole(authUser, roleNames = []) {
+  if (!authUser?.id || roleNames.length === 0) return false
+  const cached = getCachedUserMenuRoles(authUser.id)
+  const userRoleNames = cached ? cached.roleNames : await fetchUserRoleNamesForAuthUser(authUser)
+  if (!cached) cacheUserMenuRoles(authUser.id, userRoleNames)
+
+  const wanted = new Set(roleNames.map(normalizeRoleName))
+  return (userRoleNames || []).some((r) => wanted.has(normalizeRoleName(r)))
 }

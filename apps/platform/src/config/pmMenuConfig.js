@@ -50,12 +50,6 @@ export const pmMenuConfig = [
         permission: 'project.create',
       },
       {
-        id: 'platform-projects-templates',
-        label: 'Templates',
-        path: '/platform/templates',
-        permission: 'project.view',
-      },
-      {
         id: 'platform-projects-archives',
         label: 'Archived',
         path: '/platform/projects/archives',
@@ -80,12 +74,7 @@ export const pmMenuConfig = [
         path: null, // Dynamic path based on selected project
         permission: 'project.view',
       },
-      {
-        id: 'platform-projects-lessons-log',
-        label: 'Lessons Log',
-        path: null, // Dynamic path based on selected project
-        permission: 'project.view',
-      },
+      // Lessons Log removed from Projects (v883) — use Controls → Knowledge & Governance → Lessons Log
       {
         id: 'platform-projects-plans',
         label: 'Plans',
@@ -100,6 +89,23 @@ export const pmMenuConfig = [
       },
       { id: 'forms-status-report', label: 'Status Reports', path: '/platform/projects/:projectId/reports/status', permission: 'form.view' },
     ],
+  },
+
+  // 3a. Organizational Templates (top-level — not under Projects)
+  {
+    id: 'platform-organisational-templates',
+    label: 'Organizational Templates',
+    path: '/platform/templates',
+    icon: 'library',
+    permission: 'project.view',
+  },
+  // 3b. Project Templates — project-owned copies
+  {
+    id: 'platform-project-templates',
+    label: 'Project Templates',
+    path: '/platform/templates/project',
+    icon: 'folder-kanban',
+    permission: 'project.view',
   },
 
   // Personal section - My Daily Log Entries

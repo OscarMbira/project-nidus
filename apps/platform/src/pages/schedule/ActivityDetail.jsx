@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { getActivity, saveActivity } from '../../services/activityListService'
 import { listWbsNodes } from '../../services/wbsNodeService'
 import { platformDb } from '@nidus/supabase'
@@ -16,6 +20,12 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '@nidus/shared/utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SECTIONS = [
   {
@@ -31,7 +41,8 @@ const SECTIONS = [
 ]
 
 export default function ActivityDetail() {
-  const { projectId, actId } = useParams()
+  const { actId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const isNew = actId === 'new'
   const { canEdit } = useProjectRole(projectId)
@@ -39,6 +50,10 @@ export default function ActivityDetail() {
   const [saving, setSaving] = useState(false)
   const [wbsNodes, setWbsNodes] = useState([])
   const [success, setSuccess] = useState(null)
+  const [record, setRecord] = useState(null)
+  const [resolvedActId, setResolvedActId] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const [form, setForm] = useState({
     activity_code: '',
     name: '',
@@ -73,9 +88,18 @@ export default function ActivityDetail() {
       return
     }
     setLoading(true)
-    const res = await getActivity(projectId, actId)
+    const resolvedId = isLikelyDatabaseUuid(actId)
+      ? actId
+      : await resolveEntityId('activity', actId, projectId)
+    if (!resolvedId) {
+      setLoading(false)
+      return
+    }
+    setResolvedActId(resolvedId)
+    const res = await getActivity(projectId, resolvedId)
     if (res.success && res.data) {
       const d = res.data
+      setRecord(d)
       setForm({
         activity_code: d.activity_code || '',
         name: d.name || '',
@@ -97,9 +121,12 @@ export default function ActivityDetail() {
         assumptions: d.assumptions || '',
         status: d.status || 'not_started',
       })
+      if (d.activity_code && d.activity_code !== actId) {
+        navigate(platformProjectPath(routeKey, 'schedule', 'activities', d.activity_code), { replace: true })
+      }
     }
     setLoading(false)
-  }, [projectId, actId, isNew])
+  }, [projectId, actId, isNew, routeKey, navigate])
 
   useEffect(() => {
     loadWbs()
@@ -108,6 +135,14 @@ export default function ActivityDetail() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, record])
 
   const save = async (asHold) => {
     if (!projectId || !canEdit) return
@@ -119,7 +154,7 @@ export default function ActivityDetail() {
       const res = await saveActivity(
         projectId,
         {
-          id: isNew ? undefined : actId,
+          id: isNew ? undefined : (resolvedActId || actId),
           ...form,
           wbs_node_id: form.wbs_node_id || null,
           status: asHold ? 'on_hold' : form.status,
@@ -129,7 +164,7 @@ export default function ActivityDetail() {
       if (!res.success) throw new Error(res.error)
       setSuccess({ message: 'Activity saved successfully.', id: res.data?.id })
       if (isNew && res.data?.id) {
-        navigate(`/platform/projects/${projectId}/schedule/activities/${res.data.id}`, { replace: true })
+        navigate(platformProjectPath(routeKey, 'schedule', 'activities', res.data.activity_code || res.data.id), { replace: true })
       }
     } catch (e) {
       setSuccess({ error: e.message })
@@ -144,11 +179,11 @@ export default function ActivityDetail() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 dark:bg-gray-950">
       <nav className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-        <Link to={`/platform/projects/${projectId}`} className="hover:underline">
+        <Link to={platformProjectPath(routeKey)} className="hover:underline">
           Project
         </Link>
         <span className="mx-2">/</span>
-        <Link to={`/platform/projects/${projectId}/schedule/activities`} className="hover:underline">
+        <Link to={platformProjectPath(routeKey, 'schedule', 'activities')} className="hover:underline">
           Activities
         </Link>
         <span className="mx-2">/</span>
@@ -175,6 +210,35 @@ export default function ActivityDetail() {
       )}
       {success?.error && <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-200">{success.error}</div>}
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this activity is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this activity, and how it is classified.">
+              <AuditCard title="Identity" description="How this activity is labelled and tracked.">
+                <AuditField label="Code" value={record.activity_code} />
+                <AuditField label="Name" value={record.name} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this activity is estimated.">
+                <AuditField label="Estimation technique" value={humanizeAuditToken(record.estimation_technique)} />
+                <AuditField label="Milestone" value={record.is_milestone ? 'Yes' : 'No'} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this activity was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -364,6 +428,7 @@ export default function ActivityDetail() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

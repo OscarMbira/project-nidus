@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, FolderTree } from 'lucide-react'
 import { getPracticeProgrammeById } from '../../services/sim/practicePortfolioService'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function PracticeProgrammeDetail() {
   const { programmeId } = useParams()
@@ -9,6 +16,16 @@ export default function PracticeProgrammeDetail() {
   const [programme, setProgramme] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !programme) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [programme.created_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, programme])
 
   useEffect(() => {
     const load = async () => {
@@ -93,6 +110,25 @@ export default function PracticeProgrammeDetail() {
         )}
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created this programme.">
+          <AuditCard title="Identity" description="How this programme is labelled.">
+            <AuditField label="Name" value={programme.programme_name} />
+            <AuditField label="Code" value={programme.programme_code} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this programme is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(programme.programme_type)} />
+            <AuditField label="Status" value={humanizeAuditToken(programme.programme_status)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this programme was created and last changed.">
+            <AuditField label="Created by" value={programme.created_by ? auditUserLabels[programme.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={programme.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={programme.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
           Simulation notes
@@ -104,6 +140,7 @@ export default function PracticeProgrammeDetail() {
           can be added on top of this record as the simulation curriculum expands.
         </p>
       </div>
+      )}
     </div>
   )
 }

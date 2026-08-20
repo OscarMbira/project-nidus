@@ -16,6 +16,12 @@ import {
 } from '../../services/processTemplatesService'
 import { platformDb } from '@nidus/supabase'
 import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
   const { slug, id } = useParams()
@@ -34,6 +40,8 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [userId, setUserId] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const { saveDraft } = useDraftQueue(entityType, id, {
     projectId: row?.project_id || row?.practice_project_id,
@@ -43,6 +51,20 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
   useEffect(() => {
     platformDb.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null))
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        row.created_by,
+        row.updated_by,
+        row.copied_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, row])
 
   useEffect(() => {
     let cancelled = false
@@ -125,6 +147,29 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
       </Link>
       <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Edit {template.label}</h1>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this template, and how it is classified.">
+          <AuditCard title="Identity" description="How this template is labelled and tracked.">
+            <AuditField label="Reference" value={row.reference_code} />
+            <AuditField label="Title" value={title || row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(status || row.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this template sits.">
+            <AuditField label="Type" value={row.is_master ? 'Master template' : 'Workspace copy'} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this template was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+            <AuditField label="Copied by" value={row.copied_by ? auditUserLabels[row.copied_by] || null : null} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 p-5">
         <label className="block">
           <span className="text-sm text-gray-400">Title</span>
@@ -186,6 +231,7 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

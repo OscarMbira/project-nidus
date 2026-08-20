@@ -8,7 +8,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { FileText, Edit2, CheckCircle, Clock, AlertCircle, Plus, Users, Target, Package, Settings, ArrowLeft } from 'lucide-react'
+import { FileText, CheckCircle, Clock, AlertCircle, Plus, Users, Target, Package, Settings, ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPIDByProject, getOrCreatePID, updatePID } from '../../services/projectInitiationDocumentService'
 import { getObjectives } from '../../services/pidObjectivesService'
 import { supabase } from '../../services/supabaseClient'
@@ -22,6 +23,12 @@ import PIDExportMenu from '../../components/pid/PIDExportMenu'
 import PIDForm from '../../components/pid/PIDForm'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PID_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -40,12 +47,26 @@ export default function PIDView() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [editing, setEditing] = useState(false)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (projectId) {
       fetchData()
     }
   }, [projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !pid) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [
+        pid.created_by,
+        pid.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, pid])
 
   const fetchData = async () => {
     try {
@@ -187,13 +208,7 @@ export default function PIDView() {
               />
             )}
             {pid && pid.status === 'draft' && !editing && (
-              <button
-                onClick={() => setEditing(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit PID" onClick={() => setEditing(true)} />
             )}
           </div>
         </div>
@@ -234,42 +249,49 @@ export default function PIDView() {
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex -mb-px overflow-x-auto">
-              {[
-                { id: 'overview', label: 'Overview', icon: FileText },
-                { id: 'definition', label: 'Project Definition', icon: Target },
-                  { id: 'objectives', label: `Objectives (${objectives.length})`, icon: Target },
-                { id: 'interfaces', label: `Interfaces (${interfaces.length})`, icon: Package },
-                { id: 'dependencies', label: `Dependencies (${dependencies.length})`, icon: Link },
-                { id: 'approach', label: 'Approach', icon: Settings },
-                { id: 'team', label: `Team (${teamMembers.length})`, icon: Users },
-                { id: 'tolerances', label: `Tolerances (${tolerances.length})`, icon: Gauge },
-                { id: 'reporting', label: `Reporting (${reportingArrangements.length})`, icon: FileText },
-                { id: 'controls', label: 'Controls', icon: Settings },
-                { id: 'plans', label: 'Plans', icon: Package }
-              ].map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-3 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </nav>
+          <div className="border-b border-gray-200 dark:border-gray-700 px-2">
+            <DetailAuditTabList
+              activeTab={activeTab}
+              onChange={setActiveTab}
+              ariaLabel="PID sections"
+              tabs={[
+                { value: 'overview', label: 'Overview' },
+                { value: 'definition', label: 'Project Definition' },
+                { value: 'objectives', label: `Objectives (${objectives.length})` },
+                { value: 'interfaces', label: `Interfaces (${interfaces.length})` },
+                { value: 'dependencies', label: `Dependencies (${dependencies.length})` },
+                { value: 'approach', label: 'Approach' },
+                { value: 'team', label: `Team (${teamMembers.length})` },
+                { value: 'tolerances', label: `Tolerances (${tolerances.length})` },
+                { value: 'reporting', label: `Reporting (${reportingArrangements.length})` },
+                { value: 'controls', label: 'Controls' },
+                { value: 'plans', label: 'Plans' },
+                { value: 'audit', label: 'Audit details' },
+              ]}
+            />
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
+            {activeTab === 'audit' && (
+              <AuditDetailsPanel description="Who created or changed this PID, and how it is classified.">
+                <AuditCard title="Identity" description="How this PID is labelled and tracked.">
+                  <AuditField label="Reference" value={pid.pid_reference} />
+                  <AuditField label="Title" value={pid.pid_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(pid.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this PID sits.">
+                  <AuditField label="Project definition" value={pid.project_definition} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this PID was created and last changed.">
+                  <AuditField label="Created by" value={pid.created_by ? auditUserLabels[pid.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={pid.created_at} />
+                  <AuditField label="Updated by" value={pid.updated_by ? auditUserLabels[pid.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={pid.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 <div>

@@ -11,6 +11,10 @@
  * Sequential turn-taking and "only the assigned signatory may sign" are enforced by RLS.
  */
 
+import { platformDb } from '@nidus/supabase'
+import { getCurrentUserInternalUserId } from '../utils/accountResolution'
+import { peekSignedImage, resolveSignedImage, invalidateSignedImage } from './signedImageCache'
+
 export const PROCESS_TEMPLATE_SIGNATURES_BUCKET = 'process-template-signatures'
 export const USER_SIGNATURES_BUCKET = 'user-signatures'
 export const MAX_SIGNATURE_FILE_SIZE_BYTES = 2 * 1024 * 1024 // 2MB
@@ -42,6 +46,20 @@ export function earlierMandatorySlotsSigned(slots = [], slotOrder) {
   return (slots || [])
     .filter((s) => s.slot_order < slotOrder && slotIsMandatory(s))
     .every((s) => s.status === 'signed')
+}
+
+/**
+ * TRUE when `userId` may close out the round early (v898): they signed a
+ * mandatory slot, every mandatory slot in the round is signed, and at least
+ * one optional slot is still pending (otherwise there's nothing to lock).
+ */
+export function canLockRemainingOptionalSlots(slots = [], userId) {
+  if (!userId || !areMandatorySlotsSigned(slots)) return false
+  const signedThisMandatorySlot = (slots || []).some(
+    (s) => slotIsMandatory(s) && s.status === 'signed' && s.assigned_user_id === userId,
+  )
+  if (!signedThisMandatorySlot) return false
+  return (slots || []).some((s) => s.status === 'pending' && !slotIsMandatory(s))
 }
 
 /**
@@ -82,6 +100,10 @@ function fileExt(file) {
 }
 
 async function currentAuthUserId(db) {
+  if (db.auth.getSession) {
+    const { data: sessionData } = await db.auth.getSession()
+    if (sessionData?.session?.user?.id) return sessionData.session.user.id
+  }
   const { data, error } = await db.auth.getUser()
   if (error || !data?.user?.id) throw new Error('Not signed in.')
   return data.user.id
@@ -703,6 +725,29 @@ export async function getDocumentSignatories(db, templateNodeId) {
   }
 }
 
+/**
+ * Count of declined slots across EVERY round for a document — cheap enough to run
+ * unconditionally so a persistent "N declines on record" notice can be shown to
+ * every viewer (any assigned signatory, any round) without eagerly loading the
+ * full history payload that getSigningHistory returns (v898 follow-up: declines
+ * must stay a discoverable, permanent part of the audit trail, not something a
+ * viewer only sees if they think to open History).
+ */
+export async function getDeclinedSignatoryCount(db, templateNodeId) {
+  try {
+    if (!db || !templateNodeId) throw new Error('Database client and template node id are required')
+    const { count, error } = await db
+      .from('process_template_document_signatories')
+      .select('id', { count: 'exact', head: true })
+      .eq('template_node_id', templateNodeId)
+      .eq('status', 'declined')
+    if (error) throw error
+    return ok(count || 0)
+  } catch (error) {
+    return fail(error)
+  }
+}
+
 /** Every round's slots for a document, newest round first — for the audit/history view. */
 export async function getSigningHistory(db, templateNodeId) {
   try {
@@ -923,11 +968,13 @@ export async function assignSignatory(db, { templateNodeId, slotOrder, assignedU
  * this function's own turn-check below exists purely to fail with a clear message
  * before attempting a network round-trip, not as the actual security boundary.
  */
-export async function signSlot(db, { templateNodeId, slotOrder, file = null, mode = 'platform' }) {
+export async function signSlot(db, { templateNodeId, slotOrder, file = null, mode = 'platform', signingRound = null }) {
   try {
     if (!db || !templateNodeId || !slotOrder) throw new Error('Database client, template node id, and slot order are required')
 
-    const round = await getCurrentRoundNumber(db, 'process_template_document_signatories', templateNodeId)
+    const round = Number(signingRound) > 0
+      ? Number(signingRound)
+      : await getCurrentRoundNumber(db, 'process_template_document_signatories', templateNodeId)
     if (round === 0) throw new Error('Signing has not been initialised for this document yet.')
 
     let sourceFile = file
@@ -1005,6 +1052,46 @@ export async function declineSlot(db, { templateNodeId, slotOrder, reason }) {
   }
 }
 
+/**
+ * Close out the round early (v898): flips every still-pending OPTIONAL slot in
+ * the current round to 'expired'. Callable by any signatory who has already
+ * signed a MANDATORY slot in this round, once every mandatory slot is signed —
+ * RLS enforces both conditions independently (SQL/v898); this function's own
+ * required-reason check exists for the same clear-message-before-network-round-
+ * trip reason as signSlot's turn-check above, not as the security boundary.
+ */
+export async function lockRemainingOptionalSignatories(db, { templateNodeId, reason }) {
+  try {
+    if (!db || !templateNodeId) throw new Error('Database client and template node id are required')
+    if (!reason || !reason.trim()) throw new Error('A reason is required to lock remaining optional signatories.')
+
+    const table = 'process_template_document_signatories'
+    const round = await getCurrentRoundNumber(db, table, templateNodeId)
+    if (round === 0) throw new Error('Signing has not been initialised for this document yet.')
+
+    const lockedBy = await getCurrentUserInternalUserId()
+
+    const { data, error } = await db
+      .from(table)
+      .update({
+        status: 'expired',
+        locked_by: lockedBy,
+        locked_at: new Date().toISOString(),
+        lock_reason: reason.trim(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('template_node_id', templateNodeId)
+      .eq('signing_round', round)
+      .eq('status', 'pending')
+      .eq('is_mandatory', false)
+      .select('*')
+    if (error) throw error
+    return ok(data || [])
+  } catch (error) {
+    return fail(error)
+  }
+}
+
 /** Full restart after a decline — new round, same assigned people, everyone re-signs. */
 export async function restartSigningChain(db, { templateNodeId }) {
   try {
@@ -1052,17 +1139,35 @@ export async function isDocumentFullySigned(db, templateNodeId) {
 // between Platform and Simulator since it belongs to the person, not the app)
 // ─────────────────────────────────────────────────────────────
 
+const _savedSignatureInFlight = new Map()
+
 export async function getSavedSignature(db) {
   try {
     if (!db) throw new Error('Database client is required')
     const authUserId = await currentAuthUserId(db)
-    const { data, error } = await db
-      .from('user_signature_images')
-      .select('*')
-      .eq('auth_user_id', authUserId)
-      .maybeSingle()
-    if (error) throw error
-    return ok(data || null)
+
+    // In-flight de-dupe: ProfileSignatureSection's own mount effect firing twice
+    // under React 18 StrictMode (dev only) was two identical queries for the same
+    // user's saved signature on every profile page load. Not a persistent cache —
+    // a call a moment later still runs fresh.
+    if (_savedSignatureInFlight.has(authUserId)) return _savedSignatureInFlight.get(authUserId)
+
+    const run = (async () => {
+      const { data, error } = await db
+        .from('user_signature_images')
+        .select('*')
+        .eq('auth_user_id', authUserId)
+        .maybeSingle()
+      if (error) throw error
+      return ok(data || null)
+    })()
+      .catch((error) => fail(error))
+      .finally(() => {
+        _savedSignatureInFlight.delete(authUserId)
+      })
+
+    _savedSignatureInFlight.set(authUserId, run)
+    return run
   } catch (error) {
     return fail(error)
   }
@@ -1082,6 +1187,7 @@ export async function saveSignatureImage(db, file, accountId) {
       .from(USER_SIGNATURES_BUCKET)
       .upload(storagePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
     if (uploadError) throw uploadError
+    invalidateSignedImage(USER_SIGNATURES_BUCKET, storagePath)
 
     const { data, error } = await db
       .from('user_signature_images')
@@ -1113,6 +1219,7 @@ export async function deleteSavedSignature(db) {
     if (!existing.success) throw new Error(existing.message)
     if (!existing.data) return ok(null)
 
+    invalidateSignedImage(existing.data.storage_bucket || USER_SIGNATURES_BUCKET, existing.data.storage_path)
     const { error: removeError } = await db.storage
       .from(existing.data.storage_bucket || USER_SIGNATURES_BUCKET)
       .remove([existing.data.storage_path])
@@ -1133,17 +1240,45 @@ export async function deleteSavedSignature(db) {
 // Signed URLs + export resolution
 // ─────────────────────────────────────────────────────────────
 
+export function peekSignatureDisplayUrl(storagePath, bucket = USER_SIGNATURES_BUCKET) {
+  return peekSignedImage(bucket, storagePath)
+}
+
 export async function getSignatureSignedUrl(db, storagePath, expiresInSeconds = 3600, bucket = PROCESS_TEMPLATE_SIGNATURES_BUCKET) {
   try {
     if (!db || !storagePath) throw new Error('Database client and storage path are required')
-    const { data, error } = await db.storage
-      .from(bucket)
-      .createSignedUrl(storagePath, expiresInSeconds)
-    if (error) throw error
-    return ok(data.signedUrl)
+    const signedUrl = await resolveSignedImage({
+      bucket,
+      path: storagePath,
+      expiresInSeconds,
+      createSignedUrl: async () => {
+        const { data, error } = await db.storage
+          .from(bucket)
+          .createSignedUrl(storagePath, expiresInSeconds)
+        if (error) throw error
+        return data.signedUrl
+      },
+    })
+    return ok(signedUrl)
   } catch (error) {
     return fail(error)
   }
+}
+
+/**
+ * Batch-resolve assigned_user_id -> display name (full_name, falling back to email) via
+ * a single `users` lookup, mirroring SignatoriesPanel's userLabel() so the export caption
+ * shows the same human-readable name as the on-screen signatory chain instead of a raw
+ * auth user UUID. assigned_user_id always FKs to public.users(id) even on sim.* signatory
+ * rows (see SQL/v868) — there is no sim.users table, so this must always query platformDb,
+ * never the schema-scoped `db` param (which is simDb when called from the Simulator).
+ */
+async function buildUserLabelLookup(db, rows) {
+  const ids = [...new Set(rows.map((r) => r.assigned_user_id).filter(Boolean))]
+  if (!ids.length) return () => ''
+  const { data } = await platformDb.from('users').select('id, full_name, email').in('id', ids)
+  const map = new Map((data || []).map((u) => [u.id, u.full_name || u.email || '']))
+  return (userId) => (userId ? (map.get(userId) || '') : '')
 }
 
 /**
@@ -1160,11 +1295,13 @@ export async function resolveDocumentSignaturesForExport(db, templateNodeId, use
 
     const textValues = []
     const assets = []
+    const resolveLabel = userLabelResolver || await buildUserLabelLookup(db, listResult.data)
 
     for (const row of listResult.data) {
-      const signerLabel = userLabelResolver ? await userLabelResolver(row.assigned_user_id) : row.assigned_user_id
+      const signerLabel = await resolveLabel(row.assigned_user_id)
       if (row.status === 'signed') {
         const urlResult = row.storage_path ? await getSignatureSignedUrl(db, row.storage_path) : { success: false }
+        const signedAtLabel = row.signed_at ? new Date(row.signed_at).toLocaleString() : ''
         const asset = {
           role_label: row.role_label,
           signer_label: signerLabel || '',
@@ -1172,6 +1309,12 @@ export async function resolveDocumentSignaturesForExport(db, templateNodeId, use
           display_id: row.display_id || '',
           is_mandatory: row.is_mandatory !== false,
           url: urlResult.success ? urlResult.data : null,
+          // Word/PPT/PDF export renderers key off mime_type to decide whether an asset embeds
+          // as an image vs. falls back to a generic "Attachment" filename caption — without
+          // these, a real signed signature silently rendered as a blank "Attachment" label.
+          mime_type: row.mime_type || null,
+          file_name: row.file_name || `${row.role_label} signature`,
+          caption: `${row.role_label}${signerLabel ? ` (${signerLabel})` : ''} — signed ${signedAtLabel}`,
         }
         assets.push(asset)
         const label = `${row.role_label}: ${asset.signer_label} — signed ${row.signed_at ? new Date(row.signed_at).toLocaleString() : ''}`

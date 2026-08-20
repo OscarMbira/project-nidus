@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeProductDescription } from '../../services/sim/practiceProductDescriptionService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function PracticeProductDescriptionCreate() {
   const navigate = useNavigate()
@@ -18,6 +19,7 @@ export default function PracticeProductDescriptionCreate() {
     composition: '',
     derivation: ''
   })
+  const [formTab, setFormTab] = useState('details')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -43,6 +45,12 @@ export default function PracticeProductDescriptionCreate() {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </button>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Create Practice Product Description</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this product description is saved.</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">Product Title *</label>
@@ -57,6 +65,7 @@ export default function PracticeProductDescriptionCreate() {
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Creating...' : 'Create Product Description'}</button>
         </div>
       </form>
+      )}
     </div>
   )
 }

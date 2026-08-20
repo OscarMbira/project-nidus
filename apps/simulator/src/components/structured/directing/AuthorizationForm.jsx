@@ -2,11 +2,33 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileCheck, Calendar, FileText, AlertTriangle } from 'lucide-react';
 import { createProjectAuthorization, updateProjectAuthorization, fetchBoardMeetings } from '../../../services/directingProjectService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function AuthorizationForm({ projectId, boardId, authorization, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [meetings, setMeetings] = useState([]);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !authorization) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        authorization.created_by,
+        authorization.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, authorization]);
   const [formData, setFormData] = useState({
     authorization_type: authorization?.authorization_type || 'Project_Initiation',
     authorization_date: authorization?.authorization_date || new Date().toISOString().split('T')[0],
@@ -123,6 +145,33 @@ export default function AuthorizationForm({ projectId, boardId, authorization, o
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !authorization?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this authorization is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this authorization, and how it is classified.">
+                <AuditCard title="Identity" description="How this authorization is labelled and tracked.">
+                  <AuditField label="Type" value={humanizeAuditToken(formData.authorization_type || authorization.authorization_type)} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.authorization_status || authorization.authorization_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this authorization sits.">
+                  <AuditField label="Authorization date" value={formData.authorization_date || authorization.authorization_date} />
+                  <AuditField label="Scope tolerance" value={humanizeAuditToken(formData.scope_tolerance || authorization.scope_tolerance)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this authorization was created and last changed.">
+                  <AuditField label="Created by" value={authorization.created_by ? auditUserLabels[authorization.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={authorization.created_at} />
+                  <AuditField label="Updated by" value={authorization.updated_by ? auditUserLabels[authorization.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={authorization.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Authorization Type and Status */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -322,6 +371,8 @@ export default function AuthorizationForm({ projectId, boardId, authorization, o
               Optional: Specify any conditions that must be met
             </p>
           </div>
+          </>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

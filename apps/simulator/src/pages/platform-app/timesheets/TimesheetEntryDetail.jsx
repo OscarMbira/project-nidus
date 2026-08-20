@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
-import { ArrowLeft, Clock, FileEdit, Trash2, AlertCircle, Calendar, Tag, MessageSquare } from 'lucide-react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Clock, AlertCircle, Calendar, Tag, MessageSquare } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { RowActionButton } from '@nidus/ui'
 import { getTimesheetEntry, deleteTimesheetEntry, submitTimesheetEntry } from '../../../services/timesheetService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const STATUS_COLORS = {
   draft:     'bg-slate-700 text-slate-300 border-slate-600',
@@ -31,6 +38,7 @@ export default function TimesheetEntryDetail() {
   const navigate = useNavigate()
   const [entry, setEntry] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
 
   useEffect(() => {
     if (!id) return
@@ -104,10 +112,11 @@ export default function TimesheetEntryDetail() {
             Time Entry
           </h1>
           {canEdit && (
-            <Link to={`/platform/timesheets/${id}/edit${projectId ? `?projectId=${projectId}` : ''}`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 min-h-[40px]">
-              <FileEdit className="h-4 w-4" /> Edit
-            </Link>
+            <RowActionButton
+              variant="edit"
+              label="Edit entry"
+              onClick={() => navigate(`/platform/timesheets/${id}/edit${projectId ? `?projectId=${projectId}` : ''}`)}
+            />
           )}
           {entry.status === 'draft' && (
             <button type="button" onClick={handleSubmit}
@@ -116,13 +125,33 @@ export default function TimesheetEntryDetail() {
             </button>
           )}
           {entry.status === 'draft' && (
-            <button type="button" onClick={handleDelete}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-700 bg-red-900/30 px-3 py-2 text-sm text-red-300 hover:bg-red-900/50 min-h-[40px]">
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
+            <RowActionButton
+              variant="delete"
+              label="Delete entry"
+              onClick={handleDelete}
+            />
           )}
         </div>
 
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+        {activeTab === 'audit' ? (
+          <AuditDetailsPanel description="How this time entry is classified, and when it was created.">
+            <AuditCard title="Identity" description="How this entry is labelled and tracked.">
+              <AuditField label="Date" value={entry.entry_date} />
+              <AuditField label="Status" value={humanizeAuditToken(entry.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this entry is categorised.">
+              <AuditField label="Work category" value={humanizeAuditToken(entry.work_category)} />
+              <AuditField label="Hours worked" value={entry.hours_worked} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this entry was created and last changed.">
+              <AuditTimestampPair dateLabel="Created at" value={entry.created_at} />
+              <AuditTimestampPair dateLabel="Last updated" value={entry.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        ) : (
+        <>
         {/* Hero */}
         <div className="rounded-xl bg-gradient-to-r from-slate-700 to-slate-800 border border-slate-600 px-6 py-5">
           <div className="flex items-start justify-between gap-3">
@@ -157,6 +186,8 @@ export default function TimesheetEntryDetail() {
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-400 mb-1">Approved</p>
             {entry.review_notes && <p className="text-sm text-emerald-200">{entry.review_notes}</p>}
           </div>
+        )}
+        </>
         )}
       </div>
     </div>

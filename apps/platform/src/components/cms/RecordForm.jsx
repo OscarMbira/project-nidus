@@ -3,7 +3,17 @@
  * Add/edit communication record form
  */
 
+import { useState } from 'react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
+
 export default function RecordForm({ recordData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
+  const [formTab, setFormTab] = useState('details')
+
   const handleChange = (field, value) => {
     if (onChange) {
       onChange({ ...recordData, [field]: value })
@@ -28,6 +38,27 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
       }}
       className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg space-y-4"
     >
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !recordData?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this record is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this record is labelled and classified, and when it was created.">
+            <AuditCard title="Identity" description="How this record is labelled and tracked.">
+              <AuditField label="Record name" value={recordData.record_name} />
+              <AuditField label="Type" value={humanizeAuditToken(recordData.record_type)} />
+              <AuditField label="Mandatory" value={recordData.is_mandatory !== false ? 'Yes' : 'No'} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this record was created.">
+              <AuditTimestampPair dateLabel="Created at" value={recordData.created_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -158,6 +189,8 @@ export default function RecordForm({ recordData = {}, onChange, onCancel, onSubm
           </span>
         </label>
       </div>
+      </>
+      )}
 
       <div className="flex gap-2 pt-4">
         <button

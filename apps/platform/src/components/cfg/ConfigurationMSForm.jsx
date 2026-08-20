@@ -7,6 +7,11 @@
 import { useState } from 'react'
 import { CheckCircle, FileText, Settings, Package, Hash, GitBranch, BarChart3, Layers, Shield, Wrench, FolderArchive, Calendar, Users } from 'lucide-react'
 import { HoldButton } from '../ui/HoldButton'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
 export default function ConfigurationMSForm({
   cfgMsData = {},
@@ -20,6 +25,7 @@ export default function ConfigurationMSForm({
   saving = false
 }) {
   const [activeStep, setActiveStep] = useState(1)
+  const [formTab, setFormTab] = useState('wizard')
 
   const steps = [
     { id: 1, label: 'Introduction', icon: FileText },
@@ -265,6 +271,34 @@ export default function ConfigurationMSForm({
 
   return (
     <div className="space-y-6">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !cfgMsData?.id ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this strategy is saved.</p>
+          </div>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this configuration management strategy, and how it is classified.">
+            <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+              <AuditField label="Reference" value={cfgMsData.cms_reference} />
+              <AuditField label="Status" value={cfgMsData.status} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this strategy sits.">
+              <AuditField label="Project" value={cfgMsData.project?.project_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this strategy was created and last changed.">
+              <AuditField label="Created by" value={cfgMsData.created_by_user?.full_name || cfgMsData.created_by_user?.email} />
+              <AuditTimestampPair dateLabel="Created at" value={cfgMsData.created_at} />
+              <AuditField label="Updated by" value={cfgMsData.updated_by_user?.full_name || cfgMsData.updated_by_user?.email} />
+              <AuditTimestampPair dateLabel="Last updated" value={cfgMsData.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       {/* Progress Steps */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -355,6 +389,8 @@ export default function ConfigurationMSForm({
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -3,6 +3,8 @@
  * Provides export functionality for Risk Management Strategy (PDF, Word, Print)
  */
 
+import { addCanvasImagePages } from './pdfCanvasPagination.js'
+
 /**
  * Export RMS to PDF
  * @param {Object} rms - RMS data
@@ -19,6 +21,7 @@
  * @param {Array} activities - Scheduled activities
  * @param {string} filename - Output filename
  */
+
 export async function exportRMSToPDF(
   rms,
   standards = [],
@@ -70,18 +73,7 @@ export async function exportRMSToPDF(
     const imgWidth = 210
     const pageHeight = 297
     const imgHeight = (canvas.height * imgWidth) / canvas.width
-    let heightLeft = imgHeight
-    let position = 0
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
 
     // Cleanup
     document.body.removeChild(container)

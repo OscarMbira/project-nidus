@@ -4,6 +4,12 @@ import { saveBenefit } from '../../services/benefitsService';
 import { platformDb } from '@nidus/supabase';
 import { SmartAmountInput } from '../ui/SmartAmountInput';
 import { HoldButton } from '../ui/HoldButton';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete, usePageLayout = false }) {
   const [formData, setFormData] = useState({
@@ -40,6 +46,7 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
   const [saving, setSaving] = useState(false);
   const [loadingLookup, setLoadingLookup] = useState(true);
   const [lookupError, setLookupError] = useState(null);
+  const [formTab, setFormTab] = useState('details');
 
   useEffect(() => {
     if (benefit) {
@@ -201,6 +208,40 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
         </button>
       ) : null}
     </div>
+  );
+
+  const auditTabs = (
+    <div className={usePageLayout ? '' : 'px-6 pt-4'}>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+    </div>
+  );
+
+  const auditPanel = (
+    !benefit?.id ? (
+      <p className="p-6 text-sm text-gray-500 dark:text-gray-400">Audit details appear after this benefit is saved.</p>
+    ) : (
+      <div className="p-6">
+        <AuditDetailsPanel description="Who created or changed this benefit, and how it is classified.">
+          <AuditCard title="Identity" description="How this benefit is labelled and tracked.">
+            <AuditField label="Code" value={benefit.benefit_code} />
+            <AuditField label="Name" value={formData.benefit_name || benefit.benefit_name} />
+            <AuditField label="Status" value={humanizeAuditToken(benefit.benefit_status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this benefit sits.">
+            <AuditField label="Portfolio" value={portfolios.find((p) => p.id === (formData.portfolio_id || benefit.portfolio_id))?.portfolio_name} />
+            <AuditField label="Programme" value={programmes.find((p) => p.id === (formData.programme_id || benefit.programme_id))?.programme_name} />
+            <AuditField label="Project" value={projects.find((p) => p.id === (formData.project_id || benefit.project_id))?.project_name} />
+            <AuditField label="Benefit owner" value={users.find((u) => u.id === (formData.benefit_owner_user_id || benefit.benefit_owner_user_id))?.full_name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this benefit was created and last changed.">
+            <AuditField label="Created by" value={users.find((u) => u.id === benefit.created_by)?.full_name} />
+            <AuditTimestampPair dateLabel="Created at" value={benefit.created_at} />
+            <AuditField label="Updated by" value={users.find((u) => u.id === benefit.updated_by)?.full_name} />
+            <AuditTimestampPair dateLabel="Last updated" value={benefit.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      </div>
+    )
   );
 
   const formBody = (
@@ -641,8 +682,9 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
     return (
       <div className="max-w-4xl mx-auto px-4 py-6">
         {formHeader}
+        {auditTabs}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          {formBody}
+          {formTab === 'audit' ? auditPanel : formBody}
         </div>
       </div>
     );
@@ -651,7 +693,8 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {formHeader}
-        {formBody}
+        {auditTabs}
+        {formTab === 'audit' ? auditPanel : formBody}
       </div>
     </div>
   );

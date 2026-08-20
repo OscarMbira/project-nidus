@@ -4,7 +4,15 @@
  */
 
 import { useState, useEffect } from 'react'
-import { FileText, Calendar, DollarSign, Users, Package, Shield, History, CheckCircle, Edit, Download } from 'lucide-react'
+import { FileText, Calendar, DollarSign, Users, Package, Shield, History, CheckCircle, Download } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { platformDb } from '../../services/supabase/supabaseClient'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { getStagePlanById, getRevisionHistory } from '../../services/stagePlanService'
 import { getMilestones } from '../../services/planMilestoneService'
@@ -43,7 +51,9 @@ const TABS = [
   { id: 'history', label: 'History', icon: History },
 ]
 
-export default function StagePlanView({ planId, onEdit, onExport }) {
+const VIEW_TABS = [...TABS.map((t) => ({ value: t.id, label: t.label })), { value: 'audit', label: 'Audit details' }]
+
+export default function StagePlanView({ planId, onEdit, onExport, onLoaded }) {
   const { theme } = useThemeContext()
   const [activeTab, setActiveTab] = useState('overview')
   const [plan, setPlan] = useState(null)
@@ -52,6 +62,7 @@ export default function StagePlanView({ planId, onEdit, onExport }) {
   const [products, setProducts] = useState([])
   const [revisionHistory, setRevisionHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (planId) {
@@ -59,13 +70,24 @@ export default function StagePlanView({ planId, onEdit, onExport }) {
     }
   }, [planId])
 
+  useEffect(() => {
+    if (activeTab !== 'audit' || !plan) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [plan.created_by, plan.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, plan])
+
   const loadPlan = async () => {
     try {
       setLoading(true)
       const result = await getStagePlanById(planId)
       if (result.success) {
         setPlan(result.data)
-        
+        onLoaded?.(result.data)
+
         const milestonesResult = await getMilestones(planId, 'stage_plan')
         if (milestonesResult.success) {
           setMilestones(milestonesResult.data || [])
@@ -133,6 +155,27 @@ export default function StagePlanView({ planId, onEdit, onExport }) {
         return <PlanApprovalSection planId={planId} planType="stage_plan" />
       case 'history':
         return <PlanRevisionHistorySection revisionHistory={revisionHistory} />
+      case 'audit':
+        return (
+          <AuditDetailsPanel description="Who created or changed this stage plan, and how it is classified.">
+            <AuditCard title="Identity" description="How this plan is labelled and tracked.">
+              <AuditField label="Reference" value={plan.plan_reference} />
+              <AuditField label="Stage name" value={plan.stage_name} />
+              <AuditField label="Status" value={humanizeAuditToken(plan.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this plan sits.">
+              <AuditField label="Project" value={plan.project?.project_name} />
+              <AuditField label="Author" value={plan.author?.full_name || plan.author?.email} />
+              <AuditField label="Owner" value={plan.owner?.full_name || plan.owner?.email} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this plan was created and last changed.">
+              <AuditField label="Created by" value={plan.created_by ? auditUserLabels[plan.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={plan.created_at} />
+              <AuditField label="Updated by" value={plan.updated_by ? auditUserLabels[plan.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={plan.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
       default:
         return null
     }
@@ -170,37 +213,13 @@ export default function StagePlanView({ planId, onEdit, onExport }) {
               </button>
             )}
             {onEdit && plan.status !== 'baseline' && plan.status !== 'in_execution' && (
-              <button
-                onClick={() => onEdit(plan)}
-                className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit plan" onClick={() => onEdit(plan)} />
             )}
           </div>
         </div>
 
-        <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-          <nav className="flex space-x-8">
-            {TABS.map(tab => {
-              const TabIcon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
-                >
-                  <TabIcon className="w-4 h-4 mr-2" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </nav>
+        <div className="mb-6">
+          <DetailAuditTabList tabs={VIEW_TABS} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">

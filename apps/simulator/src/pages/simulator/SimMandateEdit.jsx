@@ -9,6 +9,13 @@ import ScopeList from '../../components/mandate/ScopeList'
 import AuthorityList from '../../components/mandate/AuthorityList'
 import InterfacesList from '../../components/mandate/InterfacesList'
 import QualityExpectationsList from '../../components/mandate/QualityExpectationsList'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 function SimMandateEdit() {
   const { mandateId } = useParams()
@@ -34,6 +41,9 @@ function SimMandateEdit() {
   
   // Structured constraints
   const [structuredConstraints, setStructuredConstraints] = useState([])
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (mandateId) {
@@ -41,11 +51,20 @@ function SimMandateEdit() {
     }
   }, [mandateId])
 
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [record.user_id])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record])
+
   const fetchMandate = async () => {
     try {
       setLoading(true)
       const mandate = await getSimMandateById(mandateId)
-      
+      setRecord(mandate)
+
       // Can only edit if draft
       if (mandate.document_status !== 'draft') {
         alert('Only draft practice mandates can be edited.')
@@ -251,6 +270,30 @@ function SimMandateEdit() {
         </p>
       </div>
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this mandate is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this mandate.">
+              <AuditCard title="Identity" description="How this mandate is labelled.">
+                <AuditField label="Title" value={record.mandate_title} />
+                <AuditField label="Reference" value={record.mandate_reference} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this mandate sits.">
+                <AuditField label="Status" value={humanizeAuditToken(record.document_status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this mandate was created and last changed.">
+                <AuditField label="Created by" value={record.user_id ? auditUserLabels[record.user_id] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -388,6 +431,7 @@ function SimMandateEdit() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

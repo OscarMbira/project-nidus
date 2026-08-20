@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { Plus, FileText, Calendar, LayoutDashboard } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { getProjectPlanByProject } from '../../services/projectPlanService'
@@ -82,7 +83,7 @@ export default function PlansDashboard() {
             )}
             {activeTab === 'project' && !projectPlan && (
               <button
-                onClick={() => navigate(`/app/projects/${projectId}/plans/project-plan/create`)}
+                onClick={() => navigate(platformProjectPath(routeKey, 'plans', 'project-plan', 'create'))}
                 className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -91,7 +92,7 @@ export default function PlansDashboard() {
             )}
             {activeTab === 'stage' && (
               <button
-                onClick={() => navigate(`/app/projects/${projectId}/plans/stage-plan/create`)}
+                onClick={() => navigate(platformProjectPath(routeKey, 'plans', 'stage-plan', 'create'))}
                 className="flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -131,13 +132,13 @@ export default function PlansDashboard() {
         {activeTab === 'project' && (
           <div>
             {projectPlan ? (
-              <ProjectPlanCard plan={projectPlan} projectId={projectId} />
+              <ProjectPlanCard plan={projectPlan} projectId={projectId} routeKey={routeKey} />
             ) : (
               <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <FileText className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400 mb-4">No project plan created yet</p>
                 <button
-                  onClick={() => navigate(`/app/projects/${projectId}/plans/project-plan/create`)}
+                  onClick={() => navigate(platformProjectPath(routeKey, 'plans', 'project-plan', 'create'))}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -153,7 +154,7 @@ export default function PlansDashboard() {
             {stagePlans.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {stagePlans.map(plan => (
-                  <StagePlanCard key={plan.id} plan={plan} projectId={projectId} />
+                  <StagePlanCard key={plan.id} plan={plan} projectId={projectId} routeKey={routeKey} />
                 ))}
               </div>
             ) : (
@@ -161,7 +162,7 @@ export default function PlansDashboard() {
                 <Calendar className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400 mb-4">No stage plans created yet</p>
                 <button
-                  onClick={() => navigate(`/app/projects/${projectId}/plans/stage-plan/create`)}
+                  onClick={() => navigate(platformProjectPath(routeKey, 'plans', 'stage-plan', 'create'))}
                   className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   <Plus className="w-4 h-4 mr-2" />

@@ -12,6 +12,7 @@ vi.mock('@nidus/shared/services/userAvatarService', () => ({
   saveUserAvatar: (...args) => saveUserAvatar(...args),
   removeUserAvatar: (...args) => removeUserAvatar(...args),
   getAvatarSignedUrl: (...args) => getAvatarSignedUrl(...args),
+  peekAvatarDisplayUrl: () => null,
   validateAvatarFile: (file) => {
     if (!file) return 'No file selected.'
     if (!['image/png', 'image/jpeg', 'image/gif', 'image/webp'].includes(file.type)) {

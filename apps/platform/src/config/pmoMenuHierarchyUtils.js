@@ -236,6 +236,7 @@ export const LEGACY_CATEGORY_SHELL_TARGETS = {
   // PMO layout sections
   'plat_sec_exec_overview':       'pmo-cat-exec',
   'plat_sec_project_delivery':    'pmo-cat-project-delivery',
+  'plat_sec_templates':           'pmo-cat-project-delivery',
   'plat_grp_portfolio':           'pmo-cat-project-delivery',
   'plat_grp_programme':           'pmo-cat-project-delivery',
   'plat_grp_plan_intel':          'pmo-cat-project-delivery',
@@ -478,6 +479,16 @@ function inferPlatformCategoryId(node = {}) {
 
   if (REGISTRY_PLATFORM.has(code)) return REGISTRY_PLATFORM.get(code)
 
+  // Global / Template Library (published Admin templates — copy to customise) +
+  // Organisational Templates (v807 — account's own copies, methodology-grouped)
+  if (
+    /plat_sec_templates|plat_tpl_library|plat_tpl_organisational|plat_tpl_org_|plat_pmo_field_templates|sim_sec_templates|sim_tpl_library|sim_tpl_organisational|sim_tpl_org_|sim_pmo_field_templates|template-library|organisational-templates|template library|organisational templates|global templates/.test(
+      signal
+    )
+  ) {
+    return 'pmo-cat-project-delivery'
+  }
+
   if (/pid|project initiation document|\(pids\)|\/initiation\/pids/.test(signal)) {
     return 'pmo-cat-governance-standards'
   }
@@ -657,6 +668,11 @@ function inferSimPmoCategoryId(node = {}) {
   }
   if (/sim_pmo_cat_standards_based|process group/.test(signal)) return 'sim_pmo_cat_standards_based'
   if (/sim_pmo_cat_agile|scrum-of-scrums|value-stream|kaizen/.test(signal)) return 'sim_pmo_cat_agile'
+  // Global / Organisational Templates (v807 — explicit, not relying on the
+  // trailing default fallback below to coincidentally match deliveryCode).
+  if (/sim_tpl_library|sim_tpl_organisational|sim_tpl_org_|template-library|organisational-templates|template library|organisational templates/.test(signal)) {
+    return 'sim_pmo_cat_project_delivery'
+  }
   if (/process templates|delay template|delays\/templates|delay_templates/.test(signal)) {
     return 'sim_pmo_cat_process_templates'
   }
@@ -695,6 +711,8 @@ const PMO_ONLY_PM_LAYOUT_DROP_CODES = new Set([
   'plat_sec_stakeholders_pmo',
   'plat_sec_knowledge_ops',
   'plat_sec_account',
+  // Org-wide executive page — not a PM project-scoped sidebar child (v827 / v843)
+  'plat_exec_dashboard',
   'pmo-cat-exec',
   'pmo-cat-project-delivery',
   'pmo-cat-audit-compliance',
@@ -721,11 +739,10 @@ const PM_PROJECTS_ALLOWED_CHILD_CODES = new Set([
   'plat_pm_my_projects',
   'plat_pm_all_projects',
   'plat_pm_create_project',
-  'plat_pm_templates',
   'plat_pm_archives',
   'plat_pm_manage_members',
   'plat_pm_daily_log',
-  'plat_pm_lessons',
+  // plat_pm_lessons removed (v883) — Lessons Log lives under Controls → Knowledge
 ])
 
 /** Methodology / cross-framework groups — never nest under Projects. */
@@ -793,12 +810,40 @@ function inferPmPlatformCategoryId(node = {}) {
   const label = String(node?.menu_label || '').toLowerCase()
   const signal = `${code} ${label} ${path}`
 
-  if (/^plat_pm_dashboard|^plat_exec_dashboard|\/pm\/dashboard/.test(signal)) return 'plat_pm_dashboard'
+  // Keep Executive Dashboard out of the PM "Dashboard" accordion — it is PMO/exec-only.
+  if (/^plat_exec_dashboard|executive dashboard|\/platform\/executive\/dashboard/.test(signal)) return null
+  if (/^plat_pm_dashboard|\/pm\/dashboard/.test(signal)) return 'plat_pm_dashboard'
   if (/plat_pm_ai|ai assistant/.test(signal)) return 'plat_pm_ai'
-  if (/^plat_grp_pm_projects$|^plat_pm_my_projects|^plat_pm_all_projects|^plat_pm_create_project|^plat_pm_templates|^plat_pm_archives|^plat_pm_manage_members|^plat_pm_daily_log|^plat_pm_lessons/.test(signal)) {
+  // v849: Project Documents register (must run before Project Templates path checks).
+  if (
+    /^plat_pm_project_documents$|^sim_pm_project_documents$|project documents|\/platform\/documents\/project|\/simulator\/pm\/documents\/project/.test(
+      signal,
+    )
+  ) {
+    return 'plat_pm_project_documents'
+  }
+  // v851 submenu leaves nest under their parent category (exact codes before path match).
+  if (
+    /^plat_pm_project_templates_(templates|forms)$|^sim_pm_project_templates_(templates|forms)$/.test(
+      code,
+    )
+  ) {
+    return 'plat_pm_project_templates'
+  }
+  if (/^plat_pm_templates_(templates|forms)$|^sim_pm_templates_(templates|forms)$/.test(code)) {
+    return 'plat_pm_templates'
+  }
+  // v843: Organisational Templates is a top-level PM row (not under Projects).
+  if (/^plat_pm_project_templates$|project templates|\/platform\/templates\/project/.test(signal)) {
+    return 'plat_pm_project_templates'
+  }
+  if (/^plat_pm_templates$|organisational templates|organizational templates|\/platform\/templates/.test(signal)) {
+    return 'plat_pm_templates'
+  }
+  if (/^plat_grp_pm_projects$|^plat_pm_my_projects$|^plat_pm_all_projects$|^plat_pm_create_project$|^plat_pm_archives$|^plat_pm_manage_members$|^plat_pm_daily_log$/.test(signal)) {
     return 'plat_grp_pm_projects'
   }
-  if (/^my projects$|^all projects$|^create project$|^templates$|^archives|^manage members|^lessons log/.test(label)) {
+  if (/^my projects$|^all projects$|^create project$|^archives|^manage members$/.test(label)) {
     return 'plat_grp_pm_projects'
   }
   if (/plat_grp_pm_tasks|my tasks|task board|task calendar/.test(signal)) return 'plat_grp_pm_tasks'
@@ -808,7 +853,11 @@ function inferPmPlatformCategoryId(node = {}) {
   if (/plat_pm_calendar|\/calendar/.test(signal) && !/task calendar|leave calendar/.test(signal)) {
     return 'plat_pm_calendar'
   }
-  if (/plat_grp_pm_controls|risk register|issue log|change log|delay register|requirements register|\/eef\b/.test(signal)) {
+  if (
+    /plat_grp_pm_controls|plat_pm_ctrl_|plat_pm_lessons_ctrl|risk register|issue log|change log|delay register|requirements register|lessons log|decision log|raid log|\/eef\b|\/pm\/controls\/lessons-log/.test(
+      signal
+    )
+  ) {
     return 'plat_grp_pm_controls'
   }
   if (/plat_grp_pm_stakeholders|stakeholder register|stakeholder analysis|engagement planning|communication plan|power\/interest/.test(signal)) {
@@ -850,6 +899,106 @@ function inferPmPlatformCategoryId(node = {}) {
   return null
 }
 
+/** v851 Forms/Templates submenu leaves — kept under Organizational / Project Templates. */
+const PM_TEMPLATES_SUBMENU_CHILD_CODES = new Set([
+  'plat_pm_templates_templates',
+  'plat_pm_templates_forms',
+  'plat_pm_project_templates_templates',
+  'plat_pm_project_templates_forms',
+  'sim_pm_templates_templates',
+  'sim_pm_templates_forms',
+  'sim_pm_project_templates_templates',
+  'sim_pm_project_templates_forms',
+])
+
+/**
+ * PM top-level rows with their own route normally stay single clickable links
+ * (strips legacy Executive Dashboard under Dashboard, etc.).
+ *
+ * Exception (v851): Organizational Templates + Project Templates keep their
+ * Forms / Templates submenu children so the sidebar can expand like Tasks/Teams.
+ */
+function collapsePmNavigableCategoryToLeaf(node = {}) {
+  const code = String(node?.menu_code || '').trim()
+  const isDashboard = code === 'plat_pm_dashboard'
+  const isOrgTemplates = code === 'plat_pm_templates' || code === 'sim_pm_templates'
+  const isProjectTemplates =
+    code === 'plat_pm_project_templates' || code === 'sim_pm_project_templates'
+  const isProjectDocuments =
+    code === 'plat_pm_project_documents' || code === 'sim_pm_project_documents'
+  if (!isDashboard && !isOrgTemplates && !isProjectTemplates && !isProjectDocuments) return node
+
+  const children = Array.isArray(node.children) ? node.children : []
+  if (!children.length) return node
+
+  // v851: keep Forms/Templates children; drop any other nested leftovers.
+  if (isOrgTemplates || isProjectTemplates) {
+    const kept = children.filter((child) =>
+      PM_TEMPLATES_SUBMENU_CHILD_CODES.has(String(child?.menu_code || '').trim()),
+    )
+    if (kept.length) {
+      return {
+        ...node,
+        route_path:
+          String(node.route_path || '').trim() ||
+          (isProjectTemplates ? '/platform/templates/project' : '/platform/templates'),
+        menu_icon:
+          node.menu_icon || (isProjectTemplates ? 'folder-kanban' : 'library'),
+        children: kept,
+      }
+    }
+  }
+
+  const ownRoute = String(node.route_path || '').trim()
+  if (ownRoute) {
+    return { ...node, children: [] }
+  }
+
+  if (isProjectDocuments) {
+    return {
+      ...node,
+      route_path: '/platform/documents/project',
+      menu_icon: node.menu_icon || 'file-text',
+      children: [],
+    }
+  }
+
+  if (isProjectTemplates) {
+    return {
+      ...node,
+      route_path: '/platform/templates/project',
+      menu_icon: node.menu_icon || 'folder-kanban',
+      children: [],
+    }
+  }
+
+  if (isOrgTemplates) {
+    return {
+      ...node,
+      route_path: '/platform/templates',
+      menu_icon: node.menu_icon || 'library',
+      children: [],
+    }
+  }
+
+  const preferred =
+    children.find((child) => {
+      const childCode = String(child?.menu_code || '').trim()
+      const path = String(child?.route_path || '').toLowerCase()
+      return (
+        childCode === 'plat_pm_dashboard' ||
+        (/\/pm\/dashboard|\/platform\/dashboard/.test(path) && !/executive/.test(path))
+      )
+    }) || children.find((child) => String(child?.route_path || '').trim())
+
+  return {
+    ...node,
+    route_path: preferred?.route_path || '/platform/dashboard',
+    menu_icon: node.menu_icon || preferred?.menu_icon || 'layout-dashboard',
+    children: [],
+  }
+}
+
 /** Remove PMO universal categories that leaked into PM layout trees. */
 export function filterPmLayoutMenuItems(items = []) {
   const walk = (nodes) =>
@@ -866,7 +1015,7 @@ export function filterPmLayoutMenuItems(items = []) {
             return target === 'plat_grp_pm_projects' && !(child.children || []).length
           })
         }
-        return { ...node, children }
+        return collapsePmNavigableCategoryToLeaf({ ...node, children })
       })
       .filter((node) => {
         if (node?.is_methodology_header) return true
@@ -885,15 +1034,28 @@ function relocatePmUniversalOrphans(universalNodes = [], orphans = [], layout = 
   for (const orphan of orphans) {
     const target = inferCategoryId(orphan, layout)
     if (!target || !PM_UNIVERSAL_CATEGORY_IDS.has(target)) continue
-    const cat = byCode.get(target)
-    if (!cat) continue
     const key = String(orphan?.menu_code || '')
+    // Leaf that is itself a universal category (e.g. plat_pm_templates) — promote, don't nest under a shell of itself.
+    if (key && key === target) {
+      if (!byCode.has(key)) {
+        byCode.set(key, { ...orphan, children: Array.isArray(orphan.children) ? orphan.children : [] })
+      }
+      continue
+    }
+    let cat = byCode.get(target)
+    if (!cat) {
+      const order = PM_CATEGORY_DEFS.find((d) => d.id === target)?.order ?? 999
+      cat = createCategoryShell(target, order, PM_CATEGORY_DEFS)
+      byCode.set(target, cat)
+    }
     const existing = new Set((cat.children || []).map((c) => String(c?.menu_code || '')))
     if (!key || existing.has(key)) continue
     cat.children = sortNodes([...(cat.children || []), orphan])
   }
 
-  return [...byCode.values()]
+  return PM_CATEGORY_DEFS.map((d) => byCode.get(d.id)).filter(Boolean).concat(
+    [...byCode.values()].filter((n) => !PM_UNIVERSAL_CATEGORY_IDS.has(String(n?.menu_code || '')))
+  )
 }
 
 /**
@@ -1042,6 +1204,19 @@ export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
     orphanCount += 1
     const catId = inferCategoryId(orphan, layout)
     if (!catId) continue
+    const orphanCode = String(orphan?.menu_code || '')
+    // Navigable leaf that is its own category (e.g. plat_pm_project_templates) — promote, don't nest under a shell.
+    if (
+      (layout === 'pm' || layout === 'tm') &&
+      orphanCode &&
+      orphanCode === catId &&
+      String(orphan?.route_path || '').trim()
+    ) {
+      if (!categoryByCode.has(orphanCode)) {
+        categoryByCode.set(orphanCode, sortChildren({ ...orphan, children: orphan.children || [] }))
+      }
+      continue
+    }
     let cat = categoryByCode.get(catId)
     if (!cat) {
       const order = trackOrder.get(catId) ?? categoryOrder.get(catId) ?? 999
@@ -1050,7 +1225,6 @@ export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
       if (trackCodes.has(catId)) trackCategoryNodes.push(cat)
     }
     const existingCodes = new Set((cat.children || []).map((c) => String(c?.menu_code || '')))
-    const orphanCode = String(orphan?.menu_code || '')
     if (!orphanCode || !existingCodes.has(orphanCode)) {
       cat.children = sortNodes([...(cat.children || []), orphan])
     }
@@ -1060,6 +1234,25 @@ export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
     .map((def) => categoryByCode.get(def.id))
     .filter(Boolean)
     .map(sortChildren)
+
+  // Keep new PM top-level leaves (granted from DB) visible even if they are not yet in PM_CATEGORY_DEFS.
+  if (layout === 'pm' || layout === 'tm') {
+    const seen = new Set(universalNodes.map((n) => String(n?.menu_code || '')))
+    for (const [code, node] of categoryByCode) {
+      if (seen.has(code)) continue
+      if (!/^plat_pm_/.test(code)) continue
+      const hasRoute = Boolean(String(node?.route_path || '').trim())
+      const hasChildren = (node.children || []).length > 0
+      if (!hasRoute && !hasChildren) continue
+      universalNodes.push(sortChildren(node))
+      seen.add(code)
+    }
+    universalNodes.sort((a, b) => {
+      const ao = categoryOrder.get(String(a?.menu_code || '')) ?? a?.sort_order ?? 999
+      const bo = categoryOrder.get(String(b?.menu_code || '')) ?? b?.sort_order ?? 999
+      return ao - bo
+    })
+  }
 
   trackCategoryNodes.sort((a, b) => {
     const ao = trackOrder.get(a.menu_code) ?? 999
@@ -1367,6 +1560,7 @@ export function applyCategoryPresentationLabels(nodes = []) {
     const code = String(node?.menu_code || '').trim()
     const presentation = CATEGORY_PRESENTATION_LABELS.get(code)
     const label = String(node?.menu_label || '').trim()
+    // Only fill missing/code-as-label shells — never override a real DB menu_label.
     const needsLabel =
       presentation &&
       (!label || label === code || label.toLowerCase() === code.toLowerCase())
@@ -1657,11 +1851,27 @@ export function nestExecutiveOverviewSections(universalNodes = [], layout = 'pmo
   })
 }
 
+/** v851/v852 Forms|Templates domainGroup leaves — not PMO "Forms & Documents". */
+function isTemplateDomainGroupSubmenuLeaf(node = {}) {
+  const code = String(node?.menu_code || '').toLowerCase()
+  const path = String(node?.route_path || '').toLowerCase()
+  if (/domaingrouproup=(forms|templates)/.test(path)) return true
+  return /_(?:tpl_library|tpl_organisational|pm_templates|pm_project_templates)_(?:forms|templates)$/.test(
+    code,
+  )
+}
+
 function classifyProjectDeliveryChild(node = {}, layout = 'pmo') {
   const code = String(node?.menu_code || '').toLowerCase()
   const label = String(node?.menu_label || '').toLowerCase()
   const path = String(node?.route_path || '').toLowerCase()
   const signal = `${code} ${label} ${path}`
+
+  // Keep Template Library / Organisational Templates Forms|Templates children on delivery.
+  // The workflows regex matches bare "forms" and would otherwise relocate them.
+  if (isTemplateDomainGroupSubmenuLeaf(node)) {
+    return 'other'
+  }
 
   if (
     /forms|draft forms|process group forms|\/pmo\/forms|authorisation|lifecycle dashboard|archive vault/.test(
@@ -1708,6 +1918,47 @@ function classifyProjectDeliveryChild(node = {}, layout = 'pmo') {
   }
 
   return 'other'
+}
+
+/**
+ * If Forms/Templates domainGroup leaves arrived as siblings of their parent
+ * (Template Library / Organisational Templates), nest them back under that parent.
+ */
+function attachTemplateDomainGroupSubmenus(nodes = []) {
+  const list = (nodes || []).map((n) => cloneMenuSubtree(n)).filter(Boolean)
+  const byCode = new Map(list.map((n) => [String(n?.menu_code || '').trim(), n]))
+
+  const parentForChildCode = (childCode) => {
+    const code = String(childCode || '').trim()
+    const pairs = [
+      ['plat_tpl_library_templates', 'plat_tpl_library'],
+      ['plat_tpl_library_forms', 'plat_tpl_library'],
+      ['sim_tpl_library_templates', 'sim_tpl_library'],
+      ['sim_tpl_library_forms', 'sim_tpl_library'],
+      ['plat_tpl_organisational_templates', 'plat_tpl_organisational'],
+      ['plat_tpl_organisational_forms', 'plat_tpl_organisational'],
+      ['sim_tpl_organisational_templates', 'sim_tpl_organisational'],
+      ['sim_tpl_organisational_forms', 'sim_tpl_organisational'],
+    ]
+    const hit = pairs.find(([child]) => child === code)
+    return hit ? hit[1] : null
+  }
+
+  const consumed = new Set()
+  for (const node of list) {
+    const code = String(node?.menu_code || '').trim()
+    const parentCode = parentForChildCode(code)
+    if (!parentCode) continue
+    const parent = byCode.get(parentCode)
+    if (!parent) continue
+    const existing = new Set((parent.children || []).map((c) => String(c?.menu_code || '').trim()))
+    if (!existing.has(code)) {
+      parent.children = sortNodes([...(parent.children || []), cloneMenuSubtree(node)])
+    }
+    consumed.add(code)
+  }
+
+  return list.filter((n) => !consumed.has(String(n?.menu_code || '').trim()))
 }
 
 function flattenDeliveryBucket(node, bucket, layout, acc) {
@@ -2004,7 +2255,10 @@ export function nestProjectDeliverySections(universalNodes = [], layout = 'pmo')
 
     const stayOnDelivery = misbucketedOrphans.filter((c) => inferCategoryId(c, layout) === deliveryCode)
     const relocateAway = misbucketedOrphans.filter((c) => inferCategoryId(c, layout) !== deliveryCode)
-    for (const leaf of stayOnDelivery) children.push(cloneMenuSubtree(leaf))
+    // Re-attach v851/v852 Forms|Templates leaves under their Template Library /
+    // Organisational Templates parents when the DB tree arrived flat.
+    const attached = attachTemplateDomainGroupSubmenus(stayOnDelivery)
+    for (const leaf of attached) children.push(cloneMenuSubtree(leaf))
     misbucketedOrphans.length = 0
     misbucketedOrphans.push(...relocateAway)
 

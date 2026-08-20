@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Calendar, AlertCircle, Clock, User } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam';
 import { getOverdueEntries } from '../services/dailyLogEntryService';
 import EntryTypeBadge from '../components/dailyLog/EntryTypeBadge';
 import EntryStatusBadge from '../components/dailyLog/EntryStatusBadge';
@@ -243,13 +244,19 @@ export default function MyDailyLogEntries() {
               )}
               <div className="flex gap-2">
                 <button
-                  onClick={() => navigate(`/app/projects/${entry.daily_log?.project_id}/daily-log/entry/${entry.id}`)}
+                  onClick={() => navigate(platformProjectPath(
+                    entry.daily_log?.projects?.project_code || entry.daily_log?.project_id,
+                    'daily-log', 'entry', entry.entry_code || entry.id,
+                  ))}
                   className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                 >
                   View Details
                 </button>
                 <button
-                  onClick={() => navigate(`/app/projects/${entry.daily_log?.project_id}/daily-log`)}
+                  onClick={() => navigate(platformProjectPath(
+                    entry.daily_log?.projects?.project_code || entry.daily_log?.project_id,
+                    'daily-log',
+                  ))}
                   className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
                 >
                   View Log

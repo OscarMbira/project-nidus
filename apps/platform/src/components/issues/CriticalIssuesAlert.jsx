@@ -23,23 +23,23 @@ export default function CriticalIssuesAlert({ projectId }) {
   const loadCriticalIssues = async () => {
     setLoading(true)
     try {
-      const registerResult = await getIssueRegisterByProject(projectId)
-      if (registerResult.success && registerResult.data) {
-        const issuesResult = await getIssues(registerResult.data.id, {})
-        if (issuesResult.success && issuesResult.data) {
-          // Filter critical/high priority issues that are open
-          const critical = (issuesResult.data || []).filter(issue => {
-            const isOpen = !['closed', 'cancelled', 'resolved'].includes(issue.status)
-            const isCritical = issue.priority === 'critical' || 
-                              issue.severity === 'critical' ||
-                              (issue.priority === 'high' && issue.severity === 'major')
-            return isOpen && isCritical
-          })
-          setCriticalIssues(critical.slice(0, 5)) // Show top 5
-        }
+      const register = await getIssueRegisterByProject(projectId)
+      if (!register?.id) {
+        setCriticalIssues([])
+        return
       }
+      const issuesList = await getIssues(register.id, {})
+      const critical = (Array.isArray(issuesList) ? issuesList : []).filter((issue) => {
+        const isOpen = !['closed', 'cancelled', 'resolved'].includes(issue.status)
+        const isCritical =
+          issue.priority === 'critical' ||
+          issue.severity === 'critical' ||
+          (issue.priority === 'high' && issue.severity === 'major')
+        return isOpen && isCritical
+      })
+      setCriticalIssues(critical.slice(0, 5))
     } catch (error) {
-      console.error('Error loading critical issues:', error)
+      console.warn('Critical issues alert unavailable:', error?.message || error)
       setCriticalIssues([])
     } finally {
       setLoading(false)

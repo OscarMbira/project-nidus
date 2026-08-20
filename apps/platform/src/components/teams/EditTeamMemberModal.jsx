@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X, Loader } from 'lucide-react'
 import { getTeamFunctionalRoles, updateTeamMember } from '../../services/teamService'
 import { useToast } from '@nidus/shared/hooks/useToast'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function EditTeamMemberModal({ isOpen, onClose, teamId, member, onSuccess }) {
   const { showToast } = useToast()
@@ -12,6 +19,25 @@ export default function EditTeamMemberModal({ isOpen, onClose, teamId, member, o
   const [allocation, setAllocation] = useState(100)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [auditRecord, setAuditRecord] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !member?.id) return
+    ;(async () => {
+      const { data } = await platformDb
+        .from('team_members')
+        .select('created_by, created_at, updated_by, updated_at')
+        .eq('id', member.id)
+        .maybeSingle()
+      if (data) {
+        setAuditRecord(data)
+        const labels = await resolveAuditUserLabels(platformDb, [data.created_by, data.updated_by])
+        setAuditUserLabels(labels)
+      }
+    })()
+  }, [formTab, member?.id])
 
   useEffect(() => {
     if (!isOpen || !teamId || !member) return
@@ -70,7 +96,31 @@ export default function EditTeamMemberModal({ isOpen, onClose, teamId, member, o
           {member.users?.full_name || member.users?.email || 'Member'}
         </p>
 
-        {loading ? (
+        <div className="mb-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          !auditRecord ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading audit details…</p>
+          ) : (
+            <AuditDetailsPanel description="Who added or changed this team member, and how they are classified.">
+              <AuditCard title="Identity" description="How this member is labelled and tracked.">
+                <AuditField label="Name" value={member.users?.full_name || member.users?.email} />
+                <AuditField label="Role" value={member.member_role} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Allocation on this team.">
+                <AuditField label="Allocation %" value={member.allocation_percentage != null ? `${member.allocation_percentage}%` : null} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this member was added and last changed.">
+                <AuditField label="Created by" value={auditRecord.created_by ? auditUserLabels[auditRecord.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={auditRecord.created_at} />
+                <AuditField label="Updated by" value={auditRecord.updated_by ? auditUserLabels[auditRecord.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={auditRecord.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        ) : loading ? (
           <Loader className="w-8 h-8 animate-spin mx-auto text-blue-500" />
         ) : (
           <div className="space-y-4">

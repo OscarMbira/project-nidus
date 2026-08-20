@@ -2,7 +2,7 @@
  * userAvatarService unit tests (v894 — Profile Picture)
  */
 
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   getUserAvatar,
   saveUserAvatar,
@@ -11,6 +11,7 @@ import {
   validateAvatarFile,
   MAX_AVATAR_FILE_SIZE_BYTES,
 } from '../userAvatarService'
+import { clearSignedImageCache } from '../signedImageCache'
 
 function makeFile({ name = 'photo.png', type = 'image/png', size = 1024 } = {}) {
   return { name, type, size }
@@ -104,6 +105,22 @@ describe('saveUserAvatar', () => {
     const result = await saveUserAvatar(db, makeFile(), null)
     expect(result.success).toBe(false)
   })
+
+  it('fails (not a silent success) when the UPDATE affects 0 rows — e.g. RLS blocked it', async () => {
+    const db = makeDb()
+    db.storage.from.mockReturnValue({
+      upload: vi.fn().mockResolvedValue({ error: null }),
+    })
+    // PostgREST returns data: null, error: null for an UPDATE that matched 0 rows —
+    // no thrown error, so this must be checked explicitly rather than assumed to be a
+    // successful write just because the image itself uploaded to storage fine.
+    db.from.mockReturnValue(chainable({ data: null, error: null }))
+
+    const result = await saveUserAvatar(db, makeFile(), 'account-1')
+
+    expect(result.success).toBe(false)
+    expect(result.message).toMatch(/could not be saved to your profile/i)
+  })
 })
 
 describe('removeUserAvatar', () => {
@@ -137,6 +154,10 @@ describe('removeUserAvatar', () => {
 })
 
 describe('getAvatarSignedUrl', () => {
+  beforeEach(() => {
+    clearSignedImageCache()
+  })
+
   it('creates a signed URL against the user-avatars bucket', async () => {
     const db = makeDb()
     const createSignedUrl = vi.fn().mockResolvedValue({ data: { signedUrl: 'https://signed.example/avatar.png' }, error: null })
@@ -148,5 +169,18 @@ describe('getAvatarSignedUrl', () => {
     expect(result.data).toBe('https://signed.example/avatar.png')
     expect(db.storage.from).toHaveBeenCalledWith('user-avatars')
     expect(createSignedUrl).toHaveBeenCalledWith('account-1/auth-1/avatar.png', 86400)
+  })
+
+  it('reuses a cached signed URL instead of minting a new token', async () => {
+    const db = makeDb()
+    const createSignedUrl = vi.fn().mockResolvedValue({ data: { signedUrl: 'https://signed.example/avatar.png' }, error: null })
+    db.storage.from.mockReturnValue({ createSignedUrl })
+
+    await getAvatarSignedUrl(db, 'account-1/auth-1/avatar.png')
+    const second = await getAvatarSignedUrl(db, 'account-1/auth-1/avatar.png')
+
+    expect(second.success).toBe(true)
+    expect(second.data).toBe('https://signed.example/avatar.png')
+    expect(createSignedUrl).toHaveBeenCalledTimes(1)
   })
 })

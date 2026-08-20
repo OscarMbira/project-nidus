@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function TestRunForm({ projectId, suites, onSave, onClose, projectIdKey = 'project_id' }) {
@@ -11,6 +12,7 @@ export default function TestRunForm({ projectId, suites, onSave, onClose, projec
     notes: '',
   })
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
 
   const submit = async (e) => {
     e.preventDefault()
@@ -44,6 +46,11 @@ export default function TestRunForm({ projectId, suites, onSave, onClose, projec
             <X className="h-5 w-5" />
           </button>
         </div>
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        {formTab === 'audit' ? (
+          <p className="text-sm text-gray-400">Audit details appear after this test run is saved.</p>
+        ) : (
+        <>
         <div>
           <label className="block text-xs text-gray-400 mb-1">Run name *</label>
           <input
@@ -103,6 +110,8 @@ export default function TestRunForm({ projectId, suites, onSave, onClose, projec
             className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm"
           />
         </div>
+        </>
+        )}
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"

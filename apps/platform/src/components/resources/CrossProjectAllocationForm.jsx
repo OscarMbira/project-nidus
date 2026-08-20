@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { X, Save, Users, FolderKanban, Target, Calendar, AlertTriangle } from 'lucide-react';
 import { saveCrossProjectAllocation, checkResourceConflicts } from '../../services/crossResourceService';
 import { supabase } from '../../services/supabaseClient';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function CrossProjectAllocationForm({ allocation, onSave, onCancel }) {
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
   const [formData, setFormData] = useState({
     resource_id: '',
     project_id: '',
@@ -48,6 +56,14 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
     }
     fetchLookupData();
   }, [allocation]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !allocation) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(supabase, [allocation.created_by, allocation.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, allocation]);
 
   useEffect(() => {
     // Check for conflicts when relevant fields change
@@ -181,6 +197,34 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
           </button>
         </div>
 
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          <div className="p-6">
+            {!allocation ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this allocation is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this allocation, and how it is classified.">
+                <AuditCard title="Identity" description="How this allocation is labelled and tracked.">
+                  <AuditField label="Status" value={humanizeAuditToken(allocation.allocation_status)} />
+                  <AuditField label="Type" value={humanizeAuditToken(allocation.allocation_type)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this allocation is prioritised.">
+                  <AuditField label="Priority" value={humanizeAuditToken(allocation.allocation_priority)} />
+                  <AuditField label="Critical resource" value={allocation.is_critical_resource ? 'Yes' : 'No'} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this allocation was created and last changed.">
+                  <AuditField label="Created by" value={allocation.created_by ? auditUserLabels[allocation.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={allocation.created_at} />
+                  <AuditField label="Updated by" value={allocation.updated_by ? auditUserLabels[allocation.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={allocation.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Resource Selection */}
           <div className="space-y-4">
@@ -494,6 +538,7 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X, Save, PauseCircle } from 'lucide-react'
 import { SEAM_LEVELS, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { saveDraft } from '../../services/draftQueueService'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function StakeholderAssessmentMatrixForm({
@@ -24,6 +31,21 @@ export default function StakeholderAssessmentMatrixForm({
   const [saving, setSaving] = useState(false)
   const [holding, setHolding] = useState(false)
   const [error, setError] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        record.created_by,
+        record.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, record])
 
   useEffect(() => {
     if (record) {
@@ -109,6 +131,33 @@ export default function StakeholderAssessmentMatrixForm({
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !record?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this assessment is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this assessment, and how it is classified.">
+                <AuditCard title="Identity" description="How this assessment is labelled and tracked.">
+                  <AuditField label="Stakeholder" value={stakeholders.find((s) => s.id === (formData.stakeholder_id || record.stakeholder_id))?.stakeholder_name} />
+                  <AuditField label="Assessment date" value={formData.assessment_date || record.assessment_date} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this assessment sits.">
+                  <AuditField label="Current level" value={prettySeamLevel(formData.current_level || record.current_level)} />
+                  <AuditField label="Desired level" value={prettySeamLevel(formData.desired_level || record.desired_level)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this assessment was created and last changed.">
+                  <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                  <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {error && (
             <p className="text-sm text-red-400 bg-red-950/50 border border-red-800 rounded-lg px-3 py-2">
               {error}
@@ -186,6 +235,8 @@ export default function StakeholderAssessmentMatrixForm({
               className={fieldClass}
             />
           </div>
+          </>
+          )}
           <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-gray-700">
             <button
               type="button"

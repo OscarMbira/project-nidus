@@ -14,8 +14,9 @@
 
 -- ---------------------------------------------------------------------------
 -- 1) public.auth_user_has_project_manager_role
---    Same join pattern as v185/v191 (project_memberships ⋈ project_roles,
---    role_name = 'Project Manager'), plus named projects.project_manager_user_id.
+--    Canonical project_roles.role_name is 'project_manager' (v91); also accept
+--    spaced variants, user_projects.project_role, and named PM column.
+--    (v855 tightens matching further for already-applied DBs.)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.auth_user_has_project_manager_role(p_project_id UUID)
 RETURNS BOOLEAN
@@ -37,7 +38,17 @@ AS $$
           AND u.auth_user_id = auth.uid()
           AND COALESCE(pm.is_active, TRUE) = TRUE
           AND COALESCE(pr.is_active, TRUE) = TRUE
-          AND pr.role_name = 'Project Manager'
+          AND lower(replace(trim(pr.role_name), ' ', '_')) = 'project_manager'
+      )
+      OR EXISTS (
+        SELECT 1
+        FROM public.user_projects up
+        INNER JOIN public.users u ON u.id = up.user_id
+        WHERE up.project_id = p_project_id
+          AND u.auth_user_id = auth.uid()
+          AND COALESCE(up.is_deleted, FALSE) = FALSE
+          AND COALESCE(up.is_active, TRUE) = TRUE
+          AND lower(replace(trim(up.project_role), ' ', '_')) = 'project_manager'
       )
       OR EXISTS (
         SELECT 1
@@ -47,11 +58,22 @@ AS $$
           AND COALESCE(proj.is_deleted, FALSE) = FALSE
           AND u.auth_user_id = auth.uid()
       )
+      OR EXISTS (
+        SELECT 1
+        FROM public.user_roles ur
+        INNER JOIN public.roles r ON r.id = ur.role_id
+        INNER JOIN public.users u ON u.id = ur.user_id
+        WHERE ur.project_id = p_project_id
+          AND u.auth_user_id = auth.uid()
+          AND COALESCE(ur.is_active, TRUE) = TRUE
+          AND COALESCE(ur.is_deleted, FALSE) = FALSE
+          AND lower(replace(trim(r.role_name), ' ', '_')) = 'project_manager'
+      )
     );
 $$;
 
 COMMENT ON FUNCTION public.auth_user_has_project_manager_role(UUID) IS
-  'TRUE if the authenticated user holds project_roles.role_name = Project Manager on the project (memberships) or is the named project_manager_user_id (v853 local forms).';
+  'TRUE if the user is Project Manager on the project via memberships (project_manager), user_projects, named PM column, or project-scoped suite role (v853/v855).';
 
 GRANT EXECUTE ON FUNCTION public.auth_user_has_project_manager_role(UUID) TO authenticated;
 

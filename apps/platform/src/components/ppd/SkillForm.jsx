@@ -6,6 +6,13 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addSkill, updateSkill } from '../../services/ppdSkillsService'
+import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -20,6 +27,18 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !skill) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [skill.created_by, skill.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, skill])
 
   useEffect(() => {
     if (skill) {
@@ -102,6 +121,34 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !skill?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this skill is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this skill, and how it is classified.">
+              <AuditCard title="Identity" description="How this skill is labelled and tracked.">
+                <AuditField label="Skill name" value={formData.skill_name || skill.skill_name} />
+                <AuditField label="Category" value={humanizeAuditToken(skill.skill_category)} />
+                <AuditField label="Proficiency level" value={humanizeAuditToken(skill.proficiency_level)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this skill applies.">
+                <AuditField label="Resource area" value={skill.resource_area} />
+                <AuditField label="Required for" value={skill.required_for} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this skill was created and last changed.">
+                <AuditField label="Created by" value={skill.created_by ? auditUserLabels[skill.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={skill.created_at} />
+                <AuditField label="Updated by" value={skill.updated_by ? auditUserLabels[skill.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={skill.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Skill Name <span className="text-red-500">*</span>
@@ -212,6 +259,8 @@ export default function SkillForm({ ppdId, skill = null, mode = 'create', onSave
             <span className="text-sm text-gray-700 dark:text-gray-300">Critical skill</span>
           </label>
         </div>
+        </>
+        )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {onCancel && (

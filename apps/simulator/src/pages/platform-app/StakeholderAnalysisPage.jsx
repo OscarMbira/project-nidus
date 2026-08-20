@@ -9,6 +9,7 @@ import { getStakeholders, getStakeholderAnalysis, saveStakeholderAnalysis, delet
 import PowerInterestMatrix from '../../components/stakeholders/PowerInterestMatrix'
 import StakeholderAnalysisForm from '../../components/stakeholders/StakeholderAnalysisForm'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '@nidus/supabase'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -219,17 +220,26 @@ export default function StakeholderAnalysisPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {analysis.map(a => (
+              {analysis.map((a, index) => (
                 <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{a.stakeholder?.stakeholder_name || '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.power_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.interest_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm capitalize">{a.matrix_quadrant?.replace('-', ' ') || '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.current_attitude || '—'}</td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => { setEditingAnalysis(a); setShowForm(true) }} className="text-blue-600 dark:text-blue-400 mr-2">Edit</button>
-                    <button onClick={() => handleDelete(a)} disabled={deleting === a.id} className="text-red-600 dark:text-red-400 disabled:opacity-50">Delete</button>
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit analysis"
+                      onClick={() => { setEditingAnalysis(a); setShowForm(true) }}
+                    />
+                    <RowActionButton
+                      variant="delete"
+                      label="Delete analysis"
+                      onClick={() => handleDelete(a)}
+                      disabled={deleting === a.id}
+                    />
                   </td>
                 </tr>
               ))}

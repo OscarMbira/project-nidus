@@ -1,4 +1,5 @@
-import { Table2, AlertTriangle, Pencil } from 'lucide-react'
+import { Table2, AlertTriangle } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '../ui/ExportListMenu'
 import { SEAM_LEVELS, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
@@ -140,14 +141,11 @@ export default function StakeholderSEAM({
                   </td>
                   {onEdit && (
                     <td className="px-4 py-3 text-right">
-                      <button
-                        type="button"
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit assessment"
                         onClick={() => onEdit(row.raw || row)}
-                        className="inline-flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit
-                      </button>
+                      />
                     </td>
                   )}
                 </tr>

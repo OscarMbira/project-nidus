@@ -3,6 +3,8 @@
  * Functions for exporting Quality Management Strategy data
  */
 
+import { addCanvasImagePages } from './pdfCanvasPagination.js'
+
 /**
  * Export QMS to CSV
  * @param {Object} qms - QMS data
@@ -13,6 +15,7 @@
  * @param {Array} activities - Scheduled activities
  * @param {string} filename - Output filename
  */
+
 export function exportQMSToCSV(qms, standards, methods, metrics, roles, activities, filename = null) {
   if (!qms) {
     alert('No QMS data to export')
@@ -320,18 +323,7 @@ export async function exportQMSToPDF(qms, standards, methods, metrics, roles, ac
     const imgWidth = 210
     const pageHeight = 297
     const imgHeight = (canvas.height * imgWidth) / canvas.width
-    let heightLeft = imgHeight
-    let position = 0
-    
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-    
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
     
     // Cleanup
     document.body.removeChild(container)

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -18,6 +19,12 @@ import {
   resolveInviteeNamesForInvitation,
   resolveInviterDisplayName,
 } from '@nidus/shared/utils/invitationInviteeFormat'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 function formatDisplayDate(value) {
   if (!value) return '—'
@@ -128,6 +135,7 @@ export default function InvitationDetailPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const invitation = location.state?.invitation
+  const [activeTab, setActiveTab] = useState('details')
 
   if (!invitation) {
     return (
@@ -171,6 +179,26 @@ export default function InvitationDetailPage() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Invitation Details</h1>
         </div>
 
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+        {activeTab === 'audit' ? (
+          <AuditDetailsPanel description="Who sent this invitation, and how it is classified.">
+            <AuditCard title="Identity" description="How this invitation is labelled and tracked.">
+              <AuditField label="Invitee email" value={invitation.invited_email} />
+              <AuditField label="Status" value={humanizeAuditToken(invitation.invitation_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="What this invitation is for.">
+              <AuditField label="Entity type" value={entityType} />
+              <AuditField label="Role" value={invitation.role_display_name || invitation.role_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this invitation was sent and last changed.">
+              <AuditField label="Invited by" value={inviterDisplayName} />
+              <AuditTimestampPair dateLabel="Invitation sent" value={invitation.invitation_sent_at || invitation.sent_at} />
+              <AuditTimestampPair dateLabel="Last updated" value={invitation.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        ) : (
+        <>
         {/* Hero header */}
         <div className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 text-white shadow-md">
           <div className="flex items-start gap-3">
@@ -252,6 +280,8 @@ export default function InvitationDetailPage() {
             />
           </div>
         ) : null}
+        </>
+        )}
 
       </div>
     </div>

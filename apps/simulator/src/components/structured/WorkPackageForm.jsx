@@ -5,6 +5,12 @@ import { X, Save, Calendar, User, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { HoldButton } from '../ui/HoldButton'
 import InheritedWorkPackageFields from '../../features/local-data-extensions/components/InheritedWorkPackageFields'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function WorkPackageForm({
   workPackage,
@@ -34,6 +40,22 @@ export default function WorkPackageForm({
   const [teamMembers, setTeamMembers] = useState([])
   const [saving, setSaving] = useState(false)
   const [newDeliverable, setNewDeliverable] = useState('')
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !workPackage) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        workPackage.created_by,
+        workPackage.updated_by,
+        workPackage.assigned_to_user_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, workPackage])
 
   useEffect(() => {
     if (accountIdProp) {
@@ -80,16 +102,17 @@ export default function WorkPackageForm({
   const fetchTeamMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('project_members')
+        .from('project_memberships')
         .select(`
-          *,
+          id,
+          user_id,
           user:user_id (id, email, full_name)
         `)
         .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
 
       if (error) throw error
-      setTeamMembers(data || [])
+      setTeamMembers((data || []).filter((m) => m.user_id))
     } catch (error) {
       console.error('Error fetching team members:', error)
     }
@@ -180,6 +203,40 @@ export default function WorkPackageForm({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !workPackage?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this work package is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this work package, and how it is classified.">
+                <AuditCard title="Identity" description="How this work package is labelled and tracked.">
+                  <AuditField label="Code" value={workPackage.work_package_code} />
+                  <AuditField label="Name" value={formData.work_package_name || workPackage.work_package_name} />
+                  <AuditField label="Status" value={humanizeAuditToken(workPackage.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this work package sits.">
+                  <AuditField
+                    label="Assigned to"
+                    value={
+                      formData.assigned_to_user_id || workPackage.assigned_to_user_id
+                        ? auditUserLabels[formData.assigned_to_user_id || workPackage.assigned_to_user_id] || null
+                        : null
+                    }
+                  />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this work package was created and last changed.">
+                  <AuditField label="Created by" value={workPackage.created_by ? auditUserLabels[workPackage.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={workPackage.created_at} />
+                  <AuditField label="Updated by" value={workPackage.updated_by ? auditUserLabels[workPackage.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={workPackage.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -412,6 +469,8 @@ export default function WorkPackageForm({
               workPackageId={workPackage.id}
               mode="edit"
             />
+          )}
+          </>
           )}
 
           {/* Actions */}

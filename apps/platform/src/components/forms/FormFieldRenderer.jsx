@@ -1,8 +1,23 @@
 import { parseShorthandNumber } from '../../services/formCalculations'
 import { formatWithSeparators } from '@nidus/shared/utils/amountShorthand'
 import { formatLocaleNumber } from '@nidus/shared/utils/localeFormat'
+import AttachmentField from './AttachmentField'
 
-export default function FormFieldRenderer({ field, value, onChange, resolveOptionLabel, languageCode }) {
+export default function FormFieldRenderer({
+  field, value, onChange, resolveOptionLabel, languageCode, formInstanceId = null, disabled = false, mode = 'platform',
+}) {
+  if (field.type === 'attachment') {
+    return (
+      <AttachmentField
+        field={field}
+        formInstanceId={formInstanceId}
+        onChange={onChange}
+        disabled={disabled}
+        mode={mode}
+      />
+    )
+  }
+
   const common = {
     className: 'w-full rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-950 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500',
     value: value ?? '',

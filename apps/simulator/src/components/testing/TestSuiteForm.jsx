@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
 import { X, Save, FolderOpen } from 'lucide-react'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SUITE_TYPES = ['functional','regression','smoke','uat','performance','security','integration','exploratory','sanity']
 const STATUSES    = ['draft','active','archived']
@@ -17,6 +24,16 @@ export default function TestSuiteForm({ suite, projectId, onSave, onClose, proje
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !suite) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [suite.created_by, suite.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, suite])
 
   useEffect(() => {
     if (suite) {
@@ -90,7 +107,34 @@ export default function TestSuiteForm({ suite, projectId, onSave, onClose, proje
           </button>
         </div>
 
-        {/* Form */}
+        <div className="px-5 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          <div className="p-5">
+            {!suite ? (
+              <p className="text-sm text-gray-400">Audit details appear after this test suite is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this test suite, and how it is classified.">
+                <AuditCard title="Identity" description="How this test suite is labelled and tracked.">
+                  <AuditField label="Name" value={suite.name} />
+                  <AuditField label="Status" value={humanizeAuditToken(suite.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this test suite is categorised.">
+                  <AuditField label="Suite type" value={humanizeAuditToken(suite.suite_type)} />
+                  <AuditField label="Version" value={suite.version} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this test suite was created and last changed.">
+                  <AuditField label="Created by" value={suite.created_by ? auditUserLabels[suite.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={suite.created_at} />
+                  <AuditField label="Updated by" value={suite.updated_by ? auditUserLabels[suite.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={suite.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {field('Suite Name', 'name', 'text', true)}
 
@@ -156,6 +200,7 @@ export default function TestSuiteForm({ suite, projectId, onSave, onClose, proje
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   )

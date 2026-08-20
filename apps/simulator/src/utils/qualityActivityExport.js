@@ -3,6 +3,8 @@
  * Provides export functionality for quality activities (PDF, CSV, Excel, Print)
  */
 
+import { addCanvasImagePages } from './pdfCanvasPagination.js'
+
 /**
  * Export quality activity to PDF matching template structure
  * @param {Object} activity - Quality activity data
@@ -11,6 +13,7 @@
  * @param {Array} actions - Action items
  * @param {string} filename - Output filename
  */
+
 export async function exportActivityToPDF(activity, participants = [], records = [], actions = [], filename = null) {
   try {
     // Dynamic import to reduce bundle size
@@ -49,18 +52,7 @@ export async function exportActivityToPDF(activity, participants = [], records =
     const imgWidth = 210;
     const pageHeight = 297;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
 
     // Cleanup
     document.body.removeChild(container);
@@ -516,18 +508,7 @@ export async function exportActivitiesSummaryToPDF(activities, project = null, f
     const imgWidth = 210;
     const pageHeight = 297;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
 
     document.body.removeChild(container);
 

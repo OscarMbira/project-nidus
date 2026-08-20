@@ -4,7 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Settings, Plus, Edit } from 'lucide-react'
+import { Settings, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeConfigMS, createPracticeConfigMS, updatePracticeConfigMS } from '../../services/sim/practiceConfigMSService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
@@ -77,9 +78,7 @@ export default function PracticeConfigMSList() {
         <div className="flex gap-2">
           {configMs && <ExportListMenu columns={PRACTICE_CONFIG_MS_COLUMNS} data={[configMs]} baseFilename="PracticeConfigMS" />}
           {configMs && !editing && (
-          <button onClick={() => setEditing(true)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+            <RowActionButton variant="edit" label="Edit configuration MS" onClick={() => setEditing(true)} />
           )}
         </div>
       </div>

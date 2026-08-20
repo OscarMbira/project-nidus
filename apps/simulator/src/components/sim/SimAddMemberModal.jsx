@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { X, Loader, Search } from 'lucide-react'
 import { searchUsersForSimInvite } from '../../services/sim/simProjectMembershipService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimAddMemberModal({ isOpen, onClose, assignableRoles, onAdd }) {
   const [q, setQ] = useState('')
@@ -9,6 +10,7 @@ export default function SimAddMemberModal({ isOpen, onClose, assignableRoles, on
   const [selected, setSelected] = useState(null)
   const [roleName, setRoleName] = useState('team_member')
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (!isOpen) {
@@ -62,6 +64,12 @@ export default function SimAddMemberModal({ isOpen, onClose, assignableRoles, on
             </button>
           </div>
 
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Audit details appear after this member is added.</p>
+          ) : (
+          <>
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -122,6 +130,8 @@ export default function SimAddMemberModal({ isOpen, onClose, assignableRoles, on
               {saving ? <Loader className="w-4 h-4 animate-spin" /> : 'Add'}
             </button>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

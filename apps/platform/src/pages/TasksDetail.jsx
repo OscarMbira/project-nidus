@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
-import { Edit2, Save, X, Trash2, AlertTriangle, AlertCircle, Plus } from 'lucide-react'
+import { Save, X, AlertTriangle, AlertCircle, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import TaskComments from '../components/TaskComments'
 import TaskAttachments from '../components/TaskAttachments'
 import TaskDependencies from '../components/TaskDependencies'
@@ -365,13 +366,11 @@ export default function TasksDetail() {
                     {task.task_statuses.status_name}
                   </span>
                 )}
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit task"
                   onClick={handleEdit}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit
-                </button>
+                />
               </>
             ) : (
               <div className="flex gap-2">

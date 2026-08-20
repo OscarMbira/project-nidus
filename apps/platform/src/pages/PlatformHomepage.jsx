@@ -119,8 +119,8 @@ const Header = memo(({ isLoggedIn, onHomeClick }) => {
 
   return (
     <header className="sticky top-0 z-50 shadow-sm border-b backdrop-blur-md" style={{ background: 'linear-gradient(135deg, #0F2027 0%, #203A43 100%)', borderColor: '#203A43' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+        <Link to="/" className="flex items-center gap-3 shrink-0">
           <Zap className="h-6 w-6" style={{ color: '#A8DADC' }} />
           <div className="flex flex-col">
             <span className="text-3xl font-bold">
@@ -133,31 +133,31 @@ const Header = memo(({ isLoggedIn, onHomeClick }) => {
             </div>
           </div>
         </Link>
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-3 lg:gap-4 ml-6 lg:ml-8 shrink-0">
           <button
             type="button"
             onClick={onHomeClick}
-            className="text-sm font-medium transition-colors bg-transparent border-none cursor-pointer"
+            className="whitespace-nowrap text-sm font-medium transition-colors bg-transparent border-none cursor-pointer"
             style={{ color: '#A8DADC' }}
             onMouseEnter={handleNavMouseEnter}
             onMouseLeave={handleNavMouseLeave}
           >
             Home
           </button>
-          <Link to="/platform/features" className="text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Features</Link>
-          <Link to="/platform/blog" className="text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Blog</Link>
-          <Link to="/platform/resources" className="text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Resources</Link>
-          <Link to="/platform/pricing" className="text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Pricing</Link>
-          <Link to="/documentation/platform" className="text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Documentation</Link>
-          <Link to="/platform/affiliate" className="text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Become an Affiliate</Link>
+          <Link to="/platform/features" className="whitespace-nowrap text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Features</Link>
+          <Link to="/platform/blog" className="whitespace-nowrap text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Blog</Link>
+          <Link to="/platform/resources" className="whitespace-nowrap text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Resources</Link>
+          <Link to="/platform/pricing" className="whitespace-nowrap text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Pricing</Link>
+          <Link to="/documentation/platform" className="whitespace-nowrap text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Documentation</Link>
         </nav>
-        <div className="flex items-center gap-3">
-          <Link to="/platform/request-demo" className="hidden md:inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors" style={{ color: '#A8DADC', borderColor: '#A8DADC', border: '1px solid' }} onMouseEnter={handleButtonMouseEnter} onMouseLeave={handleButtonMouseLeave}>Request Demo</Link>
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          <Link to="/platform/affiliate" className="hidden md:inline-flex whitespace-nowrap text-sm font-medium transition-colors" style={{ color: '#A8DADC' }} onMouseEnter={handleNavMouseEnter} onMouseLeave={handleNavMouseLeave}>Become an Affiliate</Link>
+          <Link to="/platform/request-demo" className="hidden md:inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium transition-colors" style={{ color: '#A8DADC', borderColor: '#A8DADC', border: '1px solid' }} onMouseEnter={handleButtonMouseEnter} onMouseLeave={handleButtonMouseLeave}>Request Demo</Link>
           <ThemeToggle />
-          <Button variant="outline" asChild className="bg-transparent shadow-lg transition-colors" style={{ borderColor: '#A8DADC', color: '#A8DADC' }} onMouseEnter={handleButtonMouseEnter} onMouseLeave={handleButtonMouseLeave}>
+          <Button variant="outline" size="sm" asChild className="whitespace-nowrap bg-transparent shadow-lg transition-colors" style={{ borderColor: '#A8DADC', color: '#A8DADC' }} onMouseEnter={handleButtonMouseEnter} onMouseLeave={handleButtonMouseLeave}>
             <Link to="/login">Login</Link>
           </Button>
-          <Button asChild className="text-white shadow-lg transition-colors" style={{ background: '#E63946' }} onMouseEnter={handleSignUpMouseEnter} onMouseLeave={handleSignUpMouseLeave}>
+          <Button size="sm" asChild className="whitespace-nowrap text-white shadow-lg transition-colors" style={{ background: '#E63946' }} onMouseEnter={handleSignUpMouseEnter} onMouseLeave={handleSignUpMouseLeave}>
             <Link to="/platform/register">Sign Up</Link>
           </Button>
         </div>

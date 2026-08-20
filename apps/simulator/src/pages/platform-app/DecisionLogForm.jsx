@@ -4,6 +4,12 @@ import { ArrowLeft, Save, CheckCircle, Gavel } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { getDecision, createDecision, updateDecision } from '../../services/decisionLogService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const EMPTY = {
   decision_title: '',
@@ -23,24 +29,12 @@ const CATEGORIES = ['general','technical','financial','risk','stakeholder','proc
 const STATUSES   = ['proposed','approved','rejected','deferred','superseded']
 const PRIORITIES = ['low','medium','high','critical']
 
-function parseShorthandNumber(raw) {
-  const s = String(raw || '').trim()
-  const m = s.match(/^([\d.]+)\s*([kmtbKMTB]?)$/)
-  if (!m) return raw
-  const n = parseFloat(m[1])
-  const suffix = m[2].toLowerCase()
-  if (suffix === 'k') return String(n * 1_000)
-  if (suffix === 'm') return String(n * 1_000_000)
-  if (suffix === 'b' || suffix === 't') return String(n * 1_000_000_000)
-  return raw
-}
-
 function Field({ label, name, value, onChange, type = 'text', options, rows }) {
-  const base = 'w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2.5 text-sm text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+  const base = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
   if (options) {
     return (
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
         <select name={name} value={value} onChange={onChange} className={base}>
           {options.map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase() + o.slice(1)}</option>)}
         </select>
@@ -50,14 +44,14 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
   if (rows) {
     return (
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
         <textarea name={name} value={value} onChange={onChange} rows={rows} className={`${base} resize-y`} />
       </div>
     )
   }
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{label}</label>
       <input type={type} name={name} value={value} onChange={onChange} className={base} />
     </div>
   )
@@ -74,6 +68,17 @@ export default function DecisionLogForm() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(isEdit)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     if (!isEdit) return
@@ -81,6 +86,7 @@ export default function DecisionLogForm() {
       setLoading(true)
       try {
         const data = await getDecision(id)
+        setRecord(data)
         setForm({
           decision_title: data.decision_title || '',
           description: data.description || '',
@@ -118,7 +124,7 @@ export default function DecisionLogForm() {
       }
       setSaved(true)
       toast.success(isEdit ? 'Decision updated' : `Decision created: ${result.decision_reference}`)
-      setTimeout(() => navigate(`/platform/governance/decisions?projectId=${projectId}`), 1200)
+      setTimeout(() => navigate(`/simulator/governance/decisions?projectId=${projectId}`), 1200)
     } catch (e) {
       toast.error(e?.message || 'Save failed')
     } finally {
@@ -128,23 +134,22 @@ export default function DecisionLogForm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 flex items-center justify-center min-h-[40vh]">
         <div className="h-8 w-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-6">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
       <div className="max-w-2xl mx-auto space-y-5">
-        {/* Header */}
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => navigate(-1)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 min-h-[40px]">
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
-          <h1 className="flex-1 text-xl font-bold text-white flex items-center gap-2">
-            <Gavel className="h-5 w-5 text-blue-400" />
+          <h1 className="flex-1 text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Gavel className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             {isEdit ? 'Edit Decision' : 'Record Decision'}
           </h1>
           <button type="button" onClick={handleSave} disabled={saving}
@@ -154,8 +159,35 @@ export default function DecisionLogForm() {
           </button>
         </div>
 
-        {/* Core fields */}
-        <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-5 space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' ? (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+            {!record ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this decision is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who recorded or changed this decision, and how it is classified.">
+                <AuditCard title="Identity" description="How this decision is labelled and tracked.">
+                  <AuditField label="Title" value={record.decision_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this decision is categorised.">
+                  <AuditField label="Category" value={humanizeAuditToken(record.category)} />
+                  <AuditField label="Priority" value={humanizeAuditToken(record.priority)} />
+                  <AuditField label="Decided by" value={record.decided_by_name} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this decision was created and last changed.">
+                  <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                  <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
+        <>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4">
           <Field label="Decision Title *" name="decision_title" value={form.decision_title} onChange={handleChange} />
           <Field label="Description" name="description" value={form.description} onChange={handleChange} rows={3} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -169,14 +201,15 @@ export default function DecisionLogForm() {
           </div>
         </div>
 
-        {/* Detail fields */}
-        <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-300">Decision Details</h2>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Decision Details</h2>
           <Field label="Rationale" name="rationale" value={form.rationale} onChange={handleChange} rows={3} />
           <Field label="Impact" name="impact" value={form.impact} onChange={handleChange} rows={3} />
           <Field label="Alternatives Considered" name="alternatives_considered" value={form.alternatives_considered} onChange={handleChange} rows={3} />
           <Field label="Review Date" name="review_date" value={form.review_date} onChange={handleChange} type="date" />
         </div>
+        </>
+        )}
 
         <div className="flex justify-end">
           <button type="button" onClick={handleSave} disabled={saving}

@@ -15,6 +15,12 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '../../../utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SECTIONS = [
   {
@@ -38,6 +44,8 @@ export default function ActivityDetail() {
   const [saving, setSaving] = useState(false)
   const [wbsNodes, setWbsNodes] = useState([])
   const [success, setSuccess] = useState(null)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
   const [form, setForm] = useState({
     activity_code: '',
     name: '',
@@ -75,6 +83,7 @@ export default function ActivityDetail() {
     const res = await simGetActivity(projectId, actId)
     if (res.success && res.data) {
       const d = res.data
+      setRecord(d)
       setForm({
         activity_code: d.activity_code || '',
         name: d.name || '',
@@ -126,6 +135,7 @@ export default function ActivityDetail() {
         user.id
       )
       if (!res.success) throw new Error(res.error)
+      setRecord(res.data)
       setSuccess({ message: 'Activity saved successfully.', id: res.data?.id })
       if (isNew && res.data?.id) {
         navigate(`/simulator/practice-projects/${projectId}/schedule/activities/${res.data.id}`, { replace: true })
@@ -174,6 +184,30 @@ export default function ActivityDetail() {
       )}
       {success?.error && <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-200">{success.error}</div>}
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this activity is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="When this activity was created and last changed.">
+              <AuditCard title="Identity" description="How this activity is labelled.">
+                <AuditField label="Name" value={record.name} />
+                <AuditField label="Code" value={record.activity_code} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this activity is tracked.">
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+                <AuditField label="Milestone" value={record.is_milestone ? 'Yes' : 'No'} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this activity was created and last changed.">
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -363,6 +397,7 @@ export default function ActivityDetail() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

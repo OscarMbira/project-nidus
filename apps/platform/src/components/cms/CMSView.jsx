@@ -4,10 +4,9 @@
  */
 
 import { useState, useEffect } from 'react'
-import { 
-  FileText, 
-  Edit2, 
-  CheckCircle, 
+import {
+  FileText,
+  CheckCircle,
   Clock, 
   MessageSquare, 
   Users, 
@@ -18,6 +17,13 @@ import {
   Megaphone,
   AlertCircle
 } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import { getCMSById, validateCompleteness, checkConformance } from '../../services/communicationManagementStrategyService'
 import { getChannels, getPreferredChannels } from '../../services/cmsCommunicationChannelsService'
 import { getMethods, getMandatoryMethods } from '../../services/cmsCommunicationMethodsService'
@@ -139,6 +145,8 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
     { id: 'roles', label: `Roles (${roles.length})`, icon: Users },
     { id: 'conformance', label: 'Conformance', icon: CheckCircle }
   ]
+
+  const VIEW_TABS = [...tabs.map((t) => ({ value: t.id, label: t.label })), { value: 'audit', label: 'Audit details' }]
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -526,6 +534,26 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
           </div>
         )
 
+      case 'audit':
+        return (
+          <AuditDetailsPanel description="Who created or changed this communication management strategy, and how it is classified.">
+            <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+              <AuditField label="Reference" value={cms.cms_reference} />
+              <AuditField label="Status" value={humanizeAuditToken(cms.status)} />
+              <AuditField label="Version" value={cms.version_number} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this strategy sits.">
+              <AuditField label="Project" value={cms.project?.project_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this strategy was created and last changed.">
+              <AuditField label="Created by" value={cms.created_by_user?.full_name || cms.created_by_user?.email} />
+              <AuditTimestampPair dateLabel="Created at" value={cms.created_at} />
+              <AuditField label="Updated by" value={cms.updated_by_user?.full_name || cms.updated_by_user?.email} />
+              <AuditTimestampPair dateLabel="Last updated" value={cms.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+
       default:
         return null
     }
@@ -549,13 +577,7 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
               {cms.status?.replace('_', ' ').toUpperCase() || 'DRAFT'}
             </span>
             {!readOnly && cms.status === 'draft' && onEdit && (
-              <button
-                onClick={onEdit}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit CMS" onClick={onEdit} />
             )}
           </div>
         </div>
@@ -563,26 +585,8 @@ export default function CMSView({ cmsId, onEdit, readOnly = true }) {
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex -mb-px overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </nav>
+        <div className="border-b border-gray-200 dark:border-gray-700 px-2 pt-2">
+          <DetailAuditTabList tabs={VIEW_TABS} activeTab={activeTab} onChange={setActiveTab} />
         </div>
         <div className="p-6">
           {renderTabContent()}

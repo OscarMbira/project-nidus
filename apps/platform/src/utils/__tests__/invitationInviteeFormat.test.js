@@ -7,6 +7,7 @@ import {
   resolveInviterDisplayName,
   resolveInviterDisplayNameFromUser,
   isHandleLikeDisplayName,
+  buildInvitationUserProfilePatch,
 } from '../invitationInviteeFormat'
 
 describe('invitationInviteeFormat', () => {
@@ -77,6 +78,48 @@ describe('invitationInviteeFormat', () => {
         inviter_last_name: 'Mbirablogging',
       }),
     ).toBe('Oscar Mbirablogging')
+  })
+
+  it('buildInvitationUserProfilePatch maps invitation name to full_name and role to job_title', () => {
+    expect(
+      buildInvitationUserProfilePatch(
+        {
+          invited_first_name: 'Arun',
+          invited_last_name: 'Quality Manager',
+          invited_email: 'qualityassurance@projectastute.com',
+          role_display_name: 'Quality Assurance',
+        },
+        {
+          full_name: 'qualityassurance',
+          email: 'qualityassurance@projectastute.com',
+          job_title: '',
+        },
+      ),
+    ).toEqual({
+      full_name: 'Arun Quality Manager',
+      first_name: 'Arun',
+      last_name: 'Quality Manager',
+      job_title: 'Quality Assurance',
+    })
+  })
+
+  it('buildInvitationUserProfilePatch does not overwrite a real profile name or job title', () => {
+    expect(
+      buildInvitationUserProfilePatch(
+        {
+          invited_first_name: 'Arun',
+          invited_last_name: 'Quality Manager',
+          role_display_name: 'Quality Assurance',
+        },
+        {
+          full_name: 'Arun Patel',
+          email: 'qualityassurance@projectastute.com',
+          first_name: 'Arun',
+          last_name: 'Patel',
+          job_title: 'QA Lead',
+        },
+      ),
+    ).toEqual({})
   })
 
   it('prepends Dear greeting when name not in body', () => {

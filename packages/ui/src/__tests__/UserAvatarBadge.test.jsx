@@ -6,6 +6,7 @@ const getAvatarSignedUrl = vi.fn()
 
 vi.mock('@nidus/shared/services/userAvatarService', () => ({
   getAvatarSignedUrl: (...args) => getAvatarSignedUrl(...args),
+  peekAvatarDisplayUrl: () => null,
 }))
 
 describe('UserAvatarBadge', () => {

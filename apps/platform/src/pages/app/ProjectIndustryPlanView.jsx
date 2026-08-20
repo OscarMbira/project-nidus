@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { RowActionButton } from '@nidus/ui'
 import { getIndustryPlanService } from '../../services/resolvers/industryPlanServiceResolver'
 import { getTemplateById } from '../../services/industryTemplateService'
 import IndustryPlanExportMenu from '../../components/industryPlan/IndustryPlanExportMenu'
@@ -65,9 +66,11 @@ export default function ProjectIndustryPlanView({ isSim = false }) {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link to={`${editPath}${plan.id}`} className="rounded border px-3 py-1 text-sm">
-            Edit
-          </Link>
+          <RowActionButton
+            variant="edit"
+            label="Edit industry plan"
+            onClick={() => navigate(`${editPath}${plan.id}`)}
+          />
           <IndustryPlanExportMenu
             data={{
               plan_title: plan.plan_title,

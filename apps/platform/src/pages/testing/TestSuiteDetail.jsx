@@ -3,6 +3,13 @@ import { Link, useParams } from 'react-router-dom'
 import { testCaseDetailPathSegment } from '../../services/testCaseService'
 import TestingPageShell from '../../components/testing/TestingPageShell'
 import { getTestSuiteById } from '../../services/testSuiteService'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function TestSuiteDetail() {
   const { suiteId } = useParams()
@@ -16,6 +23,8 @@ export default function TestSuiteDetail() {
 function Detail({ suiteId }) {
   const [suite, setSuite] = useState(null)
   const [err, setErr] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (!suiteId) return
@@ -28,6 +37,14 @@ function Detail({ suiteId }) {
       }
     })()
   }, [suiteId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !suite) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [suite.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, suite])
 
   if (err) return <p className="text-red-400">{err}</p>
   if (!suite) return <p className="text-gray-500">Loading…</p>
@@ -47,6 +64,28 @@ function Detail({ suiteId }) {
           View cases in list →
         </Link>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this test suite, and how it is classified.">
+          <AuditCard title="Identity" description="How this test suite is labelled and tracked.">
+            <AuditField label="Name" value={suite.name} />
+            <AuditField label="Status" value={humanizeAuditToken(suite.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this test suite is categorised.">
+            <AuditField label="Suite type" value={humanizeAuditToken(suite.suite_type)} />
+            <AuditField label="Version" value={suite.version} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this test suite was created and last changed.">
+            <AuditField label="Created by" value={suite.created_by_user?.full_name || suite.created_by_user?.email || null} />
+            <AuditTimestampPair dateLabel="Created at" value={suite.created_at} />
+            <AuditField label="Updated by" value={suite.updated_by ? auditUserLabels[suite.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={suite.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       <div className="rounded-xl border border-gray-800 p-4">
         <h2 className="text-xl font-bold text-white">{suite.name}</h2>
         <p className="text-sm text-gray-400 mt-1">{suite.description}</p>
@@ -68,6 +107,8 @@ function Detail({ suiteId }) {
           </li>
         ))}
       </ul>
+      </>
+      )}
     </div>
   )
 }

@@ -1,17 +1,25 @@
 /**
  * Lessons Reports Widget
- * Display list of reports generated from lessons log
+ * Compact table preview of reports generated from the lessons log
  */
 
-import { useState, useEffect } from 'react'
-import { FileText, Calendar, Eye, Edit, ArrowRight } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { FileText, ArrowRight, Search } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { getLessonsReportsByProject } from '../../services/lessonsReportService'
+import { getLessonsReportsByProject, deleteLessonsReport } from '../../services/lessonsReportService'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
+import { RowActionButton } from '@nidus/ui'
+import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function LessonsReportsWidget({ projectId, lessonsLogId }) {
+const PREVIEW_COUNT = 3
+
+export default function LessonsReportsWidget({ projectId, routeKey, lessonsLogId }) {
   const navigate = useNavigate()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (projectId) {
@@ -33,6 +41,30 @@ export default function LessonsReportsWidget({ projectId, lessonsLogId }) {
     }
   }
 
+  const goToReports = () => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))
+  const goToReport = (report) => navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || report.id))
+  const goToEdit = (report) => navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || report.id, 'edit'))
+  const canEdit = (report) => report.report_status === 'draft' || report.report_status === 'submitted'
+
+  const handleDelete = async (e, report) => {
+    e.stopPropagation()
+    if (!confirm(`Delete report "${report.report_reference}"?`)) return
+    setDeletingId(report.id)
+    try {
+      const result = await deleteLessonsReport(report.id)
+      if (result.success) {
+        setReports((prev) => prev.filter((r) => r.id !== report.id))
+      } else {
+        alert('Error deleting report: ' + result.error)
+      }
+    } catch (error) {
+      console.error('Error deleting report:', error)
+      alert('Error deleting report: ' + error.message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'approved': return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-200'
@@ -44,10 +76,41 @@ export default function LessonsReportsWidget({ projectId, lessonsLogId }) {
     }
   }
 
+  const filteredReports = useMemo(() => {
+    const t = searchTerm.trim().toLowerCase()
+    if (!t) return reports
+    return reports.filter((r) =>
+      (r.report_reference || '').toLowerCase().includes(t) ||
+      (r.report_type || '').toLowerCase().includes(t) ||
+      (r.report_status || '').toLowerCase().includes(t)
+    )
+  }, [reports, searchTerm])
+
+  const header = (
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          {reports.length > 0 ? `Lessons Reports (${reports.length})` : 'Lessons Reports'}
+        </h3>
+      </div>
+      <button
+        onClick={reports.length > 0 ? goToReports : () => navigate(platformProjectPath(routeKey, 'lessons', 'reports', 'create'))}
+        className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+      >
+        {reports.length > 0 ? 'View All' : 'Create Report'}
+        <ArrowRight className="w-4 h-4" />
+      </button>
+    </div>
+  )
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-32">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        {header}
+        <div className="flex items-center justify-center h-32">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        </div>
       </div>
     )
   }
@@ -55,98 +118,96 @@ export default function LessonsReportsWidget({ projectId, lessonsLogId }) {
   if (reports.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Lessons Reports</h3>
-          </div>
-          <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/create`)}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-          >
-            Create Report
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
+        {header}
         <p className="text-sm text-gray-500 dark:text-gray-400">No reports created yet</p>
       </div>
     )
   }
 
+  const preview = filteredReports.slice(0, PREVIEW_COUNT)
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Lessons Reports ({reports.length})
-          </h3>
-        </div>
-        <button
-          onClick={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
-          className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-        >
-          View All
-          <ArrowRight className="w-4 h-4" />
-        </button>
+      {header}
+
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search reports..."
+          className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+        />
       </div>
 
-      <div className="space-y-3">
-        {reports.slice(0, 3).map((report) => (
-          <div
-            key={report.id}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/${report.id}`)}
-          >
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
-                    {report.report_reference}
-                  </h4>
+      {preview.length === 0 ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No reports match your search.</p>
+      ) : (
+      <div className="overflow-x-auto">
+        <table className="min-w-[44rem] w-full border-collapse">
+          <thead className="bg-gray-50 dark:bg-gray-700/60">
+            <tr>
+              <TableRowNumberHeader className="!normal-case" />
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reference</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider whitespace-nowrap">Report Date</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Version</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            {preview.map((report, index) => (
+              <tr
+                key={report.id}
+                className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                onClick={() => goToReport(report)}
+              >
+                <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                <td className="px-3 py-3 whitespace-nowrap font-medium text-gray-900 dark:text-white">
+                  {report.report_reference}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm capitalize text-gray-700 dark:text-gray-300">
+                  {report.report_type}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap">
                   <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(report.report_status)}`}>
                     {report.report_status.replace(/_/g, ' ')}
                   </span>
-                  <span className="text-xs text-gray-500 capitalize">{report.report_type}</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {report.report_date ? new Date(report.report_date).toLocaleDateString() : 'N/A'}
-                  </span>
-                  <span>Version {report.version_no || '1.0'}</span>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigate(`/app/projects/${projectId}/lessons/reports/${report.id}`)
-                  }}
-                  className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                >
-                  <Eye className="w-4 h-4" />
-                </button>
-                {(report.report_status === 'draft' || report.report_status === 'submitted') && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      navigate(`/app/projects/${projectId}/lessons/reports/${report.id}/edit`)
-                    }}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {report.report_date ? new Date(report.report_date).toLocaleDateString() : 'N/A'}
+                </td>
+                <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {report.version_no || '1.0'}
+                </td>
+                <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                  <div className="inline-flex items-center gap-1 justify-end">
+                    <RowActionButton variant="view" label="View report" onClick={() => goToReport(report)} />
+                    {canEdit(report) && (
+                      <>
+                        <RowActionButton variant="edit" label="Edit report" onClick={() => goToEdit(report)} />
+                        <RowActionButton
+                          variant="delete"
+                          label="Delete report"
+                          onClick={(e) => handleDelete(e, report)}
+                          disabled={deletingId === report.id}
+                        />
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+      )}
 
-      {reports.length > 3 && (
+      {reports.length > PREVIEW_COUNT && (
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
+          onClick={goToReports}
           className="w-full mt-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
         >
           View All {reports.length} Reports

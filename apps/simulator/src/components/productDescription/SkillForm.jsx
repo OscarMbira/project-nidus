@@ -4,6 +4,13 @@
 
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
+import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SKILL_CATEGORIES = [
   { value: 'technical', label: 'Technical' },
@@ -31,6 +38,18 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
     resource_area: '',
     is_critical: false
   })
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !skill) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [skill.created_by, skill.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, skill])
 
   useEffect(() => {
     if (skill) {
@@ -57,6 +76,34 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !skill?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this skill is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this skill, and how it is classified.">
+            <AuditCard title="Identity" description="How this skill is labelled and tracked.">
+              <AuditField label="Skill name" value={formData.skill_name || skill.skill_name} />
+              <AuditField label="Category" value={humanizeAuditToken(skill.skill_category)} />
+              <AuditField label="Proficiency level" value={humanizeAuditToken(skill.proficiency_level)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this skill applies.">
+              <AuditField label="Resource area" value={skill.resource_area} />
+              <AuditField label="Required for" value={skill.required_for} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this skill was created and last changed.">
+              <AuditField label="Created by" value={skill.created_by ? auditUserLabels[skill.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={skill.created_at} />
+              <AuditField label="Updated by" value={skill.updated_by ? auditUserLabels[skill.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={skill.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -159,6 +206,8 @@ export default function SkillForm({ skill, onSubmit, onCancel }) {
           </label>
         </div>
       </div>
+      </>
+      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (

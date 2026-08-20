@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useEntityId } from '@nidus/shared/hooks/useEntityId';
-import { ArrowLeft, Edit2, Target, TrendingUp, AlertTriangle, Activity, Calendar, CheckCircle, Link2, Layers } from 'lucide-react';
+import { ArrowLeft, Target, TrendingUp, AlertTriangle, Activity, Calendar, CheckCircle, Link2, Layers } from 'lucide-react';
 import {
   getProgramme,
   deleteProgramme,
@@ -17,6 +17,13 @@ import BenefitsRealizationChart from '../../components/programme/BenefitsRealiza
 import ProgrammeTimelineView from '../../components/programme/ProgrammeTimelineView';
 import ProgrammeForm from '../../components/programme/ProgrammeForm';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
+import { RowActionButton } from '@nidus/ui';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
 import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx';
 import ForkIndustryTemplatePanel from '@nidus/ui/templates/ForkIndustryTemplatePanel.jsx';
@@ -370,6 +377,17 @@ export default function ProgrammeDetail() {
   const [showForm, setShowForm] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [accountId, setAccountId] = useState(null);
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !programme) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [programme.created_by, programme.updated_by]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, programme]);
 
   useEffect(() => {
     getCurrentUserAccountId().then(setAccountId);
@@ -463,6 +481,8 @@ export default function ProgrammeDetail() {
     { id: 'templates', label: 'Field Templates', icon: Layers },
   ];
 
+  const VIEW_TABS = [...tabs.map((t) => ({ value: t.id, label: t.label })), { value: 'audit', label: 'Audit details' }];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -504,41 +524,14 @@ export default function ProgrammeDetail() {
               onExportJSON={() => exportRecordToJSON(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
               onExportPrint={() => exportRecordToPrint(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
             />
-            <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit
-            </button>
+            <RowActionButton variant="edit" label="Edit programme" onClick={() => setShowForm(true)} />
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-8 overflow-x-auto">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap
-                  ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }
-                `}
-              >
-                <Icon className="h-5 w-5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
+        <DetailAuditTabList tabs={VIEW_TABS} activeTab={activeTab} onChange={setActiveTab} />
       </div>
 
       {/* Tab Content */}
@@ -658,6 +651,26 @@ export default function ProgrammeDetail() {
               </>
             ) : null}
           </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <AuditDetailsPanel description="Who created or changed this programme, and how it is classified.">
+            <AuditCard title="Identity" description="How this programme is labelled and tracked.">
+              <AuditField label="Code" value={programme.programme_code} />
+              <AuditField label="Name" value={programme.programme_name} />
+              <AuditField label="Status" value={humanizeAuditToken(programme.programme_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this programme sits.">
+              <AuditField label="Owner" value={programme.programme_owner?.full_name || programme.programme_owner?.email} />
+              <AuditField label="Manager" value={programme.programme_manager?.full_name || programme.programme_manager?.email} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this programme was created and last changed.">
+              <AuditField label="Created by" value={programme.created_by ? auditUserLabels[programme.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={programme.created_at} />
+              <AuditField label="Updated by" value={programme.updated_by ? auditUserLabels[programme.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={programme.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
         )}
       </div>
 

@@ -6,7 +6,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { FileText, CheckCircle, XCircle, Eye, Loader2 } from 'lucide-react'
+import { FileText, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPendingApprovals, approveMandate, rejectMandate } from '../../services/mandateWorkflowService'
 import { platformDb } from '@nidus/supabase'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
@@ -166,14 +167,11 @@ export default function MandateApprovalDashboard() {
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-2 ml-4">
-                    <button
+                    <RowActionButton
+                      variant="view"
+                      label="View mandate"
                       onClick={() => navigate(`${basePath}/${mandate?.mandate_reference || mandate?.id}/view`)}
-                      className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center"
-                      title="View Mandate"
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </button>
+                    />
                     <button
                       onClick={() => setActionModal({ approval, action: 'approve' })}
                       disabled={actioningId !== null}

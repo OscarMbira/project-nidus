@@ -9,12 +9,14 @@ import ConstraintSelector from '../../components/constraints/ConstraintSelector'
 import AuthorityList from '../../components/mandate/AuthorityList'
 import InterfacesList from '../../components/mandate/InterfacesList'
 import QualityExpectationsList from '../../components/mandate/QualityExpectationsList'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 function SimMandateCreate() {
   const navigate = useNavigate()
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
-  
+  const [formTab, setFormTab] = useState('details')
+
   const [formData, setFormData] = useState({
     mandate_title: '',
     purpose: '',
@@ -149,6 +151,13 @@ function SimMandateCreate() {
         </p>
       </div>
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this mandate is saved.</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -287,6 +296,7 @@ function SimMandateCreate() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

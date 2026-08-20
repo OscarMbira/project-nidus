@@ -16,6 +16,13 @@ import {
 } from '../../services/portfolioCategoryService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { platformDb } from '@nidus/supabase'
 
 export default function PortfolioCategories() {
   const navigate = useNavigate()
@@ -41,6 +48,18 @@ export default function PortfolioCategories() {
   useEffect(() => {
     formDataRef.current = formData
   }, [formData])
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !editing) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [editing.created_by, editing.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, editing])
 
   const load = useCallback(async () => {
     try {
@@ -68,6 +87,7 @@ export default function PortfolioCategories() {
   const handleAdd = useCallback(() => {
     setEditing(null)
     setFormData(defaultForm)
+    setFormTab('details')
     setShowForm(true)
   }, [defaultForm])
 
@@ -80,6 +100,7 @@ export default function PortfolioCategories() {
       sort_order: row.sort_order != null ? row.sort_order : 0,
       is_active: row.is_active !== undefined ? row.is_active : true,
     })
+    setFormTab('details')
     setShowForm(true)
   }, [])
 
@@ -171,6 +192,30 @@ export default function PortfolioCategories() {
             <h2 className="text-xl font-semibold text-gray-100 mb-4">
               {editing ? 'Edit Portfolio Category' : 'Add Portfolio Category'}
             </h2>
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+            {formTab === 'audit' && (
+              !editing ? (
+                <p className="text-sm text-gray-400 mt-4">Audit details appear after this category is saved.</p>
+              ) : (
+                <div className="mt-4">
+                  <AuditDetailsPanel description="Who created or changed this portfolio category, and when.">
+                    <AuditCard title="Identity" description="How this category is labelled.">
+                      <AuditField label="Name" value={formData.name || editing.name} />
+                      <AuditField label="Code" value={editing.code} />
+                    </AuditCard>
+                    <AuditCard title="Record history" description="When this category was created and last changed.">
+                      <AuditField label="Created by" value={editing.created_by ? auditUserLabels[editing.created_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Created at" value={editing.created_at} />
+                      <AuditField label="Updated by" value={editing.updated_by ? auditUserLabels[editing.updated_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Last updated" value={editing.updated_at} />
+                    </AuditCard>
+                  </AuditDetailsPanel>
+                </div>
+              )
+            )}
+
+            {formTab === 'details' && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -255,6 +300,7 @@ export default function PortfolioCategories() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         )}
 

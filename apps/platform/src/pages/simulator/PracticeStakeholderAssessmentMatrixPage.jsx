@@ -14,7 +14,7 @@ import {
 import StakeholderSEAM from '../../components/stakeholders/StakeholderSEAM'
 import StakeholderAssessmentMatrixList from '../../components/stakeholders/StakeholderAssessmentMatrixList'
 import StakeholderAssessmentMatrixForm from '../../components/stakeholders/StakeholderAssessmentMatrixForm'
-import CrudSuccessBanner from '../../components/stakeholders/CrudSuccessBanner'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { mapAssessmentRowToSeamDisplay, prettySeamLevel } from '../../utils/stakeholderSEAMUtils'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
@@ -41,7 +41,7 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
-  const [success, setSuccess] = useState(null)
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [draftInitial, setDraftInitial] = useState(null)
 
   const loadProjects = useCallback(async () => {
@@ -133,10 +133,10 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
     setShowForm(false)
     setEditing(null)
     setDraftInitial(null)
-    setSuccess({
+    showSuccess({
       message: `${editing?.id ? 'Assessment updated' : 'Assessment created'} successfully.`,
       recordId: res.data.id,
-      operation: editing?.id ? 'update' : 'create',
+      operation: editing?.id ? 'updated' : 'created',
     })
     loadMatrix()
   }
@@ -148,7 +148,7 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
     try {
       const res = await deletePracticeStakeholderAssessmentMatrix(record.id)
       if (!res.success) throw new Error(res.error)
-      setSuccess({ message: 'Assessment deleted.', recordId: record.id, operation: 'delete' })
+      showSuccess({ message: 'Assessment deleted.', recordId: record.id, operation: 'deleted' })
       loadMatrix()
     } catch (e) {
       alert(e?.message || 'Delete failed')
@@ -234,12 +234,7 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
         </div>
       </div>
 
-      <CrudSuccessBanner
-        message={success?.message}
-        recordId={success?.recordId}
-        operation={success?.operation}
-        onDismiss={() => setSuccess(null)}
-      />
+      {successModal}
 
       <div className="mb-4 flex flex-wrap gap-4 items-end">
         <div>

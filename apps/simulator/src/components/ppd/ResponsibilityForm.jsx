@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addResponsibility, updateResponsibility } from '../../services/ppdAcceptanceResponsibilitiesService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ResponsibilityForm({ ppdId, responsibility = null, mode = 'create', projectId, onSave, onCancel }) {
@@ -24,6 +30,18 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
   const [criteria, setCriteria] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !responsibility) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [responsibility.created_by, responsibility.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, responsibility])
 
   useEffect(() => {
     loadTeamMembers()
@@ -160,6 +178,33 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !responsibility?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this responsibility is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this responsibility, and how it is classified.">
+              <AuditCard title="Identity" description="How this responsibility is labelled and tracked.">
+                <AuditField label="Role name" value={formData.role_name || responsibility.role_name} />
+                <AuditField label="Role category" value={humanizeAuditToken(responsibility.role_category)} />
+                <AuditField label="Authority level" value={humanizeAuditToken(responsibility.authority_level)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this responsibility sits.">
+                <AuditField label="Assigned to" value={teamMembers.find((m) => m.id === (formData.user_id || responsibility.user_id))?.full_name || responsibility.user_name} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this responsibility was created and last changed.">
+                <AuditField label="Created by" value={responsibility.created_by ? auditUserLabels[responsibility.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={responsibility.created_at} />
+                <AuditField label="Updated by" value={responsibility.updated_by ? auditUserLabels[responsibility.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={responsibility.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Role Name <span className="text-red-500">*</span>
@@ -285,6 +330,8 @@ export default function ResponsibilityForm({ ppdId, responsibility = null, mode 
               ))}
             </div>
           </div>
+        )}
+        </>
         )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">

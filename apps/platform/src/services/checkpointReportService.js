@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid.js';
 
 /**
  * Checkpoint Report Service - API functions for Checkpoint Report management
@@ -8,7 +9,7 @@ import { supabase } from './supabaseClient';
 /**
  * Create a new Checkpoint Report
  * @param {string} projectId - Project ID
- * @param {string} workPackageId - Work Package ID
+ * @param {string|null} workPackageId - Work Package ID (optional — project-scoped reports allowed)
  * @param {Object} reportData - Report data
  * @returns {Promise<Object>} Created report
  */
@@ -26,24 +27,31 @@ export async function createCheckpointReport(projectId, workPackageId, reportDat
 
     if (!userData) throw new Error('User not found');
 
-    // Get work package details
-    const { data: workPackage } = await supabase
-      .from('work_packages')
-      .select('id, project_id, stage_boundary_id, assigned_to_user_id')
-      .eq('id', workPackageId)
-      .eq('is_deleted', false)
-      .single();
+    const validWorkPackageId = isLikelyDatabaseUuid(workPackageId) ? workPackageId : null;
+    let workPackage = null;
 
-    if (!workPackage) throw new Error('Work package not found');
+    if (validWorkPackageId) {
+      const { data, error: wpError } = await supabase
+        .from('work_packages')
+        .select('id, project_id, stage_boundary_id, assigned_to_user_id')
+        .eq('id', validWorkPackageId)
+        .eq('is_deleted', false)
+        .single();
 
-    // Get previous report for carry-forward
-    const previousReportId = await getPreviousCheckpointReport(projectId, workPackageId, null);
+      if (wpError || !data) throw new Error('Work package not found');
+      workPackage = data;
+    }
+
+    // Get previous report for carry-forward (WP-scoped only)
+    const previousReportId = validWorkPackageId
+      ? await getPreviousCheckpointReport(projectId, validWorkPackageId, null)
+      : null;
 
     const insertData = {
       ...reportData,
       project_id: projectId,
-      work_package_id: workPackageId,
-      stage_boundary_id: workPackage.stage_boundary_id || reportData.stage_boundary_id || null,
+      work_package_id: validWorkPackageId,
+      stage_boundary_id: workPackage?.stage_boundary_id || reportData.stage_boundary_id || null,
       reported_by_user_id: userData.id,
       author_id: reportData.author_id || userData.id,
       owner_id: reportData.owner_id || userData.id,
@@ -125,6 +133,10 @@ export async function getCheckpointReportById(reportId) {
  */
 export async function getCheckpointReportsByProject(projectId, filters = {}) {
   try {
+    if (!isLikelyDatabaseUuid(projectId)) {
+      throw new Error('A valid project id is required');
+    }
+
     let query = supabase
       .from('checkpoint_reports')
       .select(`
@@ -137,12 +149,16 @@ export async function getCheckpointReportsByProject(projectId, filters = {}) {
       .eq('project_id', projectId)
       .eq('is_deleted', false);
 
-    if (filters.workPackageId) {
+    if (isLikelyDatabaseUuid(filters.workPackageId)) {
       query = query.eq('work_package_id', filters.workPackageId);
     }
 
     if (filters.status) {
       query = query.eq('status', filters.status);
+    }
+
+    if (Array.isArray(filters.status_in) && filters.status_in.length) {
+      query = query.in('status', filters.status_in);
     }
 
     if (filters.stageBoundaryId) {
@@ -284,6 +300,8 @@ export async function deleteCheckpointReport(reportId) {
  */
 export async function getLatestCheckpointReport(workPackageId) {
   try {
+    if (!isLikelyDatabaseUuid(workPackageId)) return null;
+
     const { data, error } = await supabase
       .from('checkpoint_reports')
       .select(`
@@ -318,6 +336,10 @@ export async function getLatestCheckpointReport(workPackageId) {
  */
 export async function getPreviousCheckpointReport(projectId, workPackageId, currentReportId = null) {
   try {
+    if (!isLikelyDatabaseUuid(projectId) || !isLikelyDatabaseUuid(workPackageId)) {
+      return null;
+    }
+
     const { data, error } = await supabase.rpc('get_previous_checkpoint_report', {
       p_project_id: projectId,
       p_work_package_id: workPackageId,

@@ -6,7 +6,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit, FileText, Send, Loader2 } from 'lucide-react'
+import { ArrowLeft, FileText, Send, Loader2 } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import {
   getBusinessCaseById,
   canEditBusinessCase,
@@ -154,12 +155,11 @@ export default function BusinessCaseViewPage() {
             />
 
             {canEdit && (
-              <button
+              <RowActionButton
+                variant="edit"
+                label="Edit business case"
                 onClick={() => navigate(`${basePath}/${id}/edit`)}
-                className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <Edit className="w-4 h-4" /> Edit
-              </button>
+              />
             )}
 
             {businessCase.document_status === 'draft' && (

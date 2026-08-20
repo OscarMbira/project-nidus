@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Plus, Search, Eye, Pencil, Archive } from 'lucide-react'
-import { useOPATailoringContext } from '@nidus/shared/hooks/useOPATailoringContext'
+import { ArrowLeft, Plus, Search, Archive } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
@@ -147,7 +148,7 @@ export default function ProjectOPATemplates() {
             >
               <button
                 type="button"
-                onClick={() => navigate(`${base}/${r.id}`)}
+                onClick={() => navigate(`${base}/${r.opa_reference || r.id}`)}
                 className="text-left font-semibold text-gray-900 dark:text-white hover:underline"
               >
                 {r.custom_title}
@@ -158,12 +159,8 @@ export default function ProjectOPATemplates() {
                 {r.is_on_hold ? ' · On hold' : ''}
               </p>
               <div className="mt-auto flex gap-2 pt-2">
-                <button type="button" className="text-sm text-sky-600" onClick={() => navigate(`${base}/${r.id}`)}>
-                  <Eye className="h-4 w-4 inline" /> View
-                </button>
-                <button type="button" className="text-sm text-gray-700" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                  <Pencil className="h-4 w-4 inline" /> Edit
-                </button>
+                <RowActionButton variant="view" label="View OPA" onClick={() => navigate(`${base}/${r.opa_reference || r.id}`)} />
+                <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`${base}/${r.opa_reference || r.id}/edit`)} />
               </div>
             </div>
           ))}
@@ -200,12 +197,8 @@ export default function ProjectOPATemplates() {
                     {r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <button type="button" className="text-sky-600 text-sm" onClick={() => navigate(`${base}/${r.id}`)}>
-                      View
-                    </button>
-                    <button type="button" className="text-gray-700 text-sm" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                      Edit
-                    </button>
+                    <RowActionButton variant="view" label="View OPA" onClick={() => navigate(`${base}/${r.opa_reference || r.id}`)} />
+                    <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`${base}/${r.opa_reference || r.id}/edit`)} />
                     <button type="button" className="text-amber-700 text-sm" onClick={() => handleArchive(r.id)}>
                       <Archive className="h-3 w-3 inline" /> Archive
                     </button>

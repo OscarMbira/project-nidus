@@ -2,12 +2,18 @@ import { useState, useEffect } from 'react';
 import { Save, FileText, Calendar, Users, Target, CheckCircle } from 'lucide-react';
 import { saveQualityReview } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
-import { simDb } from '@nidus/supabase';
+import { simDb, platformDb } from '@nidus/supabase';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import FormSurface from '../ui/FormSurface';
 import InheritedQualityFields, {
   QUALITY_REVIEW_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedQualityFields';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function QualityReviewForm({
   review,
@@ -51,6 +57,25 @@ export default function QualityReviewForm({
   const [programmes, setProgrammes] = useState([]);
   const [qmsMethods, setQmsMethods] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !review) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        review.created_by,
+        review.updated_by,
+        review.chair_user_id,
+        review.secretary_user_id,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [formTab, review]);
 
   useEffect(() => {
     if (review) {
@@ -203,6 +228,50 @@ export default function QualityReviewForm({
       onClose={onCancel}
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !review?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this review is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this review, and how it is classified.">
+                <AuditCard title="Identity" description="How this review is labelled and tracked.">
+                  <AuditField label="Review reference" value={review.review_reference} />
+                  <AuditField label="Title" value={formData.review_title || review.review_title} />
+                  <AuditField label="Type" value={humanizeAuditToken(formData.review_type || review.review_type)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this review sits.">
+                  <AuditField label="Location type" value={humanizeAuditToken(formData.review_location_type || review.review_location_type)} />
+                  <AuditField
+                    label="Chair"
+                    value={
+                      formData.chair_user_id || review.chair_user_id
+                        ? auditUserLabels[formData.chair_user_id || review.chair_user_id] || null
+                        : null
+                    }
+                  />
+                  <AuditField
+                    label="Secretary"
+                    value={
+                      formData.secretary_user_id || review.secretary_user_id
+                        ? auditUserLabels[formData.secretary_user_id || review.secretary_user_id] || null
+                        : null
+                    }
+                  />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this review was created and last changed.">
+                  <AuditField label="Created by" value={review.created_by ? auditUserLabels[review.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={review.created_at} />
+                  <AuditField label="Updated by" value={review.updated_by ? auditUserLabels[review.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={review.updated_at} />
+                  <AuditTimestampPair dateLabel="Planned date" value={review.planned_date || formData.planned_date} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Review Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -615,6 +684,8 @@ export default function QualityReviewForm({
               mode="edit"
               title="Quality review additional fields"
             />
+          )}
+          </>
           )}
 
           {/* Form Actions */}

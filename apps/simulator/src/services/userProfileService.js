@@ -87,6 +87,13 @@ export function buildUserProfileUpdatePayload(profileData) {
   }
 }
 
+export const PROFILE_UPDATED_EVENT = 'nidus-profile-updated'
+
+function notifyProfileUpdated(fullName) {
+  if (typeof window === 'undefined' || !fullName) return
+  window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: { full_name: fullName } }))
+}
+
 /**
  * Update the signed-in user's row in public.users (source of truth for profile fields).
  */
@@ -126,5 +133,6 @@ export async function updateUserProfile(profileData) {
     throw new Error('Profile could not be updated. Check your permissions and try again.')
   }
 
+  notifyProfileUpdated(updated.full_name)
   return updated
 }

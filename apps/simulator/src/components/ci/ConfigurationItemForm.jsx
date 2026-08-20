@@ -6,6 +6,12 @@
 import { useState, useEffect } from 'react'
 import { Package, AlertCircle, CheckCircle } from 'lucide-react'
 import { HoldButton } from '../ui/HoldButton'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function ConfigurationItemForm({
   itemData = {},
@@ -22,6 +28,7 @@ export default function ConfigurationItemForm({
   const [itemTypes, setItemTypes] = useState([])
   const [identificationMethods, setIdentificationMethods] = useState([])
   const [products, setProducts] = useState([])
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (cfgMsId) {
@@ -43,6 +50,37 @@ export default function ConfigurationItemForm({
 
   return (
     <div className="space-y-6">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !itemData?.id ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this configuration item is saved.</p>
+          </div>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this configuration item, and how it is classified.">
+            <AuditCard title="Identity" description="How this configuration item is labelled and tracked.">
+              <AuditField label="Identifier" value={itemData.configuration_item_identifier} />
+              <AuditField label="Name" value={itemData.item_name} />
+              <AuditField label="Type" value={itemData.item_type?.item_type_name} />
+              <AuditField label="Status" value={itemData.current_status?.status_name} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this configuration item sits.">
+              <AuditField label="Project" value={itemData.project?.project_name} />
+              <AuditField label="Linked product" value={itemData.product?.product_title} />
+              <AuditField label="Strategy" value={itemData.cfg_ms?.cms_reference} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this configuration item was created and last changed.">
+              <AuditField label="Created by" value={itemData.created_by_user?.full_name || itemData.created_by_user?.email} />
+              <AuditTimestampPair dateLabel="Created at" value={itemData.created_at} />
+              <AuditField label="Updated by" value={itemData.updated_by_user?.full_name || itemData.updated_by_user?.email} />
+              <AuditTimestampPair dateLabel="Last updated" value={itemData.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
           Configuration Item Details
@@ -111,7 +149,7 @@ export default function ConfigurationItemForm({
               <option value="">No product link</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
-                  {product.product_name}
+                  {product.product_title}
                 </option>
               ))}
             </select>
@@ -164,6 +202,7 @@ export default function ConfigurationItemForm({
           )}
         </div>
       </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center justify-between bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

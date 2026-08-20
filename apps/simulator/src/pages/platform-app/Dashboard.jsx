@@ -13,10 +13,12 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense, memo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { platformDb } from '@nidus/supabase';
 import { resolveAccountIdForAuthUser } from '@nidus/shared/utils/accountResolution';
 import { getExecutiveSummary, getKPIs, getPmoExtendedMetrics } from '../../services/dashboardService';
+import { getUserSystemRoles } from '../../services/roleService';
+import { PMO_LAYOUT_ROLES, getCachedUserMenuRoles } from '@nidus/shared/utils/menuLayoutUtils';
 import { Shield } from 'lucide-react';
 import PMODashboardScopeTabs from '../../components/app/dashboard/PMODashboardScopeTabs';
 
@@ -40,6 +42,10 @@ const PlatformDashboard = memo(function PlatformDashboard() {
   const [profileLinked, setProfileLinked] = useState(true);
   const [userName, setUserName] = useState('');
   const [isOrgAdmin, setIsOrgAdmin] = useState(false);
+  // null = not yet resolved. Executive Summary is PMO/org-admin only.
+  // Project-level roles (e.g. project_manager) often exist in user_roles for menus/badge,
+  // so "any user_roles row" is NOT a valid gate — use PMO_LAYOUT_ROLES instead.
+  const [canSeeExecutiveDashboard, setCanSeeExecutiveDashboard] = useState(null);
   const navigate = useNavigate();
 
   const checkIsOrgAdmin = useCallback(async (authUserId) => {
@@ -94,9 +100,10 @@ const PlatformDashboard = memo(function PlatformDashboard() {
       setProfileLinked(true);
       setUserName(userRecord.full_name || user.email);
 
-      const [accountId, orgAdmin] = await Promise.all([
+      const [accountId, orgAdmin, systemRolesResult] = await Promise.all([
         resolveAccountIdForAuthUser(user.id, userRecord.id),
         checkIsOrgAdmin(user.id),
+        getUserSystemRoles(user.id),
       ]);
 
       if (accountId) {
@@ -108,6 +115,18 @@ const PlatformDashboard = memo(function PlatformDashboard() {
       }
 
       setIsOrgAdmin(orgAdmin);
+      // Prefer warm sidebar role cache for an immediate deny (avoids painting then redirecting).
+      const cachedNames = getCachedUserMenuRoles(user.id)?.roleNames || [];
+      const roleNames = (
+        cachedNames.length
+          ? cachedNames
+          : (systemRolesResult.success ? systemRolesResult.data : [])
+              .map((a) => a.roles?.role_name)
+              .filter(Boolean)
+      ).map((n) => String(n).trim().toLowerCase().replace(/\s+/g, '_'));
+      setCanSeeExecutiveDashboard(
+        orgAdmin === true || roleNames.some((r) => PMO_LAYOUT_ROLES.has(r)),
+      );
     } catch (error) {
       console.error('Error loading user and organization:', error);
       setAccountStatus('missing');
@@ -264,17 +283,21 @@ const PlatformDashboard = memo(function PlatformDashboard() {
     );
   }
 
+  // Project Manager / other non-PMO roles → PM dashboard (not org-wide Executive Summary).
+  if (canSeeExecutiveDashboard === false) {
+    return <Navigate to="/pm/dashboard" replace />;
+  }
+
+  // Do not paint Platform Dashboard / Executive Summary until the role gate allows it.
+  if (canSeeExecutiveDashboard !== true) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {headerContent}
 
-        {accountStatus === 'loading' ? (
-          <div className="space-y-8">
-            <ComponentLoader />
-            <ComponentLoader />
-          </div>
-        ) : (
         <PMODashboardScopeTabs
           organizationId={memoizedOrgId}
           analyticsBundle={pmoAnalyticsStatus === 'ok' ? pmoAnalyticsBundle : null}
@@ -330,7 +353,6 @@ const PlatformDashboard = memo(function PlatformDashboard() {
             </div>
           </>
         </PMODashboardScopeTabs>
-        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@
 
 import { platformDb } from './supabase/supabaseClient';
 import { getUserSystemRoles } from './roleService';
+import { PMO_LAYOUT_ROLES, PM_LAYOUT_ROLES } from '@nidus/shared/utils/menuLayoutUtils';
 
 /**
  * Get user's highest role level
@@ -38,6 +39,10 @@ async function getHighestRole(authUserId) {
   }
 }
 
+function normalizeRoleName(roleName) {
+  return String(roleName || '').trim().toLowerCase().replace(/\s+/g, '_');
+}
+
 /**
  * Get dashboard route based on user's role
  * @param {string} authUserId - Auth user ID
@@ -48,31 +53,31 @@ export async function getDashboardRouteByRole(authUserId) {
     const highestRole = await getHighestRole(authUserId);
     
     if (!highestRole) {
-      // No roles assigned - default dashboard
+      // No roles in user_roles — prefer project-scoped PM home over org Executive Dashboard
+      return '/pm/dashboard';
+    }
+
+    const roleName = normalizeRoleName(highestRole.role_name);
+
+    // Org / PMO admins → Executive (Platform) Dashboard
+    if (PMO_LAYOUT_ROLES.has(roleName)) {
       return '/platform/dashboard';
     }
 
-    // Route mapping based on role
-    const routeMap = {
-      'pmo_admin': '/platform/dashboard', // PMO Admin uses unified platform dashboard
-      'project_sponsor': '/platform/dashboard', // Project Sponsor dashboard (same for now)
-      'executive': '/platform/dashboard',
-      'account_owner': '/platform/dashboard',
-      'project_manager': '/pm/dashboard', // PM Dashboard
-      'programme_manager': '/platform/dashboard',
-      'project_board_member': '/platform/dashboard',
-      'project_assurance': '/platform/dashboard',
-      'quality_assurance': '/platform/dashboard',
-      'team_lead': '/platform/dashboard',
-      'team_member': '/platform/dashboard',
-      'stakeholder': '/platform/dashboard',
-      'viewer': '/platform/dashboard'
-    };
+    // Executives get the dedicated read-only strategic view
+    if (roleName === 'executive') {
+      return '/platform/executive/dashboard';
+    }
 
-    return routeMap[highestRole.role_name] || '/platform/dashboard';
+    // Project Manager and other PM-layout roles → PM Dashboard
+    if (PM_LAYOUT_ROLES.has(roleName) || roleName === 'pm_project_manager' || roleName === 'team_member' || roleName === 'team_lead') {
+      return '/pm/dashboard';
+    }
+
+    return '/pm/dashboard';
   } catch (error) {
     console.error('Error in getDashboardRouteByRole:', error);
-    return '/platform/dashboard';
+    return '/pm/dashboard';
   }
 }
 
@@ -86,8 +91,8 @@ export async function isProjectSponsorOrExecutive(authUserId) {
     const highestRole = await getHighestRole(authUserId);
     if (!highestRole) return false;
     
-    return highestRole.role_name === 'project_sponsor' || 
-           highestRole.role_name === 'executive';
+    const roleName = normalizeRoleName(highestRole.role_name);
+    return roleName === 'project_sponsor' || roleName === 'executive';
   } catch (error) {
     console.error('Error checking Project Sponsor role:', error);
     return false;
@@ -98,4 +103,3 @@ export default {
   getDashboardRouteByRole,
   isProjectSponsorOrExecutive
 };
-

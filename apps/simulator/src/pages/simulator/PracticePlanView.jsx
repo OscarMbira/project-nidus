@@ -5,8 +5,15 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import { getPracticePlanMilestones, getPracticePlanResources } from '../../services/sim/practicePlanService'
+import { getPracticePlan, getPracticePlanMilestones, getPracticePlanResources } from '../../services/sim/practicePlanService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function PracticePlanView() {
   const { id } = useParams()
@@ -16,13 +23,34 @@ export default function PracticePlanView() {
   const [milestones, setMilestones] = useState([])
   const [resources, setResources] = useState([])
   const [loading, setLoading] = useState(true)
+  const [plan, setPlan] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) {
       loadMilestones()
       loadResources()
     }
-  }, [id])
+    if (projectId) loadPlan()
+  }, [id, projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !plan) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [plan.created_by, plan.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, plan])
+
+  const loadPlan = async () => {
+    try {
+      const result = await getPracticePlan(projectId)
+      if (result.success && result.data) setPlan(result.data)
+    } catch (error) {
+      console.error('Error loading plan:', error)
+    }
+  }
 
   const loadMilestones = async () => {
     try {
@@ -55,6 +83,33 @@ export default function PracticePlanView() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Practice Plan</h1>
         <ExportRecordButtons onExportPPT={() => {}} onExportWord={() => {}} onExportExcel={() => {}} disabled />
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          {!plan ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this Project Plan.">
+              <AuditCard title="Identity" description="How this plan is labelled.">
+                <AuditField label="Title" value={plan.plan_title} />
+                <AuditField label="Reference" value={plan.plan_reference} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this plan sits.">
+                <AuditField label="Status" value={humanizeAuditToken(plan.status)} />
+                <AuditField label="Baseline" value={plan.is_baseline ? 'Yes' : 'No'} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this plan was created and last changed.">
+                <AuditField label="Created by" value={plan.created_by ? auditUserLabels[plan.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={plan.created_at} />
+                <AuditField label="Updated by" value={plan.updated_by ? auditUserLabels[plan.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={plan.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <h3 className="font-medium mb-4">Milestones</h3>
@@ -77,6 +132,7 @@ export default function PracticePlanView() {
           )}
         </div>
       </div>
+      )}
     </div>
   )
 }

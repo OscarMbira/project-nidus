@@ -157,7 +157,7 @@ export function listDefaultEntriesFromValues(values = {}, schema = { sections: [
  * @param {Record<string, unknown>} sampleValues
  * @param {Record<string, string>} guidanceValues
  * @param {object} schema
- * @returns {{ sectionKey: string, fieldKey: string, value: unknown | null, guidanceText: string | null, clear: boolean }[]}
+ * @returns {{ sectionKey: string, fieldKey: string, label: string, value: unknown | null, guidanceText: string | null, clear: boolean }[]}
  */
 export function listDefaultContentEntries(sampleValues = {}, guidanceValues = {}, schema = { sections: [] }) {
   const entries = []
@@ -167,9 +167,11 @@ export function listDefaultContentEntries(sampleValues = {}, guidanceValues = {}
       const guidanceText = guidanceValues[field.key]
       const emptySample = isEmptyDefaultValue(value)
       const emptyGuidance = isEmptyGuidanceText(guidanceText)
+      const label = String(field.label || '').trim() || String(field.key || '').trim()
       entries.push({
         sectionKey: section.key,
         fieldKey: field.key,
+        label,
         value: emptySample ? null : value,
         guidanceText: emptyGuidance ? null : String(guidanceText).trim(),
         clear: emptySample && emptyGuidance,

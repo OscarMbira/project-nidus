@@ -11,6 +11,13 @@ import IssueReportClosureSection from './IssueReportClosureSection'
 import IssueReportDistributionSection from './IssueReportDistributionSection'
 import IssueReportCompletenessIndicator from './IssueReportCompletenessIndicator'
 import { enableAutoSave, getAutoSaveStatus } from '@nidus/shared/utils/issueReportAutoSave'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const FORM_STEPS = [
   { id: 'document', label: 'Document Info', icon: FileText, description: 'Reference, version, author' },
@@ -80,6 +87,25 @@ export default function IssueReportForm({
   const [completeness, setCompleteness] = useState(null)
   const [autoSaveStatus, setAutoSaveStatus] = useState({ saved: false })
   const [autoSaveCleanup, setAutoSaveCleanup] = useState(null)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !reportId) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        formData.created_by,
+        formData.updated_by,
+        formData.author_id,
+        formData.prepared_by_id,
+        formData.decision_made_by_id,
+        formData.closure_verified_by_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, reportId, formData])
 
   useEffect(() => {
     if (reportId && mode !== 'create') {
@@ -350,6 +376,39 @@ export default function IssueReportForm({
         )}
       </div>
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+
+      {formTab === 'audit' && (
+        !reportId ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this issue report, and how it is classified.">
+            <AuditCard title="Identity" description="How this report is labelled and tracked.">
+              <AuditField label="Report reference" value={formData.report_reference} />
+              <AuditField label="Issue title" value={formData.issue_title} />
+              <AuditField label="Version" value={formData.version_no} />
+              <AuditField label="Report status" value={humanizeAuditToken(formData.report_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this report sits.">
+              <AuditField label="Author" value={formData.author_name || (formData.author_id ? auditUserLabels[formData.author_id] : null)} />
+              <AuditField label="Prepared by" value={formData.prepared_by_name || (formData.prepared_by_id ? auditUserLabels[formData.prepared_by_id] : null)} />
+              <AuditField label="Decision made by" value={formData.decision_made_by_name || (formData.decision_made_by_id ? auditUserLabels[formData.decision_made_by_id] : null)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this report was created and last changed.">
+              <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+              <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+              <AuditTimestampPair dateLabel="Report date" value={formData.report_date} />
+              <AuditTimestampPair dateLabel="Decision date" value={formData.decision_date} />
+              <AuditTimestampPair dateLabel="Closure date" value={formData.closure_date} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       {/* Completeness Indicator */}
           {mode !== 'view' && reportId && (
         <IssueReportCompletenessIndicator reportId={reportId} onCompletenessChange={setCompleteness} />
@@ -487,6 +546,8 @@ export default function IssueReportForm({
             Next
           </button>
         </div>
+      )}
+      </>
       )}
     </div>
   )

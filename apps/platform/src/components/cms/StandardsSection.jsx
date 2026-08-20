@@ -45,10 +45,11 @@ export default function StandardsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateStandard(editingId, formData)
+        await updateStandard(editingId, editableFields)
       } else {
-        await addStandard(cmsId, formData)
+        await addStandard(cmsId, editableFields)
       }
       await loadStandards()
       setShowForm(false)
@@ -62,6 +63,8 @@ export default function StandardsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (standard) => {
     setFormData({
+      id: standard.id,
+      created_at: standard.created_at,
       standard_name: standard.standard_name || '',
       standard_type: standard.standard_type || '',
       standard_description: standard.standard_description || '',

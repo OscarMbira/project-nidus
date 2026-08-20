@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react'
 import { X, Plus, Trash2, ChevronRight, ChevronLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ITTO_PROCESS_GROUPS, ITTO_KNOWLEDGE_AREAS } from '@nidus/shared/constants/ittoConstants'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const emptyInput = () => ({
   id: crypto.randomUUID(),
@@ -44,10 +51,23 @@ export default function ITTOTemplateForm({
   const [inputs, setInputs] = useState([emptyInput()])
   const [tools, setTools] = useState([emptyTool()])
   const [outputs, setOutputs] = useState([emptyOutput()])
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !initial) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [initial.created_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, initial])
 
   useEffect(() => {
     if (!open) return
     setStep(1)
+    setFormTab('wizard')
     if (initial) {
       setName(initial.name || '')
       setProcessGroup(initial.process_group || 'Planning')
@@ -149,7 +169,35 @@ export default function ITTOTemplateForm({
         </div>
 
         <div className="p-4">
-          <div className="flex gap-2 mb-6 text-sm">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+
+          {formTab === 'audit' && (
+            <div className="mt-4">
+              {!initial?.id ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who created or changed this ITTO template, and how it is classified.">
+                  <AuditCard title="Identity" description="How this template is labelled and tracked.">
+                    <AuditField label="Name" value={name || initial.name} />
+                    <AuditField label="Status" value={humanizeAuditToken(isDraft ? 'draft' : status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this template sits.">
+                    <AuditField label="Process group" value={humanizeAuditToken(processGroup || initial.process_group)} />
+                    <AuditField label="Knowledge area" value={humanizeAuditToken(knowledgeArea || initial.knowledge_area)} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this template was created and last changed.">
+                    <AuditField label="Created by" value={initial.created_by ? auditUserLabels[initial.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={initial.created_at} />
+                    <AuditTimestampPair dateLabel="Last updated" value={initial.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )}
+            </div>
+          )}
+
+          {formTab === 'wizard' && (
+          <>
+          <div className="flex gap-2 mb-6 mt-4 text-sm">
             {[1, 2, 3, 4].map((s, index) => (
               <button
                 key={s}
@@ -451,6 +499,8 @@ export default function ITTOTemplateForm({
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

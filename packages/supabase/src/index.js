@@ -96,14 +96,15 @@ export const simDb = (() => {
       },
     });
 
-    // Sync auth state - when platformDb auth changes, update simDb
-    platformDb.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        simDbInstance.auth.setSession(session).catch(() => {
-          // Silently handle sync errors - they're non-critical
-        });
-      }
-    });
+    // No manual auth-state sync needed (and dangerous if added): both clients already read/write
+    // the SAME sessionStorage entry via SHARED_STORAGE_KEY, so a session written by one is already
+    // visible to the other on its next auth-dependent call. A prior version of this file manually
+    // pushed `platformDb`'s session into `simDb` via `onAuthStateChange` + `setSession()` — but
+    // `setSession()` itself triggers auth validation (a real `/auth/v1/user` call) and its own
+    // `onAuthStateChange` event, which — because both clients share one storage key — can
+    // re-trigger the other client's listener, creating a self-sustaining feedback loop (observed:
+    // 19,000+ queued `/auth/v1/user` requests within a couple of minutes, exhausting the browser's
+    // connection pool for the whole page). Do not reintroduce a cross-client push sync here.
   }
   return simDbInstance;
 })();

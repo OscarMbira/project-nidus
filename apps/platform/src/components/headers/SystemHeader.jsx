@@ -23,6 +23,18 @@ import { getActiveLanguages } from '@nidus/shared/utils/languages'
 import { getUserLanguage, updateUserLanguage } from '@nidus/shared/utils/userLanguage'
 import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import GlobalSearchModal, { useGlobalSearchShortcut } from '../../modules/pmis-gaps/components/GlobalSearchModal'
+import { PROFILE_UPDATED_EVENT } from '../../services/userProfileService'
+
+function initialsFromFullName(name, email) {
+  const trimmed = String(name || '').trim()
+  if (trimmed) {
+    const parts = trimmed.split(/\s+/).filter(Boolean)
+    if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    return trimmed.substring(0, 2).toUpperCase()
+  }
+  if (email) return String(email).substring(0, 2).toUpperCase()
+  return 'U'
+}
 
 export default function SystemHeader({
   systemName = 'Platform', // 'Platform' or 'Simulator'
@@ -53,6 +65,7 @@ export default function SystemHeader({
   const [activeLanguages, setActiveLanguages] = useState([])
   const [internalUserId, setInternalUserId] = useState(null)
   const [user, setUser] = useState(null)
+  const [displayName, setDisplayName] = useState('')
   const [userInitials, setUserInitials] = useState('U')
   const [avatarPath, setAvatarPath] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -80,6 +93,17 @@ export default function SystemHeader({
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    const onProfileUpdated = (event) => {
+      const fullName = String(event.detail?.full_name || '').trim()
+      if (!fullName) return
+      setDisplayName(fullName)
+      setUserInitials(initialsFromFullName(fullName, user?.email))
+    }
+    window.addEventListener(PROFILE_UPDATED_EVENT, onProfileUpdated)
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, onProfileUpdated)
+  }, [user?.email])
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -110,32 +134,25 @@ export default function SystemHeader({
       const { user: currentUser } = await getAuthenticatedUser()
       if (currentUser) {
         setUser(currentUser)
-        // Get user initials from email or name
-        const email = currentUser.email || ''
-        const name = currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || ''
-        
-        if (name) {
-          const parts = name.split(' ')
-          if (parts.length >= 2) {
-            setUserInitials((parts[0][0] + parts[parts.length - 1][0]).toUpperCase())
-          } else {
-            setUserInitials(name.substring(0, 2).toUpperCase())
-          }
-        } else if (email) {
-          setUserInitials(email.substring(0, 2).toUpperCase())
-        }
 
         // Roles are visible in the header at all times (not just on the Profile page) so a
         // user working across multiple projects with different roles always knows which
         // role(s) apply to them, without navigating away from whatever they're doing.
         fetchRoles(currentUser.id)
 
-        supabase
+        const { data } = await supabase
           .from('users')
-          .select('avatar_url')
+          .select('full_name, avatar_url')
           .eq('auth_user_id', currentUser.id)
           .maybeSingle()
-          .then(({ data }) => setAvatarPath(data?.avatar_url || null))
+
+        const fullName = data?.full_name?.trim()
+          || currentUser.user_metadata?.full_name
+          || currentUser.user_metadata?.name
+          || ''
+        setDisplayName(fullName || 'User')
+        setUserInitials(initialsFromFullName(fullName, currentUser.email))
+        setAvatarPath(data?.avatar_url || null)
       }
     } catch (error) {
       console.error('Error fetching user:', error)
@@ -514,7 +531,7 @@ export default function SystemHeader({
                   {user && (
                     <div className={`px-4 py-3 border-b ${borderColor}`}>
                       <p className={`text-sm font-medium ${textColor}`}>
-                        {user.user_metadata?.full_name || user.user_metadata?.name || 'User'}
+                        {displayName || 'User'}
                       </p>
                       <p className={`text-xs ${subtextColor} truncate`}>
                         {user.email}

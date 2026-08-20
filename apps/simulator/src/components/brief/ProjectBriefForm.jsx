@@ -3,8 +3,15 @@
  * Main form container with tabs for all brief sections
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { HoldButton } from '../ui/HoldButton'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import BriefMetadataSection from './BriefMetadataSection'
 import ProjectDefinitionSection from './ProjectDefinitionSection'
 import ScopeSection from './ScopeSection'
@@ -34,6 +41,20 @@ export default function ProjectBriefForm({
   showHoldButton = true
 }) {
   const [activeTab, setActiveTab] = useState('metadata')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !formData?.id) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        formData.created_by,
+        formData.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, formData?.id, formData?.created_by, formData?.updated_by])
 
   const tabs = [
     { id: 'metadata', label: 'Metadata', icon: '📄' },
@@ -82,6 +103,26 @@ export default function ProjectBriefForm({
         return <LessonsReviewSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
       case 'references':
         return <ReferencesSection briefId={formData.id} readOnly={readOnly} />
+      case 'audit':
+        return !formData?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this brief is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this project brief, and how it is classified.">
+            <AuditCard title="Identity" description="How this brief is labelled and tracked.">
+              <AuditField label="Title" value={formData.brief_title || formData.project_title} />
+              <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this brief sits.">
+              <AuditField label="Project definition" value={formData.project_definition} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this brief was created and last changed.">
+              <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+              <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
       default:
         return null
     }
@@ -96,25 +137,16 @@ export default function ProjectBriefForm({
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex overflow-x-auto px-4" aria-label="Tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`
-                  py-4 px-4 border-b-2 font-medium text-sm whitespace-nowrap
-                  ${activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  }
-                `}
-              >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+        <div className="border-b border-gray-200 dark:border-gray-700 px-2">
+          <DetailAuditTabList
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Project brief sections"
+            tabs={[
+              ...tabs.map((tab) => ({ value: tab.id, label: `${tab.icon} ${tab.label}` })),
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
 
         {/* Tab Content */}

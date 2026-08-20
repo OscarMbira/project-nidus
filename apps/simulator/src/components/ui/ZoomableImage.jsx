@@ -10,6 +10,7 @@ export default function ZoomableImage({
   alt,
   imgClassName = '',
   hoverPreviewClassName = 'max-h-64 max-w-xs object-contain',
+  priority = false,
 }) {
   const [lightbox, setLightbox] = useState(false)
   const [hoverRect, setHoverRect] = useState(null)
@@ -57,7 +58,13 @@ export default function ZoomableImage({
         aria-label={`Enlarge ${alt}`}
         className="relative z-10 inline-flex cursor-zoom-in overflow-visible rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
       >
-        <img src={src} alt={alt} className={imgClassName} />
+        <img
+          src={src}
+          alt={alt}
+          className={imgClassName}
+          decoding="async"
+          loading={priority ? 'eager' : 'lazy'}
+        />
       </button>
       {hoverRect && !lightbox && createPortal(
         <div

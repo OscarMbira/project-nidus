@@ -46,10 +46,11 @@ export default function ReportsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateReport(editingId, formData)
+        await updateReport(editingId, editableFields)
       } else {
-        await addReport(cmsId, formData)
+        await addReport(cmsId, editableFields)
       }
       await loadReports()
       setShowForm(false)
@@ -63,6 +64,8 @@ export default function ReportsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (report) => {
     setFormData({
+      id: report.id,
+      created_at: report.created_at,
       report_name: report.report_name || '',
       report_type: report.report_type || '',
       report_description: report.report_description || '',

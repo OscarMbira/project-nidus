@@ -6,6 +6,8 @@ import { Package, Edit2, Trash2, CheckCircle, Clock, AlertCircle, User, Calendar
 import ExportListMenu from '../ui/ExportListMenu'
 import SortToolbar from '../ui/SortToolbar'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { checkpointReportsListPath } from '@nidus/shared/utils/checkpointReportRoutes.js'
 
 const WP_COLUMNS = [
   { key: 'work_package_name', label: 'Name' },
@@ -13,7 +15,7 @@ const WP_COLUMNS = [
   { key: 'status', label: 'Status' }
 ]
 
-export default function WorkPackageList({ workPackages, onEdit, onRefresh, projectId, stageBoundaries }) {
+export default function WorkPackageList({ workPackages, onEdit, onRefresh, projectId, routeKey, stageBoundaries }) {
   const navigate = useNavigate()
   const [deletingId, setDeletingId] = useState(null)
 
@@ -159,7 +161,7 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
               <div className="flex items-center gap-3 mb-2">
                 <h3 
                   className="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400"
-                  onClick={() => navigate(`/projects/${projectId}/work-packages/${wp.id}`)}
+                  onClick={() => navigate(platformProjectPath(routeKey || projectId, 'work-packages', wp.wp_reference || wp.id))}
                 >
                   {wp.work_package_name}
                 </h3>
@@ -186,14 +188,14 @@ export default function WorkPackageList({ workPackages, onEdit, onRefresh, proje
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => navigate(`/app/projects/${projectId}/work-packages/${wp.id}/checkpoint-reports`)}
+                onClick={() => navigate(checkpointReportsListPath(routeKey || projectId, wp.id))}
                 className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
                 title="Checkpoint Reports"
               >
                 <ReportIcon className="h-4 w-4" />
               </button>
               <button
-                onClick={() => navigate(`/projects/${projectId}/work-packages/${wp.id}`)}
+                onClick={() => navigate(platformProjectPath(routeKey || projectId, 'work-packages', wp.wp_reference || wp.id))}
                 className="p-2 text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded"
                 title="View Work Package"
               >

@@ -272,7 +272,7 @@ export default function TierFieldCustomisationPanel({
                 return (
                   <tr key={f.custom_field_definition_id} className="border-t border-gray-200 dark:border-gray-700">
                     <td className="px-3 py-2 text-gray-900 dark:text-gray-100">
-                      <div>{f.label || f.custom_field_definition_id}</div>
+                      <div>{f.label || 'Untitled field'}</div>
                       {(lockLabel || stickyLabel) && (
                         <div className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
                           {lockLabel || stickyLabel}

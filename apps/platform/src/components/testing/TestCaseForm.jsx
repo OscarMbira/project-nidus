@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { X, Save, ClipboardList } from 'lucide-react'
 import TestCaseStepEditor from './TestCaseStepEditor'
+import { platformDb } from '@nidus/supabase'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRIORITIES = ['critical','high','medium','low']
 const TEST_TYPES  = ['manual','automated','exploratory']
@@ -37,10 +43,19 @@ export default function TestCaseForm({
   const [errors, setErrors] = useState({})
   /** `general` = metadata & narrative fields; `steps` = step-by-step editor only */
   const [activeTab, setActiveTab] = useState('general')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     setActiveTab('general')
   }, [testCase?.id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !testCase) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [testCase.created_by, testCase.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, testCase])
 
   useEffect(() => {
     if (testCase) {
@@ -164,6 +179,21 @@ export default function TestCaseForm({
                     {form.steps.length}
                   </span>
                 )}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                id="test-case-tab-audit"
+                aria-selected={activeTab === 'audit'}
+                aria-controls="test-case-panel-audit"
+                onClick={() => setActiveTab('audit')}
+                className={`px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  activeTab === 'audit'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-200'
+                }`}
+              >
+                Audit details
               </button>
             </nav>
           </div>
@@ -338,6 +368,36 @@ export default function TestCaseForm({
                 steps={form.steps}
                 onChange={steps => setForm(f => ({ ...f, steps }))}
               />
+            </div>
+
+            <div
+              id="test-case-panel-audit"
+              role="tabpanel"
+              aria-labelledby="test-case-tab-audit"
+              hidden={activeTab !== 'audit'}
+              className={activeTab !== 'audit' ? 'hidden' : ''}
+            >
+              {!testCase ? (
+                <p className="text-sm text-gray-400">Audit details appear after this test case is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who created or changed this test case, and how it is classified.">
+                  <AuditCard title="Identity" description="How this test case is labelled and tracked.">
+                    <AuditField label="Reference" value={testCase.test_case_ref} />
+                    <AuditField label="Title" value={testCase.title} />
+                    <AuditField label="Status" value={humanizeAuditToken(testCase.status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="How this test case is categorised.">
+                    <AuditField label="Test type" value={humanizeAuditToken(testCase.test_type)} />
+                    <AuditField label="Priority" value={humanizeAuditToken(testCase.priority)} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this test case was created and last changed.">
+                    <AuditField label="Created by" value={testCase.created_by ? auditUserLabels[testCase.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={testCase.created_at} />
+                    <AuditField label="Updated by" value={testCase.updated_by ? auditUserLabels[testCase.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={testCase.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )}
             </div>
           </div>
 

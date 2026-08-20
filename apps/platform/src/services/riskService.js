@@ -44,6 +44,8 @@ export async function getRisksByProject(projectId, filters = {}) {
     // Apply filters
     if (filters.status) {
       query = query.eq('status_enum', filters.status);
+    } else if (filters.status_in?.length) {
+      query = query.in('status_enum', filters.status_in);
     }
     if (filters.risk_type) {
       query = query.eq('risk_type', filters.risk_type);
@@ -53,6 +55,8 @@ export async function getRisksByProject(projectId, filters = {}) {
     }
     if (filters.risk_level) {
       query = query.eq('pre_risk_score', filters.risk_level);
+    } else if (filters.risk_level_in?.length) {
+      query = query.in('pre_risk_score', filters.risk_level_in);
     }
     if (filters.proximity) {
       query = query.eq('proximity', filters.proximity);
@@ -62,6 +66,16 @@ export async function getRisksByProject(projectId, filters = {}) {
     }
     if (filters.search) {
       query = query.or(`risk_title.ilike.%${filters.search}%,risk_description.ilike.%${filters.search}%,cause_description.ilike.%${filters.search}%,event_description.ilike.%${filters.search}%`);
+    }
+    if (filters.overdue_responses_only) {
+      const { data: overdue } = await platformDb
+        .from('risk_responses')
+        .select('risk_id')
+        .in('status', ['planned', 'in_progress'])
+        .lt('target_date', new Date().toISOString().split('T')[0]);
+      const riskIds = [...new Set((overdue || []).map((r) => r.risk_id))];
+      // No-match sentinel keeps the query valid (and empty) when nothing is overdue.
+      query = query.in('id', riskIds.length ? riskIds : ['00000000-0000-0000-0000-000000000000']);
     }
 
     // Ordering

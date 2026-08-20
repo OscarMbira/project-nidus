@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, PauseCircle } from 'lucide-react'
-import { useOPATailoringContext } from '@nidus/shared/hooks/useOPATailoringContext'
+import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import { getOPAService } from '../../services/resolvers/opaServiceResolver'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -14,7 +16,8 @@ export default function ProjectOPACopy() {
   const location = useLocation()
   const { customisationId: routeId } = useParams()
   const isEditRoute = location.pathname.endsWith('/edit')
-  const editId = isEditRoute && routeId ? routeId : null
+  const routeEditKey = isEditRoute && routeId ? routeId : null
+  const [editId, setEditId] = useState(null)
   const fromOpa = searchParams.get('from_opa')
 
   useEffect(() => {
@@ -41,13 +44,27 @@ export default function ProjectOPACopy() {
   const [isOnHold, setIsOnHold] = useState(false)
   const [onHoldReason, setOnHoldReason] = useState('')
   const [sourceOpaId, setSourceOpaId] = useState(fromOpa || '')
-  const [loading, setLoading] = useState(!!editId || !!fromOpa)
+  const [loading, setLoading] = useState(!!routeEditKey || !!fromOpa)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
   const [inheritedFrom, setInheritedFrom] = useState(null)
 
   useEffect(() => {
-    if (editId || fromOpa || sourceOpaId || !projectId) return
+    if (!projectId || !routeEditKey) return
+    let cancelled = false
+    ;(async () => {
+      const id = isLikelyDatabaseUuid(routeEditKey)
+        ? routeEditKey
+        : await resolveEntityId('opaCustomisation', routeEditKey, projectId)
+      if (!cancelled) setEditId(id)
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [routeEditKey, projectId])
+
+  useEffect(() => {
+    if (routeEditKey || fromOpa || sourceOpaId || !projectId) return
     let cancelled = false
     ;(async () => {
       const opaSvc = getOPAService(isSim)
@@ -59,7 +76,7 @@ export default function ProjectOPACopy() {
     return () => {
       cancelled = true
     }
-  }, [editId, fromOpa, sourceOpaId, projectId, isSim])
+  }, [routeEditKey, fromOpa, sourceOpaId, projectId, isSim])
 
   useEffect(() => {
     if (!editId) return
@@ -158,7 +175,7 @@ export default function ProjectOPACopy() {
       setErr(error.message)
       return
     }
-    navigate(`${base}/${data?.id || editId}`)
+    navigate(`${base}/${data?.opa_reference || data?.id || editId}`)
   }
 
   if (loading) {

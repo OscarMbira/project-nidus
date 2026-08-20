@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Copy } from 'lucide-react'
 import { getTemplateById, getMasterVersionHistory } from '../../services/templateLibraryService'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const BASE = '/platform/templates'
 
@@ -12,6 +19,21 @@ export default function TemplateDetail() {
   const [row, setRow] = useState(null)
   const [versions, setVersions] = useState([])
   const [err, setErr] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        row.created_by,
+        row.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, row])
 
   useEffect(() => {
     ;(async () => {
@@ -62,6 +84,30 @@ export default function TemplateDetail() {
           </Link>
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this template, and how it is classified.">
+          <AuditCard title="Identity" description="How this template is labelled and tracked.">
+            <AuditField label="Title" value={row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+            <AuditField label="Version" value={row.version} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this template sits.">
+            <AuditField label="Type" value={humanizeAuditToken(row.template_type_code)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this template was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
+      <>
       <div className="prose dark:prose-invert max-w-none mb-8">
         <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{row.description || '—'}</p>
         {row.purpose && (
@@ -85,6 +131,8 @@ export default function TemplateDetail() {
           ))}
         </ul>
       </div>
+      </>
+      )}
     </div>
   )
 }

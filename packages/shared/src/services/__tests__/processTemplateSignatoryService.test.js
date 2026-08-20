@@ -3,6 +3,16 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// assigned_user_id always FKs to public.users(id), even for sim.* signatory rows (no
+// sim.users table exists) — buildUserLabelLookup always queries platformDb, never the
+// schema-scoped `db` param, so it must be mocked separately from the `db` test double.
+const { mockPlatformDb } = vi.hoisted(() => ({ mockPlatformDb: { from: vi.fn() } }))
+vi.mock('@nidus/supabase', () => ({ platformDb: mockPlatformDb }))
+vi.mock('../../utils/accountResolution', () => ({
+  getCurrentUserInternalUserId: vi.fn().mockResolvedValue('user-1'),
+}))
+
 import {
   validateSignatureFile,
   saveSignatoryRequirements,
@@ -14,10 +24,15 @@ import {
   declineSlot,
   restartSigningChain,
   isDocumentFullySigned,
+  signSlot,
+  resolveDocumentSignaturesForExport,
   normalizeRequirementSlots,
   areMandatorySlotsSigned,
   earlierMandatorySlotsSigned,
   slotIsMandatory,
+  canLockRemainingOptionalSlots,
+  lockRemainingOptionalSignatories,
+  getDeclinedSignatoryCount,
   pickEffectiveSignatoryLevels,
   MAX_SIGNATURE_FILE_SIZE_BYTES,
 } from '../processTemplateSignatoryService'
@@ -30,7 +45,7 @@ function makeFile({ name = 'signature.png', type = 'image/png', size = 1024 } = 
  * thenable so `await` resolves at whichever point the code stops chaining. */
 function chainable(result) {
   const obj = {}
-  const methods = ['select', 'eq', 'is', 'order', 'limit', 'update', 'insert', 'upsert', 'delete', 'single', 'maybeSingle']
+  const methods = ['select', 'eq', 'is', 'in', 'order', 'limit', 'update', 'insert', 'upsert', 'delete', 'single', 'maybeSingle']
   methods.forEach((m) => { obj[m] = vi.fn(() => obj) })
   obj.then = (resolve) => Promise.resolve(result).then(resolve)
   return obj
@@ -298,6 +313,104 @@ describe('deleteSavedSignature', () => {
   })
 })
 
+describe('resolveDocumentSignaturesForExport', () => {
+  beforeEach(() => {
+    mockPlatformDb.from.mockReset()
+  })
+
+  it('includes mime_type/file_name/caption on a signed asset so export renderers embed it as an image', async () => {
+    // Regression test: the Word/PPT/PDF renderers decide "embed as image" purely from
+    // asset.mime_type (see apps/platform/src/utils/exportUtils.js isEmbeddableImageAsset).
+    // Without mime_type on the returned asset, a real signed signature silently rendered
+    // as a blank "Attachment" caption instead of the actual image.
+    const db = makeDb()
+    const roundNumber = chainable({ data: [{ signing_round: 1 }], error: null })
+    const signedRow = {
+      id: 'row-1',
+      slot_order: 1,
+      role_label: 'Project Manager',
+      status: 'signed',
+      is_mandatory: true,
+      assigned_user_id: 'user-1',
+      storage_path: 'platform/node-1/1/1/signature.png',
+      file_name: 'signature.png',
+      mime_type: 'image/png',
+      display_id: 'PPTD-001',
+      signed_at: '2026-08-16T10:26:03Z',
+    }
+    const rows = chainable({ data: [signedRow], error: null })
+    const users = chainable({ data: [{ id: 'user-1', full_name: 'Jane Doe', email: 'jane@example.com' }], error: null })
+    db.from
+      .mockReturnValueOnce(roundNumber) // getCurrentRoundNumber
+      .mockReturnValueOnce(rows) // getDocumentSignatories select
+    mockPlatformDb.from.mockReturnValueOnce(users) // buildUserLabelLookup: always platformDb, even when db=simDb
+    db.storage.from.mockReturnValue({
+      createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'https://signed.example/sig.png' }, error: null }),
+    })
+
+    const result = await resolveDocumentSignaturesForExport(db, 'node-1')
+
+    expect(result.success).toBe(true)
+    expect(result.data.assets).toHaveLength(1)
+    const asset = result.data.assets[0]
+    expect(asset.mime_type).toBe('image/png')
+    expect(asset.file_name).toBe('signature.png')
+    expect(asset.url).toBe('https://signed.example/sig.png')
+    // Regression: the caption/signer_label must show the resolved display name, not the
+    // raw assigned_user_id UUID, since that's what the export/preview surfaces to users.
+    expect(asset.signer_label).toBe('Jane Doe')
+    expect(asset.caption).toContain('Jane Doe')
+    expect(asset.caption).not.toContain('user-1')
+    expect(asset.caption).toContain('Project Manager')
+    expect(asset.caption).toContain('signed')
+  })
+
+  it('falls back to a role-based file_name when the row has none', async () => {
+    const db = makeDb()
+    const roundNumber = chainable({ data: [{ signing_round: 1 }], error: null })
+    const signedRow = {
+      id: 'row-1',
+      slot_order: 1,
+      role_label: 'Sponsor',
+      status: 'signed',
+      is_mandatory: true,
+      storage_path: 'platform/node-1/1/1/signature.png',
+      file_name: null,
+      mime_type: 'image/jpeg',
+    }
+    const rows = chainable({ data: [signedRow], error: null })
+    db.from.mockReturnValueOnce(roundNumber).mockReturnValueOnce(rows)
+    db.storage.from.mockReturnValue({
+      createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'https://signed.example/sig.jpg' }, error: null }),
+    })
+
+    const result = await resolveDocumentSignaturesForExport(db, 'node-1')
+
+    expect(result.data.assets[0].file_name).toBe('Sponsor signature')
+  })
+
+  it('describes pending, declined, and optional-unsigned slots as text only (no asset)', async () => {
+    const db = makeDb()
+    const roundNumber = chainable({ data: [{ signing_round: 1 }], error: null })
+    const rowsData = [
+      { id: 'r1', slot_order: 1, role_label: 'PMO Admin', status: 'pending', is_mandatory: true },
+      { id: 'r2', slot_order: 2, role_label: 'Sponsor', status: 'declined', decline_reason: 'Out of office', is_mandatory: true },
+      { id: 'r3', slot_order: 3, role_label: 'Portfolio Manager', status: 'pending', is_mandatory: false },
+    ]
+    const rows = chainable({ data: rowsData, error: null })
+    db.from.mockReturnValueOnce(roundNumber).mockReturnValueOnce(rows)
+
+    const result = await resolveDocumentSignaturesForExport(db, 'node-1')
+
+    expect(result.data.assets).toHaveLength(0)
+    expect(result.data.textValues).toEqual([
+      'PMO Admin: Pending',
+      'Sponsor: Declined — Out of office',
+      'Portfolio Manager: Optional — not signed',
+    ])
+  })
+})
+
 describe('normalizeRequirementSlots / mandatory helpers', () => {
   it('defaults string slots to mandatory', () => {
     expect(normalizeRequirementSlots(['PM', '  ', { role_label: 'Sponsor', is_mandatory: false }])).toEqual([
@@ -464,6 +577,29 @@ describe('saveSignatoryRequirementsForTables', () => {
   })
 })
 
+describe('signSlot', () => {
+  it('uploads and updates without a round lookup when file and signingRound are provided', async () => {
+    const db = makeDb()
+    const upload = vi.fn().mockResolvedValue({ error: null })
+    db.storage.from.mockReturnValue({ upload })
+    const updateChain = chainable({ data: { id: 'row-1', status: 'signed' }, error: null })
+    db.from.mockReturnValue(updateChain)
+
+    const result = await signSlot(db, {
+      templateNodeId: 'node-1',
+      slotOrder: 1,
+      file: makeFile(),
+      signingRound: 1,
+    })
+
+    expect(result.success).toBe(true)
+    expect(db.storage.from).toHaveBeenCalledWith('process-template-signatures')
+    expect(upload).toHaveBeenCalled()
+    expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({ status: 'signed' }))
+    expect(db.from).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('declineSlot', () => {
   it('rejects an empty reason without calling the database', async () => {
     const db = makeDb()
@@ -559,5 +695,79 @@ describe('isDocumentFullySigned', () => {
     })
     db.from.mockReturnValueOnce(roundChain).mockReturnValueOnce(slotsChain)
     expect(await isDocumentFullySigned(db, 'node-1')).toBe(true)
+  })
+})
+
+describe('canLockRemainingOptionalSlots', () => {
+  const mandatorySignedByUser1 = { slot_order: 1, is_mandatory: true, status: 'signed', assigned_user_id: 'user-1' }
+  const optionalPending = { slot_order: 2, is_mandatory: false, status: 'pending', assigned_user_id: 'user-2' }
+
+  it('is false without a userId', () => {
+    expect(canLockRemainingOptionalSlots([mandatorySignedByUser1, optionalPending], null)).toBe(false)
+  })
+
+  it('is false when not every mandatory slot is signed yet', () => {
+    const laterMandatoryPending = { slot_order: 3, is_mandatory: true, status: 'pending', assigned_user_id: 'user-3' }
+    expect(canLockRemainingOptionalSlots([mandatorySignedByUser1, optionalPending, laterMandatoryPending], 'user-1')).toBe(false)
+  })
+
+  it('is false when the caller did not sign a mandatory slot themselves', () => {
+    expect(canLockRemainingOptionalSlots([mandatorySignedByUser1, optionalPending], 'user-2')).toBe(false)
+  })
+
+  it('is false when there is no pending optional slot left to lock', () => {
+    const optionalSigned = { ...optionalPending, status: 'signed' }
+    expect(canLockRemainingOptionalSlots([mandatorySignedByUser1, optionalSigned], 'user-1')).toBe(false)
+  })
+
+  it('is true for a signed mandatory signatory once all mandatory slots are signed and an optional slot is pending', () => {
+    expect(canLockRemainingOptionalSlots([mandatorySignedByUser1, optionalPending], 'user-1')).toBe(true)
+  })
+})
+
+describe('lockRemainingOptionalSignatories', () => {
+  it('rejects an empty reason without calling the database', async () => {
+    const db = makeDb()
+    const result = await lockRemainingOptionalSignatories(db, { templateNodeId: 'node-1', reason: '   ' })
+    expect(result.success).toBe(false)
+    expect(db.from).not.toHaveBeenCalled()
+  })
+
+  it('flips every pending optional slot in the current round to expired, leaving mandatory slots untouched', async () => {
+    const db = makeDb()
+    const roundChain = chainable({ data: [{ signing_round: 2 }], error: null })
+    const expiredRows = [{ id: 'row-2', slot_order: 2, status: 'expired', lock_reason: 'Waited two weeks' }]
+    const updateChain = chainable({ data: expiredRows, error: null })
+    db.from
+      .mockReturnValueOnce(roundChain) // getCurrentRoundNumber
+      .mockReturnValueOnce(updateChain) // the lock update
+
+    const result = await lockRemainingOptionalSignatories(db, { templateNodeId: 'node-1', reason: 'Waited two weeks' })
+
+    expect(updateChain.update).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'expired', lock_reason: 'Waited two weeks', locked_by: 'user-1',
+    }))
+    expect(updateChain.eq).toHaveBeenCalledWith('status', 'pending')
+    expect(updateChain.eq).toHaveBeenCalledWith('is_mandatory', false)
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual(expiredRows)
+  })
+})
+
+describe('getDeclinedSignatoryCount', () => {
+  it('returns the count of declined rows across every round', async () => {
+    const db = makeDb()
+    db.from.mockReturnValue(chainable({ count: 3, error: null }))
+    const result = await getDeclinedSignatoryCount(db, 'node-1')
+    expect(result.success).toBe(true)
+    expect(result.data).toBe(3)
+  })
+
+  it('returns 0 when nothing has ever been declined', async () => {
+    const db = makeDb()
+    db.from.mockReturnValue(chainable({ count: 0, error: null }))
+    const result = await getDeclinedSignatoryCount(db, 'node-1')
+    expect(result.success).toBe(true)
+    expect(result.data).toBe(0)
   })
 })

@@ -19,12 +19,18 @@ import {
 } from '../../../services/programmeService';
 import { platformDb } from '@nidus/supabase';
 import { logAction } from '../../../services/pmoAuditService';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-const ProgrammeDetailModal = memo(function ProgrammeDetailModal({ 
-  programme, 
-  rollup, 
-  onClose, 
-  onRefresh 
+const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
+  programme,
+  rollup,
+  onClose,
+  onRefresh
 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,12 +38,22 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
   const [availableProjects, setAvailableProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [assigning, setAssigning] = useState(false);
+  const [activeTab, setActiveTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
 
   useEffect(() => {
     if (programme?.id) {
       loadProjects();
     }
   }, [programme?.id]);
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !programme) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [programme.created_by, programme.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [activeTab, programme]);
 
   const loadProjects = async () => {
     if (!programme?.id) return;
@@ -204,8 +220,33 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+          <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+        </div>
+
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          {activeTab === 'audit' ? (
+            <AuditDetailsPanel description="Who created or changed this programme, and how it is classified.">
+              <AuditCard title="Identity" description="How this programme is labelled and tracked.">
+                <AuditField label="Code" value={programme.programme_code} />
+                <AuditField label="Name" value={programme.programme_name} />
+                <AuditField label="Status" value={programme.programme_status} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this programme sits.">
+                <AuditField label="RAG status" value={rollup?.programme_rag_status || programme.rag_status} />
+                <AuditField label="Total projects" value={rollup?.total_projects ?? projects.length} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this programme was created and last changed.">
+                <AuditField label="Created by" value={programme.created_by ? auditUserLabels[programme.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={programme.created_at} />
+                <AuditField label="Updated by" value={programme.updated_by ? auditUserLabels[programme.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={programme.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          ) : (
+          <>
           {/* Programme Info */}
           <div className="mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -389,6 +430,8 @@ const ProgrammeDetailModal = memo(function ProgrammeDetailModal({
               </div>
             )}
           </div>
+          </>
+          )}
         </div>
       </div>
     </div>

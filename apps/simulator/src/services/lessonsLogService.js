@@ -61,27 +61,26 @@ export async function createLessonsLog(projectId) {
  */
 export async function getLessonsLogByProject(projectId) {
   try {
+    // maybeSingle: no header row is normal (HTTP 406 / PGRST116 with .single()).
+    // Keep embeds minimal — multiple FKs to users can confuse PostgREST.
     const { data, error } = await platformDb
       .from('lessons_logs')
       .select(`
         *,
-        projects:project_id(id, project_name, project_code),
-        author:author_id(id, full_name, email),
-        owner:owner_id(id, full_name, email)
+        projects:project_id(id, project_name, project_code)
       `)
       .eq('project_id', projectId)
       .eq('is_deleted', false)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      // Log doesn't exist yet - return null
       if (error.code === 'PGRST116') {
         return { success: true, data: null };
       }
       throw error;
     }
 
-    return { success: true, data };
+    return { success: true, data: data || null };
   } catch (error) {
     console.error('Error fetching lessons log:', error);
     return { success: false, error: error.message };

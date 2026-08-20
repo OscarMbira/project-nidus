@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { Upload, FileText, CheckCircle, XCircle, Clock, Globe, Edit, Eye } from 'lucide-react';
+import { Upload, FileText, CheckCircle, XCircle, Clock, Globe } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import {
   getUserCustomScenarios,
   uploadScenarioDocument,
@@ -379,14 +380,7 @@ const CustomScenarios = () => {
                       )}
                     </button>
                   )}
-                  <button
-                    className={`px-3 py-2 rounded-lg text-sm font-medium ${
-                      theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                    } flex items-center space-x-2`}
-                  >
-                    <Edit className="w-4 h-4" />
-                    <span>Edit</span>
-                  </button>
+                  <RowActionButton variant="edit" label="Edit scenario" onClick={() => {}} />
                 </div>
               </div>
             </div>

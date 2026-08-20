@@ -340,55 +340,75 @@ export async function assignProjectRole(projectId, authUserId, roleName, useCust
   }
 }
 
+const _projectRolesInFlight = new Map()
+
 /**
  * Get user's project roles (all projects they're member of)
  * @param {string} authUserId - Auth user ID
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
 export async function getUserProjectRoles(authUserId) {
-  try {
-    // Get internal user ID
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUserId)
-      .single()
+  // In-flight de-dupe: SystemHeader's own role fetch and CurrentProjectContext both
+  // independently call this for the same authUserId on every /platform/* and /pm/*
+  // page load — under React 18 StrictMode's dev-only double-invoke that's up to 4
+  // near-simultaneous identical project_memberships queries. Collapse concurrent
+  // callers for the same user onto one shared request (not a persistent cache — a
+  // call a moment later still runs fresh).
+  if (_projectRolesInFlight.has(authUserId)) return _projectRolesInFlight.get(authUserId)
 
-    if (userError || !user) {
-      return { success: false, data: [], error: 'User not found' }
+  const run = (async () => {
+    try {
+      // Get internal user ID
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUserId)
+        .single()
+
+      if (userError || !user) {
+        return { success: false, data: [], error: 'User not found' }
+      }
+
+      const { data, error } = await supabase
+        .from('project_memberships')
+        .select(`
+          id,
+          project_id,
+          projects:project_id (
+            project_name,
+            project_code
+          ),
+          project_roles:project_role_id (
+            role_name,
+            role_display_name,
+            permissions,
+            is_governance_only
+          ),
+          is_active
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+
+      if (error) throw error
+
+      return { success: true, data: data || [], error: null }
+    } catch (error) {
+      console.error('Error getting user project roles:', error)
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get user project roles'
+      }
     }
+  })().finally(() => {
+    _projectRolesInFlight.delete(authUserId)
+  })
 
-    const { data, error } = await supabase
-      .from('project_memberships')
-      .select(`
-        id,
-        project_id,
-        projects:project_id (
-          project_name,
-          project_code
-        ),
-        project_roles:project_role_id (
-          role_name,
-          role_display_name,
-          permissions
-        ),
-        is_active
-      `)
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-
-    if (error) throw error
-
-    return { success: true, data: data || [], error: null }
-  } catch (error) {
-    console.error('Error getting user project roles:', error)
-    return {
-      success: false,
-      data: [],
-      error: error.message || 'Failed to get user project roles'
-    }
-  }
+  _projectRolesInFlight.set(authUserId, run)
+  return run
 }
+
+const _systemRolesInFlight = new Map()
 
 /**
  * Get user's system roles (Account Owner, etc.)
@@ -396,42 +416,57 @@ export async function getUserProjectRoles(authUserId) {
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
 export async function getUserSystemRoles(authUserId) {
-  try {
-    // Get internal user ID
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUserId)
-      .single()
+  // In-flight de-dupe — see getUserProjectRoles' comment above; same duplication
+  // source (SystemHeader's fetchRoles + StrictMode double-invoke).
+  if (_systemRolesInFlight.has(authUserId)) return _systemRolesInFlight.get(authUserId)
 
-    if (userError || !user) {
-      return { success: false, data: [], error: 'User not found' }
+  const run = (async () => {
+    try {
+      // Get internal user ID
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', authUserId)
+        .single()
+
+      if (userError || !user) {
+        return { success: false, data: [], error: 'User not found' }
+      }
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select(`
+          id,
+          roles:role_id (
+            role_name,
+            role_display_name,
+            role_level
+          ),
+          is_active
+        `)
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        // Project-scoped rows (legacy pm_* invitation roles — see v580/v622) are NOT system
+        // roles. Only account_owner/pmo_admin-style org-wide roles have project_id NULL; a
+        // per-project legacy row here would wrongly win the header's "system role" badge.
+        .is('project_id', null)
+
+      if (error) throw error
+
+      return { success: true, data: data || [], error: null }
+    } catch (error) {
+      console.error('Error getting user system roles:', error)
+      return {
+        success: false,
+        data: [],
+        error: error.message || 'Failed to get user system roles'
+      }
     }
+  })().finally(() => {
+    _systemRolesInFlight.delete(authUserId)
+  })
 
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select(`
-        id,
-        roles:role_id (
-          role_name,
-          role_display_name,
-          role_level
-        ),
-        is_active
-      `)
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-
-    if (error) throw error
-
-    return { success: true, data: data || [], error: null }
-  } catch (error) {
-    console.error('Error getting user system roles:', error)
-    return {
-      success: false,
-      data: [],
-      error: error.message || 'Failed to get user system roles'
-    }
-  }
+  _systemRolesInFlight.set(authUserId, run)
+  return run
 }
 

@@ -259,6 +259,9 @@ export async function createInstanceLocalField(db, {
     custom_field_definition_id: def.id,
     is_local: true,
     enabled: true,
+    // Persist display name on the link so resolveEffectiveFields shows it even
+    // before definition hydration runs (and matches PMO-seeded label_override rows).
+    label_override: String(label).trim(),
   })
   return def
 }

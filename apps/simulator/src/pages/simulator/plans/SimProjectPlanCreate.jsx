@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticePlan } from '../../../services/sim/practicePlanService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimProjectPlanCreate() {
   const { projectId } = useParams()
@@ -14,6 +15,7 @@ export default function SimProjectPlanCreate() {
     planned_start_date: '',
     planned_end_date: '',
   })
+  const [formTab, setFormTab] = useState('details')
   const base = `/simulator/practice-projects/${projectId}/plans`
 
   const handleSubmit = async (e) => {
@@ -39,6 +41,12 @@ export default function SimProjectPlanCreate() {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back to plans
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create project plan</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Title *</label>
@@ -68,6 +76,7 @@ export default function SimProjectPlanCreate() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

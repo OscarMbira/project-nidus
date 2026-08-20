@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle, Lightbulb, ArrowUp } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 
 export default function LessonCard({ lesson, onEscalate, onEdit, onDelete, mode = 'view' }) {
   const getTypeIcon = (type) => {
@@ -71,20 +72,10 @@ export default function LessonCard({ lesson, onEscalate, onEdit, onDelete, mode 
               </button>
             )}
             {onEdit && (
-              <button
-                onClick={() => onEdit(lesson)}
-                className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"
-              >
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit lesson" onClick={() => onEdit(lesson)} />
             )}
             {onDelete && (
-              <button
-                onClick={() => onDelete(lesson.id)}
-                className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
-              >
-                Delete
-              </button>
+              <RowActionButton variant="delete" label="Delete lesson" onClick={() => onDelete(lesson.id)} />
             )}
           </div>
         )}

@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { createTemplate, listTemplateCategories } from '../../services/templateLibraryService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { TEMPLATE_TYPE_OPTIONS, defaultContentSchemaForType, emptyContentFromSchema } from '../../services/templateLibraryConstants'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const BASE = '/platform/templates'
 
@@ -25,6 +26,7 @@ export default function TemplateCreate() {
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [formTab, setFormTab] = useState('wizard')
 
   useEffect(() => {
     ;(async () => {
@@ -105,7 +107,16 @@ export default function TemplateCreate() {
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">New template</h1>
-      <div className="flex gap-2 mb-6 text-sm">
+
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Create" auditLabel="Audit details" />
+
+      {formTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Audit details appear after this template is saved.</p>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
+      <div className="flex gap-2 mb-6 mt-4 text-sm">
         {[1, 2, 3, 4].map((s) => (
           <button
             key={s}
@@ -256,6 +267,8 @@ export default function TemplateCreate() {
             </button>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   )

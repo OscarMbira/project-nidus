@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react';
 import { FileText, X, Save, Calendar, User, Target, Users, DollarSign, BarChart3, AlertTriangle, CheckCircle } from 'lucide-react';
 import { saveBenefitsReviewPlan } from '../../services/benefitsReviewPlanService';
 import { platformDb, supabase } from '../../services/supabaseClient';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -48,6 +54,18 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
   const [programmes, setProgrammes] = useState([]);
   const [saving, setSaving] = useState(false);
   const [activeSection, setActiveSection] = useState('header');
+  const [formTab, setFormTab] = useState('wizard');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !plan?.id) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [formData.created_by, formData.updated_by]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, plan?.id, formData.created_by, formData.updated_by]);
 
   useEffect(() => {
     if (plan) {
@@ -631,6 +649,40 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
           </button>
         </div>
 
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' && (
+          <div className="p-6 overflow-y-auto">
+            {!plan?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this benefits review plan, and how it is classified.">
+                <AuditCard title="Identity" description="How this plan is labelled and tracked.">
+                  <AuditField label="Title" value={formData.plan_title} />
+                  <AuditField label="Reference" value={formData.document_ref} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this plan sits.">
+                  <AuditField label="Project" value={formData.project?.project_name} />
+                  <AuditField label="Programme" value={formData.programme?.programme_name} />
+                  <AuditField label="Author" value={formData.author?.full_name || formData.author?.email} />
+                  <AuditField label="Owner" value={formData.owner?.full_name || formData.owner?.email} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this plan was created and last changed.">
+                  <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+                  <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'wizard' && (
+        <>
         {/* Section Navigation */}
         <div className="flex gap-2 px-6 pt-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           {sections.map((section) => {
@@ -677,6 +729,8 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
             </button>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );

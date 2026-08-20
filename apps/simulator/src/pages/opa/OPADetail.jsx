@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
 import { deleteOPA, getOPAById } from '../../services/opaService'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function OPADetail() {
   const { id } = useParams()
@@ -10,6 +17,16 @@ export default function OPADetail() {
   const [row, setRow] = useState(null)
   const [err, setErr] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [row.created_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     let c = false
@@ -106,6 +123,29 @@ export default function OPADetail() {
           </button>
         </div>
       </div>
+
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      </div>
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created this OPA record, and how it is classified.">
+          <AuditCard title="Identity" description="How this OPA record is labelled and tracked.">
+            <AuditField label="Title" value={row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this OPA record is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(row.opa_type)} />
+            <AuditField label="Version" value={row.version} />
+            <AuditField label="Category" value={row.category?.name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this OPA record was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <dl className="grid sm:grid-cols-2 gap-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <div>
           <dt className="text-xs uppercase text-gray-500">Type</dt>
@@ -132,6 +172,7 @@ export default function OPADetail() {
           <dd className="text-gray-900 dark:text-white whitespace-pre-wrap">{row.notes || '—'}</dd>
         </div>
       </dl>
+      )}
     </div>
   )
 }

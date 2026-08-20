@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
 import { format, addDays, differenceInDays } from 'date-fns'
+import { RowActionButton } from '@nidus/ui'
 
 export default function SprintPlanning() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -468,12 +469,11 @@ function PlanningTab({
                 >
                   View Board
                 </button>
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit sprint"
                   onClick={() => onEditSprint(activeSprint)}
-                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Edit Sprint
-                </button>
+                />
               </>
             )}
             <button
@@ -805,15 +805,14 @@ function SprintsTab({ sprints, onCreateSprint, onEditSprint, onSelectSprint }) {
                 >
                   Open
                 </button>
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit sprint"
                   onClick={(e) => {
                     e.stopPropagation()
                     onEditSprint(sprint)
                   }}
-                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                >
-                  Edit
-                </button>
+                />
               </div>
             </div>
           ))}

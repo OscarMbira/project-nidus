@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Plus, Pencil, Search, Copy } from 'lucide-react'
+import { Plus, Search, Copy } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import toast from 'react-hot-toast'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { platformDb } from '@nidus/supabase'
@@ -312,16 +313,14 @@ export default function ITTOTemplateList({ isSim = false }) {
                   )}
                   {canEdit && (
                     <>
-                      <button
-                        type="button"
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit ITTO template"
                         onClick={() => {
                           setEditRow(r)
                           setFormOpen(true)
                         }}
-                        className="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-200"
-                      >
-                        <Pencil className="h-4 w-4" /> Edit
-                      </button>
+                      />
                       <button
                         type="button"
                         onClick={() => handleArchive(r)}
@@ -389,16 +388,14 @@ export default function ITTOTemplateList({ isSim = false }) {
                     )}
                     {canEdit && (
                       <>
-                        <button
-                          type="button"
-                          className="text-gray-700 dark:text-gray-200"
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit ITTO template"
                           onClick={() => {
                             setEditRow(r)
                             setFormOpen(true)
                           }}
-                        >
-                          Edit
-                        </button>
+                        />
                         <button type="button" className="text-amber-700 dark:text-amber-400" onClick={() => handleArchive(r)}>
                           Archive
                         </button>

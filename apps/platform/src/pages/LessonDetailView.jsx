@@ -7,7 +7,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { ArrowLeft, Edit2, Trash2, Building2, Star } from 'lucide-react';
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
+import { ArrowLeft, Building2, Star } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import { getLessonById, updateLesson, deleteLesson } from '../services/lessonService';
 import { promoteToCorporate } from '../services/corporateLessonsService';
 import LessonTypeBadge from '../components/lessonsLog/LessonTypeBadge';
@@ -21,6 +23,12 @@ import CreateRiskFromLessonWidget from '../components/lessonsLog/CreateRiskFromL
 import LessonCompletenessIndicator from '../components/lessonsLog/LessonCompletenessIndicator';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
 const LESSON_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -41,27 +49,35 @@ const LESSON_EXPORT_SECTIONS = [
 
 export default function LessonDetailView() {
   const { lessonId } = useParams()
-  const { projectId, routeKey } = usePlatformProjectId();
+  const { projectId, routeKey, loading: projectRouteLoading } = usePlatformProjectId();
   const navigate = useNavigate();
-  
+
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('details');
 
   useEffect(() => {
-    if (lessonId) {
+    if (lessonId && projectId) {
       fetchLesson();
+    } else if (!projectRouteLoading && !projectId) {
+      // Avoid an infinite spinner when the project route param cannot be resolved
+      setLoading(false);
     }
-  }, [lessonId]);
+  }, [lessonId, projectId, projectRouteLoading]);
 
   const fetchLesson = async () => {
     try {
       setLoading(true);
-      const result = await getLessonById(lessonId);
+      const result = await getLessonById(lessonId, projectId);
       if (result.success) {
         setLesson(result.data);
+        // Self-correct a raw-UUID bookmark to the friendly reference, same pattern as v872.
+        if (result.data?.lesson_reference && result.data.lesson_reference !== lessonId) {
+          navigate(platformProjectPath(routeKey, 'lessons', result.data.lesson_reference), { replace: true });
+        }
       } else {
         alert('Error loading lesson: ' + result.error);
-        navigate(`/app/projects/${projectId}/lessons`);
+        navigate(platformProjectPath(routeKey, 'lessons'));
       }
     } catch (error) {
       console.error('Error fetching lesson:', error);
@@ -75,7 +91,7 @@ export default function LessonDetailView() {
     if (!confirm('Promote this lesson to the corporate repository?')) return;
 
     try {
-      const result = await promoteToCorporate(lessonId, {});
+      const result = await promoteToCorporate(lesson.id, {});
       if (result.success) {
         alert('Lesson promoted to corporate repository successfully!');
         fetchLesson();
@@ -92,9 +108,9 @@ export default function LessonDetailView() {
     if (!confirm(`Delete lesson "${lesson.lesson_title}"?`)) return;
 
     try {
-      const result = await deleteLesson(lessonId);
+      const result = await deleteLesson(lesson.id);
       if (result.success) {
-        navigate(`/app/projects/${projectId}/lessons`);
+        navigate(platformProjectPath(routeKey, 'lessons'));
       } else {
         alert('Error deleting lesson: ' + result.error);
       }
@@ -126,10 +142,13 @@ export default function LessonDetailView() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons`)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            type="button"
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons'))}
+            className="inline-flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            aria-label="Back to Lessons Log"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
+            Back to Lessons Log
           </button>
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -164,23 +183,38 @@ export default function LessonDetailView() {
               Promote to Corporate
             </button>
           )}
-          <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/${lessonId}/edit`)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Edit2 className="w-4 h-4" />
-            Edit
-          </button>
-          <button
-            onClick={handleDelete}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+          <RowActionButton
+            variant="edit"
+            label="Edit lesson"
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons', lesson.lesson_reference || lessonId, 'edit'))}
+          />
+          <RowActionButton variant="delete" label="Delete lesson" onClick={handleDelete} />
         </div>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who logged or changed this lesson, and how it is classified.">
+          <AuditCard title="Identity" description="How this lesson is labelled and tracked.">
+            <AuditField label="Reference" value={lesson.lesson_reference} />
+            <AuditField label="Title" value={lesson.lesson_title} />
+            <AuditField label="Status" value={humanizeAuditToken(lesson.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this lesson is categorised.">
+            <AuditField label="Category" value={humanizeAuditToken(lesson.lesson_category)} />
+            <AuditField label="Scope" value={humanizeAuditToken(lesson.lesson_scope)} />
+            <AuditField label="Priority" value={humanizeAuditToken(lesson.priority)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this lesson was created and last changed.">
+            <AuditField label="Created by" value={lesson.created_by_user?.full_name || lesson.created_by_user?.email} />
+            <AuditTimestampPair dateLabel="Created at" value={lesson.created_at} />
+            <AuditField label="Updated by" value={lesson.updated_by_user?.full_name || lesson.updated_by_user?.email} />
+            <AuditTimestampPair dateLabel="Last updated" value={lesson.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
@@ -330,6 +364,8 @@ export default function LessonDetailView() {
           <CreateRiskFromLessonWidget lesson={lesson} projectId={projectId} />
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

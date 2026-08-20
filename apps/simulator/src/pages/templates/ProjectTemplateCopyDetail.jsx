@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { getCopyById, exportCopyToExcel, exportCopyToPpt } from '../../services/projectTemplateCopyService'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const BASE = '/platform/templates'
 
@@ -11,6 +18,21 @@ export default function ProjectTemplateCopyDetail() {
   const navigate = useNavigate()
   const [row, setRow] = useState(null)
   const [err, setErr] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        row.created_by,
+        row.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, row])
 
   useEffect(() => {
     ;(async () => {
@@ -78,9 +100,33 @@ export default function ProjectTemplateCopyDetail() {
           </Link>
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template copy sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this template copy, and how it is classified.">
+          <AuditCard title="Identity" description="How this copy is labelled and tracked.">
+            <AuditField label="Title" value={row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+            <AuditField label="Version" value={row.current_version} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this copy sits.">
+            <AuditField label="Project" value={row.project?.project_name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this copy was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <pre className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-900/40 p-4 text-sm text-gray-200 overflow-auto">
         {JSON.stringify(row.content || {}, null, 2)}
       </pre>
+      )}
     </div>
   )
 }

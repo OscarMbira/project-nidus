@@ -145,6 +145,7 @@ export async function fetchChangeLog(filters = {}) {
     if (filters.search) {
       const q = filters.search.toLowerCase()
       entries = entries.filter(e =>
+        (e.display_id || '').toLowerCase().includes(q) ||
         (e.description || '').toLowerCase().includes(q) ||
         (e.comments || '').toLowerCase().includes(q) ||
         (e.change_request?.change_reference || '').toLowerCase().includes(q) ||

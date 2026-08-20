@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
-import { FileText, Search, Filter, Eye, CheckCircle, Clock, AlertCircle, Plus, Edit2, Trash2 } from 'lucide-react'
+import { FileText, Search, Filter, CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPPDByProject, deletePPD } from '../services/projectProductDescriptionService'
 import PPDForm from '../components/ppd/PPDForm'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
@@ -380,33 +381,20 @@ export default function PPDList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-3">
-                        <button
+                        <RowActionButton
+                          variant="view"
+                          label="View PPD"
                           onClick={() => navigate(`/app/projects/${ppd.project_id}/ppd`)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
-                          title="View PPD"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
+                        />
                         {ppd.status === 'draft' && (
                           <>
-                            <button
-                              onClick={() => handleEditPPD(ppd)}
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1 transition-colors"
-                              title="Edit PPD"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                              Edit
-                            </button>
-                            <button
+                            <RowActionButton variant="edit" label="Edit PPD" onClick={() => handleEditPPD(ppd)} />
+                            <RowActionButton
+                              variant="delete"
+                              label="Delete PPD"
                               onClick={() => handleDeletePPD(ppd)}
                               disabled={deletingPPD === ppd.id}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 transition-colors disabled:opacity-50"
-                              title="Delete PPD"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </button>
+                            />
                           </>
                         )}
                       </div>

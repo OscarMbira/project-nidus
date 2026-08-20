@@ -7,6 +7,7 @@ import {
   CUSTOM_COLUMN_TYPES,
   MAX_CUSTOM_COLUMNS,
 } from '@nidus/shared/utils/industryPlanGridColumns.js'
+import RowActionButton from '../RowActionButton.jsx'
 
 const inputClass =
   'w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1 text-xs text-gray-900 dark:text-gray-100'
@@ -306,12 +307,8 @@ export function IndustryPlanColumnChooser({
                           <span className="ml-1 text-gray-400">({TYPE_LABELS[def.type] || def.type})</span>
                         </span>
                         <span className="shrink-0 flex gap-2">
-                          <button type="button" className="text-blue-600 dark:text-blue-400 hover:underline" onClick={() => startEdit(def)}>
-                            Edit
-                          </button>
-                          <button type="button" className="text-red-600 dark:text-red-400 hover:underline" onClick={() => handleDelete(def.id)}>
-                            Delete
-                          </button>
+                          <RowActionButton variant="edit" label="Edit custom column" onClick={() => startEdit(def)} />
+                          <RowActionButton variant="delete" label="Delete custom column" onClick={() => handleDelete(def.id)} />
                         </span>
                       </div>
                     )}

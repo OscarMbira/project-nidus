@@ -47,10 +47,11 @@ export default function MethodsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateMethod(editingId, formData)
+        await updateMethod(editingId, editableFields)
       } else {
-        await addMethod(cmsId, formData)
+        await addMethod(cmsId, editableFields)
       }
       await loadMethods()
       setShowForm(false)
@@ -64,6 +65,8 @@ export default function MethodsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (method) => {
     setFormData({
+      id: method.id,
+      created_at: method.created_at,
       method_name: method.method_name || '',
       method_type: method.method_type || '',
       method_description: method.method_description || '',

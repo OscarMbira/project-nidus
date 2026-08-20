@@ -6,6 +6,13 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addObjective, updateObjective } from '../../services/pidObjectivesService'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function ObjectiveForm({ pidId, objective = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -20,6 +27,16 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !objective) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [objective.created_by, objective.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, objective])
 
   useEffect(() => {
     if (objective) {
@@ -105,6 +122,32 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
         )}
       </div>
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' ? (
+        !objective ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this objective is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this objective, and how it is classified.">
+            <AuditCard title="Identity" description="How this objective is labelled and tracked.">
+              <AuditField label="Reference" value={objective.objective_reference} />
+              <AuditField label="Title" value={objective.objective_title} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this objective is categorised.">
+              <AuditField label="Category" value={humanizeAuditToken(objective.objective_category)} />
+              <AuditField label="Priority" value={humanizeAuditToken(objective.priority)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this objective was created and last changed.">
+              <AuditField label="Created by" value={objective.created_by ? auditUserLabels[objective.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={objective.created_at} />
+              <AuditField label="Updated by" value={objective.updated_by ? auditUserLabels[objective.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={objective.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -243,6 +286,7 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

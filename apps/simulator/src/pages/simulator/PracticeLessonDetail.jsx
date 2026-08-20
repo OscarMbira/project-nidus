@@ -8,6 +8,7 @@ import { ArrowLeft } from 'lucide-react'
 import { updatePracticeLessonEntry } from '../../services/sim/practiceLessonsService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const PRACTICE_LESSON_VIEW_SECTIONS = [
   { title: 'Lesson', fields: [
@@ -30,6 +31,7 @@ export default function PracticeLessonDetail() {
     priority: 'medium',
     status: 'logged'
   })
+  const [formTab, setFormTab] = useState('details')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -66,6 +68,14 @@ export default function PracticeLessonDetail() {
           onExportPrint={() => exportRecordToPrint(PRACTICE_LESSON_VIEW_SECTIONS, formData, `PracticeLesson_${entryId || 'new'}`)}
         />
       </div>
+
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this lesson is saved.</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">Lesson Title *</label>
@@ -80,6 +90,7 @@ export default function PracticeLessonDetail() {
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Saving...' : 'Save Lesson'}</button>
         </div>
       </form>
+      )}
     </div>
   )
 }

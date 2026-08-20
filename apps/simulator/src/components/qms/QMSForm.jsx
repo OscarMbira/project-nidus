@@ -3,6 +3,12 @@ import { supabase } from '../../services/supabaseClient'
 import { X, Save, FileText, Settings, Target, BarChart3, Shield, Users, Calendar, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react'
 import { createQMS, updateQMS, createQMSForProject } from '../../services/qualityManagementStrategyService'
 import { HoldButton } from '../ui/HoldButton'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComplete }) {
   const [formData, setFormData] = useState({
@@ -28,6 +34,24 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [activeStep, setActiveStep] = useState(1)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !qms) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [
+        qms.created_by,
+        qms.updated_by,
+        qms.author_id,
+        qms.owner_id,
+        qms.client_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, qms])
 
   const steps = [
     { id: 1, title: 'Introduction', icon: FileText },
@@ -553,6 +577,12 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             </button>
           </div>
 
+          <div className="mt-4">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+          </div>
+
+          {formTab === 'wizard' && (
+          <>
           {/* Progress Steps */}
           <div className="mt-4 flex items-center justify-between">
             {steps.map((step, index) => {
@@ -591,8 +621,38 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
               )
             })}
           </div>
+          </>
+          )}
         </div>
 
+        {formTab === 'audit' && (
+          <div className="p-6">
+            {!qms?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this strategy is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this Quality Management Strategy, and how it is classified.">
+                <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+                  <AuditField label="Purpose" value={formData.purpose || qms.purpose} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.status || qms.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this strategy sits.">
+                  <AuditField label="Author" value={qms.author_id ? auditUserLabels[qms.author_id] || null : null} />
+                  <AuditField label="Owner" value={qms.owner_id ? auditUserLabels[qms.owner_id] || null : null} />
+                  <AuditField label="Client" value={qms.client_id ? auditUserLabels[qms.client_id] || null : null} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this strategy was created and last changed.">
+                  <AuditField label="Created by" value={qms.created_by ? auditUserLabels[qms.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={qms.created_at} />
+                  <AuditField label="Updated by" value={qms.updated_by ? auditUserLabels[qms.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={qms.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'wizard' && (
+        <>
         {/* Content */}
         <div className="p-6">
           {renderStepContent()}
@@ -643,6 +703,8 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

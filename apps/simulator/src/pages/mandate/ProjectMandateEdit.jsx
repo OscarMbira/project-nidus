@@ -17,6 +17,12 @@ import { AutoSaveIndicator } from '@nidus/ui/AutoSaveIndicator'
 import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import { checkExistingDraft, getDraft, deleteDraft } from '../../services/draftQueueService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function ProjectMandateEdit() {
   const { mandateId: mandateIdentifier } = useParams()
@@ -34,6 +40,8 @@ export default function ProjectMandateEdit() {
   const [editable, setEditable] = useState(false)
   const [internalMandateId, setInternalMandateId] = useState(null)
   const [mandateRef, setMandateRef] = useState(null)
+  const [mandateRecord, setMandateRecord] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
 
   // Draft queue hook - uses internal UUID once resolved
   const {
@@ -84,6 +92,7 @@ export default function ProjectMandateEdit() {
       const ref = mandate.mandate_reference || mandate.id
       setInternalMandateId(id)
       setMandateRef(ref)
+      setMandateRecord(mandate)
 
       // Derive canEdit from mandate (avoids redundant getMandateById in isEditable)
       const canEdit = ['draft', 'rejected'].includes(mandate.document_status) && !mandate.project_id
@@ -363,6 +372,31 @@ export default function ProjectMandateEdit() {
         </div>
       </div>
 
+      <div className="mb-6">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
+      </div>
+
+      {activeTab === 'audit' && mandateRecord && (
+        <AuditDetailsPanel description="Who created or changed this mandate, and how it is classified.">
+          <AuditCard title="Identity" description="How this mandate is labelled and tracked.">
+            <AuditField label="Reference" value={mandateRecord.mandate_reference} />
+            <AuditField label="Title" value={formData.mandate_title || mandateRecord.mandate_title} />
+            <AuditField label="Status" value={humanizeAuditToken(mandateRecord.document_status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this mandate sits.">
+            <AuditField label="Authority responsible" value={formData.authority_responsible || mandateRecord.authority_responsible} />
+            <AuditField label="Quality priority" value={humanizeAuditToken(formData.quality_priority || mandateRecord.quality_priority)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this mandate was created and last changed.">
+            <AuditField label="Created by" value={mandateRecord.creator?.full_name || mandateRecord.creator?.email || null} />
+            <AuditTimestampPair dateLabel="Created at" value={mandateRecord.created_at} />
+            <AuditField label="Updated by" value={mandateRecord.updater?.full_name || mandateRecord.updater?.email || null} />
+            <AuditTimestampPair dateLabel="Last updated" value={mandateRecord.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information - Full Width */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -656,6 +690,7 @@ export default function ProjectMandateEdit() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

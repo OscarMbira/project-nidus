@@ -4,6 +4,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { createCopyFromMaster, listSimulationRunsForPicker } from '../../../services/sim/simProjectTemplateCopyService'
 import { getTemplateById } from '../../../services/sim/simTemplateLibraryService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const BASE = '/simulator/templates'
 
@@ -19,6 +20,7 @@ export default function SimProjectTemplateCopyCreate() {
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     ;(async () => {
@@ -79,6 +81,11 @@ export default function SimProjectTemplateCopyCreate() {
       <p className="text-sm text-gray-600 mb-4">Master: {masterTitle || templateId || '—'}</p>
       {!templateId && <p className="text-amber-600 mb-4">Open from a template detail page (missing templateId).</p>}
       {err && <p className="text-red-600 mb-4">{err}</p>}
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Audit details appear after this copy is saved.</p>
+      ) : (
+      <>
       <label className="block mb-4">
         <span className="text-sm">Simulation run</span>
         <select
@@ -110,6 +117,8 @@ export default function SimProjectTemplateCopyCreate() {
       >
         <Save className="h-4 w-4" /> Create
       </button>
+      </>
+      )}
     </div>
   )
 }

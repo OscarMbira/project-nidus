@@ -3,14 +3,19 @@
  * Main page for viewing and managing lessons log
  */
 
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { Lightbulb, Plus, Download, Settings, FileText } from 'lucide-react';
+import { useInitialFilterFromQuery } from '@nidus/shared/hooks/useInitialFilterFromQuery'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
+import { Lightbulb, Plus, Download, FileText } from 'lucide-react';
 import { exportToPDF, exportToCSV } from '@nidus/shared/utils/lessonExport';
-import { getLessonsLogByProject, updateLessonsLog } from '../services/lessonsLogService';
+import { getLessonsLogByProject } from '../services/lessonsLogService';
 import ExportListMenu from '@nidus/ui/ExportListMenu';
+import { useViewMode } from '@nidus/shared/hooks/useViewMode';
+import ViewToggle from '@nidus/ui/ViewToggle';
+import { DashboardRegisterTabBar, DashboardStatCard } from '@nidus/ui';
 
 const LESSON_COLUMNS = [
   { key: 'lesson_reference', label: 'Reference' },
@@ -21,27 +26,25 @@ const LESSON_COLUMNS = [
   { key: 'lesson_scope', label: 'Scope' },
   { key: 'priority', label: 'Priority' }
 ];
-import { getLessonsByProject, createLesson, updateLesson, deleteLesson } from '../services/lessonService';
+import { getLessonsByProject, deleteLesson } from '../services/lessonService';
 import { getLessonsSummary } from '../services/lessonService';
 import { getRelevantCorporateLessons } from '../services/corporateLessonsService';
-import LessonForm from '../components/lessonsLog/LessonForm';
 import LessonsList from '../components/lessonsLog/LessonsList';
 import LessonsFilters from '../components/lessonsLog/LessonsFilters';
-import LessonCard from '../components/lessonsLog/LessonCard';
-import CreateLessonsReportButton from '../components/lessonsReport/CreateLessonsReportButton';
 import LessonsReportsWidget from '../components/lessonsReport/LessonsReportsWidget';
+import { RegisterOpenItemsWidget } from '@nidus/ui';
 
 export default function LessonsLogView() {
   const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
   
+  const [viewMode, setViewMode] = useViewMode('pm-lessons-log', 'list');
+  const [pageTab, setPageTab] = useState('dashboard'); // 'dashboard' | 'register'
   const [log, setLog] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [summary, setSummary] = useState(null);
   const [corporateLessons, setCorporateLessons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     lesson_category: '',
@@ -51,6 +54,7 @@ export default function LessonsLogView() {
     priority: '',
     is_corporate_lesson: undefined
   });
+  const [quickFilter, setQuickFilter] = useState(''); // '' | 'actions_pending' | 'high_priority'
 
   useEffect(() => {
     if (projectId) {
@@ -102,32 +106,12 @@ export default function LessonsLogView() {
     }
   };
 
-  const handleSaveLesson = async (lessonData) => {
-    try {
-      let result;
-      if (selectedLesson) {
-        result = await updateLesson(selectedLesson.id, lessonData);
-      } else {
-        result = await createLesson(lessonData);
-      }
-
-      if (result.success) {
-        setShowForm(false);
-        setSelectedLesson(null);
-        fetchLessons();
-        fetchData();
-      } else {
-        alert('Error saving lesson: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error saving lesson:', error);
-      alert('Error saving lesson: ' + error.message);
-    }
+  const handleAdd = () => {
+    navigate(platformProjectPath(routeKey, 'lessons', 'create'));
   };
 
   const handleEdit = (lesson) => {
-    setSelectedLesson(lesson);
-    setShowForm(true);
+    navigate(platformProjectPath(routeKey, 'lessons', lesson.lesson_reference || lesson.id, 'edit'));
   };
 
   const handleDelete = async (lesson) => {
@@ -148,8 +132,62 @@ export default function LessonsLogView() {
   };
 
   const handleViewDetails = (lesson) => {
-    navigate(`/app/projects/${projectId}/lessons/${lesson.id}`);
+    navigate(platformProjectPath(routeKey, 'lessons', lesson.lesson_reference || lesson.id));
   };
+
+  const dashboardStats = useMemo(() => {
+    const effect = (t) => String(t || '').toLowerCase()
+    const status = (s) => String(s || '').toLowerCase()
+    const priority = (p) => String(p || '').toLowerCase()
+    return {
+      total: lessons.length,
+      positive: lessons.filter((l) => effect(l.effect_type) === 'positive').length,
+      negative: lessons.filter((l) => effect(l.effect_type) === 'negative').length,
+      neutral: lessons.filter((l) => {
+        const e = effect(l.effect_type)
+        return e === 'neutral' || e === 'mixed' || !e
+      }).length,
+      actionsPending: lessons.filter((l) => {
+        const s = status(l.status)
+        return s === 'identified' || s === 'open' || s === 'in_progress' || s === 'draft' || s === 'pending'
+      }).length,
+      highPriority: lessons.filter((l) => {
+        const p = priority(l.priority)
+        return p === 'high' || p === 'critical'
+      }).length,
+    }
+  }, [lessons])
+
+  const registerLessons = useMemo(() => {
+    if (quickFilter === 'actions_pending') {
+      return lessons.filter((l) => ['identified', 'open', 'in_progress', 'draft', 'pending'].includes(String(l.status || '').toLowerCase()))
+    }
+    if (quickFilter === 'high_priority') {
+      return lessons.filter((l) => ['high', 'critical'].includes(String(l.priority || '').toLowerCase()))
+    }
+    return lessons
+  }, [lessons, quickFilter])
+
+  const showRegisterFiltered = (kind) => {
+    const isEffect = kind === 'positive' || kind === 'negative' || kind === 'neutral'
+    setFilters({
+      search: '',
+      lesson_category: '',
+      effect_type: isEffect ? kind : '',
+      status: '',
+      lesson_scope: '',
+      priority: '',
+      is_corporate_lesson: undefined,
+    })
+    setQuickFilter(kind === 'actions_pending' || kind === 'high_priority' ? kind : '')
+    setPageTab('register')
+  }
+
+  const initialQueryFilter = useInitialFilterFromQuery(['filter'])
+  useEffect(() => {
+    if (initialQueryFilter.filter) showRegisterFiltered(initialQueryFilter.filter === 'all' ? '' : initialQueryFilter.filter)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQueryFilter.filter])
 
   if (loading) {
     return (
@@ -162,184 +200,206 @@ export default function LessonsLogView() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Lightbulb className="w-6 h-6" />
-            Lessons Log
-          </h1>
-          {log && (
-            <p className="text-sm text-gray-500 mt-1">
-              Reference: {log.log_reference} • Version: {log.version_number || '1.0'}
-            </p>
-          )}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Lightbulb className="w-6 h-6" />
+              Lessons Log
+            </h1>
+            {log && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Reference: {log.log_reference} • Version: {log.version_number || '1.0'}
+              </p>
+            )}
+          </div>
+          <DashboardRegisterTabBar
+            value={pageTab}
+            onChange={setPageTab}
+            registerLabel="Log"
+            ariaLabel="Lessons Log sections"
+          />
         </div>
-        <div className="flex items-center gap-2">
-          <ExportListMenu columns={LESSON_COLUMNS} data={lessons} baseFilename="LessonsLog" disabled={!lessons?.length} />
-          {log && (
-            <>
-              <button
-                onClick={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                View Reports
-              </button>
-              <button
-                onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/create`)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Create Report
-              </button>
-              <button
-                onClick={() => navigate(`/app/projects/${projectId}/lessons/report`)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Quick Report
-              </button>
-            </>
-          )}
-          {log && (
-            <div className="relative group">
-              <button
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </button>
-              <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+        {pageTab === 'register' && (
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="Lessons log layout" />
+            <ExportListMenu columns={LESSON_COLUMNS} data={registerLessons} baseFilename="LessonsLog" disabled={!registerLessons?.length} />
+            {log && (
+              <>
                 <button
-                  onClick={() => exportToPDF(log, lessons, summary)}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                  Export as PDF
+                  View Reports
                 </button>
                 <button
-                  onClick={() => exportToCSV(lessons)}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports', 'create'))}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
-                  Export as CSV
+                  Create Report
                 </button>
+                <button
+                  onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'report'))}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Quick Report
+                </button>
+              </>
+            )}
+            {log && (
+              <div className="relative group">
+                <button
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export
+                </button>
+                <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+                  <button
+                    onClick={() => exportToPDF(log, lessons, summary)}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export as PDF
+                  </button>
+                  <button
+                    onClick={() => exportToCSV(lessons)}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export as CSV
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
-          <button
-            onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Add Lesson
-          </button>
-        </div>
+            )}
+            <button
+              onClick={handleAdd}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Lesson
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Summary Stats */}
-      {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Total Lessons</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_lessons || 0}</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Positive</p>
-            <p className="text-2xl font-bold text-green-600">{summary.positive_lessons || 0}</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Negative</p>
-            <p className="text-2xl font-bold text-red-600">{summary.negative_lessons || 0}</p>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <p className="text-sm text-gray-500">Actions Pending</p>
-            <p className="text-2xl font-bold text-orange-600">{summary.actions_pending || 0}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Lessons Reports Widget */}
-      {log && (
-        <div className="mb-6">
-          <LessonsReportsWidget projectId={projectId} lessonsLogId={log.id} />
-        </div>
-      )}
-
-      {/* Corporate Lessons Panel */}
-      {corporateLessons.length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
-            💡 Relevant Corporate Lessons ({corporateLessons.length})
-          </h3>
-          <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">
-            Lessons from other projects that may be relevant to this project
-          </p>
-          <div className="space-y-2">
-            {corporateLessons.slice(0, 3).map((lesson, index) => (
-              <div key={lesson.lesson_id} className="bg-white dark:bg-gray-800 rounded p-2 text-sm">                <p className="font-medium text-gray-900 dark:text-white">{lesson.title}</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1">{lesson.recommendations}</p>
-              </div>
+      {pageTab === 'dashboard' && (
+        <div className="space-y-6" role="tabpanel" aria-label="Lessons dashboard">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { label: 'Total lessons', value: dashboardStats.total, accent: 'text-gray-900 dark:text-white', kind: '' },
+              { label: 'Positive', value: dashboardStats.positive, accent: 'text-emerald-700 dark:text-emerald-300', kind: 'positive' },
+              { label: 'Negative', value: dashboardStats.negative, accent: 'text-red-700 dark:text-red-300', kind: 'negative' },
+              { label: 'Neutral / other', value: dashboardStats.neutral, accent: 'text-gray-700 dark:text-gray-200', kind: 'neutral' },
+              { label: 'Actions pending', value: dashboardStats.actionsPending, accent: 'text-amber-700 dark:text-amber-300', kind: 'actions_pending' },
+              { label: 'High priority', value: dashboardStats.highPriority, accent: 'text-orange-700 dark:text-orange-300', kind: 'high_priority' },
+            ].map((card) => (
+              <DashboardStatCard
+                key={card.label}
+                label={card.label}
+                value={card.value}
+                accentClassName={card.accent}
+                onClick={() => showRegisterFiltered(card.kind)}
+              />
             ))}
           </div>
+
+          {lessons.length === 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              No lessons in this project yet. Open the Log tab to add one.
+            </p>
+          )}
+
+          {projectId && (
+            <div>
+              <LessonsReportsWidget projectId={projectId} routeKey={routeKey} lessonsLogId={log?.id} />
+            </div>
+          )}
+
+          <RegisterOpenItemsWidget
+            title="Lessons With Actions Pending"
+            icon={Lightbulb}
+            rows={lessons
+              .filter((l) => ['identified', 'open', 'in_progress', 'draft', 'pending'].includes(String(l.status || '').toLowerCase()))
+              .slice(0, 5)}
+            totalCount={dashboardStats.actionsPending}
+            columns={[
+              { key: 'lesson_reference', label: 'Reference', className: 'font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+              { key: 'lesson_title', label: 'Title', className: 'font-medium text-gray-900 dark:text-white' },
+              { key: 'effect_type', label: 'Effect', className: 'text-gray-500 dark:text-gray-400 whitespace-nowrap capitalize' },
+              { key: 'lesson_date', label: 'Date', render: (l) => (l.lesson_date ? new Date(l.lesson_date).toLocaleDateString() : '—'), className: 'text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+            ]}
+            rowKey={(l) => l.id}
+            searchFields={['lesson_title', 'lesson_reference']}
+            onRowClick={handleViewDetails}
+            onViewAll={() => setPageTab('register')}
+            viewAllLabel="Open full Lessons Log"
+            emptyMessage="No lessons with pending actions"
+          />
+
+          {corporateLessons.length > 0 && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+              <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
+                Relevant Corporate Lessons ({corporateLessons.length})
+              </h3>
+              <p className="text-xs text-blue-700 dark:text-blue-400 mb-3">
+                Lessons from other projects that may be relevant to this project
+              </p>
+              <div className="space-y-2">
+                {corporateLessons.slice(0, 3).map((lesson) => (
+                  <div key={lesson.lesson_id} className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
+                    <p className="font-medium text-gray-900 dark:text-white">{lesson.title}</p>
+                    <p className="text-xs text-gray-700 dark:text-gray-200 line-clamp-1">{lesson.recommendations}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Filters */}
-      <LessonsFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        onClear={() => setFilters({
-          search: '',
-          lesson_category: '',
-          effect_type: '',
-          status: '',
-          lesson_scope: '',
-          priority: '',
-          is_corporate_lesson: undefined
-        })}
-      />
+      {pageTab === 'register' && (
+        <div className="space-y-6" role="tabpanel" aria-label="Lessons log">
+          <LessonsFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClear={() => setFilters({
+              search: '',
+              lesson_category: '',
+              effect_type: '',
+              status: '',
+              lesson_scope: '',
+              priority: '',
+              is_corporate_lesson: undefined
+            })}
+          />
 
-      {/* Lesson Form Modal */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {selectedLesson ? 'Edit Lesson' : 'Add New Lesson'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setSelectedLesson(null);
-                }}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ×
+          {quickFilter && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                {quickFilter === 'actions_pending' ? 'Actions pending only' : 'High priority only'}
+              </span>
+              <button type="button" onClick={() => setQuickFilter('')} className="text-blue-600 dark:text-blue-400 hover:underline">
+                Clear
               </button>
             </div>
-            <LessonForm
-              lesson={selectedLesson}
-              onSave={handleSaveLesson}
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedLesson(null);
-              }}
-              projectId={projectId}
-            />
-          </div>
+          )}
+
+          <LessonsList
+            lessons={registerLessons}
+            loading={false}
+            onView={handleViewDetails}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onPromote={() => {}}
+            emptyMessage="No lessons found. Click 'Add Lesson' to get started."
+            viewMode={viewMode}
+          />
         </div>
       )}
-
-      {/* Lessons List */}
-      <LessonsList
-        lessons={lessons}
-        loading={false}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onPromote={() => {}}
-        emptyMessage="No lessons found. Click 'Add Lesson' to get started."
-      />
     </div>
   );
 }

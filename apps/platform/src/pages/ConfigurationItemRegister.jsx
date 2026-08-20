@@ -19,7 +19,7 @@ export default function ConfigurationItemRegister() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <ConfigurationItemList projectId={projectId} onCreate={handleCreate} />
+      <ConfigurationItemList projectId={projectId} routeKey={routeKey} onCreate={handleCreate} />
     </div>
   )
 }

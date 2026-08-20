@@ -136,7 +136,7 @@ export default function CMSEdit() {
 
       {/* CMS Form */}
       <CMSForm
-        cmsData={cmsData}
+        cmsData={{ ...cms, ...cmsData }}
         onChange={setCmsData}
         errors={errors}
         onSave={handleSave}

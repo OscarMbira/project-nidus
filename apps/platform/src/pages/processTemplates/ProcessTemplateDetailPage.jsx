@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { ArrowLeft, Download, Copy, Pencil } from 'lucide-react'
+import { ArrowLeft, Download, Copy } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import {
   getTemplateBySlug,
   roleKeyFromPath,
@@ -17,6 +18,12 @@ import { platformDb } from '@nidus/supabase'
 import TemplateCopyModal from '../../components/processTemplates/TemplateCopyModal'
 import { useProcessTemplateScope } from '../../components/processTemplates/ProcessTemplateProjectScope'
 import { exportListToPrint } from '@nidus/shared/utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DETAIL_COLS = [
   { key: 'reference_code', label: 'Reference' },
@@ -27,6 +34,7 @@ const DETAIL_COLS = [
 ]
 
 export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: simProp }) {
+  const navigate = useNavigate()
   const { slug, id } = useParams()
   const location = useLocation()
   const template = getTemplateBySlug(slug)
@@ -39,10 +47,26 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
   const [userId, setUserId] = useState(null)
   const [copyOpen, setCopyOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     platformDb.auth.getUser().then(({ data }) => setUserId(data?.user?.id || null))
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        row.created_by,
+        row.updated_by,
+        row.copied_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, row])
 
   useEffect(() => {
     let cancelled = false
@@ -98,13 +122,11 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
         </div>
         <div className="flex flex-wrap gap-2">
           {canEdit && (
-            <Link
-              to={`${listPath}/${id}/edit`}
-              className="inline-flex items-center gap-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Link>
+            <RowActionButton
+              variant="edit"
+              label="Edit template"
+              onClick={() => navigate(`${listPath}/${id}/edit`)}
+            />
           )}
           {canCopy && (
             <button
@@ -136,6 +158,29 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
         </div>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this template, and how it is classified.">
+          <AuditCard title="Identity" description="How this template is labelled and tracked.">
+            <AuditField label="Reference" value={row.reference_code} />
+            <AuditField label="Title" value={row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this template sits.">
+            <AuditField label="Type" value={row.is_master ? 'Master template' : 'Workspace copy'} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this template was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+            <AuditField label="Copied by" value={row.copied_by ? auditUserLabels[row.copied_by] || null : null} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <dl className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-800">
         <div className="px-4 py-3 grid grid-cols-3 gap-2">
           <dt className="text-sm text-gray-500">Status</dt>
@@ -158,6 +203,7 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
           <dd className="col-span-2 text-xs text-gray-400 font-mono">{row.id}</dd>
         </div>
       </dl>
+      )}
 
       <TemplateCopyModal
         open={copyOpen}

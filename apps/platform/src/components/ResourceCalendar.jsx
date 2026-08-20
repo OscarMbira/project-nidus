@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, Calendar, AlertCircle, Repeat } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays } from 'date-fns'
+import { RowActionButton } from '@nidus/ui'
 
 export default function ResourceCalendar({ resourceId, onClose, onSave }) {
   const [calendarEntries, setCalendarEntries] = useState([])
@@ -334,18 +335,16 @@ export default function ResourceCalendar({ resourceId, onClose, onSave }) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit calendar entry"
                         onClick={() => handleDateClick(new Date(entry.calendar_date))}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400"
-                      >
-                        Edit
-                      </button>
-                      <button
+                      />
+                      <RowActionButton
+                        variant="delete"
+                        label="Delete calendar entry"
                         onClick={() => handleDelete(entry)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400"
-                      >
-                        Delete
-                      </button>
+                      />
                     </div>
                   </div>
                 ))}

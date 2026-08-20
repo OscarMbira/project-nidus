@@ -13,6 +13,12 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '../../../utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 function linesToArr(s) {
   return (s || '')
@@ -45,6 +51,8 @@ export default function ScopeStatement() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(null)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
   const [form, setForm] = useState({
     project_description: '',
     product_scope_description: '',
@@ -65,6 +73,7 @@ export default function ScopeStatement() {
     const res = await simGetScopeStatement(projectId)
     if (res.success && res.data) {
       const d = res.data
+      setRecord(d)
       setForm({
         project_description: d.project_description || '',
         product_scope_description: d.product_scope_description || '',
@@ -110,6 +119,7 @@ export default function ScopeStatement() {
         }
       )
       if (!res.success) throw new Error(res.error)
+      setRecord(res.data)
       setSuccess({
         op: res.operation,
         id: res.data?.id,
@@ -162,6 +172,28 @@ export default function ScopeStatement() {
       )}
       {success?.error && <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-200">{success.error}</div>}
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this statement is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="When this scope statement was created and last changed.">
+              <AuditCard title="Identity" description="How this statement is versioned.">
+                <AuditField label="Version" value={record.version} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this statement sits.">
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this statement was created and last changed.">
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         {[
           ['project_description', 'Project description'],
@@ -242,6 +274,7 @@ export default function ScopeStatement() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

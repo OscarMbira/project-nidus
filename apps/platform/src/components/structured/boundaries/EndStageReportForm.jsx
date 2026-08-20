@@ -2,11 +2,32 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Calendar, Target, DollarSign, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { createEndStageReport, updateEndStageReport, fetchStageBoundaries } from '../../../services/stageBoundariesService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function EndStageReportForm({ projectId, boardId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [stageBoundaries, setStageBoundaries] = useState([]);
   const [activeSection, setActiveSection] = useState('basic'); // basic, performance, quality, forecast, approval
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (activeSection !== 'audit' || !report) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        report.created_by,
+        report.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeSection, report]);
   const [formData, setFormData] = useState({
     report_title: report?.report_title || '',
     report_date: report?.report_date || new Date().toISOString().split('T')[0],
@@ -200,25 +221,42 @@ export default function EndStageReportForm({ projectId, boardId, report, onClose
         </div>
 
         {/* Section Navigation */}
-        <div className="flex gap-2 px-6 pt-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          {sections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <button
-                key={section.id}
-                onClick={() => setActiveSection(section.id)}
-                className={`px-4 py-2 font-medium text-sm flex items-center gap-2 border-b-2 whitespace-nowrap transition-colors ${
-                  activeSection === section.id
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {section.label}
-              </button>
-            );
-          })}
+        <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+          <DetailAuditTabList
+            activeTab={activeSection}
+            onChange={setActiveSection}
+            ariaLabel="End stage report sections"
+            tabs={[
+              ...sections.map((s) => ({ value: s.id, label: s.label })),
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
+
+        {activeSection === 'audit' && (
+          <div className="p-6">
+            {!report?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this end stage report, and how it is classified.">
+                <AuditCard title="Identity" description="How this report is labelled and tracked.">
+                  <AuditField label="Title" value={formData.report_title || report.report_title} />
+                  <AuditField label="Stage" value={formData.stage_name || report.stage_name} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this report sits.">
+                  <AuditField label="Stage status" value={humanizeAuditToken(formData.stage_status || report.stage_status)} />
+                  <AuditField label="Report date" value={formData.report_date || report.report_date} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this report was created and last changed.">
+                  <AuditField label="Created by" value={report.created_by ? auditUserLabels[report.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={report.created_at} />
+                  <AuditField label="Updated by" value={report.updated_by ? auditUserLabels[report.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={report.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[calc(100vh-300px)] overflow-y-auto">

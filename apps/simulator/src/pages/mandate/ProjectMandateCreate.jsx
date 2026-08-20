@@ -14,6 +14,7 @@ import { bulkCreateConstraints } from '../../services/mandateConstraintService'
 import { HoldButton } from '@nidus/ui/HoldButton'
 import { AutoSaveIndicator } from '@nidus/ui/AutoSaveIndicator'
 import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 // Pre-load service to avoid dynamic import delay
 // Validation rules - moved outside component
@@ -36,6 +37,7 @@ function ProjectMandateCreate() {
 
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [activeTab, setActiveTab] = useState('details')
 
   // Draft queue hook for put on hold functionality
   const {
@@ -244,6 +246,13 @@ function ProjectMandateCreate() {
         </div>
       )}
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
+
+      {activeTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this mandate is saved.</p>
+      )}
+
+      {activeTab === 'details' && (
       <form onSubmit={handleSubmit} className="space-y-6" noValidate>
         {/* Basic Information - Full Width */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -557,6 +566,7 @@ function ProjectMandateCreate() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

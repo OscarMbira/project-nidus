@@ -5,10 +5,18 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, FileText } from 'lucide-react'
+import { ArrowLeft, FileText } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeBusinessCaseById } from '../../services/sim/practiceBusinessCaseService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const STATUS_COLORS = {
   draft: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',
@@ -63,10 +71,20 @@ export default function PracticeBusinessCaseView() {
   const [caseItem, setCaseItem] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     loadCase()
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !caseItem) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [caseItem.created_by, caseItem.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, caseItem])
 
   const loadCase = async () => {
     try {
@@ -142,15 +160,35 @@ export default function PracticeBusinessCaseView() {
             onExportJSON={() => exportRecordToJSON(EXPORT_SECTIONS, caseItem, `PracticeBC_${caseItem.case_reference || id}`)}
             onExportPrint={() => exportRecordToPrint(EXPORT_SECTIONS, caseItem, `PracticeBC_${caseItem.case_reference || id}`)}
           />
-          <button
+          <RowActionButton
+            variant="edit"
+            label="Edit business case"
             onClick={() => navigate(`/simulator/practice-business-cases/${id}/edit`)}
-            className="inline-flex items-center px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+          />
         </div>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this Business Case.">
+          <AuditCard title="Identity" description="How this business case is labelled.">
+            <AuditField label="Title" value={caseItem.case_title} />
+            <AuditField label="Reference" value={caseItem.case_reference} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this business case sits in its lifecycle.">
+            <AuditField label="Status" value={humanizeAuditToken(caseItem.lifecycle_stage)} />
+            <AuditField label="Approved" value={caseItem.is_approved ? 'Yes' : 'No'} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this business case was created and last changed.">
+            <AuditField label="Created by" value={caseItem.created_by ? auditUserLabels[caseItem.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={caseItem.created_at} />
+            <AuditField label="Updated by" value={caseItem.updated_by ? auditUserLabels[caseItem.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={caseItem.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       {/* Sections */}
       <Section title="Executive Summary">
         <Field label="Summary" value={caseItem.case_description} />
@@ -225,6 +263,8 @@ export default function PracticeBusinessCaseView() {
         {caseItem.updated_at && ` · Updated: ${new Date(caseItem.updated_at).toLocaleString()}`}
         {caseItem.practice_projects?.project_name && ` · Project: ${caseItem.practice_projects.project_name}`}
       </div>
+      </>
+      )}
     </div>
   )
 }

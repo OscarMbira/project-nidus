@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, PauseCircle } from 'lucide-react'
-import { useOPATailoringContext } from '@nidus/shared/hooks/useOPATailoringContext'
+import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
 import { getOPAService } from '../../services/resolvers/opaServiceResolver'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'

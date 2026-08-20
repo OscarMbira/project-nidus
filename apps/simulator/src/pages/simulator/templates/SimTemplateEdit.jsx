@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getTemplateById, updateTemplate, listTemplateCategories } from '../../../services/sim/simTemplateLibraryService'
 import { defaultContentSchemaForType } from '../../../services/templateLibraryConstants'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const BASE = '/simulator/templates'
 
@@ -12,10 +19,21 @@ export default function TemplateEdit() {
   const [loading, setLoading] = useState(true)
   const [categories, setCategories] = useState([])
   const [form, setForm] = useState(null)
+  const [record, setRecord] = useState(null)
   const [versionNote, setVersionNote] = useState('')
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     ;(async () => {
@@ -27,6 +45,7 @@ export default function TemplateEdit() {
         setLoading(false)
         return
       }
+      setRecord(data)
       setForm({
         category_id: data.category_id || '',
         template_type_code: data.template_type_code,
@@ -77,6 +96,7 @@ export default function TemplateEdit() {
       setErr(error.message)
       return
     }
+    setRecord(data)
     setSuccess({ id: data.id, version: data.version, op: 'updated' })
     setVersionNote('')
   }
@@ -109,6 +129,33 @@ export default function TemplateEdit() {
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Edit template</h1>
       {err && <p className="text-red-600 mb-4">{err}</p>}
+
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this template.">
+              <AuditCard title="Identity" description="How this template is labelled.">
+                <AuditField label="Title" value={record.title} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this template sits.">
+                <AuditField label="Type" value={humanizeAuditToken(record.template_type_code)} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+                <AuditField label="Version" value={record.version} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this template was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4">
         <label className="block">
           <span className="text-sm">Title</span>
@@ -172,6 +219,7 @@ export default function TemplateEdit() {
           <Save className="h-4 w-4" /> Save
         </button>
       </div>
+      )}
     </div>
   )
 }

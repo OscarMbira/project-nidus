@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, Target, CheckCircle } from 'lucide-react'
 import { addCriteria, updateCriteria } from '../../services/ppdAcceptanceCriteriaService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -21,6 +27,18 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !criterion) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [criterion.created_by, criterion.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, criterion])
 
   useEffect(() => {
     if (criterion) {
@@ -114,6 +132,33 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !criterion?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this criterion is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this acceptance criterion, and how it is classified.">
+                <AuditCard title="Identity" description="How this criterion is labelled and tracked.">
+                  <AuditField label="Title" value={formData.criteria_title || criterion.criteria_title} />
+                  <AuditField label="Category" value={humanizeAuditToken(criterion.criteria_category)} />
+                  <AuditField label="Priority" value={humanizeAuditToken(criterion.priority)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this criterion applies.">
+                  <AuditField label="Stakeholder group" value={humanizeAuditToken(criterion.stakeholder_group)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this criterion was created and last changed.">
+                  <AuditField label="Created by" value={criterion.created_by ? auditUserLabels[criterion.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={criterion.created_at} />
+                  <AuditField label="Updated by" value={criterion.updated_by ? auditUserLabels[criterion.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={criterion.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Criterion Title *
@@ -350,6 +395,8 @@ export default function AcceptanceCriteriaForm({ criterion, ppdId, onSave, onCan
               placeholder="Notes from validation"
             />
           </div>
+          </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button

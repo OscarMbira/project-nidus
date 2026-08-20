@@ -51,7 +51,8 @@ Field Templates tab (`TierFieldCustomisationPanel`):
 
 Run in Supabase (Platform `public` schema):
 
-`SQL/v784_pm_hierarchy_create_time_inheritance.sql`
+1. `SQL/v784_pm_hierarchy_create_time_inheritance.sql`
+2. `SQL/v846_custom_field_definitions_instance_local_rls.sql` — tier managers may write instance-local defs (PMO-only RLS blocked PM creates)
 
 (Domain whitelist for portfolio/programme *document* templates remains `SQL/v783_portfolio_programme_template_domains.sql` from Admin v187.)
 

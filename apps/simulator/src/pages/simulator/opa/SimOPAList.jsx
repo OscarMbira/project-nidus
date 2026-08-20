@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Search, Eye, Pencil, PauseCircle } from 'lucide-react'
+import { Plus, Search, PauseCircle } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { listOPAs } from '../../../services/sim/simOPAService'
 import { listSimulationRunsForPicker } from '../../../services/sim/simProjectOPATailoringService'
 import { ensureEefOpaSampleForAccount } from '../../../services/eefService'
@@ -226,13 +227,9 @@ export default function SimOPAList() {
                 </Link>
               )}
               <div className="mt-2 flex gap-2 text-sm">
-                <button type="button" className="text-sky-600" onClick={() => navigate(`${base}/${r.id}`)}>
-                  <Eye className="inline h-4 w-4" /> View
-                </button>
+                <RowActionButton variant="view" label="View OPA" onClick={() => navigate(`${base}/${r.id}`)} />
                 {!templateOnly && (
-                  <button type="button" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                    <Pencil className="inline h-4 w-4" /> Edit
-                  </button>
+                  <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`${base}/${r.id}/edit`)} />
                 )}
                 {templateOnly && (
                   <button type="button" className="text-violet-600" onClick={() => openUseInProject(r.id)}>
@@ -278,13 +275,9 @@ export default function SimOPAList() {
                   <TableCell>{r.opa_type}</TableCell>
                   <TableCell>{r.status}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <button type="button" className="text-sky-600 text-sm" onClick={() => navigate(`${base}/${r.id}`)}>
-                      View
-                    </button>
+                    <RowActionButton variant="view" label="View OPA" onClick={() => navigate(`${base}/${r.id}`)} />
                     {!templateOnly && (
-                      <button type="button" className="text-sm" onClick={() => navigate(`${base}/${r.id}/edit`)}>
-                        Edit
-                      </button>
+                      <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`${base}/${r.id}/edit`)} />
                     )}
                     {templateOnly && (
                       <button type="button" className="text-sm text-violet-600" onClick={() => openUseInProject(r.id)}>

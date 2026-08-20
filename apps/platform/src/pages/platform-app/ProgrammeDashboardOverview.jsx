@@ -3,21 +3,27 @@ import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch
 import { platformDb } from '@nidus/supabase'
 import { getProgrammeRollupsForDashboard } from '../../services/programmeService'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
+import { DashboardStatCard } from '@nidus/ui'
 
-function MetricCard({ title, value, subtitle, icon: Icon, iconBg, iconColor }) {
+function MetricCard({ title, value, subtitle, icon: Icon, iconBg, iconColor, onClick }) {
   return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-blue-500/50 transition-colors">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`p-2 rounded-lg ${iconBg}`}>
-          <Icon className={`h-5 w-5 ${iconColor}`} />
-        </div>
-      </div>
-      <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-gray-100">{value}</p>
-      {subtitle != null && subtitle !== '' && (
-        <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-      )}
-    </div>
+    <DashboardStatCard
+      label={title}
+      value={
+        <>
+          {value}
+          {subtitle != null && subtitle !== '' && (
+            <span className="block text-xs font-normal text-gray-500 mt-1">{subtitle}</span>
+          )}
+        </>
+      }
+      icon={Icon}
+      iconClassName={iconColor}
+      accentClassName="text-gray-100"
+      borderClassName="border-gray-700 hover:border-blue-500/50"
+      className="!bg-gray-800"
+      onClick={onClick}
+    />
   )
 }
 
@@ -140,6 +146,7 @@ export default function ProgrammeDashboardOverview() {
             icon={Layers}
             iconBg="bg-blue-900/40"
             iconColor="text-purple-400"
+            onClick={() => document.getElementById('programme-breakdown')?.scrollIntoView({ behavior: 'smooth' })}
           />
           <MetricCard
             title="Total Projects"
@@ -205,7 +212,7 @@ export default function ProgrammeDashboardOverview() {
           </div>
         ) : (
           <>
-            <h2 className="text-lg font-semibold text-gray-200 mb-4 flex items-center gap-2">
+            <h2 id="programme-breakdown" className="text-lg font-semibold text-gray-200 mb-4 flex items-center gap-2">
               <GitBranch className="h-5 w-5 text-purple-400" />
               By Programme
             </h2>

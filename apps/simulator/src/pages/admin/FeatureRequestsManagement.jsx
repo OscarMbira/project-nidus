@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Lightbulb, Filter, Search, TrendingUp, CheckCircle, Clock, XCircle, Edit, Eye } from 'lucide-react'
+import { Lightbulb, Filter, Search, TrendingUp, CheckCircle, Clock, XCircle, Eye } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
+import { RowActionButton } from '@nidus/ui'
 import { Button } from '@nidus/ui/Button'
 import { Input } from '@nidus/ui/Input'
 import { Textarea } from '@nidus/ui/Textarea'
@@ -342,13 +343,11 @@ export default function FeatureRequestsManagement() {
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusIcon(request.status)}
-                    <Button
-                      variant="secondary"
+                    <RowActionButton
+                      variant="view"
+                      label="View feature request"
                       onClick={() => handleViewRequest(request.id)}
-                      icon={<Eye className="h-4 w-4" />}
-                    >
-                      View
-                    </Button>
+                    />
                   </div>
                 </div>
               </div>

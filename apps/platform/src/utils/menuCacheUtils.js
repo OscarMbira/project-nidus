@@ -16,7 +16,9 @@
 // Templates section; without a version bump, anyone with an already-cached sidebar
 // tree (up to 10 min old per the TTL below) would keep seeing the pre-v805 shape
 // until it happened to expire.
-const SIDEBAR_CACHE_VERSION = 38
+// Bumped 48 → 49: Manage Roles (v902/v905) must appear for PMO + manager creator tiers.
+// Bumped 49 → 50: Manage Menu Bundles (v914/v916/v917) must appear for the same tiers.
+const SIDEBAR_CACHE_VERSION = 50
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

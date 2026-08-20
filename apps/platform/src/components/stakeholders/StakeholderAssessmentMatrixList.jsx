@@ -1,4 +1,3 @@
-import { Pencil, Trash2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
@@ -7,6 +6,7 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import RowNumberBadge from '../ui/RowNumberBadge'
+import { RowActionButton } from '@nidus/ui'
 
 function sortIndicator(direction) {
   if (direction === 'asc') return '↑'
@@ -106,21 +106,17 @@ export default function StakeholderAssessmentMatrixList({
                 </p>
                 <p className="text-xs text-gray-400 mt-1">{r.gap_summary || 'Aligned'}</p>
                 <div className="mt-3 flex gap-2 justify-end">
-                  <button
-                    type="button"
+                  <RowActionButton
+                    variant="edit"
+                    label="Edit assessment"
                     onClick={() => onEdit?.(r)}
-                    className="text-sm text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
-                  >
-                    <Pencil className="h-3.5 w-3.5" /> Edit
-                  </button>
-                  <button
-                    type="button"
+                  />
+                  <RowActionButton
+                    variant="delete"
+                    label="Delete assessment"
                     onClick={() => onDelete?.(r)}
                     disabled={deletingId === r.id}
-                    className="text-sm text-red-400 hover:text-red-300 inline-flex items-center gap-1 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                  </button>
+                  />
                 </div>
               </article>
             )
@@ -174,21 +170,17 @@ export default function StakeholderAssessmentMatrixList({
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-300">{r.gap_summary || 'Aligned'}</td>
                   <td className="px-4 py-3 text-right text-sm">
-                    <button
-                      type="button"
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit assessment"
                       onClick={() => onEdit?.(r)}
-                      className="text-blue-400 hover:text-blue-300 mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
+                    />
+                    <RowActionButton
+                      variant="delete"
+                      label="Delete assessment"
                       onClick={() => onDelete?.(r)}
                       disabled={deletingId === r.id}
-                      className="text-red-400 hover:text-red-300 disabled:opacity-50"
-                    >
-                      Delete
-                    </button>
+                    />
                   </td>
                 </tr>
               ))}

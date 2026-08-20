@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Search, Eye, Pencil, PauseCircle } from 'lucide-react'
+import { Plus, Search, PauseCircle } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { listOPAs, listProjectsForOrganisation } from '../../services/opaService'
 import { ensureEefOpaSampleForAccount } from '../../services/eefService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -268,13 +269,9 @@ export default function OPAList() {
                 </Link>
               )}
               <div className="mt-auto flex gap-2 pt-2">
-                <button type="button" onClick={() => navigate(`/platform/opa/${r.id}`)} className="inline-flex items-center gap-1 text-sm text-sky-600 dark:text-sky-400">
-                  <Eye className="h-4 w-4" /> View
-                </button>
+                <RowActionButton variant="view" label="View OPA" onClick={() => navigate(`/platform/opa/${r.id}`)} />
                 {!templateOnly && (
-                  <button type="button" onClick={() => navigate(`/platform/opa/${r.id}/edit`)} className="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
-                    <Pencil className="h-4 w-4" /> Edit
-                  </button>
+                  <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`/platform/opa/${r.id}/edit`)} />
                 )}
                 {templateOnly && (
                   <button type="button" onClick={() => openUseInProject(r.id)} className="inline-flex items-center gap-1 text-sm text-violet-600 dark:text-violet-400">
@@ -332,13 +329,9 @@ export default function OPAList() {
                     {r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <button type="button" className="text-sky-600 dark:text-sky-400 text-sm" onClick={() => navigate(`/platform/opa/${r.id}`)}>
-                      View
-                    </button>
+                    <RowActionButton variant="view" label="View OPA" onClick={() => navigate(`/platform/opa/${r.id}`)} />
                     {!templateOnly && (
-                      <button type="button" className="text-gray-700 dark:text-gray-300 text-sm" onClick={() => navigate(`/platform/opa/${r.id}/edit`)}>
-                        Edit
-                      </button>
+                      <RowActionButton variant="edit" label="Edit OPA" onClick={() => navigate(`/platform/opa/${r.id}/edit`)} />
                     )}
                     {templateOnly && (
                       <button type="button" className="text-violet-600 text-sm" onClick={() => openUseInProject(r.id)}>

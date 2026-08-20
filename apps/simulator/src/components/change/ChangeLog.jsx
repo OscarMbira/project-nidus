@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   FileText, User, Clock, Filter, Search, LayoutGrid, List,
-  ChevronUp, ChevronDown, ChevronsUpDown, Plus, Eye, Pencil,
+  ChevronUp, ChevronDown, ChevronsUpDown, Plus,
   Trash2, X, Save, AlertTriangle,
 } from 'lucide-react'
+import { RowActionButton, DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
 import {
   fetchChangeLog, fetchAccessibleProjects, fetchCRsForProject,
   fetchChangeLogEntry, createChangeLogEntry, updateChangeLogEntry,
@@ -46,15 +47,29 @@ const ACTION_COLOURS = {
   reopened:     'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300',
 }
 
+const PRIORITY_COLOURS = {
+  critical: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  urgent:   'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  high:     'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
+  medium:   'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+  low:      'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+}
+
 const EXPORT_COLUMNS = [
+  { key: 'log_id',        label: 'Log ID' },
   { key: 'cr_reference',  label: 'CR Reference' },
   { key: 'cr_title',      label: 'CR Title' },
   { key: 'action',        label: 'Action' },
   { key: 'log_type',      label: 'Log Type' },
+  { key: 'category',      label: 'Category' },
+  { key: 'priority',      label: 'Priority' },
+  { key: 'cr_status',     label: 'CR Status' },
   { key: 'description',   label: 'Description' },
+  { key: 'comments',      label: 'Comments' },
   { key: 'old_value',     label: 'Previous Value' },
   { key: 'new_value',     label: 'New Value' },
   { key: 'performed_by',  label: 'Performed By' },
+  { key: 'role',          label: 'Role' },
   { key: 'timestamp',     label: 'Timestamp' },
   { key: 'project',       label: 'Project' },
 ]
@@ -74,6 +89,38 @@ function ActionBadge({ type }) {
       {(type || '').replace(/-/g, ' ')}
     </span>
   )
+}
+
+function SoftBadge({ value, colourMap }) {
+  if (!value) return <span className="text-gray-400 dark:text-gray-500">—</span>
+  const key = String(value).toLowerCase()
+  const cls = (colourMap && colourMap[key])
+    || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+  return (
+    <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded capitalize whitespace-nowrap ${cls}`}>
+      {String(value).replace(/-/g, ' ')}
+    </span>
+  )
+}
+
+function formatRole(role) {
+  if (!role) return '—'
+  return String(role).replace(/_/g, ' ')
+}
+
+/** Prefer Admin display_id (CLG-0001); fall back to short UUID only until backfill. */
+function formatLogId(entryOrId) {
+  if (entryOrId && typeof entryOrId === 'object') {
+    const friendly = entryOrId.display_id && String(entryOrId.display_id).trim()
+    if (friendly) return friendly
+    const id = entryOrId.id
+    if (!id) return '—'
+    const s = String(id)
+    return s.length > 8 ? `${s.slice(0, 8)}…` : s
+  }
+  if (!entryOrId) return '—'
+  const s = String(entryOrId)
+  return s.length > 8 ? `${s.slice(0, 8)}…` : s
 }
 
 function SortIcon({ col, sort }) {
@@ -96,6 +143,18 @@ function Field({ label, children }) {
 
 const inputCls = 'w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
 const thCls    = 'px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200'
+const stickyThBase = 'sticky z-30 bg-gray-50 dark:bg-gray-900 shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(55,65,81,1)]'
+const stickyTdBase = 'sticky z-20 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 shadow-[1px_0_0_0_rgba(229,231,235,1)] dark:shadow-[1px_0_0_0_rgba(55,65,81,1)]'
+/** # (3rem) + Log ID (~6.5rem) + Timestamp (~11rem) → Action sticks while scrolling */
+const stickyNumCls = 'left-0'
+const stickyLogIdCls = 'left-12 min-w-[7.5rem]'
+const stickyTsCls = 'left-[10.5rem] min-w-[11rem]'
+const stickyActionCls = 'left-[21.5rem]'
+/** View/Edit/Delete column — pin to the right like Risk Register (RisksList) */
+const stickyRightActionsTh =
+  'sticky right-0 z-[35] min-w-[8.5rem] whitespace-nowrap text-right bg-gray-50 dark:bg-gray-900 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]'
+const stickyRightActionsTd =
+  'sticky right-0 z-[25] min-w-[8.5rem] whitespace-nowrap text-right bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]'
 
 // ─── Create / Edit form (modal for edit; inline panel for create) ─────────────
 
@@ -372,6 +431,9 @@ function ViewModal({ entry, onClose, onEdit, canEdit }) {
   const [activeTab, setActiveTab] = useState('details')
 
   const rows = [
+    { label: 'Log ID',         value: formatLogId(entry) !== '—'
+      ? <span className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400">{formatLogId(entry)}</span>
+      : '—' },
     { label: 'CR Reference',   value: entry.change_request?.change_reference },
     { label: 'CR Title',       value: entry.change_request?.change_title },
     { label: 'Project',        value: entry.change_request?.project?.project_name },
@@ -433,10 +495,7 @@ function ViewModal({ entry, onClose, onEdit, canEdit }) {
         {/* Footer */}
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
           {canEdit && (
-            <button onClick={onEdit}
-              className="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors">
-              <Pencil className="h-4 w-4" /> Edit
-            </button>
+            <RowActionButton variant="edit" label="Edit log entry" onClick={onEdit} />
           )}
           <button onClick={onClose}
             className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
@@ -523,6 +582,7 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
   const [error,     setError]     = useState(null)
   const [currentUserId, setCurrentUserId] = useState(null)
   const [page,      setPage]      = useState(1)
+  const [pageTab, setPageTab] = useState('dashboard') // 'dashboard' | 'register'
 
   const [filters, setFilters] = useState({
     project_id: propProjectId || '', action_type: '',
@@ -582,7 +642,13 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
     arr.sort((a, b) => {
       let va, vb
       if      (col === 'timestamp') { va = a.log_date; vb = b.log_date }
+      else if (col === 'log_id')   { va = a.display_id || a.id || ''; vb = b.display_id || b.id || '' }
       else if (col === 'action')    { va = a.action; vb = b.action }
+      else if (col === 'log_type')  { va = a.log_type || ''; vb = b.log_type || '' }
+      else if (col === 'category')  { va = a.change_request?.change_category || ''; vb = b.change_request?.change_category || '' }
+      else if (col === 'priority')  { va = a.change_request?.priority || ''; vb = b.change_request?.priority || '' }
+      else if (col === 'cr_status') { va = a.change_request?.status || ''; vb = b.change_request?.status || '' }
+      else if (col === 'role')      { va = a.performed_by_role || ''; vb = b.performed_by_role || '' }
       else if (col === 'user')      { va = a.performed_by_user?.full_name || ''; vb = b.performed_by_user?.full_name || '' }
       else if (col === 'project')   { va = a.change_request?.project?.project_name || ''; vb = b.change_request?.project?.project_name || '' }
       else if (col === 'cr')        { va = a.change_request?.change_reference || ''; vb = b.change_request?.change_reference || '' }
@@ -595,15 +661,41 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
   const paged      = useMemo(() => limit ? sorted.slice(0, limit) : sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [sorted, page, limit])
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
 
+  const dashboardStats = useMemo(() => {
+    const byAction = {}
+    for (const e of entries) {
+      const k = e.action || 'other'
+      byAction[k] = (byAction[k] || 0) + 1
+    }
+    return {
+      total: entries.length,
+      approved: byAction.approved || 0,
+      rejected: byAction.rejected || 0,
+      submitted: byAction.submitted || 0,
+      implemented: byAction.implemented || 0,
+    }
+  }, [entries])
+
+  const recentEntries = useMemo(
+    () => [...entries].sort((a, b) => new Date(b.log_date || 0) - new Date(a.log_date || 0)).slice(0, 5),
+    [entries]
+  )
+
   const exportRows = useMemo(() => sorted.map(e => ({
+    log_id:       e.display_id || e.id || '',
     cr_reference: e.change_request?.change_reference || '',
     cr_title:     e.change_request?.change_title || '',
     action:       (e.action || '').replace(/-/g, ' '),
     log_type:     (e.log_type || '').replace(/-/g, ' '),
+    category:     (e.change_request?.change_category || '').replace(/-/g, ' '),
+    priority:     (e.change_request?.priority || '').replace(/-/g, ' '),
+    cr_status:    (e.change_request?.status || '').replace(/-/g, ' '),
     description:  e.description || '',
+    comments:     e.comments || '',
     old_value:    e.old_value || '',
     new_value:    e.new_value || '',
     performed_by: e.performed_by_user?.full_name || e.performed_by_user?.email || '',
+    role:         formatRole(e.performed_by_role),
     timestamp:    e.log_date ? new Date(e.log_date).toLocaleString() : '',
     project:      e.change_request?.project?.project_name || '',
   })), [sorted])
@@ -625,10 +717,10 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
   const handleSaved = (saved, isEdit) => {
     if (isEdit) {
       setEntries(prev => prev.map(e => e.id === saved.id ? saved : e))
-      setToast({ message: 'Entry updated', details: `${saved.change_request?.change_reference} — ${saved.action}` })
+      setToast({ message: 'Entry updated', details: `${formatLogId(saved)} — ${saved.change_request?.change_reference || ''} — ${saved.action}` })
     } else {
       setEntries(prev => [saved, ...prev])
-      setToast({ message: 'Entry added', details: `${saved.change_request?.change_reference} — ${saved.action}` })
+      setToast({ message: 'Entry added', details: `${formatLogId(saved)} — ${saved.change_request?.change_reference || ''} — ${saved.action}` })
     }
     closeModal()
   }
@@ -667,6 +759,62 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
 
   return (
     <div className="space-y-4">
+      {!limit && (
+        <div className="flex justify-end">
+          <DashboardRegisterTabBar
+            value={pageTab}
+            onChange={setPageTab}
+            registerLabel="Log"
+            ariaLabel="Change Log sections"
+          />
+        </div>
+      )}
+
+      {!limit && pageTab === 'dashboard' && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4" role="tabpanel" aria-label="Change Log dashboard">
+          {[
+            { label: 'Total', value: dashboardStats.total, accent: 'text-gray-900 dark:text-white', onClick: () => { clearFilters(); setPageTab('register') } },
+            { label: 'Submitted', value: dashboardStats.submitted, accent: 'text-purple-700 dark:text-purple-300', onClick: () => { setFilter('action_type', 'submitted'); setPageTab('register') } },
+            { label: 'Approved', value: dashboardStats.approved, accent: 'text-emerald-700 dark:text-emerald-300', onClick: () => { setFilter('action_type', 'approved'); setPageTab('register') } },
+            { label: 'Rejected', value: dashboardStats.rejected, accent: 'text-red-700 dark:text-red-300', onClick: () => { setFilter('action_type', 'rejected'); setPageTab('register') } },
+            { label: 'Implemented', value: dashboardStats.implemented, accent: 'text-indigo-700 dark:text-indigo-300', onClick: () => { setFilter('action_type', 'implemented'); setPageTab('register') } },
+          ].map((card) => (
+            <DashboardStatCard key={card.label} label={card.label} value={card.value} accentClassName={card.accent} onClick={card.onClick} />
+          ))}
+        </div>
+      )}
+
+      {!limit && pageTab === 'dashboard' && (
+        <RegisterOpenItemsWidget
+          title="Recent Change Log Entries"
+          icon={FileText}
+          rows={recentEntries}
+          totalCount={entries.length}
+          columns={[
+            { key: 'log_id', label: 'Log ID', sortAccessor: (e) => formatLogId(e), render: (e) => <span className="font-mono text-xs">{formatLogId(e)}</span>, className: 'whitespace-nowrap text-gray-500 dark:text-gray-400' },
+            { key: 'cr', label: 'CR Reference', sortAccessor: (e) => e.change_request?.change_reference || '', render: (e) => e.change_request?.change_reference || '—', className: 'font-medium text-gray-900 dark:text-white whitespace-nowrap' },
+            {
+              key: 'action',
+              label: 'Action',
+              render: (e) => (
+                <span className={`px-2 py-0.5 text-xs font-medium rounded capitalize ${ACTION_COLOURS[e.action] || ACTION_COLOURS.created}`}>
+                  {(e.action || '').replace(/-/g, ' ')}
+                </span>
+              ),
+            },
+            { key: 'timestamp', label: 'Date', sortAccessor: (e) => e.log_date || '', render: (e) => (e.log_date ? new Date(e.log_date).toLocaleDateString() : '—'), className: 'text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+          ]}
+          rowKey={(e) => e.id}
+          searchFields={[]}
+          onRowClick={openView}
+          onViewAll={() => setPageTab('register')}
+          viewAllLabel="Open full Change Log"
+          emptyMessage="No change log entries yet"
+        />
+      )}
+
+      {(limit || pageTab === 'register') && (
+      <div className="space-y-4" role={limit ? undefined : 'tabpanel'} aria-label={limit ? undefined : 'Change log'}>
       {/* Toolbar */}
       {!limit && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -678,7 +826,7 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                 type="text"
                 value={filters.search}
                 onChange={e => setFilter('search', e.target.value)}
-                placeholder="Search by CR reference, title or description…"
+                placeholder="Search by Log ID, CR reference, title or description…"
                 className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
@@ -770,44 +918,74 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                <TableRowNumberHeader className="!normal-case" />
-                  <th className={thCls} onClick={() => cycleSort('timestamp')}>Timestamp <SortIcon col="timestamp" sort={sort} /></th>
-                  <th className={thCls} onClick={() => cycleSort('action')}>Action <SortIcon col="action" sort={sort} /></th>
-                  <th className={thCls} onClick={() => cycleSort('cr')}>CR Reference <SortIcon col="cr" sort={sort} /></th>
+                <TableRowNumberHeader className={`!normal-case ${stickyThBase} ${stickyNumCls}`} />
+                  <th className={`${thCls} ${stickyThBase} ${stickyLogIdCls}`} onClick={() => cycleSort('log_id')}>Log ID <SortIcon col="log_id" sort={sort} /></th>
+                  <th className={`${thCls} ${stickyThBase} ${stickyTsCls}`} onClick={() => cycleSort('timestamp')}>Timestamp <SortIcon col="timestamp" sort={sort} /></th>
+                  <th className={`${thCls} ${stickyThBase} ${stickyActionCls}`} onClick={() => cycleSort('action')}>Action <SortIcon col="action" sort={sort} /></th>
+                  <th className={thCls} onClick={() => cycleSort('log_type')}>Log Type <SortIcon col="log_type" sort={sort} /></th>
+                  <th className={thCls} onClick={() => cycleSort('cr')}>CR / Category / Priority / Status <SortIcon col="cr" sort={sort} /></th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Comments</th>
                   <th className={thCls} onClick={() => cycleSort('user')}>Performed By <SortIcon col="user" sort={sort} /></th>
+                  <th className={thCls} onClick={() => cycleSort('role')}>Role <SortIcon col="role" sort={sort} /></th>
                   {!propProjectId && <th className={thCls} onClick={() => cycleSort('project')}>Project <SortIcon col="project" sort={sort} /></th>}
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status Change</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                  <th className={`px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${stickyRightActionsTh}`}>
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {paged.map(entry => (
-                  <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                    <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                {paged.map((entry, index) => (
+                  <tr key={entry.id} className="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} className={`${stickyTdBase} ${stickyNumCls}`} />
+                    <td className={`px-4 py-3 whitespace-nowrap ${stickyTdBase} ${stickyLogIdCls}`}>
+                      <span
+                        className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400"
+                        title={entry.display_id || entry.id || ''}
+                      >
+                        {formatLogId(entry)}
+                      </span>
+                    </td>
+                    <td className={`px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ${stickyTdBase} ${stickyTsCls}`}>
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {entry.log_date ? new Date(entry.log_date).toLocaleString() : '—'}
                       </div>
                     </td>
-                    <td className="px-4 py-3"><ActionBadge type={entry.action} /></td>
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className={`px-4 py-3 ${stickyTdBase} ${stickyActionCls}`}><ActionBadge type={entry.action} /></td>
+                    <td className="px-4 py-3">
+                      <SoftBadge value={entry.log_type} />
+                    </td>
+                    <td className="px-4 py-3 min-w-[240px]">
                       {entry.change_request?.change_reference && (
                         <span className="font-mono text-xs text-blue-600 dark:text-blue-400">{entry.change_request.change_reference}</span>
                       )}
                       {entry.change_request?.change_title && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-[180px] truncate">{entry.change_request.change_title}</div>
+                        <div className="text-xs text-gray-700 dark:text-gray-200 mt-0.5 max-w-[260px] truncate font-medium" title={entry.change_request.change_title}>
+                          {entry.change_request.change_title}
+                        </div>
                       )}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                        <SoftBadge value={entry.change_request?.change_category} />
+                        <SoftBadge value={entry.change_request?.priority} colourMap={PRIORITY_COLOURS} />
+                        <SoftBadge value={entry.change_request?.status} />
+                      </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[240px]">
-                      <span className="line-clamp-2">{entry.description || '—'}</span>
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[220px]">
+                      <span className="line-clamp-2" title={entry.description || ''}>{entry.description || '—'}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[180px]">
+                      <span className="line-clamp-2" title={entry.comments || ''}>{entry.comments || '—'}</span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3 text-gray-400" />
                         {entry.performed_by_user?.full_name || entry.performed_by_user?.email || 'Unknown'}
                       </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 capitalize whitespace-nowrap">
+                      {formatRole(entry.performed_by_role)}
                     </td>
                     {!propProjectId && (
                       <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
@@ -823,17 +1001,11 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => openView(entry)} title="View" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400">
-                          <Eye className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => openEdit(entry)} title="Edit" className="p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => openDelete(entry)} title="Delete" className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                    <td className={`px-4 py-3 ${stickyRightActionsTd}`}>
+                      <div className="inline-flex items-center justify-end gap-1">
+                        <RowActionButton variant="view" label="View log entry" onClick={() => openView(entry)} />
+                        <RowActionButton variant="edit" label="Edit log entry" onClick={() => openEdit(entry)} />
+                        <RowActionButton variant="delete" label="Delete log entry" onClick={() => openDelete(entry)} />
                       </div>
                     </td>
                   </tr>
@@ -851,7 +1023,13 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
+                      {(entry.display_id || entry.id) && (
+                        <span className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400" title={entry.display_id || entry.id}>
+                          {formatLogId(entry)}
+                        </span>
+                      )}
                       <ActionBadge type={entry.action} />
+                      <SoftBadge value={entry.log_type} />
                       {entry.change_request?.change_reference && (
                         <span className="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400">{entry.change_request.change_reference}</span>
                       )}
@@ -859,9 +1037,16 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                         <span className="text-sm font-medium text-gray-900 dark:text-white truncate">{entry.change_request.change_title}</span>
                       )}
                     </div>
-                    {entry.description && <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{entry.description}</p>}
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <SoftBadge value={entry.change_request?.change_category} />
+                      <SoftBadge value={entry.change_request?.priority} colourMap={PRIORITY_COLOURS} />
+                      <SoftBadge value={entry.change_request?.status} />
+                    </div>
+                    {entry.description && <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{entry.description}</p>}
+                    {entry.comments && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 italic">“{entry.comments}”</p>}
                     <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1"><User className="h-3 w-3" />{entry.performed_by_user?.full_name || entry.performed_by_user?.email || 'Unknown'}</span>
+                      {entry.performed_by_role && <span className="capitalize">{formatRole(entry.performed_by_role)}</span>}
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{entry.log_date ? new Date(entry.log_date).toLocaleString() : '—'}</span>
                       {!propProjectId && entry.change_request?.project?.project_name && <span>{entry.change_request.project.project_name}</span>}
                       {entry.old_value && entry.new_value && (
@@ -870,15 +1055,9 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                     </div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <button onClick={() => openView(entry)} title="View" className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => openEdit(entry)} title="Edit" className="p-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600">
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button onClick={() => openDelete(entry)} title="Delete" className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <RowActionButton variant="view" label="View log entry" onClick={() => openView(entry)} />
+                    <RowActionButton variant="edit" label="Edit log entry" onClick={() => openEdit(entry)} />
+                    <RowActionButton variant="delete" label="Delete log entry" onClick={() => openDelete(entry)} />
                   </div>
                 </div>
               </div>
@@ -899,6 +1078,8 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
               className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Next</button>
           </div>
         </div>
+      )}
+      </div>
       )}
 
       {/* Modals — edit only (create uses inline panel above) */}

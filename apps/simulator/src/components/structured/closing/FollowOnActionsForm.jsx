@@ -2,11 +2,33 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, ArrowRight, Calendar, Users } from 'lucide-react';
 import { createFollowOnAction, updateFollowOnAction } from '../../../services/closingProjectService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function FollowOnActionsForm({ projectId, action, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !action) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        action.created_by,
+        action.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, action]);
   const [formData, setFormData] = useState({
     action_title: action?.action_title || '',
     action_description: action?.action_description || '',
@@ -92,6 +114,33 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !action?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this action is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this follow-on action, and how it is classified.">
+                <AuditCard title="Identity" description="How this action is labelled and tracked.">
+                  <AuditField label="Title" value={formData.action_title || action.action_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.action_status || action.action_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this action sits.">
+                  <AuditField label="Action type" value={humanizeAuditToken(formData.action_type || action.action_type)} />
+                  <AuditField label="Priority" value={humanizeAuditToken(formData.priority || action.priority)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this action was created and last changed.">
+                  <AuditField label="Created by" value={action.created_by ? auditUserLabels[action.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={action.created_at} />
+                  <AuditField label="Updated by" value={action.updated_by ? auditUserLabels[action.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={action.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Action Title *</label>
             <input
@@ -199,6 +248,8 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
               />
             </div>
           </div>
+          </>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button

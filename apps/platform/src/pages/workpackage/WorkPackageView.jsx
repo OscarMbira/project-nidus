@@ -6,7 +6,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { FileText, Edit2, ArrowLeft, Package, CheckCircle, Calendar, Users, BarChart3, Settings, Target, Briefcase, FileText as FileTextIcon } from 'lucide-react'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { FileText, ArrowLeft, Package, CheckCircle, Calendar, Users, BarChart3, Settings, Target, Briefcase, FileText as FileTextIcon } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getWorkPackageById, updateWorkPackage, authorizeWorkPackage, acceptWorkPackage, completeWorkPackage, closeWorkPackage, updateProgress } from '../../services/controllingStageService'
 import { getProducts } from '../../services/wpProductsService'
 import { getQualityCriteria } from '../../services/wpQualityCriteriaService'
@@ -17,6 +22,12 @@ import { getStatusHistory as getWPStatusHistory } from '../../services/wpStatusH
 import { getProgressSnapshots } from '../../services/wpProgressSnapshotsService'
 import { supabase } from '../../services/supabaseClient'
 import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx'
 import InheritedWorkPackageFields, {
   WORK_PACKAGE_CATEGORY,
@@ -44,9 +55,11 @@ const WP_VIEW_SECTIONS = [
 
 export default function WorkPackageView() {
   const { wpId } = useParams()
+  const { projectId: routeProjectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [workPackage, setWorkPackage] = useState(null)
+  const [resolvedWpId, setResolvedWpId] = useState(null)
   const [products, setProducts] = useState([])
   const [qualityCriteria, setQualityCriteria] = useState([])
   const [acceptanceCriteria, setAcceptanceCriteria] = useState([])
@@ -59,19 +72,40 @@ export default function WorkPackageView() {
   const [editing, setEditing] = useState(false)
   const [microPlanCount, setMicroPlanCount] = useState(null)
   const [startingDraft, setStartingDraft] = useState(false)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
-    if (wpId) {
+    if (wpId && routeProjectId) {
       fetchData()
     }
-  }, [wpId])
+  }, [wpId, routeProjectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !workPackage) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [workPackage.created_by, workPackage.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, workPackage])
 
   const fetchData = async () => {
     try {
       setLoading(true)
 
+      const resolvedId = isLikelyDatabaseUuid(wpId)
+        ? wpId
+        : await resolveEntityId('workPackage', wpId, routeProjectId)
+      if (!resolvedId) {
+        setWorkPackage(null)
+        setLoading(false)
+        return
+      }
+      setResolvedWpId(resolvedId)
+
       // Fetch work package with related data
-      const wpData = await getWorkPackageById(wpId)
+      const wpData = await getWorkPackageById(resolvedId)
       if (!wpData) {
         throw new Error('Work Package not found')
       }
@@ -98,13 +132,13 @@ export default function WorkPackageView() {
           historyResult,
           snapshotsResult
         ] = await Promise.all([
-          getProducts(wpId),
-          getQualityCriteria(wpId),
-          getAcceptanceCriteria(wpId),
-          getResources(wpId),
-          getReportingArrangements(wpId),
-          getWPStatusHistory(wpId),
-          getProgressSnapshots(wpId)
+          getProducts(resolvedId),
+          getQualityCriteria(resolvedId),
+          getAcceptanceCriteria(resolvedId),
+          getResources(resolvedId),
+          getReportingArrangements(resolvedId),
+          getWPStatusHistory(resolvedId),
+          getProgressSnapshots(resolvedId)
         ])
 
         if (productsResult.success) setProducts(productsResult.data || [])
@@ -115,10 +149,14 @@ export default function WorkPackageView() {
         if (historyResult.success) setStatusHistory(historyResult.data || [])
         if (snapshotsResult.success) setProgressSnapshots(snapshotsResult.data || [])
         try {
-          const n = await countMicroPlansByWorkPackage(wpData.project_id, wpId)
+          const n = await countMicroPlansByWorkPackage(wpData.project_id, resolvedId)
           setMicroPlanCount(n)
         } catch {
           setMicroPlanCount(null)
+        }
+
+        if (wpData?.wp_reference && wpData.wp_reference !== wpId) {
+          navigate(platformProjectPath(routeKey, 'work-packages', wpData.wp_reference), { replace: true })
         }
       } else {
         throw new Error('Work Package project_id not found')
@@ -134,7 +172,7 @@ export default function WorkPackageView() {
   const handleAuthorize = async () => {
     if (!confirm('Authorize this work package?')) return
     try {
-      await authorizeWorkPackage(wpId)
+      await authorizeWorkPackage(resolvedWpId || wpId)
       await fetchData()
       alert('Work Package authorized successfully')
     } catch (error) {
@@ -145,7 +183,7 @@ export default function WorkPackageView() {
   const handleAccept = async () => {
     if (!confirm('Accept this work package?')) return
     try {
-      await acceptWorkPackage(wpId)
+      await acceptWorkPackage(resolvedWpId || wpId)
       await fetchData()
       alert('Work Package accepted successfully')
     } catch (error) {
@@ -156,7 +194,7 @@ export default function WorkPackageView() {
   const handleComplete = async () => {
     if (!confirm('Mark this work package as completed?')) return
     try {
-      await completeWorkPackage(wpId)
+      await completeWorkPackage(resolvedWpId || wpId)
       await fetchData()
       alert('Work Package completed successfully')
     } catch (error) {
@@ -167,7 +205,7 @@ export default function WorkPackageView() {
   const handleClose = async () => {
     if (!confirm('Close this work package?')) return
     try {
-      await closeWorkPackage(wpId)
+      await closeWorkPackage(resolvedWpId || wpId)
       await fetchData()
       alert('Work Package closed successfully')
     } catch (error) {
@@ -210,13 +248,13 @@ export default function WorkPackageView() {
   const canClose = workPackage?.status === 'completed'
 
   const handleStartMicroPlanDraft = async () => {
-    if (!workPackage?.project_id || !wpId) return
+    if (!workPackage?.project_id || !resolvedWpId) return
     try {
       setStartingDraft(true)
-      const row = await startDraftMicroPlanFromWorkPackage(workPackage.project_id, wpId)
+      const row = await startDraftMicroPlanFromWorkPackage(workPackage.project_id, resolvedWpId)
       toast.success(`Draft micro-plan created: ${row.plan_reference || row.id}`)
       navigate(
-        `/pm/planning/microplans?projectId=${encodeURIComponent(workPackage.project_id)}&workPackageId=${encodeURIComponent(wpId)}`
+        `/pm/planning/microplans?projectId=${encodeURIComponent(workPackage.project_id)}&workPackageId=${encodeURIComponent(resolvedWpId)}`
       )
     } catch (e) {
       toast.error(e?.message || 'Could not create draft')
@@ -228,7 +266,7 @@ export default function WorkPackageView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${workPackage?.project_id}`)}
+        onClick={() => navigate(`/pm/delivery/work-packages?projectId=${encodeURIComponent(routeKey)}`)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -250,7 +288,7 @@ export default function WorkPackageView() {
                 Linked team micro-plans:{' '}
                 {microPlanCount == null ? '—' : microPlanCount}{' '}
                 <Link
-                  to={`/pm/planning/microplans?projectId=${encodeURIComponent(workPackage.project_id)}&workPackageId=${encodeURIComponent(wpId)}`}
+                  to={`/pm/planning/microplans?projectId=${encodeURIComponent(workPackage.project_id)}&workPackageId=${encodeURIComponent(resolvedWpId || wpId)}`}
                   className="text-blue-600 hover:underline dark:text-blue-400"
                 >
                   View list
@@ -307,13 +345,7 @@ export default function WorkPackageView() {
               </button>
             )}
             {canEdit && (
-              <button
-                onClick={() => setEditing(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit work package" onClick={() => setEditing(true)} />
             )}
           </div>
         </div>
@@ -340,37 +372,24 @@ export default function WorkPackageView() {
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           {/* Tabs */}
-          <div className="border-b border-gray-200 dark:border-gray-700">
-            <nav className="flex -mb-px overflow-x-auto">
-              {[
-                { id: 'overview', label: 'Overview', icon: FileText },
-                { id: 'work', label: 'Work Definition', icon: Target },
-                { id: 'products', label: `Products (${products.length})`, icon: Package },
-                { id: 'quality', label: `Quality (${qualityCriteria.length})`, icon: CheckCircle },
-                { id: 'acceptance', label: `Acceptance (${acceptanceCriteria.length})`, icon: CheckCircle },
-                { id: 'schedule', label: 'Schedule', icon: Calendar },
-                { id: 'resources', label: `Resources (${resources.length})`, icon: Briefcase },
-                { id: 'reporting', label: `Reporting (${reportingArrangements.length})`, icon: FileTextIcon },
-                { id: 'status', label: 'Status & Progress', icon: BarChart3 },
-                { id: 'settings', label: 'Settings', icon: Settings },
-              ].map((tab) => {
-                const Icon = tab.icon
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-3 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                  </button>
-                )
-              })}
-            </nav>
+          <div className="border-b border-gray-200 dark:border-gray-700 px-2 pt-2">
+            <DetailAuditTabList
+              activeTab={activeTab}
+              onChange={setActiveTab}
+              tabs={[
+                { value: 'overview', label: 'Overview' },
+                { value: 'work', label: 'Work Definition' },
+                { value: 'products', label: `Products (${products.length})` },
+                { value: 'quality', label: `Quality (${qualityCriteria.length})` },
+                { value: 'acceptance', label: `Acceptance (${acceptanceCriteria.length})` },
+                { value: 'schedule', label: 'Schedule' },
+                { value: 'resources', label: `Resources (${resources.length})` },
+                { value: 'reporting', label: `Reporting (${reportingArrangements.length})` },
+                { value: 'status', label: 'Status & Progress' },
+                { value: 'settings', label: 'Settings' },
+                { value: 'audit', label: 'Audit details' },
+              ]}
+            />
           </div>
 
           {/* Tab Content */}
@@ -514,6 +533,27 @@ export default function WorkPackageView() {
                   onUpdateProgress={handleUpdateProgress}
                 />
               </div>
+            )}
+
+            {activeTab === 'audit' && (
+              <AuditDetailsPanel description="Who created or changed this work package, and how it is classified.">
+                <AuditCard title="Identity" description="How this work package is labelled and tracked.">
+                  <AuditField label="Name" value={workPackage.work_package_name} />
+                  <AuditField label="Code" value={workPackage.work_package_code} />
+                  <AuditField label="Status" value={humanizeAuditToken(workPackage.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this work package sits.">
+                  <AuditField label="Project" value={project?.project_name} />
+                  <AuditField label="Stage" value={workPackage.stage_boundary?.stage_name || workPackage.stage_boundary?.gate_name} />
+                  <AuditField label="Assigned to" value={workPackage.assigned_to?.full_name || workPackage.assigned_to?.email} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this work package was created and last changed.">
+                  <AuditField label="Created by" value={workPackage.created_by ? auditUserLabels[workPackage.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={workPackage.created_at} />
+                  <AuditField label="Updated by" value={workPackage.updated_by ? auditUserLabels[workPackage.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={workPackage.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
             )}
 
             {activeTab === 'settings' && (

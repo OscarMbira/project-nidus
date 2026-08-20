@@ -172,8 +172,8 @@ const SimulatorHomepage = () => {
     <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
       {/* Header - Always dark theme with green gradient, not affected by theme toggle */}
       <header className="sticky top-0 z-50 bg-gradient-to-r from-green-900 via-emerald-800 to-teal-900 shadow-md border-b border-green-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
+          <Link to="/" className="flex items-center gap-3 shrink-0">
             <Zap className="h-6 w-6 text-green-300" />
             <div className="flex flex-col">
               <span className="text-3xl font-bold">
@@ -190,63 +190,63 @@ const SimulatorHomepage = () => {
               </div>
             </div>
           </Link>
-          <nav className="hidden md:flex items-center gap-10">
+          <nav className="hidden md:flex items-center gap-3 lg:gap-4 ml-6 lg:ml-8 shrink-0">
             <button
               type="button"
               onClick={handleHomeClick}
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
+              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
             >
               Home
             </button>
             <Link
               to="/simulator/features"
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
             >
               Features
             </Link>
             <Link
               to="/simulator/blog"
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
             >
               Blog
             </Link>
             <Link
               to="/simulator/resources"
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
             >
               Resources
             </Link>
             <Link
               to="/simulator/pricing"
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
             >
               Pricing
             </Link>
             <Link
               to="/documentation/simulator"
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
             >
               Documentation
             </Link>
+          </nav>
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <Link
               to="/simulator/affiliate"
-              className="text-sm font-medium text-green-200 hover:text-white transition-colors"
+              className="hidden md:inline-flex whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
             >
               Become an Affiliate
             </Link>
-          </nav>
-          <div className="flex items-center gap-3">
             <Link
               to="/simulator/request-demo"
-              className="hidden md:inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md"
+              className="hidden md:inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md"
             >
               Request Demo
             </Link>
             <ThemeToggle />
-            <Button variant="outline" asChild className="bg-transparent border-green-400/50 text-green-200 hover:bg-green-800/50 hover:border-green-300">
+            <Button variant="outline" size="sm" asChild className="whitespace-nowrap bg-transparent border-green-400/50 text-green-200 hover:bg-green-800/50 hover:border-green-300">
               <Link to="/simulator/login">Log in</Link>
             </Button>
-            <Button asChild className="bg-green-600 hover:bg-green-500 text-white shadow-lg">
+            <Button size="sm" asChild className="whitespace-nowrap bg-green-600 hover:bg-green-500 text-white shadow-lg">
               <Link to="/simulator/register">Get started</Link>
             </Button>
           </div>

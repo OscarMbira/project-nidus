@@ -5,25 +5,23 @@ import { simGetRequirement, simSaveRequirement, simSoftDeleteRequirement } from 
 import { getPracticeStakeholders } from '../../../services/sim/practiceStakeholderService'
 import { simDb } from '../../../services/supabase/supabaseClient'
 import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
-import {
-  exportRecordToExcel,
-  exportRecordToWord,
-  exportRecordToPPT,
-  exportRecordToCSV,
-  exportRecordToXML,
-  exportRecordToJSON,
-  exportRecordToPrint,
-} from '../../../utils/exportUtils'
+
+const inputCls =
+  'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500'
 
 const SECTIONS = [
   {
     title: 'Requirement',
     fields: [
       { key: 'requirement_code', label: 'Code' },
+      { key: 'version', label: 'Version' },
       { key: 'name', label: 'Name' },
       { key: 'description', label: 'Description' },
       { key: 'category', label: 'Category' },
-      { key: 'priority', label: 'Priority' },
+      { key: 'priority', label: 'Priority (MoSCoW)' },
+      { key: 'source_stakeholder', label: 'Source stakeholder' },
+      { key: 'acceptance_criteria', label: 'Acceptance criteria' },
+      { key: 'traceability_tag', label: 'Traceability tag' },
       { key: 'status', label: 'Status' },
     ],
   },
@@ -138,11 +136,29 @@ export default function RequirementDetail() {
     else setSuccess({ error: res.error })
   }
 
-  if (!projectId) return <p className="p-6 text-gray-500">Missing project.</p>
-  if (loading) return <div className="flex min-h-[40vh] items-center justify-center">Loading…</div>
+  if (!projectId) {
+    return <p className="p-6 text-gray-500 dark:text-gray-400">Missing project.</p>
+  }
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-gray-400">
+        Loading…
+      </div>
+    )
+  }
+
+  const stakeholderLabel =
+    stakeholders.find((s) => s.id === form.source_stakeholder_id)?.stakeholder_name ||
+    stakeholders.find((s) => s.id === form.source_stakeholder_id)?.stakeholder_reference ||
+    ''
+  const exportRecord = {
+    ...form,
+    source_stakeholder: stakeholderLabel,
+  }
+  const exportFilename = `Requirement_${form.requirement_code || reqId || 'draft'}`
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 dark:bg-gray-950">
+    <div className="mx-auto max-w-3xl px-4 py-8">
       <nav className="mb-4 text-sm text-gray-500 dark:text-gray-400">
         <Link to={`/simulator/practice-projects/${projectId}`} className="hover:underline">
           Project
@@ -152,77 +168,80 @@ export default function RequirementDetail() {
           Requirements
         </Link>
         <span className="mx-2">/</span>
-        <span>{isNew ? 'New' : 'Detail'}</span>
+        <span className="text-gray-700 dark:text-gray-300">{isNew ? 'New' : 'Detail'}</span>
       </nav>
 
       <div className="mb-6 flex flex-wrap justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{isNew ? 'New requirement' : 'Requirement'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{isNew ? 'New requirement' : 'Requirement'}</h1>
         <ExportRecordButtons
-          onExportPPT={() => exportRecordToPPT(SECTIONS, form, `Requirement_${reqId}`)}
-          onExportWord={() => exportRecordToWord(SECTIONS, form, `Requirement_${reqId}`)}
-          onExportExcel={() => exportRecordToExcel(SECTIONS, form, `Requirement_${reqId}`)}
-          onExportCSV={() => exportRecordToCSV(SECTIONS, form, `Requirement_${reqId}`)}
-          onExportXML={() => exportRecordToXML(SECTIONS, form, `Requirement_${reqId}`)}
-          onExportJSON={() => exportRecordToJSON(SECTIONS, form, `Requirement_${reqId}`)}
-          onExportPrint={() => exportRecordToPrint(SECTIONS, form, `Requirement_${reqId}`)}
+          sections={SECTIONS}
+          record={exportRecord}
+          baseFilename={exportFilename}
         />
       </div>
 
       {success?.message && (
-        <div className="mb-4 rounded-lg border border-emerald-600/40 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-200" role="status">
+        <div
+          className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 dark:border-green-800 dark:bg-green-950/40 dark:text-green-200"
+          role="status"
+        >
           {success.message} Record ID: {success.id}
         </div>
       )}
-      {success?.error && <div className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-200">{success.error}</div>}
+      {success?.error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+          {success.error}
+        </div>
+      )}
 
-      <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Code</label>
+            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Code</label>
             <input
               value={form.requirement_code}
               onChange={(e) => setForm((f) => ({ ...f, requirement_code: e.target.value }))}
               disabled={!canEdit}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Version</label>
+            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Version</label>
             <input
               value={form.version}
               onChange={(e) => setForm((f) => ({ ...f, version: e.target.value }))}
               disabled={!canEdit}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60"
+              className={inputCls}
             />
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Name *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Name *</label>
           <input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             disabled={!canEdit}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60"
+            className={inputCls}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Description</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Description</label>
           <textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             disabled={!canEdit}
             rows={3}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60"
+            className={inputCls}
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Category</label>
+            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Category</label>
             <select
               value={form.category}
               onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
               disabled={!canEdit}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              className={inputCls}
             >
               <option value="">—</option>
               <option value="business">business</option>
@@ -234,12 +253,12 @@ export default function RequirementDetail() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Priority (MoSCoW)</label>
+            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Priority (MoSCoW)</label>
             <select
               value={form.priority}
               onChange={(e) => setForm((f) => ({ ...f, priority: e.target.value }))}
               disabled={!canEdit}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              className={inputCls}
             >
               <option value="">—</option>
               <option value="must">must</option>
@@ -250,12 +269,12 @@ export default function RequirementDetail() {
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Source stakeholder</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Source stakeholder</label>
           <select
             value={form.source_stakeholder_id}
             onChange={(e) => setForm((f) => ({ ...f, source_stakeholder_id: e.target.value }))}
             disabled={!canEdit}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            className={inputCls}
           >
             <option value="">—</option>
             {stakeholders.map((s) => (
@@ -266,31 +285,31 @@ export default function RequirementDetail() {
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Acceptance criteria</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Acceptance criteria</label>
           <textarea
             value={form.acceptance_criteria}
             onChange={(e) => setForm((f) => ({ ...f, acceptance_criteria: e.target.value }))}
             disabled={!canEdit}
             rows={3}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60"
+            className={inputCls}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Traceability tag</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Traceability tag</label>
           <input
             value={form.traceability_tag}
             onChange={(e) => setForm((f) => ({ ...f, traceability_tag: e.target.value }))}
             disabled={!canEdit}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white disabled:opacity-60"
+            className={inputCls}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
           <select
             value={form.status}
             onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
             disabled={!canEdit}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+            className={inputCls}
           >
             <option value="draft">draft</option>
             <option value="approved">approved</option>
@@ -301,14 +320,28 @@ export default function RequirementDetail() {
         </div>
         {canEdit && (
           <div className="flex flex-wrap gap-2 pt-2">
-            <button type="button" disabled={saving} onClick={() => save(true)} className="rounded-lg border border-gray-400 px-4 py-2 text-sm dark:border-gray-500">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => save(true)}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
               Save as draft
             </button>
-            <button type="button" disabled={saving || !form.name.trim()} onClick={() => save(false)} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white disabled:opacity-50">
+            <button
+              type="button"
+              disabled={saving || !form.name.trim()}
+              onClick={() => save(false)}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+            >
               {saving ? 'Saving…' : 'Save'}
             </button>
             {!isNew && (
-              <button type="button" onClick={del} className="rounded-lg border border-red-600 px-4 py-2 text-sm text-red-600 dark:text-red-400">
+              <button
+                type="button"
+                onClick={del}
+                className="rounded-lg border border-red-300 bg-white px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-gray-900 dark:text-red-400 dark:hover:bg-red-950/40"
+              >
                 Delete
               </button>
             )}

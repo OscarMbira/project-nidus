@@ -5,14 +5,27 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Save, ArrowRight, ArrowLeft, AlertTriangle, TrendingUp, FileText, Target, Users, CheckCircle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { createRisk, updateRisk } from '../../services/riskService'
-import FormSurface from '../ui/FormSurface'
+import FormSurface, { resolveOversightFormVariant } from '../ui/FormSurface'
 import RecordLifecycleFieldLock, { isRecordLifecycleLocked } from '@nidus/ui/RecordLifecycleFieldLock'
 import InheritedRiskRegisterFields from '../../features/local-data-extensions/components/InheritedRiskRegisterFields'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
-export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel, variant = 'modal', accountId: accountIdProp = null }) {
+export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
+  const location = useLocation()
+  // PM/PMO register routes always use the in-page surface; default elsewhere is page too.
+  const variant =
+    resolveOversightFormVariant(location.pathname) === 'page'
+      ? 'page'
+      : (variantProp ?? 'page')
   const [activeStep, setActiveStep] = useState(1)
   const [accountId, setAccountId] = useState(accountIdProp)
   const [formData, setFormData] = useState({
@@ -59,7 +72,19 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [newTag, setNewTag] = useState('')
-  
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !risk) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [risk.created_by, risk.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, risk])
+
   const steps = [
     { id: 1, title: 'Description', icon: FileText, description: 'Cause → Event → Effect' },
     { id: 2, title: 'Assessment', icon: Target, description: 'Pre-Response Assessment' },
@@ -930,6 +955,43 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
       icon={AlertTriangle}
       onClose={onCancel}
     >
+      <div className="px-6 pt-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+      </div>
+
+      {formTab === 'audit' && (
+        <div className="p-6">
+          {!risk?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this risk is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this risk, and how it is classified.">
+              <AuditCard title="Identity" description="How this risk is labelled and tracked.">
+                <AuditField label="Title" value={formData.risk_title || risk.risk_title} />
+                <AuditField label="Type" value={humanizeAuditToken(formData.risk_type || risk.risk_type)} />
+                <AuditField label="Status" value={humanizeAuditToken(risk.status)} />
+                <AuditField label="Record status" value={humanizeAuditToken(risk.record_status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this risk sits.">
+                <AuditField label="Category" value={humanizeAuditToken(formData.risk_category || risk.risk_category)} />
+                <AuditField label="Response category" value={humanizeAuditToken(formData.response_category || risk.response_category)} />
+                <AuditField label="Author" value={teamMembers.find((m) => m.id === (formData.risk_author_id || risk.risk_author_id))?.full_name} />
+                <AuditField label="Owner" value={teamMembers.find((m) => m.id === (formData.risk_owner_id || risk.risk_owner_id))?.full_name} />
+                <AuditField label="Actionee" value={teamMembers.find((m) => m.id === (formData.risk_actionee_id || risk.risk_actionee_id))?.full_name} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this risk was created and last changed.">
+                <AuditField label="Created by" value={risk.created_by ? auditUserLabels[risk.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={risk.created_at} />
+                <AuditField label="Updated by" value={risk.updated_by ? auditUserLabels[risk.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={risk.updated_at} />
+                <AuditTimestampPair dateLabel="Date registered" value={risk.date_registered || formData.date_registered} />
+                <AuditTimestampPair dateLabel="Proximity date" value={risk.proximity_date || formData.proximity_date} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      )}
+
+      {formTab === 'wizard' && (
       <RecordLifecycleFieldLock recordStatus={risk?.record_status}>
         {/* Progress Bar */}
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -1016,6 +1078,7 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
           )}
         </div>
       </RecordLifecycleFieldLock>
+      )}
     </FormSurface>
   )
 }

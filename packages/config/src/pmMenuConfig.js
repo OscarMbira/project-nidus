@@ -80,12 +80,7 @@ export const pmMenuConfig = [
         path: null, // Dynamic path based on selected project
         permission: 'project.view',
       },
-      {
-        id: 'platform-projects-lessons-log',
-        label: 'Lessons Log',
-        path: null, // Dynamic path based on selected project
-        permission: 'project.view',
-      },
+      // Lessons Log removed from Projects (v883) — use Controls → Knowledge & Governance → Lessons Log
       {
         id: 'platform-projects-plans',
         label: 'Plans',

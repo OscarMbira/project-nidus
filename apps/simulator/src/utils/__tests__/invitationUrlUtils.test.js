@@ -6,7 +6,7 @@ import {
 } from '../invitationUrlUtils'
 
 describe('invitationUrlUtils', () => {
-  it('uses project_code in path when provided', () => {
+  it('builds a short /i/{token} accept URL', () => {
     expect(invitationProjectSegment('SLB-OBDP', 'Silverline Banking')).toBe('SLB-OBDP')
     const { acceptUrl } = buildProjectInvitationUrls({
       origin: 'https://app.example.com',
@@ -15,31 +15,38 @@ describe('invitationUrlUtils', () => {
       roleName: 'Project Manager',
       invitationToken: 'abc123token',
     })
-    expect(acceptUrl).toBe(
-      'https://app.example.com/auth/invitation/SLB-OBDP/project-manager?token=abc123token',
-    )
+    expect(acceptUrl).toBe('https://app.example.com/i/abc123token')
   })
 
-  it('falls back to slugified project name without code', () => {
+  it('still slugifies project/role segments for legacy helpers', () => {
     const { acceptUrl } = buildProjectInvitationUrls({
       origin: 'https://app.example.com',
       projectName: 'Silverline Banking',
       roleName: 'Project Manager',
       invitationToken: 'tok',
     })
-    expect(acceptUrl).toContain('/auth/invitation/silverline-banking/project-manager?token=tok')
+    expect(acceptUrl).toBe('https://app.example.com/i/tok')
   })
 
-  it('appends decline action to query string', () => {
+  it('appends decline action to the short URL query string', () => {
     const { declineUrl } = buildProjectInvitationUrls({
       origin: 'https://app.example.com',
       projectCode: 'PRJ-1',
       roleName: 'team_member',
       invitationToken: 'x',
     })
-    expect(declineUrl).toBe(
-      'https://app.example.com/auth/invitation/PRJ-1/team-member?token=x&action=decline',
-    )
+    expect(declineUrl).toBe('https://app.example.com/i/x?action=decline')
+  })
+
+  it('returns null URLs when token or origin is missing', () => {
+    expect(buildProjectInvitationUrls({ invitationToken: 'tok', origin: '' })).toEqual({
+      acceptUrl: null,
+      declineUrl: null,
+    })
+    expect(buildProjectInvitationUrls({ origin: 'https://app.example.com' })).toEqual({
+      acceptUrl: null,
+      declineUrl: null,
+    })
   })
 
   it('slugifies role segment', () => {

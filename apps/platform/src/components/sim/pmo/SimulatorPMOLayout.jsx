@@ -5,24 +5,20 @@ import SimulatorAppHeader from '../../headers/SimulatorAppHeader'
 import PracticeDashboardSwitcher from '../ui/PracticeDashboardSwitcher'
 import { BrandingProvider } from '../../../context/BrandingContext'
 import { MenuProvider } from '../../../hooks/useMenu'
+import { RoleScopeGate, RoleScopedShell } from '@nidus/ui'
 
 export default function SimulatorPMOLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <BrandingProvider>
-    <MenuProvider layoutScope="pmo">
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
-        <SimulatorAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
-
-        <div className="flex flex-1 overflow-hidden relative">
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} simulatorScope="pmo" />
-
-          <main
-            id="main-content"
-            tabIndex="-1"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:ml-80 pt-14 sm:pt-16 w-full"
-          >
+    <RoleScopeGate requiredScope="pmo" blockedRedirectTo="/platform/dashboard">
+      <BrandingProvider>
+      <MenuProvider layoutScope="pmo">
+        <RoleScopedShell
+          header={<SimulatorAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />}
+          sidebar={<Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} simulatorScope="pmo" />}
+          contentClassName="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-4"
+          aboveContent={
             <div className="px-4 sm:px-6 pb-2 pt-2 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700">
               <Link
                 to="/simulator/dashboard"
@@ -32,13 +28,12 @@ export default function SimulatorPMOLayout({ children }) {
               </Link>
               <PracticeDashboardSwitcher />
             </div>
-            <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-4">
-              {children}
-            </div>
-          </main>
-        </div>
-      </div>
-    </MenuProvider>
-    </BrandingProvider>
+          }
+        >
+          {children}
+        </RoleScopedShell>
+      </MenuProvider>
+      </BrandingProvider>
+    </RoleScopeGate>
   )
 }

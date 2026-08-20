@@ -242,6 +242,64 @@ describe('formEngineService template builder helpers', () => {
     expect(result.message).toMatch(/required/i)
   })
 
+  describe('setFieldLabelForOrg / setFieldTypeForOrg (v815)', () => {
+    it('setFieldLabelForOrg validates required fields', async () => {
+      const { setFieldLabelForOrg } = await import('../formEngineService')
+      const result = await setFieldLabelForOrg({})
+      expect(result.success).toBe(false)
+      expect(result.message).toMatch(/required/i)
+    })
+
+    it('setFieldLabelForOrg clears the override when label is blank', async () => {
+      let upsertPayload = null
+      platformDbMock.from = vi.fn(() => ({
+        upsert: (payload) => {
+          upsertPayload = payload
+          return { select: () => ({ single: async () => ({ data: payload, error: null }) }) }
+        },
+      }))
+      const { setFieldLabelForOrg } = await import('../formEngineService')
+      const result = await setFieldLabelForOrg({
+        organisationId: 'org-1', templateId: 't-1', sectionKey: 'general', fieldKey: 'a', label: '   ',
+      })
+      expect(result.success).toBe(true)
+      expect(upsertPayload.label_override).toBeNull()
+    })
+
+    it('setFieldTypeForOrg validates required fields', async () => {
+      const { setFieldTypeForOrg } = await import('../formEngineService')
+      const result = await setFieldTypeForOrg({})
+      expect(result.success).toBe(false)
+      expect(result.message).toMatch(/required/i)
+    })
+
+    it('setFieldTypeForOrg rejects overriding to select with no options', async () => {
+      const { setFieldTypeForOrg } = await import('../formEngineService')
+      const result = await setFieldTypeForOrg({
+        organisationId: 'org-1', templateId: 't-1', sectionKey: 'general', fieldKey: 'a', fieldType: 'select', options: [],
+      })
+      expect(result.success).toBe(false)
+      expect(result.message).toMatch(/option/i)
+    })
+
+    it('setFieldTypeForOrg persists options only when overriding to select', async () => {
+      let upsertPayload = null
+      platformDbMock.from = vi.fn(() => ({
+        upsert: (payload) => {
+          upsertPayload = payload
+          return { select: () => ({ single: async () => ({ data: payload, error: null }) }) }
+        },
+      }))
+      const { setFieldTypeForOrg } = await import('../formEngineService')
+      const result = await setFieldTypeForOrg({
+        organisationId: 'org-1', templateId: 't-1', sectionKey: 'general', fieldKey: 'a', fieldType: 'date', options: [{ value: 'x', label: 'X' }],
+      })
+      expect(result.success).toBe(true)
+      expect(upsertPayload.field_type_override).toBe('date')
+      expect(upsertPayload.options_override).toBeNull()
+    })
+  })
+
   describe('addFieldForOrg / deleteFieldAdditionForOrg (Phase 1b field-key collision guard)', () => {
     it('addFieldForOrg validates required fields', async () => {
       const { addFieldForOrg } = await import('../formEngineService')
@@ -279,6 +337,9 @@ describe('formEngineService template builder helpers', () => {
     it('inserts when the field_key is not used anywhere else on this template', async () => {
       let insertedPayload = null
       platformDbMock.from = vi.fn((table) => {
+        if (table === 'form_template_versions') {
+          return { select: () => ({ eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) }
+        }
         expect(table).toBe('form_template_field_additions')
         return {
           select: () => ({
@@ -307,6 +368,58 @@ describe('formEngineService template builder helpers', () => {
       expect(insertedPayload.field_key).toBe('custom_field_2')
     })
 
+    it('rejects a select field definition with no options before any DB call', async () => {
+      const { addFieldForOrg } = await import('../formEngineService')
+      const result = await addFieldForOrg({
+        organisationId: 'org-1',
+        templateId: 't-1',
+        sectionKey: 'section-a',
+        fieldDefinition: { key: 'custom_select', label: 'Custom Select', type: 'select', options: [] },
+      })
+      expect(result.success).toBe(false)
+      expect(result.message).toMatch(/option/i)
+    })
+
+    it('rejects a field_key that collides with a standard (master-schema) field (v816)', async () => {
+      platformDbMock.from = vi.fn((table) => {
+        if (table === 'form_template_versions') {
+          return {
+            select: () => ({
+              eq: () => ({
+                eq: () => ({
+                  maybeSingle: async () => ({
+                    data: { schema: { sections: [{ fields: [{ key: 'status' }, { key: 'description' }] }] } },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
+          }
+        }
+        expect(table).toBe('form_template_field_additions')
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                eq: () => ({
+                  limit: async () => ({ data: [], error: null }),
+                }),
+              }),
+            }),
+          }),
+        }
+      })
+      const { addFieldForOrg } = await import('../formEngineService')
+      const result = await addFieldForOrg({
+        organisationId: 'org-1',
+        templateId: 't-1',
+        sectionKey: 'section-a',
+        fieldDefinition: { key: 'status', label: 'Status', type: 'text' },
+      })
+      expect(result.success).toBe(false)
+      expect(result.message).toMatch(/standard field/i)
+    })
+
     it('deleteFieldAdditionForOrg validates required fields', async () => {
       const { deleteFieldAdditionForOrg } = await import('../formEngineService')
       const result = await deleteFieldAdditionForOrg({})
@@ -333,6 +446,84 @@ describe('formEngineService template builder helpers', () => {
       })
       expect(result.success).toBe(false)
       expect(result.message).toMatch(/cannot be deleted/i)
+    })
+
+    describe('updateFieldAdditionOptions (v816 — edit an existing local Select field\'s options only)', () => {
+      it('validates required fields', async () => {
+        const { updateFieldAdditionOptions } = await import('../formEngineService')
+        const result = await updateFieldAdditionOptions({})
+        expect(result.success).toBe(false)
+        expect(result.message).toMatch(/required/i)
+      })
+
+      it('rejects an empty options list before any DB call', async () => {
+        const { updateFieldAdditionOptions } = await import('../formEngineService')
+        const result = await updateFieldAdditionOptions({
+          organisationId: 'org-1', templateId: 't-1', sectionKey: 'general', fieldKey: 'impact', options: [],
+        })
+        expect(result.success).toBe(false)
+        expect(result.message).toMatch(/option/i)
+      })
+
+      it('rejects editing options on a field that is not type select', async () => {
+        platformDbMock.from = vi.fn(() => ({
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    eq: () => ({
+                      maybeSingle: async () => ({ data: { id: 'add-1', field_definition: { key: 'impact', type: 'text' } }, error: null }),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+        }))
+        const { updateFieldAdditionOptions } = await import('../formEngineService')
+        const result = await updateFieldAdditionOptions({
+          organisationId: 'org-1', templateId: 't-1', sectionKey: 'general', fieldKey: 'impact', options: [{ value: 'x', label: 'X' }],
+        })
+        expect(result.success).toBe(false)
+        expect(result.message).toMatch(/select/i)
+      })
+
+      it('updates field_definition.options while leaving key/label/type/required untouched', async () => {
+        let updatedPayload = null
+        platformDbMock.from = vi.fn(() => ({
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                eq: () => ({
+                  eq: () => ({
+                    eq: () => ({
+                      maybeSingle: async () => ({
+                        data: { id: 'add-1', field_definition: { key: 'impact', label: 'Impact', type: 'select', required: true, options: [{ value: 'low', label: 'Low' }] } },
+                        error: null,
+                      }),
+                    }),
+                  }),
+                }),
+              }),
+            }),
+          }),
+          update: (payload) => {
+            updatedPayload = payload
+            return { eq: () => ({ select: () => ({ single: async () => ({ data: { id: 'add-1', ...payload }, error: null }) }) }) }
+          },
+        }))
+        const { updateFieldAdditionOptions } = await import('../formEngineService')
+        const result = await updateFieldAdditionOptions({
+          organisationId: 'org-1', templateId: 't-1', sectionKey: 'general', fieldKey: 'impact',
+          options: [{ value: 'low', label: 'Low' }, { value: 'high', label: 'High' }],
+        })
+        expect(result.success).toBe(true)
+        expect(updatedPayload.field_definition.options).toEqual([{ value: 'low', label: 'Low' }, { value: 'high', label: 'High' }])
+        expect(updatedPayload.field_definition.key).toBe('impact')
+        expect(updatedPayload.field_definition.label).toBe('Impact')
+        expect(updatedPayload.field_definition.required).toBe(true)
+      })
     })
   })
 

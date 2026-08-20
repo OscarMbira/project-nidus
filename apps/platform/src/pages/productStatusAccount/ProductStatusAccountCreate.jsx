@@ -5,6 +5,7 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { ArrowLeft } from 'lucide-react'
 import ProductStatusAccountForm from '../../components/productStatusAccount/ProductStatusAccountForm'
 
@@ -17,11 +18,11 @@ export default function ProductStatusAccountCreate() {
   const productDescriptionId = searchParams.get('descriptionId')
 
   const handleSave = (data) => {
-    navigate(`/app/projects/${projectId}/product-status-accounts/${data.id}`)
+    navigate(platformProjectPath(routeKey, 'product-status-accounts', data.psa_reference || data.id))
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/product-status-accounts`)
+    navigate(platformProjectPath(routeKey, 'product-status-accounts'))
   }
 
   return (

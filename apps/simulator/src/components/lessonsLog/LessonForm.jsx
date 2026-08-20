@@ -12,6 +12,13 @@ import LessonPrioritySelector from './LessonPrioritySelector'
 import LessonCompletenessIndicator from './LessonCompletenessIndicator'
 import { validateLesson, getValidationWarnings } from '@nidus/shared/utils/lessonValidation';
 import { enableAutoSave, clearDraft, promptRecoverDraft } from '@nidus/shared/utils/lessonAutoSave';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const CATEGORIES = [
   'process', 'technical', 'resource', 'communication', 
@@ -57,6 +64,19 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+  const [autoSaveStatus, setAutoSaveStatus] = useState(null);
+  const [autoSaveCleanup, setAutoSaveCleanup] = useState(null);
+  const [warnings, setWarnings] = useState([]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !lesson) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [lesson.created_by, lesson.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, lesson]);
 
   useEffect(() => {
     if (lesson) {
@@ -82,7 +102,41 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
     }
   }, [lesson]);
 
-  const [warnings, setWarnings] = useState([])
+  useEffect(() => {
+    if (!projectId) return undefined;
+    const cleanup = enableAutoSave(lesson?.id || null, projectId, formData, (status) => {
+      setAutoSaveStatus(status);
+    });
+    setAutoSaveCleanup(() => cleanup);
+    return cleanup;
+  }, [lesson?.id, projectId, formData]);
+
+  useEffect(() => {
+    if (lesson || !projectId) return;
+    promptRecoverDraft(null, projectId, (draft) => {
+      if (!draft || typeof draft !== 'object') return;
+      setFormData((prev) => ({
+        ...prev,
+        lesson_title: draft.lesson_title ?? prev.lesson_title,
+        lesson_scope: draft.lesson_scope ?? prev.lesson_scope,
+        lesson_category: draft.lesson_category ?? prev.lesson_category,
+        effect_type: draft.effect_type ?? prev.effect_type,
+        priority: draft.priority ?? prev.priority,
+        what_happened: draft.what_happened ?? prev.what_happened,
+        why_it_happened: draft.why_it_happened ?? prev.why_it_happened,
+        impact_description: draft.impact_description ?? prev.impact_description,
+        early_warning_indicators: draft.early_warning_indicators ?? prev.early_warning_indicators,
+        recommendations: draft.recommendations ?? prev.recommendations,
+        was_identified_risk: draft.was_identified_risk ?? prev.was_identified_risk,
+        linked_risk_id: draft.linked_risk_id ?? prev.linked_risk_id,
+        related_product_id: draft.related_product_id ?? prev.related_product_id,
+        related_product_name: draft.related_product_name ?? prev.related_product_name,
+        project_stage: draft.project_stage ?? prev.project_stage,
+        tags: Array.isArray(draft.tags) ? draft.tags : prev.tags,
+        lesson_date: draft.lesson_date ?? prev.lesson_date,
+      }));
+    });
+  }, [lesson, projectId]);
 
   useEffect(() => {
     // Get validation warnings
@@ -144,6 +198,33 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        !lesson ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this lesson is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who logged or changed this lesson, and how it is classified.">
+            <AuditCard title="Identity" description="How this lesson is labelled and tracked.">
+              <AuditField label="Reference" value={lesson.lesson_reference} />
+              <AuditField label="Title" value={lesson.lesson_title || lesson.title} />
+              <AuditField label="Status" value={humanizeAuditToken(lesson.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this lesson is categorised.">
+              <AuditField label="Category" value={humanizeAuditToken(lesson.lesson_category || lesson.category)} />
+              <AuditField label="Scope" value={humanizeAuditToken(lesson.lesson_scope)} />
+              <AuditField label="Priority" value={humanizeAuditToken(lesson.priority)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this lesson was created and last changed.">
+              <AuditField label="Created by" value={lesson.created_by ? auditUserLabels[lesson.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={lesson.created_at} />
+              <AuditField label="Updated by" value={lesson.updated_by ? auditUserLabels[lesson.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={lesson.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      ) : (
+      <>
       {/* Auto-save Status */}
       {autoSaveStatus && (
         <div className={`text-xs px-3 py-1 rounded ${
@@ -427,6 +508,8 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
           {saving ? 'Saving...' : lesson ? 'Update Lesson' : 'Save Lesson'}
         </button>
       </div>
+      </>
+      )}
     </form>
   );
 }

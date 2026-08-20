@@ -13,7 +13,9 @@ import { inviteUserToProject } from './projectMembershipService'
 import { sendProjectInvitation } from './invitationService'
 import { loadInvitationProjectContext } from './invitationProjectContextService'
 import { resolveInviterDisplayNameFromUser } from '@nidus/shared/utils/invitationInviteeFormat'
-import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess'
+import { PMO_SUITE_ADMIN_ROLE_NAMES } from './pmoSuiteRoleAccess'
+import { userHasAnyRole } from '@nidus/shared/utils/menuLayoutUtils'
+import { getAssignableProjectRoles } from './organisationCustomRoleService'
 
 /**
  * @param {string} authUserId - Supabase auth user id
@@ -21,42 +23,7 @@ import { matchesPmoSuiteAdminRole } from './pmoSuiteRoleAccess'
  */
 async function fetchPMOAdminFlagForAuthUserId(authUserId) {
   try {
-    // Two-step query (same pattern as useMenu.js): embedding user_roles from users can hit
-    // PostgREST "more than one relationship" and return empty relations, falsely denying access.
-    const { data: userRow, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', authUserId)
-      .maybeSingle()
-
-    if (userError || !userRow?.id) {
-      return false
-    }
-
-    const { data: assignments, error: urError } = await supabase
-      .from('user_roles')
-      .select(
-        `
-        is_active,
-        is_deleted,
-        roles:role_id (
-          role_name
-        )
-      `,
-      )
-      .eq('user_id', userRow.id)
-      .eq('is_active', true)
-
-    if (urError || !assignments?.length) {
-      return false
-    }
-
-    return assignments.some((assignment) => {
-      if (!assignment.is_active || assignment.is_deleted) return false
-      const embedded = assignment.roles
-      const roleRow = Array.isArray(embedded) ? embedded[0] : embedded
-      return matchesPmoSuiteAdminRole(roleRow?.role_name)
-    })
+    return await userHasAnyRole({ id: authUserId }, PMO_SUITE_ADMIN_ROLE_NAMES)
   } catch (error) {
     console.error('Error checking PMO Admin role:', error)
     return false
@@ -152,31 +119,35 @@ const PROJECTS_PICKLIST_TTL_MS = 60_000
  * Get available roles for assignment (excluding Team Manager and Team Member)
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
+const PMO_TEAM_AND_ADMIN_TIER_ROLE_NAMES = new Set([
+  'team_manager', 'team_member', 'pm_team_manager', 'pm_team_member',
+  'system_admin', 'account_owner', 'pmo_admin',
+])
+
 export async function getAssignableRolesForPMOAdmin() {
   const now = Date.now()
   if (_assignableRolesCache && now - _assignableRolesCacheAt < ASSIGNABLE_ROLES_TTL_MS) {
     return _assignableRolesCache
   }
   try {
-    const { data, error } = await supabase
-      .from('roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('is_active', true)
-      .eq('is_deleted', false)
-      .neq('role_name', 'team_manager')
-      .neq('role_name', 'team_member')
-      .neq('role_name', 'pm_team_manager')
-      .neq('role_name', 'pm_team_member')
-      .neq('role_name', 'system_admin')
-      .neq('role_name', 'account_owner')
-      .neq('role_name', 'pmo_admin')
-      .order('role_level', { ascending: false })
+    // v906/v908: level-restricted, org-custom-role-aware catalog from the shared RPC
+    // (replaces the old raw `roles` table query — same team/admin-tier exclusion kept below).
+    const rpcResult = await getAssignableProjectRoles()
+    if (!rpcResult.success) throw new Error(rpcResult.error)
 
-    if (error) throw error
+    const data = (rpcResult.data || [])
+      .filter((r) => !PMO_TEAM_AND_ADMIN_TIER_ROLE_NAMES.has(r.role_name))
+      .map((r) => ({
+        id: r.id,
+        role_name: r.role_name,
+        role_display_name: r.role_display_name,
+        role_description: r.role_description,
+        role_level: r.role_level,
+      }))
 
     const result = {
       success: true,
-      data: data || [],
+      data,
       error: null
     }
     _assignableRolesCache = result
@@ -452,6 +423,7 @@ export async function sendRoleInvitation(
         user.user_metadata || {},
       ) || 'PMO Admin'
     const resolvedInviterJobTitle = rawProfile?.job_title || ''
+    const resolvedInviterEmail = rawProfile?.email || user?.email || ''
 
     // Use the org already resolved by the caller (form state) as the primary source;
     // fall back to the DB join result so we never lose it if the join works.
@@ -471,6 +443,7 @@ export async function sendRoleInvitation(
       roleId,
       roleName: roleDisplayName,
       inviterName: resolvedInviterName,
+      inviterEmail: resolvedInviterEmail,
       inviterJobTitle: resolvedInviterJobTitle,
       message,
       expiryDays,

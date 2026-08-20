@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import * as platformSvc from '../../services/workAuthorisationService'
 import * as simSvc from '../../services/simWorkAuthorisationService'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const ACTION_TYPES = [
@@ -33,6 +40,17 @@ export default function WorkAuthorisationCreatePage() {
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   const [loading, setLoading] = useState(!!id)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     async function loadProjects() {
@@ -50,6 +68,7 @@ export default function WorkAuthorisationCreatePage() {
       const res = await svc.getWorkAuthorisation(id)
       if (res.success && res.data) {
         const r = res.data
+        setRecord(r)
         if (mode === 'platform') setProjectId(r.project_id || '')
         else setProjectId(r.practice_project_id || '')
         setTitle(r.title || '')
@@ -164,6 +183,34 @@ export default function WorkAuthorisationCreatePage() {
         <h1 className="text-2xl font-bold mt-2">{id ? 'Edit draft' : 'New work authorisation'}</h1>
       </div>
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-6 bg-white dark:bg-gray-800/40">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this work authorisation is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who requested or changed this work authorisation, and how it is classified.">
+              <AuditCard title="Identity" description="How this record is labelled and tracked.">
+                <AuditField label="Reference" value={record.reference_code} />
+                <AuditField label="Title" value={record.title} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this record is categorised.">
+                <AuditField label="Action type" value={humanizeAuditToken(record.action_type)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this record was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 p-6 bg-white dark:bg-gray-800/40">
         <div>
           <label className="block text-sm font-medium mb-1">{mode === 'sim' ? 'Practice project' : 'Project'} *</label>
@@ -257,6 +304,7 @@ export default function WorkAuthorisationCreatePage() {
           </button>
         </div>
       </div>
+      )}
     </div>
   )
 }

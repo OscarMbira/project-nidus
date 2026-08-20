@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, Plus, Pencil, Trash2 } from 'lucide-react';
+import { useInitialFilterFromQuery } from '@nidus/shared/hooks/useInitialFilterFromQuery';
 import { DocumentGovernanceProvider } from '@nidus/shared/context/DocumentGovernanceContext';
 import { getAllProjects } from '../../services/pmoAdminService';
 import { getRisksByProject, deleteRisk } from '../../services/riskService';
@@ -14,6 +15,9 @@ import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { useToastContext } from '@nidus/shared/context/ToastContext';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+
+// Statuses that count as "open" per RiskRegisterView.jsx (v893) — everything except closed/expired.
+const RISK_ACTIVE_STATUSES = ['identified', 'assessing', 'responding', 'monitoring', 'occurred'];
 
 const EXPORT_COLUMNS = [
   { key: 'risk_identifier', label: 'Risk ID' },
@@ -36,6 +40,13 @@ export default function PMOOversightRiskRegister() {
   const [selectedRisk, setSelectedRisk] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [filters, setFilters] = useState({ search: '', status: '', risk_level: '' });
+  const [quickFilter, setQuickFilter] = useState(''); // '' | 'open' | 'high_critical' | 'closed' — client-side, keeps stats accurate against the full fetch
+
+  const initialQueryFilter = useInitialFilterFromQuery(['filter']);
+  useEffect(() => {
+    if (initialQueryFilter.filter) setQuickFilter(initialQueryFilter.filter === 'all' ? '' : initialQueryFilter.filter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQueryFilter.filter]);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,19 +92,29 @@ export default function PMOOversightRiskRegister() {
   }, [selectedProjectId, filters.search, filters.status, filters.risk_level]);
 
   const stats = useMemo(() => {
-    const open = risks.filter((r) => (r.status_enum || r.status) === 'open').length;
+    const open = risks.filter((r) => RISK_ACTIVE_STATUSES.includes(r.status_enum || r.status)).length;
     const highCritical = risks.filter((r) => {
       const level = (r.pre_risk_score ?? r.risk_level ?? '').toString().toLowerCase();
-      return level === 'high' || level === 'critical' || level === '4' || level === '5';
+      return level === 'high' || level === 'very_high';
     }).length;
     const closed = risks.filter((r) => (r.status_enum || r.status) === 'closed').length;
     return [
-      { label: 'Total Risks', value: risks.length },
-      { label: 'Open', value: open },
-      { label: 'High/Critical', value: highCritical },
-      { label: 'Closed', value: closed },
+      { label: 'Total Risks', value: risks.length, onClick: () => setQuickFilter('') },
+      { label: 'Open', value: open, onClick: () => setQuickFilter('open') },
+      { label: 'High/Critical', value: highCritical, onClick: () => setQuickFilter('high_critical') },
+      { label: 'Closed', value: closed, onClick: () => setQuickFilter('closed') },
     ];
   }, [risks]);
+
+  const displayRisks = useMemo(() => {
+    if (quickFilter === 'open') return risks.filter((r) => RISK_ACTIVE_STATUSES.includes(r.status_enum || r.status));
+    if (quickFilter === 'high_critical') return risks.filter((r) => {
+      const level = (r.pre_risk_score ?? r.risk_level ?? '').toString().toLowerCase();
+      return level === 'high' || level === 'very_high';
+    });
+    if (quickFilter === 'closed') return risks.filter((r) => (r.status_enum || r.status) === 'closed');
+    return risks;
+  }, [risks, quickFilter]);
 
   const handleDelete = async (risk) => {
     if (!window.confirm(`Delete risk "${risk.risk_title || risk.risk_identifier}"?`)) return;
@@ -194,14 +215,25 @@ export default function PMOOversightRiskRegister() {
           />
           <ExportListMenu
             columns={EXPORT_COLUMNS}
-            data={risks.map((r) => ({
+            data={displayRisks.map((r) => ({
               ...r,
               project_name: projectLabel(r),
             }))}
             baseFilename="PMO-Risk-Register"
-            disabled={!risks.length}
+            disabled={!displayRisks.length}
           />
         </div>
+        )}
+
+        {quickFilter && (
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 capitalize">
+              {quickFilter.replace('_', ' ')} only
+            </span>
+            <button type="button" onClick={() => setQuickFilter('')} className="text-blue-600 dark:text-blue-400 hover:underline">
+              Clear
+            </button>
+          </div>
         )}
 
         {!showForm && (loading ? (
@@ -228,14 +260,14 @@ export default function PMOOversightRiskRegister() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                  {risks.length === 0 ? (
+                  {displayRisks.length === 0 ? (
                     <tr>
                       <td colSpan={selectedProjectId ? 8 : 9} className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                         {selectedProjectId ? 'No risks for this project.' : 'No risks. Select a project or add risks from a project.'}
                       </td>
                     </tr>
                   ) : (
-                    risks.map((risk, index) => (
+                    displayRisks.map((risk, index) => (
                       <tr key={risk.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                         <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{risk.risk_identifier || risk.risk_code || '—'}</td>

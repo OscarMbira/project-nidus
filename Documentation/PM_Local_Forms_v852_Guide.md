@@ -36,9 +36,19 @@ New rows insert `template_code = ''`; Admin ID Generation assigns `FRM-####` / `
 
 `FormsGallery` uses `listNearestFormTemplatesForProject` — nearest-tier org/local copies plus globals that are not overridden — so teams see one deduped picker instead of every copy.
 
-## Apply order
+## Apply order (all required for Create Blank Form)
 
 1. `E:\project-nidus-admin\SQL\v201_form_templates_id_generation_seed.sql`
 2. `E:\project-nidus\SQL\v853_local_form_permission_function.sql`
 3. `E:\project-nidus\SQL\v853b_pm_template_nodes_local_form_insert_rls.sql`
 4. `E:\project-nidus\SQL\v854_form_templates_admin_display_id_trigger.sql`
+5. `E:\project-nidus\SQL\v855_local_form_pm_role_match_fix.sql` — PM role name / `user_projects` match (RLS)
+6. `E:\project-nidus\SQL\v856_pm_template_nodes_allow_blank_local_form_roots.sql` — relaxes `chk_pm_template_nodes_root_synced` so project/portfolio/programme blank forms may have `parent_node_id IS NULL`
+
+### Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| `new row violates row-level security policy for table "pm_template_nodes"` | Apply **v855** (and ensure v853/v853b applied). Confirm user is Project Manager on that project or PMO Admin. |
+| `violates check constraint "chk_pm_template_nodes_root_synced"` | Apply **v856**. |
+| `template_code` unique / blank code issues | Apply Admin **v201** + monorepo **v854**. |

@@ -16,6 +16,13 @@ import {
 } from '../../services/lifecycleTemplateService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function LifecycleTemplates() {
   const navigate = useNavigate();
@@ -34,6 +41,21 @@ export default function LifecycleTemplates() {
   const [formData, setFormData] = useState(defaultForm);
   const formDataRef = useRef(formData);
   useEffect(() => { formDataRef.current = formData; }, [formData]);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !editing) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        editing.created_by,
+        editing.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, editing]);
 
   const load = useCallback(async () => {
     try {
@@ -58,6 +80,7 @@ export default function LifecycleTemplates() {
   const handleAdd = useCallback(() => {
     setEditing(null);
     setFormData(defaultForm);
+    setFormTab('details');
     setShowForm(true);
   }, [defaultForm]);
 
@@ -70,6 +93,7 @@ export default function LifecycleTemplates() {
       sort_order: row.sort_order != null ? row.sort_order : 0,
       is_active: row.is_active !== undefined ? row.is_active : true
     });
+    setFormTab('details');
     setShowForm(true);
   }, []);
 
@@ -163,6 +187,33 @@ export default function LifecycleTemplates() {
               {editing ? 'Edit Lifecycle Template' : 'Add Lifecycle Template'}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+              {formTab === 'audit' && (
+                !editing?.id ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
+                ) : (
+                  <AuditDetailsPanel description="Who created or changed this lifecycle template, and how it is classified.">
+                    <AuditCard title="Identity" description="How this template is labelled and tracked.">
+                      <AuditField label="Name" value={formData.name || editing.name} />
+                      <AuditField label="Code" value={formData.code || editing.code} />
+                    </AuditCard>
+                    <AuditCard title="Classification" description="Where this template sits.">
+                      <AuditField label="Sort order" value={formData.sort_order ?? editing.sort_order} />
+                      <AuditField label="Status" value={(formData.is_active ?? editing.is_active) ? 'Active' : 'Inactive'} />
+                    </AuditCard>
+                    <AuditCard title="Record history" description="When this template was created and last changed.">
+                      <AuditField label="Created by" value={editing.created_by ? auditUserLabels[editing.created_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Created at" value={editing.created_at} />
+                      <AuditField label="Updated by" value={editing.updated_by ? auditUserLabels[editing.updated_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Last updated" value={editing.updated_at} />
+                    </AuditCard>
+                  </AuditDetailsPanel>
+                )
+              )}
+
+              {formTab === 'details' && (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
@@ -220,6 +271,8 @@ export default function LifecycleTemplates() {
                   </div>
                 )}
               </div>
+              </>
+              )}
               <div className="flex gap-2">
                 <button type="submit" disabled={saving} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50">
                   {editing ? 'Update' : 'Create'}

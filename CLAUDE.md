@@ -1,3 +1,87 @@
+## Project Control Document Hierarchy
+
+This `CLAUDE.md` is the **authoritative repository operating rulebook** for Claude, Cursor, and other AI-assisted development in Project Nidus.
+
+### Root-level Markdown exceptions
+
+The only Markdown files permitted in the repository root are:
+
+- `CLAUDE.md`
+- `ROADMAP.md`
+- `REVIEW.md`
+
+All other Markdown files must follow the existing placement rules in this file, including:
+
+- general documentation → `Documentation/`
+- feature PRDs → `projectprd/`
+- implementation plans → `projectplan/`
+- plan guidance → `projectplan/App_Guide.md`
+
+### Control documents
+
+| Document | Location | Purpose | May Override `CLAUDE.md`? |
+|---|---|---|---|
+| `CLAUDE.md` | Repository root | Mandatory engineering, architecture, repository, UX, database, planning, parity, and coding rules | N/A — authoritative operating rules |
+| `ROADMAP.md` | Repository root | Strategic product direction, active priorities, delivery phases, dependencies, risks, and milestone status | **No** |
+| `REVIEW.md` | Repository root | Review procedure, evidence requirements, severity model, regression/security/release gates | **No** |
+| Feature PRD | `projectprd/v{N}_*_PRD.md` | Approved feature-specific requirements and scope | Only within its approved feature scope; cannot waive `CLAUDE.md` controls |
+| Implementation Plan | `projectplan/v{N}_*_plan.md` | Approved implementation steps for one feature/change | No |
+| `App_Guide.md` | `projectplan/App_Guide.md` | Rules for preparing implementation plans | No |
+
+### Instruction precedence
+
+When instructions appear to conflict, use this order:
+
+1. The user's explicit current instruction.
+2. This `CLAUDE.md`.
+3. The approved feature PRD.
+4. The approved implementation plan.
+5. `ROADMAP.md`.
+6. `REVIEW.md`.
+7. Existing implementation patterns.
+
+**Do not silently resolve a material conflict.** Stop before implementation and identify the conflicting instructions, affected scope, and recommended resolution.
+
+### Required document workflow
+
+For a **new feature or material functional change**:
+
+1. Read `CLAUDE.md`.
+2. Read the relevant sections of `ROADMAP.md`.
+3. Read `projectplan/App_Guide.md`.
+4. Inspect the codebase/database for facts rather than asking the user for discoverable information.
+5. Create the feature PRD under `projectprd/`.
+6. Complete the required decision interview described later in this file.
+7. Create the versioned implementation plan under `projectplan/`.
+8. Obtain user approval before implementation.
+9. Implement the smallest safe vertical slices.
+10. Review the completed change using `REVIEW.md`.
+11. Add the implementation review/result section to the feature plan as already required by the Standard Workflow.
+12. Update `ROADMAP.md` only when strategic status, dependency, risk, milestone, or roadmap priority materially changes.
+
+For a **small bug fix or low-risk amendment** that does not require a new PRD/plan under the user's instruction:
+
+1. Read `CLAUDE.md`.
+2. Inspect the affected implementation and dependencies.
+3. Make the smallest safe change.
+4. Run the applicable tests/retest suite.
+5. Apply the relevant checks in `REVIEW.md`.
+6. Report changed files, validation performed, and remaining risks.
+
+### Anti-duplication rule for project-control documents
+
+Do **not** copy detailed rules from `CLAUDE.md` into `ROADMAP.md` or `REVIEW.md`.
+
+- `CLAUDE.md` owns **how development must be performed**.
+- `ROADMAP.md` owns **what Project Nidus is prioritising and where delivery stands**.
+- `REVIEW.md` owns **how completed changes are independently verified**.
+- Feature PRDs own **what a specific feature must achieve**.
+- Feature plans own **how that approved feature will be implemented**.
+
+When `ROADMAP.md` or `REVIEW.md` needs an engineering rule, it should reference `CLAUDE.md` rather than restating the rule.
+
+---
+
 ## Repo-scoped SQL & plans
 
 Use the **current repo’s** folders — do not put admin SQL/plans in the monorepo or platform SQL/plans in the admin repo.
@@ -12,6 +96,7 @@ Use the **current repo’s** folders — do not put admin SQL/plans in the monor
 - **Cross-repo features:** may need SQL and/or plans in **both** repos; each artifact stays in the repo where that work is done. Link paths across repos in the plan text — do not merge into one folder.
 
 ## Standard Workflow
+0. Read the /projectplan/App_Guide.md file whenever you are creating a new implementation plan(i.e, new feature plan in general) and follow the rules in this markdown file.
 1. First think through the problem, read the codebase for relevant files, and write a plan to projectplan.md. Where it is necessary, you can create a new file for the plan in order to maitain different plans for different features/functionality and to avoid the projectplan.md file growing so big or overwriting the previous content. Make a logical judgement to create additional and separate planning files.
 2. The plan should have a list of todo items that you can check off as you complete them
 3. Before you begin working, check in with me and I will verify the plan.
@@ -21,25 +106,56 @@ Use the **current repo’s** folders — do not put admin SQL/plans in the monor
 7. Finally, add a review section to the projectplan.md file with a summary of the changes you made and any other relevant information.
 8. When creating a new page/component/form/visualisation items etc, always make them theme aware to toggle between dark and light mode depending on the user preferences. **See rule 28.1 (mandatory theme-aware checklist).**
 9. Always create all SQL command files (*.sql) under the SQL folder in the root
-10. Always create all documentation files (*.md) under the Documentation folder in the root, except for this CLAUDE.md file which should remain in the root directory
+10. Always create all documentation files (*.md) under the Documentation folder in the root, except for the three root control files `CLAUDE.md`, `ROADMAP.md`, and `REVIEW.md`, which must remain in the root directory
 11. Always create all CSV data files (*.csv) under the "CSV Files" folder in the root
 12. Do not insert any sample/dummy data unless I specify *(exception: companion seed SQL files per rule 18.2 when implementing new features)*
 13. After creation any new features, always create and attach to the role-based sidebar menu and sublinks
 14. When creating any SQL files(*.sql), recall that I am using supabase as the backend and it requires 15. PostgreSQL. So make sure the SQL syntax is aligned accordingly.
 15. The countries field on any page(system-wide) should only show the DB table "countries" details where the is_active field is true. This always applies to all dropdown list for the country field.
-16. Make sure after successfully creating/updating any application record/table, there is a succesful form displayed to show the user that the update was successful with record specific information like record id, CRUD operation that was performed.
-16.1 **Display ID in URLs (mandatory when ID Generation exists).** If a table has a human-readable `display_id` (from Admin ID Generation / `admin.generate_display_id`), deep links for view/edit/detail **must put that display ID in the URL** (e.g. `?id=GTL-0001` or path segment), not the UUID primary key. Loaders must resolve by `display_id` **or** UUID (backward compatible). Mutations still use the UUID after the row is loaded. Prefer `display_id` in success toasts. Applies to Platform, Simulator, and Admin. Adopt when creating or next amending a record flow.
+16. Make sure after successfully creating/updating any application record/table, there is a succesful form displayed to show the user that the update was successful with record specific information like record id, CRUD operation that was performed. **Implementation (mandatory for NEW and AMENDED create/update/delete flows, v861):** use the shared blocking success-confirmation modal — `useSuccessModal()` from `@nidus/shared/hooks/useSuccessModal` (Platform/Simulator; `packages/ui/src/SuccessConfirmationModal.jsx`) or the Admin-app equivalent — not `toast.success()`/`showSuccess()` (Admin toast), not `window.alert()`, not a page-local inline banner component. Call `showSuccess({ recordId, operation: 'created'|'updated'|'deleted', message, onOk? })` after the mutation succeeds and render the returned `modal` in JSX; `recordId` should be the record's display ID (rule 16.1), not the raw UUID. `onOk` is optional and per-flow: pass it only when this specific save is a terminal action that should navigate the user elsewhere (e.g. "Create" → the new record); omit it for iterative multi-save pages (e.g. a template/form builder) so OK just closes the modal and the user keeps working — never assume navigation by default. Toast remains correct for errors, warnings, and non-CRUD info messages; this rule only concerns create/update/delete success. **Adopt opportunistically:** this does not retroactively convert every existing `toast.success()`/`alert()` CRUD confirmation — migrate a page's existing pattern to `useSuccessModal()` whenever you next touch that page's save flow (same adoption pattern as rule 52's unsaved-changes guard), not as a batch backlog. See `projectprd/v861_success_confirmation_modal_PRD.md` / `projectplan/v861_success_confirmation_modal_plan.md`.
+16.1 **Display ID in URLs (mandatory when ID Generation exists).** If a table has a human-readable `display_id` (from Admin ID Generation / `admin.generate_display_id`), deep links for view/edit/detail **must put that display ID in the URL** (e.g. `?id=GTL-0001` or path segment), not the UUID primary key. Loaders must resolve by `display_id` **or** UUID (backward compatible). Mutations still use the UUID after the row is loaded. Prefer `display_id` in success toasts. Applies to Platform, Simulator, and Admin. Adopt when creating or next amending a record flow. **Query-param "current entity" scoping (v872):** the same principle applies to context/scoping query params, not just a page's own record id — e.g. `/pm/*` pages carry `?projectId=<uuid-or-project_code>` because that route tree has no project path segment. Any **new** `/pm/*`-style page must resolve its scoping id via `usePlatformProjectId()` (`packages/shared/src/hooks/usePlatformProjectId.js`, also duplicated in `apps/platform`/`apps/simulator` — keep the three copies in sync) rather than reading `useSearchParams()` directly — the hook both resolves the id for API calls **and** self-corrects a raw-UUID `?projectId=` in the address bar to the friendly `project_code` once resolvable. Do not build a page-local query-param resolver for this.
+16.2 **Admin ID Generation for new tables and seed/sample data (mandatory).** Every new application table that exposes a human-readable reference/identifier column (e.g. `*_reference`, `*_identifier`, `display_id`, `*_code`) **must** use the Admin ID Generation engine — do not invent local generators, UUID-hex suffixes, or hand-minted `PREFIX-YYYY-<uuid>` values.
+   - **Register the table** in `database_tables` (see **Database Table Registration Rule** below).
+   - **Ensure an Admin ID Generation rule exists** in `admin.id_generation_rules` for the qualified target (e.g. `public.your_table`, `sim.your_table`). If the table is new and **does not** already have a rule, create a companion seed SQL file under **`E:\project-nidus-admin\SQL\`** (versioned `v{N}_*.sql`) that inserts the rule — follow the pattern in `v156_id_generation_sequential_entity_rules_seed.sql` (abbreviation, description, sequential/date/scope/pad settings). Do **not** put Admin `id_generation_rules` seeds in the monorepo `SQL/` folder.
+   - **Wire the column** with the shared AFTER INSERT trigger helper (`public.trg_apply_admin_display_id` / `sim.trg_apply_admin_display_id` from `v756*`) so inserts with a blank reference get `admin.generate_display_id('<schema>.<table>', id)`.
+   - **Seed / sample / demo data** (rule 18.2): insert the display-ID column as `''` (or omit it only if a DEFAULT + trigger path exists) and let the admin trigger assign the real ID. **Forbidden in seeds:** concatenating project/record UUIDs, random hex, or any non-rule format into reference columns. Hand-minted non-empty values skip the trigger and violate Admin ID Generation (see v838 governance strategy fix).
+   - **RPCs / create helpers** (`create_*_for_project`, etc.): insert `''` for the reference column; never call dropped local `generate_*_reference()` functions. Prefer the v823/v830/v838 pattern (blank insert + admin trigger + optional sequential fallback if no rule is configured).
+   - **Platform–Simulator parity:** if the table exists in both schemas, seed **both** `public.*` and `sim.*` ID Generation rules in Admin and wire triggers in both schemas.
+16.3 **Friendly URLs even without Admin ID Generation (mandatory, v910).** Rule 16.1 covers
+tables with a `display_id` from Admin ID Generation. Plenty of records don't have one and
+never will (e.g. a role's internal `role_name` slug, a lookup table's `code` column) but still
+have *some* other column that's unique, stable, and human-readable. When one exists, deep
+links for view/edit/detail **must use it in the URL** instead of the raw UUID — same principle
+as 16.1, just a different source column. Concretely:
+   - The loader must resolve by that friendly key **or** the UUID (same backward-compat
+     requirement as 16.1) — detect which one arrived (e.g. a UUID-format regex check) rather
+     than requiring two different routes.
+   - If the friendly column is only unique within a scope narrower than global (e.g. a custom
+     role's `role_name` is unique per-organisation, not platform-wide), the loader must resolve
+     it within the caller's own scope — do not silently return another tenant's record on a
+     name collision.
+   - Mutations still use the UUID after the row is loaded, same as 16.1.
+   - If genuinely no human-readable unique column exists on a record (rare), the UUID in the
+     URL is acceptable — don't invent one just to satisfy this rule.
+   - **Adopt when creating or next amending a record flow** — not a mandatory retrofit of every
+     existing UUID-in-URL page, same adoption cadence as 16.1.
+   - First applied to: Manage Roles / System Role Catalog's view/edit URLs
+     (`admin/manage-roles/:id` etc. now carry the role's `role_name`, e.g.
+     `admin/manage-roles/qa_test_lead`, not its UUID).
 17. All SQL files(*.sql) should be created in the folder SQL for easy access. This SQL folder should be created on the root if it doesn't exist
+17.1 Create a corresponding PRD file before creating the implementation plan. Create it in the folder /projectprd
+17.2 Break a PRD into independently-grabbable GitHub issues using vertical slices (tracer bullets). Break the PRD into **tracer bullet** issues. Each issue is a thin vertical slice that cuts through ALL integration layers end-to-end, NOT a horizontal slice of one layer.
 18. When creating any SQL files, make sure to give some version name that shows the sequence and rpecedence by which the files are created and for future refence. 
 18.1 Can you apply the same sequencing logic when creating implementation plans in projectplan folder. Versions for easy of knowing the sequence.
-18.2 **Seed data (Platform, Simulator, and Admin):** Whenever a new feature introduces new database tables or demo-worthy reference data, create a **companion seed SQL file** in the **same repo’s** `SQL/` folder as the infrastructure migration — separate from the migration file. **Platform** seeds: `public` schema in `E:\project-nidus\SQL\`. **Simulator** seeds: `sim` schema in `E:\project-nidus\SQL\`. **Admin** seeds: `admin` schema in `E:\project-nidus-admin\SQL\`. Infrastructure migrations may include required system defaults; demo/sample rows belong in seed files. Seed files must be **idempotent** (`ON CONFLICT DO NOTHING/UPDATE`, fixed hex-only UUIDs where practical). When both Platform and Simulator share a feature (rule 34), create seed data for **both** schemas unless app-specific.
-19. All documentation files (*.md) should be created under the Documentation folder and folder should be created on the root if it doesn't exist
+18.2 **Seed data (Platform, Simulator, and Admin):** Whenever a new feature introduces new database tables or demo-worthy reference data, create a **companion seed SQL file** in the **same repo’s** `SQL/` folder as the infrastructure migration — separate from the migration file. **Platform** seeds: `public` schema in `E:\project-nidus\SQL\`. **Simulator** seeds: `sim` schema in `E:\project-nidus\SQL\`. **Admin** seeds: `admin` schema in `E:\project-nidus-admin\SQL\`. Infrastructure migrations may include required system defaults; demo/sample rows belong in seed files. Seed files must be **idempotent** (`ON CONFLICT DO NOTHING/UPDATE`, fixed hex-only UUIDs where practical). When both Platform and Simulator share a feature (rule 34), create seed data for **both** schemas unless app-specific. **Display IDs in seed rows must follow rule 16.2** (blank reference + Admin `generate_display_id` / trigger — never hand-mint UUID-based references). If the new table has no row yet in `admin.id_generation_rules`, also add the Admin rule-seed SQL in `E:\project-nidus-admin\SQL\` before relying on seeded demo data.
+19. All documentation files (*.md) should be created under the Documentation folder and the folder should be created on the root if it doesn't exist. The only root-level Markdown exceptions are `CLAUDE.md`, `ROADMAP.md`, and `REVIEW.md`.
 20. Always push the code to the github after a major change has been done to the codebase or every 3 days, whichever comes first.
 21. I will be creating a massive documentaion of this system and therefore do not override any planning files all planning files should be placed in in root folder "projectplan". Always document in a separate file for any changes you make and and guides for documentation for each topic or functionality/feature.
 22. I will be creating a blog for the application features, hence you should always document any change by using a separate file where applicable.
 23. For each new feature/functionality, always create unit tests for automated testing purposes
 24. Make sure to have a distinct and separate folder strutures for a) Frontend and b) Backend. If they do not exist, created them and be updating/creating project files by following this folder structure religiously for easy future maintainability of the application. Any future updates to any functionality should not have a side effect of affecting any working functionality.
 25. All data should be fetched from the DB tables and do not use mock or dummy data until I have confirmed the same.
+25.1 **No hardcoding unless I explicitly say so (Platform, Simulator, and shared packages).** User-facing and configuration content must be loaded from the database — not baked into React/JS/config as the live source of truth. This includes (non-exhaustive): sidebar/menu labels and hierarchy (`menu_items` / role grants), page titles tied to menu rows, dropdown/select options and lookup lists, status/type enumerations that exist as tables or reference data, feature flags, organisation/project settings, and any copy or structure that operators may change without a code deploy. Prefer SQL migrations/seeds to create or update that data; the UI/services only query and render it. **Allowed without asking:** true UI chrome (layout, icons as presentation, Tailwind theme classes), route path constants that match registered routes, validation regexes, and temporary empty-shell labels only when a DB label is missing/equals `menu_code` (never override a real DB value). **Forbidden unless I explicitly request it:** hardcoded menu labels, static nav trees used instead of DB menus, client “force label” overrides, mock/dummy rows, and silent fallback datasets when a query fails — show an error/empty state instead. Same rule applies when amending existing code: do not introduce new hardcoding; prefer fixing the DB row or fetch path. **Admin parity:** see `E:\project-nidus-admin\CLAUDE.md` (same policy for `admin.*` data).
 26. **NEVER use fallback data, mock data, or default static data unless explicitly requested by the user.** All data must come from the database. If database queries fail, handle the error appropriately but do not substitute with fallback data.
 26. For all features that may require to upload bulk data from other existing project management tools or data, create a feature for both a) Single record capture and b) Bulk record upload/capture with all CRUD and user confirmation flows and where applicable, user the multi-step flows.
 26. When creating new and named components/folders always avoid Copyright/Trademark names for compliance with international laws and avoiding lawsuits.
@@ -121,7 +237,14 @@ Use the **current repo’s** folders — do not put admin SQL/plans in the monor
 38) Always add a feature/function(for both Plaform and Simulator systems) for each table/list and record viewing/reading as follows: 1) If it is a table/list, add a features/functionality to export to excel/powerpoint/word/csv/xml/json/print for the list of all the records that satisfied the selection criteria for these table records. If it is powerpoint/word, the default maximum number of exportable fields is 5, however, there should be some flexibility for the user to choose the fields to export upto a maximum of 10 fields/attributes.  2) If it is a record view/read/see mode, add feature/function to export a) Powerpoint and can be multiple pages based on the record data, b) MS Word with each field/attribute being a header, 3) Excel with fields/attribute being the column headers. The user should choose the right button based on the preferences. 4) For numbered or bulletted items, make sure that they are exported as such based on the what document type the user choose(ppt, docx, xls, csv, XML, JSon, Print). This makes it easy for human reading.5) For excel, show the bulleted multivalues one per each line, the same way a user will manually press alt+enter to enter values on a separate line. 6) The export functionality should show as a dropdown the list of export formats(excel/word/powerpoint/csv/xml/JSon/Print). 7) Utilise the existing exporting functionality/features to avoid redundant or duplicated code.
 39) Always make sure to implement the Progressive Web App (PWA) functionality which will be used by users to access the system, especially through their mobile devices. This has to be done for ALL NEW/Amended/Updated funtionalities/Features added in the system(both Platform and Simulation).
 40) For any NEW table/list, add clickable, sortable column headers to every table and list view across the Platform, Simulator, and Admin systems. Clicking a column heading cycles through: **unsorted → ascending → descending → unsorted**. Visual indicators (↑ ↓ ⇅) show the current sort state. This applies consistently to both HTML `<table>` pages and card/list-view pages (via a sort toolbar). The **`#` row-number column is never sortable.**
-41) For NEW tables/lists, add a consistent **Card ⊞ / Table-List ≡ view toggle** to every table and list page across the Platform, Simulator, and Admin systems (show all CRUD operation button for each record). Both views always include a **search bar**. The user's last-chosen view is remembered per page via `localStorage`.
+40.1) **Default list sort (mandatory for NEW and AMENDED tables/lists — Platform, Simulator, and Admin).** Until I explicitly override it for a named table/list, the **initial / default** row order (before the user clicks a column header) must be:
+   1. **Alphabetically** (A→Z, case-insensitive) on the primary display label for that list (e.g. name, title, `display_title`, label, or the main human-readable column shown in the first data column — not the `#` row number and not a raw UUID).
+   2. **Then by date created** (`created_at` ascending = oldest first) as the tie-breaker when labels match or the primary label is blank.
+   - Prefer applying this in the query/`ORDER BY` when possible; otherwise apply the same multi-key sort in the client after fetch (and keep it consistent with Card and Table-List views).
+   - User-driven column sorts (rule 40) still override this default for the session; clearing sort (back to unsorted) returns to this alphabet-then-created default — not to an arbitrary insertion or `updated_at`-only order.
+   - **Exceptions only when I say so** for a specific table/list (document that exception in the feature plan/PRD). Do not invent alternate defaults (e.g. newest-first only) without that instruction.
+   - **Admin parity:** same rule in `E:\project-nidus-admin\CLAUDE.md` (rule 12.1). Adopt opportunistically when amending an existing list.
+41) For NEW tables/lists, add a consistent **Card ⊞ / Table-List ≡ view toggle** to every table and list page across the Platform, Simulator, and Admin systems (show all CRUD operation button for each record). Both views always include a **search bar**. **Default to Table-List ≡, not Card ⊞, where applicable** (registers/lists read better as a table on first visit — row-dense, scannable columns beat a stack of cards for most PM data). Card view stays available via the toggle; use `useViewMode(pageId, 'list')` (not `'grid'`) when wiring a new page unless the content is genuinely card-first (e.g. a visual/media-heavy gallery). The user's last-chosen view is remembered per page via `localStorage` and overrides this default on return visits.
 42) Do NOT bypass RLS policies as a workaround.
 43) Run the retest suite after each fix to confirm no regressions
 44) For any **NEW or amended table/list view** (Platform and Simulator), show row numbers in **both** view modes when a Card ⊞ / Table-List ≡ toggle exists (rule 41):
@@ -198,6 +321,148 @@ Use the **current repo’s** folders — do not put admin SQL/plans in the monor
 52) For any **NEW or amended create/edit form** (Platform and Simulator), wire the shared unsaved-changes guard via `useUnsavedChangesGuard(isDirty, message?)` from `@nidus/shared/context/UnsavedChangesContext`. Mount `UnsavedChangesProvider` once inside `<BrowserRouter>` in each app's `App.jsx` (already done). Each form computes its own `isDirty` (e.g. diff loaded snapshot vs current state) and uses `confirmDiscard()` for Cancel/close actions and `requestNavigation()` for programmatic navigation. **Platform–Simulator parity applies** (rule 34.1). Existing forms adopt opportunistically when next touched — no one-pass retrofit.
 
 53) **Approval justification & field lock (Record Lifecycle, Platform + Simulator).** Every decision surface for a governed record (`AuthorisationRequestModal` in decide mode, or any per-record lifecycle panel) must require a mandatory justification/comments field before Approve or Reject can be confirmed — disable the action buttons while the notes field is empty/whitespace-only; never allow a silent optional-notes decision. While a record's `record_status === 'unauthorised'`, its edit/detail form must render read-only (e.g. wrap the field block in `<fieldset disabled>`) so the approver can review the pending change but not alter the underlying data. **Platform–Simulator parity applies** (rule 34.1) — apply identically to both apps. See `projectplan/v751_approval_justification_and_field_lock_plan.md` and `v752_record_lifecycle_defer_apply_plan.md`.
+
+54) Explore a codebase to find opportunities for architectural improvement, focusing on making the codebase more testable by deepening shallow modules, to improve architecture, find refactoring opportunities, consolidate tightly-coupled modules, or make a codebase more AI-navigable, urface architectural friction, discover opportunities for improving testability, and propose module-deepening refactors as GitHub issue RFCs.
+
+55) What the PRD specification should include:
+
+    a) Problem statement — what is broken or missing, and why it's worth solving, in the project's own vocabulary.
+    b) Solution — the shape of the fix at a high level, before any implementation detail.
+    c) User stories — an extensive, numbered list of the concrete behaviours the change must support, each one independently checkable.
+    d) Implementation decisions — the choices already settled during the conversation, so they aren't relitigated later.
+    e) Testing decisions — the seams the feature will be tested at, and what "done" looks like.
+    f) Out-of-scope items — what this change deliberately does not cover, to keep the ticket bounded.
+    g) Further notes — anything else worth carrying forward that doesn't fit the sections above.
+
+56) When creating a new PRD/Plan Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+
+57) Interview me relentlessly about every aspect of this plan until
+we reach a shared understanding. Walk down each branch of the
+design tree, resolving dependencies between decisions
+one-by-one. For each question, provide your recommended answer.
+
+58) Ask the questions one at a time, waiting for feedback on each
+question before continuing. Asking multiple questions at once is
+bewildering.
+
+59) If a *fact* can be found by exploring the codebase, look it up
+rather than asking me. The *decisions*, though, are mine — put
+each one to me and wait for my answer.
+
+60) Do not enact the plan until I confirm we have reached a shared
+understanding.
+
+61) **Icon-only row/detail-bar actions for View/Edit/Delete (mandatory for NEW and AMENDED list/detail pages).** Every table/card row-actions column and every record-detail top action bar must render View/Edit/Delete as icon-only buttons — no visible text label — via `RowActionButton` from `@nidus/ui` (`variant="view"|"edit"|"delete"`, blue/amber/red respectively, `Eye`/`Pencil`/`Trash2` from `lucide-react`). Each button carries a `title`/`aria-label` (the `label` prop) and shows a themed hover/focus tooltip via the paired `Tooltip` component — never ship an icon button with no accessible name. This does **not** apply to Export format dropdown menus (PDF/Word/Excel/etc. keep icon+text) or to other action types (Assign, Approve, Reject, Duplicate, Archive, Cancel, Print, Hold/Draft — these stay text-labeled unless a future rule says otherwise). Existing pages retrofit opportunistically when next touched, per the batched migration in `projectplan/v840_icon_only_row_actions_plan.md`. **Admin app:** use `AdminIconActionButton`/`AdminTooltip` from the Admin app's own `packages/ui` (see Admin rule 15) — same contract, no cross-repo import.
+
+62) Since this system is going to be a SaaS system where there won't be too much training, hence the system should be simplified. Always make all created components(forms, pages, tables, lists, dropdowns etc) are simplified as much as possible and as user-firendly as possible, do not complicate the UX where it is applicable.
+
+63) **Audit details tab on Template / Form detail surfaces (mandatory for NEW and AMENDED).** Any **new or amended** Template or Form **detail / view / builder** page (Platform and Simulator) that shows a single template definition, form template, or form instance must expose a tabbed chrome:
+ - Primary tab: **Details** / **Document details** / **Form details** (content) — **default selected**.
+ - Secondary tab: **Audit details** — card layout matching the shared pattern: **Identity**, **Classification**, **Record history**, and optional **content/version history** when a linked row exists.
+ - Use shared UI from `@nidus/ui` (`AuditField`, `AuditCard`, `AuditDetailsPanel`, `DetailAuditTabList` or successors) — do not invent a one-off audit layout.
+ - **Never** show a Technical reference card (internal UUID, content row id, storage table name) on user-facing Audit details.
+ - **Scope reference** (and similar foreign keys): show a **friendly label** (e.g. `project_code`) when resolvable; UUID only as fallback. Prefer `resolveScopeReferenceLabel` from `@nidus/shared/utils/auditDisplayUtils.js`.
+ - Form **instances**: keep any existing activity timeline (e.g. `FormAuditTimeline`) on the **Audit details** tab beneath the cards.
+ - Form **templates**: include the Audit tab on the builder in **view and edit**.
+ - **Platform–Simulator parity** (rule 34.1). When the same surface exists in Admin, apply the equivalent pattern with Admin-local UI copies (rule 34.2).
+ - Adopt opportunistically when amending an existing detail page that still lacks the tab. See `projectplan/v866_template_form_audit_details_tab_plan.md` / `Documentation/Template_Form_Audit_Details_Tab_v866_Guide.md`.
+
+63.1) **Audit tab is mandatory on every record-CRUD form, not just Template/Form surfaces (system-wide, Platform + Simulator + Admin — v871).** Rule 63's requirement extends to **any new or amended component that creates, edits, or views a single persisted database record** — Risks, Issues, Changes, Projects, Stakeholders, PID/PRINCE2 documents, resource/appointment records, and simple reference/lookup/config-data admin forms alike. Not just substantive business records — a "manage project statuses"-style admin CRUD form needs the tab too.
+ - **Same fixed 3-card structure as rule 63**: Identity / Classification / Record history, with each card's individual fields adapted to whatever that record type actually has — do not invent a per-form-type card layout.
+ - **Tab is always visible, even for a brand-new unsaved record** — show "Audit details appear after this record is saved" as a placeholder until the record has been saved once. Never hide the tab entirely between create and edit modes of the same form.
+ - **Use `DetailAuditTabList`'s generalised `tabs` prop** (an explicit `{ value, label }[]` array) for any form with more than two content tabs — do not hand-roll a separate tab-switching mechanism just because a form has more sections than a simple Details/Audit pair. The component is fully backward compatible with the simpler `detailsLabel`/`auditLabel`/`extraTab` shape for 2-3 tab forms.
+ - **Excluded**: filter/search panels, export/print/download dialogs, confirmation-only prompts with no field data, generic UI utility modals (image viewers, help popups), in-form picker/selector widgets, and bulk-action modals operating on multiple records at once. None of these edit a single record's own fields.
+ - **Metadata only** — this rule does not require a field-level change log (old value → new value per edit). That is a deliberately separate, larger effort; do not attempt to backfill it as part of adopting this rule.
+ - **Admin parity**: same rule in `E:\project-nidus-admin\CLAUDE.md` (rule 16.1) — use `@nidus-admin/ui`'s equivalent components.
+ - **Adopt opportunistically**: existing forms not yet covered are tracked in `projectplan/v871_system_wide_audit_tab_plan.md` (full census by domain) — pick them up progressively as each is next touched, in addition to any dedicated rollout pass. **Every genuinely new record-CRUD form from this point forward must ship with the Audit tab from day one** — this is not an opportunistic-only rule for new forms, only for the existing backlog.
+
+64) **Clickable dashboard summary cards (mandatory for NEW and AMENDED dashboard/summary
+cards — Platform, Simulator, and Admin, v893).** Any card on a Dashboard tab or rollup
+dashboard whose number is a **COUNT or SUM of individually-identifiable records matching an
+expressible filter** (status, category, level, date range, etc.) must be clickable: clicking
+navigates to that filtered subset on the record's list/register page, using each register's
+own existing filter state where the page's Dashboard and Register views live together
+(`setFilters(...)` + switch tab), or a URL query parameter when the card links to a
+different page (e.g. `?filter=open`, read on mount via `useInitialFilterFromQuery` from
+`@nidus/shared/hooks/` and folded into the target's own filter state). Use `DashboardStatCard`
+(`@nidus/ui`, Platform/Simulator) or `AdminCard`'s `onClick`/`to` props (Admin) — do not
+hand-roll a new static `<div>` tile. `MetricCard` (`components/analytics/MetricCard.jsx`)
+already supports `onClick` for the same purpose where it's the established pattern in a file.
+**Do not make a card clickable** when its number is an **average, percentage/ratio, or
+blends multiple distinct entity types** into one figure (e.g. "Avg Health Score", "%
+realized", a budget sum spanning heterogeneous cost lines) — these have no single coherent
+list of records behind them; leave them static, no hover affordance, no tooltip explaining
+the exclusion. If a card's implied filter doesn't exist yet on the target list page, add the
+filter capability — do not link to an unfiltered list as a substitute, and do not silently
+leave the card non-clickable instead. If wiring a card would require building an entirely new
+list/register page that doesn't exist anywhere in the codebase (not just adding a filter to
+an existing one), leave it static and note the gap in the plan/PRD rather than either building
+the new page as a side effect or quietly skipping it. A single-page widget with only one
+always-visible list may satisfy this rule via scroll-into-view instead of a tab/filter switch
+when there's no separate register view to navigate to. **Platform–Simulator parity applies**
+(rule 34.1) — but where Simulator's equivalent dashboard is built on a genuinely different data
+model or component tree (not a mirror of the Platform file), do not force-fit a parity change
+across that boundary; document the gap and recommend it as separate, scoped work instead (see
+`projectplan/v893_clickable_dashboard_summary_cards_plan.md` for a worked example — Simulator's
+PM/PMO/Portfolio "Practice" module dashboards). **Adopt opportunistically** for any dashboard
+card not yet covered by the v893 rollout when next touched. See `projectprd/v893_clickable_
+dashboard_summary_cards_PRD.md` / `projectplan/v893_clickable_dashboard_summary_cards_plan.md`.
+
+65) **Non-modal forms by default (mandatory for NEW pages/forms, Platform + Simulator +
+Admin, v910) — until I explicitly say otherwise.** Any new create/edit/view surface for a
+record — the kind of thing that would previously have been built as a popup/dialog/modal
+form — must be implemented as its own dedicated routed page with its own URL, not a modal
+overlay. This matches the pattern most record-detail pages in this codebase already use
+(e.g. `risks/:id`, a full page with its own back button, not a popup) and pairs naturally
+with rule 16.1's URL/display-ID conventions. Mode (create/view/edit) is expressed by the
+route (e.g. `entity/create`, `entity/:id`, `entity/:id/edit`), not by a prop toggling a
+modal's `isOpen`/`readOnly` state.
+- **Excluded from this rule** — these stay as modals/dialogs, same as before, because they
+  aren't a record-CRUD form: confirmation prompts (Approve/Reject/Delete confirm), small
+  action dialogs that don't edit a full record's fields, filter/search panels, image/file
+  viewers, generic help/info popups, and bulk-action modals operating on multiple records at
+  once — same exclusion list as rule 63.1.
+- **Adopt opportunistically** for existing modal-based forms — convert one the next time I
+  ask you to touch it, not as a mandatory retrofit pass across the whole app.
+- **Platform–Simulator parity applies** (rule 34.1): build the routed page for both apps in
+  the same change. **Admin parity**: see `E:\project-nidus-admin\CLAUDE.md` rule 18.
+- First converted under this rule: Manage Roles' Create/View/Edit Role surface
+  (`OrgRoleEditorModal` → `OrgRoleDetail.jsx` at `admin/manage-roles/create` ·
+  `admin/manage-roles/:id` · `admin/manage-roles/:id/edit`, both apps).
+
+66) **Performance pass on every NEW or AMENDED component (mandatory, Platform + Simulator +
+Admin, v914).** Whenever you create a page/component, or touch an existing one for any reason,
+check its data-loading path for the specific classes of waste this rule exists because of
+(real incidents: Create Role / Create Menu Bundle loading noticeably slowly):
+   - **Sequential awaits that don't need to be sequential.** If two fetches don't depend on
+     each other's result, fire them together (`Promise.all`) instead of one after another. If a
+     third fetch only needs one field from an earlier result (e.g. an account id), chain it off
+     that specific promise (`somePromise.then(...)`) so it starts the moment that value is
+     ready — not after the entire unrelated batch finishes.
+   - **Redundant duplicate resolution.** Don't let two different functions each independently
+     resolve the same expensive lookup (e.g. the current user's organisation, which itself can
+     be several sequential queries deep on a cold cache) when the result is already available,
+     or already in flight, from a sibling call — pass it through instead of re-deriving it.
+   - **Repeated fetches of data that barely changes.** If a component reloads the same,
+     largely-static reference data on every mount (e.g. a shared picker's option list), add a
+     short-lived cache with a sensible invalidation trigger (cleared wherever that data actually
+     gets written). Prefer `sessionStorage` over a plain in-memory module variable when the
+     value should survive a hard reload — a hard reload wipes all JS module state, and is a
+     normal part of how a page gets exercised, not just in-app SPA navigation. Mirror the
+     `nidus:acct:*` / `nidus:grantableMenuItems:*` sessionStorage patterns in
+     `accountResolution.js` / `organisationCustomRoleService.js` rather than inventing a new
+     caching shape.
+   - **Don't over-apply this.** A simple page with one query, or a component with no data
+     fetching at all, needs none of the above — this rule is about removing waste that's
+     actually present in a *waterfall* of dependent-looking-but-independent calls, not about
+     adding caching/parallelization ceremony to code that has no such problem (rule 62:
+     simplicity still wins over speculative optimization).
+   - **Platform–Simulator parity applies** (rule 34.1) — apply the same fix to both apps' copy
+     of a file. **Admin parity**: see `E:\project-nidus-admin\CLAUDE.md` rule 19.
+   - First applied under this rule: `getManageRolesAccess()` / `getGrantableMenuItems()` /
+     `getMenuBundleById()` in `organisationCustomRoleService.js` /
+     `organisationMenuBundleService.js`, and the `loadRole()` / `loadBundle()` waterfalls in
+     `OrgRoleDetail.jsx` / `MenuBundleDetail.jsx`.
 
 ## Simulator Module Architecture Rules
 
@@ -364,7 +629,7 @@ The codebase is migrating from a monolith to a modular architecture in three seq
 | **Option B** | v729 | ✔ Complete | Multi-entry Vite + CI/CD pipelines. Zero file moves. |
 | **Option A** | v730 | ✔ Complete | Turborepo monorepo. `apps/` + `packages/`. Independent builds. |
 | **Module Federation** | v731 | ✅ Active | `packages/modules/*` federation remotes; independent module CI/CD |
-| **Admin System** | v735 | ⏳ Pending | Separate admin app at `E:\project-nidus-admin` |
+| **Admin System** | v735 | ✅ Active | Separate admin app at `E:\project-nidus-admin` |
 
 > **Update this table** when a phase completes — change ⏳ Pending to ✅ Active or ✔ Complete.
 > **Current active phase is Module Federation (v731).** All new file placement, imports, and build commands must follow v731 conventions.
@@ -415,6 +680,13 @@ ON CONFLICT (table_name) DO UPDATE SET
 4. Examples:
    - Application table: `('customer_orders', 'Customer purchase orders and transaction history', false, true)`
    - System table: `('audit_trail', 'System-wide audit log for all table changes', true, true)`
+
+5. **Admin `id_generation_rules` (mandatory when the table has a human-readable reference column — rule 16.2):**
+   - Check whether `admin.id_generation_rules` already has an active rule for the qualified target table (`public.<table>` and/or `sim.<table>`).
+   - If **missing**, create a versioned seed in **`E:\project-nidus-admin\SQL\`** (not the monorepo) that inserts the rule — mirror `v156_id_generation_sequential_entity_rules_seed.sql` (abbreviation ≤ 4 chars where sequential family expects it, description, `include_date` / `date_format`, `scope_column`, `num_digits`, `separator`, `generation_mode`).
+   - In the monorepo migration, attach `trg_apply_admin_display_id` (or `sim.trg_apply_admin_display_id`) on the reference column; seed/demo inserts must leave that column blank so Admin assigns the ID.
+   - Checklist for a new identifiable table: (a) table DDL + RLS, (b) `database_tables` registry row, (c) Admin `id_generation_rules` seed if absent, (d) display-ID trigger wiring, (e) companion demo seed with blank references (rule 18.2), (f) URLs/toasts use display ID (rule 16.1).
+
 - The **Admin application** is a separate codebase at `E:\project-nidus-admin` (see v735 plan). It is NOT part of the monorepo at `E:\project-nidus`. It connects to the same Supabase instance but uses the `admin` schema. See rules 34.2–34.6 for three-app parity and cross-codebase change protocol.
 
 ## Registration Flow Revamp Conventions

@@ -13,6 +13,12 @@ import SearchableSelect from '../ui/SearchableSelect'
 const RFPLineItemEditor = lazy(() => import('./RFPLineItemEditor'))
 import { SmartAmountInput } from '../ui/SmartAmountInput'
 import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 /**
  * Resolve organisation account ID for the current user.
@@ -117,6 +123,21 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
   const [activeTab, setActiveTab] = useState('details') // 'details' | 'provider' | 'line-items'
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [rfpRecord, setRfpRecord] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !rfpRecord) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        rfpRecord.created_by,
+        rfpRecord.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, rfpRecord])
 
   const categoryOptions = useMemo(() => {
     const opts = categories.map((c) => ({ value: c.code || c.name, label: c.name }))
@@ -147,6 +168,7 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
   useEffect(() => {
     if (mode === 'edit' && id) {
       getRFPById(id).then((rfp) => {
+        setRfpRecord(rfp)
         const contacts = Array.isArray(rfp.service_provider_contacts) && rfp.service_provider_contacts.length > 0
           ? rfp.service_provider_contacts.map((c) => ({
               contact_person: c.contact_person ?? '',
@@ -341,46 +363,45 @@ export default function RFPForm({ mode = 'create', basePath = '/pmo', rfpService
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Tabs */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex gap-1" aria-label="RFP form sections">
-            <button
-              type="button"
-              onClick={() => setActiveTab('details')}
-              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
-                activeTab === 'details'
-                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border border-b-0 border-gray-200 dark:border-gray-700 -mb-px'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-            >
-              RFP Details
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('provider')}
-              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
-                activeTab === 'provider'
-                  ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border border-b-0 border-gray-200 dark:border-gray-700 -mb-px'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-            >
-              Service Provider
-            </button>
-            {mode === 'edit' && id && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('line-items')}
-                className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
-                  activeTab === 'line-items'
-                    ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 border border-b-0 border-gray-200 dark:border-gray-700 -mb-px'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-              >
-                Line Items
-              </button>
-            )}
-          </nav>
+          <DetailAuditTabList
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="RFP form sections"
+            tabs={[
+              { value: 'details', label: 'RFP Details' },
+              { value: 'provider', label: 'Service Provider' },
+              ...(mode === 'edit' && id ? [{ value: 'line-items', label: 'Line Items' }] : []),
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
 
         {/* Tab panels */}
+        {activeTab === 'audit' && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            {!rfpRecord?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this RFP is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this RFP, and how it is classified.">
+                <AuditCard title="Identity" description="How this RFP is labelled and tracked.">
+                  <AuditField label="RFP reference" value={rfpRecord.rfp_reference} />
+                  <AuditField label="Title" value={form.rfp_title || rfpRecord.rfp_title} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this RFP sits.">
+                  <AuditField label="Category" value={form.rfp_category || rfpRecord.rfp_category} />
+                  <AuditField label="Service provider" value={form.service_provider_name || rfpRecord.service_provider_name} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this RFP was created and last changed.">
+                  <AuditField label="Created by" value={rfpRecord.created_by ? auditUserLabels[rfpRecord.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={rfpRecord.created_at} />
+                  <AuditField label="Updated by" value={rfpRecord.updated_by ? auditUserLabels[rfpRecord.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={rfpRecord.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
         {activeTab === 'details' && (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">RFP Details</h2>

@@ -4,6 +4,8 @@
  */
 
 import { platformDb } from './supabase/supabaseClient';
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam.js';
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid.js';
 
 /**
  * Get lessons for a project
@@ -67,8 +69,13 @@ export async function getLessonsByProject(projectId, filters = {}) {
  * @param {string} lessonId - Lesson ID
  * @returns {Promise<Object>} Lesson data
  */
-export async function getLessonById(lessonId) {
+export async function getLessonById(lessonIdOrCode, projectId) {
   try {
+    const lessonId = isLikelyDatabaseUuid(lessonIdOrCode)
+      ? lessonIdOrCode
+      : await resolveEntityId('lesson', lessonIdOrCode, projectId);
+    if (!lessonId) return { success: false, error: 'Lesson not found' };
+
     const { data, error } = await platformDb
       .from('lessons_learned')
       .select(`

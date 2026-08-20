@@ -87,7 +87,7 @@ import { persistMenuLayoutScope } from '@nidus/shared/utils/menuLayoutUtils'
 import { resolveSidebarThemeTokens } from '@nidus/shared/utils/sidebarThemeUtils'
 import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import { useOpenPlanningFindingsCount } from '@nidus/shared/hooks/useOpenPlanningFindingsCount'
-import { SidebarNavTier } from '@nidus/ui'
+import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 import MethodologySwitcher from './ui/MethodologySwitcher'
 
 // Icon mapping for menu items
@@ -122,6 +122,7 @@ const iconMap = {
   'alert-triangle': AlertTriangle,
   'alert-circle': AlertCircle,
   'clipboard-list': ClipboardList,
+  'layout-template': Layers,
   'graduation-cap': GraduationCap,
   'megaphone': Megaphone,
   'settings-2': Settings2,
@@ -250,28 +251,30 @@ function SidebarMenuItem({
 
     return (
       <div className="mb-1">
-        <button
-          type="button"
-          onClick={handleSectionClick}
-          className={sectionClassName}
-          style={sectionActiveStyle}
-          aria-expanded={expanded}
-        >
-          <span
-            className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded text-white"
-            style={{ backgroundColor: accent }}
-            aria-hidden
+        <SidebarNavNestedRow level={level}>
+          <button
+            type="button"
+            onClick={handleSectionClick}
+            className={sectionClassName}
+            style={sectionActiveStyle}
+            aria-expanded={expanded}
           >
-            [{badgeText}]
-          </span>
-          <TrackIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
-          <span className="flex-1 truncate text-left">{menuItem.menu_label}</span>
-          {hasChildren && (
-            <span className={`ml-auto ${isChildActive ? 'text-current' : tokens.chevronClass}`}>
-              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            <span
+              className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded text-white"
+              style={{ backgroundColor: accent }}
+              aria-hidden
+            >
+              [{badgeText}]
             </span>
-          )}
-        </button>
+            <TrackIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
+            <span className="flex-1 truncate text-left">{menuItem.menu_label}</span>
+            {hasChildren && (
+              <span className={`ml-auto ${isChildActive ? 'text-current' : tokens.chevronClass}`}>
+                {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </span>
+            )}
+          </button>
+        </SidebarNavNestedRow>
         {hasChildren && expanded && (
           <SidebarNavTier
             borderClassName={isChildActive ? '' : tokens.childBorderClass}
@@ -308,17 +311,20 @@ function SidebarMenuItem({
   const nodeKey = getMenuNodeKey(menuItem)
   const isTopLevel = level === 0
   const usesAccordion = isTopLevel && hasChildren && onToggleExpand != null
-  const [isExpandedLocal, setIsExpandedLocal] = useState(() => isChildActive)
-
-  useEffect(() => {
-    if (usesAccordion) return
-    if (isChildActive) setIsExpandedLocal(true)
-  }, [location.pathname, location.search, usesAccordion, isChildActive])
-
-  const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
   // Treat a menu item as active ONLY when its route_path matches exactly.
   // This prevents all siblings in a section from appearing active at once.
   const isActive = !!menuItem.route_path && menuPathIsActive(location.pathname, resolvedPath, location.search)
+  // Nested navigable parents (e.g. Template Library under Portfolio & Delivery) must
+  // open when the parent itself is selected — not only when a Forms/Templates child is.
+  const shouldExpandLocal = isChildActive || (hasChildren && isActive)
+  const [isExpandedLocal, setIsExpandedLocal] = useState(() => shouldExpandLocal)
+
+  useEffect(() => {
+    if (usesAccordion) return
+    if (shouldExpandLocal) setIsExpandedLocal(true)
+  }, [location.pathname, location.search, usesAccordion, shouldExpandLocal])
+
+  const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
 
   const Icon = iconMap[menuItem.menu_icon] || LayoutDashboard
 
@@ -344,14 +350,22 @@ function SidebarMenuItem({
     badgeColorResolved = menuItem.badge_color || '#D97706'
   }
 
+  const hasOwnRoute = Boolean(String(menuItem.route_path || '').trim())
+
+  const toggleExpand = () => {
+    if (usesAccordion && onToggleExpand) {
+      onToggleExpand(nodeKey)
+    } else {
+      setIsExpandedLocal((prev) => !prev)
+    }
+  }
+
   const handleClick = (e) => {
-    if (hasChildren) {
+    // Section parents (no route): click only expands/collapses.
+    // Navigable parents with children (v851 Templates): allow navigation; chevron toggles.
+    if (hasChildren && !hasOwnRoute) {
       e.preventDefault()
-      if (usesAccordion && onToggleExpand) {
-        onToggleExpand(nodeKey)
-      } else {
-        setIsExpandedLocal((prev) => !prev)
-      }
+      toggleExpand()
       return
     }
     if (menuLayout === 'pm') {
@@ -359,6 +373,13 @@ function SidebarMenuItem({
     } else if (menuLayout === 'pmo') {
       persistMenuLayoutScope('pmo')
     }
+  }
+
+  const handleChevronClick = (e) => {
+    if (!hasChildren) return
+    e.preventDefault()
+    e.stopPropagation()
+    toggleExpand()
   }
 
   const activeStyle = isActive
@@ -377,63 +398,78 @@ function SidebarMenuItem({
   return (
     <div>
       {menuItem.external_url ? (
-        <a
-          href={menuItem.external_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={itemClassName}
-          style={{ ...activeStyle, ...textStyle }}
-        >
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
-          <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
-          {menuItem.canUse === false && (
-            <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
-          )}
-          {badgeText && (
-            <span
-              className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
-              style={{ backgroundColor: badgeColorResolved }}
-            >
-              {badgeText}
-            </span>
-          )}
-        </a>
+        <SidebarNavNestedRow level={level}>
+          <a
+            href={menuItem.external_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={itemClassName}
+            style={{ ...activeStyle, ...textStyle }}
+          >
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
+            <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
+            {menuItem.canUse === false && (
+              <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
+            )}
+            {badgeText && (
+              <span
+                className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
+                style={{ backgroundColor: badgeColorResolved }}
+              >
+                {badgeText}
+              </span>
+            )}
+          </a>
+        </SidebarNavNestedRow>
       ) : (
-        <Link
-          to={
-            !menuItem.route_path
-              ? '#'
-              : resolvedPath === '/'
-                ? '/platform/dashboard'
-                : resolvedPath
-          }
-          onClick={handleClick}
-          className={itemClassName}
-          style={{ ...activeStyle, ...textStyle }}
-        >
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
-          <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
-          {menuItem.canUse === false && (
-            <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
-          )}
-          {badgeText && (
-            <span
-              className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
-              style={{ backgroundColor: badgeColorResolved }}
-            >
-              {badgeText}
-            </span>
-          )}
-          {hasChildren && (
-            <span className={`ml-auto ${isActive ? 'text-current' : tokens.chevronClass}`}>
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </span>
-          )}
-        </Link>
+        <SidebarNavNestedRow level={level}>
+          <Link
+            to={
+              !menuItem.route_path
+                ? '#'
+                : resolvedPath === '/'
+                  ? '/platform/dashboard'
+                  : resolvedPath
+            }
+            onClick={handleClick}
+            className={itemClassName}
+            style={{ ...activeStyle, ...textStyle }}
+          >
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
+            <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
+            {menuItem.canUse === false && (
+              <Eye className="h-3.5 w-3.5 flex-shrink-0 opacity-60" aria-label="View only" title="View only" />
+            )}
+            {badgeText && (
+              <span
+                className="px-2 py-0.5 text-xs rounded-full font-medium text-white"
+                style={{ backgroundColor: badgeColorResolved }}
+              >
+                {badgeText}
+              </span>
+            )}
+            {hasChildren && (
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label={expanded ? 'Collapse submenu' : 'Expand submenu'}
+                onClick={handleChevronClick}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleChevronClick(e)
+                  }
+                }}
+                className={`ml-auto ${isActive ? 'text-current' : tokens.chevronClass}`}
+              >
+                {expanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </span>
+            )}
+          </Link>
+        </SidebarNavNestedRow>
       )}
       {hasChildren && expanded && (
         <SidebarNavTier

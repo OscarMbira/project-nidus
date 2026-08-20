@@ -7,6 +7,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam.js'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid.js'
 import { ArrowLeft, Edit2, Download, FileDown, Printer, FileText, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { getLessonsReportById } from '../services/lessonsReportService'
 import { getLessonsInReport } from '../services/lessonsReportLessonService'
@@ -42,14 +45,24 @@ export default function LessonsReportView() {
   const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
-    if (reportId) {
+    if (reportId && projectId) {
       loadReportData()
     }
-  }, [reportId])
+  }, [reportId, projectId])
 
   const loadReportData = async () => {
     try {
       setLoading(true)
+      // Resolve the route segment (code or UUID) once, then reuse the real UUID for every
+      // sub-fetch below — they're all keyed on lessons_report_id and expect the UUID.
+      const resolvedId = isLikelyDatabaseUuid(reportId)
+        ? reportId
+        : await resolveEntityId('lessonsReport', reportId, projectId)
+      if (!resolvedId) {
+        setLoading(false)
+        return
+      }
+
       const [
         reportResult,
         lessonsResult,
@@ -58,16 +71,20 @@ export default function LessonsReportView() {
         distributionResult,
         appendicesResult
       ] = await Promise.all([
-        getLessonsReportById(reportId),
-        getLessonsInReport(reportId),
-        getRecommendations(reportId),
-        getApprovals(reportId),
-        getDistributionList(reportId),
-        getAppendices(reportId)
+        getLessonsReportById(resolvedId),
+        getLessonsInReport(resolvedId),
+        getRecommendations(resolvedId),
+        getApprovals(resolvedId),
+        getDistributionList(resolvedId),
+        getAppendices(resolvedId)
       ])
 
       if (reportResult.success) {
         setReport(reportResult.data)
+        // Self-correct a raw-UUID bookmark to the friendly reference, same pattern as v872.
+        if (reportResult.data?.report_reference && reportResult.data.report_reference !== reportId) {
+          navigate(platformProjectPath(routeKey, 'lessons', 'reports', reportResult.data.report_reference), { replace: true })
+        }
       }
 
       if (lessonsResult.success) {
@@ -149,7 +166,7 @@ export default function LessonsReportView() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Report not found</p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Reports
@@ -166,7 +183,7 @@ export default function LessonsReportView() {
       {/* Back Button and Export */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
+          onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -186,20 +203,22 @@ export default function LessonsReportView() {
       {/* Header */}
       <LessonsReportHeader
         report={report}
-        onEdit={() => navigate(`/app/projects/${projectId}/lessons/reports/${reportId}/edit`)}
+        onEdit={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || reportId, 'edit'))}
         onExport={handleExport}
         readOnly={!canEdit}
       />
 
-      {/* View using form in view mode */}
+      {/* View using form in view mode. reportId is the real UUID (report.id), not the
+          friendly route param — the form and its children (HoldButton, completeness
+          check, section queries) all key their fetches on a real lessons_reports.id. */}
       <LessonsReportForm
         projectId={projectId}
         lessonsLogId={report.lessons_log_id}
         stageBoundaryId={report.stage_boundary_id}
-        reportId={reportId}
+        reportId={report.id}
         reportType={report.report_type}
         mode="view"
-        onCancel={() => navigate(`/app/projects/${projectId}/lessons/reports`)}
+        onCancel={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))}
       />
     </div>
   )

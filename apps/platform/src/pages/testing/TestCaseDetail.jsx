@@ -5,6 +5,7 @@ import TestCaseForm from '../../components/testing/TestCaseForm'
 import { getTestCaseById, updateTestCase } from '../../services/testCaseService'
 import { getTestSuites } from '../../services/testSuiteService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { RowActionButton } from '@nidus/ui'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -118,13 +119,7 @@ function Detail({ caseId, projectId }) {
                 onExportJSON={() => exportRecordToJSON(exportSections, tc, `test_case_${tc.test_case_ref || tc.id}`)}
                 onExportPrint={() => exportRecordToPrint(exportSections, tc)}
               />
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-600 text-sm text-white"
-              >
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit test case" onClick={() => setEditing(true)} />
             </>
           )}
         </div>

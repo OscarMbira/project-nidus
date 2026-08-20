@@ -15,10 +15,21 @@ export async function createIssueRegister(projectId) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // auth.getUser() returns the auth uid, which is not users.id. The RPC writes
+    // that value into created_by/updated_by, both FKs to public.users.
+    const { data: userRecord, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('auth_user_id', user.id)
+      .eq('is_deleted', false)
+      .single();
+
+    if (userError || !userRecord) throw new Error('User record not found');
+
     // Call database function to create register
     const { data, error } = await supabase.rpc('create_issue_register_for_project', {
       p_project_id: projectId,
-      p_user_id: user.id
+      p_user_id: userRecord.id
     });
 
     if (error) throw error;

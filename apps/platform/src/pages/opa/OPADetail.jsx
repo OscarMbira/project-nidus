@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { deleteOPA, getOPAById } from '../../services/opaService'
 import { platformDb } from '@nidus/supabase'
 import { resolveTemplateProvenanceBatch } from '@nidus/shared/services/pmTemplateOverrideService.js'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function OPADetail() {
   const { id } = useParams()
@@ -14,6 +21,16 @@ export default function OPADetail() {
   const [loading, setLoading] = useState(true)
   // v807 Gap 4: if this OPA was copied from a Global template, link back to it.
   const [provenance, setProvenance] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [row.created_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     let c = false
@@ -116,18 +133,37 @@ export default function OPADetail() {
         </div>
         <div className="flex flex-wrap gap-2">
           <ExportRecordMenu sections={sections} record={record} baseFilename={`OPA_${row.id}`} />
-          <button
-            type="button"
+          <RowActionButton
+            variant="edit"
+            label="Edit OPA"
             onClick={() => navigate(`/platform/opa/${id}/edit`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600"
-          >
-            <Pencil className="h-4 w-4" /> Edit
-          </button>
-          <button type="button" onClick={handleDelete} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-300 text-red-700 dark:text-red-400">
-            <Trash2 className="h-4 w-4" /> Delete
-          </button>
+          />
+          <RowActionButton variant="delete" label="Delete OPA" onClick={handleDelete} />
         </div>
       </div>
+
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      </div>
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created this OPA record, and how it is classified.">
+          <AuditCard title="Identity" description="How this OPA record is labelled and tracked.">
+            <AuditField label="Title" value={row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this OPA record is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(row.opa_type)} />
+            <AuditField label="Version" value={row.version} />
+            <AuditField label="Category" value={row.category?.name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this OPA record was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <dl className="grid sm:grid-cols-2 gap-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <div>
           <dt className="text-xs uppercase text-gray-500">Type</dt>
@@ -154,6 +190,7 @@ export default function OPADetail() {
           <dd className="text-gray-900 dark:text-white whitespace-pre-wrap">{row.notes || '—'}</dd>
         </div>
       </dl>
+      )}
     </div>
   )
 }

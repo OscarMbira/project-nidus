@@ -6,7 +6,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { User, Mail, Building, Target, FileText, ListTodo, MessageSquare, GitBranch, Edit2, Download, ChevronDown } from 'lucide-react'
+import { User, Mail, Building, Target, FileText, ListTodo, MessageSquare, GitBranch, Download, ChevronDown } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import {
   getStakeholderAnalysis,
   getEngagementActions,
@@ -17,6 +18,13 @@ import EngagementActions from './EngagementActions'
 import StakeholderRelationships from './StakeholderRelationships'
 import { exportRecordToWord, exportRecordToExcel, exportRecordToPPT, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import { getCompletenessPercent } from '@nidus/shared/utils/stakeholderCompleteness'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const ID_SOURCE_LABELS = {
@@ -33,8 +41,23 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
   const [analysis, setAnalysis] = useState([])
   const [communications, setCommunications] = useState([])
   const [exportOpen, setExportOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const projectId = stakeholder?.project_id || null
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !stakeholder) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        stakeholder.created_by,
+        stakeholder.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, stakeholder])
 
   useEffect(() => {
     if (!stakeholder?.id) return
@@ -128,13 +151,11 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
             )}
           </div>
           {onEdit && (
-            <button
-              type="button"
+            <RowActionButton
+              variant="edit"
+              label="Edit stakeholder"
               onClick={() => onEdit()}
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium"
-            >
-              <Edit2 className="h-4 w-4" /> Edit
-            </button>
+            />
           )}
         </div>
       </div>
@@ -149,6 +170,33 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
         <span className="text-xs font-medium text-gray-700 dark:text-gray-300 tabular-nums">{completeness}%</span>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Stakeholder profile sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this stakeholder, and how it is classified.">
+          <AuditCard title="Identity" description="How this stakeholder is labelled and tracked.">
+            <AuditField label="Reference" value={stakeholder.stakeholder_reference} />
+            <AuditField label="Name" value={stakeholder.stakeholder_name} />
+            <AuditField label="Type" value={humanizeAuditToken(stakeholder.stakeholder_type)} />
+            <AuditField label="Status" value={humanizeAuditToken(stakeholder.stakeholder_status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this stakeholder sits.">
+            <AuditField label="Category" value={humanizeAuditToken(stakeholder.stakeholder_category)} />
+            <AuditField label="Organization" value={stakeholder.stakeholder_organization} />
+            <AuditField label="Project role" value={stakeholder.project_role} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this stakeholder was created and last changed.">
+            <AuditField label="Created by" value={stakeholder.created_by ? auditUserLabels[stakeholder.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={stakeholder.created_at} />
+            <AuditField label="Updated by" value={stakeholder.updated_by ? auditUserLabels[stakeholder.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={stakeholder.updated_at} />
+            <AuditTimestampPair dateLabel="Identification date" value={stakeholder.identification_date} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
+      <>
       {/* 1. Basic Info */}
       <section className={sectionClass}>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><User className="h-5 w-5" /> Basic information</h3>
@@ -252,6 +300,8 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
         <section className={sectionClass}>
           <p className="text-sm text-gray-500 dark:text-gray-400">This stakeholder is not assigned to a project. Assign a project to see engagement actions, communication history, and relationships.</p>
         </section>
+      )}
+      </>
       )}
     </div>
   )

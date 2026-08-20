@@ -603,19 +603,11 @@ export async function getLatestHighlightReport(projectId, stageBoundaryId = null
  * @param {string|null} stageBoundaryId - Stage boundary UUID (optional)
  * @param {string} [reportDate] - Report date YYYY-MM-DD (optional)
  */
-export async function generateReportReference(projectId, stageBoundaryId = null, reportDate = null) {
-  try {
-    const { data, error } = await supabase.rpc('generate_highlight_report_reference', {
-      p_project_id: projectId,
-      p_stage_boundary_id: stageBoundaryId,
-      p_report_date: reportDate || new Date().toISOString().split('T')[0],
-    })
-    if (error) throw error
-    return data
-  } catch (e) {
-    console.warn('generate_highlight_report_reference RPC failed', e)
-    return null
-  }
+export async function generateReportReference() {
+  // generate_highlight_report_reference was dropped by v756b (id_generation_migration) —
+  // report_reference is now assigned automatically by the Admin ID Generation trigger on
+  // insert when left blank (see CLAUDE.md rule 16.2 / v882).
+  return null
 }
 
 /**

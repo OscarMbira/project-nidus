@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Archive, Pencil } from 'lucide-react'
-import { useOPATailoringContext } from '@nidus/shared/hooks/useOPATailoringContext'
+import { ArrowLeft, Archive } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -65,13 +66,11 @@ export default function ProjectOPACustomisationDetail() {
           >
             Export PPT
           </button>
-          <button
-            type="button"
+          <RowActionButton
+            variant="edit"
+            label="Edit OPA customisation"
             onClick={() => navigate(`${base}/${customisationId}/edit`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 text-white min-h-[44px]"
-          >
-            <Pencil className="h-4 w-4" /> Edit
-          </button>
+          />
           <button
             type="button"
             onClick={handleArchive}

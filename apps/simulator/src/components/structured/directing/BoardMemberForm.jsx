@@ -2,10 +2,32 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, User, Calendar, FileText } from 'lucide-react';
 import { addBoardMember, updateBoardMember } from '../../../services/directingProjectService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function BoardMemberForm({ boardId, member, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !member) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        member.created_by,
+        member.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, member]);
   const [formData, setFormData] = useState({
     user_id: member?.user_id || '',
     role_on_board: member?.role_on_board || 'Senior_User',
@@ -102,6 +124,33 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !member?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this member is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this board member, and how it is classified.">
+                <AuditCard title="Identity" description="How this member is labelled and tracked.">
+                  <AuditField label="Board member" value={users.find((u) => u.id === (formData.user_id || member.user_id))?.full_name} />
+                  <AuditField label="Role on board" value={humanizeAuditToken(formData.role_on_board || member.role_on_board)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this member sits.">
+                  <AuditField label="Appointment date" value={formData.appointment_date || member.appointment_date} />
+                  <AuditField label="Active" value={(formData.is_active ?? member.is_active) ? 'Yes' : 'No'} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this member was created and last changed.">
+                  <AuditField label="Created by" value={member.created_by ? auditUserLabels[member.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={member.created_at} />
+                  <AuditField label="Updated by" value={member.updated_by ? auditUserLabels[member.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={member.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* User Selection */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -198,6 +247,8 @@ export default function BoardMemberForm({ boardId, member, onClose, onSuccess })
               Active member
             </label>
           </div>
+          </>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

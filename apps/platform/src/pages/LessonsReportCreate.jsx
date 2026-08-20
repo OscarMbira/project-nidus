@@ -6,6 +6,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { useState, useEffect } from 'react'
 import LessonsReportForm from '../components/lessonsReport/LessonsReportForm'
 import { getLessonsLogByProject } from '../services/lessonsLogService'
@@ -35,7 +36,7 @@ export default function LessonsReportCreate() {
         setLessonsLogId(result.data.id)
       } else {
         alert('Lessons Log not found for this project. Please create a Lessons Log first.')
-        navigate(`/app/projects/${projectId}/lessons`)
+        navigate(platformProjectPath(routeKey, 'lessons'))
       }
     } catch (error) {
       console.error('Error loading lessons log:', error)
@@ -46,11 +47,11 @@ export default function LessonsReportCreate() {
   }
 
   const handleSave = async (report) => {
-    navigate(`/app/projects/${projectId}/lessons/reports/${report.id}`)
+    navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || report.id))
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/lessons`)
+    navigate(platformProjectPath(routeKey, 'lessons'))
   }
 
   if (loading) {
@@ -67,7 +68,7 @@ export default function LessonsReportCreate() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Lessons Log not found</p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons'))}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Lessons Log

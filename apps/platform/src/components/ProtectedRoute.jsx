@@ -7,6 +7,23 @@ import PlatformSelectionModal from './PlatformSelectionModal'
 
 const AUTH_CHECK_TIMEOUT_MS = 15000
 
+// `<ProtectedRoute><Layout>...</Layout></ProtectedRoute>` is the `element` of every individual
+// <Route>, not a single shared parent — React Router therefore unmounts/remounts this whole tree
+// (auth check AND the sidebar layout nested inside it) on every in-app navigation. That's a
+// routing-structure fact this component can't change on its own. What it CAN fix: a fresh mount
+// doesn't need to re-run the full async auth/org/platform check chain and block the sidebar
+// behind a spinner every time — only the first check in a while needs to be blocking. Later
+// mounts within AUTH_CACHE_TTL_MS reuse the last result instantly and revalidate silently in the
+// background, so a real logout/access change is still caught, just without a visible flash.
+const AUTH_CACHE_TTL_MS = 60000
+const authResultCache = new Map() // key: requiredPlatform || 'none' -> { authenticated, currentUser, redirectTo, showPlatformModal, timestamp }
+
+function getCachedAuth(cacheKey) {
+  const entry = authResultCache.get(cacheKey)
+  if (!entry || Date.now() - entry.timestamp > AUTH_CACHE_TTL_MS) return null
+  return entry
+}
+
 function delay(ms) {
   return new Promise((_, reject) => setTimeout(() => reject(new Error('Auth check timeout')), ms))
 }
@@ -16,26 +33,30 @@ export default function ProtectedRoute({
   requiredRoles = [],
   requiredPlatform = null  // 'platform' or 'simulator'
 }) {
-  const [loading, setLoading] = useState(true)
+  const cacheKey = requiredPlatform || 'none'
+  const cached = getCachedAuth(cacheKey)
+
+  const [loading, setLoading] = useState(!cached)
   const [authTimeout, setAuthTimeout] = useState(false)
-  const [authenticated, setAuthenticated] = useState(false)
+  const [authenticated, setAuthenticated] = useState(cached?.authenticated ?? false)
   const [userRoles, setUserRoles] = useState([])
-  const [showPlatformModal, setShowPlatformModal] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [redirectTo, setRedirectTo] = useState(null)
+  const [showPlatformModal, setShowPlatformModal] = useState(cached?.showPlatformModal ?? false)
+  const [currentUser, setCurrentUser] = useState(cached?.currentUser ?? null)
+  const [redirectTo, setRedirectTo] = useState(cached?.redirectTo ?? null)
   const location = useLocation()
   // Snapshot of the pathname this instance first mounted on — used only to
   // decide whether the *landing* route is an onboarding route. Deliberately
-  // NOT the live location.pathname: this component is mounted once per
-  // protected area (wrapping the whole layout/sidebar) and persists across
-  // in-app navigation, so a live dependency here re-ran the entire auth/org/
-  // platform check chain on every single click, blanking the whole sidebar
-  // behind a "Checking authentication..." screen each time.
+  // NOT the live location.pathname: a live dependency here would re-run the
+  // entire auth/org/platform check chain on every single click.
   const initialPathnameRef = useRef(location.pathname)
+  // Captured once at mount — whether THIS instance can skip the blocking spinner and revalidate
+  // silently in the background. Deliberately not re-evaluated on later renders of the same
+  // instance (cache staleness between renders of one mount isn't the scenario we're solving).
+  const wasCachedOnMountRef = useRef(Boolean(cached))
 
-  const checkAuth = useCallback(async () => {
+  const checkAuth = useCallback(async ({ silent = false } = {}) => {
     setAuthTimeout(false)
-    setLoading(true)
+    if (!silent) setLoading(true)
     try {
       const authPromise = (async () => {
         // Step 1: Auth check (must be first)
@@ -44,6 +65,7 @@ export default function ProtectedRoute({
         if (authError || !user) {
           setAuthenticated(false)
           setLoading(false)
+          authResultCache.delete(cacheKey)
           return
         }
 
@@ -68,6 +90,7 @@ export default function ProtectedRoute({
         if (needsOrgCheck && orgStatus && !orgStatus.exists) {
           setRedirectTo('/onboarding/organisation-setup')
           setLoading(false)
+          authResultCache.set(cacheKey, { authenticated: true, currentUser: user, redirectTo: '/onboarding/organisation-setup', showPlatformModal: false, timestamp: Date.now() })
           return
         }
 
@@ -86,6 +109,7 @@ export default function ProtectedRoute({
             if (!hasRegistered || !hasAccess) {
               setShowPlatformModal(true)
               setLoading(false)
+              authResultCache.set(cacheKey, { authenticated: true, currentUser: user, redirectTo: null, showPlatformModal: true, timestamp: Date.now() })
               return
             }
           } catch (platformError) {
@@ -95,10 +119,16 @@ export default function ProtectedRoute({
         }
 
         setLoading(false)
+        authResultCache.set(cacheKey, { authenticated: true, currentUser: user, redirectTo: null, showPlatformModal: false, timestamp: Date.now() })
       })()
 
       await Promise.race([authPromise, delay(AUTH_CHECK_TIMEOUT_MS)])
     } catch (error) {
+      if (silent) {
+        // A background revalidation hiccup (timeout/transient network error) shouldn't disrupt
+        // an already-working session — just leave the cached state in place and try again later.
+        return
+      }
       if (error?.message === 'Auth check timeout') {
         setAuthTimeout(true)
       } else {
@@ -107,10 +137,10 @@ export default function ProtectedRoute({
       }
       setLoading(false)
     }
-  }, [requiredPlatform])
+  }, [requiredPlatform, cacheKey])
 
   useEffect(() => {
-    checkAuth()
+    checkAuth({ silent: wasCachedOnMountRef.current })
   }, [checkAuth])
 
   const handleClosePlatformModal = () => {

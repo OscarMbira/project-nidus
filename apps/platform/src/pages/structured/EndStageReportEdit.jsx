@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { ArrowLeft } from 'lucide-react'
 import EndStageReportFormEnhanced from '../../components/structured/boundaries/EndStageReportFormEnhanced'
 
@@ -9,12 +10,12 @@ export default function EndStageReportEdit() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
 
-  const handleSave = () => {
-    navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/${reportId}`)
+  const handleSave = (report) => {
+    navigate(platformProjectPath(routeKey, 'stage-boundaries', 'end-stage-reports', report?.report_reference || reportId))
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/${reportId}`)
+    navigate(platformProjectPath(routeKey, 'stage-boundaries', 'end-stage-reports', reportId))
   }
 
   return (

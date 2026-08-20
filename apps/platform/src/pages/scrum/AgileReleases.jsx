@@ -93,7 +93,7 @@ export default function AgileReleases() {
               <div className="text-xs text-gray-500">{r.release_status}</div>
             </div>
             <Link
-              to={`${platformProjectPath(routeKey, 'scrum', 'releases', r.id)}`}
+              to={`${platformProjectPath(routeKey, 'scrum', 'releases', r.release_reference || r.id)}`}
               className="text-blue-400 text-sm self-center"
             >
               Open

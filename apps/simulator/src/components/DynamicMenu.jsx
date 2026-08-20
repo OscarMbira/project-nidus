@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useMenu } from '@nidus/shared/hooks/useMenu'
-import { SidebarNavTier } from '@nidus/ui'
+import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 import { getSidebarNestedItemPadding } from '@nidus/shared/utils/sidebarNavUtils'
 
 function MenuItem({ menuItem, level = 0 }) {
@@ -51,19 +51,21 @@ function MenuItem({ menuItem, level = 0 }) {
 
   if (menuItem.external_url) {
     return (
-      <a
-        href={menuItem.external_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`block ${getSidebarNestedItemPadding(level, { base: 'px-3', nested: 'pr-3' })} py-2 rounded-md text-sm font-medium transition-colors ${
-          isActive
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-        }`}
-        style={isActive && menuItem.menu_color ? { backgroundColor: menuItem.menu_color } : {}}
-      >
-        {menuContent}
-      </a>
+      <SidebarNavNestedRow level={level}>
+        <a
+          href={menuItem.external_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`block ${getSidebarNestedItemPadding(level, { base: 'px-3', nested: 'pr-3' })} py-2 rounded-md text-sm font-medium transition-colors ${
+            isActive
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+          style={isActive && menuItem.menu_color ? { backgroundColor: menuItem.menu_color } : {}}
+        >
+          {menuContent}
+        </a>
+      </SidebarNavNestedRow>
     )
   }
 
@@ -73,18 +75,20 @@ function MenuItem({ menuItem, level = 0 }) {
 
   return (
     <div>
-      <Link
-        to={menuItem.route_path || '#'}
-        onClick={handleClick}
-        className={`block ${getSidebarNestedItemPadding(level, { base: 'px-3', nested: 'pr-3' })} py-2 rounded-md text-sm font-medium transition-colors ${
-          isActive
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-        }`}
-        style={isActive && menuItem.menu_color ? { backgroundColor: menuItem.menu_color } : {}}
-      >
-        {menuContent}
-      </Link>
+      <SidebarNavNestedRow level={level}>
+        <Link
+          to={menuItem.route_path || '#'}
+          onClick={handleClick}
+          className={`block ${getSidebarNestedItemPadding(level, { base: 'px-3', nested: 'pr-3' })} py-2 rounded-md text-sm font-medium transition-colors ${
+            isActive
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+          style={isActive && menuItem.menu_color ? { backgroundColor: menuItem.menu_color } : {}}
+        >
+          {menuContent}
+        </Link>
+      </SidebarNavNestedRow>
       {hasChildren && isExpanded && (
         <SidebarNavTier borderClassName={isActive ? 'border-blue-600' : 'border-gray-200 dark:border-gray-700'}>
           {menuItem.children.map((child) => (

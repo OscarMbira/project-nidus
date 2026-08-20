@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { TableRowNumberCell } from '../ui/Table';
 import RowNumberBadge from '../ui/RowNumberBadge';
+import { RowActionButton } from '@nidus/ui';
 
 function formatShortDate(iso) {
   if (!iso) return '';
@@ -79,34 +79,22 @@ export const ProjectGridCard = memo(function ProjectGridCard({
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
-          aria-label={`View project ${project.project_name}`}
-          title="View"
+        <RowActionButton
+          variant="view"
+          label={`View project ${project.project_name}`}
           onClick={() => onSelect(project)}
-          className="p-2 rounded-md text-sky-400 hover:bg-gray-700 hover:text-sky-300 transition-colors"
-        >
-          <Eye className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          aria-label={`Edit project ${project.project_name}`}
-          title="Edit"
+        />
+        <RowActionButton
+          variant="edit"
+          label={`Edit project ${project.project_name}`}
           onClick={() => onEdit(project)}
-          className="p-2 rounded-md text-amber-400 hover:bg-gray-700 hover:text-amber-300 transition-colors"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          aria-label={`Delete project ${project.project_name}`}
-          title="Delete"
+        />
+        <RowActionButton
+          variant="delete"
+          label={`Delete project ${project.project_name}`}
           disabled={isDeleting}
           onClick={() => onDelete(project)}
-          className="p-2 rounded-md text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors disabled:opacity-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        />
       </div>
     </div>
   );
@@ -173,15 +161,11 @@ export const ProjectListRow = memo(function ProjectListRow({
           <span className="text-gray-500">-</span>
         )}
       </td>
-      <td className="px-6 py-4 text-sm text-gray-400">
-        {start && end ? (
-          <div>
-            <div>{start}</div>
-            <div className="text-xs">to {end}</div>
-          </div>
-        ) : (
-          '-'
-        )}
+      <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
+        {start || <span className="text-gray-500">—</span>}
+      </td>
+      <td className="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">
+        {end || <span className="text-gray-500">—</span>}
       </td>
       <td
         className="px-4 py-3 text-right whitespace-nowrap sticky right-0 bg-gray-800 group-hover:bg-gray-700/40 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.4)]"
@@ -189,34 +173,22 @@ export const ProjectListRow = memo(function ProjectListRow({
         onKeyDown={(e) => e.stopPropagation()}
       >
         <div className="inline-flex items-center gap-0.5">
-          <button
-            type="button"
-            aria-label={`View project ${project.project_name}`}
-            title="View"
+          <RowActionButton
+            variant="view"
+            label={`View project ${project.project_name}`}
             onClick={() => onSelect(project)}
-            className="p-2 rounded-md text-sky-400 hover:bg-gray-700 hover:text-sky-300 transition-colors"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            aria-label={`Edit project ${project.project_name}`}
-            title="Edit"
+          />
+          <RowActionButton
+            variant="edit"
+            label={`Edit project ${project.project_name}`}
             onClick={() => onEdit(project)}
-            className="p-2 rounded-md text-amber-400 hover:bg-gray-700 hover:text-amber-300 transition-colors"
-          >
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            aria-label={`Delete project ${project.project_name}`}
-            title="Delete"
+          />
+          <RowActionButton
+            variant="delete"
+            label={`Delete project ${project.project_name}`}
             disabled={isDeleting}
             onClick={() => onDelete(project)}
-            className="p-2 rounded-md text-red-400 hover:bg-gray-700 hover:text-red-300 transition-colors disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          />
         </div>
       </td>
     </tr>

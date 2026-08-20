@@ -86,16 +86,17 @@ export default function DailyScrum() {
 
       // Fetch team members (project members assigned to this sprint or project)
       const { data: membersData, error: membersError } = await supabase
-        .from('project_members')
+        .from('project_memberships')
         .select(`
-          *,
+          id,
+          user_id,
           user:user_id (id, email, full_name)
         `)
         .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
 
       if (membersError) throw membersError
-      setTeamMembers(membersData || [])
+      setTeamMembers((membersData || []).filter((m) => m.user_id))
 
     } catch (error) {
       console.error('Error fetching data:', error)

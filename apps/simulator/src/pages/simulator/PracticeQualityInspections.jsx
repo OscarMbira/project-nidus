@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Search, CheckCircle, XCircle, Calendar } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import {
   getPracticeQualityInspections,
   deletePracticeQualityInspection
@@ -162,9 +163,9 @@ export default function PracticeQualityInspections() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {inspections.map(i => (
+              {inspections.map((i, index) => (
                 <tr key={i.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{i.inspection_title}</div>
                     {i.inspection_reference && <div className="text-xs text-gray-500">{i.inspection_reference}</div>}
@@ -180,7 +181,7 @@ export default function PracticeQualityInspections() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleDelete(i)} disabled={deleting === i.id} className="text-red-600 hover:text-red-800 dark:text-red-400 disabled:opacity-50 text-sm">Delete</button>
+                    <RowActionButton variant="delete" label="Delete inspection" onClick={() => handleDelete(i)} disabled={deleting === i.id} />
                   </td>
                 </tr>
               ))}

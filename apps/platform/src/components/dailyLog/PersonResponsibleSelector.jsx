@@ -74,19 +74,19 @@ export default function PersonResponsibleSelector({
 
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
         <User className="w-4 h-4" />
         Person Responsible
       </label>
       
       {loading ? (
-        <div className="text-sm text-gray-500">Loading team members...</div>
+        <div className="text-sm text-gray-500 dark:text-gray-400">Loading team members...</div>
       ) : (
         <>
           <select
             value={currentInternalId}
             onChange={(e) => handleInternalChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           >
             <option value="">Select team member...</option>
             {teamMembers.map((member) => (
@@ -103,9 +103,9 @@ export default function PersonResponsibleSelector({
                 value={currentExternalName}
                 onChange={(e) => handleExternalChange(e.target.value)}
                 placeholder="Or enter external person name..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 Leave blank if using team member above
               </p>
             </div>

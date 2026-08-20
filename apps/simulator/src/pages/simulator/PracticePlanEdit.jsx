@@ -6,6 +6,13 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getPracticePlan, updatePracticePlan } from '../../services/sim/practicePlanService'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function PracticePlanEdit() {
   const { id } = useParams()
@@ -18,16 +25,27 @@ export default function PracticePlanEdit() {
     plan_purpose: '',
     plan_scope: ''
   })
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) loadPlan()
   }, [id])
 
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record])
+
   const loadPlan = async () => {
     try {
       setLoading(true)
       const result = await getPracticePlan(projectId)
-      if (result.success && result.data) setFormData(result.data)
+      if (result.success && result.data) { setFormData(result.data); setRecord(result.data) }
     } catch (error) {
       console.error('Error loading plan:', error)
     } finally {
@@ -59,6 +77,31 @@ export default function PracticePlanEdit() {
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </button>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Edit Practice Plan</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this Project Plan.">
+              <AuditCard title="Identity" description="How this plan is labelled.">
+                <AuditField label="Title" value={record.plan_title} />
+                <AuditField label="Reference" value={record.plan_reference} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this plan sits.">
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+                <AuditField label="Baseline" value={record.is_baseline ? 'Yes' : 'No'} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this plan was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">Plan Title *</label>
@@ -73,6 +116,7 @@ export default function PracticePlanEdit() {
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
         </div>
       </form>
+      )}
     </div>
   )
 }

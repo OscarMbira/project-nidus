@@ -1,5 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import {
+  formInstancePathSegmentFromRow,
+  resolveFormInstanceRecordsListPath,
+} from '@nidus/shared/utils/formInstanceRegisterUtils.js'
 import { applyTieredSchemaFieldOverrides, buildFieldOverrideMap } from '@nidus/shared/utils/formTemplateFieldOverrides'
 import {
   applyGuidanceToSchema,
@@ -23,7 +28,9 @@ import {
 const TIER_LABEL = { portfolio: 'Portfolio', programme: 'Programme', project: 'Project' }
 
 export default function FormNew({ mode = 'platform', basePath = '/platform/projects' }) {
-  const { projectId, templateCode } = useParams()
+  const { templateCode } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
+  const projectSeg = encodeURIComponent(routeKey || projectId || '')
   const navigate = useNavigate()
   const { languageCode } = useLanguageContext()
   const [template, setTemplate] = useState(null)
@@ -35,10 +42,25 @@ export default function FormNew({ mode = 'platform', basePath = '/platform/proje
   const [translations, setTranslations] = useState([])
   const [examples, setExamples] = useState([])
   const [selectedExampleId, setSelectedExampleId] = useState(null)
+  const [autoInstance, setAutoInstance] = useState(null)
+  const creatingInstanceRef = useRef(false)
 
   useEffect(() => {
     getFormTemplate(templateCode, mode).then((r) => r.success && setTemplate(r.data))
   }, [templateCode, mode])
+
+  // Create the draft row as soon as the page opens (not on first Save) so field-level
+  // Attachment capture — which needs a real form_instance_id to attach to — works
+  // immediately on a brand-new record, same as the existing hold/draft-queue pattern
+  // (rule 37) where an early, empty draft is expected, not an error state.
+  useEffect(() => {
+    if (!projectId || !templateCode || creatingInstanceRef.current) return
+    creatingInstanceRef.current = true
+    createFormInstance(projectId, templateCode, null, mode).then((result) => {
+      if (result.success) setAutoInstance(result.data)
+      else creatingInstanceRef.current = false // allow retry (e.g. transient network error)
+    })
+  }, [projectId, templateCode, mode])
 
   useEffect(() => {
     if (!template?.id) return
@@ -101,14 +123,31 @@ export default function FormNew({ mode = 'platform', basePath = '/platform/proje
   }
 
   const save = async () => {
-    const created = await createFormInstance(projectId, templateCode, null, mode)
-    if (!created.success) return
-    await updateFormValues(created.data.id, values, mode)
-    navigate(`${basePath}/${projectId}/forms/${created.data.id}/edit`)
+    // Normally already created on page load (see effect above) — createFormInstance here is
+    // only a fallback if that earlier call failed (e.g. transient network error).
+    const created = autoInstance || (await createFormInstance(projectId, templateCode, null, mode)).data
+    if (!created) return
+    await updateFormValues(created.id, values, mode)
+    const instanceSeg = formInstancePathSegmentFromRow(created)
+    navigate(`${basePath}/${projectSeg}/forms/${instanceSeg}/edit`)
   }
 
+  const listPath = resolveFormInstanceRecordsListPath({
+    pathname: `${basePath}/${projectSeg}/forms/new`,
+    projectId,
+    projectKey: routeKey || projectId,
+    templateCode,
+    fallbackBasePath: basePath,
+  })
+
   return (
-    <div className="space-y-4 p-4 text-gray-900 dark:text-gray-100">
+    <div className="mx-auto w-full md:w-3/4 space-y-4 p-4 text-gray-900 dark:text-gray-100">
+      <Link
+        to={listPath}
+        className="inline-block text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+      >
+        ← Back to records
+      </Link>
       <h1 className="text-lg font-semibold">New Form: {template?.name || templateCode}</h1>
 
       {examples.length > 0 && (
@@ -149,6 +188,8 @@ export default function FormNew({ mode = 'platform', basePath = '/platform/proje
         translations={translations}
         languageCode={languageCode}
         showCalculated
+        mode={mode}
+        formInstanceId={autoInstance?.id || null}
       />
       <button type="button" onClick={save} className="rounded bg-blue-600 px-4 py-2 text-sm text-white">Create Draft</button>
     </div>

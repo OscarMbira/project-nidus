@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAvatarSignedUrl } from '@nidus/shared/services/userAvatarService'
+import { getAvatarSignedUrl, peekAvatarDisplayUrl } from '@nidus/shared/services/userAvatarService'
 import ZoomableImage from './ZoomableImage'
 
 /**
@@ -8,18 +8,37 @@ import ZoomableImage from './ZoomableImage'
  * to the existing initials gradient circle when no picture is set — same markup
  * as the pre-v894 initials-only badge, so users without a picture see no change.
  */
-export default function UserAvatarBadge({ db, avatarPath, initials, sizeClassName = 'w-7 h-7 sm:w-8 sm:h-8', zoomable = false }) {
-  const [signedUrl, setSignedUrl] = useState(null)
+export default function UserAvatarBadge({
+  db,
+  avatarPath,
+  initials,
+  sizeClassName = 'w-7 h-7 sm:w-8 sm:h-8',
+  zoomable = false,
+  refreshNonce = 0,
+}) {
+  const [signedUrl, setSignedUrl] = useState(() => (avatarPath ? peekAvatarDisplayUrl(avatarPath) : null))
 
   useEffect(() => {
     let cancelled = false
-    setSignedUrl(null)
-    if (!db || !avatarPath) return undefined
+    if (!db || !avatarPath) {
+      setSignedUrl(null)
+      return undefined
+    }
+    const cached = peekAvatarDisplayUrl(avatarPath)
+    if (cached) setSignedUrl(cached)
     getAvatarSignedUrl(db, avatarPath).then((result) => {
-      if (!cancelled && result.success) setSignedUrl(result.data)
+      if (cancelled) return
+      if (result.success) {
+        setSignedUrl(result.data)
+      } else {
+        // Falls back to the initials circle either way (never a broken <img>), but a failed
+        // signed-URL read for an avatar_url that IS set was previously indistinguishable from
+        // "no picture uploaded" — surface it so this doesn't look like a silent no-op.
+        console.warn('[UserAvatarBadge] Failed to load profile picture:', result.message)
+      }
     })
     return () => { cancelled = true }
-  }, [db, avatarPath])
+  }, [db, avatarPath, refreshNonce])
 
   if (signedUrl) {
     const imgClassName = `${sizeClassName} rounded-full object-cover shadow-md`
@@ -30,6 +49,7 @@ export default function UserAvatarBadge({ db, avatarPath, initials, sizeClassNam
           alt="Your profile picture"
           imgClassName={imgClassName}
           hoverPreviewClassName="h-48 w-48 rounded-full object-cover"
+          priority
         />
       )
     }
@@ -38,6 +58,7 @@ export default function UserAvatarBadge({ db, avatarPath, initials, sizeClassNam
         src={signedUrl}
         alt="Your profile picture"
         className={imgClassName}
+        decoding="async"
       />
     )
   }

@@ -7,6 +7,12 @@
 import { useState } from 'react'
 import { CheckCircle, FileText, MessageSquare, Users, Settings, Calendar, BarChart3, Shield, Megaphone } from 'lucide-react'
 import { HoldButton } from '../ui/HoldButton'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function CMSForm({
   cmsData = {},
@@ -19,6 +25,7 @@ export default function CMSForm({
   saving = false
 }) {
   const [activeStep, setActiveStep] = useState(1)
+  const [formTab, setFormTab] = useState('wizard')
 
   const steps = [
     { id: 1, label: 'Introduction', icon: FileText },
@@ -260,6 +267,34 @@ export default function CMSForm({
 
   return (
     <div className="space-y-6">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !cmsData?.id ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this strategy is saved.</p>
+          </div>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this communication management strategy, and how it is classified.">
+            <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+              <AuditField label="Reference" value={cmsData.cms_reference} />
+              <AuditField label="Status" value={humanizeAuditToken(cmsData.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this strategy sits.">
+              <AuditField label="Project" value={cmsData.project?.project_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this strategy was created and last changed.">
+              <AuditField label="Created by" value={cmsData.created_by_user?.full_name || cmsData.created_by_user?.email} />
+              <AuditTimestampPair dateLabel="Created at" value={cmsData.created_at} />
+              <AuditField label="Updated by" value={cmsData.updated_by_user?.full_name || cmsData.updated_by_user?.email} />
+              <AuditTimestampPair dateLabel="Last updated" value={cmsData.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       {/* Progress Steps */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex items-center justify-between mb-4">
@@ -349,6 +384,8 @@ export default function CMSForm({
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

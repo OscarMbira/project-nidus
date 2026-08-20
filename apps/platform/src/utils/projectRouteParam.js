@@ -119,3 +119,29 @@ export async function resolveProjectIdFromRouteSegment(segment) {
   );
   return id;
 }
+
+/**
+ * Prefer project_code for friendly URLs; fall back to id (UUID).
+ * @param {string} idOrSegment — projects.id UUID or already a code
+ * @returns {Promise<string | null>}
+ */
+export async function resolveProjectRouteKeyFromId(idOrSegment) {
+  const key = String(idOrSegment || '').trim();
+  if (!key) return null;
+  if (!looksLikeProjectUuid(key)) return key;
+
+  const { data, error } = await platformDb
+    .from('projects')
+    .select('id, project_code')
+    .eq('id', key)
+    .eq('is_deleted', false)
+    .maybeSingle();
+  if (error && error.code !== 'PGRST116') {
+    console.warn('resolveProjectRouteKeyFromId:', error.message);
+  }
+  if (!data) return key;
+  const code = data.project_code != null && String(data.project_code).trim() !== ''
+    ? String(data.project_code).trim()
+    : null;
+  return code || data.id || key;
+}

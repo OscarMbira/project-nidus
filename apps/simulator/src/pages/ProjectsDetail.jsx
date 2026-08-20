@@ -4,7 +4,8 @@ import { platformDb } from '@nidus/supabase'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { platformProjectPath, looksLikeProjectUuid } from '@nidus/shared/utils/projectRouteParam'
 import { GanttChart } from '../components/gantt'
-import { Edit2, Trash2, Archive, AlertTriangle, Shield, MessageSquare } from 'lucide-react'
+import { Archive, AlertTriangle, Shield, MessageSquare } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getQMSByProject } from '../services/qualityManagementStrategyService'
 import { getRMSByProject } from '../services/riskManagementStrategyService'
 import ProjectRiskSummary from '../components/risks/ProjectRiskSummary'
@@ -424,14 +425,12 @@ export default function ProjectsDetail() {
                 {project.project_statuses.status_name}
               </span>
             )}
-            <button
+            <RowActionButton
+              variant="edit"
+              label="Edit project"
               onClick={() => navigate(platformProjectPath(urlProjectSegment, 'edit'))}
               disabled={isRecordLifecycleLocked(project.record_status)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit
-            </button>
+            />
             <button
               onClick={() => setShowArchiveConfirm(true)}
               disabled={isRecordLifecycleLocked(project.record_status)}
@@ -440,14 +439,12 @@ export default function ProjectsDetail() {
               <Archive className="h-4 w-4" />
               Archive
             </button>
-            <button
+            <RowActionButton
+              variant="delete"
+              label="Delete project"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isRecordLifecycleLocked(project.record_status)}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
+            />
           </div>
         </div>
 

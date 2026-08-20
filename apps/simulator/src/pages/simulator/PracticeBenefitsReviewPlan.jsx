@@ -4,7 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { FileText, Plus, Edit } from 'lucide-react'
+import { FileText, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeBenefitsReviewPlan, createPracticeBenefitsReviewPlan, updatePracticeBenefitsReviewPlan } from '../../services/sim/practiceBenefitsService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
@@ -78,9 +79,7 @@ export default function PracticeBenefitsReviewPlan() {
         <div className="flex gap-2">
           {plan && <ExportListMenu columns={PRACTICE_BRP_COLUMNS} data={[plan]} baseFilename="PracticeBenefitsReviewPlan" />}
           {plan && !editing && (
-          <button onClick={() => setEditing(true)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+            <RowActionButton variant="edit" label="Edit benefits review plan" onClick={() => setEditing(true)} />
           )}
         </div>
       </div>

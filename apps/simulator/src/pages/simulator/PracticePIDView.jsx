@@ -4,10 +4,18 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Edit } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticePIDById } from '../../services/sim/practicePIDService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRACTICE_PID_VIEW_SECTIONS = [
   { title: 'PID', fields: [
@@ -24,10 +32,20 @@ export default function PracticePIDView() {
   const projectId = searchParams.get('projectId')
   const [pid, setPid] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) loadPID()
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !pid) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [pid.created_by, pid.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, pid])
 
   const loadPID = async () => {
     try {
@@ -61,11 +79,33 @@ export default function PracticePIDView() {
             onExportJSON={() => exportRecordToJSON(PRACTICE_PID_VIEW_SECTIONS, pid, `PracticePID_${pid.pid_reference || id}`)}
             onExportPrint={() => exportRecordToPrint(PRACTICE_PID_VIEW_SECTIONS, pid, `PracticePID_${pid.pid_reference || id}`)}
           />
-          <button onClick={() => navigate(`/simulator/practice-pids/${id}/edit?projectId=${projectId}`)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+          <RowActionButton
+            variant="edit"
+            label="Edit PID"
+            onClick={() => navigate(`/simulator/practice-pids/${id}/edit?projectId=${projectId}`)}
+          />
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this PID.">
+          <AuditCard title="Identity" description="How this PID is labelled.">
+            <AuditField label="Title" value={pid.pid_title} />
+            <AuditField label="Reference" value={pid.pid_reference} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Approval status.">
+            <AuditField label="Approved" value={pid.is_approved ? 'Yes' : 'No'} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this PID was created and last changed.">
+            <AuditField label="Created by" value={pid.created_by ? auditUserLabels[pid.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={pid.created_at} />
+            <AuditField label="Updated by" value={pid.updated_by ? auditUserLabels[pid.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={pid.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
           <h3 className="font-medium mb-2">Description</h3>
@@ -80,6 +120,7 @@ export default function PracticePIDView() {
           <p className="text-gray-600 dark:text-gray-400">{pid.project_scope || 'N/A'}</p>
         </div>
       </div>
+      )}
     </div>
   )
 }

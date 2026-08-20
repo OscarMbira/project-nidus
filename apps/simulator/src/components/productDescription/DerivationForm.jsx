@@ -5,6 +5,12 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DERIVATION_TYPES = [
   { value: 'existing_product', label: 'Existing Product' },
@@ -31,6 +37,18 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
   const [ppds, setPpds] = useState([])
   const [ppdCompositionItems, setPpdCompositionItems] = useState([])
   const [mandates, setMandates] = useState([])
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !derivation) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [derivation.created_by, derivation.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, derivation])
 
   useEffect(() => {
     if (derivation) {
@@ -90,6 +108,34 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !derivation?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this derivation is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this derivation, and how it is classified.">
+            <AuditCard title="Identity" description="How this derivation is labelled and tracked.">
+              <AuditField label="Title" value={formData.derivation_title || derivation.derivation_title} />
+              <AuditField label="Type" value={humanizeAuditToken(derivation.derivation_type)} />
+              <AuditField label="Reference" value={derivation.derivation_reference} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this derivation sits.">
+              <AuditField label="Linked PPD" value={ppds.find((p) => p.id === (formData.linked_ppd_id || derivation.linked_ppd_id))?.product_title} />
+              <AuditField label="Linked mandate" value={mandates.find((m) => m.id === (formData.mandate_id || derivation.mandate_id))?.mandate_title} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this derivation was created and last changed.">
+              <AuditField label="Created by" value={derivation.created_by ? auditUserLabels[derivation.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={derivation.created_at} />
+              <AuditField label="Updated by" value={derivation.updated_by ? auditUserLabels[derivation.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={derivation.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -208,6 +254,8 @@ export default function DerivationForm({ derivation, onSubmit, onCancel, project
           </div>
         )}
       </div>
+      </>
+      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (

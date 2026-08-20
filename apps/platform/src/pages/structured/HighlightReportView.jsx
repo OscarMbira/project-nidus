@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { ArrowLeft, Edit, FileText, Printer } from 'lucide-react'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { ArrowLeft, FileText, Printer } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getHighlightReportById } from '../../services/controllingStageService'
 import { getProducts } from '../../services/highlightReportProductService'
 import { getRisks } from '../../services/highlightReportRiskService'
@@ -15,10 +19,17 @@ import HighlightReportRevisionHistory from '../../components/structured/highligh
 import HighlightReportPrintView from '../../components/structured/highlightReport/HighlightReportPrintView'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const HIGHLIGHT_VIEW_SECTIONS = [
   { title: 'Document Information', fields: [
-    { key: 'document_ref', label: 'Document Ref' },
+    { key: 'report_reference', label: 'Document Ref' },
     { key: 'report_title', label: 'Title' },
     { key: 'executive_summary', label: 'Executive Summary' },
     { key: 'approval_workflow_status', label: 'Status' }
@@ -36,26 +47,53 @@ export default function HighlightReportView() {
   const [tolerances, setTolerances] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+  const [resolvedReportId, setResolvedReportId] = useState(null)
 
   useEffect(() => {
-    if (reportId) loadData()
-  }, [reportId])
+    if (reportId && projectId) loadData()
+  }, [reportId, projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !report) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        report.created_by,
+        report.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, report])
 
   const loadData = async () => {
     try {
       setLoading(true)
+      const resolvedId = isLikelyDatabaseUuid(reportId)
+        ? reportId
+        : await resolveEntityId('highlightReport', reportId, projectId)
+      if (!resolvedId) {
+        setReport(null)
+        setLoading(false)
+        return
+      }
+      setResolvedReportId(resolvedId)
       const [r, p, rs, is, tol] = await Promise.all([
-        getHighlightReportById(reportId),
-        getProducts(reportId).catch(() => []),
-        getRisks(reportId).catch(() => []),
-        getIssues(reportId).catch(() => []),
-        getTolerances(reportId).catch(() => [])
+        getHighlightReportById(resolvedId),
+        getProducts(resolvedId).catch(() => []),
+        getRisks(resolvedId).catch(() => []),
+        getIssues(resolvedId).catch(() => []),
+        getTolerances(resolvedId).catch(() => [])
       ])
       setReport(r)
       setProducts(p || [])
       setRisks(rs || [])
       setIssues(is || [])
       setTolerances(tol || [])
+      if (r?.report_reference && r.report_reference !== reportId) {
+        navigate(platformProjectPath(routeKey, 'highlight-reports', r.report_reference), { replace: true })
+      }
     } catch (e) {
       console.error('Error loading highlight report:', e)
       setReport(null)
@@ -78,7 +116,7 @@ export default function HighlightReportView() {
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-gray-400">Report not found</p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/stage-boundaries`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'stage-boundaries'))}
             className="mt-4 text-blue-600 hover:underline"
           >
             Back to Stage Boundaries
@@ -93,14 +131,15 @@ export default function HighlightReportView() {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: FileText },
-    { id: 'print', label: 'Print & Export', icon: Printer }
+    { id: 'print', label: 'Print & Export', icon: Printer },
+    { id: 'audit', label: 'Audit details', icon: FileText }
   ]
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/stage-boundaries`)}
+          onClick={() => navigate(platformProjectPath(routeKey, 'stage-boundaries'))}
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -108,48 +147,59 @@ export default function HighlightReportView() {
         </button>
         <div className="flex items-center gap-2">
           <ExportRecordButtons
-            onExportPPT={() => exportRecordToPPT(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
-            onExportWord={() => exportRecordToWord(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
-            onExportExcel={() => exportRecordToExcel(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
-            onExportCSV={() => exportRecordToCSV(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
-            onExportXML={() => exportRecordToXML(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
-            onExportJSON={() => exportRecordToJSON(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
-            onExportPrint={() => exportRecordToPrint(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.document_ref || reportId}`)}
+            onExportPPT={() => exportRecordToPPT(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
+            onExportWord={() => exportRecordToWord(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
+            onExportExcel={() => exportRecordToExcel(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
+            onExportCSV={() => exportRecordToCSV(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
+            onExportXML={() => exportRecordToXML(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
+            onExportJSON={() => exportRecordToJSON(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
+            onExportPrint={() => exportRecordToPrint(HIGHLIGHT_VIEW_SECTIONS, report, `Highlight_${report.report_reference || reportId}`)}
           />
           {isDraft && (
-            <button
-              onClick={() => navigate(`/app/projects/${projectId}/highlight-reports/${reportId}/edit`)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-            >
-              <Edit className="h-4 w-4" />
-              Edit
-            </button>
+            <RowActionButton
+              variant="edit"
+              label="Edit highlight report"
+              onClick={() => navigate(platformProjectPath(routeKey, 'highlight-reports', report.report_reference || reportId, 'edit'))}
+            />
           )}
         </div>
       </div>
 
       <HighlightReportHeader report={report} />
 
-      <div className="mt-6 flex flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-t-lg font-medium flex items-center gap-2 ${
-              activeTab === tab.id
-                ? 'bg-white dark:bg-gray-800 border border-b-0 border-gray-200 dark:border-gray-700 -mb-px text-blue-600 dark:text-blue-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
-          </button>
-        ))}
+      <div className="mt-6 border-b border-gray-200 dark:border-gray-700">
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Highlight report sections"
+          tabs={tabs.map((tab) => ({ value: tab.id, label: tab.label }))}
+        />
       </div>
+
+      {activeTab === 'audit' && (
+        <div className="bg-white dark:bg-gray-800 rounded-b-lg border border-gray-200 dark:border-gray-700 border-t-0 p-6">
+          <AuditDetailsPanel description="Who created or changed this highlight report, and how it is classified.">
+            <AuditCard title="Identity" description="How this report is labelled and tracked.">
+              <AuditField label="Reference" value={report.report_reference} />
+              <AuditField label="Title" value={report.report_title} />
+              <AuditField label="Status" value={humanizeAuditToken(status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this report sits.">
+              <AuditField label="Executive summary" value={report.executive_summary} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this report was created and last changed.">
+              <AuditField label="Created by" value={report.created_by ? auditUserLabels[report.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={report.created_at} />
+              <AuditField label="Updated by" value={report.updated_by ? auditUserLabels[report.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={report.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        </div>
+      )}
 
       {activeTab === 'overview' && (
         <div className="bg-white dark:bg-gray-800 rounded-b-lg border border-gray-200 dark:border-gray-700 border-t-0 p-6 space-y-6">
-          <HighlightReportCompletenessIndicator reportId={reportId} />
+          <HighlightReportCompletenessIndicator reportId={resolvedReportId || reportId} />
 
           {report.executive_summary && (
             <section>
@@ -258,7 +308,7 @@ export default function HighlightReportView() {
 
           <section>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Revision History</h2>
-            <HighlightReportRevisionHistory reportId={reportId} />
+            <HighlightReportRevisionHistory reportId={resolvedReportId || reportId} />
           </section>
         </div>
       )}

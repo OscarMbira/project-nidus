@@ -79,5 +79,5 @@ Delivered blank-origin local forms on the existing `pm_template_nodes` / `form_t
 
 ### Follow-ups
 - PRD O1: portfolio/programme membership tables to broaden create beyond owner columns.
-- Apply SQL in order listed in `Documentation/PM_Local_Forms_v852_Guide.md` before browser UAT.
+- Apply SQL in order listed in `Documentation/PM_Local_Forms_v852_Guide.md` before browser UAT (**include v855 + v856** — UAT found role-name RLS miss and `chk_pm_template_nodes_root_synced` blocking blank project roots).
 - Request a git commit / push when ready.

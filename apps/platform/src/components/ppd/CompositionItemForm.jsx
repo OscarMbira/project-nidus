@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, Package } from 'lucide-react'
 import { addCompositionItem, updateCompositionItem } from '../../services/ppdCompositionService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
@@ -17,6 +23,18 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
   const [productDescriptions, setProductDescriptions] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !item) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [item.created_by, item.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, item])
 
   useEffect(() => {
     fetchProducts()
@@ -147,6 +165,34 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !item?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this composition item is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this composition item, and how it is classified.">
+                <AuditCard title="Identity" description="How this composition item is labelled and tracked.">
+                  <AuditField label="Product name" value={formData.product_name || item.product_name} />
+                  <AuditField label="Type" value={humanizeAuditToken(item.product_type)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this composition item sits.">
+                  <AuditField label="Linked product deliverable" value={products.find((p) => p.id === (formData.linked_product_id || item.linked_product_id))?.product_name} />
+                  <AuditField label="Linked product description" value={productDescriptions.find((pd) => pd.id === (formData.product_description_id || item.product_description_id))?.product_title} />
+                  <AuditField label="Planned delivery stage" value={item.planned_delivery_stage} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this composition item was created and last changed.">
+                  <AuditField label="Created by" value={item.created_by ? auditUserLabels[item.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={item.created_at} />
+                  <AuditField label="Updated by" value={item.updated_by ? auditUserLabels[item.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={item.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Product Name *
@@ -269,6 +315,8 @@ export default function CompositionItemForm({ item, ppdId, onSave, onCancel }) {
               Mandatory (must be delivered)
             </label>
           </div>
+          </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button

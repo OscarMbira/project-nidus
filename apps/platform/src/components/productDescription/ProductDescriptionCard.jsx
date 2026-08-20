@@ -4,6 +4,7 @@
 
 import { FileText, CheckCircle, Clock, XCircle, Package } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 
 const STATUS_COLORS = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
@@ -19,12 +20,12 @@ const STATUS_ICONS = {
   superseded: XCircle
 }
 
-export default function ProductDescriptionCard({ pd, projectId }) {
+export default function ProductDescriptionCard({ pd, projectId, routeKey }) {
   const navigate = useNavigate()
   const StatusIcon = STATUS_ICONS[pd.status] || FileText
 
   const handleClick = () => {
-    navigate(`/app/projects/${projectId}/product-descriptions/${pd.id}`)
+    navigate(platformProjectPath(routeKey || projectId, 'product-descriptions', pd.pd_reference || pd.id))
   }
 
   return (

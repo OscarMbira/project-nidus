@@ -18,6 +18,13 @@ import NextPeriodSection from './NextPeriodSection'
 import ToleranceStatusSection from './ToleranceStatusSection'
 import IssuesRisksSection from './IssuesRisksSection'
 import CheckpointQualityCriteria from './CheckpointQualityCriteria'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const FORM_STEPS = [
   { id: 'header', label: 'Header', icon: FileText, description: 'Document metadata' },
@@ -83,6 +90,21 @@ export default function CheckpointReportForm({
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [qualityStatus, setQualityStatus] = useState(null)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !reportId) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        formData.created_by,
+        formData.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, reportId, formData.created_by, formData.updated_by])
 
   useEffect(() => {
     if (reportId && mode !== 'create') {
@@ -347,10 +369,10 @@ export default function CheckpointReportForm({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+        {/* Header + steps scroll with the page (no sticky — leftover modal chrome caused orphaned tabs) */}
+        <div className="border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <FileText className="h-6 w-6" />
@@ -365,14 +387,45 @@ export default function CheckpointReportForm({
           <button
             onClick={onCancel}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Close"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Progress Steps */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
-          <div className="flex items-center gap-2 min-w-max">
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+        </div>
+
+        {formTab === 'audit' && (
+          <div className="p-6">
+            {!reportId ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this checkpoint report, and how it is classified.">
+                <AuditCard title="Identity" description="How this report is labelled and tracked.">
+                  <AuditField label="Reference" value={formData.document_ref} />
+                  <AuditField label="Title" value={formData.report_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this report sits.">
+                  <AuditField label="Checkpoint date" value={formData.checkpoint_date} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this report was created and last changed.">
+                  <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+                  <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'wizard' && (
+        <>
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex flex-wrap items-center gap-2">
             {FORM_STEPS.map((step, index) => {
               const Icon = step.icon
               const isActive = index === activeStep
@@ -399,17 +452,15 @@ export default function CheckpointReportForm({
           </div>
         </div>
 
-        {/* Form Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6">
           {renderStepContent()}
         </div>
 
-        {/* Footer */}
-        <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Step {activeStep + 1} of {FORM_STEPS.length}
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {activeStep > 0 && (
               <button
                 type="button"
@@ -460,6 +511,8 @@ export default function CheckpointReportForm({
             </button>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

@@ -4,6 +4,7 @@
  */
 
 import { useMemo } from 'react';
+import { DashboardStatCard } from '@nidus/ui';
 
 const DEFAULT_ICON = () => null;
 
@@ -20,16 +21,12 @@ export default function PMOOversightHeader({
     () =>
       Array.isArray(stats)
         ? stats.map((s, i) => (
-            <div
+            <DashboardStatCard
               key={i}
-              className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 shadow-sm"
-            >              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                {s.label}
-              </p>
-              <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-                {s.value != null ? s.value : '—'}
-              </p>
-            </div>
+              label={s.label}
+              value={s.value != null ? s.value : '—'}
+              onClick={s.onClick}
+            />
           ))
         : null,
     [stats]

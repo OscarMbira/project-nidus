@@ -3,6 +3,8 @@
  * Export Product Descriptions to PDF, Word, CSV formats
  */
 
+import { addCanvasImagePages } from './pdfCanvasPagination.js'
+
 /**
  * Export Product Description to PDF
  * @param {Object} pd - Product Description data
@@ -16,6 +18,7 @@
  * @param {Array} approvals - Approvals
  * @param {string} filename - Output filename
  */
+
 export async function exportProductDescriptionToPDF(
   pd,
   compositionItems = [],
@@ -72,18 +75,7 @@ export async function exportProductDescriptionToPDF(
     const imgWidth = 210 // A4 width in mm
     const pageHeight = 297 // A4 height in mm
     const imgHeight = (canvas.height * imgWidth) / canvas.width
-    let heightLeft = imgHeight
-    let position = 0
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
 
     // Save PDF
     const outputFilename = filename || `PD-${pd.pd_reference || pd.id}-${new Date().toISOString().split('T')[0]}.pdf`

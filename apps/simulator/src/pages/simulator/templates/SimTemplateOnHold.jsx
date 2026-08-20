@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Eye } from 'lucide-react'
+import { Search } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { listCopiesForAccount } from '../../../services/sim/simProjectTemplateCopyService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 import { useSortableTable } from '../../../hooks/useSortableTable'
@@ -122,13 +123,11 @@ export default function SimTemplateOnHold() {
                 {r.project_name} · {r.status}
               </p>
               <p className="text-xs text-gray-500 mt-1">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</p>
-              <button
-                type="button"
+              <RowActionButton
+                variant="view"
+                label="View template copy"
                 onClick={() => navigate(`${BASE}/copies/${r.id}`)}
-                className="mt-3 inline-flex items-center gap-1 text-sm text-violet-600 dark:text-violet-400"
-              >
-                <Eye className="h-4 w-4" /> View
-              </button>
+              />
             </div>
           ))}
         </div>
@@ -168,9 +167,11 @@ export default function SimTemplateOnHold() {
                   <TableCell>{r.status}</TableCell>
                   <TableCell className="text-sm text-gray-600">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</TableCell>
                   <TableCell className="text-right">
-                    <button type="button" className="text-violet-600 text-sm" onClick={() => navigate(`${BASE}/copies/${r.id}`)}>
-                      View
-                    </button>
+                    <RowActionButton
+                      variant="view"
+                      label="View template copy"
+                      onClick={() => navigate(`${BASE}/copies/${r.id}`)}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

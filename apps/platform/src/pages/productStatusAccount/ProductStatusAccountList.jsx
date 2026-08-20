@@ -5,6 +5,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import ProductStatusAccountList from '../../components/productStatusAccount/ProductStatusAccountList'
 
 export default function ProductStatusAccountListPage() {
@@ -12,13 +13,14 @@ export default function ProductStatusAccountListPage() {
   const navigate = useNavigate()
 
   const handleCreate = () => {
-    navigate(`/app/projects/${projectId}/product-status-accounts/create`)
+    navigate(platformProjectPath(routeKey, 'product-status-accounts', 'create'))
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <ProductStatusAccountList 
+      <ProductStatusAccountList
         projectId={projectId}
+        routeKey={routeKey}
         onCreate={handleCreate}
       />
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createOPA, listOPACategories, listSimulationRunsForPicker } from '../../../services/sim/simOPAService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimOPACreate() {
   const navigate = useNavigate()
@@ -12,6 +13,7 @@ export default function SimOPACreate() {
   const [category_id, setCategory_id] = useState('')
   const [opa_type, setOpa_type] = useState('template')
   const [related_simulation_run_id, setRun] = useState('')
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     ;(async () => {
@@ -49,6 +51,11 @@ export default function SimOPACreate() {
   return (
     <div className="max-w-lg mx-auto px-4 py-8 space-y-4">
       <h1 className="text-xl font-bold text-gray-900 dark:text-white">New OPA</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this OPA is saved.</p>
+      ) : (
+      <>
       <input className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
       <select className="w-full rounded-lg border px-3 py-2 bg-white dark:bg-gray-900" value={category_id} onChange={(e) => setCategory_id(e.target.value)}>
         <option value="">Category</option>
@@ -69,6 +76,8 @@ export default function SimOPACreate() {
       <button type="button" onClick={save} className="px-4 py-2 bg-sky-600 text-white rounded-lg">
         Create
       </button>
+      </>
+      )}
     </div>
   )
 }

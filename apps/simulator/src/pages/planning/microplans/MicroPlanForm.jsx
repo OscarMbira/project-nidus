@@ -6,6 +6,12 @@ import PlanningProjectBar, { usePlanningProjectId } from '../../../components/pl
 import * as api from '../../../services/microPlanService'
 import * as simApi from '../../../services/sim/simMicroPlanService'
 import { platformDb, simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const RAG_OPTIONS = ['green', 'amber', 'red']
@@ -51,9 +57,20 @@ export default function MicroPlanForm() {
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
+  const [record, setRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const backPath = isSim ? '/simulator/tm/plans/my-plans' : '/platform/plans/my-plans'
   const db = isSim ? simDb : platformDb
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(db, [record.created_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record, db])
 
   useEffect(() => {
     if (!isEdit) return
@@ -61,6 +78,7 @@ export default function MicroPlanForm() {
       try {
         const data = isSim ? await simApi.getMicroPlan(id) : await api.getMicroPlan(id)
         if (data) {
+          setRecord(data)
           setForm({
             plan_name: data.plan_name || '',
             description: data.description || '',
@@ -104,6 +122,7 @@ export default function MicroPlanForm() {
           is_draft: asDraft,
         }
         const updated = isSim ? await simApi.updateMicroPlan(id, patch) : await api.updateMicroPlan(id, patch)
+        setRecord(updated)
         toast.success(`Plan updated — ${updated.plan_reference || updated.id}`)
         navigate(`${isSim ? '/simulator/pm/planning' : '/pm/planning'}/microplans/${updated.id}`)
       } else {
@@ -171,6 +190,31 @@ export default function MicroPlanForm() {
 
         <PlanningProjectBar isSim={isSim} />
 
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' ? (
+          <div className="mt-6 rounded-lg border border-gray-700 p-6">
+            {!record ? (
+              <p className="text-sm text-gray-400">Audit details appear after this plan is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created this micro plan.">
+                <AuditCard title="Identity" description="How this plan is labelled.">
+                  <AuditField label="Name" value={record.plan_name} />
+                  <AuditField label="Reference" value={record.plan_reference} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this plan is tracked.">
+                  <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+                  <AuditField label="RAG" value={humanizeAuditToken(record.overall_rag)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this plan was created and last changed.">
+                  <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                  <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
         <div className="mt-6 grid gap-5">
           {/* Plan Name */}
           <Field label="Plan Name" required>
@@ -285,6 +329,7 @@ export default function MicroPlanForm() {
             </Field>
           </div>
         </div>
+        )}
 
         {/* Actions */}
         <div className="mt-8 flex flex-wrap gap-3">

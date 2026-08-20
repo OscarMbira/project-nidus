@@ -10,6 +10,11 @@ import {
   appendAudit,
 } from '../api/customFieldsApi'
 import { isOptionBackedType } from '../utils/fieldTypeRegistry'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function CustomFieldAdminBuilder({
   platformDb,
@@ -21,6 +26,15 @@ export default function CustomFieldAdminBuilder({
 }) {
   const [tab, setTab] = useState('basic')
   const [saving, setSaving] = useState(false)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (tab !== 'audit' || !initial?.id) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [initial.created_by, initial.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [tab, initial, platformDb])
   const [form, setForm] = useState(() => ({
     field_code: initial?.field_code || '',
     label: initial?.label || '',
@@ -128,7 +142,7 @@ export default function CustomFieldAdminBuilder({
           </button>
         </div>
         <div className="flex gap-1 px-4 pt-3 border-b border-gray-100 dark:border-gray-800">
-          {['basic', 'validation', 'options', 'preview'].map((t) => (
+          {['basic', 'validation', 'options', 'preview', 'audit'].map((t) => (
             <button
               key={t}
               type="button"
@@ -232,6 +246,28 @@ export default function CustomFieldAdminBuilder({
               <p className="text-sm text-gray-500">Options apply to dropdown / multi-select types only.</p>
             ))}
           {tab === 'preview' && <FieldPreviewPanel draft={draftPreview} />}
+          {tab === 'audit' && (
+            !initial?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this field is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this field definition, and how it is classified.">
+                <AuditCard title="Identity" description="How this field is labelled and tracked.">
+                  <AuditField label="Field code" value={initial.field_code} />
+                  <AuditField label="Label" value={initial.label} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this field behaves.">
+                  <AuditField label="Type" value={initial.field_type} />
+                  <AuditField label="Workflow status" value={humanizeAuditToken(initial.workflow_status)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this field was created and last changed.">
+                  <AuditField label="Created by" value={initial.created_by ? auditUserLabels[initial.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={initial.created_at} />
+                  <AuditField label="Updated by" value={initial.updated_by ? auditUserLabels[initial.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={initial.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
         </div>
         <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex flex-wrap gap-2 justify-end">
           <button type="button" className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm" onClick={onClose}>

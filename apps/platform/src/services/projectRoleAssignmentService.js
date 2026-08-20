@@ -9,6 +9,7 @@
 import { platformDb } from './supabase/supabaseClient';
 import { isPmoAdmin } from './organisationRoleService';
 import { assignSystemRole } from './roleService';
+import { getAssignableProjectRoles } from './organisationCustomRoleService';
 
 /**
  * Check if user is Project Manager for a specific project
@@ -244,24 +245,29 @@ export async function getAvailableProjectRoles() {
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
  */
 /**
- * All active template project_roles (PMO / sponsors / leads / delivery team).
+ * All active template project_roles (PMO / sponsors / leads / delivery team) — built-in
+ * roles (account_id IS NULL) plus the caller's own organisation's custom roles (v902).
  * Used when inviting or editing memberships with governance roles — not limited to team roles.
+ * Scoped to the caller's account so one organisation never sees another's custom roles.
  */
 export async function getPmoMembershipAssignableRoles() {
   try {
-    const { data, error } = await platformDb
-      .from('project_roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('is_active', true)
-      .eq('is_template', true)
-      .is('project_id', null)
-      .order('role_level', { ascending: false })
+    // v906/v908: level-restricted, org-custom-role-aware catalog from the shared RPC
+    // (replaces the old raw project_roles query, which had no level cap).
+    const result = await getAssignableProjectRoles()
+    if (!result.success) throw new Error(result.error)
 
-    if (error) throw error
+    const data = (result.data || []).map((r) => ({
+      id: r.id,
+      role_name: r.role_name,
+      role_display_name: r.role_display_name,
+      role_description: r.role_description,
+      role_level: r.role_level,
+    }))
 
     return {
       success: true,
-      data: data || [],
+      data,
       error: null,
     }
   } catch (error) {
@@ -274,28 +280,34 @@ export async function getPmoMembershipAssignableRoles() {
   }
 }
 
+const PROJECT_MANAGER_INVITE_ROLE_NAMES = new Set([
+  'team_manager',
+  'team_member',
+  'project_assurance',
+  'quality_assurance',
+  'change_authority',
+]);
+
 export async function getProjectManagerAssignableRoles() {
   try {
-    const { data, error } = await platformDb
-      .from('project_roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('is_active', true)
-      .eq('is_template', true)
-      .is('project_id', null)
-      .in('role_name', [
-        'team_manager',
-        'team_member',
-        'project_assurance',
-        'quality_assurance',
-        'change_authority',
-      ])
-      .order('role_level', { ascending: false });
+    // v906/v908: level-restricted via the shared RPC, then narrowed to the same
+    // team-tier whitelist this function has always used.
+    const result = await getAssignableProjectRoles()
+    if (!result.success) throw new Error(result.error)
 
-    if (error) throw error;
+    const data = (result.data || [])
+      .filter((r) => PROJECT_MANAGER_INVITE_ROLE_NAMES.has(r.role_name))
+      .map((r) => ({
+        id: r.id,
+        role_name: r.role_name,
+        role_display_name: r.role_display_name,
+        role_description: r.role_description,
+        role_level: r.role_level,
+      }));
 
     return {
       success: true,
-      data: data || [],
+      data,
       error: null
     };
   } catch (error) {

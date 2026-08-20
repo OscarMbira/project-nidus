@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { ArrowLeft, CheckCircle } from 'lucide-react'
 import EndProjectReportFormEnhanced from '../../components/structured/closing/EndProjectReportFormEnhanced'
 
@@ -13,15 +14,15 @@ export default function EndProjectReportWizard() {
 
   const handleSave = (report) => {
     // Navigate to view page after save
-    const id = report?.id || reportId
-    navigate(`/app/projects/${projectId}/closure/end-project-report/${id}`)
+    const id = report?.document_ref || report?.id || reportId
+    navigate(platformProjectPath(routeKey, 'closure', 'end-project-report', id))
   }
 
   const handleCancel = () => {
     if (reportId) {
-      navigate(`/app/projects/${projectId}/closure/end-project-report/${reportId}`)
+      navigate(platformProjectPath(routeKey, 'closure', 'end-project-report', reportId))
     } else {
-      navigate(`/app/projects/${projectId}/closure`)
+      navigate(platformProjectPath(routeKey, 'closure'))
     }
   }
 

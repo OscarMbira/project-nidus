@@ -4,12 +4,21 @@ import toast from 'react-hot-toast'
 import * as delayApi from '../../services/delayService'
 import * as simDelayApi from '../../services/sim/simDelayService'
 import { DELAY_CATEGORIES, DELAY_SEVERITIES, TEMPLATE_STATUSES } from '@nidus/shared/constants/delayConstants'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function DelayTemplateForm({ open, onClose, onSaved, initial, accountId, userId, isSim, canEdit, variant = 'modal' }) {
   const [form, setForm] = useState({})
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState(null)
   const [step, setStep] = useState(0)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const svc = isSim ? simDelayApi : delayApi
 
@@ -17,6 +26,7 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
     if (open) {
       setDone(null)
       setStep(0)
+      setFormTab('details')
       setForm(
         initial || {
           name: '',
@@ -29,6 +39,14 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
       )
     }
   }, [open, initial])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !form?.id) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [form.created_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, form?.id, form?.created_by])
 
   if (!open) return null
 
@@ -81,6 +99,36 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
             <X className="h-5 w-5" />
           </button>
         </div>
+        <div className="px-4 pt-2">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' && (
+          <div className="px-4 py-4">
+            {!form.id ? (
+              <p className="text-sm text-slate-400">Audit details appear after this template is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this delay template, and how it is classified.">
+                <AuditCard title="Identity" description="How this template is labelled and tracked.">
+                  <AuditField label="Name" value={form.name} />
+                  <AuditField label="Status" value={humanizeAuditToken(form.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this template is categorised.">
+                  <AuditField label="Category" value={humanizeAuditToken(form.delay_category)} />
+                  <AuditField label="Default severity" value={humanizeAuditToken(form.default_severity)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this template was created and last changed.">
+                  <AuditField label="Created by" value={form.created_by ? auditUserLabels[form.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={form.created_at} />
+                  <AuditTimestampPair dateLabel="Last updated" value={form.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div className="px-4 py-2 flex gap-2">
           <button type="button" className={`text-xs px-2 py-1 rounded ${step === 0 ? 'bg-blue-600' : 'bg-slate-800'}`} onClick={() => setStep(0)}>1. Info</button>
           <button type="button" className={`text-xs px-2 py-1 rounded ${step === 1 ? 'bg-blue-600' : 'bg-slate-800'}`} onClick={() => setStep(1)}>2. Content</button>
@@ -150,6 +198,8 @@ export default function DelayTemplateForm({ open, onClose, onSaved, initial, acc
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
   )
 

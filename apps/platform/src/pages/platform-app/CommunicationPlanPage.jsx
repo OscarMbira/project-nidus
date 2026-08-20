@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, List, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getCommunicationPlans, saveCommunicationPlan } from '../../services/stakeholderService'
 import CommunicationPlanForm from '../../components/stakeholders/CommunicationPlanForm'
 import CommunicationLog from '../../components/stakeholders/CommunicationLog'
@@ -124,7 +125,13 @@ export default function CommunicationPlanPage() {
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{p.plan_name}</td>
                   <td className="px-6 py-4 text-sm">{p.plan_status}</td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{p.plan_start_date ? new Date(p.plan_start_date).toLocaleDateString() : '—'}</td>
-                  <td className="px-6 py-4 text-right"><button onClick={() => { setEditingPlan(p); setShowForm(true) }} className="text-blue-600 dark:text-blue-400">Edit</button></td>
+                  <td className="px-6 py-4 text-right">
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit plan"
+                      onClick={() => { setEditingPlan(p); setShowForm(true) }}
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,15 +1,57 @@
 import { useState } from 'react'
 import { supabase } from '../services/supabaseClient'
-import { format } from 'date-fns'
-import { Edit2, Trash2, CheckCircle, Clock, AlertCircle, User, Calendar, Bug, Zap } from 'lucide-react'
+import { format, differenceInCalendarDays, startOfDay, parseISO, isValid } from 'date-fns'
+import { CheckCircle, Clock, AlertCircle, User, Calendar, Bug, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import RowNumberBadge from './ui/RowNumberBadge'
+import { RowActionButton } from '@nidus/ui'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformIssuePath } from '@nidus/shared/utils/projectRouteParam'
+import { formatIssueUpdatedBy } from '../constants/issueListColumns'
 
-export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMode = 'grid' }) {
+const CLOSED_STATUSES = new Set(['closed', 'resolved', 'cancelled'])
+
+/** Days since date_raised (fallback created_at), matching get_issue_aging. */
+export function getIssueAgeDays(issue) {
+  const raw = issue?.date_raised || issue?.created_at
+  if (!raw) return null
+  const start = typeof raw === 'string' ? parseISO(raw.length === 10 ? `${raw}T00:00:00` : raw) : new Date(raw)
+  if (!isValid(start)) return null
+  return Math.max(0, differenceInCalendarDays(startOfDay(new Date()), startOfDay(start)))
+}
+
+export function formatIssueAge(issue) {
+  const days = getIssueAgeDays(issue)
+  if (days === null) return '—'
+  return `${days}d`
+}
+
+export function isIssueDueOverdue(issue) {
+  if (!issue?.due_date || CLOSED_STATUSES.has(issue.status)) return false
+  const due = typeof issue.due_date === 'string'
+    ? parseISO(issue.due_date.length === 10 ? `${issue.due_date}T00:00:00` : issue.due_date)
+    : new Date(issue.due_date)
+  if (!isValid(due)) return false
+  return differenceInCalendarDays(startOfDay(new Date()), startOfDay(due)) > 0
+}
+
+export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMode = 'grid', onView }) {
   const navigate = useNavigate()
+  const { routeKey } = usePlatformProjectId()
   const [deletingId, setDeletingId] = useState(null)
+
+  const handleView = (issue) => {
+    if (typeof onView === 'function') {
+      onView(issue)
+      return
+    }
+    const projectKey = routeKey || projectId
+    const issueKey = issue?.issue_identifier || issue?.issue_code || issue?.id
+    if (!projectKey || !issueKey) return
+    navigate(platformIssuePath(projectKey, issueKey))
+  }
 
   const handleDelete = async (issueId) => {
     if (!confirm('Are you sure you want to delete this issue?')) return
@@ -136,13 +178,20 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
             <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <TableRowNumberHeader className="!normal-case" />
-                <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Title</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Type</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case">Assigned</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Aging</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Due date</TableHeaderCell>
                 <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Created</TableHeaderCell>
-                <TableHeaderCell sortable={false} className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700 z-[1] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]">
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Last Update</TableHeaderCell>
+                <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">Updated by</TableHeaderCell>
+                <TableHeaderCell
+                  sortable={false}
+                  className="!normal-case text-right sticky right-0 min-w-[10.5rem] whitespace-nowrap bg-gray-50 dark:bg-gray-700 z-[3] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]"
+                >
                   Actions
                 </TableHeaderCell>
               </tr>
@@ -154,10 +203,10 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group"
                 >
                   <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-gray-900 dark:text-white">{issue.issue_title}</div>
+                  <td className="px-6 py-4 whitespace-nowrap min-w-[14rem]">
+                    <div className="font-medium text-gray-900 dark:text-white whitespace-nowrap">{issue.issue_title}</div>
                     {issue.issue_description && (
-                      <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">{issue.issue_description}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 max-w-xl">{issue.issue_description}</div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -172,31 +221,40 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                     {issue.assigned_to ? (issue.assigned_to.full_name || issue.assigned_to.email) : '—'}
                   </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                    {formatIssueAge(issue)}
+                  </td>
+                  <td
+                    className={`px-6 py-4 text-sm whitespace-nowrap ${
+                      isIssueDueOverdue(issue)
+                        ? 'text-red-600 dark:text-red-400 font-medium'
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    {issue.due_date ? format(new Date(issue.due_date), 'MMM dd, yyyy') : '—'}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {issue.created_at ? format(new Date(issue.created_at), 'MMM dd, yyyy') : '—'}
                   </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    {issue.updated_at ? format(new Date(issue.updated_at), 'MMM dd, yyyy') : '—'}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap min-w-[8rem]">
+                    {formatIssueUpdatedBy(issue)}
+                  </td>
                   <td
-                    className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                    className="px-3 py-3 text-right sticky right-0 min-w-[10.5rem] whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="inline-flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        aria-label="Edit issue"
-                        onClick={() => onEdit(issue)}
-                        className="p-2 rounded text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Delete issue"
+                    <div className="inline-flex items-center gap-1.5 justify-end">
+                      <RowActionButton variant="view" label="View issue" onClick={() => handleView(issue)} />
+                      <RowActionButton variant="edit" label="Edit issue" onClick={() => onEdit(issue)} />
+                      <RowActionButton
+                        variant="delete"
+                        label="Delete issue"
                         disabled={deletingId === issue.id}
                         onClick={() => handleDelete(issue.id)}
-                        className="p-2 rounded text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      />
                     </div>
                   </td>
                 </tr>
@@ -257,12 +315,26 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
                     <span>{format(new Date(issue.created_at), 'MMM dd, yyyy')}</span>
                   </div>
                 )}
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>Aging: {formatIssueAge(issue)}</span>
+                </div>
                 {issue.due_date && (
-                  <div className="flex items-center gap-1">
+                  <div className={`flex items-center gap-1 ${isIssueDueOverdue(issue) ? 'text-red-600 dark:text-red-400 font-medium' : ''}`}>
                     <Calendar className="h-3 w-3" />
-                    <span>Due: {format(new Date(issue.due_date), 'MMM dd')}</span>
+                    <span>Due: {format(new Date(issue.due_date), 'MMM dd, yyyy')}</span>
                   </div>
                 )}
+                {issue.updated_at && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>Updated: {format(new Date(issue.updated_at), 'MMM dd, yyyy')}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>Updated by: {formatIssueUpdatedBy(issue)}</span>
+                </div>
               </div>
             </div>
             <div className="flex gap-2">
@@ -275,19 +347,14 @@ export default function IssueList({ issues, onEdit, onRefresh, projectId, viewMo
                   Resolve
                 </button>
               )}
-              <button
-                onClick={() => onEdit(issue)}
-                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-              >
-                <Edit2 className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => handleDelete(issue.id)}
+              <RowActionButton variant="view" label="View issue" onClick={() => handleView(issue)} />
+              <RowActionButton variant="edit" label="Edit issue" onClick={() => onEdit(issue)} />
+              <RowActionButton
+                variant="delete"
+                label="Delete issue"
                 disabled={deletingId === issue.id}
-                className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+                onClick={() => handleDelete(issue.id)}
+              />
             </div>
           </div>
         </div>

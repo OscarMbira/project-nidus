@@ -46,10 +46,11 @@ export default function ChannelsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateChannel(editingId, formData)
+        await updateChannel(editingId, editableFields)
       } else {
-        await addChannel(cmsId, formData)
+        await addChannel(cmsId, editableFields)
       }
       await loadChannels()
       setShowForm(false)
@@ -63,6 +64,8 @@ export default function ChannelsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (channel) => {
     setFormData({
+      id: channel.id,
+      created_at: channel.created_at,
       channel_name: channel.channel_name || '',
       channel_type: channel.channel_type || '',
       channel_description: channel.channel_description || '',

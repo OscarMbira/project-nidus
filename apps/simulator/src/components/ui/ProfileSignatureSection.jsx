@@ -6,6 +6,7 @@ import {
   saveSignatureImage,
   deleteSavedSignature,
   getSignatureSignedUrl,
+  peekSignatureDisplayUrl,
   validateSignatureFile,
   USER_SIGNATURES_BUCKET,
 } from '@nidus/shared/services/processTemplateSignatoryService'
@@ -21,7 +22,6 @@ import ZoomableImage from './ZoomableImage'
 export default function ProfileSignatureSection({ db, accountId }) {
   const [saved, setSaved] = useState(null)
   const [signedUrl, setSignedUrl] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [showPasteHint, setShowPasteHint] = useState(false)
   const [busy, setBusy] = useState(false)
   const pasteBoxRef = useRef(null)
@@ -31,16 +31,20 @@ export default function ProfileSignatureSection({ db, accountId }) {
     getSavedSignature(db).then((result) => {
       if (cancelled) return
       if (result.success) setSaved(result.data)
-      setLoading(false)
     })
     return () => { cancelled = true }
   }, [db])
 
   useEffect(() => {
     let cancelled = false
-    setSignedUrl(null)
-    if (!saved?.storage_path) return undefined
-    getSignatureSignedUrl(db, saved.storage_path, 86400, saved.storage_bucket || USER_SIGNATURES_BUCKET).then((result) => {
+    if (!saved?.storage_path) {
+      setSignedUrl(null)
+      return undefined
+    }
+    const bucket = saved.storage_bucket || USER_SIGNATURES_BUCKET
+    const cached = peekSignatureDisplayUrl(saved.storage_path, bucket)
+    if (cached) setSignedUrl(cached)
+    getSignatureSignedUrl(db, saved.storage_path, 86400, bucket).then((result) => {
       if (!cancelled && result.success) setSignedUrl(result.data)
     })
     return () => { cancelled = true }
@@ -105,10 +109,6 @@ export default function ProfileSignatureSection({ db, accountId }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPasteHint])
 
-  if (loading) {
-    return <p className="text-xs text-gray-500 dark:text-gray-400">Loading signature…</p>
-  }
-
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <h3 className="mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100">Signature</h3>
@@ -122,6 +122,7 @@ export default function ProfileSignatureSection({ db, accountId }) {
             alt="Your saved signature"
             imgClassName="max-h-24 max-w-full object-contain"
             hoverPreviewClassName="max-h-64 max-w-md object-contain"
+            priority
           />
         </div>
       ) : (

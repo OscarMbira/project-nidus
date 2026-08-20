@@ -27,39 +27,57 @@ function writeCachedAccountId(authUserId, accountId) {
   sessionStorage.setItem(`${ACCOUNT_CACHE_PREFIX}${authUserId}`, accountId)
 }
 
+let _internalUserIdInFlight = null
+
 /**
  * @returns {Promise<string|null>} public.users.id or null
  */
 export async function getCurrentUserInternalUserId() {
-  // getSession() reads the already-persisted local session — no network round
-  // trip — unlike getUser(), which always re-validates with the Auth server.
-  // ProtectedRoute already does that server-side revalidation once per
-  // protected area; re-hitting the Auth server here on every call (this
-  // function is used by 125+ files) was a flat per-page-load cost completely
-  // independent of how much data the page actually renders.
-  const {
-    data: { session },
-  } = await platformDb.auth.getSession()
-  const user = session?.user
-  if (!user) return null
+  // In-flight de-dupe: this function is called independently by 125+ files, several
+  // of which mount on the same page load (header, profile sections, project context,
+  // ...) — under React 18 StrictMode's dev-only double-invoke, or just several
+  // components' own effects firing within the same tick, that's the same query fired
+  // many times over. Collapsing concurrent callers onto one shared request is exactly
+  // the pattern userProfileService.js's getAuthSessionUserId() already uses for the
+  // identical reason. Deliberately NOT a persistent cache — no staleness risk, a call
+  // a moment later still does a fresh lookup.
+  if (_internalUserIdInFlight) return _internalUserIdInFlight
 
-  const { data: userRow } = await platformDb
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', user.id)
-    .maybeSingle()
-  if (userRow?.id) return userRow.id
+  _internalUserIdInFlight = (async () => {
+    // getSession() reads the already-persisted local session — no network round
+    // trip — unlike getUser(), which always re-validates with the Auth server.
+    // ProtectedRoute already does that server-side revalidation once per
+    // protected area; re-hitting the Auth server here on every call was a flat
+    // per-page-load cost completely independent of how much data the page
+    // actually renders.
+    const {
+      data: { session },
+    } = await platformDb.auth.getSession()
+    const user = session?.user
+    if (!user) return null
 
-  if (user.email) {
-    const { data: byEmail } = await platformDb
+    const { data: userRow } = await platformDb
       .from('users')
       .select('id')
-      .eq('email', user.email)
+      .eq('auth_user_id', user.id)
       .maybeSingle()
-    if (byEmail?.id) return byEmail.id
-  }
+    if (userRow?.id) return userRow.id
 
-  return null
+    if (user.email) {
+      const { data: byEmail } = await platformDb
+        .from('users')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle()
+      if (byEmail?.id) return byEmail.id
+    }
+
+    return null
+  })().finally(() => {
+    _internalUserIdInFlight = null
+  })
+
+  return _internalUserIdInFlight
 }
 
 async function resolveAccountFromProjects(userRowId) {

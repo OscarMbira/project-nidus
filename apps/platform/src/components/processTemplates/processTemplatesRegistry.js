@@ -129,7 +129,7 @@ export const PROCESS_TEMPLATES = [
   { slug: 'end-stage-report', label: 'End Stage Report', group: 'monitoring-controlling', kind: 'existing', paths: { pmo: '/pmo/reporting/end-stage-reports', pm: '/pm/reporting/end-stage-reports', simPmo: '/simulator/pmo/reporting/end-stage-reports', simPm: '/simulator/pm/reporting/end-stage-reports' } },
   { slug: 'change-log', label: 'Change Log / Register', group: 'monitoring-controlling', kind: 'existing', paths: { pmo: '/pmo/oversight/change-log', pm: '/pm/controls/change-log', simPmo: '/simulator/pmo/oversight/change-log', simPm: '/simulator/pm/controls/change-log' } },
   { slug: 'delay-register', label: 'Delay Register', group: 'monitoring-controlling', kind: 'existing', paths: { pmo: '/pmo/oversight/delays', pm: '/pm/delays', simPmo: '/simulator/pmo/oversight/delays', simPm: '/simulator/pm/delays' } },
-  { slug: 'decision-log', label: 'Decision Log', group: 'monitoring-controlling', kind: 'existing', paths: { pmo: '/platform/decision-log', pm: '/pm/controls/decisions', simPmo: '/simulator/decision-log', simPm: '/simulator/pm/controls/decisions' } },
+  { slug: 'decision-log', label: 'Decision Log', group: 'monitoring-controlling', kind: 'existing', paths: { pmo: '/platform/governance/decisions', pm: '/pm/controls/decisions', simPmo: '/simulator/decision-log', simPm: '/simulator/pm/controls/decisions' } },
   { slug: 'quality-register', label: 'Quality Register', group: 'monitoring-controlling', kind: 'existing', paths: { pmo: '/pmo/oversight/quality-register', pm: '/pm/controls/quality', simPmo: '/simulator/pmo/oversight/quality-register', simPm: '/simulator/pm/controls/quality' } },
   { slug: 'variance-analysis-report', label: 'Variance Analysis Report', group: 'monitoring-controlling', kind: 'new', table: 'variance_analysis_reports', refPrefix: 'VAR', titleField: 'title' },
   { slug: 'evm-status-report', label: 'Earned Value Status Report', group: 'monitoring-controlling', kind: 'new', table: 'evm_status_reports', refPrefix: 'EVM', titleField: 'title' },
@@ -153,7 +153,7 @@ export const PROCESS_REGISTERS = {
   planning: [
     { label: 'Risk Register', paths: { pmo: '/pmo/oversight/risk-register', pm: '/pm/controls/risks', simPmo: '/simulator/pmo/oversight/risk-register', simPm: '/simulator/pm/controls/risks' } },
     { label: 'Requirements Traceability Matrix', paths: { pmo: '/platform/scope/traceability', pm: '/pm/planning/traceability', simPmo: '/simulator/scope/traceability', simPm: '/simulator/pm/planning/traceability' } },
-    { label: 'Decision Log', paths: { pmo: '/platform/decision-log', pm: '/pm/controls/decisions', simPmo: '/simulator/decision-log', simPm: '/simulator/pm/controls/decisions' } },
+    { label: 'Decision Log', paths: { pmo: '/platform/governance/decisions', pm: '/pm/controls/decisions', simPmo: '/simulator/decision-log', simPm: '/simulator/pm/controls/decisions' } },
   ],
   executing: [
     { label: 'Issue Register', paths: { pmo: '/pmo/oversight/issue-register', pm: '/pm/controls/issues', simPmo: '/simulator/pmo/oversight/issue-register', simPm: '/simulator/pm/controls/issues' } },
@@ -165,7 +165,7 @@ export const PROCESS_REGISTERS = {
     { label: 'Delay Register', paths: { pmo: '/pmo/oversight/delays', pm: '/pm/delays', simPmo: '/simulator/pmo/oversight/delays', simPm: '/simulator/pm/delays' } },
     { label: 'Change Register', paths: { pmo: '/pmo/oversight/change-requests', pm: '/pm/controls/changes', simPmo: '/simulator/pmo/oversight/change-requests', simPm: '/simulator/pm/controls/changes' } },
     { label: 'Issue Register', paths: { pmo: '/pmo/oversight/issue-register', pm: '/pm/controls/issues', simPmo: '/simulator/pmo/oversight/issue-register', simPm: '/simulator/pm/controls/issues' } },
-    { label: 'Decision Log', paths: { pmo: '/platform/decision-log', pm: '/pm/controls/decisions', simPmo: '/simulator/decision-log', simPm: '/simulator/pm/controls/decisions' } },
+    { label: 'Decision Log', paths: { pmo: '/platform/governance/decisions', pm: '/pm/controls/decisions', simPmo: '/simulator/decision-log', simPm: '/simulator/pm/controls/decisions' } },
   ],
   closing: [
     { label: 'Lessons Log', paths: { pmo: '/pmo/oversight/lessons-log', pm: '/pm/controls/lessons', simPmo: '/simulator/pmo/oversight/lessons-log', simPm: '/simulator/pm/controls/lessons' } },

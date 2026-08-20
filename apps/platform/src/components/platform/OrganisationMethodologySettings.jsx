@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react'
 import { platformDb } from '@nidus/supabase'
+import {
+  DEFAULT_FORM_BULK_APPROVE_MAX,
+  FORM_BULK_APPROVE_HARD_MAX,
+  normalizeFormBulkApproveMax,
+} from '@nidus/shared/utils/formInstanceRegisterUtils.js'
 
 const METHODOLOGY_OPTIONS = [
   { value: 'hybrid', label: 'Hybrid (all tracks visible)' },
@@ -9,7 +14,7 @@ const METHODOLOGY_OPTIONS = [
 ]
 
 /**
- * Organisation methodology settings (v673) — PMO Admin settings tab.
+ * Organisation methodology settings (v673) + form bulk-approve cap (v860).
  */
 export default function OrganisationMethodologySettings({ accountId, onSaved }) {
   const [loading, setLoading] = useState(true)
@@ -18,6 +23,7 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
   const [success, setSuccess] = useState(null)
   const [defaultMethodology, setDefaultMethodology] = useState('hybrid')
   const [allowOverride, setAllowOverride] = useState(true)
+  const [formBulkApproveMax, setFormBulkApproveMax] = useState(DEFAULT_FORM_BULK_APPROVE_MAX)
 
   useEffect(() => {
     if (!accountId) {
@@ -30,7 +36,7 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
       setError(null)
       const { data, error: fetchErr } = await platformDb
         .from('accounts')
-        .select('default_methodology, allow_project_methodology_override')
+        .select('default_methodology, allow_project_methodology_override, form_bulk_approve_max')
         .eq('id', accountId)
         .maybeSingle()
       if (cancelled) return
@@ -39,6 +45,7 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
       } else if (data) {
         setDefaultMethodology(data.default_methodology || 'hybrid')
         setAllowOverride(data.allow_project_methodology_override !== false)
+        setFormBulkApproveMax(normalizeFormBulkApproveMax(data.form_bulk_approve_max))
       }
       setLoading(false)
     })()
@@ -52,11 +59,13 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
     setSaving(true)
     setError(null)
     setSuccess(null)
+    const capped = normalizeFormBulkApproveMax(formBulkApproveMax)
     const { error: updateErr } = await platformDb
       .from('accounts')
       .update({
         default_methodology: defaultMethodology,
         allow_project_methodology_override: allowOverride,
+        form_bulk_approve_max: capped,
         updated_at: new Date().toISOString(),
       })
       .eq('id', accountId)
@@ -65,8 +74,9 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
       setError(updateErr.message)
       return
     }
-    setSuccess('Methodology settings saved successfully.')
-    onSaved?.({ defaultMethodology, allowOverride })
+    setFormBulkApproveMax(capped)
+    setSuccess('Organisation settings saved successfully.')
+    onSaved?.({ defaultMethodology, allowOverride, formBulkApproveMax: capped })
     window.dispatchEvent(new CustomEvent('nidus-methodology-pref-changed'))
   }
 
@@ -124,6 +134,27 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
         </span>
       </label>
 
+      <div>
+        <label
+          htmlFor="org-form-bulk-approve-max"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
+          Form bulk approve limit
+        </label>
+        <input
+          id="org-form-bulk-approve-max"
+          type="number"
+          min={1}
+          max={FORM_BULK_APPROVE_HARD_MAX}
+          value={formBulkApproveMax}
+          onChange={(e) => setFormBulkApproveMax(Number(e.target.value))}
+          className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+        />
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Maximum draft form records that can be approved in one batch (default {DEFAULT_FORM_BULK_APPROVE_MAX}, max {FORM_BULK_APPROVE_HARD_MAX}).
+        </p>
+      </div>
+
       {error && (
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {error}
@@ -141,7 +172,7 @@ export default function OrganisationMethodologySettings({ accountId, onSaved }) 
         disabled={saving}
         className="px-4 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 dark:bg-emerald-500 dark:hover:bg-emerald-600"
       >
-        {saving ? 'Saving…' : 'Save Methodology Settings'}
+        {saving ? 'Saving…' : 'Save Organisation Settings'}
       </button>
     </div>
   )

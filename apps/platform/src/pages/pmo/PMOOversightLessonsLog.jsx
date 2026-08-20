@@ -45,6 +45,7 @@ export default function PMOOversightLessonsLog() {
   const [deletingId, setDeletingId] = useState(null);
   const [activeTab, setActiveTab] = useState('all');
   const [filters, setFilters] = useState({ search: '', status: '' });
+  const [implementedOnly, setImplementedOnly] = useState(false); // client-side — keeps stats accurate against the full fetch
 
   useEffect(() => {
     let cancelled = false;
@@ -91,10 +92,12 @@ export default function PMOOversightLessonsLog() {
   }, [selectedProjectId, filters.search, filters.status]);
 
   const filteredByTab = useMemo(() => {
-    if (activeTab === 'all') return lessons;
-    if (activeTab === 'corporate') return lessons.filter((l) => l.is_corporate_lesson === true);
-    return lessons.filter((l) => (l.effect_type || '').toLowerCase() === activeTab);
-  }, [lessons, activeTab]);
+    let list = lessons;
+    if (activeTab === 'corporate') list = list.filter((l) => l.is_corporate_lesson === true);
+    else if (activeTab !== 'all') list = list.filter((l) => (l.effect_type || '').toLowerCase() === activeTab);
+    if (implementedOnly) list = list.filter((l) => (l.status || '').toLowerCase() === 'implemented');
+    return list;
+  }, [lessons, activeTab, implementedOnly]);
 
   const stats = useMemo(() => {
     const positive = lessons.filter((l) => (l.effect_type || '').toLowerCase() === 'positive').length;
@@ -102,11 +105,11 @@ export default function PMOOversightLessonsLog() {
     const corporate = lessons.filter((l) => l.is_corporate_lesson === true).length;
     const implemented = lessons.filter((l) => (l.status || '').toLowerCase() === 'implemented').length;
     return [
-      { label: 'Total Lessons', value: lessons.length },
-      { label: 'Positive', value: positive },
-      { label: 'Negative', value: negative },
-      { label: 'Corporate', value: corporate },
-      { label: 'Implemented', value: implemented },
+      { label: 'Total Lessons', value: lessons.length, onClick: () => { setActiveTab('all'); setImplementedOnly(false); } },
+      { label: 'Positive', value: positive, onClick: () => { setActiveTab('positive'); setImplementedOnly(false); } },
+      { label: 'Negative', value: negative, onClick: () => { setActiveTab('negative'); setImplementedOnly(false); } },
+      { label: 'Corporate', value: corporate, onClick: () => { setActiveTab('corporate'); setImplementedOnly(false); } },
+      { label: 'Implemented', value: implemented, onClick: () => { setActiveTab('all'); setImplementedOnly(true); } },
     ];
   }, [lessons]);
 
@@ -227,6 +230,17 @@ export default function PMOOversightLessonsLog() {
             disabled={!filteredByTab.length}
           />
         </div>
+        )}
+
+        {implementedOnly && (
+          <div className="mb-4 flex items-center gap-2 text-sm">
+            <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+              Implemented only
+            </span>
+            <button type="button" onClick={() => setImplementedOnly(false)} className="text-blue-600 dark:text-blue-400 hover:underline">
+              Clear
+            </button>
+          </div>
         )}
 
         {!showForm && (loading ? (

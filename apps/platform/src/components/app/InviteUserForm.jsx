@@ -34,6 +34,7 @@ import { createTeamMemberAppointment } from '../../services/teamMemberAppointmen
 import { isTeamMemberAppointmentRole, isManagerAppointmentRole } from '@nidus/shared/utils/appointmentRoleUtils'
 import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../pm/ManagerAppointmentForm'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const MODE_INVITE = 'invite'
 const INVITE_UI_FAILSAFE_MS = INVITE_HARD_LIMIT_MS + 4_000
@@ -50,6 +51,7 @@ export default function InviteUserForm({
   defaultRole = null,  // role_name string to pre-select (e.g. 'team_manager')
 }) {
   const [pmoMode, setPmoMode] = useState(MODE_INVITE)
+  const [formTab, setFormTab] = useState('details')
   const [loading, setLoading] = useState(false)
   const [checkingSeats, setCheckingSeats] = useState(false)
   const [email, setEmail] = useState('')
@@ -656,6 +658,16 @@ export default function InviteUserForm({
         ) : null}
       </div>
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this invitation is sent.</p>
+      )}
+
+      {formTab === 'details' && (
+      <>
       {seatInfo && pmoMode === MODE_INVITE && (
         <div
           className={`mb-4 p-4 rounded-lg ${
@@ -902,6 +914,8 @@ export default function InviteUserForm({
           </button>
         </div>
       </form>
+      </>
+      )}
     </section>
   )
 }

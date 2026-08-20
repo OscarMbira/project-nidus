@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { RowActionButton } from '@nidus/ui';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { supabase } from '../../services/supabaseClient';
 import {
   FileX,
@@ -177,12 +179,7 @@ export default function ClosingProject() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowClosureForm(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-                  >
-                    Edit Closure
-                  </button>
+                  <RowActionButton variant="edit" label="Edit closure" onClick={() => setShowClosureForm(true)} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -278,18 +275,17 @@ export default function ClosingProject() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => navigate(`/app/projects/${projectId}/closure/end-project-report/${endReport.id}`)}
+                      onClick={() => navigate(platformProjectPath(routeKey, 'closure', 'end-project-report', endReport.document_ref || endReport.id))}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
                     >
                       View Full Report
                     </button>
                     {(endReport.approval_status === 'draft' || endReport.approval_status === 'rejected') && (
-                      <button
-                        onClick={() => navigate(`/app/projects/${projectId}/closure/end-project-report/${endReport.id}/edit`)}
-                        className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium"
-                      >
-                        Edit
-                      </button>
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit end project report"
+                        onClick={() => navigate(platformProjectPath(routeKey, 'closure', 'end-project-report', endReport.document_ref || endReport.id, 'edit'))}
+                      />
                     )}
                   </div>
                 </div>
@@ -327,7 +323,7 @@ export default function ClosingProject() {
                   Create a comprehensive end project report
                 </p>
                 <button
-                  onClick={() => navigate(`/app/projects/${projectId}/closure/end-project-report/create`)}
+                  onClick={() => navigate(platformProjectPath(routeKey, 'closure', 'end-project-report', 'create'))}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
                 >
                   <Plus className="h-5 w-5" />
@@ -387,12 +383,7 @@ export default function ClosingProject() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setShowHandoverChecklist(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-                  >
-                    Edit Handover
-                  </button>
+                  <RowActionButton variant="edit" label="Edit handover" onClick={() => setShowHandoverChecklist(true)} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

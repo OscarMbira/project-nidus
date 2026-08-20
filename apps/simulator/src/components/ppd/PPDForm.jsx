@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { X, Save, FileText, Package, BookOpen, Users, Award, Target, Settings } from 'lucide-react'
 import { createPPD, updatePPD, createPPDFromMandate } from '../../services/projectProductDescriptionService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel }) {
@@ -31,6 +37,18 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [activeStep, setActiveStep] = useState(1)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !ppd) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [ppd.created_by, ppd.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, ppd])
 
   const steps = [
     { id: 1, title: 'Title & Purpose', icon: FileText },
@@ -631,6 +649,39 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
           </button>
         </div>
 
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' && (
+          <div className="p-6">
+            {!ppd?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this PPD is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this project product description, and how it is classified.">
+                <AuditCard title="Identity" description="How this PPD is labelled and tracked.">
+                  <AuditField label="Title" value={formData.product_title || ppd.product_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(ppd.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this PPD sits.">
+                  <AuditField label="Project" value={ppd.project?.project_name} />
+                  <AuditField label="Author" value={ppd.author?.full_name || ppd.author?.email} />
+                  <AuditField label="Owner" value={ppd.owner?.full_name || ppd.owner?.email} />
+                  <AuditField label="Client" value={ppd.client?.full_name || ppd.client?.email} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this PPD was created and last changed.">
+                  <AuditField label="Created by" value={ppd.created_by ? auditUserLabels[ppd.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={ppd.created_at} />
+                  <AuditField label="Updated by" value={ppd.updated_by ? auditUserLabels[ppd.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={ppd.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'wizard' && (
+        <>
         {/* Progress Steps */}
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
@@ -713,6 +764,8 @@ export default function PPDForm({ ppd, projectId, mandateId, onSave, onCancel })
             </div>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   )

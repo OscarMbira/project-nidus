@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react'
+import { RowActionButton } from '@nidus/ui'
 import { useNavigate } from 'react-router-dom'
 import { getSSOProviders, configureSSOProvider, validateSSOProvider } from '../../services/ssoService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function SSOManagement() {
   const [providers, setProviders] = useState([])
@@ -25,10 +33,22 @@ export default function SSOManagement() {
     default_role_id: null
   })
   const navigate = useNavigate()
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     fetchProviders()
   }, [])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !editingProvider) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [editingProvider.created_by, editingProvider.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, editingProvider])
 
   const fetchProviders = async () => {
     try {
@@ -61,6 +81,7 @@ export default function SSOManagement() {
       auto_provision_users: false,
       default_role_id: null
     })
+    setFormTab('details')
     setShowAddForm(true)
   }
 
@@ -81,6 +102,7 @@ export default function SSOManagement() {
       auto_provision_users: provider.auto_provision_users || false,
       default_role_id: provider.default_role_id || null
     })
+    setFormTab('details')
     setShowAddForm(true)
   }
 
@@ -157,7 +179,33 @@ export default function SSOManagement() {
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             {editingProvider ? 'Edit SSO Provider' : 'Add SSO Provider'}
           </h2>
-          
+
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' ? (
+            <div className="mt-4">
+              {!editingProvider ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this provider is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who configured or changed this SSO provider.">
+                  <AuditCard title="Identity" description="How this provider is labelled.">
+                    <AuditField label="Provider name" value={editingProvider.provider_name} />
+                    <AuditField label="Type" value={editingProvider.provider_type} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="How this provider behaves.">
+                    <AuditField label="Active" value={editingProvider.is_active ? 'Yes' : 'No'} />
+                    <AuditField label="Auto-provision users" value={editingProvider.auto_provision_users ? 'Yes' : 'No'} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this provider was created and last changed.">
+                    <AuditField label="Created by" value={editingProvider.created_by ? auditUserLabels[editingProvider.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={editingProvider.created_at} />
+                    <AuditField label="Updated by" value={editingProvider.updated_by ? auditUserLabels[editingProvider.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={editingProvider.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )}
+            </div>
+          ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -328,6 +376,7 @@ export default function SSOManagement() {
               </button>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -400,12 +449,7 @@ export default function SSOManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditProvider(provider)}
-                          className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
-                        >
-                          Edit
-                        </button>
+                        <RowActionButton variant="edit" label="Edit SSO provider" onClick={() => handleEditProvider(provider)} />
                         <button
                           onClick={() => handleTestProvider(provider.id)}
                           className="text-green-600 hover:text-green-700 dark:text-green-400"

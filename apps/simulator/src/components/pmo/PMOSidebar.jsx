@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
 import { ChevronRight, ChevronDown, LogOut, X, Shield } from 'lucide-react'
-import { SidebarNavTier } from '@nidus/ui'
+import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import pmoMenuConfig from '@nidus/config/pmoMenuConfig'
 
@@ -46,27 +46,29 @@ function PMOSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onTogg
 
   return (
     <div>
-      <Link
-        to={menuItem.path || '#'}
-        onClick={handleClick}
-        className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-          isActive
-            ? 'bg-indigo-600 text-white'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-        }`}
-      >
-        <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-        <span className="flex-1">{menuItem.label}</span>
-        {hasChildren && (
-          <span className="ml-auto">
-            {expanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </span>
-        )}
-      </Link>
+      <SidebarNavNestedRow level={level}>
+        <Link
+          to={menuItem.path || '#'}
+          onClick={handleClick}
+          className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            isActive
+              ? 'bg-indigo-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <span className="flex-1">{menuItem.label}</span>
+          {hasChildren && (
+            <span className="ml-auto">
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </span>
+          )}
+        </Link>
+      </SidebarNavNestedRow>
       {hasChildren && expanded && (
         <SidebarNavTier borderClassName={isChildActive ? 'border-indigo-600' : 'border-gray-200 dark:border-gray-700'}>
           {menuItem.children.map((child) => (

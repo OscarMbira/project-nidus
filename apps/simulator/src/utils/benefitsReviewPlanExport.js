@@ -3,6 +3,8 @@
  * Provides export functionality for Benefits Review Plans (PDF, Print)
  */
 
+import { addCanvasImagePages } from './pdfCanvasPagination.js'
+
 /**
  * Export Benefits Review Plan to PDF matching template structure
  * @param {Object} plan - Benefits Review Plan data
@@ -15,6 +17,7 @@
  * @param {Array} distribution - Distribution list
  * @param {string} filename - Output filename
  */
+
 export async function exportBenefitsReviewPlanToPDF(
   plan,
   coverage = [],
@@ -63,18 +66,7 @@ export async function exportBenefitsReviewPlanToPDF(
     const imgWidth = 210;
     const pageHeight = 297;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
 
     // Cleanup
     document.body.removeChild(container);

@@ -14,7 +14,7 @@ import {
 import StakeholderSEAM from '../../components/stakeholders/StakeholderSEAM'
 import StakeholderAssessmentMatrixList from '../../components/stakeholders/StakeholderAssessmentMatrixList'
 import StakeholderAssessmentMatrixForm from '../../components/stakeholders/StakeholderAssessmentMatrixForm'
-import CrudSuccessBanner from '../../components/stakeholders/CrudSuccessBanner'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { mapAssessmentRowToSeamDisplay, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { platformDb } from '@nidus/supabase'
@@ -40,7 +40,7 @@ export default function StakeholderAssessmentMatrixPage() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
-  const [success, setSuccess] = useState(null)
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [draftInitial, setDraftInitial] = useState(null)
 
   const loadProjects = useCallback(async () => {
@@ -106,10 +106,10 @@ export default function StakeholderAssessmentMatrixPage() {
     setShowForm(false)
     setEditing(null)
     setDraftInitial(null)
-    setSuccess({
+    showSuccess({
       message: `${editing?.id ? 'Assessment updated' : 'Assessment created'} successfully.`,
       recordId: saved.id,
-      operation: editing?.id ? 'update' : 'create',
+      operation: editing?.id ? 'updated' : 'created',
     })
     loadMatrix()
   }
@@ -120,10 +120,10 @@ export default function StakeholderAssessmentMatrixPage() {
     setDeletingId(record.id)
     try {
       await deleteStakeholderAssessmentMatrix(record.id)
-      setSuccess({
+      showSuccess({
         message: 'Assessment deleted.',
         recordId: record.id,
-        operation: 'delete',
+        operation: 'deleted',
       })
       loadMatrix()
     } catch (e) {
@@ -206,12 +206,7 @@ export default function StakeholderAssessmentMatrixPage() {
         </div>
       </div>
 
-      <CrudSuccessBanner
-        message={success?.message}
-        recordId={success?.recordId}
-        operation={success?.operation}
-        onDismiss={() => setSuccess(null)}
-      />
+      {successModal}
 
       <div className="mb-4 flex flex-wrap gap-4 items-end">
         <div>

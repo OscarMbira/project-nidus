@@ -7,6 +7,8 @@ import { platformDb } from './supabase/supabaseClient';
 import { getLessonsSummary } from './lessonService';
 import { getActionsByLesson } from './lessonActionService';
 import { exportToPDF, exportToCSV, exportToExcel, generateLessonsReport as generateReportData } from '@nidus/shared/utils/lessonExport';
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam.js';
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid.js';
 
 /**
  * Create a new Lessons Report
@@ -80,21 +82,10 @@ export async function createLessonsReport(projectId, reportData) {
       created_by: userRecord.id
     };
 
-    // Generate reference if not provided
-    if (!reportData.report_reference) {
-      const { data: ref, error: refError } = await platformDb.rpc(
-        'generate_lessons_report_reference',
-        {
-          p_project_id: projectId,
-          p_stage_boundary_id: reportData.stage_boundary_id || null,
-          p_report_type: reportData.report_type || 'project'
-        }
-      );
-
-      if (!refError && ref) {
-        newReport.report_reference = ref;
-      }
-    } else {
+    // report_reference is assigned by the admin.id_generation_rules trigger
+    // (trg_apply_admin_display_id, v756b) when left blank on insert — generate_lessons_report_reference()
+    // was dropped by that same migration, so don't call it (v882 fix).
+    if (reportData.report_reference) {
       newReport.report_reference = reportData.report_reference;
     }
 
@@ -130,8 +121,13 @@ export async function createLessonsReport(projectId, reportData) {
  * @param {string} reportId - Report ID
  * @returns {Promise<Object>} Report data
  */
-export async function getLessonsReportById(reportId) {
+export async function getLessonsReportById(reportIdOrCode, projectId) {
   try {
+    const reportId = isLikelyDatabaseUuid(reportIdOrCode)
+      ? reportIdOrCode
+      : await resolveEntityId('lessonsReport', reportIdOrCode, projectId);
+    if (!reportId) return { success: false, error: 'Lessons report not found' };
+
     const { data, error } = await platformDb
       .from('lessons_reports')
       .select(`
@@ -301,27 +297,14 @@ export async function deleteLessonsReport(reportId) {
 }
 
 /**
- * Generate report reference
- * @param {string} projectId - Project ID
- * @param {string} stageBoundaryId - Stage boundary ID (optional)
- * @param {string} reportType - Report type
- * @returns {Promise<Object>} Reference string
+ * Preview the report reference before save. The real reference is assigned by the
+ * admin.id_generation_rules trigger on insert (v756b) — generate_lessons_report_reference()
+ * was dropped by that same migration (v882 fix), so there's no live preview to compute
+ * client-side; callers should show "assigned on save" until the record exists.
+ * @returns {Promise<Object>} `{ success: false }` — no RPC to call; kept for call-site compatibility
  */
-export async function generateReportReference(projectId, stageBoundaryId = null, reportType = 'project') {
-  try {
-    const { data, error } = await platformDb.rpc('generate_lessons_report_reference', {
-      p_project_id: projectId,
-      p_stage_boundary_id: stageBoundaryId,
-      p_report_type: reportType
-    });
-
-    if (error) throw error;
-
-    return { success: true, data };
-  } catch (error) {
-    console.error('Error generating report reference:', error);
-    return { success: false, error: error.message };
-  }
+export async function generateReportReference() {
+  return { success: false, error: 'Reference is assigned automatically when the report is saved.' };
 }
 
 /**

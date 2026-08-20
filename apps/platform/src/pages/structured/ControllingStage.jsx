@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { checkpointReportCreatePath, checkpointReportDetailPath } from '@nidus/shared/utils/checkpointReportRoutes.js'
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, BarChart3, Settings } from 'lucide-react'
@@ -295,6 +297,7 @@ export default function ControllingStage() {
             onEdit={handleEditWorkPackage}
             onRefresh={fetchData}
             projectId={projectId}
+            routeKey={routeKey}
             stageBoundaries={stageBoundaries}
           />
         </div>
@@ -323,7 +326,7 @@ export default function ControllingStage() {
                   if (filteredWorkPackages.length > 0) {
                     // Navigate to create report for first work package, or show selection
                     const firstWP = filteredWorkPackages[0]
-                    navigate(`/app/projects/${projectId}/work-packages/${firstWP.id}/checkpoint-reports/create`)
+                    navigate(checkpointReportCreatePath(routeKey, firstWP.id))
                   } else {
                     alert('Please create a work package first')
                   }
@@ -337,7 +340,7 @@ export default function ControllingStage() {
                 onClick={() => {
                   const params = new URLSearchParams()
                   if (selectedStage) params.set('stage', selectedStage)
-                  navigate(`/app/projects/${projectId}/highlight-reports/create${params.toString() ? `?${params.toString()}` : ''}`)
+                  navigate(`${platformProjectPath(routeKey, 'highlight-reports', 'create')}${params.toString() ? `?${params.toString()}` : ''}`)
                 }}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center gap-2"
               >
@@ -361,7 +364,7 @@ export default function ControllingStage() {
                     key={report.id}
                     onClick={() => {
                       if (report.work_package_id) {
-                        navigate(`/app/projects/${projectId}/work-packages/${report.work_package_id}/checkpoint-reports/${report.id}`)
+                        navigate(checkpointReportDetailPath(routeKey, report.work_package_id, report.document_ref || report.id))
                       }
                     }}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
@@ -439,8 +442,8 @@ export default function ControllingStage() {
                     key={report.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => navigate(`/app/projects/${projectId}/highlight-reports/${report.id}`)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/app/projects/${projectId}/highlight-reports/${report.id}`); } }}
+                    onClick={() => navigate(platformProjectPath(routeKey, 'highlight-reports', report.report_reference || report.id))}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(platformProjectPath(routeKey, 'highlight-reports', report.report_reference || report.id)); } }}
                     className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
                   >
                     <div className="flex items-start justify-between mb-2">

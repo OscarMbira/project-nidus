@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
-import { X, Save, Plus, Trash2, Award, Star } from 'lucide-react'
+import { X, Save, Plus, Award, Star } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 
 export default function ResourceSkills({ resourceId, onClose, onSave }) {
   const [skills, setSkills] = useState([])
@@ -230,18 +231,16 @@ export default function ResourceSkills({ resourceId, onClose, onSave }) {
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit skill"
                         onClick={() => handleEdit(skill)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400"
-                      >
-                        Edit
-                      </button>
-                      <button
+                      />
+                      <RowActionButton
+                        variant="delete"
+                        label="Delete skill"
                         onClick={() => handleDelete(skill)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      />
                     </div>
                   </div>
 

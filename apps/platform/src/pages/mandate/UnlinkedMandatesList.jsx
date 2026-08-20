@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Plus, Eye, FileText, CheckCircle } from 'lucide-react'
+import { Plus, FileText, CheckCircle } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getUnlinkedMandates, createProjectFromMandate } from '../../services/projectMandateService'
 import { platformDb } from '@nidus/supabase'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
@@ -152,14 +153,11 @@ export default function UnlinkedMandatesList() {
                 </div>
                 
                 <div className="flex space-x-2 ml-4">
-                  <button
+                  <RowActionButton
+                    variant="view"
+                    label="View mandate"
                     onClick={() => navigate(`${basePath}/${mandate.mandate_reference || mandate.id}/view`)}
-                    className="px-3 py-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center"
-                    title="View Mandate"
-                  >
-                    <Eye className="w-5 h-5 mr-1" />
-                    View
-                  </button>
+                  />
                   <button
                     onClick={() => handleCreateProject(mandate.mandate_id)}
                     disabled={creatingProject === mandate.mandate_id}

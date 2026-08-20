@@ -3,29 +3,56 @@
  * List all Lessons Reports for a project
  */
 
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { Plus, Search, FileText, Calendar, User, Eye, Edit } from 'lucide-react'
-import { getLessonsReportsByProject } from '../services/lessonsReportService'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { Plus, Search, FileText, Calendar, User } from 'lucide-react'
+import { getLessonsReportsByProject, deleteLessonsReport } from '../services/lessonsReportService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton, ViewToggle } from '@nidus/ui'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
+import RowNumberBadge from '../components/ui/RowNumberBadge'
 
 const LESSONS_REPORT_COLUMNS = [
   { key: 'report_reference', label: 'Reference' },
-  { key: 'executive_summary', label: 'Executive Summary' },
   { key: 'report_type', label: 'Type' },
-  { key: 'report_status', label: 'Status' }
+  { key: 'report_status', label: 'Status' },
+  { key: 'report_date', label: 'Report Date' },
+  { key: 'version_no', label: 'Version' },
+  { key: 'author_name', label: 'Author' },
+  { key: 'executive_summary', label: 'Executive Summary' }
 ]
+
+const SORT_ACCESSORS = {
+  report_reference: (r) => r.report_reference,
+  report_type: (r) => r.report_type,
+  report_status: (r) => r.report_status,
+  report_date: (r) => r.report_date,
+  version_no: (r) => r.version_no,
+  author_name: (r) => r.author_name || r.author?.full_name,
+  created_at: (r) => r.created_at,
+}
 
 export default function LessonsReportsList() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [viewMode, setViewMode] = useViewMode('pm-lessons-reports', 'list')
+
+  const { sortedData, handleSort, getSortDirectionForColumn } = useSortableTable({
+    defaultSort: { column: 'report_reference', direction: 'asc' },
+    storageKey: 'pm-lessons-reports-sort',
+  })
 
   useEffect(() => {
     if (projectId) {
@@ -48,16 +75,47 @@ export default function LessonsReportsList() {
     }
   }
 
-  const filteredReports = reports.filter(report => {
-    const matchesSearch = !searchTerm || 
-      report.report_reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.executive_summary?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesType = filterType === 'all' || report.report_type === filterType
-    const matchesStatus = filterStatus === 'all' || report.report_status === filterStatus
+  const filteredReports = useMemo(() => {
+    const filtered = reports.filter(report => {
+      const matchesSearch = !searchTerm ||
+        report.report_reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.executive_summary?.toLowerCase().includes(searchTerm.toLowerCase())
 
-    return matchesSearch && matchesType && matchesStatus
-  })
+      const matchesType = filterType === 'all' || report.report_type === filterType
+      const matchesStatus = filterStatus === 'all' || report.report_status === filterStatus
+
+      return matchesSearch && matchesType && matchesStatus
+    })
+    return sortedData(filtered, SORT_ACCESSORS)
+  }, [reports, searchTerm, filterType, filterStatus, sortedData])
+
+  const canEdit = (report) => report.report_status === 'draft' || report.report_status === 'submitted'
+
+  const handleView = (report) => {
+    navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || report.id))
+  }
+
+  const handleEdit = (report) => {
+    navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || report.id, 'edit'))
+  }
+
+  const handleDelete = async (report) => {
+    if (!confirm(`Delete report "${report.report_reference}"?`)) return
+    setDeletingId(report.id)
+    try {
+      const result = await deleteLessonsReport(report.id)
+      if (result.success) {
+        setReports((prev) => prev.filter((r) => r.id !== report.id))
+      } else {
+        alert('Error deleting report: ' + result.error)
+      }
+    } catch (error) {
+      console.error('Error deleting report:', error)
+      alert('Error deleting report: ' + error.message)
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -91,10 +149,11 @@ export default function LessonsReportsList() {
             Formal lessons reports for organizational learning
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <ViewToggle value={viewMode === 'list' ? 'list' : 'grid'} onChange={(v) => setViewMode(v === 'list' ? 'list' : 'grid')} ariaLabel="Lessons Reports layout" />
           <ExportListMenu columns={LESSONS_REPORT_COLUMNS} data={filteredReports} baseFilename="LessonsReports" disabled={!filteredReports.length} />
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/create`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports', 'create'))}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -160,13 +219,125 @@ export default function LessonsReportsList() {
           </p>
           {reports.length === 0 && (
             <button
-              onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/create`)}
+              onClick={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports', 'create'))}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg inline-flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               Create First Report
             </button>
           )}
+        </div>
+      ) : viewMode === 'list' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-[72rem] w-full border-collapse">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableRowNumberHeader className="!normal-case" />
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('report_reference')}
+                    onSort={() => handleSort('report_reference')}
+                    className="!normal-case whitespace-nowrap min-w-[10rem]"
+                  >
+                    Reference
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('report_type')}
+                    onSort={() => handleSort('report_type')}
+                    className="!normal-case whitespace-nowrap"
+                  >
+                    Type
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('report_status')}
+                    onSort={() => handleSort('report_status')}
+                    className="!normal-case whitespace-nowrap"
+                  >
+                    Status
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('report_date')}
+                    onSort={() => handleSort('report_date')}
+                    className="!normal-case whitespace-nowrap"
+                  >
+                    Report Date
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('version_no')}
+                    onSort={() => handleSort('version_no')}
+                    className="!normal-case whitespace-nowrap"
+                  >
+                    Version
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('author_name')}
+                    onSort={() => handleSort('author_name')}
+                    className="!normal-case whitespace-nowrap min-w-[10rem]"
+                  >
+                    Author
+                  </TableHeaderCell>
+                  <TableHeaderCell
+                    sortable={false}
+                    className="!normal-case text-right sticky right-0 min-w-[8.5rem] bg-gray-50 dark:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]"
+                  >
+                    Actions
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredReports.map((report, index) => (
+                  <tr key={report.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <td className="px-4 py-4 whitespace-nowrap font-mono text-sm text-gray-500 dark:text-gray-400">
+                      {report.report_reference}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm capitalize text-gray-700 dark:text-gray-300">
+                      {report.report_type}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(report.report_status)}`}>
+                        {report.report_status?.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {report.report_date ? new Date(report.report_date).toLocaleDateString() : '—'}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                      {report.version_no || '1.0'}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                      {report.author_name || report.author?.full_name || '—'}
+                    </td>
+                    <td
+                      className="px-3 py-3 text-right sticky right-0 min-w-[8.5rem] whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="inline-flex items-center gap-1 justify-end">
+                        <RowActionButton variant="view" label="View report" onClick={() => handleView(report)} />
+                        {canEdit(report) && (
+                          <>
+                            <RowActionButton variant="edit" label="Edit report" onClick={() => handleEdit(report)} />
+                            <RowActionButton
+                              variant="delete"
+                              label="Delete report"
+                              onClick={() => handleDelete(report)}
+                              disabled={deletingId === report.id}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -178,11 +349,12 @@ export default function LessonsReportsList() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
+                    <RowNumberBadge number={getDisplayRowNumber(index)} />
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {report.report_reference}
                     </h3>
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(report.report_status)}`}>
-                      {report.report_status.replace(/_/g, ' ')}
+                      {report.report_status?.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs text-gray-500 capitalize">{report.report_type}</span>
                   </div>
@@ -205,22 +377,18 @@ export default function LessonsReportsList() {
                     </p>
                   )}
                 </div>
-                <div className="flex gap-2 ml-4">
-                  <button
-                    onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/${report.id}`)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                    title="View Report"
-                  >
-                    <Eye className="w-5 h-5" />
-                  </button>
-                  {(report.report_status === 'draft' || report.report_status === 'submitted') && (
-                    <button
-                      onClick={() => navigate(`/app/projects/${projectId}/lessons/reports/${report.id}/edit`)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                      title="Edit Report"
-                    >
-                      <Edit className="w-5 h-5" />
-                    </button>
+                <div className="flex gap-1 ml-4">
+                  <RowActionButton variant="view" label="View report" onClick={() => handleView(report)} />
+                  {canEdit(report) && (
+                    <>
+                      <RowActionButton variant="edit" label="Edit report" onClick={() => handleEdit(report)} />
+                      <RowActionButton
+                        variant="delete"
+                        label="Delete report"
+                        onClick={() => handleDelete(report)}
+                        disabled={deletingId === report.id}
+                      />
+                    </>
                   )}
                 </div>
               </div>

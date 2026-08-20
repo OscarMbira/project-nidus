@@ -14,7 +14,7 @@ const PD_COLUMNS = [
   { key: 'status', label: 'Status' }
 ]
 
-export default function ProductDescriptionList({ projectId, onCreate }) {
+export default function ProductDescriptionList({ projectId, routeKey, onCreate }) {
   const [productDescriptions, setProductDescriptions] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -129,7 +129,7 @@ export default function ProductDescriptionList({ projectId, onCreate }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredDescriptions.map(pd => (
-            <ProductDescriptionCard key={pd.id} pd={pd} projectId={projectId} />
+            <ProductDescriptionCard key={pd.id} pd={pd} projectId={projectId} routeKey={routeKey} />
           ))}
         </div>
       )}

@@ -9,6 +9,13 @@ import StepTestCaseSteps from './StepTestStepsBuilder'
 import StepTestData from './StepTestData'
 import StepAutomation from './StepAutomation'
 import StepEvidenceTags from './StepEvidenceTags'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const STEPS = [
   { id: 'general', title: 'General' },
@@ -134,7 +141,10 @@ export default function TestCaseWizard({ mode = 'platform', testCaseId = null, p
   )
 
   const [step, setStep] = useState(0)
+  const [formTab, setFormTab] = useState('wizard')
   const [form, setForm] = useState(() => defaultForm(suggestCode))
+  const [record, setRecord] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const [modules, setModules] = useState([])
   const [loading, setLoading] = useState(!!testCaseId)
   const [saving, setSaving] = useState(false)
@@ -149,11 +159,21 @@ export default function TestCaseWizard({ mode = 'platform', testCaseId = null, p
     svc
       .getTestCase(testCaseId)
       .then((r) => {
-        if (r.success && r.data) setForm(mapRowToForm(r.data))
-        else toast.error(r.message || 'Failed to load')
+        if (r.success && r.data) {
+          setForm(mapRowToForm(r.data))
+          setRecord(r.data)
+        } else toast.error(r.message || 'Failed to load')
       })
       .finally(() => setLoading(false))
   }, [testCaseId, svc])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [record.created_by, record.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, record])
 
   const regen = useCallback(() => {
     setForm((f) => ({ ...f, test_case_code: suggestCode() }))
@@ -198,7 +218,21 @@ export default function TestCaseWizard({ mode = 'platform', testCaseId = null, p
           ← Test case library
         </Link>
         <h1 className="text-2xl font-semibold mt-2">{testCaseId ? 'Edit test case' : 'New test case'}</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Step {step + 1} of {STEPS.length}</p>
+
+        <div className="mt-3">
+          <DetailAuditTabList
+            activeTab={formTab}
+            onChange={setFormTab}
+            tabs={[
+              { value: 'wizard', label: 'Wizard' },
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
+        </div>
+
+        {formTab === 'wizard' && (
+        <>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Step {step + 1} of {STEPS.length}</p>
         <ol className="mt-3 flex flex-wrap gap-1">
           {STEPS.map((s, i) => (
             <li key={s.id}>
@@ -216,8 +250,38 @@ export default function TestCaseWizard({ mode = 'platform', testCaseId = null, p
             </li>
           ))}
         </ol>
+        </>
+        )}
       </div>
 
+      {formTab === 'audit' && (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-4 md:p-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this test case is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this test case, and how it is classified.">
+              <AuditCard title="Identity" description="How this test case is labelled and tracked.">
+                <AuditField label="Code" value={record.test_case_code} />
+                <AuditField label="Title" value={record.title} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this test case is categorised.">
+                <AuditField label="Test type" value={humanizeAuditToken(record.test_type)} />
+                <AuditField label="Priority" value={humanizeAuditToken(record.priority)} />
+                <AuditField label="Methodology" value={humanizeAuditToken(record.methodology_type)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this test case was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditField label="Updated by" value={record.updated_by ? auditUserLabels[record.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      )}
+
+      {formTab === 'wizard' && (
       <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 p-4 md:p-6">
         {step === 0 && (
           <StepGeneralInfo
@@ -277,6 +341,7 @@ export default function TestCaseWizard({ mode = 'platform', testCaseId = null, p
           </div>
         </div>
       </div>
+      )}
     </div>
   )
 }

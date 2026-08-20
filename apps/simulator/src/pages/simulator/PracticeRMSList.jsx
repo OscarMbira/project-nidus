@@ -4,9 +4,10 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Shield, Plus, Edit } from 'lucide-react'
+import { Shield, Plus } from 'lucide-react'
 import { getPracticeRMS, createPracticeRMS, updatePracticeRMS } from '../../services/sim/practiceRMSService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 
 const PRACTICE_RMS_COLUMNS = [
   { key: 'strategy_name', label: 'Name' },
@@ -76,9 +77,7 @@ export default function PracticeRMSList() {
         <div className="flex gap-2">
           {rms && <ExportListMenu columns={PRACTICE_RMS_COLUMNS} data={[rms]} baseFilename="PracticeRMS" />}
           {rms && !editing && (
-          <button onClick={() => setEditing(true)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+          <RowActionButton variant="edit" label="Edit RMS" onClick={() => setEditing(true)} />
           )}
         </div>
       </div>

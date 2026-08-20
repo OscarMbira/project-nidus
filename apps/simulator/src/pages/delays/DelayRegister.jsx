@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Plus, Copy, RefreshCw, Bot, Pencil, Trash2, Search } from 'lucide-react'
+import { Plus, Copy, RefreshCw, Bot, Search, Clock } from 'lucide-react'
+import { RowActionButton, DashboardRegisterTabBar, RegisterOpenItemsWidget } from '@nidus/ui'
 import toast from 'react-hot-toast'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { platformDb, simDb } from '@nidus/supabase'
@@ -65,11 +66,16 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
   const [statusFilter, setStatusFilter] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
+  const [openOnly, setOpenOnly] = useState(false)
+  const [resolvedOnly, setResolvedOnly] = useState(false)
+  const [autoLinkedOnly, setAutoLinkedOnly] = useState(false)
   const [viewMode, setViewMode] = useViewMode(isSim ? 'sim-delays' : 'platform-delays', 'list')
   const [formOpen, setFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState('edit') // 'view' | 'edit' | 'create'
   const [editRow, setEditRow] = useState(null)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [templates, setTemplates] = useState([])
+  const [pageTab, setPageTab] = useState('dashboard') // 'dashboard' | 'register'
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'delay_reference', direction: 'asc' },
@@ -209,11 +215,14 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
     if (statusFilter) r = r.filter((x) => x.status === statusFilter)
     if (categoryFilter) r = r.filter((x) => x.delay_category === categoryFilter)
     if (sourceFilter) r = r.filter((x) => x.source_type === sourceFilter)
+    if (openOnly) r = r.filter((x) => x.status !== 'resolved' && x.status !== 'closed')
+    if (resolvedOnly) r = r.filter((x) => x.status === 'resolved' || x.status === 'closed')
+    if (autoLinkedOnly) r = r.filter((x) => x.is_auto_linked)
     if (pmoOversight && projectId) {
       r = r.filter((x) => (isSim ? x.practice_project_id : x.project_id) === projectId)
     }
     return r
-  }, [rows, debounced, statusFilter, categoryFilter, sourceFilter, pmoOversight, projectId])
+  }, [rows, debounced, statusFilter, categoryFilter, sourceFilter, openOnly, resolvedOnly, autoLinkedOnly, pmoOversight, projectId])
 
   const accessors = useMemo(
     () => ({
@@ -230,6 +239,15 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
   )
 
   const displayRows = useMemo(() => sortedData(filtered, accessors), [filtered, sortedData, accessors])
+
+  const openDelays = useMemo(
+    () =>
+      [...rows]
+        .filter((r) => r.status !== 'resolved' && r.status !== 'closed')
+        .sort((a, b) => new Date(b.identified_date || 0) - new Date(a.identified_date || 0))
+        .slice(0, 5),
+    [rows]
+  )
 
   const summary = useMemo(() => {
     const api = isSim ? simDelayApi : delayApi
@@ -294,6 +312,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
       is_draft: draftsOnly,
     }
     setEditRow({ ...base, ...prefill })
+    setFormMode('create')
     setFormOpen(true)
   }
 
@@ -308,7 +327,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
 
   if (!ready || permLoading) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center text-slate-500 dark:text-slate-400">
+      <div className="min-h-[40vh] flex items-center justify-center text-gray-500 dark:text-gray-400">
         Loading…
       </div>
     )
@@ -317,79 +336,132 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
   const projectLabel = isSim ? 'Practice project' : 'Project'
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-slate-50 dark:bg-slate-950 min-h-screen">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {draftsOnly ? 'Delay drafts' : pmoOversight ? 'Delay register (oversight)' : 'Delay register'}
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Log and track schedule delays; auto-linked from overdue issues, risks, and defects.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <ExportListMenu
-            columns={EXPORT_COLS}
-            data={displayRows}
-            baseFilename="Project_Delays"
-            disabled={!displayRows.length}
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+      <div className="mb-6 flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {draftsOnly ? 'Delay drafts' : pmoOversight ? 'Delay register (oversight)' : 'Delay register'}
+            </h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Log and track schedule delays; auto-linked from overdue issues, risks, and defects.
+            </p>
+          </div>
+          <DashboardRegisterTabBar
+            value={pageTab}
+            onChange={setPageTab}
+            registerLabel="Register"
+            ariaLabel="Delay register sections"
           />
-          <ViewToggle value={viewMode} onChange={setViewMode} />
-          {!readOnly && canWriteDelay && projectId && !pmoOversight && (
-            <>
-              <button
-                type="button"
-                onClick={handleSync}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-600 text-sm text-slate-200 min-h-[44px]"
-              >
-                <RefreshCw className="h-4 w-4" /> Sync overdue
-              </button>
-              {canCopyTemplate && (
+        </div>
+        {pageTab === 'register' && (
+          <div className="flex flex-wrap gap-2 items-center justify-end">
+            <ExportListMenu
+              columns={EXPORT_COLS}
+              data={displayRows}
+              baseFilename="Project_Delays"
+              disabled={!displayRows.length}
+            />
+            <ViewToggle value={viewMode} onChange={setViewMode} />
+            {!readOnly && canWriteDelay && projectId && !pmoOversight && (
+              <>
                 <button
                   type="button"
-                  onClick={() => setPickerOpen(true)}
-                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-600 text-sm min-h-[44px]"
+                  onClick={handleSync}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-200 min-h-[44px]"
                 >
-                  <Copy className="h-4 w-4" /> Use template
+                  <RefreshCw className="h-4 w-4" /> Sync overdue
                 </button>
-              )}
-              <button
-                type="button"
-                onClick={() => openNew()}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium min-h-[44px]"
-              >
-                <Plus className="h-5 w-5" /> Log delay
-              </button>
-            </>
-          )}
-        </div>
+                {canCopyTemplate && (
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen(true)}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-200 min-h-[44px]"
+                  >
+                    <Copy className="h-4 w-4" /> Use template
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => openNew()}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium min-h-[44px]"
+                >
+                  <Plus className="h-5 w-5" /> Log delay
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {!(formOpen && delayFormVariant === 'page') && (
       <>
-      <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{projectLabel}</span>
+      <div className="mb-4">
+        <label className="block max-w-md">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{projectLabel}</span>
           <select
-            className="mt-1 w-full rounded-lg border border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-slate-900 dark:text-slate-100"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
             disabled={false}
           >
             <option value="">{pmoOversight ? 'All projects (oversight)' : 'Select…'}</option>
-            {(isSim ? practiceProjects : projects).map((p, index) => (
+            {(isSim ? practiceProjects : projects).map((p) => (
               <option key={p.id} value={p.id}>
                 {p.project_name}
               </option>
             ))}
           </select>
         </label>
+      </div>
+
+      {pageTab === 'dashboard' && (
+        <div role="tabpanel" aria-label="Delay dashboard" className="space-y-6">
+          <DelaySummaryStats
+            summary={summary}
+            onCardClick={(key) => {
+              setStatusFilter('')
+              setOpenOnly(key === 'open')
+              setResolvedOnly(key === 'resolved')
+              setAutoLinkedOnly(key === 'auto_linked')
+              setPageTab('register')
+            }}
+          />
+          <RegisterOpenItemsWidget
+            title="Open Delays"
+            icon={Clock}
+            rows={openDelays}
+            totalCount={rows.filter((r) => r.status !== 'resolved' && r.status !== 'closed').length}
+            columns={[
+              { key: 'delay_reference', label: 'Reference', className: 'font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+              { key: 'title', label: 'Title', className: 'font-medium text-gray-900 dark:text-white' },
+              { key: 'severity', label: 'Severity', render: (r) => <DelaySeverityBadge severity={r.severity} /> },
+              { key: 'impact_schedule_days', label: 'Days lost', sortAccessor: (r) => Number(r.impact_schedule_days) || 0, className: 'text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+              { key: 'identified_date', label: 'Identified', render: (r) => (r.identified_date ? new Date(r.identified_date).toLocaleDateString() : '—'), className: 'text-gray-500 dark:text-gray-400 whitespace-nowrap' },
+            ]}
+            rowKey={(r) => r.id}
+            searchFields={['title', 'delay_reference']}
+            onRowClick={(row) => {
+              setEditRow(row)
+              setFormMode(readOnly ? 'view' : 'edit')
+              setFormOpen(true)
+            }}
+            onViewAll={() => setPageTab('register')}
+            viewAllLabel="Open full Delay Register"
+            emptyMessage="No open delays"
+          />
+        </div>
+      )}
+
+      {pageTab === 'register' && (
+      <div role="tabpanel" aria-label="Delay register">
+      <div className="mb-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         <label className="block">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Search</span>
-          <div className="mt-1 flex items-center gap-2 rounded-lg border border-slate-600 bg-white dark:bg-slate-900 px-3 py-2">
-            <Search className="h-4 w-4 text-slate-500" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Search</span>
+          <div className="mt-1 flex items-center gap-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2">
+            <Search className="h-4 w-4 text-gray-500" />
             <input
-              className="flex-1 bg-transparent outline-none text-slate-900 dark:text-slate-100"
+              className="flex-1 bg-transparent outline-none text-gray-900 dark:text-gray-100"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Title, reference…"
@@ -397,14 +469,14 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
           </div>
         </label>
         <label className="block">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Status</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status</span>
           <select
-            className="mt-1 w-full rounded-lg border border-slate-600 bg-white dark:bg-slate-900 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
             <option value="">All</option>
-            {['identified', 'under_review', 'approved', 'resolved', 'closed'].map((s, index) => (
+            {['identified', 'under_review', 'approved', 'resolved', 'closed'].map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
@@ -412,14 +484,14 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
           </select>
         </label>
         <label className="block">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Source</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Source</span>
           <select
-            className="mt-1 w-full rounded-lg border border-slate-600 bg-white dark:bg-slate-900 px-3 py-2"
+            className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value)}
           >
             <option value="">All</option>
-            {DELAY_SOURCE_TYPES.map((s, index) => (
+            {DELAY_SOURCE_TYPES.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>
@@ -428,9 +500,22 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
         </label>
       </div>
 
-      <DelaySummaryStats summary={summary} />
+      {(openOnly || resolvedOnly || autoLinkedOnly) && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+          {openOnly && <span className="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">Open only</span>}
+          {resolvedOnly && <span className="px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">Resolved only</span>}
+          {autoLinkedOnly && <span className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">Auto-linked only</span>}
+          <button
+            type="button"
+            onClick={() => { setOpenOnly(false); setResolvedOnly(false); setAutoLinkedOnly(false) }}
+            className="text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Clear
+          </button>
+        </div>
+      )}
 
-      {loading && <p className="text-slate-500">Loading…</p>}
+      {loading && <p className="text-gray-500 dark:text-gray-400">Loading…</p>}
 
       {!loading && viewMode === 'card' && (
         <div className="grid gap-4 md:grid-cols-2">
@@ -442,6 +527,7 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
               readOnly={readOnly}
               onEdit={() => {
                 setEditRow(row)
+                setFormMode(readOnly ? 'view' : 'edit')
                 setFormOpen(true)
               }}
             />
@@ -450,57 +536,72 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
       )}
 
       {!loading && viewMode === 'list' && (
-        <div className="overflow-x-auto rounded-lg border border-slate-700">
-          <table className="min-w-full text-sm text-left text-slate-200">
-            <thead className="bg-slate-800 text-xs uppercase text-slate-400">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <table className="min-w-[72rem] w-full text-sm text-left text-gray-900 dark:text-gray-100">
+            <thead className="bg-gray-50 dark:bg-gray-700 text-xs uppercase text-gray-500 dark:text-gray-300">
               <tr>
                 <TableRowNumberHeader className="!normal-case" />
                 {EXPORT_COLS.map((col) => (
-                  <th key={col.key} className="px-3 py-2">
+                  <th key={col.key} className="px-3 py-2 whitespace-nowrap">
                     <button type="button" className="inline-flex items-center gap-1" onClick={() => handleSort(col.key)}>
                       {col.label}
                       <span className="text-[10px]">{getSortDirectionForColumn(col.key)}</span>
                     </button>
                   </th>
                 ))}
-                <th className="px-3 py-2"> </th>
+                <th className="px-3 py-2 text-right sticky right-0 min-w-[8.5rem] bg-gray-50 dark:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {displayRows.map((row, index) => (
-                <tr key={row.id} className="border-t border-slate-700 hover:bg-slate-800/60">
+                <tr key={row.id} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                  <td className="px-3 py-2 font-mono text-xs">{row.delay_reference}</td>
+                  <td className="px-3 py-2 font-mono text-xs whitespace-nowrap text-gray-700 dark:text-gray-200">{row.delay_reference}</td>
                   <td className="px-3 py-2">{row.title}</td>
-                  <td className="px-3 py-2 capitalize">{row.delay_category?.replace(/_/g, ' ')}</td>
+                  <td className="px-3 py-2 capitalize whitespace-nowrap text-gray-700 dark:text-gray-200">{row.delay_category?.replace(/_/g, ' ')}</td>
                   <td className="px-3 py-2">
                     <DelaySeverityBadge severity={row.severity} />
                   </td>
-                  <td className="px-3 py-2">{row.impact_schedule_days ?? '—'}</td>
-                  <td className="px-3 py-2 capitalize">{row.status}</td>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">{row.impact_schedule_days ?? '—'}</td>
+                  <td className="px-3 py-2 capitalize whitespace-nowrap text-gray-700 dark:text-gray-200">{row.status}</td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">
                     <span className="inline-flex items-center gap-1">
-                      {row.is_auto_linked && <Bot className="h-3.5 w-3.5 text-cyan-400" aria-hidden />}
+                      {row.is_auto_linked && <Bot className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" aria-hidden />}
                       {row.source_type?.replace(/_/g, ' ')}
                     </span>
                   </td>
-                  <td className="px-3 py-2">{row.identified_date || '—'}</td>
-                  <td className="px-3 py-2 text-right space-x-2">
-                    <button
-                      type="button"
-                      className="text-blue-400 hover:underline inline-flex items-center gap-1"
-                      onClick={() => {
-                        setEditRow(row)
-                        setFormOpen(true)
-                      }}
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> {readOnly ? 'View' : 'Edit'}
-                    </button>
-                    {!readOnly && canDeleteDelay && (
-                      <button type="button" className="text-red-400 hover:underline inline-flex items-center gap-1" onClick={() => handleDelete(row)}>
-                        <Trash2 className="h-3.5 w-3.5" /> Delete
-                      </button>
-                    )}
+                  <td className="px-3 py-2 whitespace-nowrap text-gray-700 dark:text-gray-200">{row.identified_date || '—'}</td>
+                  <td
+                    className="px-3 py-2 text-right sticky right-0 min-w-[8.5rem] whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="inline-flex items-center justify-end gap-1">
+                      <RowActionButton
+                        variant="view"
+                        label="View delay"
+                        onClick={() => {
+                          setEditRow(row)
+                          setFormMode('view')
+                          setFormOpen(true)
+                        }}
+                      />
+                      {!readOnly && (
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit delay"
+                          onClick={() => {
+                            setEditRow(row)
+                            setFormMode('edit')
+                            setFormOpen(true)
+                          }}
+                        />
+                      )}
+                      {!readOnly && canDeleteDelay && (
+                        <RowActionButton variant="delete" label="Delete delay" onClick={() => handleDelete(row)} />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -509,15 +610,18 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
         </div>
       )}
 
+      </div>
+      )}
+
       </>
       )}
 
       {pickerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-slate-900 border border-slate-600 p-4">
+          <div className="w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold text-white">Choose template</h3>
-              <button type="button" className="text-slate-400" onClick={() => setPickerOpen(false)}>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Choose template</h3>
+              <button type="button" className="text-gray-500 dark:text-gray-400" onClick={() => setPickerOpen(false)}>
                 Close
               </button>
             </div>
@@ -527,14 +631,14 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
                   key={t.id}
                   type="button"
                   onClick={() => applyTemplate(t)}
-                  className="text-left rounded-lg border border-slate-600 p-3 hover:bg-slate-800"
+                  className="text-left rounded-lg border border-gray-200 dark:border-gray-600 p-3 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  <div className="font-medium text-slate-100">{t.name}</div>
-                  <div className="text-xs text-slate-400 capitalize">{t.delay_category?.replace(/_/g, ' ')}</div>
+                  <div className="font-medium text-gray-900 dark:text-gray-100">{t.name}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{t.delay_category?.replace(/_/g, ' ')}</div>
                 </button>
               ))}
             </div>
-            {templates.length === 0 && <p className="text-slate-500 text-sm">No active templates.</p>}
+            {templates.length === 0 && <p className="text-gray-500 dark:text-gray-400 text-sm">No active templates.</p>}
           </div>
         </div>
       )}
@@ -545,12 +649,13 @@ export default function DelayRegister({ isSim: isSimProp, readOnly: readOnlyProp
         onClose={() => {
           setFormOpen(false)
           setEditRow(null)
+          setFormMode('edit')
         }}
         onSaved={() => loadRows()}
         initial={editRow}
         userId={userId}
         isSim={isSim}
-        readOnly={readOnly}
+        readOnly={readOnly || formMode === 'view'}
         saveFns={saveFns}
         fetchOwnerHistory={fetchOwnerHistory}
       />

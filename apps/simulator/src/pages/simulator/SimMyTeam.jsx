@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Users, UserPlus, Pencil, Trash2, Search } from 'lucide-react'
+import { Users, UserPlus, Search } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { isPmoAdmin } from '../../services/organisationRoleService'
 import {
@@ -510,22 +511,16 @@ export default function SimMyTeam() {
                         {m.joined_at ? String(m.joined_at).slice(0, 10) : '—'}
                       </td>
                       <td className="px-3 py-2 text-right">
-                        <button
-                          type="button"
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit member"
                           onClick={() => setEditMember(m)}
-                          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 mr-1"
-                          aria-label="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Remove member"
                           onClick={() => handleRemoveMember(m)}
-                          className="p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-red-600"
-                          aria-label="Remove"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        />
                       </td>
                     </tr>
                   ))}
@@ -549,20 +544,16 @@ export default function SimMyTeam() {
                   </div>
                   <div className="mt-3 flex justify-end gap-2">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                    <button
-                      type="button"
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit member"
                       onClick={() => setEditMember(m)}
-                      className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
+                    />
+                    <RowActionButton
+                      variant="delete"
+                      label="Remove member"
                       onClick={() => handleRemoveMember(m)}
-                      className="px-3 py-1.5 rounded border border-red-300 text-red-600 text-sm"
-                    >
-                      Remove
-                    </button>
+                    />
                   </div>
                 </div>
               ))}
@@ -690,21 +681,17 @@ export default function SimMyTeam() {
                       <td className="px-3 py-2 text-gray-900 dark:text-white">{fr.role_label}</td>
                       <td className="px-3 py-2 tabular-nums">{fr._count}</td>
                       <td className="px-3 py-2 text-right">
-                        <button
-                          type="button"
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit role"
                           onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                          className="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 mr-2"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          disabled={fr._count > 0}
+                        />
+                        <RowActionButton
+                          variant="delete"
+                          label="Delete role"
                           onClick={() => handleDeleteRole(fr)}
-                          className="px-2 py-1 rounded border border-red-300 text-red-600 disabled:opacity-40"
-                        >
-                          Delete
-                        </button>
+                          disabled={fr._count > 0}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -722,21 +709,17 @@ export default function SimMyTeam() {
                   <div className="text-sm text-gray-500 mt-1">Members using: {fr._count}</div>
                   <div className="mt-3 flex gap-2 justify-end">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                    <button
-                      type="button"
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit role"
                       onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                      className="px-3 py-1.5 rounded border text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      disabled={fr._count > 0}
+                    />
+                    <RowActionButton
+                      variant="delete"
+                      label="Delete role"
                       onClick={() => handleDeleteRole(fr)}
-                      className="px-3 py-1.5 rounded border border-red-300 text-red-600 text-sm disabled:opacity-40"
-                    >
-                      Delete
-                    </button>
+                      disabled={fr._count > 0}
+                    />
                   </div>
                 </div>
               ))}

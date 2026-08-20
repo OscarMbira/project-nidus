@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getCopyById, exportCopyToExcel, exportCopyToPpt } from '../../../services/sim/simProjectTemplateCopyService'
 import ExportRecordMenu from '../../../components/ui/ExportRecordMenu'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const BASE = '/simulator/templates'
 
@@ -11,6 +19,16 @@ export default function ProjectTemplateCopyDetail() {
   const navigate = useNavigate()
   const [row, setRow] = useState(null)
   const [err, setErr] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [row.created_by, row.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     ;(async () => {
@@ -66,21 +84,39 @@ export default function ProjectTemplateCopyDetail() {
           >
             PPT
           </button>
-          <button
-            type="button"
+          <RowActionButton
+            variant="edit"
+            label="Edit template copy"
             onClick={() => navigate(`${BASE}/copies/${copyId}/edit`)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 text-white min-h-[44px]"
-          >
-            <Pencil className="h-4 w-4" /> Edit
-          </button>
+          />
           <Link to={`${BASE}/copies/${copyId}/versions`} className="inline-flex items-center px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 min-h-[44px]">
             Version history
           </Link>
         </div>
       </div>
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this template copy.">
+          <AuditCard title="Identity" description="How this copy is labelled.">
+            <AuditField label="Title" value={row.title} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this copy sits.">
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+            <AuditField label="Version" value={row.current_version} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this copy was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <pre className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-900/40 p-4 text-sm text-gray-200 overflow-auto">
         {JSON.stringify(row.content || {}, null, 2)}
       </pre>
+      )}
     </div>
   )
 }

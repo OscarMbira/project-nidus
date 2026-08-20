@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
-import ProcessTemplatesHub from '../../components/processTemplates/ProcessTemplatesHub'
 import ProcessTemplatesDetail from '../../components/processTemplates/ProcessTemplatesDetail'
+import ProcessTemplatesLandingRedirect from './ProcessTemplatesLandingRedirect'
 import ProcessTemplateListPage from './ProcessTemplateListPage'
 import ProcessTemplateCreatePage from './ProcessTemplateCreatePage'
 import ProcessTemplateEditPage from './ProcessTemplateEditPage'
@@ -20,7 +20,8 @@ function Section({ which }) {
 
   return (
     <Routes>
-      <Route index element={<ProcessTemplatesHub roleKey={c.roleKey} basePath={basePath} />} />
+      {/* v848: Hub landing → Project Templates (capture surface); keep sub-routes */}
+      <Route index element={<ProcessTemplatesLandingRedirect />} />
       <Route
         path="t/:slug/new"
         element={<ProcessTemplateCreatePage roleKey={c.roleKey} basePath={basePath} sim={c.sim} />}

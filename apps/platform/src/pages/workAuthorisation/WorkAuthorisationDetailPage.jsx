@@ -7,6 +7,12 @@ import * as simSvc from '../../services/simWorkAuthorisationService'
 import { hasPermission } from '@nidus/shared/utils/permissionChecker'
 import { platformDb } from '@nidus/supabase'
 import { canEditDraft } from '../../services/workAuthorisationTransitions'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function WorkAuthorisationDetailPage() {
   const location = useLocation()
@@ -23,8 +29,18 @@ export default function WorkAuthorisationDetailPage() {
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
   const [perm, setPerm] = useState({ request: false, approve: false, suspend: false })
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const projectId = mode === 'platform' ? row?.project_id : null
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [row.created_by, row.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, row])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -92,6 +108,51 @@ export default function WorkAuthorisationDetailPage() {
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
+      <div className="mb-6">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      </div>
+
+      {activeTab === 'audit' ? (
+        <div className="space-y-6">
+          <AuditDetailsPanel description="Who requested or changed this work authorisation, and how it is classified.">
+            <AuditCard title="Identity" description="How this record is labelled and tracked.">
+              <AuditField label="Reference" value={row.reference_code} />
+              <AuditField label="Title" value={row.title} />
+              <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this record is categorised.">
+              <AuditField label="Action type" value={humanizeAuditToken(row.action_type)} />
+              <AuditField label="Requested by" value={row.requestor?.full_name || row.requestor?.email} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this record was created and last changed.">
+              <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+              <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+
+          <div>
+            <h2 className="text-lg font-semibold mb-3">History</h2>
+            <ul className="space-y-2 text-sm">
+              {history.map((h, index) => (
+                <li key={h.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50">
+                  <div className="flex justify-between gap-2">
+                    <span className="font-medium">{h.action}</span>
+                    <span className="text-gray-500 text-xs">{h.created_at ? new Date(h.created_at).toLocaleString() : ''}</span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {(h.from_status || '—')} → {h.to_status}
+                    {h.actor?.full_name ? ` · ${h.actor.full_name}` : ''}
+                  </p>
+                  {h.notes && <p className="mt-1 whitespace-pre-wrap">{h.notes}</p>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : (
+      <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40 p-6 space-y-4">
         <div className="flex flex-wrap justify-between gap-2">
           <div>
@@ -182,29 +243,12 @@ export default function WorkAuthorisationDetailPage() {
         </div>
       </div>
 
-      <div className="mt-10">
-        <h2 className="text-lg font-semibold mb-3">History</h2>
-        <ul className="space-y-2 text-sm">
-          {history.map((h, index) => (
-            <li key={h.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800/50">
-              <div className="flex justify-between gap-2">
-                <span className="font-medium">{h.action}</span>
-                <span className="text-gray-500 text-xs">{h.created_at ? new Date(h.created_at).toLocaleString() : ''}</span>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400">
-                {(h.from_status || '—')} → {h.to_status}
-                {h.actor?.full_name ? ` · ${h.actor.full_name}` : ''}
-              </p>
-              {h.notes && <p className="mt-1 whitespace-pre-wrap">{h.notes}</p>}
-            </li>
-          ))}
-        </ul>
-      </div>
-
       {projectId && (
         <p className="mt-6 text-xs text-gray-500 dark:text-gray-500">
           Project ID: {projectId}
         </p>
+      )}
+      </>
       )}
     </div>
   )

@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
+import { platformDb } from '@nidus/supabase'
 import { format } from 'date-fns'
 import { X, Save, Calendar, User, FileText } from 'lucide-react'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+
 export default function ProductForm({ product, projectId, workPackages, onSave, onCancel }) {
   const [formData, setFormData] = useState({
     product_name: '',
@@ -21,6 +29,22 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
   })
   const [teamMembers, setTeamMembers] = useState([])
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !product) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        product.created_by,
+        product.updated_by,
+        product.assigned_to_user_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, product])
 
   useEffect(() => {
     if (product) {
@@ -45,16 +69,17 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
   const fetchTeamMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('project_members')
+        .from('project_memberships')
         .select(`
-          *,
+          id,
+          user_id,
           user:user_id (id, email, full_name)
         `)
         .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
 
       if (error) throw error
-      setTeamMembers(data || [])
+      setTeamMembers((data || []).filter((m) => m.user_id))
     } catch (error) {
       console.error('Error fetching team members:', error)
     }
@@ -127,6 +152,50 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !product?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this product is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this product, and how it is classified.">
+                <AuditCard title="Identity" description="How this product is labelled and tracked.">
+                  <AuditField label="Code" value={product.product_code} />
+                  <AuditField label="Name" value={formData.product_name || product.product_name} />
+                  <AuditField label="Type" value={humanizeAuditToken(product.product_type)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this product sits.">
+                  <AuditField
+                    label="Work package"
+                    value={
+                      (() => {
+                        const wpId = formData.work_package_id || product.work_package_id
+                        const wp = workPackages.find((w) => w.id === wpId)
+                        return wp ? (wp.work_package_code || wp.work_package_name) : null
+                      })()
+                    }
+                  />
+                  <AuditField
+                    label="Assigned to"
+                    value={
+                      formData.assigned_to_user_id || product.assigned_to_user_id
+                        ? auditUserLabels[formData.assigned_to_user_id || product.assigned_to_user_id] || null
+                        : null
+                    }
+                  />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this product was created and last changed.">
+                  <AuditField label="Created by" value={product.created_by ? auditUserLabels[product.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={product.created_at} />
+                  <AuditField label="Updated by" value={product.updated_by ? auditUserLabels[product.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={product.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -307,6 +376,8 @@ export default function ProductForm({ product, projectId, workPackages, onSave, 
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
+          </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button

@@ -4,11 +4,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { 
-  FileText, 
-  Edit2, 
-  CheckCircle, 
-  Clock, 
+import {
+  FileText,
+  CheckCircle,
+  Clock,
   Package,
   Hash,
   GitBranch,
@@ -22,8 +21,14 @@ import {
   Users,
   AlertCircle
 } from 'lucide-react'
-import { 
-  getConfigurationMSById, 
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import {
+  getConfigurationMSById,
   validateCompleteness, 
   checkConformance 
 } from '../../services/configurationManagementStrategyService'
@@ -135,6 +140,8 @@ export default function ConfigurationMSView({ cfgMsId, onEdit, readOnly = true }
     { id: 'roles', label: 'Roles', icon: Users },
     { id: 'conformance', label: 'Conformance', icon: CheckCircle }
   ]
+
+  const VIEW_TABS = [...tabs.map((t) => ({ value: t.id, label: t.label })), { value: 'audit', label: 'Audit details' }]
 
   if (loading) {
     return (
@@ -255,6 +262,26 @@ export default function ConfigurationMSView({ cfgMsId, onEdit, readOnly = true }
           </div>
         )
 
+      case 'audit':
+        return (
+          <AuditDetailsPanel description="Who created or changed this configuration management strategy, and how it is classified.">
+            <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+              <AuditField label="Reference" value={cfgMs.cms_reference} />
+              <AuditField label="Status" value={cfgMs.status} />
+              <AuditField label="Version" value={cfgMs.version_number} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this strategy sits.">
+              <AuditField label="Project" value={cfgMs.project?.project_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this strategy was created and last changed.">
+              <AuditField label="Created by" value={cfgMs.created_by_user?.full_name || cfgMs.created_by_user?.email} />
+              <AuditTimestampPair dateLabel="Created at" value={cfgMs.created_at} />
+              <AuditField label="Updated by" value={cfgMs.updated_by_user?.full_name || cfgMs.updated_by_user?.email} />
+              <AuditTimestampPair dateLabel="Last updated" value={cfgMs.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+
       default:
         return (
           <div className="text-center py-12">
@@ -295,13 +322,7 @@ export default function ConfigurationMSView({ cfgMsId, onEdit, readOnly = true }
               {cfgMs.status.replace('_', ' ')}
             </span>
             {!readOnly && cfgMs.status === 'draft' && onEdit && (
-              <button
-                onClick={onEdit}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit configuration MS" onClick={onEdit} />
             )}
           </div>
         </div>
@@ -309,26 +330,8 @@ export default function ConfigurationMSView({ cfgMsId, onEdit, readOnly = true }
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-1 overflow-x-auto px-4">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
+        <div className="border-b border-gray-200 dark:border-gray-700 px-4 pt-2">
+          <DetailAuditTabList tabs={VIEW_TABS} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
         <div className="p-6">

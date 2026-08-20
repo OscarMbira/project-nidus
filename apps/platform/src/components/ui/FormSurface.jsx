@@ -58,12 +58,20 @@ export default function FormSurface({
   )
 }
 
-/** Use full-page forms on PMO Project Oversight menu routes (not modals). */
+/** Use full-page forms on PM/PMO register routes (not modals). */
 export function resolveOversightFormVariant(pathname = '') {
   if (!pathname) return 'modal'
+  if (/\/pm\/controls\//.test(pathname)) return 'page'
   if (/\/pmo\/oversight\//.test(pathname)) return 'page'
   if (/\/pmo\/registers\//.test(pathname)) return 'page'
   if (/\/pmo\/delays\/templates/.test(pathname)) return 'page'
+  // Delay register list routes (platform / PM / simulator) — view & edit are in-page, not modals
+  if (/\/(?:platform\/)?delays(?:\/drafts)?(?:\/|$|\?)/.test(pathname)) return 'page'
+  if (/\/pm\/delays(?:\/drafts)?(?:\/|$|\?)/.test(pathname)) return 'page'
+  if (/\/simulator\/(?:pm\/)?delays(?:\/drafts)?(?:\/|$|\?)/.test(pathname)) return 'page'
+  if (/\/projects\/[^/]+\/risks(?:\/|$|\?)/.test(pathname)) return 'page'
+  if (/\/risks\/register/.test(pathname)) return 'page'
+  if (/\/simulator\/pm\/controls\//.test(pathname)) return 'page'
   if (/\/simulator\/pmo\/oversight\//.test(pathname)) return 'page'
   if (/\/simulator\/pmo\/registers\//.test(pathname)) return 'page'
   if (/\/simulator\/pmo\/delays\/templates/.test(pathname)) return 'page'

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Plus, Search, LayoutGrid, Table2, ArrowUpDown, Download, Clock } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
@@ -8,6 +8,7 @@ import { exportListToCSV, exportListToJSON, exportListToXML, exportListToPrint }
 import PlanningProjectBar, { usePlanningProjectId } from '../../../components/planning/PlanningProjectBar'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { RowActionButton } from '@nidus/ui'
 
 const VIEW_KEY = 'tm-timesheets-view-v1'
 
@@ -54,6 +55,7 @@ function formatDate(v) {
 
 export default function MyTimesheetsPage() {
   const projectId = usePlanningProjectId()
+  const navigate = useNavigate()
   const [userId, setUserId] = useState(null)
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
@@ -256,16 +258,25 @@ export default function MyTimesheetsPage() {
                         </div>
                         {e.description && <p className="text-xs text-slate-400 mb-3 line-clamp-2">{e.description}</p>}
                         <div className="flex items-center gap-2 pt-2 border-t border-slate-700">
-                          <Link to={`/platform/timesheets/${e.id}${projectId ? `?projectId=${projectId}` : ''}`}
-                            className="text-blue-400 hover:text-blue-300 text-xs">View</Link>
+                          <RowActionButton
+                            variant="view"
+                            label="View entry"
+                            onClick={() => navigate(`/platform/timesheets/${e.id}${projectId ? `?projectId=${projectId}` : ''}`)}
+                          />
                           {e.status === 'draft' && (
                             <>
-                              <Link to={`/platform/timesheets/${e.id}/edit${projectId ? `?projectId=${projectId}` : ''}`}
-                                className="text-slate-400 hover:text-slate-200 text-xs">Edit</Link>
+                              <RowActionButton
+                                variant="edit"
+                                label="Edit entry"
+                                onClick={() => navigate(`/platform/timesheets/${e.id}/edit${projectId ? `?projectId=${projectId}` : ''}`)}
+                              />
                               <button type="button" onClick={() => handleSubmit(e.id)}
                                 className="text-amber-400 hover:text-amber-300 text-xs">Submit</button>
-                              <button type="button" onClick={() => handleDelete(e.id)}
-                                className="text-red-400 hover:text-red-300 text-xs">Delete</button>
+                              <RowActionButton
+                                variant="delete"
+                                label="Delete entry"
+                                onClick={() => handleDelete(e.id)}
+                              />
                             </>
                           )}
                           {e.status === 'rejected' && (
@@ -308,18 +319,27 @@ export default function MyTimesheetsPage() {
                     <td className="px-4 py-3 text-slate-400 max-w-xs truncate">{e.description || '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/platform/timesheets/${e.id}${projectId ? `?projectId=${projectId}` : ''}`}
-                          className="text-blue-400 hover:text-blue-300 text-xs">View</Link>
+                        <RowActionButton
+                          variant="view"
+                          label="View entry"
+                          onClick={() => navigate(`/platform/timesheets/${e.id}${projectId ? `?projectId=${projectId}` : ''}`)}
+                        />
                         {(e.status === 'draft' || e.status === 'rejected') && (
-                          <Link to={`/platform/timesheets/${e.id}/edit${projectId ? `?projectId=${projectId}` : ''}`}
-                            className="text-slate-400 hover:text-slate-200 text-xs">Edit</Link>
+                          <RowActionButton
+                            variant="edit"
+                            label="Edit entry"
+                            onClick={() => navigate(`/platform/timesheets/${e.id}/edit${projectId ? `?projectId=${projectId}` : ''}`)}
+                          />
                         )}
                         {e.status === 'draft' && (
                           <>
                             <button type="button" onClick={() => handleSubmit(e.id)}
                               className="text-amber-400 hover:text-amber-300 text-xs">Submit</button>
-                            <button type="button" onClick={() => handleDelete(e.id)}
-                              className="text-red-400 hover:text-red-300 text-xs">Delete</button>
+                            <RowActionButton
+                              variant="delete"
+                              label="Delete entry"
+                              onClick={() => handleDelete(e.id)}
+                            />
                           </>
                         )}
                       </div>

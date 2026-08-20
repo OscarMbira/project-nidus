@@ -194,6 +194,7 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
   const projectName = invitationData.projectName || 'a project'
   const roleName = invitationData.roleName || 'team member'
   const inviterName = invitationData.inviterName || 'A team member'
+  const inviterEmail = String(invitationData.inviterEmail ?? '').trim()
   const inviterJobTitle = String(invitationData.inviterJobTitle ?? '').trim()
   const expiryDays = invitationData.expiryDays || 14
   const projectId = invitationData.projectId
@@ -274,6 +275,7 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
         projectName,
         roleName,
         inviterName,
+        inviterEmail,
         inviterJobTitle,
         organisationName,
         personalMessage,
@@ -288,6 +290,7 @@ export async function dispatchProjectInvitationEmail(email, invitationData) {
         projectName,
         roleName,
         inviterName,
+        inviterEmail,
         inviterJobTitle,
         organisationName,
         personalMessage,
@@ -324,6 +327,7 @@ export async function dispatchOrganisationPmoAdminInvitationEmail(email, invitat
     String(invitationData.organisationName ?? invitationData.orgLabel ?? '').trim() || 'your organisation'
   const roleName = invitationData.roleName || 'PMO Administrator'
   const inviterName = invitationData.inviterName || 'A team member'
+  const inviterEmail = String(invitationData.inviterEmail ?? '').trim()
   const inviterJobTitle = String(invitationData.inviterJobTitle ?? '').trim()
   const expiryDays = invitationData.expiryDays || 7
   const invitationToken = invitationData.invitationToken || null
@@ -374,6 +378,7 @@ export async function dispatchOrganisationPmoAdminInvitationEmail(email, invitat
         projectName: organisationName,
         roleName,
         inviterName,
+        inviterEmail,
         inviterJobTitle,
         organisationName,
         personalMessage,
@@ -388,6 +393,7 @@ export async function dispatchOrganisationPmoAdminInvitationEmail(email, invitat
         projectName: organisationName,
         roleName,
         inviterName,
+        inviterEmail,
         inviterJobTitle,
         organisationName,
         personalMessage,
@@ -559,6 +565,7 @@ function buildInvitationEmailHtml({
   projectName,
   roleName,
   inviterName,
+  inviterEmail = '',
   inviterJobTitle = '',
   organisationName,
   personalMessage,
@@ -615,6 +622,13 @@ function buildInvitationEmailHtml({
   const apptBlock = appointmentTermsHtml || ''
   const contextBlock = projectContextHtml || ''
 
+  const emailRow = inviterEmail
+    ? `<tr>
+         <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">Email</td>
+         <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:500;">${escapeHtml(inviterEmail)}</td>
+       </tr>`
+    : ''
+
   const jobTitleRow = inviterJobTitle
     ? `<tr>
          <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">Job Title</td>
@@ -652,6 +666,7 @@ function buildInvitationEmailHtml({
           <td style="padding:4px 0;color:#6b7280;font-size:13px;width:110px;">Name</td>
           <td style="padding:4px 0;color:#111827;font-size:13px;font-weight:600;">${escapeHtml(inviterName)}</td>
         </tr>
+        ${emailRow}
         ${jobTitleRow}
         ${orgRow}
         ${projectRow}
@@ -706,6 +721,7 @@ function buildInvitationEmailText({
   projectName,
   roleName,
   inviterName,
+  inviterEmail = '',
   inviterJobTitle = '',
   organisationName,
   personalMessage,
@@ -752,6 +768,7 @@ function buildInvitationEmailText({
     'Invitation sent by',
     `Name:         ${inviterName}`,
   )
+  if (inviterEmail) lines.push(`Email:        ${inviterEmail}`)
   if (inviterJobTitle) lines.push(`Job Title:    ${inviterJobTitle}`)
   if (organisationName) lines.push(`Organisation: ${organisationName}`)
   if (isOrganisationInvite) {
@@ -820,6 +837,7 @@ export async function sendInvitationReminder(invitationId) {
         invitation.role?.role_display_name || invitation.role?.role_name || 'team member',
       inviterName:
         resolveInviterDisplayNameFromUser(invitation.invited_by || {}) || 'A team member',
+      inviterEmail: invitation.invited_by?.email || '',
       message: invitation.invitation_message || null,
       expiryDays,
       invitationToken: invitation.invitation_token,

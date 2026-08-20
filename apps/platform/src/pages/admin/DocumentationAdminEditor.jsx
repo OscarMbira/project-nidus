@@ -15,6 +15,11 @@ import {
   uploadDocumentationFile,
 } from '../../services/documentationService';
 import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 
 // All modules from the registry
 const PLATFORM_MODULES = [
@@ -107,6 +112,8 @@ export default function DocumentationAdminEditor() {
   const [draftRestored, setDraftRestored] = useState(false);
   const [showDiscardPrompt, setShowDiscardPrompt] = useState(false);
   const autoSaveTimer = useRef(null);
+  const [formTab, setFormTab] = useState('details');
+  const [record, setRecord] = useState(null);
 
   const moduleOptions = system === 'simulator' ? SIMULATOR_MODULES : PLATFORM_MODULES;
 
@@ -128,6 +135,7 @@ export default function DocumentationAdminEditor() {
           .single();
         if (error) throw error;
 
+        setRecord(data);
         setSystem(data.system);
         setTitle(data.title);
         setGuideId(data.guide_id);
@@ -298,6 +306,35 @@ export default function DocumentationAdminEditor() {
         </div>
       </div>
 
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 pt-3">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' ? (
+        <div className="flex-1 overflow-auto p-6">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this guide is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this documentation guide, and how it is classified.">
+              <AuditCard title="Identity" description="How this guide is labelled and tracked.">
+                <AuditField label="Title" value={record.title} />
+                <AuditField label="Guide ID" value={record.guide_id} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this guide sits.">
+                <AuditField label="System" value={record.system} />
+                <AuditField label="Module" value={record.module} />
+                <AuditField label="Category" value={record.category} />
+                <AuditField label="Active" value={record.is_active ? 'Yes' : 'No'} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this guide was created and last changed.">
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
+      <>
       {/* ── Metadata form ── */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-4">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -464,6 +501,8 @@ export default function DocumentationAdminEditor() {
           )}
         </div>
       </div>
+      </>
+      )}
 
       {/* Discard confirmation */}
       {showDiscardPrompt && (

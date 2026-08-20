@@ -21,6 +21,7 @@ import { createManagerAppointment } from '../../services/managerAppointmentServi
 import { managerRoleForEntityType } from '@nidus/shared/utils/appointmentRoleUtils'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 
 const VIEW_KEY = 'pmo-manager-assignments-view'
 const SORT_PREFIX = 'pmo-manager-assignments-sort-'
@@ -55,6 +56,7 @@ const TAB_OPTIONS = [
 
 const AssignmentTableRow = memo(function AssignmentTableRow({
   row,
+  index,
   codeField,
   nameField,
   limit,
@@ -67,7 +69,8 @@ const AssignmentTableRow = memo(function AssignmentTableRow({
   const w = mid ? workload[mid] ?? 0 : null
   return (
     <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-      <td className="px-4 py-2 font-mono text-xs text-gray-600 dark:text-gray-300">{row[codeField]}</td>
+      <TableRowNumberCell number={getDisplayRowNumber(index)} />
+      <td className="px-4 py-2 min-w-[11rem] whitespace-nowrap font-mono text-xs text-gray-600 dark:text-gray-300">{row[codeField]}</td>
       <td className="px-4 py-2 text-gray-900 dark:text-white">{row[nameField]}</td>
       <td className="px-4 py-2 text-gray-700 dark:text-gray-300">
         {row.manager?.full_name || row.manager?.email || '—'}
@@ -99,13 +102,16 @@ const AssignmentTableRow = memo(function AssignmentTableRow({
   )
 })
 
-const AssignmentCard = memo(function AssignmentCard({ row, codeField, nameField, limit, workload, onAssign, onRemove }) {
+const AssignmentCard = memo(function AssignmentCard({ row, index, codeField, nameField, limit, workload, onAssign, onRemove }) {
   const mid =
     row.project_manager_user_id || row.programme_manager_user_id || row.portfolio_manager_user_id
   const w = mid ? workload[mid] ?? 0 : null
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm flex flex-col gap-2">
-      <div className="text-xs font-mono text-gray-500">{row[codeField]}</div>
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xs font-mono text-gray-500">{row[codeField]}</div>
+        <RowNumberBadge number={getDisplayRowNumber(index)} />
+      </div>
       <div className="font-semibold text-gray-900 dark:text-white">{row[nameField]}</div>
       <div className="text-sm text-gray-600 dark:text-gray-300">
         Manager: {row.manager?.full_name || row.manager?.email || '—'}
@@ -466,6 +472,7 @@ export default function ManagerAssignments() {
                   <AssignmentTableRow
                     key={r.id}
                     row={r}
+                    index={index}
                     codeField={codeField}
                     nameField={nameField}
                     limit={limit}
@@ -486,6 +493,7 @@ export default function ManagerAssignments() {
               <AssignmentCard
                 key={r.id}
                 row={r}
+                index={index}
                 codeField={codeField}
                 nameField={nameField}
                 limit={limit}

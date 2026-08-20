@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, GraduationCap, Award, Rocket } from 'lucide-react'
+import { ArrowLeft, GraduationCap, Award, Rocket } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getSimMandateById, getSimDeliverables, getSimStakeholders, getSimMandateProgress, canCreatePracticeProject, createPracticeProjectFromMandate, getPracticeProjectsFromMandate } from '../../services/simulatorMandateService'
 import { getSimConstraintsByMandate } from '../../services/simMandateConstraintService'
 import ConstraintSelector from '../../components/constraints/ConstraintSelector'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SIM_MANDATE_VIEW_SECTIONS = [
   { title: 'Mandate', fields: [
@@ -26,12 +34,23 @@ export default function SimMandateView() {
   const [canCreateProject, setCanCreateProject] = useState(false)
   const [creatingProject, setCreatingProject] = useState(false)
   const [practiceProjects, setPracticeProjects] = useState([])
+  const [constraints, setConstraints] = useState([])
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (mandateId) {
       fetchMandate()
     }
   }, [mandateId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !mandate) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [mandate.user_id])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, mandate])
 
   const handleCreatePracticeProject = async () => {
     if (!confirm('Create a practice project from this approved mandate? This is for learning purposes only.')) return
@@ -144,13 +163,11 @@ export default function SimMandateView() {
               onExportPrint={() => exportRecordToPrint(SIM_MANDATE_VIEW_SECTIONS, mandate, `PracticeMandate_${mandate.mandate_reference || mandateId}`)}
             />
             {mandate.document_status === 'draft' && (
-              <button
+              <RowActionButton
+                variant="edit"
+                label="Edit mandate"
                 onClick={() => navigate(`/simulator/mandates/${mandateId}/edit`)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </button>
+              />
             )}
             {canCreateProject && (
               <button
@@ -173,6 +190,25 @@ export default function SimMandateView() {
         </p>
       </div>
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created this mandate.">
+          <AuditCard title="Identity" description="How this mandate is labelled.">
+            <AuditField label="Title" value={mandate.mandate_title} />
+            <AuditField label="Reference" value={mandate.mandate_reference} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this mandate sits.">
+            <AuditField label="Status" value={humanizeAuditToken(mandate.document_status)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this mandate was created and last changed.">
+            <AuditField label="Created by" value={mandate.user_id ? auditUserLabels[mandate.user_id] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={mandate.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={mandate.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       {/* Progress Indicator */}
       {progress && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
@@ -354,6 +390,8 @@ export default function SimMandateView() {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   )
 }

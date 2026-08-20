@@ -12,7 +12,7 @@ import UserAvatarBadge from './UserAvatarBadge'
  */
 export default function ProfilePictureSection({ db, accountId, initials }) {
   const [avatarPath, setAvatarPath] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [refreshNonce, setRefreshNonce] = useState(0)
   const [showPasteHint, setShowPasteHint] = useState(false)
   const [busy, setBusy] = useState(false)
   const pasteBoxRef = useRef(null)
@@ -22,7 +22,6 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
     getUserAvatar(db).then((result) => {
       if (cancelled) return
       if (result.success) setAvatarPath(result.data)
-      setLoading(false)
     })
     return () => { cancelled = true }
   }, [db])
@@ -42,6 +41,7 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
         return
       }
       setAvatarPath(result.data)
+      setRefreshNonce((n) => n + 1)
       setShowPasteHint(false)
       toast.success('Profile picture updated')
     } finally {
@@ -85,15 +85,11 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPasteHint])
 
-  if (loading) {
-    return <p className="text-xs text-gray-500 dark:text-gray-400">Loading profile picture…</p>
-  }
-
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">Profile Picture</h3>
       <div className="flex flex-wrap items-center gap-4">
-        <UserAvatarBadge db={db} avatarPath={avatarPath} initials={initials} sizeClassName="w-20 h-20" zoomable />
+        <UserAvatarBadge db={db} avatarPath={avatarPath} initials={initials} sizeClassName="w-20 h-20" zoomable refreshNonce={refreshNonce} />
         <div className="flex flex-1 flex-wrap items-center gap-2">
           <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-800 ${busy ? 'pointer-events-none opacity-50' : ''}`}>
             <Upload className="h-3.5 w-3.5" />

@@ -3,7 +3,15 @@ import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { X, Save, User, Calendar, AlertTriangle, TrendingUp } from 'lucide-react'
 import { HoldButton } from './ui/HoldButton'
+import FormSurface from './ui/FormSurface'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -78,7 +86,7 @@ function riskToFormData(risk, linkedTaskId, linkedWorkPackageId) {
   }
 }
 
-export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComplete, linkedTaskId, linkedWorkPackageId }) {
+export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComplete, linkedTaskId, linkedWorkPackageId, variant = 'modal' }) {
   const [formData, setFormData] = useState(EMPTY_RISK_FORM)
   const [baselineSnapshot, setBaselineSnapshot] = useState('')
   const [teamMembers, setTeamMembers] = useState([])
@@ -86,12 +94,15 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
   const [workPackages, setWorkPackages] = useState([])
   const [saving, setSaving] = useState(false)
   const [newArea, setNewArea] = useState('')
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const isDirty = useMemo(
     () => baselineSnapshot !== '' && buildRiskFormSnapshot(formData) !== baselineSnapshot,
     [formData, baselineSnapshot],
   )
   const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved risk changes.')
+  const { showSuccess, modal: successModal } = useSuccessModal()
 
   const handleCancel = () => confirmDiscard(onCancel)
 
@@ -103,19 +114,35 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
     fetchLinkedItems()
   }, [risk, projectId, linkedTaskId, linkedWorkPackageId])
 
+  useEffect(() => {
+    if (formTab !== 'audit' || !risk) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [
+        risk.created_by,
+        risk.updated_by,
+        risk.identified_by_user_id,
+        risk.risk_owner_user_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, risk])
+
   const fetchTeamMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('project_members')
+        .from('project_memberships')
         .select(`
-          *,
+          id,
+          user_id,
           user:user_id (id, email, full_name)
         `)
         .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
 
       if (error) throw error
-      setTeamMembers(data || [])
+      setTeamMembers((data || []).filter((m) => m.user_id))
     } catch (error) {
       console.error('Error fetching team members:', error)
     }
@@ -199,6 +226,8 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
         updated_by: user.id,
       }
 
+      let riskCode = risk?.risk_code
+
       if (risk) {
         // Update
         const { error } = await supabase
@@ -210,14 +239,23 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
       } else {
         // Create
         submitData.created_by = user.id
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('risks')
           .insert(submitData)
+          .select('risk_code')
+          .single()
 
         if (error) throw error
+        riskCode = data?.risk_code
       }
 
-      onSave()
+      setBaselineSnapshot(buildRiskFormSnapshot(formData))
+      showSuccess({
+        recordId: riskCode,
+        operation: risk ? 'updated' : 'created',
+        message: `Risk ${risk ? 'updated' : 'created'} successfully.`,
+        onOk: onSave,
+      })
     } catch (error) {
       console.error('Error saving risk:', error)
       alert('Error saving risk: ' + error.message)
@@ -230,22 +268,59 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
   const riskLevel = getRiskLevel(riskScore)
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {risk ? 'Edit Risk' : 'Create Risk'}
-          </h2>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-
+    <>
+    {successModal}
+    <FormSurface
+      variant={variant}
+      title={risk ? 'Edit Risk' : 'Create Risk'}
+      icon={AlertTriangle}
+      onClose={handleCancel}
+    >
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !risk?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this risk is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this risk, and how it is classified.">
+                <AuditCard title="Identity" description="How this risk is labelled and tracked.">
+                  <AuditField label="Risk code" value={risk.risk_code} />
+                  <AuditField label="Title" value={formData.risk_title || risk.risk_title} />
+                  <AuditField label="Type" value={humanizeAuditToken(formData.risk_type || risk.risk_type)} />
+                  <AuditField label="Status" value={humanizeAuditToken(risk.status)} />
+                  <AuditField label="Record status" value={humanizeAuditToken(risk.record_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this risk sits.">
+                  <AuditField label="Category" value={humanizeAuditToken(formData.risk_category || risk.risk_category)} />
+                  <AuditField label="Response strategy" value={humanizeAuditToken(formData.response_strategy || risk.response_strategy)} />
+                  <AuditField
+                    label="Risk owner"
+                    value={
+                      formData.risk_owner_user_id || risk.risk_owner_user_id
+                        ? auditUserLabels[formData.risk_owner_user_id || risk.risk_owner_user_id] || null
+                        : null
+                    }
+                  />
+                  <AuditField
+                    label="Identified by"
+                    value={risk.identified_by_user_id ? auditUserLabels[risk.identified_by_user_id] || null : null}
+                  />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this risk was created and last changed.">
+                  <AuditField label="Created by" value={risk.created_by ? auditUserLabels[risk.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={risk.created_at} />
+                  <AuditField label="Updated by" value={risk.updated_by ? auditUserLabels[risk.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={risk.updated_at} />
+                  <AuditTimestampPair dateLabel="Target mitigation date" value={risk.target_mitigation_date || formData.target_mitigation_date} />
+                  <AuditTimestampPair dateLabel="Next review date" value={risk.next_review_date || formData.next_review_date} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -588,6 +663,8 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
               ))}
             </div>
           </div>
+          </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <HoldButton
@@ -614,8 +691,8 @@ export default function RiskForm({ risk, projectId, onSave, onCancel, onHoldComp
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </FormSurface>
+    </>
   )
 }
 

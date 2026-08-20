@@ -2,9 +2,11 @@ import { useState, useEffect, useMemo } from 'react'
 import { X, Loader, AlertTriangle } from 'lucide-react'
 import { getAssignableProjectMembers, getTeamFunctionalRoles, getUserTotalTeamAllocation, addTeamMember } from '../../services/teamService'
 import { useToast } from '@nidus/shared/hooks/useToast'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId, onSuccess }) {
   const { showToast } = useToast()
+  const [formTab, setFormTab] = useState('details')
   const [loading, setLoading] = useState(true)
   const [assignable, setAssignable] = useState([])
   const [roles, setRoles] = useState([])
@@ -112,7 +114,13 @@ export default function AddTeamMemberModal({ isOpen, onClose, teamId, projectId,
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Only users already on the project can be added.</p>
 
-        {loading ? (
+        <div className="mb-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this team member is saved.</p>
+        ) : loading ? (
           <div className="flex justify-center py-8">
             <Loader className="w-8 h-8 animate-spin text-blue-500" />
           </div>

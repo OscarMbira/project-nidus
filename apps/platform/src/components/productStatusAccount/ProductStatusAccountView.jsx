@@ -16,6 +16,12 @@ import PSAProgressIndicator from './PSAProgressIndicator'
 import ProductStatusAccountExportMenu from './ProductStatusAccountExportMenu'
 import ExportRecordButtons from '../ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import { supabase } from '../../services/supabaseClient'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PSA_VIEW_SECTIONS = [
   { title: 'Overview', fields: [
@@ -31,7 +37,8 @@ const TABS = [
   { id: 'progress', label: 'Progress', icon: TrendingUp },
   { id: 'quality', label: 'Quality & Acceptance', icon: CheckCircle },
   { id: 'issues', label: 'Issues & Dependencies', icon: AlertCircle },
-  { id: 'history', label: 'History', icon: Clock }
+  { id: 'history', label: 'History', icon: Clock },
+  { id: 'audit', label: 'Audit details', icon: FileText }
 ]
 
 export default function ProductStatusAccountView({ psaId, projectId }) {
@@ -43,12 +50,21 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
   const [milestones, setMilestones] = useState([])
   const [dependencies, setDependencies] = useState([])
   const [loading, setLoading] = useState(true)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (psaId) {
       loadData()
     }
   }, [psaId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !psa) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [psa.created_by, psa.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, psa])
 
   const loadData = async () => {
     try {
@@ -456,6 +472,27 @@ export default function ProductStatusAccountView({ psaId, projectId }) {
               )}
             </div>
           </div>
+        )
+
+      case 'audit':
+        return (
+          <AuditDetailsPanel description="Who created or changed this product status account, and how it is classified.">
+            <AuditCard title="Identity" description="How this record is labelled and tracked.">
+              <AuditField label="Reference" value={psa.psa_reference} />
+              <AuditField label="Product name" value={psa.product_name} />
+              <AuditField label="Status" value={humanizeAuditToken(psa.current_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this record is categorised.">
+              <AuditField label="Product type" value={humanizeAuditToken(psa.product_type)} />
+              <AuditField label="Progress indicator" value={humanizeAuditToken(psa.progress_indicator)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this record was created and last changed.">
+              <AuditField label="Created by" value={psa.created_by ? auditUserLabels[psa.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={psa.created_at} />
+              <AuditField label="Updated by" value={psa.updated_by ? auditUserLabels[psa.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={psa.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
         )
 
       default:

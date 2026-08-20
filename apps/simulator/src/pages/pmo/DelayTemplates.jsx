@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Plus, Pencil, Search } from 'lucide-react'
+import { Plus, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { platformDb } from '@nidus/supabase'
 import * as delayApi from '../../services/delayService'
 import * as simDelayApi from '../../services/sim/simDelayService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
@@ -213,9 +214,12 @@ export default function DelayTemplates({ isSim = false }) {
               <div className="text-xs text-slate-400 mt-1 capitalize">{r.delay_category?.replace(/_/g, ' ')}</div>
               <div className="text-xs text-slate-500 mt-2">Used by {usage[r.id] ?? 0} project delay(s)</div>
               {canEdit && (
-                <button type="button" className="mt-2 text-blue-400 text-sm" onClick={() => { setEditRow(r); setFormOpen(true); }}>
-                  <Pencil className="inline h-3.5 w-3.5" /> Edit
-                </button>
+                <RowActionButton
+                  variant="edit"
+                  label="Edit delay template"
+                  className="mt-2"
+                  onClick={() => { setEditRow(r); setFormOpen(true); }}
+                />
               )}
             </div>
           ))}
@@ -254,9 +258,11 @@ export default function DelayTemplates({ isSim = false }) {
                   <td className="px-3 py-2 text-right">
                     {canEdit && (
                       <>
-                        <button type="button" className="text-blue-400 mr-2" onClick={() => { setEditRow(r); setFormOpen(true); }}>
-                          Edit
-                        </button>
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit delay template"
+                          onClick={() => { setEditRow(r); setFormOpen(true); }}
+                        />
                         <button type="button" className="text-red-400" onClick={() => archiveRow(r)}>
                           Archive
                         </button>

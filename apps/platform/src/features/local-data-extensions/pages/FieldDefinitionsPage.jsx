@@ -8,6 +8,7 @@ import {
 import CustomFieldAdminBuilder from '../components/CustomFieldAdminBuilder'
 import { WORKFLOW_STATUS } from '../utils/customFieldConstants'
 import { invalidateAllCustomFieldsCache } from '../hooks/useCustomFields'
+import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -103,9 +104,7 @@ export default function FieldDefinitionsPage() {
                   <td className="p-2">{r.field_type}</td>
                   <td className="p-2 capitalize">{r.workflow_status}</td>
                   <td className="p-2 text-right space-x-2 whitespace-nowrap">
-                    <button type="button" className="text-blue-600 dark:text-blue-400" onClick={() => openEdit(r)}>
-                      Edit
-                    </button>
+                    <RowActionButton variant="edit" label="Edit field definition" onClick={() => openEdit(r)} />
                     {r.workflow_status !== WORKFLOW_STATUS.PUBLISHED && (
                       <button type="button" className="text-emerald-600 dark:text-emerald-400" onClick={() => publish(r)}>
                         Publish

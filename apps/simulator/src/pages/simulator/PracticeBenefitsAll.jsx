@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Target, Search, FileText } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getAllPracticeBenefitsReviewPlans } from '../../services/sim/practiceBenefitsService'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
@@ -131,13 +132,11 @@ export default function PracticeBenefitsAll() {
                         {plan.updated_at ? new Date(plan.updated_at).toLocaleDateString() : '—'}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
+                        <RowActionButton
+                          variant="view"
+                          label="View benefits review plan"
                           onClick={() => navigate(`/simulator/practice-benefits-review-plans/${plan.id}`)}
-                          className="text-blue-500 hover:text-purple-300 inline-flex items-center gap-1 text-sm"
-                        >
-                          View
-                        </button>
+                        />
                       </td>
                     </tr>
                   ))}

@@ -7,6 +7,7 @@ import { listSimEvmSnapshots, upsertSimEvmSnapshot } from '../../services/simEvm
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const EXPORT_COLS = [
   { key: 'period_date', label: 'Period' },
@@ -20,6 +21,7 @@ export default function SimProjectEVMPage() {
   const [rows, setRows] = useState([])
   const [uid, setUid] = useState(null)
   const [form, setForm] = useState({ period_date: new Date().toISOString().slice(0, 10), planned_value: '', earned_value: '', actual_cost: '' })
+  const [formTab, setFormTab] = useState('details')
 
   const load = useCallback(async () => {
     setRows(await listSimEvmSnapshots(projectId))
@@ -63,6 +65,10 @@ export default function SimProjectEVMPage() {
           <ExportListMenu columns={EXPORT_COLS} data={rows} baseFilename={`sim_practice_evm_${projectId}`} disabled={!rows.length} />
         </div>
         <h1 className="text-xl font-bold">Practice EVM</h1>
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        {formTab === 'audit' ? (
+          <p className="text-sm text-gray-400 rounded-xl border border-gray-800 p-4">Audit details appear after a snapshot is saved.</p>
+        ) : (
         <form onSubmit={save} className="flex flex-wrap gap-2 rounded-xl border border-gray-800 p-4">
           <input type="date" value={form.period_date} onChange={(e) => setForm({ ...form, period_date: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <input placeholder="PV" value={form.planned_value} onChange={(e) => setForm({ ...form, planned_value: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
@@ -70,6 +76,7 @@ export default function SimProjectEVMPage() {
           <input placeholder="AC" value={form.actual_cost} onChange={(e) => setForm({ ...form, actual_cost: e.target.value })} className="rounded border border-gray-700 bg-gray-900 px-2 py-1 text-sm" />
           <button type="submit" className="px-3 py-1 rounded bg-blue-600 text-sm">Save</button>
         </form>
+        )}
         <table className="min-w-full text-sm border border-gray-800 rounded">
           <thead className="bg-gray-900">
             <tr>

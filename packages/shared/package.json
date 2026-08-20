@@ -11,6 +11,7 @@
     "./services/*": "./src/services/*",
     "./context/*": "./src/context/*",
     "./constants/*": "./src/constants/*",
+    "./config/*": "./src/config/*",
     "./components/domain/*": "./src/components/domain/*",
     "./components/subscription/*": "./src/components/subscription/*.jsx",
     "./components/*": "./src/components/*",

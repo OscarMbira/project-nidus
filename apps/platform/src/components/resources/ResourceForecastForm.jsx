@@ -2,8 +2,16 @@ import { useState, useEffect } from 'react';
 import { X, Save, TrendingUp, Target, Calendar } from 'lucide-react';
 import { saveResourceForecast } from '../../services/crossResourceService';
 import { supabase } from '../../services/supabaseClient';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
   const [formData, setFormData] = useState({
     portfolio_id: '',
     programme_id: '',
@@ -50,6 +58,14 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
     }
     fetchLookupData();
   }, [forecast]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !forecast) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(supabase, [forecast.created_by, forecast.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, forecast]);
 
   const fetchLookupData = async () => {
     try {
@@ -129,6 +145,34 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
           </button>
         </div>
 
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          <div className="p-6">
+            {!forecast ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this forecast is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this forecast, and how it is classified.">
+                <AuditCard title="Identity" description="How this forecast is labelled and tracked.">
+                  <AuditField label="Scope" value={humanizeAuditToken(forecast.forecast_scope)} />
+                  <AuditField label="Type" value={humanizeAuditToken(forecast.forecast_type)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this forecast is categorised.">
+                  <AuditField label="Resource category" value={forecast.resource_category} />
+                  <AuditField label="Confidence level" value={humanizeAuditToken(forecast.forecast_confidence_level)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this forecast was created and last changed.">
+                  <AuditField label="Created by" value={forecast.created_by ? auditUserLabels[forecast.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={forecast.created_at} />
+                  <AuditField label="Updated by" value={forecast.updated_by ? auditUserLabels[forecast.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={forecast.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Forecast Context */}
           <div className="space-y-4">
@@ -458,6 +502,7 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   );

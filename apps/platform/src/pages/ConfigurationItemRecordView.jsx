@@ -8,7 +8,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { ArrowLeft, Edit2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import ConfigurationItemView from '../components/ci/ConfigurationItemView'
 import { getConfigurationItemById } from '../services/configurationItemRecordService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
@@ -30,16 +31,20 @@ export default function ConfigurationItemRecordView() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (itemId) {
+    if (itemId && projectId) {
       fetchItem()
     }
-  }, [itemId])
+  }, [itemId, projectId])
 
   const fetchItem = async () => {
     try {
       setLoading(true)
-      const data = await getConfigurationItemById(itemId)
+      const data = await getConfigurationItemById(itemId, projectId)
       setItem(data)
+      // Self-correct a raw-UUID bookmark to the friendly identifier, same pattern as v872.
+      if (data?.configuration_item_identifier && data.configuration_item_identifier !== itemId) {
+        navigate(platformProjectPath(routeKey, 'configuration-items', data.configuration_item_identifier), { replace: true })
+      }
     } catch (error) {
       console.error('Error fetching Configuration Item:', error)
       alert('Error: ' + error.message)
@@ -49,7 +54,7 @@ export default function ConfigurationItemRecordView() {
   }
 
   const handleEdit = () => {
-    navigate(platformProjectPath(routeKey, 'configuration-items', '${itemId}', 'edit'))
+    navigate(platformProjectPath(routeKey, 'configuration-items', item?.configuration_item_identifier || itemId, 'edit'))
   }
 
   if (loading) {
@@ -96,13 +101,7 @@ export default function ConfigurationItemRecordView() {
         />
       </div>
       <div className="mb-4 flex justify-end">
-        <button
-          onClick={handleEdit}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-        >
-          <Edit2 className="h-4 w-4" />
-          Edit
-        </button>
+        <RowActionButton variant="edit" label="Edit configuration item" onClick={handleEdit} />
       </div>
       <ConfigurationItemView itemId={itemId} onEdit={handleEdit} />
     </div>

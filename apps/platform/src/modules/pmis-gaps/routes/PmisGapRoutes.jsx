@@ -1,4 +1,4 @@
-import { Route } from 'react-router-dom'
+import { Route, Outlet } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import ProtectedRoute from '../../../components/ProtectedRoute'
 import { ThemeProvider } from '@nidus/shared/context/ThemeContext'
@@ -84,6 +84,60 @@ function wrapSimulator(el) {
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
+    </Suspense>
+  )
+}
+
+function wrapPmOutlet() {
+  return (
+    <Suspense fallback={<Loading />}>
+      {withProviders(<PMLayout><Outlet /></PMLayout>)}
+    </Suspense>
+  )
+}
+
+function wrapPmoOutlet() {
+  return (
+    <Suspense fallback={<Loading />}>
+      {withProviders(<PMOLayout><Outlet /></PMOLayout>)}
+    </Suspense>
+  )
+}
+
+function wrapPlatformOutlet() {
+  return (
+    <Suspense fallback={<Loading />}>
+      {withProviders(<Layout><Outlet /></Layout>)}
+    </Suspense>
+  )
+}
+
+function wrapSimulatorOutlet() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ThemeProvider>
+        <ToastProvider>
+          <ProtectedRoute requiredPlatform="simulator">
+            <Layout><Outlet /></Layout>
+          </ProtectedRoute>
+        </ToastProvider>
+      </ThemeProvider>
+    </Suspense>
+  )
+}
+
+function wrapSimPmOutlet() {
+  return (
+    <Suspense fallback={<Loading />}>
+      {withProviders(<SimulatorPMLayout><Outlet /></SimulatorPMLayout>)}
+    </Suspense>
+  )
+}
+
+function wrapSimPmoOutlet() {
+  return (
+    <Suspense fallback={<Loading />}>
+      {withProviders(<SimulatorPMOLayout><Outlet /></SimulatorPMOLayout>)}
     </Suspense>
   )
 }
@@ -444,157 +498,175 @@ export function PmisGapRouteElements() {
   return (
     <>
       {/* PM routes */}
-      <Route path="pm/calendar" element={wrapPm(<UniversalCalendarPage />)} />
-      <Route path="pm/automations" element={wrapPm(<AutomationHubPage />)} />
-      <Route path="pm/automations/templates" element={wrapPm(<AutomationTemplatesPage />)} />
-      <Route path="pm/automations/log" element={wrapPm(<AutomationLogPage />)} />
-      <Route path="pm/automations/builder/:ruleId?" element={wrapPm(<AutomationRuleBuilder />)} />
-      <Route path="pm/okr" element={wrapPm(<OKRDashboardPage />)} />
-      <Route path="pm/okr/objectives" element={wrapPm(<OKRObjectivesPage />)} />
-      <Route path="pm/okr/alignment" element={wrapPm(<OKRDashboardPage />)} />
-      <Route path="pm/okr/checkins" element={wrapPm(<OKRObjectivesPage />)} />
-      <Route path="pm/settings/custom-fields" element={wrapPm(<CustomFieldsPage />)} />
-      <Route path="pm/resources/workload" element={wrapPm(<WorkloadHeatmapPage />)} />
-      <Route path="pm/settings/intake-forms" element={wrapPm(<IntakeFormsPage />)} />
-      <Route path="pm/settings/intake-forms/submissions" element={wrapPm(<IntakeFormsPage />)} />
-      <Route path="pm/settings/client-portal" element={wrapPm(<ClientPortalPage />)} />
-      <Route path="pm/settings/recurring-tasks" element={wrapPm(<RecurringTasksPage />)} />
-      <Route path="pm/resources/raci" element={wrapPm(<RaciPage />)} />
-      <Route path="pm/resources/skills" element={wrapPm(<SkillsPage />)} />
-      <Route path="pm/resources/timesheet-approvals" element={wrapPm(<TimesheetApprovalsPage />)} />
-      <Route path="pm/resources/training" element={wrapPm(<TrainingPage />)} />
-      <Route path="pm/procurement/vendors" element={wrapPm(<VendorsPage />)} />
-      <Route path="pm/procurement/requests" element={wrapPm(<VendorsPage />)} />
-      <Route path="pm/procurement/orders" element={wrapPm(<VendorsPage />)} />
-      <Route path="pm/procurement/contracts" element={wrapPm(<VendorsPage />)} />
-      <Route path="pm/procurement/invoices" element={wrapPm(<VendorsPage />)} />
-      <Route path="pm/planning/s-curve" element={wrapPm(<SCurvePage />)} />
-      <Route path="pm/planning/planning-poker" element={wrapPm(<PlanningPokerPage />)} />
-      <Route path="pm/dashboards/builder" element={wrapPm(<DashboardBuilderPage />)} />
-      <Route path="pm/strategy/portfolio-map" element={wrapPm(<PortfolioMapPage />)} />
-      <Route path="pm/collaboration/whiteboard" element={wrapPm(<WhiteboardPage />)} />
-      <Route path="pm/settings/guest-access" element={wrapPm(<GuestAccessPage />)} />
-      <Route path="pm/settings/notifications" element={wrapPm(<NotificationPrefsPage />)} />
-      <Route path="pm/settings/project-clone" element={wrapPm(<ProjectClonePage />)} />
-      <Route path="pm/reporting/scheduled" element={wrapPm(<ScheduledReportsPage />)} />
-      <Route path="pm/integrations" element={wrapPm(<IntegrationsPage />)} />
-      <Route path="pm/integrations/connections" element={wrapPm(<IntegrationsPage />)} />
 
       {/* PMO routes */}
-      <Route path="pmo/calendar" element={wrapPmo(<UniversalCalendarPage />)} />
-      <Route path="pmo/admin/automations" element={wrapPmo(<AutomationHubPage />)} />
-      <Route path="pmo/admin/automations/templates" element={wrapPmo(<AutomationTemplatesPage />)} />
-      <Route path="pmo/okr" element={wrapPmo(<OKRDashboardPage />)} />
-      <Route path="pmo/okr/objectives" element={wrapPmo(<OKRObjectivesPage />)} />
-      <Route path="pmo/okr/alignment" element={wrapPmo(<OKRDashboardPage />)} />
-      <Route path="pmo/okr/checkins" element={wrapPmo(<OKRObjectivesPage />)} />
-      <Route path="pmo/admin/custom-fields" element={wrapPmo(<CustomFieldsPage />)} />
-      <Route path="pmo/resources/workload" element={wrapPmo(<WorkloadHeatmapPage />)} />
-      <Route path="pmo/admin/intake-forms" element={wrapPmo(<IntakeFormsPage />)} />
-      <Route path="pmo/admin/client-portals" element={wrapPmo(<ClientPortalPage />)} />
-      <Route path="pmo/resources/raci" element={wrapPmo(<RaciPage />)} />
-      <Route path="pmo/resources/skills" element={wrapPmo(<SkillsPage />)} />
-      <Route path="pmo/procurement/vendors" element={wrapPmo(<VendorsPage />)} />
-      <Route path="pmo/procurement/requests" element={wrapPmo(<VendorsPage />)} />
-      <Route path="pmo/procurement/orders" element={wrapPmo(<VendorsPage />)} />
-      <Route path="pmo/procurement/contracts" element={wrapPmo(<VendorsPage />)} />
-      <Route path="pmo/procurement/invoices" element={wrapPmo(<VendorsPage />)} />
-      <Route path="pmo/planning/s-curve" element={wrapPmo(<SCurvePage />)} />
-      <Route path="pmo/planning/planning-poker" element={wrapPmo(<PlanningPokerPage />)} />
-      <Route path="pmo/dashboards/builder" element={wrapPmo(<DashboardBuilderPage />)} />
-      <Route path="pmo/strategy/portfolio-map" element={wrapPmo(<PortfolioMapPage />)} />
-      <Route path="pmo/collaboration/whiteboard" element={wrapPmo(<WhiteboardPage />)} />
-      <Route path="pmo/settings/notifications" element={wrapPmo(<NotificationPrefsPage />)} />
-      <Route path="pmo/admin/integrations" element={wrapPmo(<IntegrationsPage />)} />
-      <Route path="pmo/reporting/scheduled" element={wrapPmo(<ScheduledReportsPage />)} />
 
       {/* Platform DB-driven role routes */}
-      <Route path="platform/calendar" element={wrapPlatform(<UniversalCalendarPage />)} />
-      <Route path="platform/okr" element={wrapPlatform(<OKRDashboardPage />)} />
-      <Route path="platform/resources/workload" element={wrapPlatform(<WorkloadHeatmapPage />)} />
-      <Route path="platform/settings/notifications" element={wrapPlatform(<NotificationPrefsPage />)} />
-      <Route path="platform/automations" element={wrapPlatform(<AutomationHubPage />)} />
-      <Route path="platform/admin/custom-fields" element={wrapPlatform(<CustomFieldsPage />)} />
-      <Route path="platform/intake-forms" element={wrapPlatform(<IntakeFormsPage />)} />
-      <Route path="platform/client-portal" element={wrapPlatform(<ClientPortalPage />)} />
-      <Route path="platform/recurring-tasks" element={wrapPlatform(<RecurringTasksPage />)} />
-      <Route path="platform/planning/raci" element={wrapPlatform(<RaciPage />)} />
-      <Route path="platform/resources/skills" element={wrapPlatform(<SkillsPage />)} />
-      <Route path="platform/procurement" element={wrapPlatform(<VendorsPage />)} />
-      <Route path="platform/timesheets/approvals" element={wrapPlatform(<TimesheetApprovalsPage />)} />
-      <Route path="platform/planning/s-curve" element={wrapPlatform(<SCurvePage />)} />
-      <Route path="platform/planning/planning-poker" element={wrapPlatform(<PlanningPokerPage />)} />
-      <Route path="platform/dashboards/builder" element={wrapPlatform(<DashboardBuilderPage />)} />
-      <Route path="platform/strategy/portfolio-map" element={wrapPlatform(<PortfolioMapPage />)} />
-      <Route path="platform/collaboration/whiteboard" element={wrapPlatform(<WhiteboardPage />)} />
-      <Route path="platform/admin/guest-access" element={wrapPlatform(<GuestAccessPage />)} />
-      <Route path="platform/resources/training" element={wrapPlatform(<TrainingPage />)} />
-      <Route path="platform/admin/project-clone" element={wrapPlatform(<ProjectClonePage />)} />
-      <Route path="platform/reporting/scheduled" element={wrapPlatform(<ScheduledReportsPage />)} />
-      <Route path="platform/admin/integrations" element={wrapPlatform(<IntegrationsPage />)} />
 
       {/* Simulator general */}
-      <Route path="simulator/calendar" element={wrapSimulator(<UniversalCalendarPage sim />)} />
-      <Route path="simulator/okr" element={wrapSimulator(<OKRDashboardPage sim />)} />
-      <Route path="simulator/team-mode/setup" element={wrapSimulator(<SimMultiplayerPage />)} />
-      <Route path="simulator/team-mode/active" element={wrapSimulator(<SimMultiplayerPage />)} />
-      <Route path="simulator/exams" element={wrapSimulator(<SimExamModePage />)} />
-      <Route path="simulator/exams/results" element={wrapSimulator(<SimExamModePage />)} />
-      <Route path="simulator/exams/certificates" element={wrapSimulator(<SimExamModePage />)} />
-      <Route path="simulator/scenarios/marketplace" element={wrapSimulator(<SimMarketplacePage />)} />
-      <Route path="simulator/profile/run-analytics" element={wrapSimulator(<SimCrossRunAnalyticsPage />)} />
-      <Route path="simulator/profile/improvement" element={wrapSimulator(<SimCrossRunAnalyticsPage />)} />
-      <Route path="simulator/planning/recurring-tasks" element={wrapSimulator(<RecurringTasksPageSim />)} />
-      <Route path="simulator/planning/raci" element={wrapSimulator(<RaciPageSim />)} />
-      <Route path="simulator/dashboards/builder" element={wrapSimulator(<DashboardBuilderPage sim />)} />
-      <Route path="simulator/reporting/scheduled" element={wrapSimulator(<ScheduledReportsPageSim />)} />
-      <Route path="simulator/collaboration/whiteboard" element={wrapSimulator(<WhiteboardPage sim />)} />
-      <Route path="simulator/settings/notifications" element={wrapSimulator(<NotificationPrefsPageSim />)} />
 
       {/* Simulator PM */}
-      <Route path="simulator/pm/calendar" element={wrapSimPm(<UniversalCalendarPage sim />)} />
-      <Route path="simulator/pm/automations" element={wrapSimPm(<AutomationHubPage />)} />
-      <Route path="simulator/pm/okr" element={wrapSimPm(<OKRDashboardPage sim />)} />
-      <Route path="simulator/pm/resources/workload" element={wrapSimPm(<WorkloadHeatmapPage sim />)} />
-      <Route path="simulator/pm/settings/custom-fields" element={wrapSimPm(<CustomFieldsPageSim />)} />
-      <Route path="simulator/pm/settings/intake-forms" element={wrapSimPm(<IntakeFormsPageSim />)} />
-      <Route path="simulator/pm/settings/client-portal" element={wrapSimPm(<ClientPortalPageSim />)} />
-      <Route path="simulator/pm/settings/recurring-tasks" element={wrapSimPm(<RecurringTasksPageSim />)} />
-      <Route path="simulator/pm/resources/raci" element={wrapSimPm(<RaciPageSim />)} />
-      <Route path="simulator/pm/resources/skills" element={wrapSimPm(<SkillsPageSim />)} />
-      <Route path="simulator/pm/procurement/vendors" element={wrapSimPm(<VendorsPageSim />)} />
-      <Route path="simulator/pm/planning/s-curve" element={wrapSimPm(<SCurvePage sim />)} />
-      <Route path="simulator/pm/planning/planning-poker" element={wrapSimPm(<PlanningPokerPage sim />)} />
-      <Route path="simulator/pm/dashboards/builder" element={wrapSimPm(<DashboardBuilderPage sim />)} />
-      <Route path="simulator/pm/collaboration/whiteboard" element={wrapSimPm(<WhiteboardPage sim />)} />
-      <Route path="simulator/pm/settings/notifications" element={wrapSimPm(<NotificationPrefsPageSim />)} />
-      <Route path="simulator/pm/reporting/scheduled" element={wrapSimPm(<ScheduledReportsPageSim />)} />
 
       {/* Simulator PMO */}
-      <Route path="simulator/pmo/calendar" element={wrapSimPmo(<UniversalCalendarPage sim />)} />
-      <Route path="simulator/pmo/admin/automations" element={wrapSimPmo(<AutomationHubPage />)} />
-      <Route path="simulator/pmo/okr" element={wrapSimPmo(<OKRDashboardPage sim />)} />
-      <Route path="simulator/pmo/resources/workload" element={wrapSimPmo(<WorkloadHeatmapPage sim />)} />
-      <Route path="simulator/pmo/admin/custom-fields" element={wrapSimPmo(<CustomFieldsPageSim />)} />
-      <Route path="simulator/pmo/admin/intake-forms" element={wrapSimPmo(<IntakeFormsPageSim />)} />
-      <Route path="simulator/pmo/admin/client-portals" element={wrapSimPmo(<ClientPortalPageSim />)} />
-      <Route path="simulator/pmo/resources/raci" element={wrapSimPmo(<RaciPageSim />)} />
-      <Route path="simulator/pmo/resources/skills" element={wrapSimPmo(<SkillsPageSim />)} />
-      <Route path="simulator/pmo/procurement/vendors" element={wrapSimPmo(<VendorsPageSim />)} />
-      <Route path="simulator/pmo/planning/s-curve" element={wrapSimPmo(<SCurvePage sim />)} />
-      <Route path="simulator/pmo/strategy/portfolio-map" element={wrapSimPmo(<PortfolioMapPage sim />)} />
-      <Route path="simulator/pmo/admin/integrations" element={wrapSimPmo(<IntegrationsPageSim />)} />
-      <Route path="simulator/pmo/reporting/scheduled" element={wrapSimPmo(<ScheduledReportsPageSim />)} />
 
       {/* Simulator TM */}
-      <Route path="simulator/tm/calendar" element={wrapSimulator(<UniversalCalendarPage sim />)} />
-      <Route path="simulator/tm/workload" element={wrapSimulator(<WorkloadHeatmapPage sim />)} />
-      <Route path="simulator/tm/raci" element={wrapSimulator(<RaciPageSim />)} />
-      <Route path="simulator/tm/skills" element={wrapSimulator(<SkillsPageSim />)} />
-      <Route path="simulator/tm/recurring-tasks" element={wrapSimulator(<RecurringTasksPageSim />)} />
-      <Route path="simulator/tm/collaboration/whiteboard" element={wrapSimulator(<WhiteboardPage sim />)} />
-      <Route path="simulator/tm/settings/notifications" element={wrapSimulator(<NotificationPrefsPageSim />)} />
-      <Route path="simulator/tm/training" element={wrapSimulator(<TrainingPageSim />)} />
+      <Route element={wrapPmOutlet()}>
+        <Route path="pm/calendar" element={<UniversalCalendarPage />} />
+        <Route path="pm/automations" element={<AutomationHubPage />} />
+        <Route path="pm/automations/templates" element={<AutomationTemplatesPage />} />
+        <Route path="pm/automations/log" element={<AutomationLogPage />} />
+        <Route path="pm/automations/builder/:ruleId?" element={<AutomationRuleBuilder />} />
+        <Route path="pm/okr" element={<OKRDashboardPage />} />
+        <Route path="pm/okr/objectives" element={<OKRObjectivesPage />} />
+        <Route path="pm/okr/alignment" element={<OKRDashboardPage />} />
+        <Route path="pm/okr/checkins" element={<OKRObjectivesPage />} />
+        <Route path="pm/settings/custom-fields" element={<CustomFieldsPage />} />
+        <Route path="pm/resources/workload" element={<WorkloadHeatmapPage />} />
+        <Route path="pm/settings/intake-forms" element={<IntakeFormsPage />} />
+        <Route path="pm/settings/intake-forms/submissions" element={<IntakeFormsPage />} />
+        <Route path="pm/settings/client-portal" element={<ClientPortalPage />} />
+        <Route path="pm/settings/recurring-tasks" element={<RecurringTasksPage />} />
+        <Route path="pm/resources/raci" element={<RaciPage />} />
+        <Route path="pm/resources/skills" element={<SkillsPage />} />
+        <Route path="pm/resources/timesheet-approvals" element={<TimesheetApprovalsPage />} />
+        <Route path="pm/resources/training" element={<TrainingPage />} />
+        <Route path="pm/procurement/vendors" element={<VendorsPage />} />
+        <Route path="pm/procurement/requests" element={<VendorsPage />} />
+        <Route path="pm/procurement/orders" element={<VendorsPage />} />
+        <Route path="pm/procurement/contracts" element={<VendorsPage />} />
+        <Route path="pm/procurement/invoices" element={<VendorsPage />} />
+        <Route path="pm/planning/s-curve" element={<SCurvePage />} />
+        <Route path="pm/planning/planning-poker" element={<PlanningPokerPage />} />
+        <Route path="pm/dashboards/builder" element={<DashboardBuilderPage />} />
+        <Route path="pm/strategy/portfolio-map" element={<PortfolioMapPage />} />
+        <Route path="pm/collaboration/whiteboard" element={<WhiteboardPage />} />
+        <Route path="pm/settings/guest-access" element={<GuestAccessPage />} />
+        <Route path="pm/settings/notifications" element={<NotificationPrefsPage />} />
+        <Route path="pm/settings/project-clone" element={<ProjectClonePage />} />
+        <Route path="pm/reporting/scheduled" element={<ScheduledReportsPage />} />
+        <Route path="pm/integrations" element={<IntegrationsPage />} />
+        <Route path="pm/integrations/connections" element={<IntegrationsPage />} />
+      </Route>
+
+      <Route element={wrapPmoOutlet()}>
+        <Route path="pmo/calendar" element={<UniversalCalendarPage />} />
+        <Route path="pmo/admin/automations" element={<AutomationHubPage />} />
+        <Route path="pmo/admin/automations/templates" element={<AutomationTemplatesPage />} />
+        <Route path="pmo/okr" element={<OKRDashboardPage />} />
+        <Route path="pmo/okr/objectives" element={<OKRObjectivesPage />} />
+        <Route path="pmo/okr/alignment" element={<OKRDashboardPage />} />
+        <Route path="pmo/okr/checkins" element={<OKRObjectivesPage />} />
+        <Route path="pmo/admin/custom-fields" element={<CustomFieldsPage />} />
+        <Route path="pmo/resources/workload" element={<WorkloadHeatmapPage />} />
+        <Route path="pmo/admin/intake-forms" element={<IntakeFormsPage />} />
+        <Route path="pmo/admin/client-portals" element={<ClientPortalPage />} />
+        <Route path="pmo/resources/raci" element={<RaciPage />} />
+        <Route path="pmo/resources/skills" element={<SkillsPage />} />
+        <Route path="pmo/procurement/vendors" element={<VendorsPage />} />
+        <Route path="pmo/procurement/requests" element={<VendorsPage />} />
+        <Route path="pmo/procurement/orders" element={<VendorsPage />} />
+        <Route path="pmo/procurement/contracts" element={<VendorsPage />} />
+        <Route path="pmo/procurement/invoices" element={<VendorsPage />} />
+        <Route path="pmo/planning/s-curve" element={<SCurvePage />} />
+        <Route path="pmo/planning/planning-poker" element={<PlanningPokerPage />} />
+        <Route path="pmo/dashboards/builder" element={<DashboardBuilderPage />} />
+        <Route path="pmo/strategy/portfolio-map" element={<PortfolioMapPage />} />
+        <Route path="pmo/collaboration/whiteboard" element={<WhiteboardPage />} />
+        <Route path="pmo/settings/notifications" element={<NotificationPrefsPage />} />
+        <Route path="pmo/admin/integrations" element={<IntegrationsPage />} />
+        <Route path="pmo/reporting/scheduled" element={<ScheduledReportsPage />} />
+      </Route>
+
+      <Route element={wrapPlatformOutlet()}>
+        <Route path="platform/calendar" element={<UniversalCalendarPage />} />
+        <Route path="platform/okr" element={<OKRDashboardPage />} />
+        <Route path="platform/resources/workload" element={<WorkloadHeatmapPage />} />
+        <Route path="platform/settings/notifications" element={<NotificationPrefsPage />} />
+        <Route path="platform/automations" element={<AutomationHubPage />} />
+        <Route path="platform/admin/custom-fields" element={<CustomFieldsPage />} />
+        <Route path="platform/intake-forms" element={<IntakeFormsPage />} />
+        <Route path="platform/client-portal" element={<ClientPortalPage />} />
+        <Route path="platform/recurring-tasks" element={<RecurringTasksPage />} />
+        <Route path="platform/planning/raci" element={<RaciPage />} />
+        <Route path="platform/resources/skills" element={<SkillsPage />} />
+        <Route path="platform/procurement" element={<VendorsPage />} />
+        <Route path="platform/timesheets/approvals" element={<TimesheetApprovalsPage />} />
+        <Route path="platform/planning/s-curve" element={<SCurvePage />} />
+        <Route path="platform/planning/planning-poker" element={<PlanningPokerPage />} />
+        <Route path="platform/dashboards/builder" element={<DashboardBuilderPage />} />
+        <Route path="platform/strategy/portfolio-map" element={<PortfolioMapPage />} />
+        <Route path="platform/collaboration/whiteboard" element={<WhiteboardPage />} />
+        <Route path="platform/admin/guest-access" element={<GuestAccessPage />} />
+        <Route path="platform/resources/training" element={<TrainingPage />} />
+        <Route path="platform/admin/project-clone" element={<ProjectClonePage />} />
+        <Route path="platform/reporting/scheduled" element={<ScheduledReportsPage />} />
+        <Route path="platform/admin/integrations" element={<IntegrationsPage />} />
+      </Route>
+
+      <Route element={wrapSimulatorOutlet()}>
+        <Route path="simulator/calendar" element={<UniversalCalendarPage sim />} />
+        <Route path="simulator/okr" element={<OKRDashboardPage sim />} />
+        <Route path="simulator/team-mode/setup" element={<SimMultiplayerPage />} />
+        <Route path="simulator/team-mode/active" element={<SimMultiplayerPage />} />
+        <Route path="simulator/exams" element={<SimExamModePage />} />
+        <Route path="simulator/exams/results" element={<SimExamModePage />} />
+        <Route path="simulator/exams/certificates" element={<SimExamModePage />} />
+        <Route path="simulator/scenarios/marketplace" element={<SimMarketplacePage />} />
+        <Route path="simulator/profile/run-analytics" element={<SimCrossRunAnalyticsPage />} />
+        <Route path="simulator/profile/improvement" element={<SimCrossRunAnalyticsPage />} />
+        <Route path="simulator/planning/recurring-tasks" element={<RecurringTasksPageSim />} />
+        <Route path="simulator/planning/raci" element={<RaciPageSim />} />
+        <Route path="simulator/dashboards/builder" element={<DashboardBuilderPage sim />} />
+        <Route path="simulator/reporting/scheduled" element={<ScheduledReportsPageSim />} />
+        <Route path="simulator/collaboration/whiteboard" element={<WhiteboardPage sim />} />
+        <Route path="simulator/settings/notifications" element={<NotificationPrefsPageSim />} />
+        <Route path="simulator/tm/calendar" element={<UniversalCalendarPage sim />} />
+        <Route path="simulator/tm/workload" element={<WorkloadHeatmapPage sim />} />
+        <Route path="simulator/tm/raci" element={<RaciPageSim />} />
+        <Route path="simulator/tm/skills" element={<SkillsPageSim />} />
+        <Route path="simulator/tm/recurring-tasks" element={<RecurringTasksPageSim />} />
+        <Route path="simulator/tm/collaboration/whiteboard" element={<WhiteboardPage sim />} />
+        <Route path="simulator/tm/settings/notifications" element={<NotificationPrefsPageSim />} />
+        <Route path="simulator/tm/training" element={<TrainingPageSim />} />
+      </Route>
+
+      <Route element={wrapSimPmOutlet()}>
+        <Route path="simulator/pm/calendar" element={<UniversalCalendarPage sim />} />
+        <Route path="simulator/pm/automations" element={<AutomationHubPage />} />
+        <Route path="simulator/pm/okr" element={<OKRDashboardPage sim />} />
+        <Route path="simulator/pm/resources/workload" element={<WorkloadHeatmapPage sim />} />
+        <Route path="simulator/pm/settings/custom-fields" element={<CustomFieldsPageSim />} />
+        <Route path="simulator/pm/settings/intake-forms" element={<IntakeFormsPageSim />} />
+        <Route path="simulator/pm/settings/client-portal" element={<ClientPortalPageSim />} />
+        <Route path="simulator/pm/settings/recurring-tasks" element={<RecurringTasksPageSim />} />
+        <Route path="simulator/pm/resources/raci" element={<RaciPageSim />} />
+        <Route path="simulator/pm/resources/skills" element={<SkillsPageSim />} />
+        <Route path="simulator/pm/procurement/vendors" element={<VendorsPageSim />} />
+        <Route path="simulator/pm/planning/s-curve" element={<SCurvePage sim />} />
+        <Route path="simulator/pm/planning/planning-poker" element={<PlanningPokerPage sim />} />
+        <Route path="simulator/pm/dashboards/builder" element={<DashboardBuilderPage sim />} />
+        <Route path="simulator/pm/collaboration/whiteboard" element={<WhiteboardPage sim />} />
+        <Route path="simulator/pm/settings/notifications" element={<NotificationPrefsPageSim />} />
+        <Route path="simulator/pm/reporting/scheduled" element={<ScheduledReportsPageSim />} />
+      </Route>
+
+      <Route element={wrapSimPmoOutlet()}>
+        <Route path="simulator/pmo/calendar" element={<UniversalCalendarPage sim />} />
+        <Route path="simulator/pmo/admin/automations" element={<AutomationHubPage />} />
+        <Route path="simulator/pmo/okr" element={<OKRDashboardPage sim />} />
+        <Route path="simulator/pmo/resources/workload" element={<WorkloadHeatmapPage sim />} />
+        <Route path="simulator/pmo/admin/custom-fields" element={<CustomFieldsPageSim />} />
+        <Route path="simulator/pmo/admin/intake-forms" element={<IntakeFormsPageSim />} />
+        <Route path="simulator/pmo/admin/client-portals" element={<ClientPortalPageSim />} />
+        <Route path="simulator/pmo/resources/raci" element={<RaciPageSim />} />
+        <Route path="simulator/pmo/resources/skills" element={<SkillsPageSim />} />
+        <Route path="simulator/pmo/procurement/vendors" element={<VendorsPageSim />} />
+        <Route path="simulator/pmo/planning/s-curve" element={<SCurvePage sim />} />
+        <Route path="simulator/pmo/strategy/portfolio-map" element={<PortfolioMapPage sim />} />
+        <Route path="simulator/pmo/admin/integrations" element={<IntegrationsPageSim />} />
+        <Route path="simulator/pmo/reporting/scheduled" element={<ScheduledReportsPageSim />} />
+      </Route>
+
     </>
   )
 }

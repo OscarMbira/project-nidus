@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Target, Search, Plus, FileText, Edit2 } from 'lucide-react'
+import { Target, Search, Plus, FileText } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getAllPracticeBenefitsReviewPlans } from '../../services/sim/practiceBenefitsService'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
@@ -140,20 +141,16 @@ export default function PracticeBenefitsRegister() {
                         {plan.created_at ? new Date(plan.created_at).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <button
-                          type="button"
+                        <RowActionButton
+                          variant="edit"
+                          label="Edit benefits review plan"
                           onClick={() => navigate(`/simulator/practice-benefits-review-plans/${plan.id}/edit`)}
-                          className="text-blue-500 hover:text-purple-300 inline-flex items-center gap-1 text-sm mr-4"
-                        >
-                          <Edit2 className="h-3 w-3" /> Edit
-                        </button>
-                        <button
-                          type="button"
+                        />
+                        <RowActionButton
+                          variant="view"
+                          label="View benefits review plan"
                           onClick={() => navigate(`/simulator/practice-benefits-review-plans/${plan.id}`)}
-                          className="text-blue-500 hover:text-purple-300 inline-flex items-center gap-1 text-sm"
-                        >
-                          View
-                        </button>
+                        />
                       </td>
                     </tr>
                   ))}

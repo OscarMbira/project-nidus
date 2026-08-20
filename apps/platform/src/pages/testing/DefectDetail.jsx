@@ -8,6 +8,7 @@ import DefectHistoryTimeline from '../../components/testing/DefectHistoryTimelin
 import DefectStatusBadge from '../../components/testing/DefectStatusBadge'
 import DefectSeverityBadge from '../../components/testing/DefectSeverityBadge'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { RowActionButton } from '@nidus/ui'
 import {
   getDefectById,
   createDefect,
@@ -23,6 +24,13 @@ import {
   exportRecordToPrint,
 } from '@nidus/shared/utils/exportUtils'
 import { resolveInternalUserId } from '@nidus/shared/utils/resolveInternalUserId'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DEFECT_EXPORT_SECTIONS = [
   {
@@ -59,10 +67,20 @@ function Detail({ defectId, isNew, projectId }) {
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
   const [uid, setUid] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     resolveInternalUserId().then(setUid)
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [row.created_by, row.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     setEditing(isNew)
@@ -129,6 +147,40 @@ function Detail({ defectId, isNew, projectId }) {
           Successfully {success.op} defect <strong>{success.ref || success.id}</strong> (id: {success.id}).
         </div>
       )}
+      {!isNew && (
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      )}
+
+      {activeTab === 'audit' && !isNew && (
+        <div className="space-y-4">
+          {!row ? (
+            <p className="text-sm text-gray-400">Audit details appear after this defect is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who reported or changed this defect, and how it is classified.">
+              <AuditCard title="Identity" description="How this defect is labelled and tracked.">
+                <AuditField label="Reference" value={row.defect_ref} />
+                <AuditField label="Title" value={row.title} />
+                <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this defect is categorised.">
+                <AuditField label="Severity" value={humanizeAuditToken(row.severity)} />
+                <AuditField label="Priority" value={humanizeAuditToken(row.priority)} />
+                <AuditField label="Defect type" value={humanizeAuditToken(row.defect_type)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this defect was reported and last changed.">
+                <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+                <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+          <DefectHistoryTimeline defectId={row.id} />
+        </div>
+      )}
+
+      {(activeTab === 'details' || isNew) && (
+      <>
       {!isNew && row && (
         <div className="flex flex-wrap justify-between gap-2">
           <div>
@@ -149,13 +201,7 @@ function Detail({ defectId, isNew, projectId }) {
               onExportJSON={() => exportRecordToJSON(DEFECT_EXPORT_SECTIONS, record, `defect_${row.defect_ref || row.id}`)}
               onExportPrint={() => exportRecordToPrint(DEFECT_EXPORT_SECTIONS, record)}
             />
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-600 text-sm text-white"
-            >
-              Edit
-            </button>
+            <RowActionButton variant="edit" label="Edit defect" onClick={() => setEditing(true)} />
           </div>
         </div>
       )}
@@ -169,8 +215,9 @@ function Detail({ defectId, isNew, projectId }) {
           </div>
           <DefectCommentSection defectId={row.id} currentUserId={uid} />
           <DefectAttachmentUploader projectId={row.project_id} defectId={row.id} uploadedByUserId={uid} />
-          <DefectHistoryTimeline defectId={row.id} />
         </>
+      )}
+      </>
       )}
     </div>
   )

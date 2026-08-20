@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
+import { getV671CanonicalLeaves, matchPeopleLeaf } from '../v671PmoMenuCanonical.js'
 import {
   applyCategoryPresentationLabels,
   applyPmLayoutSanitization,
   applyPmoSectionNesting,
+  filterPmLayoutMenuItems,
   inferPmoCategoryId,
   LEGACY_CATEGORY_SHELL_TARGETS,
   nestExecutiveOverviewSections,
@@ -12,6 +14,83 @@ import {
   reorganizeMenuRoots,
   reorganizePmoMenuRoots,
 } from '../pmoMenuHierarchyUtils'
+
+describe('filterPmLayoutMenuItems dashboard leaf', () => {
+  it('keeps v851 Forms/Templates children under Project Templates', () => {
+    const filtered = filterPmLayoutMenuItems([
+      {
+        menu_code: 'plat_pm_project_templates',
+        menu_label: 'Project Templates',
+        route_path: '/platform/templates/project',
+        children: [
+          {
+            menu_code: 'plat_pm_project_templates_templates',
+            menu_label: 'Templates',
+            route_path: '/platform/templates/project?domainGroup=templates',
+            children: [],
+          },
+          {
+            menu_code: 'plat_pm_project_templates_forms',
+            menu_label: 'Forms',
+            route_path: '/platform/templates/project?domainGroup=forms',
+            children: [],
+          },
+        ],
+      },
+    ])
+
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].children.map((c) => c.menu_code)).toEqual([
+      'plat_pm_project_templates_templates',
+      'plat_pm_project_templates_forms',
+    ])
+  })
+
+  it('removes Executive Dashboard and keeps Dashboard as a direct link', () => {
+    const filtered = filterPmLayoutMenuItems([
+      {
+        menu_code: 'plat_pm_dashboard',
+        menu_label: 'Dashboard',
+        route_path: '/platform/dashboard',
+        children: [
+          {
+            menu_code: 'plat_exec_dashboard',
+            menu_label: 'Executive Dashboard',
+            route_path: '/platform/executive/dashboard',
+            children: [],
+          },
+        ],
+      },
+    ])
+
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].menu_label).toBe('Dashboard')
+    expect(filtered[0].route_path).toBe('/platform/dashboard')
+    expect(filtered[0].children).toEqual([])
+  })
+
+  it('promotes a lone child route onto a Dashboard shell with no own route', () => {
+    const filtered = filterPmLayoutMenuItems([
+      {
+        menu_code: 'plat_pm_dashboard',
+        menu_label: 'Dashboard',
+        route_path: null,
+        children: [
+          {
+            menu_code: 'plat_pm_dashboard_leaf',
+            menu_label: 'Dashboard',
+            route_path: '/pm/dashboard',
+            children: [],
+          },
+        ],
+      },
+    ])
+
+    expect(filtered).toHaveLength(1)
+    expect(filtered[0].route_path).toBe('/pm/dashboard')
+    expect(filtered[0].children).toEqual([])
+  })
+})
 
 describe('inferPmoCategoryId', () => {
   it('maps security admin routes to system admin category', () => {
@@ -46,6 +125,65 @@ describe('inferPmoCategoryId', () => {
         route_path: '/platform/admin/invitation-tracker',
       })
     ).toBe('pmo-cat-teams')
+  })
+
+  it('maps Manage Roles to People & Resources', () => {
+    const node = {
+      menu_code: 'pmo-people-manage-roles',
+      menu_label: 'Manage Roles',
+      route_path: '/platform/admin/manage-roles',
+    }
+    expect(inferPmoCategoryId(node)).toBe('pmo-cat-teams')
+    expect(matchPeopleLeaf(node)).toBe(true)
+  })
+
+  it('maps Manage Menu Bundles to People & Resources and survives the flat-mode leaf filter (v914 — regression: a brand-new /platform/admin/* leaf under pmo-cat-teams was silently dropped by TWO independent static allowlists — inferPlatformCategoryId (bucketing) and matchPeopleLeaf (mergeV671Leaves final filter) — even though role_menu_items and parent_menu_id were both correct in the DB)', () => {
+    const node = {
+      menu_code: 'pmo-people-manage-menu-bundles',
+      menu_label: 'Manage Menu Bundles',
+      route_path: '/platform/admin/manage-menu-bundles',
+    }
+    expect(inferPmoCategoryId(node)).toBe('pmo-cat-teams')
+    expect(matchPeopleLeaf(node)).toBe(true)
+
+    const withDbRow = nestV671CategoryNode(
+      {
+        menu_code: 'pmo-cat-teams',
+        menu_label: 'People & Resources',
+        children: [{ ...node, children: [] }],
+      },
+      'pmo',
+    )
+    expect(withDbRow.children?.some((c) => c.menu_code === 'pmo-people-manage-menu-bundles')).toBe(true)
+  })
+
+  it('does not inject Manage Roles from the JS canonical list', () => {
+    const codes = getV671CanonicalLeaves('people').map((n) => n.menu_code)
+    expect(codes).not.toContain('pmo-people-manage-roles')
+    expect(codes).not.toContain('plat_pm_manage_roles')
+
+    const withoutDbRow = nestV671CategoryNode(
+      { menu_code: 'pmo-cat-teams', menu_label: 'People & Resources', children: [] },
+      'pmo'
+    )
+    expect(withoutDbRow.children?.some((c) => /manage-roles/.test(c.menu_code || ''))).toBe(false)
+
+    const withDbRow = nestV671CategoryNode(
+      {
+        menu_code: 'pmo-cat-teams',
+        menu_label: 'People & Resources',
+        children: [
+          {
+            menu_code: 'pmo-people-manage-roles',
+            menu_label: 'Manage Roles',
+            route_path: '/platform/admin/manage-roles',
+            children: [],
+          },
+        ],
+      },
+      'pmo'
+    )
+    expect(withDbRow.children?.some((c) => c.menu_code === 'pmo-people-manage-roles')).toBe(true)
   })
 })
 
@@ -414,6 +552,127 @@ describe('reorganizePmoMenuRoots', () => {
     expect(labels).toContain('Calendar')
   })
 
+  it('nestProjectDeliverySections keeps Template Library Forms/Templates children (v852)', () => {
+    const universalNodes = [
+      {
+        menu_code: 'pmo-cat-project-delivery',
+        menu_label: 'Portfolio & Delivery',
+        children: [
+          {
+            menu_code: 'plat_tpl_library',
+            menu_label: 'Template Library',
+            route_path: '/app/pmo/template-library',
+            children: [
+              {
+                menu_code: 'plat_tpl_library_templates',
+                menu_label: 'Templates',
+                route_path: '/app/pmo/template-library?domainGroup=templates',
+                children: [],
+              },
+              {
+                menu_code: 'plat_tpl_library_forms',
+                menu_label: 'Forms',
+                route_path: '/app/pmo/template-library?domainGroup=forms',
+                children: [],
+              },
+            ],
+          },
+        ],
+      },
+      { menu_code: 'pmo-cat-workflows-approvals', menu_label: 'Workflows', children: [] },
+    ]
+    const { universalNodes: nested } = nestProjectDeliverySections(universalNodes, 'pmo')
+    const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
+    const library = delivery.children.find((c) => c.menu_code === 'plat_tpl_library')
+    expect(library?.children?.map((c) => c.menu_code)).toEqual([
+      'plat_tpl_library_templates',
+      'plat_tpl_library_forms',
+    ])
+    const workflows = nested.find((n) => n.menu_code === 'pmo-cat-workflows-approvals')
+    expect(workflows.children.some((c) => /tpl_library_forms/.test(c.menu_code))).toBe(false)
+  })
+
+  it('nestProjectDeliverySections reattaches flat Template Library Forms/Templates siblings (v852)', () => {
+    const universalNodes = [
+      {
+        menu_code: 'pmo-cat-project-delivery',
+        menu_label: 'Portfolio & Delivery',
+        children: [
+          {
+            menu_code: 'plat_tpl_library',
+            menu_label: 'Template Library',
+            route_path: '/app/pmo/template-library',
+            children: [],
+          },
+          {
+            menu_code: 'plat_tpl_library_templates',
+            menu_label: 'Templates',
+            route_path: '/app/pmo/template-library?domainGroup=templates',
+            children: [],
+          },
+          {
+            menu_code: 'plat_tpl_library_forms',
+            menu_label: 'Forms',
+            route_path: '/app/pmo/template-library?domainGroup=forms',
+            children: [],
+          },
+        ],
+      },
+      { menu_code: 'pmo-cat-workflows-approvals', menu_label: 'Workflows', children: [] },
+    ]
+    const { universalNodes: nested } = nestProjectDeliverySections(universalNodes, 'pmo')
+    const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
+    const library = delivery.children.find((c) => c.menu_code === 'plat_tpl_library')
+    expect(library?.children?.map((c) => c.menu_code)).toEqual([
+      'plat_tpl_library_templates',
+      'plat_tpl_library_forms',
+    ])
+    expect(delivery.children.some((c) => c.menu_code === 'plat_tpl_library_forms')).toBe(false)
+    const workflows = nested.find((n) => n.menu_code === 'pmo-cat-workflows-approvals')
+    expect(workflows.children.some((c) => c.menu_code === 'plat_tpl_library_forms')).toBe(false)
+  })
+
+  it('nestProjectDeliverySections keeps Document Signatory Requirements on delivery (v868/v870)', () => {
+    const universalNodes = [
+      {
+        menu_code: 'pmo-cat-project-delivery',
+        menu_label: 'Portfolio & Delivery',
+        children: [
+          {
+            menu_code: 'plat_tpl_library',
+            menu_label: 'Template Library',
+            route_path: '/app/pmo/template-library',
+            children: [],
+          },
+          {
+            menu_code: 'plat_tpl_organisational',
+            menu_label: 'Organisational Templates',
+            route_path: '/app/pmo/organisational-templates',
+            children: [],
+          },
+          {
+            menu_code: 'plat_pmo_field_templates',
+            menu_label: 'Field Templates',
+            route_path: '/app/pmo/field-templates',
+            children: [],
+          },
+          {
+            menu_code: 'plat_tpl_signatory_requirements',
+            menu_label: 'Document Signatory',
+            route_path: '/app/pmo/signatory-requirements',
+            children: [],
+          },
+        ],
+      },
+      { menu_code: 'pmo-cat-admin', menu_label: 'Admin', children: [] },
+    ]
+    const { universalNodes: nested } = nestProjectDeliverySections(universalNodes, 'pmo')
+    const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
+    expect(delivery.children.some((c) => c.menu_code === 'plat_tpl_signatory_requirements')).toBe(true)
+    const admin = nested.find((n) => n.menu_code === 'pmo-cat-admin')
+    expect(admin.children.some((c) => c.menu_code === 'plat_tpl_signatory_requirements')).toBe(false)
+  })
+
   it('nestProjectDeliverySections relocates Delay Templates to Knowledge Template Library, not oversight', () => {
     const universalNodes = [
       {
@@ -521,6 +780,22 @@ describe('reorganizePmoMenuRoots', () => {
     expect(labels).toContain('Projects')
     expect(labels).not.toContain('Executive Overview')
     expect(labels).not.toContain('Portfolio & Delivery')
+  })
+
+  it('buckets Manage Roles under PM Teams', () => {
+    const { universalNodes } = reorganizeMenuRoots(
+      [
+        {
+          menu_code: 'plat_pm_manage_roles',
+          menu_label: 'Manage Roles',
+          route_path: '/platform/admin/manage-roles',
+          children: [],
+        },
+      ],
+      'pm'
+    )
+    const teams = universalNodes.find((n) => n.menu_code === 'plat_grp_pm_teams')
+    expect(teams?.children?.some((c) => c.menu_code === 'plat_pm_manage_roles')).toBe(true)
   })
 
   it('applyPmLayoutSanitization removes methodology items from Projects group', () => {

@@ -14,12 +14,14 @@ import { X, Save } from 'lucide-react';
 import { saveProgramme } from '../../../services/programmeService';
 import { platformDb } from '@nidus/supabase';
 import { logAction } from '../../../services/pmoAuditService';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 
-const CreateProgrammeModal = memo(function CreateProgrammeModal({ 
-  organizationId, 
-  onClose, 
-  onSuccess 
+const CreateProgrammeModal = memo(function CreateProgrammeModal({
+  organizationId,
+  onClose,
+  onSuccess
 }) {
+  const [activeTab, setActiveTab] = useState('details');
   const [formData, setFormData] = useState({
     programme_name: '',
     programme_code: '',
@@ -165,6 +167,11 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
           </button>
         </div>
 
+        {/* Tabs */}
+        <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+          <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+        </div>
+
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
           {error && (
@@ -173,6 +180,11 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
             </div>
           )}
 
+          {activeTab === 'audit' ? (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this programme is saved.</p>
+            </div>
+          ) : (
           <div className="space-y-4">
             {/* Programme Name */}
             <div>
@@ -323,6 +335,7 @@ const CreateProgrammeModal = memo(function CreateProgrammeModal({
               />
             </div>
           </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-700">

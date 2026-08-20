@@ -21,10 +21,10 @@ import {
   Send
 } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
-import { 
-  getAssignableRoles, 
-  isPmoAdmin, 
-  assignRoleToUser, 
+import {
+  getAssignableRoles,
+  isPmoAdmin as checkIsPmoAdmin,
+  assignRoleToUser,
   inviteUserWithRole,
   getOrganisationUsers,
   removeRoleFromUser
@@ -44,7 +44,7 @@ export default function RoleAssignment() {
   // Role assignment state
   const [assignableRoles, setAssignableRoles] = useState([]);
   const [organisationUsers, setOrganisationUsers] = useState([]);
-  const [isPmoAdmin, setIsPmoAdmin] = useState(false);
+  const [hasPmoAdminAccess, setHasPmoAdminAccess] = useState(false);
   
   // Invitation form state
   const [showInviteForm, setShowInviteForm] = useState(false);
@@ -72,14 +72,14 @@ export default function RoleAssignment() {
       }
 
       // Check if user is PMO Admin
-      const adminCheck = await isPmoAdmin(user.id);
+      const adminCheck = await checkIsPmoAdmin(user.id);
       if (!adminCheck) {
         setError('Only PMO Admin can access this page');
         setLoading(false);
         return;
       }
 
-      setIsPmoAdmin(true);
+      setHasPmoAdminAccess(true);
       
       // Load assignable roles
       const rolesResult = await getAssignableRoles();
@@ -277,7 +277,7 @@ export default function RoleAssignment() {
     );
   }
 
-  if (!isPmoAdmin) {
+  if (!hasPmoAdminAccess) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <PlatformHeader />
@@ -287,7 +287,7 @@ export default function RoleAssignment() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-bold mb-2">Access Denied</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-              <Button onClick={() => navigate('/platform/dashboard')}>Go to Dashboard</Button>
+              <Button onClick={() => navigate('/simulator/pmo/dashboard')}>Go to Dashboard</Button>
             </div>
           </Card>
         </div>

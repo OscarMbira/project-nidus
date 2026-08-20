@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, User, DollarSign, Calendar } from 'lucide-react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ResourceForm({ resource, onSave, onCancel }) {
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const [formData, setFormData] = useState({
     resource_name: '',
     resource_code: '',
@@ -47,6 +55,14 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
     }
     fetchLookupData()
   }, [resource])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !resource) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [resource.created_by, resource.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, resource])
 
   const fetchLookupData = async () => {
     try {
@@ -139,6 +155,34 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
           </button>
         </div>
 
+        <div className="px-6 pt-4">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' ? (
+          <div className="p-6">
+            {!resource ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this resource is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this resource, and how it is classified.">
+                <AuditCard title="Identity" description="How this resource is labelled and tracked.">
+                  <AuditField label="Code" value={resource.resource_code} />
+                  <AuditField label="Name" value={resource.resource_name} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this resource is categorised.">
+                  <AuditField label="Type" value={humanizeAuditToken(resource.resource_type)} />
+                  <AuditField label="Category" value={resource.resource_category} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this resource was created and last changed.">
+                  <AuditField label="Created by" value={resource.created_by ? auditUserLabels[resource.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={resource.created_at} />
+                  <AuditField label="Updated by" value={resource.updated_by ? auditUserLabels[resource.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={resource.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -419,6 +463,7 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
             </button>
           </div>
         </form>
+        )}
       </div>
     </div>
   )

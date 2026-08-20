@@ -27,6 +27,13 @@ import {
   ensureIndustryRowIds,
 } from '@nidus/shared/utils/industryPlanCustomColumnOps.js'
 import { normalizeCustomColumnDefs } from '@nidus/shared/utils/industryPlanGridColumns.js'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 function attachPhaseNumbers(phases, rows) {
   const byId = new Map((phases || []).map((p) => [p.id, p.phase_number]))
@@ -91,6 +98,9 @@ export default function IndustryTemplateForm() {
   const [milestones, setMilestones] = useState([])
   const [roles, setRoles] = useState([])
   const [saving, setSaving] = useState(false)
+  const [templateRecord, setTemplateRecord] = useState(null)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const [viewByTab, setViewByTab] = useState(() => ({
     phases: loadView('phases'),
     activities: loadView('activities'),
@@ -101,9 +111,23 @@ export default function IndustryTemplateForm() {
   }))
 
   useEffect(() => {
+    if (formTab !== 'audit' || !templateRecord) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        templateRecord.created_by,
+        templateRecord.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, templateRecord])
+
+  useEffect(() => {
     if (!id) return
     getTemplateById(id).then((t) => {
       if (!t) return
+      setTemplateRecord(t)
       setHeader({
         industry_code: t.industry_code,
         industry_name: t.industry_name,
@@ -233,6 +257,38 @@ export default function IndustryTemplateForm() {
       <h1 className="text-2xl font-bold mt-2 text-gray-900 dark:text-gray-100">
         {isEdit ? 'Edit' : 'New'} Industry Template
       </h1>
+
+      <div className="mt-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+      </div>
+
+      {formTab === 'audit' && (
+        <div className="mt-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          {!templateRecord?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this industry template, and how it is classified.">
+              <AuditCard title="Identity" description="How this template is labelled and tracked.">
+                <AuditField label="Industry code" value={header.industry_code || templateRecord.industry_code} />
+                <AuditField label="Industry name" value={header.industry_name || templateRecord.industry_name} />
+                <AuditField label="Status" value={humanizeAuditToken(header.status || templateRecord.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this template sits.">
+                <AuditField label="Typical duration" value={header.typical_duration || templateRecord.typical_duration} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this template was created and last changed.">
+                <AuditField label="Created by" value={templateRecord.created_by ? auditUserLabels[templateRecord.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={templateRecord.created_at} />
+                <AuditField label="Updated by" value={templateRecord.updated_by ? auditUserLabels[templateRecord.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={templateRecord.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       <div className="mt-4 flex flex-wrap gap-1">
         {STEPS.map((label, i) => (
           <button
@@ -550,6 +606,8 @@ export default function IndustryTemplateForm() {
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -36,6 +36,7 @@ import {
   cacheUserMenuRoles,
   clearCachedUserMenuRoles,
   getCachedUserMenuRoles,
+  fetchUserRoleNamesForAuthUser,
 } from '@nidus/shared/utils/menuLayoutUtils'
 import {
   applyCategorySortOrders,
@@ -574,34 +575,7 @@ export async function fetchMenuFromDBShared(user, options = {}) {
   return promise
 }
 
-async function fetchUserRoleNamesForAuthUser(authUser) {
-  if (!authUser?.id) return []
-  const { data: userRow } = await platformDb
-    .from('users')
-    .select('id')
-    .eq('auth_user_id', authUser.id)
-    .maybeSingle()
-  if (!userRow?.id) return []
-
-  const { data: roleRows } = await platformDb
-    .from('user_roles')
-    .select('role_id, is_deleted, is_active')
-    .eq('user_id', userRow.id)
-    .eq('is_active', true)
-
-  const roleIds = (roleRows || [])
-    .filter((ur) => !ur.is_deleted)
-    .map((ur) => ur.role_id)
-    .filter(Boolean)
-  if (roleIds.length === 0) return []
-
-  const { data: roleDetails } = await platformDb
-    .from('roles')
-    .select('role_name')
-    .in('id', roleIds)
-
-  return (roleDetails || []).map((r) => r.role_name).filter(Boolean)
-}
+// fetchUserRoleNamesForAuthUser lives in menuLayoutUtils.js now (also used by useRoleScopeGuard).
 
 // Pure DB fetch — returns { items, error }. No fallback; menu data is from DB only.
 // Use two separate queries to avoid PostgREST "more than one relationship" embed error between users and user_roles.

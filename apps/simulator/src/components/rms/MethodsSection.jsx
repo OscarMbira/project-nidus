@@ -51,11 +51,12 @@ export default function MethodsSection({ rmsId, readOnly = false, onUpdate }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_by, created_at, ...editableFields } = formData
       let result
       if (editingId) {
-        result = await updateMethod(editingId, formData)
+        result = await updateMethod(editingId, editableFields)
       } else {
-        result = await addMethod(rmsId, formData)
+        result = await addMethod(rmsId, editableFields)
       }
       
       if (result.success) {
@@ -74,6 +75,9 @@ export default function MethodsSection({ rmsId, readOnly = false, onUpdate }) {
 
   const handleEdit = (method) => {
     setFormData({
+      id: method.id,
+      created_by: method.created_by,
+      created_at: method.created_at,
       method_name: method.method_name || '',
       method_type: method.method_type || 'workshop',
       method_description: method.method_description || '',

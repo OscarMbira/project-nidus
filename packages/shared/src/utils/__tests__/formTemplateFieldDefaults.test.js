@@ -159,6 +159,7 @@ describe('formTemplateFieldDefaults', () => {
       {
         sectionKey: 'general',
         fieldKey: 'a',
+        label: 'A',
         value: 'Sample',
         guidanceText: 'Help A',
         clear: false,
@@ -166,6 +167,7 @@ describe('formTemplateFieldDefaults', () => {
       {
         sectionKey: 'general',
         fieldKey: 'b',
+        label: 'B',
         value: null,
         guidanceText: null,
         clear: true,

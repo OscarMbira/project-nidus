@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addProduct, updateProduct } from '../../services/wpProductsService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function WPProductForm({ wpId, product = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -26,6 +32,18 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
   const [productDescriptions, setProductDescriptions] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !product) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [product.created_by, product.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, product])
 
   useEffect(() => {
     if (product) {
@@ -146,6 +164,34 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !product?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this product is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this product, and how it is classified.">
+              <AuditCard title="Identity" description="How this product is labelled and tracked.">
+                <AuditField label="Product name" value={formData.product_name || product.product_name} />
+                <AuditField label="Type" value={humanizeAuditToken(product.product_type)} />
+                <AuditField label="Delivery status" value={humanizeAuditToken(product.delivery_status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this product sits.">
+                <AuditField label="Linked product deliverable" value={deliverables.find((d) => d.id === (formData.linked_product_deliverable_id || product.linked_product_deliverable_id))?.deliverable_name} />
+                <AuditField label="Linked product description" value={productDescriptions.find((pd) => pd.id === (formData.linked_product_description_id || product.linked_product_description_id))?.product_name} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this product was created and last changed.">
+                <AuditField label="Created by" value={product.created_by ? auditUserLabels[product.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={product.created_at} />
+                <AuditField label="Updated by" value={product.updated_by ? auditUserLabels[product.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={product.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Product Name <span className="text-red-500">*</span>
@@ -312,6 +358,8 @@ export default function WPProductForm({ wpId, product = null, mode = 'create', o
             />
           </div>
         </div>
+        </>
+        )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {onCancel && (

@@ -5,6 +5,7 @@ import { createCopyFromMaster } from '../../services/projectTemplateCopyService'
 import { getTemplateById } from '../../services/templateLibraryService'
 import { listProjectsForOrganisation } from '../../services/eefService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const BASE = '/platform/templates'
 
@@ -20,6 +21,7 @@ export default function ProjectTemplateCopyCreate() {
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     ;(async () => {
@@ -82,6 +84,15 @@ export default function ProjectTemplateCopyCreate() {
       <p className="text-sm text-gray-600 mb-4">Master: {masterTitle || templateId || '—'}</p>
       {!templateId && <p className="text-amber-600 mb-4">Open from a template detail page (missing templateId).</p>}
       {err && <p className="text-red-600 mb-4">{err}</p>}
+
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Audit details appear after this copy is saved.</p>
+      )}
+
+      {formTab === 'details' && (
+      <>
       <label className="block mb-4">
         <span className="text-sm">Project</span>
         <select
@@ -113,6 +124,8 @@ export default function ProjectTemplateCopyCreate() {
       >
         <Save className="h-4 w-4" /> Create
       </button>
+      </>
+      )}
     </div>
   )
 }

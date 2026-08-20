@@ -7,6 +7,7 @@ import {
   resolveInviterDisplayName,
   resolveInviterDisplayNameFromUser,
   isHandleLikeDisplayName,
+  buildInvitationUserProfilePatch,
 } from '../invitationInviteeFormat'
 
 describe('invitationInviteeFormat', () => {
@@ -63,6 +64,21 @@ describe('invitationInviteeFormat', () => {
     ).toBe('Oscar Mbirablogging')
   })
 
+  it('resolveInviterDisplayNameFromUser prefers a real full_name over a stale composed first/last name', () => {
+    // Regression: Settings.jsx only exposes a single "Full name" field (no separate
+    // first/last name inputs), so first_name/last_name can go stale — e.g. a role title
+    // ends up stuffed into last_name from an earlier onboarding flow — while full_name
+    // reflects what the user actually edited and wants shown.
+    expect(
+      resolveInviterDisplayNameFromUser({
+        full_name: 'Oscar Mbira',
+        first_name: 'Oscar',
+        last_name: 'Organisational Administrator',
+        email: 'oscar@example.com',
+      }),
+    ).toBe('Oscar Mbira')
+  })
+
   it('isHandleLikeDisplayName detects email-prefix names', () => {
     expect(isHandleLikeDisplayName('oscarmbirablogging', 'oscarmbirablogging@gmail.com')).toBe(true)
     expect(isHandleLikeDisplayName('Pat PM', 'pat@example.com')).toBe(false)
@@ -77,6 +93,48 @@ describe('invitationInviteeFormat', () => {
         inviter_last_name: 'Mbirablogging',
       }),
     ).toBe('Oscar Mbirablogging')
+  })
+
+  it('buildInvitationUserProfilePatch maps invitation name to full_name and role to job_title', () => {
+    expect(
+      buildInvitationUserProfilePatch(
+        {
+          invited_first_name: 'Arun',
+          invited_last_name: 'Quality Manager',
+          invited_email: 'qualityassurance@projectastute.com',
+          role_display_name: 'Quality Assurance',
+        },
+        {
+          full_name: 'qualityassurance',
+          email: 'qualityassurance@projectastute.com',
+          job_title: '',
+        },
+      ),
+    ).toEqual({
+      full_name: 'Arun Quality Manager',
+      first_name: 'Arun',
+      last_name: 'Quality Manager',
+      job_title: 'Quality Assurance',
+    })
+  })
+
+  it('buildInvitationUserProfilePatch does not overwrite a real profile name or job title', () => {
+    expect(
+      buildInvitationUserProfilePatch(
+        {
+          invited_first_name: 'Arun',
+          invited_last_name: 'Quality Manager',
+          role_display_name: 'Quality Assurance',
+        },
+        {
+          full_name: 'Arun Patel',
+          email: 'qualityassurance@projectastute.com',
+          first_name: 'Arun',
+          last_name: 'Patel',
+          job_title: 'QA Lead',
+        },
+      ),
+    ).toEqual({})
   })
 
   it('prepends Dear greeting when name not in body', () => {

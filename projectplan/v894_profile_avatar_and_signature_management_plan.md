@@ -79,3 +79,49 @@ Files touched:
 - A `ZoomableImage` component (click-to-enlarge preview) was added afterward to `UserAvatarBadge`/`ProfilePictureSection`/`ProfileSignatureSection` and synced into both apps' local copies — same triple-copy handling as everything else here.
 
 **Not yet applied to the database.** `SQL/v894_user_avatar_storage.sql` is written and ready but has not been run — this sandbox can reach the Supabase REST API (HTTPS) but not raw Postgres (port 5432), so it needs the normal path: paste it into the Supabase SQL Editor (or your usual migration process) before this feature is live. Until then, `getUserAvatar`/`saveUserAvatar` will fail (no `user-avatars` bucket yet). The Admin companion migration (`E:\project-nidus-admin\SQL\v207_admin_profile_avatar_and_signature.sql`) needs the same step.
+
+**Follow-up (same-session bug report — profile picture uploads silently not showing):** `saveUserAvatar()` had a real bug independent of the above: after uploading to storage, it wrote `avatar_url` to `public.users` without checking whether the UPDATE actually affected a row. A 0-row UPDATE (e.g. RLS silently filtering it, or — most likely given the note above — the `user-avatars` bucket/RLS from this migration never having been applied, so the upload itself may be failing in a way not yet confirmed) comes back from PostgREST as `data: null, error: null`, and the old code treated that as success, showing "Profile picture updated" regardless. Fixed to throw a real, visible error when `data` is null instead of silently reporting success (`packages/shared/src/services/userAvatarService.js`); added a regression test (`userAvatarService.test.js`, now 14 tests). **First thing to check**: confirm `SQL/v894_user_avatar_storage.sql` has actually been run in Supabase — if not, that alone likely explains the whole symptom, and the code fix above will at least now surface a clear error instead of a silent no-op.
+
+**Update — SQL confirmed applied, symptom persists.** User ran `v894_user_avatar_storage.sql` (confirmed success) and the picture still doesn't render (initials only), while the signature does. Since the *write* path (`saveUserAvatar`) now throws visibly on failure, and the *read* path (`UserAvatarBadge`'s `getAvatarSignedUrl` call) had the identical silent-failure gap — `if (result.success) setSignedUrl(...)` with no `else`, so a failed signed-URL read was indistinguishable from "no picture uploaded" — added a `console.warn` on read failure there too (`packages/ui/src/UserAvatarBadge.jsx` + its two app-local duplicates in `apps/platform` and `apps/simulator`, per the same alias-duplication convention as the `@nidus/shared/utils` case above; `UserAvatarBadge.test.jsx` still passes, 4/4). **Next step**: retry the upload now that both fixes are live — if it still fails, the browser console will now show either a `saveUserAvatar` error toast (write-side) or a `[UserAvatarBadge] Failed to load profile picture: ...` console warning (read-side), which will pin down the exact cause instead of guessing further.
+
+**Update — root cause found via Network tab response body: `DatabaseTimeout`, not RLS.**
+```json
+{ "statusCode": "544", "error": "DatabaseTimeout", "message": "The connection to the database has timed out", "code": "DatabaseTimeout" }
+```
+The picture itself was already working correctly on two other accounts by this
+point (confirming the Chrome vs Firefox `__cf_bm`/third-party-cookie finding
+was the real root cause of the *original* report) — this was a *new*, separate
+symptom: the personal saved-signature request specifically timing out waiting
+for a pooled DB connection. The Network panel showed the same identity-
+resolution queries firing 2–4× each on one page load (`users?select=avatar_url`
+×2, `user_signature_images` ×2, `project_memberships` ×3+, `notifications`
+×4+) — consistent with React 18 StrictMode's dev-only double-invoke of mount
+effects, compounded by several independent components (`SystemHeader`,
+`CurrentProjectContext`, `Settings.jsx`, `ProfilePictureSection`,
+`ProfileSignatureSection`) each re-resolving "current user" from scratch
+instead of sharing one request.
+
+**Fix — in-flight request de-duplication**, mirroring the proven pattern
+already used by `userProfileService.js`'s `getAuthSessionUserId()` (module-
+level in-flight promise/Map, cleared in `.finally()` — collapses concurrent
+callers onto one shared request; deliberately *not* a persistent cache, so a
+call moments later still runs fresh):
+- `getCurrentUserInternalUserId()` (`accountResolution.js`, canonical +
+  Platform + Simulator local copies — used by 125+ files).
+- `getUserProjectRoles()` / `getUserSystemRoles()` (`roleService.js`, both
+  apps — `SystemHeader` and `CurrentProjectContext` both call
+  `getUserProjectRoles` independently on the same page load).
+- `getUserAvatar()` (`userAvatarService.js`) and `getSavedSignature()`
+  (`processTemplateSignatoryService.js`) — both canonical-only (not aliased).
+
+Tests: 3 new cases added to `accountResolution.test.js` (Platform + Simulator)
+covering the resolve, de-dupe, and not-a-persistent-cache behaviours. Full
+`packages/shared` suite (58/505) and the directly-affected Platform suites all
+green; `packages/ui` suite green aside from the pre-existing unrelated
+`ExportRecordMenu.test.jsx` import failure noted above.
+
+This reduces the query burst that made the timeout more likely, but a
+`DatabaseTimeout` is fundamentally about Supabase's connection pool capacity
+at that moment — if it recurs under real concurrent load, that's a Supabase
+project-tier/connection-pooling question, not something further app-code
+de-duplication can fully rule out.

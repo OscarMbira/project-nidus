@@ -8,6 +8,13 @@ import { ArrowLeft } from 'lucide-react'
 import { getPracticeQualityActivityById } from '../../services/sim/practiceQualityService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRACTICE_QA_VIEW_SECTIONS = [
   { title: 'Quality Activity', fields: [
@@ -24,10 +31,20 @@ export default function PracticeQualityActivityView() {
   const projectId = searchParams.get('projectId')
   const [activity, setActivity] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) loadActivity()
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !activity) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [activity.created_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, activity])
 
   const loadActivity = async () => {
     try {
@@ -61,6 +78,27 @@ export default function PracticeQualityActivityView() {
           onExportPrint={() => exportRecordToPrint(PRACTICE_QA_VIEW_SECTIONS, activity, `PracticeQualityActivity_${activity.id}`)}
         />
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created this quality activity.">
+          <AuditCard title="Identity" description="How this activity is labelled.">
+            <AuditField label="Name" value={activity.activity_name} />
+            <AuditField label="Reference" value={activity.activity_identifier} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this activity is tracked.">
+            <AuditField label="Type" value={humanizeAuditToken(activity.activity_type)} />
+            <AuditField label="Status" value={humanizeAuditToken(activity.status)} />
+            <AuditField label="Result" value={humanizeAuditToken(activity.result)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this activity was created and last changed.">
+            <AuditField label="Created by" value={activity.created_by ? auditUserLabels[activity.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={activity.created_at} />
+            <AuditTimestampPair dateLabel="Last updated" value={activity.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
           <h3 className="font-medium mb-2">Activity Type</h3>
@@ -75,6 +113,7 @@ export default function PracticeQualityActivityView() {
           <p className="text-gray-600 dark:text-gray-400">{activity.result || 'Pending'}</p>
         </div>
       </div>
+      )}
     </div>
   )
 }

@@ -5,7 +5,7 @@ import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutS
 import pmDashboardMenuConfig from '@nidus/config/pmDashboardMenuConfig'
 import { resolveMenuRoutePath, menuPathIsActive } from '@nidus/shared/utils/sidebarRouteUtils'
 import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
-import { SidebarNavTier } from '@nidus/ui'
+import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 
 function PMSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggleExpand = null }) {
   const location = useLocation()
@@ -45,27 +45,29 @@ function PMSidebarMenuItem({ menuItem, level = 0, expandedMenuId = null, onToggl
 
   return (
     <div>
-      <Link
-        to={!menuItem.path ? '#' : resolvedPath === '/' ? '/pm/dashboard' : resolvedPath}
-        onClick={handleClick}
-        className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-          isActive
-            ? 'bg-blue-600 text-white'
-            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-        }`}
-      >
-        <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-        <span className="flex-1">{menuItem.label}</span>
-        {hasChildren && (
-          <span className="ml-auto">
-            {expanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </span>
-        )}
-      </Link>
+      <SidebarNavNestedRow level={level}>
+        <Link
+          to={!menuItem.path ? '#' : resolvedPath === '/' ? '/pm/dashboard' : resolvedPath}
+          onClick={handleClick}
+          className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+            isActive
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+          }`}
+        >
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+          <span className="flex-1">{menuItem.label}</span>
+          {hasChildren && (
+            <span className="ml-auto">
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </span>
+          )}
+        </Link>
+      </SidebarNavNestedRow>
       {hasChildren && expanded && (
         <SidebarNavTier borderClassName={isChildActive ? 'border-blue-600' : 'border-gray-200 dark:border-gray-700'}>
           {menuItem.children.map((child) => (

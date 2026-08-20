@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getEEFById, listEEFCategories, listSimulationRunsForPicker, updateEEF } from '../../../services/sim/simEEFService'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function SimEEFEdit() {
   const { id } = useParams()
@@ -9,12 +16,24 @@ export default function SimEEFEdit() {
   const [categories, setCategories] = useState([])
   const [runs, setRuns] = useState([])
   const [form, setForm] = useState(null)
+  const [record, setRecord] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !record) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [record.created_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, record])
 
   useEffect(() => {
     ;(async () => {
       const { data, error } = await getEEFById(id)
       if (error || !data) return
+      setRecord(data)
       const c = await listEEFCategories(data.organisation_id)
       setCategories(c.data || [])
       const r = await listSimulationRunsForPicker()
@@ -68,6 +87,30 @@ export default function SimEEFEdit() {
         <ArrowLeft className="h-4 w-4" /> Back
       </Link>
       <h1 className="text-2xl font-bold text-white mb-6">Edit EEF</h1>
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      {formTab === 'audit' ? (
+        <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
+          {!record ? (
+            <p className="text-sm text-gray-400">Audit details appear after this EEF is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this Enterprise Environment Factor.">
+              <AuditCard title="Identity" description="How this EEF is labelled.">
+                <AuditField label="Title" value={record.title} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this EEF is categorised.">
+                <AuditField label="Type" value={humanizeAuditToken(record.eef_type)} />
+                <AuditField label="Impact level" value={humanizeAuditToken(record.impact_level)} />
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this EEF was created and last changed.">
+                <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 bg-gray-800 rounded-xl border border-gray-700 p-6">
         <input className="w-full rounded-lg bg-gray-900 border border-gray-600 px-3 py-2 text-white" value={form.title} onChange={(e) => set('title', e.target.value)} />
         <textarea className="w-full rounded-lg bg-gray-900 border border-gray-600 px-3 py-2 text-white min-h-[80px]" value={form.description} onChange={(e) => set('description', e.target.value)} />
@@ -95,6 +138,7 @@ export default function SimEEFEdit() {
           <Save className="h-4 w-4" /> Save
         </button>
       </div>
+      )}
     </div>
   )
 }

@@ -9,6 +9,7 @@ export default function PortfolioAnalyticsDashboard({ portfolioId = null }) {
   const [projects, setProjects] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState(''); // '' (top 5) | 'all' | 'active' | 'completed'
 
   useEffect(() => {
     fetchProjects();
@@ -157,18 +158,21 @@ export default function PortfolioAnalyticsDashboard({ portfolioId = null }) {
           value={metrics.totalProjects}
           displayFormat="number"
           status="neutral"
+          onClick={() => { setStatusFilter('all'); document.getElementById('portfolio-project-list')?.scrollIntoView({ behavior: 'smooth' }); }}
         />
         <MetricCard
           title="Active Projects"
           value={metrics.activeProjects}
           displayFormat="number"
           status={metrics.activeProjects > 0 ? 'good' : 'neutral'}
+          onClick={() => { setStatusFilter('active'); document.getElementById('portfolio-project-list')?.scrollIntoView({ behavior: 'smooth' }); }}
         />
         <MetricCard
           title="Completed Projects"
           value={metrics.completedProjects}
           displayFormat="number"
           status={metrics.completedProjects > 0 ? 'good' : 'neutral'}
+          onClick={() => { setStatusFilter('completed'); document.getElementById('portfolio-project-list')?.scrollIntoView({ behavior: 'smooth' }); }}
         />
         <MetricCard
           title="Average Health Score"
@@ -274,17 +278,31 @@ export default function PortfolioAnalyticsDashboard({ portfolioId = null }) {
         </div>
       </div>
 
-      {/* Top Performing Projects */}
+      {/* Top Performing Projects / filtered project list */}
       {projects.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-green-600" />
-            Top Performing Projects
-          </h3>
+        <div id="portfolio-project-list" className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <div className="mb-4 flex items-center justify-between gap-3 flex-wrap">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              {statusFilter === 'active' ? 'Active Projects' : statusFilter === 'completed' ? 'Completed Projects' : statusFilter === 'all' ? 'All Projects' : 'Top Performing Projects'}
+            </h3>
+            {statusFilter && (
+              <div className="flex items-center gap-2 text-sm">
+                <button type="button" onClick={() => setStatusFilter('')} className="text-blue-600 dark:text-blue-400 hover:underline">
+                  Back to top 5
+                </button>
+              </div>
+            )}
+          </div>
           <div className="space-y-3">
             {projects
+              .filter((p) => {
+                if (statusFilter === 'active') return p.project_status !== 'completed' && p.project_status !== 'closed';
+                if (statusFilter === 'completed') return p.project_status === 'completed' || p.project_status === 'closed';
+                return true;
+              })
               .sort((a, b) => (b.health_score || 0) - (a.health_score || 0))
-              .slice(0, 5)
+              .slice(0, statusFilter ? undefined : 5)
               .map(project => (
                 <div key={project.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <div>

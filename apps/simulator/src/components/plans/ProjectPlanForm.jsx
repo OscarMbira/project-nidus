@@ -9,6 +9,13 @@ import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { createProjectPlan, updateProjectPlan, getProjectPlanById, validateCompleteness } from '../../services/projectPlanService'
 import { addMilestone, getMilestones } from '../../services/planMilestoneService'
 import { addResource, getResources } from '../../services/planResourceService'
+import { platformDb } from '../../services/supabase/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import ProjectPlanOverviewSection from './ProjectPlanOverviewSection'
 import ProjectPlanApproachSection from './ProjectPlanApproachSection'
 import ProjectPlanScheduleSection from './ProjectPlanScheduleSection'
@@ -72,12 +79,24 @@ export default function ProjectPlanForm({
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [completeness, setCompleteness] = useState(null)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (planId && mode !== 'create') {
       loadPlan()
     }
   }, [planId, mode])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !planId) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [formData.created_by, formData.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, planId, formData.created_by, formData.updated_by])
 
   useEffect(() => {
     if (planId && formData.planned_start_date && formData.planned_end_date) {
@@ -339,6 +358,36 @@ export default function ProjectPlanForm({
           )}
         </div>
 
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          <div className="mt-6">
+            {!planId ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this project plan, and how it is classified.">
+                <AuditCard title="Identity" description="How this plan is labelled and tracked.">
+                  <AuditField label="Title" value={formData.plan_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this plan sits.">
+                  <AuditField label="Project" value={formData.project?.project_name} />
+                  <AuditField label="Author" value={formData.author?.full_name || formData.author?.email} />
+                  <AuditField label="Owner" value={formData.owner?.full_name || formData.owner?.email} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this plan was created and last changed.">
+                  <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+                  <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
+
+        {formTab === 'wizard' && (
+        <>
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -426,6 +475,8 @@ export default function ProjectPlanForm({
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   )

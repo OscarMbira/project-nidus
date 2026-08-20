@@ -35,6 +35,13 @@ import HighlightReportLessonsSection from './HighlightReportLessonsSection'
 import HighlightReportDistributionSection from './HighlightReportDistributionSection'
 import HighlightReportCompletenessIndicator from './HighlightReportCompletenessIndicator'
 import HighlightReportAutoPopulateButton from './HighlightReportAutoPopulateButton'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const FORM_STEPS = [
   { id: 'document', label: 'Document Info', icon: FileText },
@@ -118,12 +125,27 @@ export default function HighlightReportForm({
   const [loading, setLoading] = useState(!!reportId)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const formDataRef = useRef(formData)
   formDataRef.current = formData
 
   useEffect(() => {
     if (reportId && mode !== 'create') loadReport()
   }, [reportId, mode])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !reportId) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        formData.created_by,
+        formData.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, reportId, formData.created_by, formData.updated_by])
 
   // Auto-save draft every 30s in edit mode
   useEffect(() => {
@@ -243,6 +265,8 @@ export default function HighlightReportForm({
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">
             {isCreate ? 'Create Highlight Report' : 'Edit Highlight Report'}
           </h2>
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+          {formTab === 'wizard' && (
           <nav className="flex flex-wrap gap-1">
             {FORM_STEPS.map((s, i) => (
               <button
@@ -259,6 +283,7 @@ export default function HighlightReportForm({
               </button>
             ))}
           </nav>
+          )}
         </div>
         {!embedded && (
           <button type="button" onClick={onCancel} className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
@@ -266,6 +291,34 @@ export default function HighlightReportForm({
           </button>
         )}
       </div>
+
+      {formTab === 'audit' && (
+        <div className="p-6">
+          {!reportId ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this highlight report, and how it is classified.">
+              <AuditCard title="Identity" description="How this report is labelled and tracked.">
+                <AuditField label="Reference" value={formData.report_reference} />
+                <AuditField label="Title" value={formData.report_title} />
+                <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this report sits.">
+                <AuditField label="Report date" value={formData.report_date} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this report was created and last changed.">
+                <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+                <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
 
       <div className="p-6">
         {reportId && (
@@ -448,6 +501,8 @@ export default function HighlightReportForm({
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

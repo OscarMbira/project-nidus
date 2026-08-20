@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { Plus, AlertTriangle, FileText, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { getExceptionReportsByProject } from '../../services/exceptionReportService'
@@ -89,7 +90,7 @@ export default function ExceptionReportDashboard() {
           </p>
         </div>
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/exception-reports/create`)}
+          onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', 'create'))}
           className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
@@ -178,7 +179,7 @@ export default function ExceptionReportDashboard() {
                   </div>
                 </div>
                 <button
-                  onClick={() => navigate(`/app/projects/${projectId}/exception-reports/create?exceptionId=${exception.id}`)}
+                  onClick={() => navigate(`${platformProjectPath(routeKey, 'exception-reports', 'create')}?exceptionId=${exception.id}`)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                 >
                   Create Report
@@ -200,7 +201,7 @@ export default function ExceptionReportDashboard() {
               <div
                 key={report.id}
                 className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                onClick={() => navigate(`/app/projects/${projectId}/exception-reports/${report.id}`)}
+                onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', report.document_ref || report.id))}
               >
                 <div className="flex-1">
                   <h3 className="font-medium text-gray-900 dark:text-white">{report.report_title || report.exception_title || 'Untitled'}</h3>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { Search } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { ArrowLeft, FileSpreadsheet, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
@@ -10,15 +11,31 @@ import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getDisplayRowNumber, withExportRowNumbers } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
+  archivableIdsFromFilteredRows,
+  assertBulkApproveWithinCap,
   canArchiveFormInstance,
   canEditFormInstance,
+  DEFAULT_FORM_BULK_APPROVE_MAX,
+  draftIdsFromFilteredRows,
   filterFormInstancesForRegister,
+  formInstancePathSegmentFromRow,
   formInstanceStatusLabel,
+  isNonEmptyJustification,
 } from '@nidus/shared/utils/formInstanceRegisterUtils.js'
+import { buildPmTemplatesListPath } from '@nidus/shared/utils/organisationalTemplateRoutes'
+import {
+  looksLikeProjectUuid,
+  resolveProjectRouteKeyFromId,
+} from '@nidus/shared/utils/projectRouteParam'
+import { getMenuLabel } from '@nidus/shared/services/menuLabelService.js'
 import FormTemplateGallery from '../../components/forms/FormTemplateGallery'
-import DraftFormQueue from '../../components/forms/DraftFormQueue'
+import FormExcelBulkInstancesModal from '../../components/forms/FormExcelBulkInstancesModal'
 import {
   archiveForm,
+  bulkApproveFormInstances,
+  bulkArchiveFormInstances,
+  getFormBulkApproveMaxForProject,
+  getFormTemplate,
   getFormsByProject,
   resolveEffectiveFormTemplate,
 } from '../../services/formEngineService'
@@ -28,6 +45,7 @@ import { listNearestFormTemplatesForProject } from '@nidus/shared/services/proje
 
 const EXPORT_COLS = [
   { key: '_rowNumber', label: '#' },
+  { key: 'display_title', label: 'Record' },
   { key: 'template_name', label: 'Template' },
   { key: 'instance_reference', label: 'Reference' },
   { key: 'statusLabel', label: 'Status' },
@@ -67,10 +85,13 @@ function formatUpdatedAt(value) {
 
 /**
  * Process Group Forms gallery + Project Forms register (v850).
- * Keeps FormTemplateGallery ("start new") and DraftFormQueue; adds All Records.
+ * FormTemplateGallery ("start new") + Records register. Drafts live in Records
+ * (Edit resumes them) — no separate Draft Queue (avoids duplicating the same rows).
  */
-export default function FormsGallery({ mode = 'platform', basePath = '/platform/projects' }) {
-  const { projectId } = useParams()
+export default function FormsGallery({ mode = 'sim', basePath = '/simulator/pm/projects' }) {
+  const { projectId, routeKey } = usePlatformProjectId()
+  const [friendlyProjectKey, setFriendlyProjectKey] = useState(null)
+  const projectSeg = encodeURIComponent(friendlyProjectKey || routeKey || projectId || '')
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [templates, setTemplates] = useState([])
@@ -79,13 +100,76 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || '')
+  const [templateCodeFilter, setTemplateCodeFilter] = useState(
+    () => searchParams.get('templateCode') || '',
+  )
   const [sortKey, setSortKey] = useState('')
   const [sortDir, setSortDir] = useState('')
   const [busyId, setBusyId] = useState(null)
   const [viewMode, setViewMode] = useViewMode('project-forms-register', 'list')
+  const [bulkTemplateCode, setBulkTemplateCode] = useState('')
+  const [bulkModalOpen, setBulkModalOpen] = useState(false)
+  const [bulkTemplateFields, setBulkTemplateFields] = useState([])
+  const [bulkOpening, setBulkOpening] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [bulkApproveOpen, setBulkApproveOpen] = useState(false)
+  const [bulkApproveComment, setBulkApproveComment] = useState('')
+  const [bulkApproveBusy, setBulkApproveBusy] = useState(false)
+  const [bulkApproveMax, setBulkApproveMax] = useState(DEFAULT_FORM_BULK_APPROVE_MAX)
+  const [draftQueueBusy, setDraftQueueBusy] = useState(false)
+  const [backLinkLabel, setBackLinkLabel] = useState('Forms')
+
+  const templatesListHref = useMemo(
+    () =>
+      buildPmTemplatesListPath({
+        pathname: '/simulator/pm/templates/project',
+        listVariant: 'project',
+        projectKey: friendlyProjectKey || routeKey || projectId || '',
+        searchParams: 'domainGroup=forms',
+      }),
+    [friendlyProjectKey, routeKey, projectId],
+  )
+
+  useEffect(() => {
+    getMenuLabel(simDb, 'sim_pm_project_templates_forms', 'Forms').then(setBackLinkLabel)
+  }, [])
+
+  useEffect(() => {
+    if (!projectId) {
+      setFriendlyProjectKey(null)
+      return
+    }
+    let cancelled = false
+    resolveProjectRouteKeyFromId(projectId).then((key) => {
+      if (cancelled) return
+      const next = key || projectId
+      setFriendlyProjectKey(next)
+      if (
+        routeKey &&
+        looksLikeProjectUuid(routeKey) &&
+        next &&
+        next !== routeKey
+      ) {
+        const qs = searchParams.toString()
+        navigate(
+          `${basePath}/${encodeURIComponent(next)}/forms${qs ? `?${qs}` : ''}`,
+          { replace: true },
+        )
+      }
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [projectId, routeKey, basePath, navigate, searchParams])
 
   useEffect(() => {
     setStatusFilter(searchParams.get('status') || '')
+    setTemplateCodeFilter(searchParams.get('templateCode') || '')
+  }, [searchParams])
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('templateCode') || ''
+    if (fromQuery) setBulkTemplateCode(fromQuery)
   }, [searchParams])
 
   const loadInstances = useCallback(async () => {
@@ -145,13 +229,43 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
     resolveEffectiveFormTemplate(projectId, mode).then((r) => r.success && setRecommended(r.data))
   }, [projectId, mode])
 
-  const drafts = useMemo(() => instances.filter((x) => x.status === 'draft'), [instances])
+  useEffect(() => {
+    if (!projectId) {
+      setBulkApproveMax(DEFAULT_FORM_BULK_APPROVE_MAX)
+      return
+    }
+    getFormBulkApproveMaxForProject(projectId, mode).then((r) => {
+      if (r.success) setBulkApproveMax(r.data)
+    })
+  }, [projectId, mode])
+
+  useEffect(() => {
+    setSelectedIds(new Set())
+  }, [statusFilter, search, templateCodeFilter, projectId])
+
+  const filteredTemplateMeta = useMemo(() => {
+    const code = String(templateCodeFilter || '').trim().toLowerCase()
+    if (!code) return null
+    return (templates || []).find(
+      (t) => String(t.template_code || '').trim().toLowerCase() === code,
+    ) || null
+  }, [templates, templateCodeFilter])
 
   const filtered = useMemo(() => {
-    let rows = filterFormInstancesForRegister(instances, { statusFilter, search }).map((r) => ({
+    let rows = filterFormInstancesForRegister(instances, {
+      statusFilter,
+      search,
+      templateCode: templateCodeFilter,
+    }).map((r) => ({
       ...r,
       statusLabel: formInstanceStatusLabel(r.status),
       template_name: r.template_name || r.template_code || 'Form',
+      display_title:
+        r.display_title ||
+        r.instance_reference ||
+        r.template_name ||
+        r.template_code ||
+        'Form record',
     }))
     if (sortKey && sortDir) {
       const dir = sortDir === 'asc' ? 1 : -1
@@ -171,7 +285,7 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
       })
     }
     return rows
-  }, [instances, statusFilter, search, sortKey, sortDir])
+  }, [instances, statusFilter, search, templateCodeFilter, sortKey, sortDir])
 
   const exportRows = useMemo(
     () =>
@@ -192,11 +306,146 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
     setSortDir(next.dir)
   }
 
+  const selectableDraftIds = useMemo(() => draftIdsFromFilteredRows(filtered), [filtered])
+  const selectableArchiveIds = useMemo(() => archivableIdsFromFilteredRows(filtered), [filtered])
+  const selectedCount = selectedIds.size
+  const selectedDraftCount = useMemo(
+    () => [...selectedIds].filter((id) => selectableDraftIds.includes(id)).length,
+    [selectedIds, selectableDraftIds],
+  )
+  const allArchivableSelected =
+    selectableArchiveIds.length > 0 && selectableArchiveIds.every((id) => selectedIds.has(id))
+
+  const toggleRowSelected = (row) => {
+    if (!canArchiveFormInstance(row.status)) return
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(row.id)) next.delete(row.id)
+      else next.add(row.id)
+      return next
+    })
+  }
+
+  const toggleSelectAllArchivable = () => {
+    if (allArchivableSelected) {
+      setSelectedIds(new Set())
+      return
+    }
+    setSelectedIds(new Set(selectableArchiveIds))
+  }
+
+  const openBulkApprove = () => {
+    if (!selectedDraftCount) {
+      toast.error('Select at least one draft to approve')
+      return
+    }
+    const capCheck = assertBulkApproveWithinCap(selectedDraftCount, bulkApproveMax)
+    if (!capCheck.ok) {
+      toast.error(capCheck.message)
+      return
+    }
+    setBulkApproveComment('')
+    setBulkApproveOpen(true)
+  }
+
+  const handleBulkDeleteSelected = async () => {
+    if (!selectedCount) {
+      toast.error('Select at least one record')
+      return
+    }
+    if (
+      !window.confirm(
+        `Remove ${selectedCount} record${selectedCount === 1 ? '' : 's'} from this list? They will be archived.`,
+      )
+    ) {
+      return
+    }
+    setDraftQueueBusy(true)
+    try {
+      const r = await bulkArchiveFormInstances([...selectedIds], mode)
+      if (!r.success) throw new Error(r.message || 'Failed to remove records')
+      const archived = r.data?.archived?.length || 0
+      const failed = r.data?.errors?.length || 0
+      if (failed) toast.error(`Removed ${archived}; ${failed} failed`)
+      else toast.success(`Removed ${archived} record${archived === 1 ? '' : 's'}`)
+      setSelectedIds(new Set())
+      await loadInstances()
+    } catch (e) {
+      toast.error(e.message || 'Failed to remove records')
+    } finally {
+      setDraftQueueBusy(false)
+    }
+  }
+
+  const confirmBulkApprove = async () => {
+    if (!isNonEmptyJustification(bulkApproveComment)) {
+      toast.error('Approval justification is required')
+      return
+    }
+    const ids = [...selectedIds].filter((id) => selectableDraftIds.includes(id))
+    if (!ids.length) {
+      toast.error('Select at least one draft to approve')
+      return
+    }
+    const capCheck = assertBulkApproveWithinCap(ids.length, bulkApproveMax)
+    if (!capCheck.ok) {
+      toast.error(capCheck.message)
+      return
+    }
+    setBulkApproveBusy(true)
+    try {
+      const r = await bulkApproveFormInstances(ids, bulkApproveComment, mode)
+      if (!r.success) throw new Error(r.message || 'Bulk approve failed')
+      const approved = r.data?.approved?.length || 0
+      const failed = r.data?.errors?.length || 0
+      if (failed) {
+        toast.error(`Approved ${approved}; ${failed} failed`)
+      } else {
+        toast.success(`Approved ${approved} draft${approved === 1 ? '' : 's'}`)
+      }
+      setBulkApproveOpen(false)
+      setSelectedIds(new Set())
+      await loadInstances()
+    } catch (e) {
+      toast.error(e.message || 'Bulk approve failed')
+    } finally {
+      setBulkApproveBusy(false)
+    }
+  }
+
+  const openBulkUpload = async () => {
+    if (!bulkTemplateCode) {
+      toast.error('Select a form template first')
+      return
+    }
+    setBulkOpening(true)
+    try {
+      const r = await getFormTemplate(bulkTemplateCode, mode)
+      if (!r.success) throw new Error(r.message || 'Failed to load template')
+      const sections = r.data?.current_version?.schema?.sections || []
+      const fields = sections.flatMap((s) => s.fields || []).map((f) => ({
+        key: f.key,
+        label: f.label || f.key,
+        type: f.type || 'text',
+      }))
+      if (!fields.length) {
+        toast.error('This template has no fields yet — import a schema in the Form Template Builder first')
+        return
+      }
+      setBulkTemplateFields(fields)
+      setBulkModalOpen(true)
+    } catch (e) {
+      toast.error(e.message || 'Failed to open bulk upload')
+    } finally {
+      setBulkOpening(false)
+    }
+  }
+
   const handleArchive = async (row) => {
     if (!canArchiveFormInstance(row.status)) return
     if (
       !window.confirm(
-        `Archive "${row.template_name || 'this form'}"? It will move to Archived and leave the default list.`,
+        `Archive "${row.display_title || row.instance_reference || row.template_name || 'this form'}"? It will move to Archived and leave the default list.`,
       )
     ) {
       return
@@ -215,26 +464,26 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
   }
 
   const renderActions = (row) => {
-    const viewPath = `${basePath}/${projectId}/forms/${row.id}/view`
-    const editPath = `${basePath}/${projectId}/forms/${row.id}/edit`
+    const instanceSeg = formInstancePathSegmentFromRow(row)
+    const viewPath = `${basePath}/${projectSeg}/forms/${instanceSeg}/view`
+    const editPath = `${basePath}/${projectSeg}/forms/${instanceSeg}/edit`
     const editable = canEditFormInstance(row.status)
     const archivable = canArchiveFormInstance(row.status)
     const archiveDisabled = !archivable || busyId === row.id
     const archiveLabel = archivable
-      ? `Archive ${row.template_name || 'form'}`
-      : row.status === 'approved'
-        ? 'Cannot archive an approved form'
-        : row.status === 'archived'
-          ? 'Already archived'
-          : 'Archive unavailable'
+      ? `Delete / archive ${row.display_title || row.instance_reference || row.template_name || 'form'}`
+      : row.status === 'archived'
+        ? 'Already archived'
+        : 'Delete unavailable'
+    const recordLabel = row.display_title || row.instance_reference || row.template_name || 'form'
 
     return (
       <div className="inline-flex items-center gap-0.5">
-        <RowActionButton variant="view" label={`View ${row.template_name || 'form'}`} onClick={() => navigate(viewPath)} />
+        <RowActionButton variant="view" label={`View ${recordLabel}`} onClick={() => navigate(viewPath)} />
         {editable && (
           <RowActionButton
             variant="edit"
-            label={`Edit ${row.template_name || 'form'}`}
+            label={`Edit ${recordLabel}`}
             onClick={() => navigate(editPath)}
           />
         )}
@@ -248,27 +497,119 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
     )
   }
 
+  const recordsHeading = templateCodeFilter
+    ? (filteredTemplateMeta?.name
+      ? `${filteredTemplateMeta.name} records`
+      : `Form records (${templateCodeFilter})`)
+    : 'Process Group Forms'
+
   return (
     <div className="space-y-4 p-4 text-gray-900 dark:text-gray-100">
-      <h1 className="text-lg font-semibold">Process Group Forms</h1>
-      <FormTemplateGallery
-        templates={templates}
-        onSelect={(t) => navigate(`${basePath}/${projectId}/forms/${t.template_code}/new`)}
-        recommendedCode={recommended?.templateCode}
-        recommendedTier={recommended?.tier}
-      />
-      <DraftFormQueue
-        drafts={drafts}
-        onResume={(d) => navigate(`${basePath}/${projectId}/forms/${d.id}/edit`)}
-      />
+      <Link
+        to={templatesListHref}
+        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline dark:text-blue-400"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to {backLinkLabel}
+      </Link>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-semibold">{recordsHeading}</h1>
+          {templateCodeFilter && (
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Filled-in records for template{' '}
+              <span className="font-mono">{templateCodeFilter}</span>
+              {filteredTemplateMeta?.name ? ` · ${filteredTemplateMeta.name}` : ''}.
+            </p>
+          )}
+        </div>
+        {templateCodeFilter && (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="rounded border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+              onClick={() => {
+                const next = new URLSearchParams(searchParams)
+                next.delete('templateCode')
+                navigate({ search: next.toString() ? `?${next}` : '' }, { replace: true })
+              }}
+            >
+              Show all project forms
+            </button>
+            <button
+              type="button"
+              className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500"
+              onClick={() =>
+                navigate(`${basePath}/${projectSeg}/forms/${encodeURIComponent(templateCodeFilter)}/new`)
+              }
+            >
+              Start new record
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* When deep-linked for one template, skip the start-new gallery so users land on the records table. */}
+      {!templateCodeFilter && (
+        <FormTemplateGallery
+          templates={templates}
+          onSelect={(t) =>
+            navigate(`${basePath}/${projectSeg}/forms/${encodeURIComponent(t.template_code)}/new`)
+          }
+          recommendedCode={recommended?.templateCode}
+          recommendedTier={recommended?.tier}
+        />
+      )}
+
+      {!templateCodeFilter && (
+        <>
+          <section className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Bulk upload rows</h2>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Create draft form instances from an Excel/CSV file (one draft per data row).
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  className="min-w-[14rem] rounded border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  value={bulkTemplateCode}
+                  onChange={(e) => setBulkTemplateCode(e.target.value)}
+                  disabled={!templates.length}
+                >
+                  <option value="">Select template…</option>
+                  {templates.map((t) => (
+                    <option key={t.template_code || t.id} value={t.template_code}>
+                      {t.name || t.template_code}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={openBulkUpload}
+                  disabled={!bulkTemplateCode || bulkOpening || !projectId}
+                  className="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                  {bulkOpening ? 'Loading…' : 'Bulk upload rows'}
+                </button>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       <section className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">All Records</h2>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              {templateCodeFilter ? 'Records' : 'All Records'}
+            </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Every form instance for this project. Archived records are hidden until you filter for
-              them.
+              {templateCodeFilter
+                ? 'Drafts, in review, approved, and rejected instances for this template. Archived are hidden unless you filter for them.'
+                : 'Every form instance for this project. Archived records are hidden until you filter for them.'}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -306,6 +647,42 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
           </select>
         </div>
 
+        {selectableArchiveIds.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800/60">
+            <button
+              type="button"
+              onClick={toggleSelectAllArchivable}
+              className="rounded border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-800 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+            >
+              {allArchivableSelected
+                ? 'Clear selection'
+                : `Select all (${selectableArchiveIds.length})`}
+            </button>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {selectedCount} selected
+              {selectableDraftIds.length > 0 ? ` · approve max ${bulkApproveMax}` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={handleBulkDeleteSelected}
+              disabled={!selectedCount || draftQueueBusy}
+              className="rounded bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-500 disabled:opacity-40"
+            >
+              {draftQueueBusy ? 'Removing…' : `Delete selected (${selectedCount})`}
+            </button>
+            {selectableDraftIds.length > 0 && (
+              <button
+                type="button"
+                onClick={openBulkApprove}
+                disabled={!selectedDraftCount || bulkApproveBusy}
+                className="rounded bg-green-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-green-500 disabled:opacity-40"
+              >
+                Approve selected drafts ({selectedDraftCount})
+              </button>
+            )}
+          </div>
+        )}
+
         {loading && <p className="text-sm text-gray-500 dark:text-gray-400">Loading records…</p>}
 
         {!loading && (
@@ -316,8 +693,9 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
 
         {!loading && filtered.length === 0 && (
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            No form records match this view. Start a new form above, or choose Archived to see
-            retired instances.
+            {templateCodeFilter
+              ? `No records yet for template ${templateCodeFilter}. Use Start new record, or Bulk upload rows below.`
+              : 'No form records match this view. Start a new form above, or choose Archived to see retired instances.'}
           </p>
         )}
 
@@ -326,15 +704,25 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
             <table className="min-w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
+                  <th className="w-10 px-2 py-2 text-left">
+                    <input
+                      type="checkbox"
+                      aria-label="Select all records in this list"
+                      checked={allArchivableSelected}
+                      disabled={!selectableArchiveIds.length}
+                      onChange={toggleSelectAllArchivable}
+                      className="rounded border-gray-300 dark:border-gray-600"
+                    />
+                  </th>
                   <TableRowNumberHeader />
                   <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">
                     <button
                       type="button"
                       className="inline-flex items-center gap-1"
-                      onClick={() => onSort('template_name')}
+                      onClick={() => onSort('display_title')}
                     >
-                      Template{' '}
-                      <span className="text-xs opacity-70">{sortIcon(sortKey, sortDir, 'template_name')}</span>
+                      Record{' '}
+                      <span className="text-xs opacity-70">{sortIcon(sortKey, sortDir, 'display_title')}</span>
                     </button>
                   </th>
                   <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">
@@ -368,14 +756,25 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
                     key={row.id}
                     className="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
                   >
+                    <td className="px-2 py-2">
+                      {canArchiveFormInstance(row.status) ? (
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${row.instance_reference || row.template_name || 'record'}`}
+                          checked={selectedIds.has(row.id)}
+                          onChange={() => toggleRowSelected(row)}
+                          className="rounded border-gray-300 dark:border-gray-600"
+                        />
+                      ) : (
+                        <span className="inline-block w-4" />
+                      )}
+                    </td>
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                     <td className="px-3 py-2 text-gray-900 dark:text-gray-100">
-                      <div>{row.template_name}</div>
-                      {(row.instance_reference || row.template_code) && (
-                        <div className="text-xs text-gray-400">
-                          {row.instance_reference || row.template_code}
-                        </div>
-                      )}
+                      <div className="font-medium">{row.display_title}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {[row.instance_reference, row.template_name].filter(Boolean).join(' · ')}
+                      </div>
                     </td>
                     <td className="px-3 py-2">
                       <span
@@ -402,12 +801,21 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
                 key={row.id}
                 className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
               >
-                <div className="mb-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <RowNumberBadge number={getDisplayRowNumber(index)} />
+                  {canArchiveFormInstance(row.status) && (
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${row.instance_reference || row.template_name || 'record'}`}
+                      checked={selectedIds.has(row.id)}
+                      onChange={() => toggleRowSelected(row)}
+                      className="rounded border-gray-300 dark:border-gray-600"
+                    />
+                  )}
                 </div>
-                <h3 className="font-medium text-gray-900 dark:text-gray-100">{row.template_name}</h3>
+                <h3 className="font-medium text-gray-900 dark:text-gray-100">{row.display_title}</h3>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  {row.instance_reference || row.template_code || row.id}
+                  {[row.instance_reference, row.template_name].filter(Boolean).join(' · ') || row.id}
                 </p>
                 <div className="mt-2">
                   <span
@@ -425,6 +833,87 @@ export default function FormsGallery({ mode = 'platform', basePath = '/platform/
           </div>
         )}
       </section>
+
+      {templateCodeFilter && (
+        <section className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Bulk upload rows</h2>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Create draft instances for {filteredTemplateMeta?.name || templateCodeFilter} from Excel/CSV.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openBulkUpload}
+              disabled={!bulkTemplateCode || bulkOpening || !projectId}
+              className="inline-flex items-center gap-1.5 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              {bulkOpening ? 'Loading…' : 'Bulk upload rows'}
+            </button>
+          </div>
+        </section>
+      )}
+
+      <FormExcelBulkInstancesModal
+        isOpen={bulkModalOpen}
+        onClose={() => setBulkModalOpen(false)}
+        projectId={projectId}
+        templateCode={bulkTemplateCode}
+        templateFields={bulkTemplateFields}
+        mode={mode}
+        onCreated={() => loadInstances()}
+      />
+
+      {bulkApproveOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="bulk-approve-title"
+            className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-700 dark:bg-gray-900"
+          >
+            <h3 id="bulk-approve-title" className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Approve {selectedCount} draft{selectedCount === 1 ? '' : 's'}
+            </h3>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              One justification will be applied to every selected draft (max {bulkApproveMax}).
+            </p>
+            <label className="mt-3 block">
+              <span className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                Justification (required)
+              </span>
+              <textarea
+                value={bulkApproveComment}
+                onChange={(e) => setBulkApproveComment(e.target.value)}
+                rows={4}
+                disabled={bulkApproveBusy}
+                className="w-full rounded border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                placeholder="Explain the approval…"
+              />
+            </label>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={bulkApproveBusy}
+                onClick={() => setBulkApproveOpen(false)}
+                className="rounded border border-gray-300 px-3 py-1.5 text-xs dark:border-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={bulkApproveBusy || !isNonEmptyJustification(bulkApproveComment)}
+                onClick={confirmBulkApprove}
+                className="rounded bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-500 disabled:opacity-40"
+              >
+                {bulkApproveBusy ? 'Approving…' : 'Approve'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

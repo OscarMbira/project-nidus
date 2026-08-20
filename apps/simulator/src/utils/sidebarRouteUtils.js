@@ -83,6 +83,7 @@ export function resolveMenuRoutePath(routePath, pathname) {
 /** PM layout entry points — keep PM users on /pm/* dashboards where possible. */
 const PM_LAYOUT_ROUTE_REWRITES = {
   '/platform/dashboard': '/pm/dashboard',
+  '/platform/executive/dashboard': '/pm/dashboard',
 }
 
 /**
@@ -128,7 +129,33 @@ export function menuPathIsActive(pathname, resolvedPath, search = '') {
     if (pathname === '/platform/dashboard') {
       return normalizeDashboardTab(new URLSearchParams(String(search || '').replace(/^\?/, '')).get('tab')) === 'overview'
     }
+    // v851/v852: bare parents (Template Library, Organizational Templates, Project Templates, …)
+    // stay inactive when a Forms|Templates submenu leaf (?domainGroup=) owns the URL.
+    const cur = new URLSearchParams(String(search || '').replace(/^\?/, ''))
+    if (cur.get('domainGroup')) {
+      return false
+    }
     return true
+  }
+  // Prefix match for nested pages (e.g. …/requirements → …/requirements/new).
+  // Organizational Templates menu uses hub /platform/templates (redirects to organisational
+  // with project context). That hub must NOT stay active for peer leaf /templates/project,
+  // and must stay inactive when a Forms|Templates (?domainGroup=) child owns the URL.
+  const curSearch = new URLSearchParams(String(search || '').replace(/^\?/, ''))
+  const domainGroupOwnsHighlight = Boolean(curSearch.get('domainGroup'))
+  if (pathNoHash === '/platform/templates') {
+    if (domainGroupOwnsHighlight) return false
+    return (
+      pathname === '/platform/templates/organisational' ||
+      pathname.startsWith('/platform/templates/organisational/')
+    )
+  }
+  if (pathNoHash === '/simulator/pm/templates') {
+    if (domainGroupOwnsHighlight) return false
+    return (
+      pathname === '/simulator/pm/templates/organisational' ||
+      pathname.startsWith('/simulator/pm/templates/organisational/')
+    )
   }
   return pathname.startsWith(`${pathNoHash}/`)
 }

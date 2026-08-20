@@ -73,7 +73,7 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading timeline...</div>;
+    return <div className="text-center py-8 text-gray-900 dark:text-gray-100">Loading timeline...</div>;
   }
 
   const grouped = getGroupedEntries();
@@ -87,13 +87,13 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
   return (
     <div className="space-y-6">
       {/* Group By Selector */}
-      <div className="bg-white rounded-lg shadow p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 border border-transparent dark:border-gray-700">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Group by:</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Group by:</label>
           <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100"
           >
             <option value="date">Date</option>
             <option value="type">Type</option>
@@ -109,7 +109,7 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
           return (
             <div key={groupKey} className="relative">
               {/* Timeline Line */}
-              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300 dark:bg-gray-600"></div>
 
               {/* Group Header */}
               <div className="flex items-center gap-4 mb-4">
@@ -117,13 +117,13 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
                   <div className="w-3 h-3 bg-white rounded-full"></div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     {groupBy === 'date' 
                       ? format(new Date(groupKey), 'MMMM d, yyyy')
                       : groupKey.charAt(0).toUpperCase() + groupKey.slice(1)
                     }
                   </h3>
-                  <p className="text-sm text-gray-500">{groupEntries.length} entr{groupEntries.length !== 1 ? 'ies' : 'y'}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{groupEntries.length} entr{groupEntries.length !== 1 ? 'ies' : 'y'}</p>
                 </div>
               </div>
 
@@ -133,20 +133,20 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
                   <div
                     key={entry.id}
                     onClick={() => onEntryClick && onEntryClick(entry)}
-                    className="bg-white rounded-lg shadow p-4 hover:shadow-md cursor-pointer transition-shadow"
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md cursor-pointer transition-shadow border border-transparent dark:border-gray-700"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-500">#{entry.entry_number}</span>
+                        <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">#{entry.entry_number}</span>
                         <EntryTypeBadge type={entry.entry_type} />
                         <EntryStatusBadge status={entry.status} />
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {format(new Date(entry.created_at), 'h:mm a')}
                       </div>
                     </div>
-                    <p className="text-gray-700 mb-3 line-clamp-2">{entry.description}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <p className="text-gray-700 dark:text-gray-300 mb-3 line-clamp-2">{entry.description}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                       {entry.person_responsible && (
                         <div className="flex items-center gap-1">
                           <User className="w-3 h-3" />
@@ -180,7 +180,7 @@ export default function DailyLogTimelineView({ logId, onEntryClick }) {
       </div>
 
       {groups.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           No entries found
         </div>
       )}

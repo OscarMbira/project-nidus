@@ -47,7 +47,7 @@ const PlatformHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 shadow-sm border-b backdrop-blur-md" style={{ background: 'linear-gradient(135deg, #0F2027 0%, #203A43 100%)', borderColor: '#203A43' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
         <Link to="/" className="flex items-center gap-3">
           <Zap className="h-6 w-6" style={{ color: '#A8DADC' }} />
           <div className="flex flex-col">
@@ -61,12 +61,12 @@ const PlatformHeader = () => {
             </div>
           </div>
         </Link>
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-3 lg:gap-4 ml-6 lg:ml-10 shrink-0">
           <button
             type="button"
             onClick={handleHomeClick}
-            className="font-medium transition-colors bg-transparent border-none cursor-pointer"
-            style={{ color: '#A8DADC', fontSize: '16px' }}
+            className="whitespace-nowrap font-medium transition-colors bg-transparent border-none cursor-pointer"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
             onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
             onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
           >
@@ -74,8 +74,8 @@ const PlatformHeader = () => {
           </button>
           <Link
             to="/platform/features"
-            className="font-medium transition-colors"
-            style={{ color: '#A8DADC', fontSize: '16px' }}
+            className="whitespace-nowrap font-medium transition-colors"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
             onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
             onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
           >
@@ -83,8 +83,8 @@ const PlatformHeader = () => {
           </Link>
           <Link
             to="/platform/blog"
-            className="font-medium transition-colors"
-            style={{ color: '#A8DADC', fontSize: '16px' }}
+            className="whitespace-nowrap font-medium transition-colors"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
             onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
             onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
           >
@@ -92,8 +92,8 @@ const PlatformHeader = () => {
           </Link>
           <Link
             to="/platform/resources"
-            className="font-medium transition-colors"
-            style={{ color: '#A8DADC', fontSize: '16px' }}
+            className="whitespace-nowrap font-medium transition-colors"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
             onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
             onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
           >
@@ -101,8 +101,8 @@ const PlatformHeader = () => {
           </Link>
           <Link
             to="/platform/pricing"
-            className="font-medium transition-colors"
-            style={{ color: '#A8DADC', fontSize: '16px' }}
+            className="whitespace-nowrap font-medium transition-colors"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
             onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
             onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
           >
@@ -110,24 +110,33 @@ const PlatformHeader = () => {
           </Link>
           <Link
             to="/documentation/platform"
-            className="font-medium transition-colors"
-            style={{ color: '#A8DADC', fontSize: '16px' }}
+            className="whitespace-nowrap font-medium transition-colors"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
             onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
             onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
           >
             Documentation
           </Link>
         </nav>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 ml-auto shrink-0">
+          <Link
+            to="/platform/affiliate"
+            className="hidden whitespace-nowrap md:inline-flex font-medium transition-colors"
+            style={{ color: '#A8DADC', fontSize: '14px' }}
+            onMouseEnter={(e) => e.target.style.color = '#FFFFFF'}
+            onMouseLeave={(e) => e.target.style.color = '#A8DADC'}
+          >
+            Become an Affiliate
+          </Link>
           <Link
             to="/platform/request-demo"
-            className="hidden md:inline-flex items-center justify-center px-4 py-2 text-sm font-medium transition-colors"
+            className="hidden whitespace-nowrap md:inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium transition-colors"
             style={{ color: '#A8DADC', borderColor: '#A8DADC', border: '1px solid' }}
-            onMouseEnter={(e) => { 
+            onMouseEnter={(e) => {
               e.target.style.backgroundColor = 'rgba(168, 218, 220, 0.1)';
               e.target.style.borderColor = '#FFFFFF';
             }}
-            onMouseLeave={(e) => { 
+            onMouseLeave={(e) => {
               e.target.style.backgroundColor = 'transparent';
               e.target.style.borderColor = '#A8DADC';
             }}
@@ -135,25 +144,27 @@ const PlatformHeader = () => {
             Request Demo
           </Link>
           <ThemeToggle />
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
+            size="sm"
             asChild
-            className="bg-transparent shadow-lg transition-colors"
+            className="whitespace-nowrap bg-transparent shadow-lg transition-colors"
             style={{ borderColor: '#A8DADC', color: '#A8DADC' }}
-            onMouseEnter={(e) => { 
+            onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = 'rgba(168, 218, 220, 0.1)';
               e.currentTarget.style.borderColor = '#FFFFFF';
             }}
-            onMouseLeave={(e) => { 
+            onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
               e.currentTarget.style.borderColor = '#A8DADC';
             }}
           >
             <Link to="/platform/login">Login</Link>
           </Button>
-          <Button 
+          <Button
+            size="sm"
             asChild
-            className="text-white shadow-lg transition-colors"
+            className="whitespace-nowrap text-white shadow-lg transition-colors"
             style={{ background: '#E63946' }}
             onMouseEnter={(e) => e.currentTarget.style.background = '#d62839'}
             onMouseLeave={(e) => e.currentTarget.style.background = '#E63946'}

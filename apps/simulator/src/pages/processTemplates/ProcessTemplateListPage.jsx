@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams, useLocation } from 'react-router-dom'
+import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
+import { RowActionButton } from '@nidus/ui'
 import toast from 'react-hot-toast'
 import { Plus, Search, LayoutGrid, Table2, Download, ArrowLeft, Copy, Pause } from 'lucide-react'
 import ProcessTemplateProjectScope, { useProcessTemplateScope } from '../../components/processTemplates/ProcessTemplateProjectScope'
@@ -43,6 +44,7 @@ function sortRows(rows, key, dir) {
 }
 
 export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
+  const navigate = useNavigate()
   const { slug } = useParams()
   const location = useLocation()
   const template = getTemplateBySlug(slug)
@@ -259,7 +261,7 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
                   </button>
                 )}
                 {canEditMasterTemplate(roleKey, row, userId) && (
-                  <Link to={`${listBase}/${row.id}/edit`} className="text-xs text-gray-400 hover:text-gray-200">Edit</Link>
+                  <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${listBase}/${row.id}/edit`)} />
                 )}
               </div>
             </div>
@@ -299,13 +301,13 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
                       <button type="button" onClick={() => setCopyMaster(row)} className="text-blue-400 text-xs">Copy</button>
                     )}
                     {canEditMasterTemplate(roleKey, row, userId) && (
-                      <Link to={`${listBase}/${row.id}/edit`} className="text-gray-400 text-xs hover:text-gray-200">Edit</Link>
+                      <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${listBase}/${row.id}/edit`)} />
                     )}
                     <button type="button" onClick={() => handleHold(row)} className="text-amber-400 text-xs inline-flex items-center gap-0.5">
                       <Pause className="h-3 w-3" /> Hold
                     </button>
                     {canDeleteTemplate(roleKey, row, userId) && (
-                      <button type="button" onClick={() => handleDelete(row)} className="text-red-400 text-xs">Delete</button>
+                      <RowActionButton variant="delete" label="Delete template" onClick={() => handleDelete(row)} />
                     )}
                   </td>
                 </tr>

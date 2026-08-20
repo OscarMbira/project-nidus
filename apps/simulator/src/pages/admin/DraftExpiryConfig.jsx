@@ -27,6 +27,7 @@ import {
 import { supabase } from '../../services/supabaseClient';
 import { getExpiryConfigs, updateExpiryConfig } from '../../services/draftQueueService';
 import { getEntityLabel, ENTITY_CATEGORIES } from '@nidus/config/draftQueueConfig';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 
 export function DraftExpiryConfig() {
   const [configs, setConfigs] = useState([]);
@@ -35,6 +36,7 @@ export function DraftExpiryConfig() {
   const [saving, setSaving] = useState({});
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [newConfigTab, setNewConfigTab] = useState('details');
 
   // Form state for new config
   const [newConfig, setNewConfig] = useState({
@@ -331,6 +333,11 @@ export function DraftExpiryConfig() {
             </div>
           </div>
           <div className="p-6">
+            <DetailAuditTabList activeTab={newConfigTab} onChange={setNewConfigTab} />
+            {newConfigTab === 'audit' ? (
+              <p className="text-sm text-gray-400 mt-4">Audit details appear after this configuration is saved.</p>
+            ) : (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -412,6 +419,8 @@ export function DraftExpiryConfig() {
               )}
               <span>Add Configuration</span>
             </button>
+            </>
+            )}
           </div>
         </div>
 

@@ -1,4 +1,9 @@
 import { useState, useEffect } from 'react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
 export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
   const [wbs_code, setWbsCode] = useState('')
@@ -6,6 +11,7 @@ export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
   const [description, setDescription] = useState('')
   const [level_num, setLevelNum] = useState(1)
   const [sort_order, setSortOrder] = useState(0)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (initial) {
@@ -27,6 +33,25 @@ export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-gray-900 p-6 shadow-xl">
         <h3 className="mb-4 text-lg font-semibold text-white">{initial ? 'Edit WBS node' : 'New WBS node'}</h3>
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        {formTab === 'audit' ? (
+          <div className="py-3">
+            {!initial ? (
+              <p className="text-sm text-gray-400">Audit details appear after this WBS node is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="When this WBS node was created and last changed.">
+                <AuditCard title="Identity" description="How this node is labelled and tracked.">
+                  <AuditField label="WBS code" value={initial.wbs_code} />
+                  <AuditField label="Title" value={initial.title} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this node was created and last changed.">
+                  <AuditTimestampPair dateLabel="Created at" value={initial.created_at} />
+                  <AuditTimestampPair dateLabel="Last updated" value={initial.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        ) : (
         <div className="space-y-3">
           <div>
             <label className="mb-1 block text-xs text-gray-400">WBS code</label>
@@ -51,6 +76,7 @@ export default function WBSNodeForm({ initial, parentId, onSubmit, onCancel }) {
             </div>
           </div>
         </div>
+        )}
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" onClick={onCancel} className="rounded-lg border border-gray-600 px-4 py-2 text-gray-300 hover:bg-gray-800">
             Cancel

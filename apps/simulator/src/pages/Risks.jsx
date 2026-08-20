@@ -5,13 +5,15 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
-import { Plus, AlertTriangle, TrendingUp, Filter, Search, BarChart3 } from 'lucide-react'
+import { Plus, AlertTriangle, TrendingUp, Search, LayoutDashboard, List } from 'lucide-react'
 import RiskForm from '../components/RiskForm'
 import RiskHeatMap from '../components/RiskHeatMap'
 import RiskList from '../components/RiskList'
 import Pagination from '../components/Pagination'
 import SortToolbar from '@nidus/ui/SortToolbar'
+import ViewToggle from '@nidus/ui/ViewToggle'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import RecordLifecycleListHeader from '@nidus/ui/RecordLifecycleListHeader'
 import useRecordLifecycleFilter from '@nidus/shared/hooks/useRecordLifecycleFilter'
 import { applyRecordStatusFilter } from '@nidus/shared/utils/lifecycleListUtils'
@@ -31,16 +33,25 @@ export default function Risks() {
     risk_type: '',
     search: '',
   })
-  const [activeView, setActiveView] = useState('list') // 'list', 'heatmap'
+  const [pageTab, setPageTab] = useState('summary') // 'summary' | 'register'
+  const [activeView, setActiveView] = useState('list') // 'list', 'heatmap' (within Register tab)
+  const [listLayout, setListLayout] = useViewMode('simulator-risks-page', 'list')
   const [currentPage, setCurrentPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const itemsPerPage = 20
+
+  const tabBtn = (active) =>
+    `px-3 py-1.5 rounded text-sm font-medium transition-colors inline-flex items-center gap-1.5 ${
+      active
+        ? 'bg-sky-600 text-white'
+        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+    }`
 
   const { statusFilter, setStatusFilter, counts } = useRecordLifecycleFilter('risks', { projectId })
 
   const { handleSort, getSortDirectionForColumn, supabaseOrder } = useSortableTable({
     defaultSort: { column: 'risk_score', direction: 'desc' },
-    storageKey: 'nidus-risks-sort',
+    storageKey: 'nidus-sim-risks-sort',
     serverColumnMap: {
       risk_score: 'risk_score',
       status: 'status',
@@ -173,12 +184,40 @@ export default function Risks() {
     fetchRisks()
   }
 
+  const handleCancelRiskForm = () => {
+    setShowRiskForm(false)
+    setSelectedRisk(null)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Risks...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (showRiskForm) {
+    return (
+      <div className="w-full space-y-4">
+        <button
+          type="button"
+          onClick={handleCancelRiskForm}
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          ← Back to risk list
+        </button>
+        <div className="w-[75%] max-w-[75%] mx-auto">
+          <RiskForm
+            variant="page"
+            risk={selectedRisk}
+            projectId={projectId}
+            onSave={handleRiskSaved}
+            onCancel={handleCancelRiskForm}
+          />
         </div>
       </div>
     )
@@ -203,227 +242,275 @@ export default function Risks() {
         ← Back to Project
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Risk Management
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          {project?.project_name} - Risk Register and Management
-        </p>
-      </div>
-
-      <RecordLifecycleListHeader
-        tableName="risks"
-        projectId={projectId}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-        counts={counts}
-      />
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Risks</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-blue-500" />
-          </div>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Risk Management
+          </h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            {project?.project_name} - Risk Register and Management
+          </p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">High</p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.high}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Medium</p>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.medium}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-yellow-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Low</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.low}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-gray-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Threats</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.threats}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Opportunities</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.opportunities}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-            <Search className="h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search risks..."
-              value={filters.search}
-              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            />
-          </div>
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">All Statuses</option>
-            <option value="identified">Identified</option>
-            <option value="assessed">Assessed</option>
-            <option value="mitigated">Mitigated</option>
-            <option value="monitored">Monitored</option>
-            <option value="closed">Closed</option>
-            <option value="realized">Realized</option>
-          </select>
-          <select
-            value={filters.risk_level}
-            onChange={(e) => setFilters({ ...filters, risk_level: e.target.value })}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">All Levels</option>
-            <option value="critical">Critical</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
-          </select>
-          <select
-            value={filters.risk_type}
-            onChange={(e) => setFilters({ ...filters, risk_type: e.target.value })}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">All Types</option>
-            <option value="threat">Threat</option>
-            <option value="opportunity">Opportunity</option>
-          </select>
-        </div>
-      </div>
-
-      {/* View Toggle */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
-          <button
-            onClick={() => setActiveView('list')}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-              activeView === 'list'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            List View
-          </button>
-          <button
-            onClick={() => setActiveView('heatmap')}
-            className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
-              activeView === 'heatmap'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            Heat Map
-          </button>
-        </div>
-        <button
-          onClick={handleCreateRisk}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
+        <div
+          className="flex flex-wrap items-center gap-1 border border-gray-200 dark:border-gray-700 rounded-lg p-1 self-start"
+          role="tablist"
+          aria-label="Risk management sections"
         >
-          <Plus className="h-4 w-4" />
-          Create Risk
-        </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pageTab === 'summary'}
+            onClick={() => setPageTab('summary')}
+            className={tabBtn(pageTab === 'summary')}
+          >
+            <LayoutDashboard className="h-4 w-4" aria-hidden />
+            Summary
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={pageTab === 'register'}
+            onClick={() => setPageTab('register')}
+            className={tabBtn(pageTab === 'register')}
+          >
+            <List className="h-4 w-4" aria-hidden />
+            Register
+          </button>
+        </div>
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto" />
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Loading risks...</p>
+      {pageTab === 'summary' && (
+        <div className="space-y-6" role="tabpanel" aria-label="Risk summary">
+          <RecordLifecycleListHeader
+            tableName="risks"
+            projectId={projectId}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            counts={counts}
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Risks</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-sky-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
+                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-red-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">High</p>
+                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.high}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-orange-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Medium</p>
+                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.medium}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-yellow-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Low</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.low}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-gray-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Threats</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.threats}</p>
+                </div>
+                <AlertTriangle className="h-8 w-8 text-red-500" />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-800 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Opportunities</p>
+                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">{stats.opportunities}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-teal-500" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setPageTab('register')}
+              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-medium"
+            >
+              Open Register →
+            </button>
           </div>
         </div>
-      ) : activeView === 'list' ? (
-        <>
-          <div className="mb-4">
-            <SortToolbar
-              columns={[
-                { key: 'risk_score', label: 'Risk score' },
-                { key: 'status', label: 'Status' },
-                { key: 'risk_level', label: 'Level' },
-                { key: 'created_at', label: 'Created' },
-              ]}
-              getSortDirection={getSortDirectionForColumn}
-              onSort={handleSort}
-            />
-          </div>
-          <RiskList
-            risks={risks}
-            onEdit={handleEditRisk}
-            onRefresh={fetchRisks}
-            projectId={projectId}
-            routeProjectKey={routeKey || projectId}
-          />
-          {totalCount > itemsPerPage && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(totalCount / itemsPerPage)}
-              onPageChange={setCurrentPage}
-              itemsPerPage={itemsPerPage}
-              totalItems={totalCount}
-            />
-          )}
-        </>
-      ) : (
-        <RiskHeatMap risks={risks} />
       )}
 
-      {/* Risk Form Modal */}
-      {showRiskForm && (
-        <RiskForm
-          risk={selectedRisk}
-          projectId={projectId}
-          onSave={handleRiskSaved}
-          onCancel={() => {
-            setShowRiskForm(false)
-            setSelectedRisk(null)
-          }}
-        />
+      {pageTab === 'register' && (
+        <div className="space-y-6" role="tabpanel" aria-label="Risk register">
+          {/* Filters */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search risks..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value="">All Statuses</option>
+                <option value="identified">Identified</option>
+                <option value="assessed">Assessed</option>
+                <option value="mitigated">Mitigated</option>
+                <option value="monitored">Monitored</option>
+                <option value="closed">Closed</option>
+                <option value="realized">Realized</option>
+              </select>
+              <select
+                value={filters.risk_level}
+                onChange={(e) => setFilters({ ...filters, risk_level: e.target.value })}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value="">All Levels</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <select
+                value={filters.risk_type}
+                onChange={(e) => setFilters({ ...filters, risk_type: e.target.value })}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value="">All Types</option>
+                <option value="threat">Threat</option>
+                <option value="opportunity">Opportunity</option>
+              </select>
+            </div>
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex gap-2 border border-gray-200 dark:border-gray-700 rounded-lg p-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveView('list')}
+                  className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                    activeView === 'list'
+                      ? 'bg-sky-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  List View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveView('heatmap')}
+                  className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                    activeView === 'heatmap'
+                      ? 'bg-sky-600 text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  Heat Map
+                </button>
+              </div>
+              {activeView === 'list' && (
+                <ViewToggle
+                  value={listLayout}
+                  onChange={setListLayout}
+                  ariaLabel="Risk card or table layout"
+                />
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleCreateRisk}
+              className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Risk
+            </button>
+          </div>
+
+          {/* Content */}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-600 mx-auto" />
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Loading risks...</p>
+              </div>
+            </div>
+          ) : activeView === 'list' ? (
+            <>
+              <div>
+                <SortToolbar
+                  columns={[
+                    { key: 'risk_score', label: 'Risk score' },
+                    { key: 'status', label: 'Status' },
+                    { key: 'risk_level', label: 'Level' },
+                    { key: 'created_at', label: 'Created' },
+                  ]}
+                  getSortDirection={getSortDirectionForColumn}
+                  onSort={handleSort}
+                />
+              </div>
+              <RiskList
+                risks={risks}
+                onEdit={handleEditRisk}
+                onRefresh={fetchRisks}
+                projectId={projectId}
+                routeProjectKey={routeKey || projectId}
+                viewMode={listLayout}
+                page={currentPage}
+                pageSize={itemsPerPage}
+              />
+              {totalCount > itemsPerPage && (
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(totalCount / itemsPerPage)}
+                  onPageChange={setCurrentPage}
+                  itemsPerPage={itemsPerPage}
+                  totalItems={totalCount}
+                />
+              )}
+            </>
+          ) : (
+            <RiskHeatMap risks={risks} />
+          )}
+        </div>
       )}
+
     </div>
   )
 }

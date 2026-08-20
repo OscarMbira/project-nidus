@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { supabase } from '../../services/supabaseClient';
 import { FileText, AlertTriangle, ArrowRight, Settings, AlertCircle, ArrowLeft } from 'lucide-react';
 import StageBoundaryDashboard from '../../components/structured/boundaries/StageBoundaryDashboard';
@@ -209,16 +210,16 @@ export default function StageBoundaries() {
             reports={endStageReports}
             onEdit={(report) => {
               // Navigate to edit page instead of modal
-              navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/${report.id}/edit`);
+              navigate(platformProjectPath(routeKey, 'stage-boundaries', 'end-stage-reports', report.report_reference || report.id, 'edit'));
             }}
             onView={(report) => {
               // Navigate to view page
-              navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/${report.id}`);
+              navigate(platformProjectPath(routeKey, 'stage-boundaries', 'end-stage-reports', report.report_reference || report.id));
             }}
             onRefresh={loadBoundaryData}
             onAdd={() => {
               // Navigate to create page
-              navigate(`/app/projects/${projectId}/stage-boundaries/end-stage-reports/create`);
+              navigate(platformProjectPath(routeKey, 'stage-boundaries', 'end-stage-reports', 'create'));
             }}
           />
         )}

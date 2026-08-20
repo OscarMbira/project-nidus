@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
-import { Shield, Search, Filter, Eye, Plus, Edit2, Trash2, Star, StarOff } from 'lucide-react'
+import { Shield, Search, Filter, Plus, Star, StarOff } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getTemplates, getDefaultTemplate, setAsDefault, deleteTemplate } from '../services/qmsTemplateService'
 
 export default function QMSTemplates() {
@@ -273,22 +274,18 @@ export default function QMSTemplates() {
                       <StarOff className="h-4 w-4" />
                     </button>
                   )}
-                  <button
+                  <RowActionButton
+                    variant="delete"
+                    label="Delete template"
                     onClick={() => handleDeleteTemplate(template)}
                     disabled={deletingTemplate === template.id}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                    title="Delete template"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  />
                 </div>
-                <button
+                <RowActionButton
+                  variant="view"
+                  label="View template"
                   onClick={() => navigate(`/app/qms/templates/${template.id}`)}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 text-sm"
-                >
-                  <Eye className="h-4 w-4" />
-                  View
-                </button>
+                />
               </div>
             </div>
           ))}

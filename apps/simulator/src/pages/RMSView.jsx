@@ -1,9 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { platformDb } from '@nidus/supabase'
 import { FileText, Edit2, CheckCircle, Clock, AlertTriangle, Plus, Target, Award, Settings, Users, BarChart3, Calendar, Shield, TrendingUp } from 'lucide-react'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { getRMSByProject, updateRMS, createRMSForProject, validateCompleteness, checkConformance, applyToRiskRegister } from '../services/riskManagementStrategyService'
 import { getStandards } from '../services/rmsRiskStandardsService'
 import { getMethods, getMandatoryMethods } from '../services/rmsIdentificationMethodsService'
@@ -49,6 +56,10 @@ const RMS_VIEW_SECTIONS = [
 export default function RMSView() {
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
+  const location = useLocation()
+  const backTarget =
+    location.state?.from ||
+    platformProjectPath(routeKey || projectId)
   const [project, setProject] = useState(null)
   const [rms, setRms] = useState(null)
   const [riskRegister, setRiskRegister] = useState(null)
@@ -71,12 +82,23 @@ export default function RMSView() {
   const [applyingToRegister, setApplyingToRegister] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showPrintView, setShowPrintView] = useState(false)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (projectId) {
       fetchData()
     }
   }, [projectId, refreshKey])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !rms) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [rms.created_by, rms.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, rms])
 
   const handleSectionUpdate = () => {
     // Trigger refresh of all data when a section is updated
@@ -258,10 +280,11 @@ export default function RMSView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}`)}
+        type="button"
+        onClick={() => navigate(backTarget)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
-        ← Back to Project
+        ← {location.state?.from ? 'Back to RMS list' : 'Back to Project'}
       </button>
 
       {/* Header */}
@@ -463,42 +486,29 @@ export default function RMSView() {
         <>
           {/* Tabs */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
-            <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex -mb-px overflow-x-auto">
-                {[
-                  { id: 'overview', label: 'Overview', icon: FileText },
-                  { id: 'standards', label: `Standards (${standards.length})`, icon: Shield },
-                  { id: 'procedures', label: 'Procedures', icon: Settings },
-                  { id: 'methods', label: `Methods (${methods.length})`, icon: Target },
-                  { id: 'scales', label: `Scales (${scales.length})`, icon: BarChart3 },
-                  { id: 'matrix', label: `Matrix (${matrices.length})`, icon: TrendingUp },
-                  { id: 'strategies', label: `Strategies (${strategies.length})`, icon: Shield },
-                  { id: 'tools', label: `Tools (${tools.length})`, icon: Settings },
-                  { id: 'templates', label: `Templates (${templates.length})`, icon: FileText },
-                  { id: 'records', label: `Records (${records.length})`, icon: FileText },
-                  { id: 'reports', label: `Reports (${reports.length})`, icon: BarChart3 },
-                  { id: 'roles', label: `Roles (${roles.length})`, icon: Users },
-                  { id: 'activities', label: `Activities (${activities.length})`, icon: Calendar },
-                  { id: 'conformance', label: 'Conformance', icon: CheckCircle },
-                  { id: 'history', label: 'Revision History', icon: Clock }
-                ].map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </nav>
+            <div className="border-b border-gray-200 dark:border-gray-700 px-2 pt-2">
+              <DetailAuditTabList
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                tabs={[
+                  { value: 'overview', label: 'Overview' },
+                  { value: 'standards', label: `Standards (${standards.length})` },
+                  { value: 'procedures', label: 'Procedures' },
+                  { value: 'methods', label: `Methods (${methods.length})` },
+                  { value: 'scales', label: `Scales (${scales.length})` },
+                  { value: 'matrix', label: `Matrix (${matrices.length})` },
+                  { value: 'strategies', label: `Strategies (${strategies.length})` },
+                  { value: 'tools', label: `Tools (${tools.length})` },
+                  { value: 'templates', label: `Templates (${templates.length})` },
+                  { value: 'records', label: `Records (${records.length})` },
+                  { value: 'reports', label: `Reports (${reports.length})` },
+                  { value: 'roles', label: `Roles (${roles.length})` },
+                  { value: 'activities', label: `Activities (${activities.length})` },
+                  { value: 'conformance', label: 'Conformance' },
+                  { value: 'history', label: 'Revision History' },
+                  { value: 'audit', label: 'Audit details' },
+                ]}
+              />
             </div>
 
             {/* Tab Content */}
@@ -642,6 +652,26 @@ export default function RMSView() {
 
               {activeTab === 'history' && rms && (
                 <RMSRevisionHistory rmsId={rms.id} />
+              )}
+
+              {activeTab === 'audit' && rms && (
+                <AuditDetailsPanel description="Who created or changed this risk management strategy, and how it is classified.">
+                  <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+                    <AuditField label="Status" value={humanizeAuditToken(rms.status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this strategy sits.">
+                    <AuditField label="Project" value={project?.project_name || rms.project?.project_name} />
+                    <AuditField label="Author" value={rms.author?.full_name || rms.author?.email} />
+                    <AuditField label="Owner" value={rms.owner?.full_name || rms.owner?.email} />
+                    <AuditField label="Client" value={rms.client?.full_name || rms.client?.email} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this strategy was created and last changed.">
+                    <AuditField label="Created by" value={rms.created_by ? auditUserLabels[rms.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={rms.created_at} />
+                    <AuditField label="Updated by" value={rms.updated_by ? auditUserLabels[rms.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={rms.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
               )}
             </div>
           </div>

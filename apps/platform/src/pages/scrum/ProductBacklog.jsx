@@ -20,6 +20,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { supabase } from '../../services/supabaseClient'
+import { RowActionButton } from '@nidus/ui'
 
 export default function ProductBacklog() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -490,12 +491,11 @@ function SortableStoryCard({ story, onEdit }) {
           </div>
         </div>
 
-        <button
+        <RowActionButton
+          variant="edit"
+          label="Edit story"
           onClick={() => onEdit(story)}
-          className="ml-4 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-        >
-          Edit
-        </button>
+        />
       </div>
     </div>
   )
@@ -987,12 +987,11 @@ function EpicsTab({ epics, onAddEpic, onEditEpic, showEpicForm, editingEpic, onS
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {epic.epic_name}
                 </h3>
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit epic"
                   onClick={() => onEditEpic(epic)}
-                  className="px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded"
-                >
-                  Edit
-                </button>
+                />
               </div>
 
               {epic.epic_goal && (

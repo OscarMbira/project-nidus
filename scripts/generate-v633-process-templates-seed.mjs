@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 
 const MASTERS = [
-  { table: 'project_charters', ref: 'PCH', slug: 'project-charter', group: 'initiating', title: 'Project Charter Master Template', description: 'Standard PMBOK project charter for authorising a new project or phase.', sections: ['Purpose', 'High-Level Requirements', 'Project Objectives', 'Success Criteria', 'High-Level Risks', 'Summary Milestone Schedule', 'Summary Budget', 'Project Approval Requirements'] },
+  { table: 'project_charters', ref: 'PCH', slug: 'project-charter', group: 'initiating', title: 'Project Charter Master Template', description: 'Standards-Based project charter template for authorising a new project or phase.', sections: ['Purpose', 'High-Level Requirements', 'Project Objectives', 'Success Criteria', 'High-Level Risks', 'Summary Milestone Schedule', 'Summary Budget', 'Project Approval Requirements'] },
   { table: 'assumption_logs', ref: 'ASM', slug: 'assumption-log', group: 'initiating', title: 'Assumption Log Master Template', description: 'Register assumptions, constraints, and their impact throughout the project lifecycle.', sections: ['Assumption ID', 'Description', 'Category', 'Impact if Invalid', 'Owner', 'Status', 'Review Date'] },
   { table: 'project_management_plans', ref: 'PMP', slug: 'project-management-plan', group: 'planning', title: 'Project Management Plan Master Template', description: 'Integrates subsidiary management plans and baselines for the project.', sections: ['Introduction', 'Subordinate Plans', 'Baselines', 'Configuration Management', 'Change Control', 'Performance Measurement'] },
   { table: 'requirements_management_plans', ref: 'RMP', slug: 'requirements-management-plan', group: 'planning', title: 'Requirements Management Plan Master Template', description: 'Defines how requirements will be analysed, documented, and managed.', sections: ['Scope', 'Roles', 'Traceability Approach', 'Workflow', 'Configuration', 'Metrics'] },
@@ -41,7 +41,7 @@ function docJson(m) {
   return JSON.stringify({
     seed_marker: 'SEED633',
     template_slug: m.slug,
-    pmbok_group: m.group,
+    standards_based_group: m.group,
     sections: m.sections,
     notes: `PMO master template scaffold for ${m.title}. Copy to a project workspace and customise.`,
   })
@@ -265,7 +265,7 @@ BEGIN
   ) VALUES (
     'sim_pmo_process_templates_section',
     'Process Templates',
-    'Simulator PMO — PMBOK process templates hub',
+    'Simulator PMO — Standards-Based process templates hub',
     NULL, 1, 75,
     NULL, 'layers', TRUE, TRUE
   )

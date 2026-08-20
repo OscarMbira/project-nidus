@@ -89,3 +89,78 @@ describe('resolveAccountTemplateOverrideBatch', () => {
     expect(result.get('global-1').id).toBe('newer')
   })
 })
+
+// v822: tier/scopeEntityType/scopeEntityId narrow "does an override already exist" to one
+// specific tier instance (e.g. one Project) instead of "anywhere in this account" — a thenable
+// chain mock (mirrors how the real supabase-js query builder resolves at any point in the
+// chain) so any combination of optional .eq()/.is() calls can be asserted without a
+// hand-written mock per combination.
+function makeChainableMock(finalValue) {
+  const calls = []
+  const builder = {
+    calls,
+    eq: (...args) => { calls.push(['eq', ...args]); return builder },
+    is: (...args) => { calls.push(['is', ...args]); return builder },
+    not: (...args) => { calls.push(['not', ...args]); return builder },
+    order: (...args) => { calls.push(['order', ...args]); return builder },
+    limit: (...args) => { calls.push(['limit', ...args]); return builder },
+    maybeSingle: () => Promise.resolve(finalValue),
+    then: (resolve) => resolve(finalValue),
+  }
+  return builder
+}
+
+describe('resolveAccountTemplateOverride — scope-aware (v822)', () => {
+  it('adds tier + scope_entity_id filters when scopeEntityId is provided', async () => {
+    const builder = makeChainableMock({ data: { id: 'copy-project-x' }, error: null })
+    const db = { from: vi.fn(() => ({ select: () => builder })) }
+    const result = await resolveAccountTemplateOverride(db, {
+      accountId: 'acct-1',
+      globalNodeId: 'global-1',
+      tier: 'project',
+      scopeEntityType: 'project',
+      scopeEntityId: 'project-x',
+    })
+    expect(result.id).toBe('copy-project-x')
+    expect(builder.calls).toContainEqual(['eq', 'tier', 'project'])
+    expect(builder.calls).toContainEqual(['eq', 'scope_entity_type', 'project'])
+    expect(builder.calls).toContainEqual(['eq', 'scope_entity_id', 'project-x'])
+  })
+
+  it('uses is(scope_entity_id, null) for account-wide (PMO) scope', async () => {
+    const builder = makeChainableMock({ data: { id: 'copy-pmo' }, error: null })
+    const db = { from: vi.fn(() => ({ select: () => builder })) }
+    const result = await resolveAccountTemplateOverride(db, {
+      accountId: 'acct-1',
+      globalNodeId: 'global-1',
+      tier: 'pmo',
+      scopeEntityType: 'account',
+      scopeEntityId: null,
+    })
+    expect(result.id).toBe('copy-pmo')
+    expect(builder.calls).toContainEqual(['eq', 'tier', 'pmo'])
+    expect(builder.calls).toContainEqual(['eq', 'scope_entity_type', 'account'])
+    expect(builder.calls).toContainEqual(['is', 'scope_entity_id', null])
+  })
+})
+
+describe('resolveAccountTemplateOverrideBatch — scope-aware (v822)', () => {
+  it('scopes the batch query to one tier/scope instance when provided', async () => {
+    const builder = makeChainableMock({
+      data: [{ id: 'copy-project-x', parent_node_id: 'global-1', created_at: '2026-01-01' }],
+      error: null,
+    })
+    const db = { from: vi.fn(() => ({ select: () => builder })) }
+    const result = await resolveAccountTemplateOverrideBatch(db, {
+      accountId: 'acct-1',
+      globalNodeIds: ['global-1'],
+      tier: 'project',
+      scopeEntityType: 'project',
+      scopeEntityId: 'project-x',
+    })
+    expect(result.get('global-1').id).toBe('copy-project-x')
+    expect(builder.calls).toContainEqual(['eq', 'tier', 'project'])
+    expect(builder.calls).toContainEqual(['eq', 'scope_entity_type', 'project'])
+    expect(builder.calls).toContainEqual(['eq', 'scope_entity_id', 'project-x'])
+  })
+})

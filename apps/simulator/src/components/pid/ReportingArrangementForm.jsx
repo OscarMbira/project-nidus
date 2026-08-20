@@ -9,6 +9,12 @@ import {
   updateReportingArrangement,
 } from '../../services/pidReportingArrangementsService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const REPORT_TYPES = [
@@ -43,6 +49,16 @@ export default function ReportingArrangementForm({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [users, setUsers] = useState([])
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !arrangement) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [arrangement.created_by, arrangement.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, arrangement])
 
   useEffect(() => {
     if (arrangement && mode === 'edit') {
@@ -131,6 +147,31 @@ export default function ReportingArrangementForm({
           {error}
         </p>
       )}
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+      {formTab === 'audit' ? (
+        !arrangement ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this reporting arrangement is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this reporting arrangement, and how it is classified.">
+            <AuditCard title="Identity" description="How this reporting arrangement is labelled and tracked.">
+              <AuditField label="Report type" value={humanizeAuditToken(arrangement.report_type)} />
+              <AuditField label="Format" value={humanizeAuditToken(arrangement.report_format)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this reporting arrangement is structured.">
+              <AuditField label="Frequency" value={arrangement.report_frequency} />
+              <AuditField label="Owner" value={arrangement.report_owner ? (users.find(u => u.id === arrangement.report_owner)?.full_name || auditUserLabels[arrangement.report_owner]) : null} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this reporting arrangement was created and last changed.">
+              <AuditField label="Created by" value={arrangement.created_by ? auditUserLabels[arrangement.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={arrangement.created_at} />
+              <AuditField label="Updated by" value={arrangement.updated_by ? auditUserLabels[arrangement.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={arrangement.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <label className="block">
@@ -229,6 +270,7 @@ export default function ReportingArrangementForm({
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

@@ -12,6 +12,11 @@ export const PM_LAYOUT_ROLES = new Set([
   'project_manager',
   'programme_manager',
   'portfolio_manager',
+  'team_manager',
+  'pm_project_manager',
+  'pm_programme_manager',
+  'pm_portfolio_manager',
+  'pm_team_manager',
   'executive',
   'project_sponsor',
   'project_board_member',
@@ -184,6 +189,9 @@ export function isSharedPmPlatformPath(pathname = '') {
 
 export function isPmoOnlyPlatformPath(pathname = '') {
   const p = String(pathname || '').toLowerCase()
+  // Shared by PMO Admin and the 4 manager creator tiers (v902). Keep PM users
+  // on the PM sidebar instead of swapping them onto the PMO People & Resources tree.
+  if (p.startsWith('/platform/admin/manage-roles')) return false
   return PMO_ONLY_PLATFORM_PREFIXES.some((prefix) => p.startsWith(prefix))
 }
 

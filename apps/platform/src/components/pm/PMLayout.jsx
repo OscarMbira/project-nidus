@@ -2,34 +2,31 @@ import { useState } from 'react'
 import Sidebar from '../Sidebar'
 import PlatformAppHeader from '../headers/PlatformAppHeader'
 import QuickCaptureFab from '../../modules/pmis-gaps/components/QuickCaptureFab'
+import PMProjectSelector from './PMProjectSelector'
 import { BrandingProvider } from '@nidus/shared/context/BrandingContext'
 import { MenuProvider } from '@nidus/shared/hooks/useMenu'
+import { CurrentProjectProvider } from '../../context/CurrentProjectContext'
+import { RoleScopeGate, RoleScopedShell } from '@nidus/ui'
 
 export default function PMLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // When blocked, send users to a home they can open — not /pm/dashboard (same Layout → blank loop).
   return (
-    <BrandingProvider>
-    <MenuProvider layoutScope="pm">
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
-        <PlatformAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
-
-        <div className="flex flex-1 overflow-hidden relative">
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-          <main
-            id="main-content"
-            tabIndex="-1"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:ml-80 pt-14 sm:pt-16 w-full"
-          >
-            <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0 sm:pt-2">
-              {children}
-            </div>
-          </main>
-        </div>
-        <QuickCaptureFab />
-      </div>
-    </MenuProvider>
-    </BrandingProvider>
+    <RoleScopeGate requiredScope="pm" blockedRedirectTo="/platform/dashboard">
+      <BrandingProvider>
+      <MenuProvider layoutScope="pm">
+        <RoleScopedShell
+          header={<PlatformAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />}
+          sidebar={<Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+          aboveContent={<PMProjectSelector />}
+          quickCaptureFab={<QuickCaptureFab />}
+          providers={[CurrentProjectProvider]}
+        >
+          {children}
+        </RoleScopedShell>
+      </MenuProvider>
+      </BrandingProvider>
+    </RoleScopeGate>
   )
 }

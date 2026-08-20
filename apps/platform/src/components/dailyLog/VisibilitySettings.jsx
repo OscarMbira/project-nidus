@@ -16,28 +16,28 @@ export default function VisibilitySettings({ logId, currentVisibility, onUpdate 
       label: 'Private',
       description: 'Only you (Project Manager) can view',
       icon: EyeOff,
-      color: 'text-gray-600'
+      color: 'text-gray-600 dark:text-gray-300'
     },
     {
       value: 'team',
       label: 'Team',
       description: 'All project team members can view',
       icon: Users,
-      color: 'text-blue-600'
+      color: 'text-blue-600 dark:text-blue-400'
     },
     {
       value: 'stakeholders',
       label: 'Stakeholders',
       description: 'Team members and stakeholders can view',
       icon: Shield,
-      color: 'text-purple-600'
+      color: 'text-purple-600 dark:text-purple-400'
     },
     {
       value: 'public',
       label: 'Public',
       description: 'Anyone with project access can view',
       icon: Globe,
-      color: 'text-green-600'
+      color: 'text-green-600 dark:text-green-400'
     }
   ];
 
@@ -64,7 +64,7 @@ export default function VisibilitySettings({ logId, currentVisibility, onUpdate 
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold flex items-center gap-2">
+      <h4 className="text-sm font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
         <Eye className="w-4 h-4" />
         Visibility Settings
       </h4>
@@ -80,15 +80,15 @@ export default function VisibilitySettings({ logId, currentVisibility, onUpdate 
               disabled={saving}
               className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                 isSelected
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
               } ${saving ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
               <div className="flex items-start gap-3">
                 <Icon className={`w-5 h-5 mt-0.5 ${isSelected ? option.color : 'text-gray-400'}`} />
                 <div className="flex-1">
-                  <div className="font-medium text-sm">{option.label}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">{option.description}</div>
+                  <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{option.label}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{option.description}</div>
                 </div>
                 {isSelected && (
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -99,7 +99,7 @@ export default function VisibilitySettings({ logId, currentVisibility, onUpdate 
         })}
       </div>
       {saving && (
-        <p className="text-xs text-gray-500">Saving...</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Saving...</p>
       )}
     </div>
   );

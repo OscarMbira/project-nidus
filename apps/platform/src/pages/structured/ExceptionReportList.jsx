@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { Plus, FileText, AlertTriangle, Eye, Edit } from 'lucide-react'
 import { getExceptionReportsByProject } from '../../services/exceptionReportService'
 import ExceptionReportStatusBadge from '../../components/structured/exceptionReport/ExceptionReportStatusBadge'
@@ -60,7 +61,7 @@ export default function ExceptionReportList() {
         <div className="flex gap-2">
           <ExportListMenu columns={EXCEPTION_REPORT_COLUMNS} data={reports} baseFilename="ExceptionReports" disabled={!reports.length} />
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/exception-reports/create`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', 'create'))}
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
@@ -77,7 +78,7 @@ export default function ExceptionReportList() {
             Create an exception report when a tolerance breach has occurred or is forecast to occur.
           </p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/exception-reports/create`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', 'create'))}
             className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
@@ -132,7 +133,7 @@ export default function ExceptionReportList() {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end space-x-2">
                       <button
-                        onClick={() => navigate(`/app/projects/${projectId}/exception-reports/${report.id}`)}
+                        onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', report.document_ref || report.id))}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                         title="View"
                       >
@@ -140,7 +141,7 @@ export default function ExceptionReportList() {
                       </button>
                       {report.report_status === 'draft' || report.report_status === 'rejected' ? (
                         <button
-                          onClick={() => navigate(`/app/projects/${projectId}/exception-reports/${report.id}/edit`)}
+                          onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', report.document_ref || report.id, 'edit'))}
                           className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                           title="Edit"
                         >

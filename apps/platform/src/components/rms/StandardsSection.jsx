@@ -51,11 +51,12 @@ export default function StandardsSection({ rmsId, readOnly = false, onUpdate }) 
 
   const handleSubmit = async () => {
     try {
+      const { id, created_by, created_at, ...editableFields } = formData
       let result
       if (editingId) {
-        result = await updateStandard(editingId, formData)
+        result = await updateStandard(editingId, editableFields)
       } else {
-        result = await addStandard(rmsId, formData)
+        result = await addStandard(rmsId, editableFields)
       }
       
       if (result.success) {
@@ -75,6 +76,9 @@ export default function StandardsSection({ rmsId, readOnly = false, onUpdate }) 
 
   const handleEdit = (standard) => {
     setFormData({
+      id: standard.id,
+      created_by: standard.created_by,
+      created_at: standard.created_at,
       standard_code: standard.standard_code || '',
       standard_name: standard.standard_name || '',
       standard_type: standard.standard_type || '',

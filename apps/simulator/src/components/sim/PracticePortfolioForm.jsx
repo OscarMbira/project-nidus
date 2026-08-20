@@ -190,6 +190,7 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
             { id: 'basic', label: 'Basic Information' },
             { id: 'timeline', label: 'Timeline' },
             { id: 'budget', label: 'Budget' },
+            { id: 'audit', label: 'Audit details' },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -206,6 +207,12 @@ export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayou
           ))}
         </nav>
       </div>
+
+      {activeSection === 'audit' && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-400">Audit details appear after this portfolio is saved.</p>
+        </div>
+      )}
 
       {activeSection === 'basic' && (
         <div className="space-y-4">

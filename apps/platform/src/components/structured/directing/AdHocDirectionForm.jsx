@@ -1,10 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, MessageSquare, Calendar, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { createAdHocDirection, updateAdHocDirection } from '../../../services/directingProjectService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function AdHocDirectionForm({ projectId, direction, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !direction) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        direction.created_by,
+        direction.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, direction]);
   const [formData, setFormData] = useState({
     direction_title: direction?.direction_title || '',
     request_date: direction?.request_date || new Date().toISOString().split('T')[0],
@@ -119,6 +141,33 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !direction?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this direction is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this ad hoc direction, and how it is classified.">
+                <AuditCard title="Identity" description="How this direction is labelled and tracked.">
+                  <AuditField label="Title" value={formData.direction_title || direction.direction_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.direction_status || direction.direction_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this direction sits.">
+                  <AuditField label="Type" value={humanizeAuditToken(formData.direction_type || direction.direction_type)} />
+                  <AuditField label="Priority" value={humanizeAuditToken(formData.priority || direction.priority)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this direction was created and last changed.">
+                  <AuditField label="Created by" value={direction.created_by ? auditUserLabels[direction.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={direction.created_at} />
+                  <AuditField label="Updated by" value={direction.updated_by ? auditUserLabels[direction.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={direction.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Direction Title */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -306,6 +355,8 @@ export default function AdHocDirectionForm({ projectId, direction, onClose, onSu
                 />
               </div>
             </div>
+          )}
+          </>
           )}
 
           {/* Actions */}

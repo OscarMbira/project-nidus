@@ -5,7 +5,7 @@ import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { V734RoleRouteElements } from './v734RoleRoutes.jsx'
-import { SimPmoFederated, SimPmoTemplateLibraryFederated, SimPmoOrganisationalTemplatesFederated } from './SimPmoFederatedOutlet.jsx'
+import { SimPmoFederated, SimPmoTemplateLibraryFederated, SimPmoOrganisationalTemplatesFederated, SimPmOrganisationalTemplatesFederated, SimPmProjectTemplatesFederated, SimPmProjectDocumentsFederated, SimDocumentOversightFederated } from './SimPmoFederatedOutlet.jsx'
 import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
@@ -40,6 +40,7 @@ import {
   ScopeManagementPlanPage,
   ScopeStatementPage,
   RequirementsRegisterPage,
+  SimRequirementsCurrentProjectRedirect,
   RequirementDetailPage,
   TraceabilityMatrixPage,
   WBSBuilderPage,
@@ -556,6 +557,12 @@ import {
   FreeTrialDashboard,
   TrialUpgrade,
   RoleAssignment,
+  ManageRoles,
+  OrgRoleDetail,
+  ManageMenuBundles,
+  MenuBundleDetail,
+  SystemRoleCatalog,
+  SystemRoleEditPage,
   AssignRolesToProjects,
   SendRoleInvites,
   InvitationExpirySettingsPage,
@@ -1187,6 +1194,84 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <SimDelayRegister />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/raid-log" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <RAIDLog />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/change" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ChangeLogPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/governance/decisions" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <DecisionLogPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/governance/decisions/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <DecisionLogForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/governance/decisions/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <DecisionLogDetail />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/governance/decisions/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <DecisionLogForm />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -1931,6 +2016,19 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <SimScopeStatementPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/scope/requirements" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimRequirementsCurrentProjectRedirect />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4496,6 +4594,27 @@ export function SimulatorRouteElements() {
                 <Route path="simulator/pmo/field-templates/*" element={<SimPmoFederated />} />
                 <Route path="simulator/pmo/template-library/*" element={<SimPmoTemplateLibraryFederated />} />
                 <Route path="simulator/pmo/organisational-templates/*" element={<SimPmoOrganisationalTemplatesFederated />} />
+                <Route path="simulator/pm/templates/organisational/*" element={<SimPmOrganisationalTemplatesFederated />} />
+                <Route path="simulator/pm/templates/project/*" element={<SimPmProjectTemplatesFederated />} />
+                <Route path="simulator/pm/documents/project/*" element={<SimPmProjectDocumentsFederated />} />
+                <Route path="simulator/pmo/document-oversight/*" element={<SimDocumentOversightFederated />} />
+                {/*
+                  PM-safe Form Template Builder — same rationale as platform
+                  /platform/templates/forms/:templateCode/edit (avoid /simulator/pmo/* for PMs).
+                */}
+                <Route path="simulator/pm/templates/forms/:templateCode/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMLayout>
+                            <FormTemplateBuilder mode="sim" />
+                          </SimulatorPMLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/pmo/forms" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -4568,6 +4687,149 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <SimulatorPMOLayout>
                             <SimManagerAssignments />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/role-assignment" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RoleAssignment />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-roles" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <ManageRoles />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-roles/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrgRoleDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-roles/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrgRoleDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-roles/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrgRoleDetail forceEdit />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-menu-bundles" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <ManageMenuBundles />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-menu-bundles/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <MenuBundleDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-menu-bundles/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <MenuBundleDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/manage-menu-bundles/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <MenuBundleDetail forceEdit />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/system-roles" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <SystemRoleCatalog />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/system-roles/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <SystemRoleEditPage />
                           </SimulatorPMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -5794,6 +6056,13 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
                 <Route path="auth/invitation/:projectSlug/:roleSlug" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <InvitationAccept />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="auth/invitation/:token" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <InvitationAccept />

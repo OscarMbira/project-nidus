@@ -9,6 +9,7 @@ import { getStakeholders, getStakeholderEngagement, saveStakeholderEngagement } 
 import EngagementTracker from '../../components/stakeholders/EngagementTracker'
 import EngagementPlanForm from '../../components/stakeholders/EngagementPlanForm'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '@nidus/supabase'
 
 export default function StakeholderEngagementPage() {
@@ -144,7 +145,11 @@ export default function StakeholderEngagementPage() {
                   <div key={e.id} className="bg-white dark:bg-gray-800 rounded p-2 text-sm shadow">
                     <div className="font-medium text-gray-900 dark:text-white">{e.stakeholder?.stakeholder_name || '—'}</div>
                     <div className="text-xs text-gray-500">Target: {e.target_engagement_level || '—'}</div>
-                    <button onClick={() => { setEditingPlan(e); setShowForm(true) }} className="text-blue-600 text-xs mt-1">Edit</button>
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit engagement plan"
+                      onClick={() => { setEditingPlan(e); setShowForm(true) }}
+                    />
                   </div>
                 ))}
               </div>

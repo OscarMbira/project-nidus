@@ -5732,6 +5732,13 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="auth/invitation/:token" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <InvitationAccept />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="role-selection" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>

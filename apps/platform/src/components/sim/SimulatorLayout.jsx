@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { SidebarNavTier } from '@nidus/ui';
+import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui';
 import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils';
 import { Moon, Sun, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
@@ -84,50 +84,54 @@ function SimulatorMenuItem({ menuItem, level = 0, theme }) {
   return (
     <div>
       {menuItem.path ? (
-        <Link
-          to={menuItem.path}
-          onClick={handleClick}
-          className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            isActive
-              ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
-              : theme === 'dark'
-              ? 'text-gray-300 hover:bg-gray-700'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-          <span className="flex-1">{menuItem.label}</span>
-          {hasChildren && (
-            <span className="ml-auto">
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </span>
-          )}
-        </Link>
+        <SidebarNavNestedRow level={level}>
+          <Link
+            to={menuItem.path}
+            onClick={handleClick}
+            className={`flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+              isActive
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                : theme === 'dark'
+                ? 'text-gray-300 hover:bg-gray-700'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <span className="flex-1">{menuItem.label}</span>
+            {hasChildren && (
+              <span className="ml-auto">
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </span>
+            )}
+          </Link>
+        </SidebarNavNestedRow>
       ) : (
-        <button
-          onClick={handleClick}
-          className={`w-full flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-            theme === 'dark'
-              ? 'text-gray-300 hover:bg-gray-700'
-              : 'text-gray-700 hover:bg-gray-100'
-          }`}
-        >
-          <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-          <span className="flex-1 text-left">{menuItem.label}</span>
-          {hasChildren && (
-            <span className="ml-auto">
-              {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </span>
-          )}
-        </button>
+        <SidebarNavNestedRow level={level}>
+          <button
+            onClick={handleClick}
+            className={`w-full flex items-center gap-2 sm:gap-3 ${getSidebarNestedRowPadding(level)} py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+              theme === 'dark'
+                ? 'text-gray-300 hover:bg-gray-700'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <span className="flex-1 text-left">{menuItem.label}</span>
+            {hasChildren && (
+              <span className="ml-auto">
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </span>
+            )}
+          </button>
+        </SidebarNavNestedRow>
       )}
       {hasChildren && isExpanded && (
         <SidebarNavTier borderClassName={isActive ? 'border-blue-500' : theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}>

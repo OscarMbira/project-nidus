@@ -2,11 +2,33 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, Calendar, Clock, MapPin, FileText, Users } from 'lucide-react';
 import { createBoardMeeting, updateBoardMeeting, fetchBoardMembers } from '../../../services/directingProjectService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [boardMembers, setBoardMembers] = useState([]);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !meeting) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        meeting.created_by,
+        meeting.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [formTab, meeting]);
   const [formData, setFormData] = useState({
     meeting_title: meeting?.meeting_title || '',
     meeting_date: meeting?.meeting_date || new Date().toISOString().split('T')[0],
@@ -114,6 +136,33 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !meeting?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this meeting is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this board meeting, and how it is classified.">
+                <AuditCard title="Identity" description="How this meeting is labelled and tracked.">
+                  <AuditField label="Title" value={formData.meeting_title || meeting.meeting_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.meeting_status || meeting.meeting_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this meeting sits.">
+                  <AuditField label="Meeting type" value={humanizeAuditToken(formData.meeting_type || meeting.meeting_type)} />
+                  <AuditField label="Meeting date" value={formData.meeting_date || meeting.meeting_date} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this meeting was created and last changed.">
+                  <AuditField label="Created by" value={meeting.created_by ? auditUserLabels[meeting.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={meeting.created_at} />
+                  <AuditField label="Updated by" value={meeting.updated_by ? auditUserLabels[meeting.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={meeting.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Meeting Title */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -324,6 +373,8 @@ export default function BoardMeetingForm({ boardId, meeting, onClose, onSuccess 
                 </div>
               </div>
             </div>
+          )}
+          </>
           )}
 
           {/* Actions */}

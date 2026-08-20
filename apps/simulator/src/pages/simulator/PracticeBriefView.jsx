@@ -4,10 +4,18 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Edit } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeBriefById } from '../../services/sim/practiceBriefService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRACTICE_BRIEF_VIEW_SECTIONS = [
   { title: 'Brief', fields: [
@@ -24,10 +32,20 @@ export default function PracticeBriefView() {
   const projectId = searchParams.get('projectId')
   const [brief, setBrief] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) loadBrief()
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !brief) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [brief.created_by, brief.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, brief])
 
   const loadBrief = async () => {
     try {
@@ -61,11 +79,33 @@ export default function PracticeBriefView() {
             onExportJSON={() => exportRecordToJSON(PRACTICE_BRIEF_VIEW_SECTIONS, brief, `PracticeBrief_${brief.brief_reference || id}`)}
             onExportPrint={() => exportRecordToPrint(PRACTICE_BRIEF_VIEW_SECTIONS, brief, `PracticeBrief_${brief.brief_reference || id}`)}
           />
-          <button onClick={() => navigate(`/simulator/practice-briefs/${id}/edit?projectId=${projectId}`)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+          <RowActionButton
+            variant="edit"
+            label="Edit brief"
+            onClick={() => navigate(`/simulator/practice-briefs/${id}/edit?projectId=${projectId}`)}
+          />
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this Project Brief.">
+          <AuditCard title="Identity" description="How this brief is labelled.">
+            <AuditField label="Title" value={brief.brief_title} />
+            <AuditField label="Reference" value={brief.brief_reference} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Approval status.">
+            <AuditField label="Approved" value={brief.is_approved ? 'Yes' : 'No'} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this brief was created and last changed.">
+            <AuditField label="Created by" value={brief.created_by ? auditUserLabels[brief.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={brief.created_at} />
+            <AuditField label="Updated by" value={brief.updated_by ? auditUserLabels[brief.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={brief.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
           <h3 className="font-medium mb-2">Description</h3>
@@ -80,6 +120,7 @@ export default function PracticeBriefView() {
           <p className="text-gray-600 dark:text-gray-400">{brief.project_scope || 'N/A'}</p>
         </div>
       </div>
+      )}
     </div>
   )
 }

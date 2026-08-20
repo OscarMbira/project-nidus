@@ -5,6 +5,12 @@ import { platformDb } from '../../services/supabaseClient';
 import SearchableSelect from '../ui/SearchableSelect';
 import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue';
 import { buildIanaTimezoneSelectOptions } from '@nidus/shared/utils/ianaTimezoneOptions';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const DEFAULT_FORM_DATA = {
   stakeholder_reference: '',
@@ -68,10 +74,24 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
   const [roles, setRoles] = useState([]);
   const [rolesLoading, setRolesLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState('projects-basic');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
 
   const TAB_IDS = ['projects-basic', 'contact', 'project-role', 'availability', 'notes'];
   const TAB_LABELS = ['Assign & Basic Information', 'Contact Information', 'Project Role & Characteristics', 'Availability', 'Notes & Requirements'];
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !stakeholder) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        stakeholder.created_by,
+        stakeholder.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, stakeholder]);
   const roleOptions = useMemo(
     () => roles.map((r) => ({ value: r.role_name, label: r.role_display_name || r.role_name })),
     [roles]
@@ -399,25 +419,45 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
         </div>
       )}
       {/* Tab navigation */}
-      <div className="flex flex-wrap gap-1 border-b border-gray-200 dark:border-gray-700 pb-4">
-        {TAB_LABELS.map((label, idx) => (
-          <button
-            key={TAB_IDS[idx]}
-            type="button"
-            onClick={() => setActiveTab(idx)}
-            className={`px-3 py-2 text-sm font-medium rounded-t-lg transition-colors ${
-              activeTab === idx
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Stakeholder form sections"
+        tabs={[
+          ...TAB_IDS.map((id, idx) => ({ value: id, label: TAB_LABELS[idx] })),
+          { value: 'audit', label: 'Audit details' },
+        ]}
+      />
 
-          {/* Tab 0: Assign to project(s) + Basic Information (merged) */}
-          <div className="space-y-6" style={{ display: activeTab === 0 ? 'block' : 'none' }}>
+      {activeTab === 'audit' && (
+        !stakeholder?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this stakeholder is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this stakeholder, and how it is classified.">
+            <AuditCard title="Identity" description="How this stakeholder is labelled and tracked.">
+              <AuditField label="Reference" value={stakeholder.stakeholder_reference} />
+              <AuditField label="Name" value={formData.stakeholder_name || stakeholder.stakeholder_name} />
+              <AuditField label="Type" value={humanizeAuditToken(formData.stakeholder_type || stakeholder.stakeholder_type)} />
+              <AuditField label="Status" value={humanizeAuditToken(formData.stakeholder_status || stakeholder.stakeholder_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this stakeholder sits.">
+              <AuditField label="Category" value={humanizeAuditToken(formData.stakeholder_category || stakeholder.stakeholder_category)} />
+              <AuditField label="Organization" value={formData.stakeholder_organization || stakeholder.stakeholder_organization} />
+              <AuditField label="Project role" value={formData.project_role || stakeholder.project_role} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this stakeholder was created and last changed.">
+              <AuditField label="Created by" value={stakeholder.created_by ? auditUserLabels[stakeholder.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={stakeholder.created_at} />
+              <AuditField label="Updated by" value={stakeholder.updated_by ? auditUserLabels[stakeholder.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={stakeholder.updated_at} />
+              <AuditTimestampPair dateLabel="Identification date" value={stakeholder.identification_date || formData.identification_date} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+          {/* Tab: Assign to project(s) + Basic Information (merged) */}
+          <div className="space-y-6" style={{ display: activeTab === 'projects-basic' ? 'block' : 'none' }}>
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
                 {stakeholder ? 'Project' : 'Assign to project(s)'}
@@ -652,8 +692,8 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </div>
           </div>
 
-          {/* Tab 1: Contact Information */}
-          <div className="space-y-4" style={{ display: activeTab === 1 ? 'block' : 'none' }}>
+          {/* Tab: Contact Information */}
+          <div className="space-y-4" style={{ display: activeTab === 'contact' ? 'block' : 'none' }}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
               <Mail className="h-5 w-5" />
               Contact Information
@@ -800,8 +840,8 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </div>
           </div>
 
-          {/* Tab 2: Project Role & Characteristics */}
-          <div className="space-y-4" style={{ display: activeTab === 2 ? 'block' : 'none' }}>
+          {/* Tab: Project Role & Characteristics */}
+          <div className="space-y-4" style={{ display: activeTab === 'project-role' ? 'block' : 'none' }}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
               <Target className="h-5 w-5" />
               Project Role & Characteristics
@@ -930,8 +970,8 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </div>
           </div>
 
-          {/* Tab 3: Availability */}
-          <div className="space-y-4" style={{ display: activeTab === 3 ? 'block' : 'none' }}>
+          {/* Tab: Availability */}
+          <div className="space-y-4" style={{ display: activeTab === 'availability' ? 'block' : 'none' }}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Availability
             </h3>
@@ -1004,8 +1044,8 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </div>
           </div>
 
-          {/* Tab 4: Notes, Requirements & Expectations */}
-          <div className="space-y-4" style={{ display: activeTab === 4 ? 'block' : 'none' }}>
+          {/* Tab: Notes, Requirements & Expectations */}
+          <div className="space-y-4" style={{ display: activeTab === 'notes' ? 'block' : 'none' }}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Notes, Requirements & Expectations
             </h3>

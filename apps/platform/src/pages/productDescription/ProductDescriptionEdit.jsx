@@ -2,22 +2,22 @@
  * Product Description Edit Page
  */
 
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
-import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { useEntityDetailParams } from '@nidus/shared/hooks/useEntityDetailParams.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import ProductDescriptionForm from '../../components/productDescription/ProductDescriptionForm'
 
 export default function ProductDescriptionEdit() {
-  const { pdId } = useParams()
-  const { projectId, routeKey } = usePlatformProjectId()
+  const { projectId, entityId: pdId, projectRouteKey } = useEntityDetailParams('productDescription', { entityParam: 'pdId' })
   const navigate = useNavigate()
 
   const handleSave = (pd) => {
-    navigate(`/app/projects/${projectId}/product-descriptions/${pd.id}`)
+    navigate(platformProjectPath(projectRouteKey, 'product-descriptions', pd.pd_reference || pd.id))
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/product-descriptions/${pdId}`)
+    navigate(platformProjectPath(projectRouteKey, 'product-descriptions', pdId))
   }
 
   return (

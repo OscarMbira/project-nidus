@@ -1,4 +1,5 @@
 import { Target, TrendingUp, TrendingDown } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 
 export default function BenefitReviewCard({ review, onEdit, onDelete, mode = 'view' }) {
   const getBenefitTypeColor = (type) => {
@@ -65,20 +66,10 @@ export default function BenefitReviewCard({ review, onEdit, onDelete, mode = 'vi
         {mode !== 'view' && (onEdit || onDelete) && (
           <div className="flex gap-2 ml-4">
             {onEdit && (
-              <button
-                onClick={() => onEdit(review)}
-                className="p-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded"
-              >
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit benefit review" onClick={() => onEdit(review)} />
             )}
             {onDelete && (
-              <button
-                onClick={() => onDelete(review.id)}
-                className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded"
-              >
-                Delete
-              </button>
+              <RowActionButton variant="delete" label="Delete benefit review" onClick={() => onDelete(review.id)} />
             )}
           </div>
         )}

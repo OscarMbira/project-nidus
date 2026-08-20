@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Eye, Plus } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getTemplatesForAccount } from '../../../services/sim/simTemplateLibraryService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 import ExportListMenu from '../../../components/ui/ExportListMenu'
@@ -170,13 +171,11 @@ export default function TemplateLibraryList() {
                 {r.template_type_code} · {r.status} · v{r.version}
               </p>
               <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
+                <RowActionButton
+                  variant="view"
+                  label="View template"
                   onClick={() => navigate(`${BASE}/${r.id}`)}
-                  className="text-sm text-violet-600 dark:text-violet-400 inline-flex items-center gap-1"
-                >
-                  <Eye className="h-4 w-4" /> View
-                </button>
+                />
                 <button
                   type="button"
                   onClick={() => navigate(`${BASE}/copies/new?templateId=${r.id}`)}
@@ -230,9 +229,11 @@ export default function TemplateLibraryList() {
                     {r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
-                    <button type="button" className="text-violet-600 dark:text-violet-400 text-sm" onClick={() => navigate(`${BASE}/${r.id}`)}>
-                      View
-                    </button>
+                    <RowActionButton
+                      variant="view"
+                      label="View template"
+                      onClick={() => navigate(`${BASE}/${r.id}`)}
+                    />
                     <button
                       type="button"
                       className="text-gray-700 dark:text-gray-300 text-sm"

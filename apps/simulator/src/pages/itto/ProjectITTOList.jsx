@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Plus, Pencil, Search, Trash2, Copy } from 'lucide-react'
+import { Plus, Search, Copy } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import toast from 'react-hot-toast'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { platformDb, simDb } from '@nidus/supabase'
@@ -394,25 +395,17 @@ export default function ProjectITTOList({ isSim = false }) {
                 <div className="flex flex-wrap gap-2 justify-end">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
                   {canWriteProjectIto && (
-                    <button
-                      type="button"
+                    <RowActionButton
+                      variant="edit"
+                      label="Edit ITTO"
                       onClick={() => {
                         setEditRow(r)
                         setFormOpen(true)
                       }}
-                      className="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-200"
-                    >
-                      <Pencil className="h-4 w-4" /> Edit
-                    </button>
+                    />
                   )}
                   {canDeleteProjectIto && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(r)}
-                      className="inline-flex items-center gap-1 text-sm text-red-600 dark:text-red-400"
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </button>
+                    <RowActionButton variant="delete" label="Delete ITTO" onClick={() => handleDelete(r)} />
                   )}
                 </div>
               }
@@ -466,21 +459,17 @@ export default function ProjectITTOList({ isSim = false }) {
                   <td className="p-3 text-gray-500 dark:text-gray-500 text-xs">{r.updated_at?.slice?.(0, 10) || '—'}</td>
                   <td className="p-3 text-right space-x-2">
                     {canWriteProjectIto && (
-                      <button
-                        type="button"
-                        className="text-gray-700 dark:text-gray-200"
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit ITTO"
                         onClick={() => {
                           setEditRow(r)
                           setFormOpen(true)
                         }}
-                      >
-                        Edit
-                      </button>
+                      />
                     )}
                     {canDeleteProjectIto && (
-                      <button type="button" className="text-red-600 dark:text-red-400" onClick={() => handleDelete(r)}>
-                        Delete
-                      </button>
+                      <RowActionButton variant="delete" label="Delete ITTO" onClick={() => handleDelete(r)} />
                     )}
                   </td>
                 </tr>

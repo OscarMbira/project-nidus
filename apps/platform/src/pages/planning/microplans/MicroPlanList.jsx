@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { LayoutGrid, Table2, Search, ArrowUpDown, Download, Plus, Pencil, Trash2 } from 'lucide-react'
+import { LayoutGrid, Table2, Search, ArrowUpDown, Download, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import PlanningProjectBar, { usePlanningProjectId } from '../../../components/planning/PlanningProjectBar'
 import * as api from '../../../services/microPlanService'
 import * as simApi from '../../../services/sim/simMicroPlanService'
@@ -31,6 +32,7 @@ function sortRows(rows, key, dir) {
 }
 
 export default function MicroPlanList({ scope }) {
+  const navigate = useNavigate()
   const isSim = useLocation().pathname.includes('/simulator/')
   const [searchParams] = useSearchParams()
   const workPackageFilter = searchParams.get('workPackageId')
@@ -251,25 +253,13 @@ export default function MicroPlanList({ scope }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-400">{p.overall_progress_pct ?? 0}%</span>
-                  <Link
-                    to={`${base}/microplans/${p.id}${q}`}
-                    className="text-xs text-blue-400 hover:text-blue-300"
-                  >
-                    View
-                  </Link>
-                  <Link
-                    to={editRoute(p.id)}
-                    className="text-xs text-amber-400 hover:text-amber-300 inline-flex items-center gap-1"
-                  >
-                    <Pencil className="h-3 w-3" /> Edit
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(p)}
-                    className="text-xs text-red-400 hover:text-red-300 inline-flex items-center gap-1"
-                  >
-                    <Trash2 className="h-3 w-3" /> Delete
-                  </button>
+                  <RowActionButton
+                    variant="view"
+                    label="View micro-plan"
+                    onClick={() => navigate(`${base}/microplans/${p.id}${q}`)}
+                  />
+                  <RowActionButton variant="edit" label="Edit micro-plan" onClick={() => navigate(editRoute(p.id))} />
+                  <RowActionButton variant="delete" label="Delete micro-plan" onClick={() => handleDelete(p)} />
                 </div>
               </li>
             ))}
@@ -311,19 +301,13 @@ export default function MicroPlanList({ scope }) {
                     <td className="px-3 py-2 text-gray-400">{p.overall_rag}</td>
                     <td className="px-3 py-2 text-right">
                       <div className="flex items-center justify-end gap-3">
-                        <Link to={`${base}/microplans/${p.id}${q}`} className="text-blue-400 hover:text-blue-300 text-xs">
-                          View
-                        </Link>
-                        <Link to={editRoute(p.id)} className="text-amber-400 hover:text-amber-300 text-xs inline-flex items-center gap-1">
-                          <Pencil className="h-3 w-3" /> Edit
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(p)}
-                          className="text-red-400 hover:text-red-300 text-xs inline-flex items-center gap-1"
-                        >
-                          <Trash2 className="h-3 w-3" /> Delete
-                        </button>
+                        <RowActionButton
+                          variant="view"
+                          label="View micro-plan"
+                          onClick={() => navigate(`${base}/microplans/${p.id}${q}`)}
+                        />
+                        <RowActionButton variant="edit" label="Edit micro-plan" onClick={() => navigate(editRoute(p.id))} />
+                        <RowActionButton variant="delete" label="Delete micro-plan" onClick={() => handleDelete(p)} />
                       </div>
                     </td>
                   </tr>

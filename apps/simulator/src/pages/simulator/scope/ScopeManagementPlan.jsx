@@ -13,6 +13,12 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '../../../utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SECTIONS = [
   {
@@ -49,6 +55,7 @@ export default function ScopeManagementPlan() {
     status: 'draft',
     version: '1.0',
   })
+  const [formTab, setFormTab] = useState('details')
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -151,6 +158,28 @@ export default function ScopeManagementPlan() {
         <div className="mb-4 rounded-lg border border-red-600/40 bg-red-950/30 px-4 py-3 text-sm text-red-200">{success.error}</div>
       )}
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          {!record ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="When this scope management plan was created and last changed.">
+              <AuditCard title="Identity" description="How this plan is versioned.">
+                <AuditField label="Version" value={record.version} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this plan sits.">
+                <AuditField label="Status" value={humanizeAuditToken(record.status)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this plan was created and last changed.">
+                <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
         {[
           ['scope_definition_approach', 'Scope definition approach'],
@@ -216,6 +245,7 @@ export default function ScopeManagementPlan() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

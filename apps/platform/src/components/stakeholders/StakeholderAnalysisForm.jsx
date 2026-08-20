@@ -6,6 +6,13 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { salienceClassFromPLU } from '@nidus/shared/utils/salienceUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 function quadrantFromPowerInterest(power, interest) {
   const high = (v) => v >= 4
@@ -41,6 +48,21 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
     analysis_period: '',
     notes: '',
   })
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !analysis) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        analysis.created_by,
+        analysis.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, analysis])
 
   useEffect(() => {
     if (analysis) {
@@ -99,6 +121,35 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
             <button type="button" onClick={onCancel} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><X className="h-5 w-5" /></button>
           </div>
           <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+            {formTab === 'audit' && (
+              !analysis?.id ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this analysis is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who created or changed this analysis, and how it is classified.">
+                  <AuditCard title="Identity" description="How this analysis is labelled and tracked.">
+                    <AuditField label="Matrix quadrant" value={humanizeAuditToken(formData.matrix_quadrant || analysis.matrix_quadrant)} />
+                    <AuditField label="Salience class" value={humanizeAuditToken(formData.salience_class || analysis.salience_class)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this analysis sits.">
+                    <AuditField label="Current attitude" value={humanizeAuditToken(formData.current_attitude || analysis.current_attitude)} />
+                    <AuditField label="Desired attitude" value={humanizeAuditToken(formData.desired_attitude || analysis.desired_attitude)} />
+                    <AuditField label="Engagement priority" value={humanizeAuditToken(formData.engagement_priority || analysis.engagement_priority)} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this analysis was created and last changed.">
+                    <AuditField label="Created by" value={analysis.created_by ? auditUserLabels[analysis.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={analysis.created_at} />
+                    <AuditField label="Updated by" value={analysis.updated_by ? auditUserLabels[analysis.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={analysis.updated_at} />
+                    <AuditTimestampPair dateLabel="Analysis date" value={analysis.analysis_date || formData.analysis_date} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )
+            )}
+
+            {formTab === 'details' && (
+            <>
             {!analysis && stakeholders.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stakeholder</label>
@@ -191,6 +242,8 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
                 <input type="text" name="analysis_period" value={formData.analysis_period} onChange={handleChange} placeholder="e.g. initiation" className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
               </div>
             </div>
+            </>
+            )}
             <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button type="button" onClick={onCancel} className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>
               <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Save className="h-4 w-4" />Save</button>

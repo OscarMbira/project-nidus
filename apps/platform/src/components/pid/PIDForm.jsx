@@ -8,6 +8,12 @@ import { FileText, Target, Settings, Users, Gauge, BarChart3, CheckCircle, Arrow
 import { createPID, updatePID } from '../../services/projectInitiationDocumentService'
 import { HoldButton } from '../ui/HoldButton'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const FORM_STEPS = [
   { id: 'overview', label: 'Overview', icon: FileText, description: 'Basic information and background' },
@@ -28,6 +34,22 @@ export default function PIDForm({
   saving = false
 }) {
   const [activeStep, setActiveStep] = useState(0)
+  const [formTab, setFormTab] = useState('wizard')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !pid) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [
+        pid.created_by,
+        pid.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, pid])
+
   const [formData, setFormData] = useState({
     pid_title: '',
     pid_description: '',
@@ -730,6 +752,36 @@ export default function PIDForm({
         </div>
       </div>
 
+      <div className="px-6 pt-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} detailsLabel="Edit" auditLabel="Audit details" />
+      </div>
+
+      {formTab === 'audit' && (
+        <div className="p-6">
+          {!pid?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this PID is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this Project Initiation Document, and how it is classified.">
+              <AuditCard title="Identity" description="How this PID is labelled and tracked.">
+                <AuditField label="Title" value={formData.pid_title || pid.pid_title} />
+                <AuditField label="Status" value={humanizeAuditToken(pid.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this PID sits.">
+                <AuditField label="Project justification" value={formData.project_justification || pid.project_justification} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this PID was created and last changed.">
+                <AuditField label="Created by" value={pid.created_by ? auditUserLabels[pid.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={pid.created_at} />
+                <AuditField label="Updated by" value={pid.updated_by ? auditUserLabels[pid.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={pid.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       {/* Step Indicators */}
       <div className="border-b border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center gap-2 overflow-x-auto">
@@ -810,6 +862,8 @@ export default function PIDForm({
           )}
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

@@ -11,6 +11,12 @@ import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const RESOURCE_VIEW_SECTIONS = [
   { title: 'Resource', fields: [
@@ -31,6 +37,8 @@ export default function ResourceDetail() {
   const [selectedAssignment, setSelectedAssignment] = useState(null)
   const [showCalendar, setShowCalendar] = useState(false)
   const [showSkills, setShowSkills] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) {
@@ -38,6 +46,14 @@ export default function ResourceDetail() {
       fetchAssignments()
     }
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !resource) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [resource.created_by, resource.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, resource])
 
   const fetchResource = async () => {
     try {
@@ -164,6 +180,29 @@ export default function ResourceDetail() {
         />
       </div>
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      </div>
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this resource, and how it is classified.">
+          <AuditCard title="Identity" description="How this resource is labelled and tracked.">
+            <AuditField label="Code" value={resource.resource_code} />
+            <AuditField label="Name" value={resource.resource_name} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this resource is categorised.">
+            <AuditField label="Type" value={humanizeAuditToken(resource.resource_type)} />
+            <AuditField label="Category" value={resource.resource_category} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this resource was created and last changed.">
+            <AuditField label="Created by" value={resource.created_by ? auditUserLabels[resource.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={resource.created_at} />
+            <AuditField label="Updated by" value={resource.updated_by ? auditUserLabels[resource.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={resource.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       {/* Resource Header */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
@@ -356,6 +395,8 @@ export default function ResourceDetail() {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Resource Form Modal */}
       {showResourceForm && (

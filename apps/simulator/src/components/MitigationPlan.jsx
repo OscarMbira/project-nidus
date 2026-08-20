@@ -49,16 +49,17 @@ export default function MitigationPlan({ riskId, projectId, onUpdate }) {
   const fetchTeamMembers = async () => {
     try {
       const { data, error } = await supabase
-        .from('project_members')
+        .from('project_memberships')
         .select(`
-          *,
+          id,
+          user_id,
           user:user_id (id, email, full_name)
         `)
         .eq('project_id', projectId)
-        .eq('is_deleted', false)
+        .eq('is_active', true)
 
       if (error) throw error
-      setTeamMembers(data || [])
+      setTeamMembers((data || []).filter((m) => m.user_id))
     } catch (error) {
       console.error('Error fetching team members:', error)
     }

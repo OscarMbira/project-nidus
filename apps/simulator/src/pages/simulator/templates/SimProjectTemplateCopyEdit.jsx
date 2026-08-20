@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getCopyById, updateCopy } from '../../../services/sim/simProjectTemplateCopyService'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const BASE = '/simulator/templates'
 
@@ -15,6 +22,16 @@ export default function ProjectTemplateCopyEdit() {
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !row) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [row.created_by, row.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, row])
 
   useEffect(() => {
     ;(async () => {
@@ -49,6 +66,7 @@ export default function ProjectTemplateCopyEdit() {
       setErr(error.message)
       return
     }
+    setRow(data)
     setSuccess({ id: data.id, version: data.current_version, op: 'updated' })
   }
 
@@ -78,6 +96,29 @@ export default function ProjectTemplateCopyEdit() {
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Edit project template copy</h1>
       {err && <p className="text-red-600 mb-4">{err}</p>}
+
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <AuditDetailsPanel description="Who created or changed this template copy.">
+            <AuditCard title="Identity" description="How this copy is labelled.">
+              <AuditField label="Title" value={row.title} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this copy sits.">
+              <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+              <AuditField label="Version" value={row.current_version} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this copy was created and last changed.">
+              <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+              <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        </div>
+      ) : (
+      <>
       <label className="block mb-4">
         <span className="text-sm">Title</span>
         <input
@@ -111,6 +152,8 @@ export default function ProjectTemplateCopyEdit() {
       >
         <Save className="h-4 w-4" /> Save
       </button>
+      </>
+      )}
     </div>
   )
 }

@@ -8,6 +8,12 @@ import { X, Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { createResponse, updateResponse } from '../../services/riskResponseService'
 import { SmartAmountInput } from '../ui/SmartAmountInput'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function ResponseForm({ riskId, response, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -21,6 +27,22 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
   const [teamMembers, setTeamMembers] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !response) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        response.created_by,
+        response.updated_by,
+        response.assigned_to_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, response])
 
   useEffect(() => {
     fetchTeamMembers()
@@ -138,6 +160,41 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !response?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this response is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this response action, and how it is classified.">
+                <AuditCard title="Identity" description="How this response action is labelled and tracked.">
+                  <AuditField label="Action type" value={humanizeAuditToken(formData.action_type || response.action_type)} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.status || response.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this response action sits.">
+                  <AuditField
+                    label="Assigned to"
+                    value={
+                      formData.assigned_to_id || response.assigned_to_id
+                        ? auditUserLabels[formData.assigned_to_id || response.assigned_to_id] || null
+                        : null
+                    }
+                  />
+                  <AuditTimestampPair dateLabel="Target date" value={response.target_date || formData.target_date} />
+                  <AuditField label="Estimated cost" value={response.estimated_cost != null ? String(response.estimated_cost) : null} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this response action was created and last changed.">
+                  <AuditField label="Created by" value={response.created_by ? auditUserLabels[response.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={response.created_at} />
+                  <AuditField label="Updated by" value={response.updated_by ? auditUserLabels[response.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={response.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Action Description * <span className="text-xs text-gray-500">(Min 20 characters)</span>
@@ -232,6 +289,8 @@ export default function ResponseForm({ riskId, response, onSave, onCancel }) {
               showShorthandHelper
             />
           </div>
+          </>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button

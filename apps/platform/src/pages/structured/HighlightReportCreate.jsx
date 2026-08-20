@@ -1,6 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { ArrowLeft } from 'lucide-react'
 import HighlightReportForm from '../../components/structured/highlightReport/HighlightReportForm'
 
@@ -12,14 +13,14 @@ export default function HighlightReportCreate() {
 
   const handleSave = (report) => {
     if (report?.id) {
-      navigate(`/app/projects/${projectId}/highlight-reports/${report.id}`)
+      navigate(platformProjectPath(routeKey, 'highlight-reports', report.report_reference || report.id))
     } else {
-      navigate(`/app/projects/${projectId}/stage-boundaries`)
+      navigate(platformProjectPath(routeKey, 'stage-boundaries'))
     }
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/stage-boundaries`)
+    navigate(platformProjectPath(routeKey, 'stage-boundaries'))
   }
 
   return (

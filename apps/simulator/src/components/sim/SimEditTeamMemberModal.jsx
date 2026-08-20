@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react'
 import { X, Loader } from 'lucide-react'
 import { getSimTeamFunctionalRoles, updateSimTeamMember } from '../../services/sim/simTeamService'
 import { useToast } from '../../hooks/useToast'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
 export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId, member, onSuccess }) {
   const { showToast } = useToast()
@@ -12,6 +17,7 @@ export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId
   const [allocation, setAllocation] = useState(100)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (!isOpen || !practiceTeamId || !member) return
@@ -69,7 +75,25 @@ export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{displayName}</p>
 
-        {loading ? (
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' ? (
+          <div className="mt-4">
+            <AuditDetailsPanel description="When this team member record was created and last changed.">
+              <AuditCard title="Identity" description="Who this member is.">
+                <AuditField label="Name" value={displayName} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this member is tracked.">
+                <AuditField label="Functional role" value={member.member_role} />
+                <AuditField label="Allocation" value={member.allocation_percentage != null ? `${member.allocation_percentage}%` : null} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this member was added and last changed.">
+                <AuditTimestampPair dateLabel="Joined at" value={member.joined_at || member.created_at} />
+                <AuditTimestampPair dateLabel="Last updated" value={member.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          </div>
+        ) : loading ? (
           <Loader className="w-8 h-8 animate-spin mx-auto text-blue-500" />
         ) : (
           <div className="space-y-4">

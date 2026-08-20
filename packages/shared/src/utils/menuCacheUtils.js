@@ -17,7 +17,9 @@
 // tree (up to 10 min old per the TTL below) would keep seeing the pre-v805 shape
 // until it happened to expire, which is what made the new menu item look "missing"
 // even though the DB row was already correct.
-const SIDEBAR_CACHE_VERSION = 38
+// Bumped 47 → 48: force sidebar re-fetch after Document Signatory menu_label rename (v871).
+// Bumped 48 → 49: Manage Roles (v902/v905) must appear for PMO + manager creator tiers.
+const SIDEBAR_CACHE_VERSION = 49
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

@@ -47,10 +47,11 @@ export default function RecordsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateRecord(editingId, formData)
+        await updateRecord(editingId, editableFields)
       } else {
-        await addRecord(cmsId, formData)
+        await addRecord(cmsId, editableFields)
       }
       await loadRecords()
       setShowForm(false)
@@ -64,6 +65,8 @@ export default function RecordsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (record) => {
     setFormData({
+      id: record.id,
+      created_at: record.created_at,
       record_name: record.record_name || '',
       record_type: record.record_type || '',
       record_description: record.record_description || '',

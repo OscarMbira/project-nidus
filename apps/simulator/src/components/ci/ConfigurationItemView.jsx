@@ -4,11 +4,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { 
-  Package, 
-  Edit2, 
-  GitBranch, 
-  BarChart3, 
+import {
+  Package,
+  GitBranch,
+  BarChart3,
   Layers,
   Link2,
   Shield,
@@ -16,6 +15,12 @@ import {
   Clock,
   CheckCircle
 } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { getConfigurationItemById } from '../../services/configurationItemRecordService'
 import { getVersionsByItem, getCurrentVersion } from '../../services/configurationItemVersionService'
 import { getStatusHistory } from '../../services/configurationItemStatusService'
@@ -90,6 +95,8 @@ export default function ConfigurationItemView({ itemId, onEdit, readOnly = true 
     { id: 'baselines', label: 'Baselines', icon: Layers }
   ]
 
+  const VIEW_TABS = [...tabs.map((t) => ({ value: t.id, label: t.label })), { value: 'audit', label: 'Audit details' }]
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -147,7 +154,7 @@ export default function ConfigurationItemView({ itemId, onEdit, readOnly = true 
             {item.product && (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Linked Product</h3>
-                <p className="text-gray-900 dark:text-white">{item.product.product_name}</p>
+                <p className="text-gray-900 dark:text-white">{item.product.product_title}</p>
               </div>
             )}
           </div>
@@ -164,6 +171,27 @@ export default function ConfigurationItemView({ itemId, onEdit, readOnly = true 
 
       case 'relationships':
         return <RelationshipsSection itemId={itemId} />
+
+      case 'audit':
+        return (
+          <AuditDetailsPanel description="Who created or changed this configuration item, and how it is classified.">
+            <AuditCard title="Identity" description="How this configuration item is labelled and tracked.">
+              <AuditField label="Identifier" value={item.configuration_item_identifier} />
+              <AuditField label="Name" value={item.item_name} />
+              <AuditField label="Status" value={item.current_status_code} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this configuration item sits.">
+              <AuditField label="Linked product" value={item.product?.product_title} />
+              <AuditField label="Item type" value={item.item_type?.item_type_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this configuration item was created and last changed.">
+              <AuditField label="Created by" value={item.created_by_user?.full_name || item.created_by_user?.email} />
+              <AuditTimestampPair dateLabel="Created at" value={item.created_at} />
+              <AuditField label="Updated by" value={item.updated_by_user?.full_name || item.updated_by_user?.email} />
+              <AuditTimestampPair dateLabel="Last updated" value={item.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
 
       default:
         return (
@@ -196,13 +224,7 @@ export default function ConfigurationItemView({ itemId, onEdit, readOnly = true 
               </span>
             )}
             {!readOnly && onEdit && (
-              <button
-                onClick={onEdit}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit configuration item" onClick={onEdit} />
             )}
           </div>
         </div>
@@ -210,26 +232,8 @@ export default function ConfigurationItemView({ itemId, onEdit, readOnly = true 
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-1 overflow-x-auto px-4">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
+        <div className="border-b border-gray-200 dark:border-gray-700 px-4 pt-2">
+          <DetailAuditTabList tabs={VIEW_TABS} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
         <div className="p-6">

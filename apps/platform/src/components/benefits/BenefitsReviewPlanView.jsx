@@ -4,6 +4,7 @@
  */
 
 import { FileText, Edit2, Download, Share2, CheckCircle, Clock, XCircle, Archive, Printer } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 
 export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onApprove, onDistribute, onPrint }) {
   if (!plan) {
@@ -57,13 +58,7 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
           <div className="flex items-center gap-3">
             {getStatusBadge(plan.status)}
             {onEdit && plan.status === 'draft' && (
-              <button
-                onClick={onEdit}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 text-sm"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit benefits review plan" onClick={onEdit} />
             )}
           </div>
         </div>
@@ -240,13 +235,7 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
       {(onEdit || onExport || onApprove || onDistribute) && (
         <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-900/50 flex flex-wrap gap-3">
           {onEdit && plan.status === 'draft' && (
-            <button
-              onClick={onEdit}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit Plan
-            </button>
+            <RowActionButton variant="edit" label="Edit benefits review plan" onClick={onEdit} />
           )}
           {onExport && (
             <button

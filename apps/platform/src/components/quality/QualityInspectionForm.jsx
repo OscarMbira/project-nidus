@@ -7,6 +7,12 @@ import FormSurface from '../ui/FormSurface';
 import InheritedQualityFields, {
   QUALITY_INSPECTION_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedQualityFields';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function QualityInspectionForm({
   inspection,
@@ -52,6 +58,24 @@ export default function QualityInspectionForm({
   const [programmes, setProgrammes] = useState([]);
   const [qmsMethods, setQmsMethods] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !inspection) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        inspection.created_by,
+        inspection.updated_by,
+        inspection.inspector_user_id,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [formTab, inspection]);
 
   useEffect(() => {
     if (inspection) {
@@ -218,6 +242,44 @@ export default function QualityInspectionForm({
       onClose={onCancel}
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+          {formTab === 'audit' && (
+            !inspection?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this inspection is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this inspection, and how it is classified.">
+                <AuditCard title="Identity" description="How this inspection is labelled and tracked.">
+                  <AuditField label="Inspection reference" value={inspection.inspection_reference} />
+                  <AuditField label="Title" value={formData.inspection_title || inspection.inspection_title} />
+                  <AuditField label="Type" value={humanizeAuditToken(formData.inspection_type || inspection.inspection_type)} />
+                  <AuditField label="Result" value={humanizeAuditToken(formData.inspection_result || inspection.inspection_result)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this inspection sits.">
+                  <AuditField label="Method" value={humanizeAuditToken(formData.inspection_method || inspection.inspection_method)} />
+                  <AuditField label="Location" value={formData.inspection_location || inspection.inspection_location} />
+                  <AuditField
+                    label="Inspector"
+                    value={
+                      formData.inspector_user_id || inspection.inspector_user_id
+                        ? auditUserLabels[formData.inspector_user_id || inspection.inspector_user_id] || null
+                        : null
+                    }
+                  />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this inspection was created and last changed.">
+                  <AuditField label="Created by" value={inspection.created_by ? auditUserLabels[inspection.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={inspection.created_at} />
+                  <AuditField label="Updated by" value={inspection.updated_by ? auditUserLabels[inspection.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={inspection.updated_at} />
+                  <AuditTimestampPair dateLabel="Inspection date" value={inspection.inspection_date || formData.inspection_date} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Inspection Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -671,6 +733,8 @@ export default function QualityInspectionForm({
               mode="edit"
               title="Quality inspection additional fields"
             />
+          )}
+          </>
           )}
 
           {/* Form Actions */}

@@ -114,11 +114,51 @@ serve(async (req) => {
       return fail('Email address does not match this invitation.', 403);
     }
 
-    const inviteeFirstName = String(inv.invited_first_name ?? '').trim();
-    const inviteeLastName = String(inv.invited_last_name ?? '').trim();
-    const inviteeFullName =
-      [inviteeFirstName, inviteeLastName].filter(Boolean).join(' ') ||
-      email.split('@')[0];
+    let inviteeFirstName = String(inv.invited_first_name ?? '').trim();
+    let inviteeLastName = String(inv.invited_last_name ?? '').trim();
+    let inviteeFullName = [inviteeFirstName, inviteeLastName].filter(Boolean).join(' ');
+    if (!inviteeFullName && typeof inv.invitation_message === 'string') {
+      const dearMatch = String(inv.invitation_message).match(/^\s*Dear\s+([^,\n]+?)\s*,/im);
+      if (dearMatch) {
+        inviteeFullName = dearMatch[1].trim().replace(/\*/g, '');
+        const parts = inviteeFullName.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) {
+          inviteeFirstName = parts[0];
+        } else if (parts.length > 1) {
+          inviteeFirstName = parts.slice(0, -1).join(' ');
+          inviteeLastName = parts[parts.length - 1];
+        }
+      }
+    }
+    if (!inviteeFullName) inviteeFullName = email.split('@')[0];
+    const inviteeJobTitle = String(inv.role_display_name ?? '').trim();
+
+    function isHandleLikeName(name: string, userEmail: string) {
+      const n = String(name ?? '').trim().toLowerCase();
+      const e = String(userEmail ?? '').trim().toLowerCase();
+      const local = e.split('@')[0] || '';
+      return !!n && (n === local || n === e);
+    }
+
+    function profileDefaultsPatch(existing: {
+      full_name?: string;
+      email?: string;
+      job_title?: string;
+      first_name?: string;
+      last_name?: string;
+    } | null) {
+      const patch: Record<string, unknown> = {};
+      const currentFull = String(existing?.full_name ?? '').trim();
+      const currentJob = String(existing?.job_title ?? '').trim();
+      const userEmail = String(existing?.email ?? email).trim();
+      if (inviteeFullName && (!currentFull || isHandleLikeName(currentFull, userEmail))) {
+        patch.full_name = inviteeFullName;
+        if (inviteeFirstName) patch.first_name = inviteeFirstName;
+        if (inviteeLastName) patch.last_name = inviteeLastName;
+      }
+      if (inviteeJobTitle && !currentJob) patch.job_title = inviteeJobTitle;
+      return patch;
+    }
 
     // ── 2. Create auth user via GoTrue admin REST API ─────────────────────────
     let authUserId = '';
@@ -134,6 +174,7 @@ serve(async (req) => {
           first_name: inviteeFirstName || undefined,
           last_name: inviteeLastName || undefined,
           full_name: inviteeFullName,
+          job_title: inviteeJobTitle || undefined,
           invitation_token,
         },
       }),
@@ -178,18 +219,21 @@ serve(async (req) => {
 
     // ── 3. Ensure public.users row (idempotent) ───────────────────────────────
     // Priority 1: find by auth_user_id (the normal path for new users)
-    const checkByAuthRes = await restGet(rest, key, `/users?auth_user_id=eq.${encodeURIComponent(authUserId)}&select=id&limit=1`);
-    let existingId: string | null =
-      checkByAuthRes.ok && Array.isArray(checkByAuthRes.body) ? (checkByAuthRes.body[0]?.id ?? null) : null;
+    const userSelect = 'id,auth_user_id,full_name,first_name,last_name,email,job_title';
+    const checkByAuthRes = await restGet(rest, key, `/users?auth_user_id=eq.${encodeURIComponent(authUserId)}&select=${userSelect}&limit=1`);
+    let existingRow =
+      checkByAuthRes.ok && Array.isArray(checkByAuthRes.body) ? (checkByAuthRes.body[0] ?? null) : null;
+    let existingId: string | null = existingRow?.id ?? null;
 
     if (!existingId) {
       // Priority 2: find by email — handles the case where a users row was created
       // without an auth_user_id (e.g. admin-created, legacy import, or prior partial signup).
-      const checkByEmailRes = await restGet(rest, key, `/users?email=eq.${encodeURIComponent(email)}&select=id,auth_user_id&limit=1`);
+      const checkByEmailRes = await restGet(rest, key, `/users?email=eq.${encodeURIComponent(email)}&select=${userSelect}&limit=1`);
       const emailRow = checkByEmailRes.ok && Array.isArray(checkByEmailRes.body) ? checkByEmailRes.body[0] : null;
 
       if (emailRow?.id) {
         existingId = emailRow.id;
+        existingRow = emailRow;
         // Backfill auth_user_id so future lookups work correctly
         if (!emailRow.auth_user_id || emailRow.auth_user_id !== authUserId) {
           const patchRes = await restPatch(rest, key, `/users?id=eq.${encodeURIComponent(existingId)}`, {
@@ -202,6 +246,14 @@ serve(async (req) => {
       }
     }
 
+    if (existingId) {
+      const nameJobPatch = profileDefaultsPatch(existingRow);
+      if (Object.keys(nameJobPatch).length > 0) {
+        const patchRes = await restPatch(rest, key, `/users?id=eq.${encodeURIComponent(existingId)}`, nameJobPatch);
+        console.log('[accept-invitation] profile defaults patch status:', patchRes.status);
+      }
+    }
+
     if (!existingId) {
       // Truly new — insert
       const insRes = await restPost(rest, key, '/users', {
@@ -210,6 +262,7 @@ serve(async (req) => {
         first_name: inviteeFirstName || null,
         last_name: inviteeLastName || null,
         full_name: inviteeFullName,
+        job_title: inviteeJobTitle || null,
         is_active: true,
         is_verified: true,
       });

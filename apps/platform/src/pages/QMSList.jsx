@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
-import { Shield, Search, Filter, Eye, CheckCircle, Clock, AlertCircle, Plus, Edit2, Trash2 } from 'lucide-react'
+import { Shield, Search, Filter, CheckCircle, Clock, AlertCircle, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getQMSByProject, deleteQMS, getOrCreateQMS } from '../services/qualityManagementStrategyService'
 import QMSForm from '../components/qms/QMSForm'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
@@ -346,33 +347,20 @@ export default function QMSList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-3">
-                        <button
+                        <RowActionButton
+                          variant="view"
+                          label="View QMS"
                           onClick={() => navigate(`/app/projects/${qms.project_id}/qms`)}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
-                          title="View QMS"
-                        >
-                          <Eye className="h-4 w-4" />
-                          View
-                        </button>
+                        />
                         {qms.status === 'draft' && (
                           <>
-                            <button
-                              onClick={() => handleEditQMS(qms)}
-                              className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 flex items-center gap-1 transition-colors"
-                              title="Edit QMS"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                              Edit
-                            </button>
-                            <button
+                            <RowActionButton variant="edit" label="Edit QMS" onClick={() => handleEditQMS(qms)} />
+                            <RowActionButton
+                              variant="delete"
+                              label="Delete QMS"
                               onClick={() => handleDeleteQMS(qms)}
                               disabled={deletingQMS === qms.id}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1 transition-colors disabled:opacity-50"
-                              title="Delete QMS"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete
-                            </button>
+                            />
                           </>
                         )}
                       </div>

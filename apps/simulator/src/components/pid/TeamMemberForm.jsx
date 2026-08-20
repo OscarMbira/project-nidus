@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addTeamMember, updateTeamMember } from '../../services/pidTeamStructureService'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function TeamMemberForm({ pidId, teamMember = null, mode = 'create', projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -22,6 +28,16 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
   const [teamMembers, setTeamMembers] = useState([])
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !teamMember) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [teamMember.created_by, teamMember.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, teamMember])
 
   useEffect(() => {
     loadTeamMembers()
@@ -127,6 +143,32 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         )}
       </div>
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
+
+      {formTab === 'audit' ? (
+        !teamMember ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this team member is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this team member entry, and how it is classified.">
+            <AuditCard title="Identity" description="How this role is labelled and tracked.">
+              <AuditField label="Role name" value={teamMember.role_name} />
+              <AuditField label="Assigned to" value={teamMember.assigned_user_name || teamMembers.find(m => m.id === teamMember.assigned_user_id)?.full_name} />
+            </AuditCard>
+            <AuditCard title="Classification" description="How this role is categorised.">
+              <AuditField label="Role type" value={humanizeAuditToken(teamMember.role_type)} />
+              <AuditField label="Authority level" value={teamMember.authority_level} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this team member entry was created and last changed.">
+              <AuditField label="Created by" value={teamMember.created_by ? auditUserLabels[teamMember.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={teamMember.created_at} />
+              <AuditField label="Updated by" value={teamMember.updated_by ? auditUserLabels[teamMember.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={teamMember.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -260,6 +302,7 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

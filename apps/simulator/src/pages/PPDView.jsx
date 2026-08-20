@@ -3,7 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
-import { FileText, Edit2, CheckCircle, Clock, AlertCircle, Plus, Users, Target, Package, BookOpen, Award, Settings, ArrowRight, Mail } from 'lucide-react'
+import { FileText, CheckCircle, Clock, AlertCircle, Plus, Users, Target, Package, BookOpen, Award, Settings, ArrowRight, Mail } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { getPPDByProject, getOrCreatePPD } from '../services/projectProductDescriptionService'
 import { getCompositionItems } from '../services/ppdCompositionService'
 import { getCriteria } from '../services/ppdAcceptanceCriteriaService'
@@ -51,12 +58,23 @@ export default function PPDView() {
   const [showCriteriaForm, setShowCriteriaForm] = useState(false)
   const [selectedCompositionItem, setSelectedCompositionItem] = useState(null)
   const [selectedCriterion, setSelectedCriterion] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (projectId) {
       fetchData()
     }
   }, [projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !ppd) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [ppd.created_by, ppd.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, ppd])
 
   const fetchData = async () => {
     try {
@@ -193,13 +211,7 @@ export default function PPDView() {
               </>
             )}
             {ppd && ppd.status === 'draft' && (
-              <button
-                onClick={() => setShowPPDForm(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton variant="edit" label="Edit PPD" onClick={() => setShowPPDForm(true)} />
             )}
           </div>
         </div>
@@ -226,39 +238,24 @@ export default function PPDView() {
         <>
           {/* Tabs */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
-            <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex -mb-px overflow-x-auto">
-                {[
-                  { id: 'overview', label: 'Overview', icon: FileText },
-                  { id: 'composition', label: `Composition (${compositionItems.length})`, icon: Package },
-                  { id: 'derivations', label: 'Derivations', icon: BookOpen },
-                  { id: 'skills', label: `Skills (${skills.length})`, icon: Users },
-                  { id: 'quality', label: `Quality (${expectations.length})`, icon: Award },
-                  { id: 'criteria', label: `Acceptance Criteria (${criteria.length})`, icon: Target },
-                  { id: 'history', label: 'Revision History', icon: Clock },
-                  { id: 'distribution', label: 'Distribution', icon: Mail },
-                  { id: 'responsibilities', label: `Responsibilities (${responsibilities.length})`, icon: Settings },
-                  { id: 'acceptance', label: 'Acceptance Testing', icon: CheckCircle },
-                  { id: 'history', label: 'Revision History', icon: Clock },
-                  { id: 'distribution', label: 'Distribution', icon: Mail }
-                ].map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </nav>
+            <div className="border-b border-gray-200 dark:border-gray-700 px-2 pt-2">
+              <DetailAuditTabList
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                tabs={[
+                  { value: 'overview', label: 'Overview' },
+                  { value: 'composition', label: `Composition (${compositionItems.length})` },
+                  { value: 'derivations', label: 'Derivations' },
+                  { value: 'skills', label: `Skills (${skills.length})` },
+                  { value: 'quality', label: `Quality (${expectations.length})` },
+                  { value: 'criteria', label: `Acceptance Criteria (${criteria.length})` },
+                  { value: 'responsibilities', label: `Responsibilities (${responsibilities.length})` },
+                  { value: 'acceptance', label: 'Acceptance Testing' },
+                  { value: 'history', label: 'Revision History' },
+                  { value: 'distribution', label: 'Distribution' },
+                  { value: 'audit', label: 'Audit details' },
+                ]}
+              />
             </div>
 
             {/* Tab Content */}
@@ -526,6 +523,28 @@ export default function PPDView() {
                   }}
                   projectId={projectId}
                 />
+              )}
+
+              {/* Audit Details Tab */}
+              {activeTab === 'audit' && (
+                <AuditDetailsPanel description="Who created or changed this project product description, and how it is classified.">
+                  <AuditCard title="Identity" description="How this PPD is labelled and tracked.">
+                    <AuditField label="Title" value={ppd.product_title} />
+                    <AuditField label="Status" value={humanizeAuditToken(ppd.status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this PPD sits.">
+                    <AuditField label="Project" value={project?.project_name} />
+                    <AuditField label="Author" value={ppd.author?.full_name || ppd.author?.email} />
+                    <AuditField label="Owner" value={ppd.owner?.full_name || ppd.owner?.email} />
+                    <AuditField label="Client" value={ppd.client?.full_name || ppd.client?.email} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this PPD was created and last changed.">
+                    <AuditField label="Created by" value={ppd.created_by ? auditUserLabels[ppd.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={ppd.created_at} />
+                    <AuditField label="Updated by" value={ppd.updated_by ? auditUserLabels[ppd.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={ppd.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
               )}
 
               {/* Acceptance Testing Tab */}

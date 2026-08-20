@@ -16,6 +16,12 @@ import LessonsReportAppendicesSection from './LessonsReportAppendicesSection'
 import LessonsReportDistributionSection from './LessonsReportDistributionSection'
 import LessonsReportCompletenessIndicator from './LessonsReportCompletenessIndicator'
 import { validateReportCompleteness } from '../../services/lessonsReportService'
+import { platformDb } from '@nidus/supabase'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 // Auto-save utility (similar to issue reports)
 const enableAutoSave = (reportId, formData, onStatusChange) => {
@@ -57,7 +63,8 @@ const FORM_STEPS = [
   { id: 'lessons', label: 'Significant Lessons', icon: '💡' },
   { id: 'recommendations', label: 'Recommendations', icon: '✅' },
   { id: 'appendices', label: 'Appendices', icon: '📎' },
-  { id: 'distribution', label: 'Distribution & Approval', icon: '📤' }
+  { id: 'distribution', label: 'Distribution & Approval', icon: '📤' },
+  { id: 'audit', label: 'Audit details', icon: '🕒' }
 ]
 
 export default function LessonsReportForm({
@@ -110,6 +117,15 @@ export default function LessonsReportForm({
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [autoSaveStatus, setAutoSaveStatus] = useState({ saved: false })
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (FORM_STEPS[activeStep]?.id !== 'audit' || !reportId || reportId === 'new') return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [formData.created_by, formData.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeStep, reportId, formData.created_by, formData.updated_by])
   const [autoSaveCleanup, setAutoSaveCleanup] = useState(null)
 
   useEffect(() => {
@@ -329,6 +345,27 @@ export default function LessonsReportForm({
             reportId={reportId || 'new'}
             readOnly={mode === 'view'}
           />
+        )
+      case 'audit':
+        return !reportId || reportId === 'new' ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this lessons report, and how it is classified.">
+            <AuditCard title="Identity" description="How this report is labelled and tracked.">
+              <AuditField label="Report type" value={humanizeAuditToken(formData.report_type)} />
+              <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Who this report is attributed to.">
+              <AuditField label="Author" value={formData.author_name} />
+              <AuditField label="Prepared by" value={formData.prepared_by_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this report was created and last changed.">
+              <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+              <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
         )
       default:
         return null

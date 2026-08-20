@@ -20,6 +20,7 @@ import {
 } from '../../../services/sim/simManagerAssignmentService'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
 import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import RowNumberBadge from '../../../components/ui/RowNumberBadge'
 
 const VIEW_KEY = 'sim-pmo-manager-assignments-view'
 const SORT_PREFIX = 'sim-pmo-manager-assignments-sort-'
@@ -327,7 +328,7 @@ export default function SimManagerAssignments() {
                   return (
                     <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                      <td className="px-4 py-2 font-mono text-xs text-gray-600 dark:text-gray-300">{r[codeField]}</td>
+                      <td className="px-4 py-2 min-w-[11rem] whitespace-nowrap font-mono text-xs text-gray-600 dark:text-gray-300">{r[codeField]}</td>
                       <td className="px-4 py-2 text-gray-900 dark:text-white">{r[nameField]}</td>
                       <td className="px-4 py-2 text-gray-700 dark:text-gray-300">{r.manager?.full_name || r.manager?.email || '—'}</td>
                       <td className="px-4 py-2 tabular-nums text-gray-600 dark:text-gray-400">{mid != null ? `${w} / ${limit}` : '—'}</td>
@@ -362,7 +363,7 @@ export default function SimManagerAssignments() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rows.map((r) => {
+            {rows.map((r, index) => {
               const mid = r.manager_public_user_id
               const w = mid ? workload[mid] ?? 0 : null
               return (
@@ -370,7 +371,10 @@ export default function SimManagerAssignments() {
                   key={r.id}
                   className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm flex flex-col gap-2"
                 >
-                  <div className="text-xs font-mono text-gray-500">{r[codeField]}</div>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-xs font-mono text-gray-500">{r[codeField]}</div>
+                    <RowNumberBadge number={getDisplayRowNumber(index)} />
+                  </div>
                   <div className="font-semibold text-gray-900 dark:text-white">{r[nameField]}</div>
                   <div className="text-sm text-gray-600 dark:text-gray-300">
                     Manager: {r.manager?.full_name || r.manager?.email || '—'}

@@ -13,6 +13,13 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '@nidus/shared/utils/exportUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function TestRunDetail() {
   const { runId } = useParams()
@@ -27,6 +34,8 @@ function Detail({ runId }) {
   const [run, setRun] = useState(null)
   const [execs, setExecs] = useState([])
   const [err, setErr] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (!runId) return
@@ -41,6 +50,14 @@ function Detail({ runId }) {
       }
     })()
   }, [runId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !run) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [run.created_by, run.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, run])
 
   if (err) return <p className="text-red-400">{err}</p>
   if (!run) return <p className="text-gray-500">Loading…</p>
@@ -84,6 +101,28 @@ function Detail({ runId }) {
           </Link>
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this test run, and how it is classified.">
+          <AuditCard title="Identity" description="How this test run is labelled and tracked.">
+            <AuditField label="Name" value={run.run_name} />
+            <AuditField label="Status" value={humanizeAuditToken(run.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this test run is categorised.">
+            <AuditField label="Environment" value={humanizeAuditToken(run.environment)} />
+            <AuditField label="Suite" value={run.suite?.name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this test run was created and last changed.">
+            <AuditField label="Created by" value={run.created_by ? auditUserLabels[run.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={run.created_at} />
+            <AuditField label="Updated by" value={run.updated_by ? auditUserLabels[run.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={run.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
+      <>
       <TestExecutionProgressBar summary={run.summary} />
       <p className="text-sm text-gray-400">
         {run.environment} · {run.status} · {run.run_date}
@@ -97,6 +136,8 @@ function Detail({ runId }) {
           </li>
         ))}
       </ul>
+      </>
+      )}
     </div>
   )
 }

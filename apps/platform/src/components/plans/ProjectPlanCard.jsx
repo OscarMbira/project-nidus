@@ -4,6 +4,7 @@
 
 import { Calendar, DollarSign, Users, FileText, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 
 const STATUS_COLORS = {
   draft: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300',
@@ -13,11 +14,11 @@ const STATUS_COLORS = {
   superseded: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
 }
 
-export default function ProjectPlanCard({ plan, projectId }) {
+export default function ProjectPlanCard({ plan, projectId, routeKey }) {
   const navigate = useNavigate()
 
   const handleClick = () => {
-    navigate(`/app/projects/${projectId}/plans/project-plan`)
+    navigate(platformProjectPath(routeKey || projectId, 'plans', 'project-plan'))
   }
 
   return (

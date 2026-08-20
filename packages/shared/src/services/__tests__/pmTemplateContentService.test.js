@@ -103,9 +103,15 @@ describe('updateOpaContent / updateProcessTemplateContent', () => {
     const select = vi.fn(() => ({ maybeSingle }))
     const eq = vi.fn(() => ({ select }))
     const update = vi.fn(() => ({ eq }))
-    const db = { from: vi.fn((t) => { expect(t).toBe('quality_checklists'); return { update } }) }
+    const db = {
+      auth: { getUser: vi.fn(async () => ({ data: { user: { id: 'auth-user-1' } } })) },
+      from: vi.fn((t) => { expect(t).toBe('quality_checklists'); return { update } }),
+    }
 
     await updateProcessTemplateContent(db, 'quality_checklists', 'pt-1', { title: 'New title' })
-    expect(update).toHaveBeenCalledWith(expect.objectContaining({ title: 'New title' }))
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'New title',
+      updated_by: 'auth-user-1',
+    }))
   })
 })

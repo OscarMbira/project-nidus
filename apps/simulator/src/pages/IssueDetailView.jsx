@@ -7,7 +7,8 @@ import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { supabase } from '../services/supabaseClient'
 import { platformDb, simDb } from '@nidus/supabase'
 import { format } from 'date-fns'
-import { ArrowLeft, Edit2, Trash2, CheckCircle, XCircle, Clock, AlertTriangle, FileText, Package, User, Calendar, MessageSquare, History, Link2, Eye, EyeOff } from 'lucide-react'
+import { ArrowLeft, CheckCircle, XCircle, Clock, AlertTriangle, FileText, Package, User, Calendar, MessageSquare, History, Link2, Eye, EyeOff } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getIssueById, updateStatus, closeIssue, reopenIssue } from '../services/issueService'
 import { getActions } from '../services/issueActionService'
 import { getDecisions } from '../services/issueDecisionService'
@@ -35,6 +36,12 @@ import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecor
 import CustomFieldRenderer from '../features/local-data-extensions/components/CustomFieldRenderer'
 import InheritedIssueRegisterFields from '../features/local-data-extensions/components/InheritedIssueRegisterFields'
 import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const ISSUE_EXPORT_SECTIONS = [
@@ -89,12 +96,29 @@ export default function IssueDetailView() {
   const [showEditForm, setShowEditForm] = useState(false)
   const [showTransferDialog, setShowTransferDialog] = useState(false)
   const [showChangeRequestDialog, setShowChangeRequestDialog] = useState(false)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (issueUuid) {
       fetchData()
     }
   }, [issueUuid])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !issue) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        issue.created_by,
+        issue.updated_by,
+        issue.raised_by_id,
+        issue.author_id,
+        issue.owner_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, issue])
 
   useEffect(() => {
     const projectRef = issue?.project_id || projectId
@@ -355,14 +379,12 @@ export default function IssueDetailView() {
             {issue.status !== 'closed' && issue.status !== 'cancelled' && (
               <>
                 <CreateIssueReportButton issueId={issueUuid} projectId={projectId} />
-                <button
+                <RowActionButton
+                  variant="edit"
+                  label="Edit issue"
                   onClick={() => setShowEditForm(true)}
                   disabled={lifecycleLocked}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit
-                </button>
+                />
                 {isRFC && (
                   <button
                     onClick={() => setShowChangeRequestDialog(true)}
@@ -381,14 +403,12 @@ export default function IssueDetailView() {
                 </button>
               </>
             )}
-            <button
+            <RowActionButton
+              variant="delete"
+              label="Delete issue"
               onClick={handleDelete}
               disabled={lifecycleLocked}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </button>
+            />
           </div>
         </div>
 
@@ -458,30 +478,51 @@ export default function IssueDetailView() {
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex -mb-px">
-            {['overview', 'actions', 'decisions', 'comments', 'history'].map((tab, index) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 text-sm font-medium border-b-2 capitalize ${
-                  activeTab === tab
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-              >
-                {tab === 'overview' && 'Overview'}
-                {tab === 'actions' && `Actions (${actions.length})`}
-                {tab === 'decisions' && `Decisions (${decisions.length})`}
-                {tab === 'comments' && `Comments (${comments.length})`}
-                {tab === 'history' && 'History'}
-              </button>
-            ))}
-          </nav>
+        <div className="border-b border-gray-200 dark:border-gray-700 px-2 pt-2">
+          <DetailAuditTabList
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Issue sections"
+            tabs={[
+              { value: 'overview', label: 'Overview' },
+              { value: 'actions', label: `Actions (${actions.length})` },
+              { value: 'decisions', label: `Decisions (${decisions.length})` },
+              { value: 'comments', label: `Comments (${comments.length})` },
+              { value: 'history', label: 'History' },
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
 
         {/* Tab Content */}
         <div className="p-6">
+          {activeTab === 'audit' && (
+            <AuditDetailsPanel description="Who created or changed this issue, and how it is classified.">
+              <AuditCard title="Identity" description="How this issue is labelled and tracked.">
+                <AuditField label="Display ID" value={issue.issue_identifier} />
+                <AuditField label="Title" value={issue.issue_title} />
+                <AuditField label="Type" value={humanizeAuditToken(issue.issue_type)} />
+                <AuditField label="Status" value={humanizeAuditToken(issue.status)} />
+                <AuditField label="Priority" value={humanizeAuditToken(issue.priority)} />
+                <AuditField label="Severity" value={humanizeAuditToken(issue.severity)} />
+                <AuditField label="Record status" value={humanizeAuditToken(issue.record_status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this issue sits.">
+                <AuditField label="Raised by" value={issue.raised_by?.full_name || issue.raised_by?.email || (issue.raised_by_id ? auditUserLabels[issue.raised_by_id] : null)} />
+                <AuditField label="Author" value={issue.author?.full_name || issue.author?.email || (issue.author_id ? auditUserLabels[issue.author_id] : null)} />
+                <AuditField label="Owner" value={issue.owner?.full_name || issue.owner?.email || (issue.owner_id ? auditUserLabels[issue.owner_id] : null)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this issue was created and last changed.">
+                <AuditField label="Created by" value={issue.created_by ? auditUserLabels[issue.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={issue.created_at} />
+                <AuditField label="Updated by" value={issue.updated_by ? auditUserLabels[issue.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={issue.updated_at} />
+                <AuditTimestampPair dateLabel="Date raised" value={issue.date_raised} />
+                <AuditTimestampPair dateLabel="Resolution date" value={issue.resolution_date} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Description */}

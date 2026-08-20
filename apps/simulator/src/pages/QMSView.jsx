@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
-import { FileText, Edit2, CheckCircle, Clock, AlertCircle, Plus, Target, Award, Settings, Users, BarChart3, Calendar, Shield, TrendingUp } from 'lucide-react'
+import { FileText, CheckCircle, Clock, AlertCircle, Plus, Target, Award, Settings, Users, BarChart3, Calendar, Shield, TrendingUp } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getQMSByProject, getOrCreateQMS, validateCompleteness, checkConformance } from '../services/qualityManagementStrategyService'
 import { getStandards } from '../services/qmsQualityStandardsService'
 import { getMethods } from '../services/qmsQualityMethodsService'
@@ -18,6 +19,12 @@ import QMSExportMenu from '../components/qms/QMSExportMenu'
 import { updateQMS } from '../services/qualityManagementStrategyService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const QMS_VIEW_SECTIONS = [
   { title: 'Document Information', fields: [
@@ -45,12 +52,29 @@ export default function QMSView() {
   const [validation, setValidation] = useState(null)
   const [conformance, setConformance] = useState(null)
   const [showQMSForm, setShowQMSForm] = useState(false)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (projectId) {
       fetchData()
     }
   }, [projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !qms) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [
+        qms.created_by,
+        qms.updated_by,
+        qms.author_id,
+        qms.owner_id,
+        qms.client_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, qms])
 
   const fetchData = async () => {
     try {
@@ -176,13 +200,7 @@ export default function QMSView() {
                   {qms.status.replace('_', ' ').toUpperCase()}
                 </span>
                 {qms.status === 'draft' && (
-                  <button
-                    onClick={() => setShowQMSForm(true)}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 transition-colors"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                    Edit
-                  </button>
+                  <RowActionButton variant="edit" label="Edit QMS" onClick={() => setShowQMSForm(true)} />
                 )}
                 <QMSExportMenu 
                   qms={qms}
@@ -336,42 +354,50 @@ export default function QMSView() {
         <>
           {/* Tabs */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-6">
-            <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex -mb-px overflow-x-auto">
-                {[
-                  { id: 'overview', label: 'Overview', icon: FileText },
-                  { id: 'standards', label: `Standards (${standards.length})`, icon: Shield },
-                  { id: 'procedures', label: 'Procedures', icon: Settings },
-                  { id: 'methods', label: `Methods (${methods.length})`, icon: Target },
-                  { id: 'metrics', label: `Metrics (${metrics.length})`, icon: BarChart3 },
-                  { id: 'tools', label: `Tools (${tools.length})`, icon: Settings },
-                  { id: 'records', label: `Records (${records.length})`, icon: FileText },
-                  { id: 'reports', label: `Reports (${reports.length})`, icon: BarChart3 },
-                  { id: 'roles', label: `Roles (${roles.length})`, icon: Users },
-                  { id: 'activities', label: `Activities (${activities.length})`, icon: Calendar },
-                  { id: 'conformance', label: 'Conformance', icon: CheckCircle }
-                ].map((tab) => {
-                  const Icon = tab.icon
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 text-sm font-medium border-b-2 flex items-center gap-2 whitespace-nowrap ${
-                        activeTab === tab.id
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {tab.label}
-                    </button>
-                  )
-                })}
-              </nav>
+            <div className="border-b border-gray-200 dark:border-gray-700 px-2">
+              <DetailAuditTabList
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                ariaLabel="Quality Management Strategy sections"
+                tabs={[
+                  { value: 'overview', label: 'Overview' },
+                  { value: 'standards', label: `Standards (${standards.length})` },
+                  { value: 'procedures', label: 'Procedures' },
+                  { value: 'methods', label: `Methods (${methods.length})` },
+                  { value: 'metrics', label: `Metrics (${metrics.length})` },
+                  { value: 'tools', label: `Tools (${tools.length})` },
+                  { value: 'records', label: `Records (${records.length})` },
+                  { value: 'reports', label: `Reports (${reports.length})` },
+                  { value: 'roles', label: `Roles (${roles.length})` },
+                  { value: 'activities', label: `Activities (${activities.length})` },
+                  { value: 'conformance', label: 'Conformance' },
+                  { value: 'audit', label: 'Audit details' },
+                ]}
+              />
             </div>
 
             {/* Tab Content */}
             <div className="p-6">
+              {activeTab === 'audit' && (
+                <AuditDetailsPanel description="Who created or changed this Quality Management Strategy, and how it is classified.">
+                  <AuditCard title="Identity" description="How this strategy is labelled and tracked.">
+                    <AuditField label="Reference" value={qms.qms_reference} />
+                    <AuditField label="Status" value={humanizeAuditToken(qms.status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this strategy sits.">
+                    <AuditField label="Author" value={qms.author_id ? auditUserLabels[qms.author_id] || null : null} />
+                    <AuditField label="Owner" value={qms.owner_id ? auditUserLabels[qms.owner_id] || null : null} />
+                    <AuditField label="Client" value={qms.client_id ? auditUserLabels[qms.client_id] || null : null} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this strategy was created and last changed.">
+                    <AuditField label="Created by" value={qms.created_by ? auditUserLabels[qms.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={qms.created_at} />
+                    <AuditField label="Updated by" value={qms.updated_by ? auditUserLabels[qms.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={qms.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )}
+
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   {/* Purpose */}

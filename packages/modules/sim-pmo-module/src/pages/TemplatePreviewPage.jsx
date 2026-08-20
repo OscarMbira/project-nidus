@@ -100,6 +100,13 @@ export default function TemplatePreviewPage() {
   const [copying, setCopying] = useState(false)
   const [backLabel, setBackLabel] = useState('Global Template Library')
 
+  // v822: resolved once and reused by both the override lookup and the copy call itself —
+  // "does an override already exist" and "what scope does Copy create one in" must always
+  // agree, or the disabled-button state and the actual copy could target different scopes.
+  const resolvedTier = tierParam || (entityType ? entityType.replace('practice_', '') : 'pmo')
+  const resolvedScopeEntityType = entityType || 'account'
+  const resolvedScopeEntityId = entityId || null
+
   useEffect(() => {
     getMenuLabel(simDb, 'sim_tpl_library', 'Global Template Library').then(setBackLabel)
   }, [])
@@ -122,8 +129,17 @@ export default function TemplatePreviewPage() {
         ])
         if (cancelled) return
         setInfo(contentInfo)
-        if (accountId && ['portfolio', 'programme', 'project'].includes(entityType)) {
-          const override = await resolveAccountTemplateOverride(simDb, { accountId, globalNodeId: n.id })
+        // v822: checked for every scope, including PMO/account-wide (previously only
+        // checked for portfolio/programme/project) — a PMO-tier template can be
+        // already-copied too, and the Copy button below needs to know that.
+        if (accountId) {
+          const override = await resolveAccountTemplateOverride(simDb, {
+            accountId,
+            globalNodeId: n.id,
+            tier: resolvedTier,
+            scopeEntityType: resolvedScopeEntityType,
+            scopeEntityId: resolvedScopeEntityId,
+          })
           if (!cancelled) setOverrideNode(override)
         }
       } catch (e) {
@@ -133,7 +149,8 @@ export default function TemplatePreviewPage() {
       }
     })()
     return () => { cancelled = true }
-  }, [nodeId, entityType])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodeId, resolvedTier, resolvedScopeEntityType, resolvedScopeEntityId])
 
   const backHref = `/simulator/pmo/template-library${searchParams.toString() ? `?${searchParams.toString()}` : ''}`
 
@@ -142,20 +159,24 @@ export default function TemplatePreviewPage() {
     setCopying(true)
     try {
       const accountId = await getCurrentUserAccountId()
-      const tier = tierParam || (entityType ? entityType.replace('practice_', '') : 'pmo')
       const isDownstreamScope = ['portfolio', 'programme', 'project'].includes(entityType)
       const source = isDownstreamScope && overrideNode ? overrideNode : node
       const { node: copied } = await copyTemplateNodeForAccount(simDb, {
         accountId,
         sourceNodeId: source.id,
-        tier: ['portfolio', 'programme', 'project', 'pmo'].includes(tier) ? tier : 'pmo',
-        scopeEntityType: entityType || 'account',
-        scopeEntityId: entityId || null,
+        tier: ['portfolio', 'programme', 'project', 'pmo'].includes(resolvedTier) ? resolvedTier : 'pmo',
+        scopeEntityType: resolvedScopeEntityType,
+        scopeEntityId: resolvedScopeEntityId,
       })
       toast.success(`Copied as "${copied.name}" (${copied.template_reference || copied.id})`)
       navigate(backHref)
     } catch (e) {
-      toast.error(e.message || 'Copy failed')
+      // v822: belt-and-braces — see TemplateLibraryPage's handleCopy for why.
+      if (e.code === 'ALREADY_COPIED') {
+        toast.error('Already copied for this scope.')
+      } else {
+        toast.error(e.message || 'Copy failed')
+      }
     } finally {
       setCopying(false)
     }
@@ -303,12 +324,15 @@ export default function TemplatePreviewPage() {
 
       <button
         type="button"
-        disabled={copying}
+        disabled={copying || !!overrideNode}
+        title={overrideNode ? 'Already copied for this scope' : undefined}
         onClick={handleCopy}
-        className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+        className={`inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-medium text-white disabled:opacity-60 ${
+          overrideNode ? 'bg-gray-400 dark:bg-gray-600' : 'bg-blue-600 hover:bg-blue-700'
+        }`}
       >
         <Copy className="h-4 w-4" />
-        {copying ? 'Copying…' : overrideNode ? 'Copy again' : 'Copy to customise'}
+        {copying ? 'Copying…' : overrideNode ? 'Already copied' : 'Copy to customise'}
       </button>
     </div>
   )

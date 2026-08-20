@@ -5,16 +5,22 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, User, Tag, Package, AlertTriangle, Star, Eye, CheckCircle } from 'lucide-react';
+import { Calendar, User, Tag, Package, AlertTriangle, Star, CheckCircle } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import LessonTypeBadge from './LessonTypeBadge';
 import LessonStatusBadge from './LessonStatusBadge';
 import EffectTypeIndicator from './EffectTypeIndicator';
+import RowNumberBadge from '../ui/RowNumberBadge';
 
-export default function LessonCard({ lesson, onEdit, onDelete, onPromote }) {
+export default function LessonCard({ lesson, onView, onEdit, onDelete, onPromote, rowNumber }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
 
   const handleViewDetails = () => {
+    if (onView) {
+      onView(lesson);
+      return;
+    }
     navigate(`/app/projects/${lesson.project_id}/lessons/${lesson.id}`);
   };
 
@@ -39,6 +45,7 @@ export default function LessonCard({ lesson, onEdit, onDelete, onPromote }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
+            {rowNumber != null && <RowNumberBadge number={rowNumber} />}
             <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
               {lesson.lesson_reference || `#${lesson.lesson_number || ''}`}
             </span>
@@ -160,12 +167,10 @@ export default function LessonCard({ lesson, onEdit, onDelete, onPromote }) {
             View Details
           </button>
           {onEdit && (
-            <button
-              onClick={() => onEdit(lesson)}
-              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-            >
-              Edit
-            </button>
+            <RowActionButton variant="edit" label="Edit lesson" onClick={() => onEdit(lesson)} />
+          )}
+          {onDelete && (
+            <RowActionButton variant="delete" label="Delete lesson" onClick={() => onDelete(lesson)} />
           )}
         </div>
       </div>

@@ -85,9 +85,91 @@ describe('sidebarRouteUtils', () => {
     expect(menuPathIsActive('/platform/dashboard', '/platform/dashboard?tab=projects', '')).toBe(false)
   })
 
+  it('menuPathIsActive does not treat Project Templates as under Organizational Templates hub', () => {
+    expect(menuPathIsActive('/platform/templates/project', '/platform/templates')).toBe(false)
+    expect(menuPathIsActive('/platform/templates/project', '/platform/templates/project')).toBe(true)
+    expect(menuPathIsActive('/platform/templates/organisational', '/platform/templates')).toBe(true)
+    expect(menuPathIsActive('/platform/templates/organisational', '/platform/templates/project')).toBe(false)
+  })
+
+  it('menuPathIsActive highlights v851 domainGroup Forms/Templates leaves', () => {
+    expect(
+      menuPathIsActive(
+        '/platform/templates/project',
+        '/platform/templates/project?domainGroup=forms',
+        '?domainGroup=forms&entityType=project&entityId=abc',
+      ),
+    ).toBe(true)
+    expect(
+      menuPathIsActive(
+        '/platform/templates/project',
+        '/platform/templates/project',
+        '?domainGroup=forms&entityType=project&entityId=abc',
+      ),
+    ).toBe(false)
+    expect(
+      menuPathIsActive(
+        '/platform/templates/organisational',
+        '/platform/templates/organisational?domainGroup=templates',
+        '?domainGroup=templates',
+      ),
+    ).toBe(true)
+  })
+
+  it('menuPathIsActive does not highlight Organizational Templates hub when domainGroup Forms is selected', () => {
+    expect(
+      menuPathIsActive(
+        '/platform/templates/organisational',
+        '/platform/templates',
+        '?domainGroup=forms&entityType=project&entityId=abc',
+      ),
+    ).toBe(false)
+    expect(
+      menuPathIsActive(
+        '/platform/templates/organisational',
+        '/platform/templates/organisational?domainGroup=forms',
+        '?domainGroup=forms&entityType=project&entityId=abc',
+      ),
+    ).toBe(true)
+    expect(
+      menuPathIsActive(
+        '/platform/templates/organisational',
+        '/platform/templates',
+        '?entityType=project&entityId=abc',
+      ),
+    ).toBe(true)
+  })
+
+  it('menuPathIsActive highlights v852 Template Library Forms without parent', () => {
+    expect(
+      menuPathIsActive(
+        '/app/pmo/template-library',
+        '/app/pmo/template-library?domainGroup=forms',
+        '?domainGroup=forms',
+      ),
+    ).toBe(true)
+    expect(
+      menuPathIsActive(
+        '/app/pmo/template-library',
+        '/app/pmo/template-library',
+        '?domainGroup=forms',
+      ),
+    ).toBe(false)
+    expect(
+      menuPathIsActive(
+        '/app/pmo/template-library',
+        '/app/pmo/template-library',
+        '',
+      ),
+    ).toBe(true)
+  })
+
   it('resolveMenuRoutePathForLayout rewrites PM dashboard links', () => {
     expect(
       resolveMenuRoutePathForLayout('/platform/dashboard', '/platform/projects', 'pm')
+    ).toBe('/pm/dashboard')
+    expect(
+      resolveMenuRoutePathForLayout('/platform/executive/dashboard', '/platform/projects', 'pm')
     ).toBe('/pm/dashboard')
     expect(
       resolveMenuRoutePathForLayout('/platform/dashboard', '/platform/projects', 'pmo')

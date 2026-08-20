@@ -216,6 +216,7 @@ export default function ProgrammeCreatePage() {
               { id: 'ownership', label: 'Ownership & Management' },
               { id: 'timeline', label: 'Timeline' },
               { id: 'budget', label: 'Budget' },
+              { id: 'audit', label: 'Audit details' },
             ].map(tab => (
               <button
                 key={tab.id}
@@ -527,6 +528,12 @@ export default function ProgrammeCreatePage() {
             )}
           </div>
         </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this programme is saved.</p>
+          </div>
         )}
 
         {/* Actions */}

@@ -1,11 +1,66 @@
 import { supabase } from './supabaseClient';
 import { validateStatusTransition } from '@nidus/shared/utils/issueValidation';
 import { tryGovernedLifecycleUpdate } from '@nidus/shared/utils/lifecycleGovernedUpdate';
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 /**
  * Issue Service - API functions for Issue management
  * Handles CRUD operations and filtering for issues
  */
+
+/**
+ * Attach updated_by_user labels for list display (users.id or auth uid).
+ * @param {Array<object>} issues
+ * @returns {Promise<Array<object>>}
+ */
+export async function enrichIssueUpdaterLabels(issues) {
+  if (!Array.isArray(issues) || issues.length === 0) return issues || [];
+  try {
+    const labels = await resolveAuditUserLabels(
+      supabase,
+      issues.map((i) => i.updated_by)
+    );
+    return issues.map((issue) => {
+      if (issue.updated_by_user?.full_name || issue.updated_by_user?.email) return issue;
+      const label = issue.updated_by ? labels[issue.updated_by] : null;
+      if (!label) return issue;
+      return {
+        ...issue,
+        updated_by_user: { id: issue.updated_by, full_name: label, email: label },
+        updated_by_label: label,
+      };
+    });
+  } catch (err) {
+    console.warn('enrichIssueUpdaterLabels failed:', err?.message || err);
+    return issues;
+  }
+}
+
+/**
+ * Resolve the public.users row id for the signed-in user.
+ *
+ * auth.getUser() returns the Supabase auth uid, which is a different value from
+ * public.users.id — the two are joined by users.auth_user_id. Every *_by and
+ * *_user_id column on issues is a foreign key to public.users(id), so writing the
+ * auth uid straight into them fails the constraint.
+ *
+ * @returns {Promise<string>} public.users.id for the current user
+ */
+async function getCurrentAppUserId() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data: userRecord, error } = await supabase
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', user.id)
+    .eq('is_deleted', false)
+    .single();
+
+  if (error || !userRecord) throw new Error('User record not found');
+
+  return userRecord.id;
+}
 
 /**
  * Create a new issue
@@ -15,8 +70,7 @@ import { tryGovernedLifecycleUpdate } from '@nidus/shared/utils/lifecycleGoverne
  */
 export async function createIssue(registerId, issueData) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const currentUserId = await getCurrentAppUserId();
 
     // Get project_id from register
     const { data: register } = await supabase
@@ -31,11 +85,11 @@ export async function createIssue(registerId, issueData) {
       ...issueData,
       issue_register_id: registerId,
       project_id: register.project_id,
-      created_by: user.id,
-      updated_by: user.id,
-      reported_by_user_id: issueData.raised_by_id || user.id,
-      raised_by_id: issueData.raised_by_id || user.id,
-      author_id: issueData.author_id || user.id,
+      created_by: currentUserId,
+      updated_by: currentUserId,
+      reported_by_user_id: issueData.raised_by_id || currentUserId,
+      raised_by_id: issueData.raised_by_id || currentUserId,
+      author_id: issueData.author_id || currentUserId,
       owner_id: issueData.owner_id || issueData.assigned_to_user_id,
       assigned_to_user_id: issueData.owner_id || issueData.assigned_to_user_id,
       date_raised: issueData.date_raised || new Date().toISOString().split('T')[0],
@@ -72,12 +126,11 @@ export async function createIssue(registerId, issueData) {
  */
 export async function updateIssue(issueId, updates) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const currentUserId = await getCurrentAppUserId();
 
     const updateData = {
       ...updates,
-      updated_by: user.id
+      updated_by: currentUserId
     };
 
     // Map owner_id to assigned_to_user_id if needed
@@ -136,16 +189,15 @@ export async function updateIssue(issueId, updates) {
  */
 export async function deleteIssue(issueId) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const currentUserId = await getCurrentAppUserId();
 
     const { error } = await supabase
       .from('issues')
       .update({
         is_deleted: true,
-        deleted_by: user.id,
+        deleted_by: currentUserId,
         deleted_at: new Date().toISOString(),
-        updated_by: user.id
+        updated_by: currentUserId
       })
       .eq('id', issueId);
 
@@ -207,7 +259,7 @@ export async function getIssues(registerId, filters = {}) {
 
     if (error) throw error;
 
-    return data || [];
+    return enrichIssueUpdaterLabels(data || []);
   } catch (error) {
     console.error('Error fetching issues:', error);
     throw error;
@@ -263,7 +315,7 @@ export async function getIssuesByType(registerId, type) {
 
     if (error) throw error;
 
-    return data || [];
+    return enrichIssueUpdaterLabels(data || []);
   } catch (error) {
     console.error('Error fetching issues by type:', error);
     throw error;
@@ -420,15 +472,14 @@ export async function updateStatus(issueId, status, notes = null) {
  */
 export async function closeIssue(issueId, resolution, notes = null) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    const currentUserId = await getCurrentAppUserId();
 
     return await updateIssue(issueId, {
       status: 'closed',
       closure_date: new Date().toISOString().split('T')[0],
       closure_reason: notes || resolution,
       resolution_description: resolution,
-      resolved_by_id: user.id
+      resolved_by_id: currentUserId
     });
   } catch (error) {
     console.error('Error closing issue:', error);

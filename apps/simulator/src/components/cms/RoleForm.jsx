@@ -5,11 +5,18 @@
 
 import { useState, useEffect } from 'react'
 import { platformDb } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, isEditing = false }) {
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(false)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     loadUsers()
@@ -58,6 +65,30 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
       }}
       className="bg-gray-50 dark:bg-gray-900 p-6 rounded-lg space-y-4"
     >
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !roleData?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this role is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="How this role is labelled and classified, and when it was created.">
+            <AuditCard title="Identity" description="How this role is labelled and tracked.">
+              <AuditField label="Role name" value={roleData.role_name} />
+              <AuditField label="Type" value={humanizeAuditToken(roleData.role_type)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Who holds this role.">
+              <AuditField label="Assigned user" value={users.find((u) => u.id === roleData.assigned_user_id)?.full_name} />
+              <AuditField label="Authority level" value={roleData.authority_level} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this role was created.">
+              <AuditTimestampPair dateLabel="Created at" value={roleData.created_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -167,6 +198,8 @@ export default function RoleForm({ roleData = {}, onChange, onCancel, onSubmit, 
           placeholder="Skills and qualifications needed for this role..."
         />
       </div>
+      </>
+      )}
 
       <div className="flex gap-2 pt-4">
         <button

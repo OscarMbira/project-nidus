@@ -1,5 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createTierDocumentTemplateNode, updateTemplateNode, archiveTemplateNode, getTemplateNode } from '../pmTemplateNodeService.js'
+import {
+  createTierDocumentTemplateNode,
+  updateTemplateNode,
+  archiveTemplateNode,
+  archiveProcessTemplateContent,
+  archiveProcessTemplateNodeAndContent,
+  getTemplateNode,
+  matchArchivedCopyForCandidate,
+} from '../pmTemplateNodeService.js'
 
 describe('getTemplateNode', () => {
   it('resolves by id when given a UUID', async () => {
@@ -78,6 +86,44 @@ describe('createTierDocumentTemplateNode', () => {
     }))
     expect(row.id).toBe('n1')
   })
+
+  it('resolves created_by from auth → public.users when userId is omitted', async () => {
+    const single = vi.fn().mockResolvedValue({
+      data: { id: 'n2', created_by: 'internal-user-1' },
+      error: null,
+    })
+    const selectInsert = vi.fn(() => ({ single }))
+    const insert = vi.fn(() => ({ select: selectInsert }))
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'internal-user-1' }, error: null })
+    const db = {
+      auth: {
+        getSession: vi.fn(async () => ({ data: { session: { user: { id: 'auth-1' } } } })),
+      },
+      from: vi.fn((table) => {
+        if (table === 'users') {
+          return {
+            select: () => ({
+              eq: () => ({ maybeSingle }),
+            }),
+          }
+        }
+        return { insert }
+      }),
+    }
+
+    await createTierDocumentTemplateNode(db, {
+      accountId: 'acc',
+      tier: 'project',
+      domain: 'process_template',
+      scopeEntityType: 'project',
+      scopeEntityId: 'proj-1',
+      name: 'Doc',
+    })
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({
+      created_by: 'internal-user-1',
+    }))
+  })
 })
 
 describe('updateTemplateNode', () => {
@@ -112,5 +158,81 @@ describe('archiveTemplateNode', () => {
 
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_current: false }))
     expect(row.is_current).toBe(false)
+  })
+})
+
+describe('archiveProcessTemplateContent (v849)', () => {
+  it('sets is_deleted=true on the catalog row', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'c1', is_deleted: true }, error: null })
+    const select = vi.fn(() => ({ maybeSingle }))
+    const eqId = vi.fn(() => ({ select }))
+    const update = vi.fn(() => ({ eq: eqId }))
+    const db = { from: vi.fn(() => ({ update })) }
+
+    const row = await archiveProcessTemplateContent(db, 'project_charters', 'c1')
+    expect(db.from).toHaveBeenCalledWith('project_charters')
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ is_deleted: true }))
+    expect(row.is_deleted).toBe(true)
+  })
+})
+
+describe('matchArchivedCopyForCandidate', () => {
+  it('matches archived copy by candidate id or ancestor parent_node_id', () => {
+    const pmo = { id: 'pmo-1', parent_node_id: null }
+    const prog = { id: 'prog-1', parent_node_id: 'pmo-1' }
+    const rows = [pmo, prog]
+    const archived = [
+      { id: 'arch-old', parent_node_id: 'pmo-1', updated_at: '2020-01-01' },
+      { id: 'arch-new', parent_node_id: 'prog-1', updated_at: '2024-01-01' },
+    ]
+    expect(matchArchivedCopyForCandidate(prog, rows, archived)?.id).toBe('arch-new')
+    expect(matchArchivedCopyForCandidate(pmo, rows, archived)?.id).toBe('arch-old')
+    expect(matchArchivedCopyForCandidate({ id: 'other' }, rows, archived)).toBeNull()
+  })
+})
+
+describe('archiveProcessTemplateNodeAndContent (v849)', () => {
+  it('archives node then catalog row when domain is process_template', async () => {
+    const nodeMaybe = vi.fn().mockResolvedValue({ data: { id: 'n1', is_current: false }, error: null })
+    const contentMaybe = vi.fn().mockResolvedValue({ data: { id: 'c1', is_deleted: true }, error: null })
+    const linkMaybe = vi.fn().mockResolvedValue({ data: { document_table: 'project_charters' }, error: null })
+
+    const db = {
+      from: vi.fn((table) => {
+        if (table === 'pm_template_nodes') {
+          return {
+            update: () => ({
+              eq: () => ({
+                eq: () => ({
+                  select: () => ({ maybeSingle: nodeMaybe }),
+                }),
+              }),
+            }),
+          }
+        }
+        if (table === 'process_template_node_links') {
+          return {
+            select: () => ({
+              eq: () => ({ maybeSingle: linkMaybe }),
+            }),
+          }
+        }
+        return {
+          update: () => ({
+            eq: () => ({
+              select: () => ({ maybeSingle: contentMaybe }),
+            }),
+          }),
+        }
+      }),
+    }
+
+    const result = await archiveProcessTemplateNodeAndContent(db, {
+      id: 'n1',
+      domain: 'process_template',
+      domain_ref_id: 'c1',
+    })
+    expect(result.is_current).toBe(false)
+    expect(db.from).toHaveBeenCalledWith('project_charters')
   })
 })

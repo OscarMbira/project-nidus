@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { ArrowLeft, Edit2, Printer, FileText, Calendar, User, CheckCircle, Clock, Download, FileDown } from 'lucide-react'
+import { ArrowLeft, Printer, FileText, Calendar, User, CheckCircle, Clock, Download, FileDown } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { exportToPDF, exportToWord, copyToClipboard } from '@nidus/shared/utils/issueReportExport'
 import { getIssueReportById } from '../services/issueReportService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
@@ -155,13 +156,11 @@ export default function IssueReportView() {
               onExportPrint={() => exportRecordToPrint(ISSUE_REPORT_VIEW_SECTIONS, report, `IssueReport_${report.report_reference || reportId}`)}
             />
             {report.report_status === 'draft' && (
-              <button
+              <RowActionButton
+                variant="edit"
+                label="Edit issue report"
                 onClick={() => navigate(`/projects/${projectId}/issues/${issueId}/reports/${reportId}/edit`)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              />
             )}
             <div className="flex gap-2">
               <button

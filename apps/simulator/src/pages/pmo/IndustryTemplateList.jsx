@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Layers, Plus, Search, Eye, Pencil, Archive, Copy } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Layers, Plus, Search, Archive, Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import {
   listIndustryTemplates,
@@ -141,15 +142,8 @@ export default function IndustryTemplateList() {
               </span>
               <div className="mt-4 flex gap-2">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                <Link to={`/pmo/industry-templates/${r.id}`} className="text-xs text-blue-600 flex items-center gap-1">
-                  <Eye className="h-3 w-3" /> View
-                </Link>
-                <Link
-                  to={`/pmo/industry-templates/${r.id}/edit`}
-                  className="text-xs text-slate-600 flex items-center gap-1"
-                >
-                  <Pencil className="h-3 w-3" /> Edit
-                </Link>
+                <RowActionButton variant="view" label="View template" onClick={() => navigate(`/pmo/industry-templates/${r.id}`)} />
+                <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`/pmo/industry-templates/${r.id}/edit`)} />
               </div>
             </div>
           ))}
@@ -178,12 +172,8 @@ export default function IndustryTemplateList() {
                   <td className="px-4 py-2">{r.typical_duration}</td>
                   <td className="px-4 py-2 text-right">
                     <div className="flex justify-end gap-2">
-                      <Link to={`/pmo/industry-templates/${r.id}`} title="View">
-                        <Eye className="h-4 w-4" />
-                      </Link>
-                      <Link to={`/pmo/industry-templates/${r.id}/edit`} title="Edit">
-                        <Pencil className="h-4 w-4" />
-                      </Link>
+                      <RowActionButton variant="view" label="View template" onClick={() => navigate(`/pmo/industry-templates/${r.id}`)} />
+                      <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`/pmo/industry-templates/${r.id}/edit`)} />
                       <button type="button" onClick={() => handleDuplicate(r.id)} title="Duplicate">
                         <Copy className="h-4 w-4" />
                       </button>

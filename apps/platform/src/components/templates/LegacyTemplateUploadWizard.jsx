@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { RowActionButton } from '@nidus/ui'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -46,6 +47,7 @@ export default function LegacyTemplateUploadWizard({
   replaceChildrenFn = replaceTemplateChildren,
   backTo = '/pmo/industry-templates',
 }) {
+  const navigate = useNavigate()
   const [track, setTrack] = useState(defaultTrack)
   const [listType, setListType] = useState('risk_register')
   const [step, setStep] = useState('file')
@@ -439,9 +441,12 @@ export default function LegacyTemplateUploadWizard({
               >
                 {r.ok ? `✓ ${r.title} (${r.kind})` : `✗ ${r.title}: ${r.error}`}
                 {r.ok && r.kind === 'schedule' && (
-                  <Link className="ml-2 text-blue-400 hover:underline" to={`/pmo/industry-templates/${r.id}/edit`}>
-                    Edit
-                  </Link>
+                  <RowActionButton
+                    variant="edit"
+                    label="Edit template"
+                    className="ml-2"
+                    onClick={() => navigate(`/pmo/industry-templates/${r.id}/edit`)}
+                  />
                 )}
               </li>
             ))}

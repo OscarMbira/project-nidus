@@ -4,20 +4,18 @@ import { getPortfolios } from '../../services/portfolioService'
 import { getAllPortfolioProjects } from '../../services/portfolioService'
 import { platformDb } from '@nidus/supabase'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
+import { DashboardStatCard } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-function KpiCard({ label, value, icon: Icon, colour }) {
+function KpiCard({ label, value, icon: Icon, onClick }) {
   return (
-    <div className="bg-gray-800 dark:bg-gray-800 light:bg-white border border-gray-700 dark:border-gray-700 light:border-gray-200 rounded-lg p-5 flex items-center gap-4">
-      <div className={`p-3 rounded-lg ${colour}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-      <div>
-        <p className="text-sm text-gray-400">{label}</p>
-        <p className="text-2xl font-bold text-white dark:text-white light:text-gray-900">{value}</p>
-      </div>
-    </div>
+    <DashboardStatCard
+      label={label}
+      value={value}
+      icon={Icon}
+      onClick={onClick}
+    />
   )
 }
 
@@ -47,6 +45,7 @@ export default function PortfolioDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [organizationId, setOrganizationId] = useState(null)
+  const [activeOnly, setActiveOnly] = useState(false)
 
   async function load() {
     setLoading(true)
@@ -85,6 +84,7 @@ export default function PortfolioDashboard() {
   }, [])
 
   const activeCount   = portfolios.filter(p => p.portfolio_status === 'active').length
+  const displayPortfolios = activeOnly ? portfolios.filter(p => p.portfolio_status === 'active') : portfolios
   const totalBudget   = portfolios.reduce((s, p) => s + (p.total_budget || 0), 0)
   const avgHealth     = portfolios.length
     ? portfolios.reduce((s, p) => s + (p.overall_health_score || 0), 0) / portfolios.length
@@ -134,10 +134,11 @@ export default function PortfolioDashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Total Portfolios"  value={portfolios.length} icon={Briefcase}   colour="bg-blue-600" />
-        <KpiCard label="Active Portfolios" value={activeCount}        icon={Activity}    colour="bg-green-600" />
-        <KpiCard label="Total Budget"      value={fmt(totalBudget)}   icon={DollarSign}  colour="bg-blue-600" />
-        <KpiCard label="Avg Health Score"  value={`${Math.round(avgHealth)}%`} icon={TrendingUp} colour="bg-orange-600" />
+        <KpiCard label="Total Portfolios"  value={portfolios.length} icon={Briefcase}  onClick={() => setActiveOnly(false)} />
+        <KpiCard label="Active Portfolios" value={activeCount}       icon={Activity}   onClick={() => setActiveOnly(true)} />
+        {/* Total Budget (sum) and Avg Health Score (average) are blended/calculated metrics — no single filtered list behind them, so no onClick (v893 rule). */}
+        <KpiCard label="Total Budget"      value={fmt(totalBudget)}  icon={DollarSign} />
+        <KpiCard label="Avg Health Score"  value={`${Math.round(avgHealth)}%`} icon={TrendingUp} />
       </div>
 
       {organizationId && (
@@ -146,10 +147,18 @@ export default function PortfolioDashboard() {
 
       {/* Portfolio Health Table */}
       <div className="bg-gray-800 dark:bg-gray-800 light:bg-white border border-gray-700 dark:border-gray-700 light:border-gray-200 rounded-lg overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-700">
+        <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between gap-3 flex-wrap">
           <h2 className="text-white dark:text-white light:text-gray-900 font-semibold">Portfolio Health Overview</h2>
+          {activeOnly && (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="px-2 py-1 rounded bg-gray-700 text-gray-200">Active only</span>
+              <button type="button" onClick={() => setActiveOnly(false)} className="text-blue-400 hover:underline">
+                Clear
+              </button>
+            </div>
+          )}
         </div>
-        {portfolios.length === 0 ? (
+        {displayPortfolios.length === 0 ? (
           <div className="text-center py-12 text-gray-500">No portfolios found.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -163,12 +172,12 @@ export default function PortfolioDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {portfolios.map((p, i) => (
+                {displayPortfolios.map((p, i) => (
                   <tr
                     key={p.id}
                     className={`border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-700/10'}`}
                   >
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <TableRowNumberCell number={getDisplayRowNumber(i)} />
                     <td className="px-4 py-3 text-white font-medium">{p.portfolio_name}</td>
                     <td className="px-4 py-3 text-gray-300 font-mono text-xs">{p.portfolio_code}</td>
                     <td className="px-4 py-3">{statusBadge(p.portfolio_status)}</td>

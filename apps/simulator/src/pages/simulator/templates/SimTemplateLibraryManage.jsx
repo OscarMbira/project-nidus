@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Plus, Pencil, Eye } from 'lucide-react'
+import { Search, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getTemplatesForAccount } from '../../../services/sim/simTemplateLibraryService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 import ExportListMenu from '../../../components/ui/ExportListMenu'
@@ -112,12 +113,8 @@ export default function TemplateLibraryManage() {
                 {r.status} · {r.template_type_code}
               </p>
               <div className="mt-2 flex gap-2">
-                <button type="button" onClick={() => navigate(`${BASE}/${r.id}`)} className="text-sm text-violet-600 inline-flex items-center gap-1">
-                  <Eye className="h-4 w-4" /> View
-                </button>
-                <button type="button" onClick={() => navigate(`${BASE}/${r.id}/edit`)} className="text-sm inline-flex items-center gap-1">
-                  <Pencil className="h-4 w-4" /> Edit
-                </button>
+                <RowActionButton variant="view" label="View template" onClick={() => navigate(`${BASE}/${r.id}`)} />
+                <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${BASE}/${r.id}/edit`)} />
               </div>
             </div>
           ))}
@@ -154,12 +151,8 @@ export default function TemplateLibraryManage() {
                   <TableCell>{r.version}</TableCell>
                   <TableCell className="text-sm text-gray-600">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</TableCell>
                   <TableCell className="text-right space-x-2">
-                    <button type="button" className="text-violet-600 text-sm" onClick={() => navigate(`${BASE}/${r.id}`)}>
-                      View
-                    </button>
-                    <button type="button" className="text-sm" onClick={() => navigate(`${BASE}/${r.id}/edit`)}>
-                      Edit
-                    </button>
+                    <RowActionButton variant="view" label="View template" onClick={() => navigate(`${BASE}/${r.id}`)} />
+                    <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${BASE}/${r.id}/edit`)} />
                   </TableCell>
                 </TableRow>
               ))}

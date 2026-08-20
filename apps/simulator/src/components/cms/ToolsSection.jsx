@@ -48,10 +48,11 @@ export default function ToolsSection({ cmsId, readOnly = false }) {
 
   const handleSubmit = async () => {
     try {
+      const { id, created_at, ...editableFields } = formData
       if (editingId) {
-        await updateTool(editingId, formData)
+        await updateTool(editingId, editableFields)
       } else {
-        await addTool(cmsId, formData)
+        await addTool(cmsId, editableFields)
       }
       await loadTools()
       setShowForm(false)
@@ -65,6 +66,8 @@ export default function ToolsSection({ cmsId, readOnly = false }) {
 
   const handleEdit = (tool) => {
     setFormData({
+      id: tool.id,
+      created_at: tool.created_at,
       tool_name: tool.tool_name || '',
       tool_type: tool.tool_type || '',
       tool_description: tool.tool_description || '',

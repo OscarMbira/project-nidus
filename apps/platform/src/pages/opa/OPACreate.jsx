@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createOPA, listOPACategories, listProjectsForOrganisation } from '../../services/opaService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const OPA_TYPES = ['template', 'guideline', 'standard', 'procedure', 'policy', 'historical_info', 'lessons_learned', 'other']
@@ -26,6 +27,7 @@ const initial = {
 
 export default function OPACreate() {
   const navigate = useNavigate()
+  const [formTab, setFormTab] = useState('wizard')
   const [step, setStep] = useState(1)
   const [accountId, setAccountId] = useState(null)
   const [categories, setCategories] = useState([])
@@ -114,6 +116,24 @@ export default function OPACreate() {
         <ArrowLeft className="h-4 w-4" /> Back to list
       </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">New Organisational Process Asset</h1>
+
+      <div className="mb-4">
+        <DetailAuditTabList
+          activeTab={formTab}
+          onChange={setFormTab}
+          tabs={[
+            { value: 'wizard', label: 'Wizard' },
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
+      </div>
+
+      {formTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this OPA record is saved.</p>
+      )}
+
+      {formTab === 'wizard' && (
+      <>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         Step {step} of 2 — {step === 1 ? 'Basics' : 'Document & dates'}
       </p>
@@ -295,6 +315,8 @@ export default function OPACreate() {
             </div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   )

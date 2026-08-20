@@ -966,6 +966,36 @@ export function AuthRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                {/* Short clean URL for invitation emails: /i/{token} (?action=decline for Decline) */}
+                <Route path="i/:token" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <InvitationAccept />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* Legacy routes kept for older invitation emails and in-app links */}
+                <Route path="auth/invitation/:projectSlug/:roleSlug/:token" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <InvitationAccept />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="auth/invitation/:projectSlug/:roleSlug" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <InvitationAccept />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="auth/invitation/:token" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <InvitationAccept />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
     </>
   )
 }

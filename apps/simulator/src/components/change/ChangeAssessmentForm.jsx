@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
-import { simDb } from '@nidus/supabase';
+import { simDb, platformDb } from '@nidus/supabase';
 import { X, FileText, DollarSign, Clock, Target, AlertTriangle, TrendingUp } from 'lucide-react';
 import { createChangeAssessment, updateChangeAssessment } from '../../services/changeManagementService';
 import InheritedChangeRequestFields from '../../features/local-data-extensions/components/InheritedChangeRequestFields';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function ChangeAssessmentForm({
   projectId,
@@ -79,6 +85,21 @@ export default function ChangeAssessmentForm({
     estimated_duration_days: assessment?.estimated_duration_days || 0,
     implementation_complexity: assessment?.implementation_complexity || 'medium'
   });
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (activeSection !== 'audit' || !assessment) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        assessment.created_by,
+        assessment.updated_by,
+        assessment.assessed_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeSection, assessment]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -658,31 +679,43 @@ export default function ChangeAssessmentForm({
         </div>
 
         {/* Section Navigation */}
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <nav className="flex overflow-x-auto">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={`flex items-center gap-2 px-4 py-4 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
-                    activeSection === section.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {section.label}
-                </button>
-              );
-            })}
-          </nav>
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 px-2">
+          <DetailAuditTabList
+            activeTab={activeSection}
+            onChange={setActiveSection}
+            ariaLabel="Change assessment sections"
+            tabs={[...sections.map((s) => ({ value: s.id, label: s.label })), { value: 'audit', label: 'Audit details' }]}
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-6">
-            {renderSection()}
+            {activeSection === 'audit' ? (
+              !assessment?.id ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this assessment is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who created or changed this change assessment, and how it is classified.">
+                  <AuditCard title="Identity" description="How this assessment is labelled and tracked.">
+                    <AuditField label="Impact level" value={humanizeAuditToken(formData.impact_level || assessment.impact_level)} />
+                    <AuditField label="Feasibility rating" value={humanizeAuditToken(formData.feasibility_rating || assessment.feasibility_rating)} />
+                    <AuditField label="Recommendation" value={humanizeAuditToken(formData.recommendation || assessment.recommendation)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this assessment sits.">
+                    <AuditField label="Cost impact level" value={humanizeAuditToken(formData.cost_impact_level || assessment.cost_impact_level)} />
+                    <AuditField label="Schedule impact level" value={humanizeAuditToken(formData.schedule_impact_level || assessment.schedule_impact_level)} />
+                    <AuditField label="Implementation complexity" value={humanizeAuditToken(formData.implementation_complexity || assessment.implementation_complexity)} />
+                    <AuditField label="Assessed by" value={assessment.assessed_by ? auditUserLabels[assessment.assessed_by] || null : null} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this assessment was created and last changed.">
+                    <AuditField label="Created by" value={assessment.created_by ? auditUserLabels[assessment.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={assessment.created_at} />
+                    <AuditField label="Updated by" value={assessment.updated_by ? auditUserLabels[assessment.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={assessment.updated_at} />
+                    <AuditTimestampPair dateLabel="Assessment date" value={assessment.assessment_date || formData.assessment_date} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )
+            ) : renderSection()}
             {changeRequestId && accountId && projectId && (
               <InheritedChangeRequestFields
                 db={simDb}

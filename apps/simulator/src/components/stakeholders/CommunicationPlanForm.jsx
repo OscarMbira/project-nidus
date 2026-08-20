@@ -4,6 +4,13 @@
 
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const COMM_TYPES = ['update', 'report', 'meeting', 'newsletter', 'briefing', 'consultation', 'survey', 'other']
 const CHANNELS = ['email', 'teams', 'phone', 'in-person', 'video-call', 'portal', 'notice-board']
@@ -24,6 +31,21 @@ export default function CommunicationPlanForm({ plan, projectId, onSave, onCance
     plan_end_date: '',
     notes: '',
   })
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !plan) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        plan.created_by,
+        plan.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, plan])
 
   useEffect(() => {
     if (plan) {
@@ -65,6 +87,34 @@ export default function CommunicationPlanForm({ plan, projectId, onSave, onCance
             <button type="button" onClick={onCancel} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><X className="h-5 w-5" /></button>
           </div>
           <form onSubmit={handleSubmit} className="p-4 space-y-4">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+            {formTab === 'audit' && (
+              !plan?.id ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this communication plan is saved.</p>
+              ) : (
+                <AuditDetailsPanel description="Who created or changed this communication plan, and how it is classified.">
+                  <AuditCard title="Identity" description="How this plan is labelled and tracked.">
+                    <AuditField label="Plan name" value={formData.plan_name || plan.plan_name} />
+                    <AuditField label="Status" value={humanizeAuditToken(formData.plan_status || plan.plan_status)} />
+                  </AuditCard>
+                  <AuditCard title="Classification" description="Where this plan sits.">
+                    <AuditField label="Objectives" value={formData.communication_objectives || plan.communication_objectives} />
+                    <AuditField label="Start date" value={formData.plan_start_date || plan.plan_start_date} />
+                    <AuditField label="End date" value={formData.plan_end_date || plan.plan_end_date} />
+                  </AuditCard>
+                  <AuditCard title="Record history" description="When this plan was created and last changed.">
+                    <AuditField label="Created by" value={plan.created_by ? auditUserLabels[plan.created_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Created at" value={plan.created_at} />
+                    <AuditField label="Updated by" value={plan.updated_by ? auditUserLabels[plan.updated_by] || null : null} />
+                    <AuditTimestampPair dateLabel="Last updated" value={plan.updated_at} />
+                  </AuditCard>
+                </AuditDetailsPanel>
+              )
+            )}
+
+            {formTab === 'details' && (
+            <>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Plan name</label>
               <input type="text" name="plan_name" value={formData.plan_name} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
@@ -97,6 +147,8 @@ export default function CommunicationPlanForm({ plan, projectId, onSave, onCance
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
               <textarea name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
             </div>
+            </>
+            )}
             <div className="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button type="button" onClick={onCancel} className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">Cancel</button>
               <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Save className="h-4 w-4" />Save</button>

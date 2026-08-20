@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Plus, Search, Calendar, Clock } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import { getQualityReviews, deleteQualityReview } from '../services/qualityManagementService';
 import QualityReviewForm from '../components/quality/QualityReviewForm';
 import ExportListMenu from '@nidus/ui/ExportListMenu';
@@ -343,21 +344,13 @@ export default function QualityReviews() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleEditReview(review)}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-2"
-                        title="Edit Review"
-                      >
-                        Edit
-                      </button>
-                      <button
+                      <RowActionButton variant="edit" label="Edit review" onClick={() => handleEditReview(review)} />
+                      <RowActionButton
+                        variant="delete"
+                        label="Delete review"
                         onClick={() => handleDelete(review)}
                         disabled={deleting === review.id}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                        title="Delete Review"
-                      >
-                        {deleting === review.id ? '…' : 'Delete'}
-                      </button>
+                      />
                     </td>
                   </tr>
                 ))}

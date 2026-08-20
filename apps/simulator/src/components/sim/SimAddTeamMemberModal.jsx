@@ -7,6 +7,7 @@ import {
   addSimTeamMember,
 } from '../../services/sim/simTeamService'
 import { useToast } from '../../hooks/useToast'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId, practiceProjectId, onSuccess }) {
   const { showToast } = useToast()
@@ -21,6 +22,7 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
   const [allocation, setAllocation] = useState(80)
   const [allocWarning, setAllocWarning] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
 
   useEffect(() => {
     if (!isOpen || !practiceTeamId || !practiceProjectId) return
@@ -117,7 +119,11 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Only users already on the practice project can be added.</p>
 
-        {loading ? (
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Audit details appear after this member is added.</p>
+        ) : loading ? (
           <div className="flex justify-center py-8">
             <Loader className="w-8 h-8 animate-spin text-blue-500" />
           </div>

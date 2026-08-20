@@ -92,6 +92,12 @@ export async function updateProcessTemplateContent(db, table, id, { title, descr
   if (title !== undefined) patch.title = title
   if (description !== undefined) patch.description = description
   if (documentData !== undefined) patch.document_data = documentData
+  try {
+    const { data: { user } } = await db.auth.getUser()
+    if (user?.id) patch.updated_by = user.id
+  } catch {
+    // leave updated_by unset when auth is unavailable (tests / service role)
+  }
   const { data, error } = await db.from(table).update(patch).eq('id', id).select().maybeSingle()
   if (error) throw error
   return data

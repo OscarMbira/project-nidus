@@ -3,9 +3,12 @@
  * Provides export functionality for Risk Register (PDF, CSV, Excel, Print)
  */
 
+import { addCanvasImagePages } from './pdfCanvasPagination.js'
+
 /**
  * Export Risk Register to PDF
  */
+
 export async function exportRiskRegisterToPDF(register, risks, filename = null) {
   try {
     const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
@@ -17,7 +20,8 @@ export async function exportRiskRegisterToPDF(register, risks, filename = null) 
     container.style.position = 'absolute'
     container.style.left = '-9999px'
     container.style.width = '210mm'
-    container.style.padding = '20mm'
+    // Tighter padding so header + legend + ~11-row table fits one A4 page
+    container.style.padding = '10mm 12mm'
     container.style.backgroundColor = 'white'
     container.style.fontFamily = 'Arial, sans-serif'
     container.className = 'risk-register-export-pdf'
@@ -38,18 +42,7 @@ export async function exportRiskRegisterToPDF(register, risks, filename = null) 
     const imgWidth = 210
     const pageHeight = 297
     const imgHeight = (canvas.height * imgWidth) / canvas.width
-    let heightLeft = imgHeight
-    let position = 0
-
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-    heightLeft -= pageHeight
-
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight
-      pdf.addPage()
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
-      heightLeft -= pageHeight
-    }
+    addCanvasImagePages(pdf, imgData, { imgWidth, imgHeight, pageHeight })
 
     document.body.removeChild(container)
 
@@ -154,46 +147,67 @@ function generateRiskRegisterPDFHTML(register, risks) {
     return 'green'
   }
 
+  // Supabase embed uses `projects:project_id(...)` → `register.projects`; some callers still pass `project`.
+  const project = register.projects || register.project || {}
+  const projectCode = escapeHtml(project.project_code || register.project_code || 'N/A')
+  const projectName = escapeHtml(project.project_name || register.project_name || 'N/A')
+  const generatedAt = new Date().toLocaleString()
+
   return `
     <div style="color: black;">
-      <h1 style="font-size: 24px; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+      <h1 style="font-size: 18px; margin: 0 0 8px 0; border-bottom: 2px solid #000; padding-bottom: 6px;">
         Risk Register
       </h1>
-      <div style="margin-bottom: 20px;">
-        <p><strong>Reference:</strong> ${register.register_reference || 'N/A'}</p>
-        <p><strong>Version:</strong> ${register.version_number || '1.0'}</p>
-        <p><strong>Project:</strong> ${register.project?.project_name || 'N/A'}</p>
-        ${register.last_review_date ? `<p><strong>Last Review:</strong> ${formatDate(register.last_review_date)}</p>` : ''}
-        ${register.next_review_date ? `<p><strong>Next Review:</strong> ${formatDate(register.next_review_date)}</p>` : ''}
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 10px;">
+        <div style="flex: 1; min-width: 0; font-size: 11px; line-height: 1.35;">
+          <p style="margin: 0 0 2px 0;"><strong>Reference:</strong> ${escapeHtml(register.register_reference || 'N/A')}</p>
+          <p style="margin: 0 0 2px 0;"><strong>Version:</strong> ${escapeHtml(register.version_number || '1.0')}</p>
+          <p style="margin: 0 0 2px 0;"><strong>Project Code:</strong> ${projectCode}</p>
+          <p style="margin: 0 0 2px 0;"><strong>Project Name:</strong> ${projectName}</p>
+          ${register.last_review_date ? `<p style="margin: 0 0 2px 0;"><strong>Last Review:</strong> ${formatDate(register.last_review_date)}</p>` : ''}
+          ${register.next_review_date ? `<p style="margin: 0 0 2px 0;"><strong>Next Review:</strong> ${formatDate(register.next_review_date)}</p>` : ''}
+        </div>
+        <div style="flex: 0 0 240px;">
+          <div style="border: 1px solid #111; border-radius: 4px; padding: 6px 8px; background-color: #fffbeb; font-size: 9px; line-height: 1.35;">
+            <div style="font-size: 11px; font-weight: bold; margin-bottom: 4px; border-bottom: 1px solid #d1d5db; padding-bottom: 3px;">Legend</div>
+            <p style="margin: 0 0 4px 0;"><strong>P</strong> — Probability (1–5): 1=Very Low … 5=Very High</p>
+            <p style="margin: 0 0 4px 0;"><strong>I</strong> — Impact (1–5): 1=Very Low … 5=Very High</p>
+            <p style="margin: 0;"><strong>Score</strong> — P × I (range 1–25)</p>
+          </div>
+          <p style="margin: 4px 0 0 0; font-size: 9px; color: #374151;">
+            <strong>Generated:</strong> ${escapeHtml(generatedAt)}
+          </p>
+        </div>
       </div>
 
       ${register.risk_tolerance_statement ? `
-      <div style="margin-bottom: 20px; padding: 10px; background-color: #f3f4f6; border-left: 4px solid #3b82f6;">
-        <h3 style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">Risk Tolerance Statement</h3>
-        <p style="text-align: justify;">${escapeHtml(register.risk_tolerance_statement)}</p>
+      <div style="margin-bottom: 8px; padding: 6px 8px; background-color: #f3f4f6; border-left: 3px solid #3b82f6;">
+        <h3 style="font-size: 11px; font-weight: bold; margin: 0 0 3px 0;">Risk Tolerance Statement</h3>
+        <p style="margin: 0; font-size: 10px; text-align: justify;">${escapeHtml(register.risk_tolerance_statement)}</p>
       </div>
       ` : ''}
 
-      <h2 style="font-size: 18px; margin-top: 30px; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">
+      <h2 style="font-size: 14px; margin: 8px 0 4px 0; border-bottom: 1px solid #000; padding-bottom: 3px;">
         Risks (${risks.length})
       </h2>
 
       ${risks.length === 0 ? `
-        <p style="text-align: center; color: #666; padding: 20px;">No risks registered</p>
+        <p style="text-align: center; color: #666; padding: 12px; font-size: 11px;">No risks registered</p>
       ` : `
-        <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px;">
+        <table style="width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 9px;">
           <thead>
             <tr style="background-color: #f3f4f6;">
-              <th style="border: 1px solid #000; padding: 6px; text-align: left;">ID</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: left;">Title</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">Type</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">Category</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">P</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">I</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">Score</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">Level</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: center;">Status</th>
-              <th style="border: 1px solid #000; padding: 6px; text-align: left;">Owner</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center; width: 28px;">#</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: left;">ID</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: left;">Title</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">Type</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">Category</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">P</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">I</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">Score</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">Level</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: center;">Status</th>
+              <th style="border: 1px solid #000; padding: 3px 4px; text-align: left;">Owner</th>
             </tr>
           </thead>
           <tbody>
@@ -201,29 +215,25 @@ function generateRiskRegisterPDFHTML(register, risks) {
               const levelColor = getRiskLevelColor(risk.pre_risk_score || '')
               return `
                 <tr style="page-break-inside: avoid;">
-                  <td style="border: 1px solid #000; padding: 6px;">${escapeHtml(risk.risk_identifier || `R${index + 1}`)}</td>
-                  <td style="border: 1px solid #000; padding: 6px;">${escapeHtml(risk.risk_title || '')}</td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center; text-transform: capitalize;">${escapeHtml(risk.risk_type || '')}</td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center; text-transform: capitalize;">${escapeHtml(risk.risk_category || '')}</td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center;">${risk.pre_probability || ''}</td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center;">${risk.pre_impact || ''}</td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center;">${risk.pre_expected_value || ''}</td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center; background-color: ${levelColor === 'red' ? '#fee2e2' : levelColor === 'orange' ? '#fed7aa' : levelColor === 'yellow' ? '#fef3c7' : '#dcfce7'};">
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; font-weight: 600;">${index + 1}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px;">${escapeHtml(risk.risk_identifier || `R${index + 1}`)}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px;">${escapeHtml(risk.risk_title || '')}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; text-transform: capitalize;">${escapeHtml(risk.risk_type || '')}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; text-transform: capitalize;">${escapeHtml(risk.risk_category || '')}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center;">${risk.pre_probability || ''}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center;">${risk.pre_impact || ''}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center;">${risk.pre_expected_value || ''}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; background-color: ${levelColor === 'red' ? '#fee2e2' : levelColor === 'orange' ? '#fed7aa' : levelColor === 'yellow' ? '#fef3c7' : '#dcfce7'};">
                     ${escapeHtml((risk.pre_risk_score || '').replace('_', ' ').toUpperCase())}
                   </td>
-                  <td style="border: 1px solid #000; padding: 6px; text-align: center; text-transform: capitalize;">${escapeHtml(risk.status_enum || risk.status || '')}</td>
-                  <td style="border: 1px solid #000; padding: 6px;">${escapeHtml(risk.risk_owner?.full_name || '')}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px; text-align: center; text-transform: capitalize;">${escapeHtml(risk.status_enum || risk.status || '')}</td>
+                  <td style="border: 1px solid #000; padding: 3px 4px;">${escapeHtml(risk.risk_owner?.full_name || '')}</td>
                 </tr>
               `
             }).join('')}
           </tbody>
         </table>
       `}
-
-      <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #000; font-size: 10px; text-align: center; color: #666;">
-        <p>Generated on ${new Date().toLocaleString()}</p>
-        <p>Risk Register Reference: ${register.register_reference || 'N/A'}</p>
-      </div>
     </div>
   `
 }

@@ -1,8 +1,16 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { RowActionButton } from '@nidus/ui'
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Pencil, FlaskConical } from 'lucide-react'
+import { ArrowLeft, FlaskConical } from 'lucide-react'
 import * as platform from '../../services/testingCentreService'
 import * as sim from '../../services/simTestingCentreService'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 function fmtDate(s) {
   if (!s) return '—'
@@ -49,11 +57,22 @@ function ProseBlock({ text }) {
 }
 
 export default function TestCaseDetailPage({ pathPrefix, mode }) {
+  const navigate = useNavigate()
   const { id } = useParams()
   const svc = mode === 'sim' ? sim : platform
   const [row, setRow] = useState(null)
   const [err, setErr] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !row) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [row.created_by, row.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeTab, row])
 
   useEffect(() => {
     let cancelled = false
@@ -140,16 +159,38 @@ export default function TestCaseDetailPage({ pathPrefix, mode }) {
               {row.title}
             </h1>
           </div>
-          <Link
-            to={`${pathPrefix}/cases/${id}/edit`}
-            className="inline-flex items-center justify-center gap-2 shrink-0 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2.5 shadow-sm"
-          >
-            <Pencil className="w-4 h-4" />
-            Edit
-          </Link>
+          <RowActionButton
+            variant="edit"
+            label="Edit test case"
+            onClick={() => navigate(`${pathPrefix}/cases/${id}/edit`)}
+          />
         </div>
       </div>
 
+      <div className="mb-4">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+      </div>
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this test case, and how it is classified.">
+          <AuditCard title="Identity" description="How this test case is labelled and tracked.">
+            <AuditField label="Code" value={row.test_case_code} />
+            <AuditField label="Title" value={row.title} />
+            <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="How this test case is categorised.">
+            <AuditField label="Test type" value={humanizeAuditToken(row.test_type)} />
+            <AuditField label="Priority" value={humanizeAuditToken(row.priority)} />
+            <AuditField label="Methodology" value={humanizeAuditToken(row.methodology_type)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this test case was created and last changed.">
+            <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
+            <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="space-y-4">
         <Section title="Summary">
           <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -274,6 +315,7 @@ export default function TestCaseDetailPage({ pathPrefix, mode }) {
           )}
         </Section>
       </div>
+      )}
     </div>
   )
 }

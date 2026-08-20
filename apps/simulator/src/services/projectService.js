@@ -31,10 +31,43 @@ export function sanitizeProjectSearchTerm(raw) {
   return raw.trim().replace(/%/g, '').replace(/\\/g, '').replace(/_/g, ' ').replace(/,/g, ' ');
 }
 
+/** Role names that count as assigned Project Manager for My Projects */
+export const MY_PROJECTS_PM_ROLE_NAMES = new Set([
+  'project_manager',
+  'programme_manager',
+  'pm_project_manager',
+]);
+
 /**
- * Get user's projects (projects they're assigned to)
- * Two-step query: membership ids, then `projects` — avoids PostgREST `user_projects → projects!inner`
- * embed RLS edge cases (403 / permission errors when expanding nested rows).
+ * Merge project IDs where the user is the assigned PM.
+ * Pure helper for unit tests — does not query the DB.
+ * @param {{ managedRows?: Array<{id?: string}>, membershipRows?: Array<{project_id?: string, role?: {role_name?: string}}>, userRoleRows?: Array<{project_id?: string, roles?: {role_name?: string}}> }} sources
+ * @returns {string[]}
+ */
+export function mergeMyPmProjectIds({ managedRows = [], membershipRows = [], userRoleRows = [] } = {}) {
+  const ids = new Set();
+  for (const p of managedRows) {
+    if (p?.id) ids.add(p.id);
+  }
+  for (const m of membershipRows) {
+    const roleName = m?.role?.role_name;
+    if (roleName && MY_PROJECTS_PM_ROLE_NAMES.has(roleName) && m.project_id) {
+      ids.add(m.project_id);
+    }
+  }
+  for (const ur of userRoleRows) {
+    const roleName = ur?.roles?.role_name;
+    if (roleName && MY_PROJECTS_PM_ROLE_NAMES.has(roleName) && ur.project_id) {
+      ids.add(ur.project_id);
+    }
+  }
+  return [...ids];
+}
+
+/**
+ * Get projects assigned to the current user as Project Manager.
+ * Sources: projects.project_manager_user_id, PM project_memberships, project-scoped PM user_roles.
+ * Does not use user_projects — that table is blanket-granted for RLS demos (v825/v826) and over-includes.
  * @param {string} userId - User ID (public.users.id)
  * @param {Object} filters - Filter options (status_id; search is applied client-side when set)
  * @param {{ signal?: AbortSignal }} [options]
@@ -42,25 +75,53 @@ export function sanitizeProjectSearchTerm(raw) {
  */
 export async function getMyProjects(userId, filters = {}, options = {}) {
   try {
-    let upQuery = platformDb
-      .from('user_projects')
-      .select('project_id')
-      .eq('user_id', userId)
-      .eq('is_deleted', false);
+    const withSignal = (query) => (options.signal ? query.abortSignal(options.signal) : query);
 
-    if (options.signal) {
-      upQuery = upQuery.abortSignal(options.signal);
-    }
+    const [managedRes, membershipsRes, userRolesRes] = await Promise.all([
+      withSignal(
+        platformDb
+          .from('projects')
+          .select('id')
+          .eq('project_manager_user_id', userId)
+          .eq('is_deleted', false)
+      ),
+      withSignal(
+        platformDb
+          .from('project_memberships')
+          .select('project_id, role:project_roles(role_name)')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .or('invitation_status.eq.accepted,invitation_status.is.null')
+      ),
+      withSignal(
+        platformDb
+          .from('user_roles')
+          .select('project_id, roles:roles!user_roles_role_id_fkey(role_name)')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .eq('is_deleted', false)
+          .not('project_id', 'is', null)
+      ),
+    ]);
 
-    const { data: upRows, error: upError } = await upQuery;
-    if (upError) {
-      if (isAbortLike(upError)) {
-        return { success: false, aborted: true, error: upError.message || '' };
+    for (const res of [managedRes, membershipsRes, userRolesRes]) {
+      if (res.error && isAbortLike(res.error)) {
+        return { success: false, aborted: true, error: res.error.message || '' };
       }
-      throw upError;
+    }
+    if (managedRes.error) throw managedRes.error;
+    if (membershipsRes.error) {
+      console.warn('getMyProjects: project_memberships', membershipsRes.error.message);
+    }
+    if (userRolesRes.error) {
+      console.warn('getMyProjects: user_roles', userRolesRes.error.message);
     }
 
-    const ids = [...new Set((upRows || []).map((r) => r.project_id).filter(Boolean))];
+    const ids = mergeMyPmProjectIds({
+      managedRows: managedRes.data || [],
+      membershipRows: membershipsRes.error ? [] : membershipsRes.data || [],
+      userRoleRows: userRolesRes.error ? [] : userRolesRes.data || [],
+    });
     if (ids.length === 0) {
       return { success: true, data: [] };
     }

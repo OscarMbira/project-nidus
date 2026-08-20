@@ -48,6 +48,7 @@ import {
 import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../../components/pm/ManagerAppointmentForm'
 import { isManagerAppointmentRole } from '@nidus/shared/utils/appointmentRoleUtils'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
+import SearchableSelect from '../../components/ui/SearchableSelect'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -691,6 +692,24 @@ export default function SendRoleInvites() {
 
   const roleSelectDisabled = !selectedProject || availableRoles.length === 0
 
+  const projectSelectOptions = useMemo(
+    () =>
+      projects.map((project) => ({
+        value: project.id,
+        label: `${project.project_name} (${project.project_code || 'No code'})`,
+      })),
+    [projects],
+  )
+
+  const roleSelectOptions = useMemo(
+    () =>
+      availableRoles.map((role) => ({
+        value: role.id,
+        label: role.role_display_name || role.role_name,
+      })),
+    [availableRoles],
+  )
+
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
       <div className="mb-6 sm:mb-8">
@@ -856,26 +875,22 @@ export default function SendRoleInvites() {
                       <span>Select Project *</span>
                     </span>
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={projectSelectOptions}
                     value={selectedProject}
-                    onChange={(e) => {
-                      setSelectedProject(e.target.value)
+                    onChange={(val) => {
+                      setSelectedProject(val)
                       setSelectedRole('')
                       setMessage('')
                       setInviteExpirySelect('account')
                       resetMessageTemplateState()
                     }}
+                    placeholder="Choose a project..."
+                    searchPlaceholder="Search projects..."
                     required
                     disabled={formDisabled}
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white disabled:opacity-60"
-                  >
-                    <option value="">Choose a project...</option>
-                    {projects.map((project) => (
-                      <option key={project.id} value={project.id}>
-                        {project.project_name} ({project.project_code || 'No code'})
-                      </option>
-                    ))}
-                  </select>
+                    combobox
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -884,26 +899,22 @@ export default function SendRoleInvites() {
                       <span>Select Role *</span>
                     </span>
                   </label>
-                  <select
+                  <SearchableSelect
+                    options={roleSelectOptions}
                     value={selectedRole}
-                    onChange={(e) => setSelectedRole(e.target.value)}
-                    required
-                    className="w-full px-3 sm:px-4 py-2.5 sm:py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                    disabled={formDisabled || roleSelectDisabled}
-                  >
-                    <option value="">
-                      {!selectedProject
+                    onChange={setSelectedRole}
+                    placeholder={
+                      !selectedProject
                         ? 'Select a project first'
                         : availableRoles.length === 0
                           ? 'No roles available'
-                          : 'Choose a role...'}
-                    </option>
-                    {availableRoles.map((role, index) => (
-                      <option key={role.id} value={role.id}>
-                        {role.role_display_name || role.role_name}
-                      </option>
-                    ))}
-                  </select>
+                          : 'Choose a role...'
+                    }
+                    searchPlaceholder="Search roles..."
+                    required
+                    disabled={formDisabled || roleSelectDisabled}
+                    combobox
+                  />
                   <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     Team Manager and Team Member are reserved for Project Managers.
                   </p>

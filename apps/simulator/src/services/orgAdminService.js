@@ -11,6 +11,9 @@ import { assignProjectRole } from './roleService'
 import { inviteUserToProject } from './projectMembershipService'
 import { sendProjectInvitation } from './invitationService'
 import { resolveInviterDisplayNameFromUser } from '@nidus/shared/utils/invitationInviteeFormat'
+import { getAssignableProjectRoles } from './organisationCustomRoleService'
+
+const TEAM_TIER_ROLE_NAMES = new Set(['team_manager', 'team_member', 'pm_team_manager', 'pm_team_member'])
 
 /**
  * Check if user is Organization Admin
@@ -151,57 +154,22 @@ export async function getAssignableRolesForOrgAdmin() {
  */
 export async function getProjectRoles(projectId) {
   try {
-    // Try project_roles table first
-    const { data: projectRoles, error: projectRolesError } = await supabase
-      .from('project_roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('project_id', projectId)
-      .eq('is_active', true)
-      .eq('is_template', false)
-      .neq('role_name', 'team_manager')
-      .neq('role_name', 'team_member')
-      .neq('role_name', 'pm_team_manager')
-      .neq('role_name', 'pm_team_member')
+    // v906/v908: level-restricted, org-custom-role-aware catalog from the shared RPC
+    // (replaces the old raw project_roles/roles queries — same team-tier exclusion kept below).
+    const result = await getAssignableProjectRoles(projectId)
+    if (!result.success) throw new Error(result.error)
 
-    if (!projectRolesError && projectRoles) {
-      // Also get template roles
-      const { data: templates } = await supabase
-        .from('project_roles')
-        .select('id, role_name, role_display_name, role_description, role_level')
-        .eq('is_template', true)
-        .eq('is_active', true)
-        .neq('role_name', 'team_manager')
-        .neq('role_name', 'team_member')
-        .neq('role_name', 'pm_team_manager')
-        .neq('role_name', 'pm_team_member')
+    const data = (result.data || [])
+      .filter((r) => !TEAM_TIER_ROLE_NAMES.has(r.role_name))
+      .map((r) => ({
+        id: r.id,
+        role_name: r.role_name,
+        role_display_name: r.role_display_name,
+        role_description: r.role_description,
+        role_level: r.role_level,
+      }))
 
-      return {
-        success: true,
-        data: [...(projectRoles || []), ...(templates || [])],
-        error: null
-      }
-    }
-
-    // Fallback to roles table
-    const { data: roles, error: rolesError } = await supabase
-      .from('roles')
-      .select('id, role_name, role_display_name, role_description, role_level')
-      .eq('is_active', true)
-      .eq('is_deleted', false)
-      .neq('role_name', 'team_manager')
-      .neq('role_name', 'team_member')
-      .neq('role_name', 'pm_team_manager')
-      .neq('role_name', 'pm_team_member')
-      .neq('role_name', 'system_admin')
-      .neq('role_name', 'org_admin')
-
-    if (rolesError) throw rolesError
-
-    return {
-      success: true,
-      data: roles || [],
-      error: null
-    }
+    return { success: true, data, error: null }
   } catch (error) {
     console.error('Error fetching project roles:', error)
     return {

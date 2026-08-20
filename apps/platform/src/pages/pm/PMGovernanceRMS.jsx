@@ -14,7 +14,7 @@ export default function PMGovernanceRMS() {
             Risk Management Strategies
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            View baseline RMS and create tailored copies for your projects
+            View and tailor the Risk Management Strategy for the selected project
           </p>
         </div>
         <RMSList />

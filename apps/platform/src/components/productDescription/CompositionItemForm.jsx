@@ -5,6 +5,12 @@
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const SUB_PRODUCT_TYPES = [
   { value: 'component', label: 'Component' },
@@ -27,6 +33,18 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
   })
   const [productDescriptions, setProductDescriptions] = useState([])
   const [productDeliverables, setProductDeliverables] = useState([])
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !item) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [item.created_by, item.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, item])
 
   useEffect(() => {
     if (item) {
@@ -75,6 +93,33 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' && (
+        !item?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this composition item is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this composition item, and how it is classified.">
+            <AuditCard title="Identity" description="How this composition item is labelled and tracked.">
+              <AuditField label="Sub-product name" value={formData.sub_product_name || item.sub_product_name} />
+              <AuditField label="Type" value={humanizeAuditToken(item.sub_product_type)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this composition item sits.">
+              <AuditField label="Linked product description" value={productDescriptions.find((pd) => pd.id === (formData.linked_product_description_id || item.linked_product_description_id))?.product_title} />
+              <AuditField label="Linked product deliverable" value={productDeliverables.find((d) => d.id === (formData.linked_product_deliverable_id || item.linked_product_deliverable_id))?.product_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this composition item was created and last changed.">
+              <AuditField label="Created by" value={item.created_by ? auditUserLabels[item.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={item.created_at} />
+              <AuditField label="Updated by" value={item.updated_by ? auditUserLabels[item.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={item.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
+
+      {formTab === 'details' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -170,6 +215,8 @@ export default function CompositionItemForm({ item, onSubmit, onCancel, projectI
           </label>
         </div>
       </div>
+      </>
+      )}
 
       <div className="flex justify-end gap-2">
         {onCancel && (

@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEntityId } from '@nidus/shared/hooks/useEntityId';
-import { ArrowLeft, Edit2, Settings, FolderKanban, Users, Target, DollarSign, AlertTriangle, Activity, Layers } from 'lucide-react';
+import { ArrowLeft, Settings, FolderKanban, Users, Target, DollarSign, AlertTriangle, Activity, Layers } from 'lucide-react';
 import { getPortfolio } from '../../services/portfolioService';
 import PortfolioDashboard from '../../components/portfolio/PortfolioDashboard';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
+import { RowActionButton } from '@nidus/ui'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import { platformDb } from '../../services/supabase/supabaseClient';
 import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
@@ -26,6 +34,17 @@ export default function PortfolioDetail() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'projects', 'resources', 'financial', 'risks', 'reports', 'templates'
   const [accountId, setAccountId] = useState(null);
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !portfolio) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [portfolio.created_by, portfolio.updated_by]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, portfolio]);
 
   useEffect(() => {
     getCurrentUserAccountId().then(setAccountId);
@@ -104,6 +123,8 @@ export default function PortfolioDetail() {
     { id: 'templates', label: 'Form Templates', icon: Layers },
   ];
 
+  const VIEW_TABS = [...tabs.map((t) => ({ value: t.id, label: t.label })), { value: 'audit', label: 'Audit details' }];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
@@ -145,42 +166,20 @@ export default function PortfolioDetail() {
               onExportJSON={() => exportRecordToJSON(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
               onExportPrint={() => exportRecordToPrint(PORTFOLIO_VIEW_SECTIONS, portfolio, `Portfolio_${portfolio.portfolio_code || portfolioUuid}`)}
             />
-            <button
+            <RowActionButton
+              variant="edit"
+              label="Edit portfolio"
               onClick={() =>
                 navigate(
                   `/portfolio/${encodeURIComponent(portfolio.portfolio_code?.trim() || portfolioUuid)}/edit`,
                 )
               }
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit
-            </button>
+            />
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                  } flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+        <DetailAuditTabList tabs={VIEW_TABS} activeTab={activeTab} onChange={setActiveTab} />
       </div>
 
       {/* Tab Content */}
@@ -269,6 +268,26 @@ export default function PortfolioDetail() {
               <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
             )}
           </div>
+        )}
+
+        {activeTab === 'audit' && (
+          <AuditDetailsPanel description="Who created or changed this portfolio, and how it is classified.">
+            <AuditCard title="Identity" description="How this portfolio is labelled and tracked.">
+              <AuditField label="Code" value={portfolio.portfolio_code} />
+              <AuditField label="Name" value={portfolio.portfolio_name} />
+              <AuditField label="Status" value={humanizeAuditToken(portfolio.portfolio_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this portfolio sits.">
+              <AuditField label="Owner" value={portfolio.portfolio_owner?.full_name || portfolio.portfolio_owner?.email} />
+              <AuditField label="Manager" value={portfolio.portfolio_manager?.full_name || portfolio.portfolio_manager?.email} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this portfolio was created and last changed.">
+              <AuditField label="Created by" value={portfolio.created_by ? auditUserLabels[portfolio.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={portfolio.created_at} />
+              <AuditField label="Updated by" value={portfolio.updated_by ? auditUserLabels[portfolio.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={portfolio.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
         )}
       </div>
     </div>

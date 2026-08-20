@@ -3,9 +3,16 @@
  * Form for adding/editing quality expectations
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
 import { addExpectation, updateExpectation } from '../../services/ppdQualityExpectationsService'
+import { supabase } from '../../services/supabaseClient'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function QualityExpectationForm({ ppdId, expectation = null, mode = 'create', onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -18,6 +25,18 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
   })
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !expectation) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(supabase, [expectation.created_by, expectation.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [formTab, expectation])
 
   useState(() => {
     if (expectation) {
@@ -98,6 +117,33 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+        {formTab === 'audit' && (
+          !expectation?.id ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this quality expectation is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this quality expectation, and how it is classified.">
+              <AuditCard title="Identity" description="How this quality expectation is labelled and tracked.">
+                <AuditField label="Category" value={humanizeAuditToken(expectation.expectation_category)} />
+                <AuditField label="Priority" value={humanizeAuditToken(expectation.priority)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this quality expectation comes from.">
+                <AuditField label="Source" value={expectation.source} />
+                <AuditField label="Standard reference" value={expectation.standard_reference} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this quality expectation was created and last changed.">
+                <AuditField label="Created by" value={expectation.created_by ? auditUserLabels[expectation.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={expectation.created_at} />
+                <AuditField label="Updated by" value={expectation.updated_by ? auditUserLabels[expectation.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={expectation.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Category <span className="text-red-500">*</span>
@@ -185,6 +231,8 @@ export default function QualityExpectationForm({ ppdId, expectation = null, mode
             placeholder="Related standard if any"
           />
         </div>
+        </>
+        )}
 
         <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           {onCancel && (

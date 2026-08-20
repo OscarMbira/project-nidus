@@ -1,6 +1,7 @@
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import ExceptionReportFormEnhanced from '../../components/structured/exceptionReport/ExceptionReportFormEnhanced'
 
 export default function ExceptionReportCreate() {
@@ -11,14 +12,14 @@ export default function ExceptionReportCreate() {
 
   const handleSave = (report) => {
     if (report?.id) {
-      navigate(`/app/projects/${projectId}/exception-reports/${report.id}`)
+      navigate(platformProjectPath(routeKey, 'exception-reports', report.document_ref || report.id))
     } else {
-      navigate(`/app/projects/${projectId}/exception-reports`)
+      navigate(platformProjectPath(routeKey, 'exception-reports'))
     }
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/exception-reports`)
+    navigate(platformProjectPath(routeKey, 'exception-reports'))
   }
 
   if (!exceptionId) {

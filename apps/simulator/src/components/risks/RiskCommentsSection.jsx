@@ -4,9 +4,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { MessageSquare, Send, Edit2, Trash2, User } from 'lucide-react'
+import { MessageSquare, Send, User } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { getCommentsByRisk, addComment, updateComment, deleteComment } from '../../services/riskCommentService'
+import { RowActionButton } from '@nidus/ui'
 
 export default function RiskCommentsSection({ riskId }) {
   const [comments, setComments] = useState([])
@@ -222,20 +223,16 @@ export default function RiskCommentsSection({ riskId }) {
                         </p>
                         {isOwner && (
                           <div className="flex gap-2">
-                            <button
+                            <RowActionButton
+                              variant="edit"
+                              label="Edit comment"
                               onClick={() => handleEdit(comment)}
-                              className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                              Edit
-                            </button>
-                            <button
+                            />
+                            <RowActionButton
+                              variant="delete"
+                              label="Delete comment"
                               onClick={() => handleDelete(comment.id)}
-                              className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 flex items-center gap-1"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              Delete
-                            </button>
+                            />
                           </div>
                         )}
                       </>

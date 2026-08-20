@@ -1,6 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import {
+  resolveCheckpointWorkPackageId,
+  checkpointReportsListPath,
+  checkpointReportDetailPath,
+  checkpointReportEditPath,
+} from '@nidus/shared/utils/checkpointReportRoutes.js'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import { useState, useEffect } from 'react'
 import { Edit, ArrowLeft, FileText, Calendar, User, Package, CheckCircle, AlertCircle, TrendingUp, Printer } from 'lucide-react'
 import { getCheckpointReportById } from '../../services/checkpointReportService'
@@ -18,6 +26,13 @@ import CheckpointReportPrintView from '../../components/structured/CheckpointRep
 import { format } from 'date-fns'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const CHECKPOINT_VIEW_SECTIONS = [
   { title: 'Document Information', fields: [
@@ -30,9 +45,10 @@ const CHECKPOINT_VIEW_SECTIONS = [
 ]
 
 export default function CheckpointReportView() {
-  const { workPackageId, reportId } = useParams()
+  const { workPackageId: workPackageIdParam, reportId } = useParams()
   const { projectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
+  const workPackageId = resolveCheckpointWorkPackageId(workPackageIdParam)
   const [report, setReport] = useState(null)
   const [products, setProducts] = useState([])
   const [qualityActivities, setQualityActivities] = useState([])
@@ -41,21 +57,42 @@ export default function CheckpointReportView() {
   const [qualityStatus, setQualityStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
-    loadData()
-  }, [reportId])
+    if (projectId) loadData()
+  }, [reportId, projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !report) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        report.created_by,
+        report.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, report])
 
   const loadData = async () => {
     try {
       setLoading(true)
+      const resolvedId = isLikelyDatabaseUuid(reportId)
+        ? reportId
+        : await resolveEntityId('checkpointReport', reportId, projectId)
+      if (!resolvedId) {
+        setLoading(false)
+        return
+      }
       const [reportData, productsData, qualityData, followUpsData, lessonsData, qualityStatusData] = await Promise.all([
-        getCheckpointReportById(reportId),
-        getProductsByReport(reportId),
-        getQualityActivities(reportId),
-        getFollowUps(reportId),
-        getLessons(reportId),
-        getQualityCheckStatus(reportId)
+        getCheckpointReportById(resolvedId),
+        getProductsByReport(resolvedId),
+        getQualityActivities(resolvedId),
+        getFollowUps(resolvedId),
+        getLessons(resolvedId),
+        getQualityCheckStatus(resolvedId)
       ])
       setReport(reportData)
       setProducts(productsData)
@@ -63,6 +100,9 @@ export default function CheckpointReportView() {
       setFollowUps(followUpsData)
       setLessons(lessonsData)
       setQualityStatus(qualityStatusData)
+      if (reportData?.document_ref && reportData.document_ref !== reportId) {
+        navigate(checkpointReportDetailPath(routeKey, resolveCheckpointWorkPackageId(workPackageId, reportData?.work_package_id), reportData.document_ref), { replace: true })
+      }
     } catch (error) {
       console.error('Error loading report:', error)
       alert('Error loading report: ' + error.message)
@@ -99,14 +139,15 @@ export default function CheckpointReportView() {
     { id: 'history', label: 'History', icon: FileText },
     { id: 'approvals', label: 'Approvals', icon: CheckCircle },
     { id: 'distribution', label: 'Distribution', icon: User },
-    { id: 'print', label: 'Print/Export', icon: Printer }
+    { id: 'print', label: 'Print/Export', icon: Printer },
+    { id: 'audit', label: 'Audit details', icon: FileText },
   ]
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/work-packages/${workPackageId}/checkpoint-reports`)}
+          onClick={() => navigate(checkpointReportsListPath(routeKey, resolveCheckpointWorkPackageId(workPackageId, report?.work_package_id)))}
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -125,7 +166,7 @@ export default function CheckpointReportView() {
         </div>
         {report.status === 'draft' || report.status === 'rejected' ? (
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/work-packages/${workPackageId}/checkpoint-reports/${reportId}/edit`)}
+            onClick={() => navigate(checkpointReportEditPath(routeKey, resolveCheckpointWorkPackageId(workPackageId, report?.work_package_id), report?.document_ref || reportId))}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
           >
             <Edit className="h-5 w-5" />
@@ -174,29 +215,36 @@ export default function CheckpointReportView() {
 
       {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <div className="flex overflow-x-auto">
-            {tabs.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 flex items-center gap-2 border-b-2 transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
+        <div className="border-b border-gray-200 dark:border-gray-700 px-2">
+          <DetailAuditTabList
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            ariaLabel="Checkpoint report sections"
+            tabs={tabs.map((tab) => ({ value: tab.id, label: tab.label }))}
+          />
         </div>
 
         <div className="p-6">
+          {activeTab === 'audit' && (
+            <AuditDetailsPanel description="Who created or changed this checkpoint report, and how it is classified.">
+              <AuditCard title="Identity" description="How this report is labelled and tracked.">
+                <AuditField label="Reference" value={report.document_ref} />
+                <AuditField label="Title" value={report.report_title} />
+                <AuditField label="Status" value={humanizeAuditToken(report.status)} />
+              </AuditCard>
+              <AuditCard title="Classification" description="Where this report sits.">
+                <AuditField label="Checkpoint date" value={report.checkpoint_date} />
+                <AuditField label="Author" value={report.author?.full_name || report.author?.email} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this report was created and last changed.">
+                <AuditField label="Created by" value={report.created_by ? auditUserLabels[report.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={report.created_at} />
+                <AuditField label="Updated by" value={report.updated_by ? auditUserLabels[report.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={report.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {report.report_summary && (
@@ -278,7 +326,8 @@ export default function CheckpointReportView() {
                 <p className="text-gray-500 dark:text-gray-400">No follow-up items</p>
               ) : (
                 followUps.map((followUp, index) => (
-                  <div key={followUp.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">                    <p className="text-gray-900 dark:text-white mb-2">{followUp.follow_up_item}</p>
+                  <div key={followUp.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <p className="text-gray-900 dark:text-white mb-2">{followUp.follow_up_item}</p>
                     {followUp.resolution && (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         <strong>Resolution:</strong> {followUp.resolution}

@@ -38,6 +38,10 @@ describe('updateUserProfile', () => {
   })
 
   it('updates users row for authenticated user', async () => {
+    const dispatched = []
+    const onUpdated = (event) => dispatched.push(event.detail)
+    window.addEventListener('nidus-profile-updated', onUpdated)
+
     mockGetUser.mockResolvedValue({
       data: { user: { id: 'auth-1' } },
       error: null,
@@ -79,6 +83,8 @@ describe('updateUserProfile', () => {
 
     expect(result.full_name).toBe('Jane')
     expect(mockFrom).toHaveBeenCalledWith('users')
+    expect(dispatched).toEqual([{ full_name: 'Jane' }])
+    window.removeEventListener('nidus-profile-updated', onUpdated)
   })
 
   it('throws when no users row exists', async () => {

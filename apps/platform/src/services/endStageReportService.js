@@ -8,13 +8,11 @@ import { getBusinessCaseForReview } from './endProjectReportService'
 
 export { getBusinessCaseForReview }
 
-export async function generateReportReference(projectId, stageNumber = 1) {
-  const { data, error } = await supabase.rpc('generate_end_stage_report_reference', {
-    p_project_id: projectId,
-    p_stage_number: stageNumber,
-  })
-  if (error) throw error
-  return data
+export async function generateReportReference() {
+  // generate_end_stage_report_reference was dropped by v756b (id_generation_migration) —
+  // report_reference is now assigned automatically by the Admin ID Generation trigger on
+  // insert when left blank (see CLAUDE.md rule 16.2 / v882).
+  return null
 }
 
 export async function getReportByStageBoundary(stageBoundaryId) {

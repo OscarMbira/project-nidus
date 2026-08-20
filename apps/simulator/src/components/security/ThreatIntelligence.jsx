@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { Shield, Ban, AlertTriangle, CheckCircle, X } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -285,15 +286,14 @@ export default function ThreatIntelligence() {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {threats.length === 0 ? (
               <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                <td colSpan="6" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan="7" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                   No threats recorded
                 </td>
               </tr>
             ) : (
               threats.map((threat, index) => (
                 <tr key={threat.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                     {threat.threat_type}
                   </td>
@@ -333,12 +333,7 @@ export default function ThreatIntelligence() {
                       >
                         {threat.is_blocked ? 'Unblock' : 'Block'}
                       </button>
-                      <button
-                        onClick={() => handleDelete(threat.id)}
-                        className="px-3 py-1 text-xs font-medium rounded bg-gray-600 hover:bg-gray-700 text-white transition-colors"
-                      >
-                        Delete
-                      </button>
+                      <RowActionButton variant="delete" label="Delete threat" onClick={() => handleDelete(threat.id)} />
                     </div>
                   </td>
                 </tr>

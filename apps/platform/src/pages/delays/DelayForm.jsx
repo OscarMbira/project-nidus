@@ -4,6 +4,13 @@ import toast from 'react-hot-toast'
 import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 import DelayOwnerHistory from '../../components/delays/DelayOwnerHistory'
 import { DELAY_CATEGORIES, DELAY_SEVERITIES, DELAY_STATUSES } from '@nidus/shared/constants/delayConstants'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const STEPS = ['Basic', 'Impact', 'Resolution', 'Links']
 
@@ -23,21 +30,36 @@ export default function DelayForm({
   const [saving, setSaving] = useState(false)
   const [doneRef, setDoneRef] = useState(null)
   const [form, setForm] = useState(() => initial || {})
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (open) {
       setStep(0)
       setDoneRef(null)
       setForm(initial || {})
+      setFormTab('details')
     }
   }, [open, initial])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !form?.id) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [form.created_by, form.resolution_owner_id])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, form?.id, form?.created_by, form?.resolution_owner_id])
 
   if (!open) return null
 
   const auto = form.is_auto_linked
   const write = !readOnly
+  const formTitle = !form.id ? 'Log delay' : readOnly ? 'View delay' : 'Edit delay'
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }))
+
+  const fieldClass =
+    'mt-1 w-full rounded-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 px-3 py-2 text-gray-900 dark:text-gray-100 disabled:opacity-60'
 
   async function submit(finalStatus = 'submit') {
     if (!write) return
@@ -76,24 +98,61 @@ export default function DelayForm({
 
   const panel = (
       <div
-        className={`w-full max-w-lg overflow-y-auto rounded-xl border border-slate-600 bg-slate-900 text-slate-100 shadow-xl ${
-          variant === 'page' ? 'max-w-4xl' : 'max-h-[90vh]'
+        className={`w-full overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm ${
+          variant === 'page' ? 'max-w-4xl' : 'max-w-lg max-h-[90vh] shadow-xl'
         }`}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-          <h2 className="text-lg font-semibold">{form.id ? 'Edit delay' : 'Log delay'}</h2>
-          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-slate-800" aria-label="Close">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{formTitle}</h2>
+          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" aria-label="Close">
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        <div className="px-4 pt-3">
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        </div>
+
+        {formTab === 'audit' && (
+          <div className="px-4 py-4">
+            {!form.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this delay is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who logged or changed this delay, and how it is classified.">
+                <AuditCard title="Identity" description="How this delay is labelled and tracked.">
+                  <AuditField label="Reference" value={form.delay_reference} />
+                  <AuditField label="Title" value={form.title} />
+                  <AuditField label="Status" value={humanizeAuditToken(form.status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this delay is categorised.">
+                  <AuditField label="Category" value={humanizeAuditToken(form.delay_category)} />
+                  <AuditField label="Severity" value={humanizeAuditToken(form.severity)} />
+                  <AuditField label="Resolution owner" value={form.resolution_owner_id ? auditUserLabels[form.resolution_owner_id] || null : null} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this delay was logged and last changed.">
+                  <AuditField label="Created by" value={form.created_by ? auditUserLabels[form.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={form.created_at} />
+                  <AuditTimestampPair dateLabel="Last updated" value={form.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+            {form.id && fetchOwnerHistory && (
+              <div className="mt-4">
+                <DelayOwnerHistory delayId={form.id} fetchHistory={fetchOwnerHistory} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {formTab === 'details' && (
+        <>
         <div className="px-4 py-3 flex gap-1 flex-wrap">
           {STEPS.map((label, i) => (
             <button
               key={label}
               type="button"
               onClick={() => setStep(i)}
-              className={`text-xs px-2 py-1 rounded ${step === i ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+              className={`text-xs px-2 py-1 rounded ${step === i ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
             >
               {i + 1}. {label}
             </button>
@@ -101,7 +160,7 @@ export default function DelayForm({
         </div>
 
         {doneRef && (
-          <div className="mx-4 mb-3 rounded-lg bg-emerald-900/40 border border-emerald-700/50 px-3 py-2 text-sm">
+          <div className="mx-4 mb-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-200">
             Success — reference <strong>{doneRef}</strong>
           </div>
         )}
@@ -112,7 +171,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Title *
                 <input
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.title || ''}
                   disabled={!write}
                   onChange={(e) => set('title', e.target.value)}
@@ -121,7 +180,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Category
                 <select
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.delay_category || 'other'}
                   disabled={!write}
                   onChange={(e) => set('delay_category', e.target.value)}
@@ -136,7 +195,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Responsible party
                 <input
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.responsible_party || ''}
                   disabled={!write}
                   onChange={(e) => set('responsible_party', e.target.value)}
@@ -146,7 +205,7 @@ export default function DelayForm({
                 Identified date
                 <input
                   type="date"
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.identified_date || ''}
                   disabled={!write}
                   onChange={(e) => set('identified_date', e.target.value)}
@@ -155,7 +214,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Severity
                 <select
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.severity || 'medium'}
                   disabled={!write}
                   onChange={(e) => set('severity', e.target.value)}
@@ -171,7 +230,7 @@ export default function DelayForm({
                 <label className="block text-sm">
                   Tailoring notes
                   <textarea
-                    className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                    className={fieldClass}
                     rows={2}
                     value={form.tailoring_notes || ''}
                     disabled={!write}
@@ -188,7 +247,7 @@ export default function DelayForm({
                 Schedule impact (days)
                 <input
                   type="number"
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.impact_schedule_days ?? ''}
                   disabled={!write}
                   onChange={(e) => set('impact_schedule_days', e.target.value ? Number(e.target.value) : null)}
@@ -200,13 +259,13 @@ export default function DelayForm({
                   value={form.impact_cost != null ? Number(form.impact_cost) : null}
                   onChange={(n) => set('impact_cost', n)}
                   disabled={!write}
-                  inputClassName="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2 text-slate-100"
+                  inputClassName={fieldClass}
                 />
               </div>
               <label className="block text-sm">
                 Scope impact
                 <textarea
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   rows={2}
                   value={form.impact_scope || ''}
                   disabled={!write}
@@ -217,7 +276,7 @@ export default function DelayForm({
                 Original baseline date
                 <input
                   type="date"
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.original_baseline_date || ''}
                   disabled={!write}
                   onChange={(e) => set('original_baseline_date', e.target.value)}
@@ -227,7 +286,7 @@ export default function DelayForm({
                 Revised forecast date
                 <input
                   type="date"
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.revised_forecast_date || ''}
                   disabled={!write}
                   onChange={(e) => set('revised_forecast_date', e.target.value)}
@@ -241,7 +300,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Resolution plan
                 <textarea
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   rows={3}
                   value={form.resolution_plan || ''}
                   disabled={!write}
@@ -251,7 +310,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Resolution owner (user id)
                 <input
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2 font-mono text-xs"
+                  className={`${fieldClass} font-mono text-xs`}
                   value={form.resolution_owner_id || ''}
                   disabled={!write}
                   onChange={(e) => set('resolution_owner_id', e.target.value || null)}
@@ -261,7 +320,7 @@ export default function DelayForm({
                 Resolution target date
                 <input
                   type="date"
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.resolution_target_date || ''}
                   disabled={!write}
                   onChange={(e) => set('resolution_target_date', e.target.value)}
@@ -270,7 +329,7 @@ export default function DelayForm({
               <label className="block text-sm">
                 Status
                 <select
-                  className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2"
+                  className={fieldClass}
                   value={form.status || 'identified'}
                   disabled={!write}
                   onChange={(e) => set('status', e.target.value)}
@@ -288,7 +347,7 @@ export default function DelayForm({
           {step === 3 && (
             <>
               {auto ? (
-                <p className="text-sm text-slate-400 flex items-center gap-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
                   <Lock className="h-4 w-4" />
                   Links are auto-managed for this delay.
                 </p>
@@ -299,7 +358,7 @@ export default function DelayForm({
                       <label key={k} className="block text-sm">
                         {k.replace(/_/g, ' ')}
                         <input
-                          className="mt-1 w-full rounded bg-slate-800 border border-slate-600 px-3 py-2 font-mono text-xs"
+                          className={`${fieldClass} font-mono text-xs`}
                           value={form[k] || ''}
                           disabled={!write}
                           onChange={(e) => set(k, e.target.value || null)}
@@ -312,17 +371,13 @@ export default function DelayForm({
             </>
           )}
 
-          {form.id && fetchOwnerHistory && (
-            <DelayOwnerHistory delayId={form.id} fetchHistory={fetchOwnerHistory} />
-          )}
-
           {write && (
-            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-700">
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 disabled={saving}
                 onClick={() => submit('draft')}
-                className="px-3 py-2 rounded-lg bg-slate-700 text-sm"
+                className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
               >
                 Save as draft
               </button>
@@ -337,11 +392,13 @@ export default function DelayForm({
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
   )
 
   if (variant === 'page') {
-    return <div className="mt-6">{panel}</div>
+    return <div className="mt-2">{panel}</div>
   }
 
   return (

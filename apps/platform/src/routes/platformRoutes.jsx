@@ -1,5 +1,5 @@
 /** Platform routes — extracted from App.jsx (v729 Option B) */
-import { Route, Navigate, Routes } from 'react-router-dom'
+import { Route, Navigate, Routes, Outlet } from 'react-router-dom'
 import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
@@ -369,6 +369,14 @@ import {
   SimOPABulkUpload,
   TemplateLibraryList,
   TemplateLibraryManage,
+  PmOrganisationalTemplatesPage,
+  PmOrganisationalTemplateDetailPage,
+  ProjectTemplatesEntry,
+  OrganisationalTemplatesEntry,
+  ProjectDocumentsEntry,
+  DocumentOversightPortfolioPage,
+  DocumentOversightProgrammePage,
+  DocumentOversightPmoPage,
   TemplateCreate,
   TemplateEdit,
   TemplateDetail,
@@ -559,6 +567,12 @@ import {
   FreeTrialDashboard,
   TrialUpgrade,
   RoleAssignment,
+  ManageRoles,
+  OrgRoleDetail,
+  ManageMenuBundles,
+  MenuBundleDetail,
+  SystemRoleCatalog,
+  SystemRoleEditPage,
   AssignRolesToProjects,
   SendRoleInvites,
   InvitationExpirySettingsPage,
@@ -826,6 +840,7 @@ import {
   MyDailyLogEntries,
   LessonsLogView,
   LessonDetailView,
+  LessonFormPage,
   CorporateLessonsLibrary,
   MyLessonActions,
   LessonsReport,
@@ -1094,6 +1109,87 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* Static template leaves BEFORE templates/:id so "project"/"organisational" are never treated as library ids.
+                                  v864: keyed list/detail /templates/{organisational|project}/:projectId[/:nodeId] */}
+                              <Route path="templates/organisational/:projectId/:nodeId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PmOrganisationalTemplateDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="templates/organisational/:projectId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationalTemplatesEntry />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="templates/organisational" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationalTemplatesEntry />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="templates/project/:projectId/:nodeId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PmOrganisationalTemplateDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="templates/project/:projectId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectTemplatesEntry />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="templates/project" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectTemplatesEntry />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="documents/project" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectDocumentsEntry />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="documents/project/:nodeId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PmOrganisationalTemplateDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v897 — Document Oversight: read-only cross-project register for
+                                  Portfolio/Programme/PMO roles, scoped to their own branch. */}
+                              <Route path="portfolio/document-oversight" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DocumentOversightPortfolioPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="programme/document-oversight" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DocumentOversightProgrammePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo/document-oversight" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DocumentOversightPmoPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="templates/:id/edit" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -1119,6 +1215,19 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <TemplateLibraryList />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/*
+                                PM-safe Form Template Builder mount — "Manage form fields" from
+                                /platform/templates/organisational must not deep-link into /app/pmo/*
+                                (RoleScopeGate redirects PMs to /pm/dashboard). Page still enforces
+                                PMO Admin via getSessionPMOAdminStatus.
+                              */}
+                              <Route path="templates/forms/:templateCode/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <FormTemplateBuilder mode="platform" />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1949,6 +2058,14 @@ export function PlatformRouteElements() {
                                 </Suspense>
                               } />
                               <Route path="projects/templates/*" element={<RedirectProjectsTemplatesToLibrary />} />
+                              {/* Static segment — must be before projects/:id or "all" is treated as a project id */}
+                              <Route path="projects/all" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <Projects />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:id" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2077,7 +2194,7 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              {/* Lessons Log routes */}
+                              {/* Lessons Log routes — static paths before :lessonId */}
                               <Route path="projects/:projectId/lessons" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2085,10 +2202,17 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="projects/:projectId/lessons/:lessonId" element={
+                              <Route path="projects/:projectId/lessons/create" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <LessonDetailView />
+                                    <LessonFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/lessons/:lessonId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LessonFormPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -2113,6 +2237,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="projects/:projectId/lessons/reports/:reportId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LessonsReportEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:projectId/lessons/reports/:reportId" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2120,10 +2251,10 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="projects/:projectId/lessons/reports/:reportId/edit" element={
+                              <Route path="projects/:projectId/lessons/:lessonId" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <LessonsReportEdit />
+                                    <LessonDetailView />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -2796,6 +2927,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="projects/:projectId/risks/:riskId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RiskDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:projectId/raid-log" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2950,6 +3088,35 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* Project-scoped checkpoint reports (PM area / no work package) */}
+                              <Route path="projects/:projectId/checkpoint-reports" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CheckpointReportList />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/checkpoint-reports/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CheckpointReportCreate />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/checkpoint-reports/:reportId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CheckpointReportView />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/checkpoint-reports/:reportId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CheckpointReportEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:projectId/work-packages/:workPackageId/checkpoint-reports" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3085,6 +3252,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ScopeStatementPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="scope/requirements" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RequirementsRegisterPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3467,6 +3641,76 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="admin/manage-roles" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ManageRoles />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-roles/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrgRoleDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-roles/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrgRoleDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-roles/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrgRoleDetail forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-menu-bundles" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ManageMenuBundles />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-menu-bundles/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MenuBundleDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-menu-bundles/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MenuBundleDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/manage-menu-bundles/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MenuBundleDetail forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/system-roles" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <SystemRoleCatalog />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/system-roles/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <SystemRoleEditPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="admin/assign-roles-to-projects" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3527,6 +3771,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <EmailSenderProfiles />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Menu (v681) uses /platform/change; canonical path is change-log */}
+                              <Route path="change" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ChangeLogPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3667,7 +3919,7 @@ export function PlatformRouteElements() {
                   Must be declared before app/* so it is not swallowed by AppToPlatformRedirect.
                   /platform/project-members and /platform/project-users are first-class aliases (same page).
                 */}
-                <Route path="app/project-members" element={
+                <Route element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <ToastProvider>
@@ -3675,7 +3927,7 @@ export function PlatformRouteElements() {
                           <Layout>
                             <Suspense fallback={<LoadingFallback />}>
                               <ProtectedRoute>
-                                <ProjectUsers />
+                                <Outlet />
                               </ProtectedRoute>
                             </Suspense>
                           </Layout>
@@ -3683,94 +3935,14 @@ export function PlatformRouteElements() {
                       </ToastProvider>
                     </ThemeProvider>
                   </Suspense>
-                } />
-                <Route path="app/invitation-tracker" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          <Layout>
-                            <Suspense fallback={<LoadingFallback />}>
-                              <ProtectedRoute>
-                                <PMInvitationTracker />
-                              </ProtectedRoute>
-                            </Suspense>
-                          </Layout>
-                        </Suspense>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="app/invitation-tracker/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          <Layout>
-                            <Suspense fallback={<LoadingFallback />}>
-                              <ProtectedRoute>
-                                <InvitationDetailPage />
-                              </ProtectedRoute>
-                            </Suspense>
-                          </Layout>
-                        </Suspense>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="app/project-users" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          <Layout>
-                            <Suspense fallback={<LoadingFallback />}>
-                              <ProtectedRoute>
-                                <ProjectUsers />
-                              </ProtectedRoute>
-                            </Suspense>
-                          </Layout>
-                        </Suspense>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-      
-                <Route path="app/settings/invitation-templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          <Layout>
-                            <Suspense fallback={<LoadingFallback />}>
-                              <ProtectedRoute>
-                                <InvitationTemplatesPage />
-                              </ProtectedRoute>
-                            </Suspense>
-                          </Layout>
-                        </Suspense>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-      
-                <Route path="app/local-data-extensions/*" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <Suspense fallback={<LoadingFallback />}>
-                          <Layout>
-                            <Suspense fallback={<LoadingFallback />}>
-                              <ProtectedRoute>
-                                <LocalDataExtensionsRoutes />
-                              </ProtectedRoute>
-                            </Suspense>
-                          </Layout>
-                        </Suspense>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
+                }>
+                  <Route path="app/project-members" element={<ProjectUsers />} />
+                  <Route path="app/invitation-tracker" element={<PMInvitationTracker />} />
+                  <Route path="app/invitation-tracker/view" element={<InvitationDetailPage />} />
+                  <Route path="app/project-users" element={<ProjectUsers />} />
+                  <Route path="app/settings/invitation-templates" element={<InvitationTemplatesPage />} />
+                  <Route path="app/local-data-extensions/*" element={<LocalDataExtensionsRoutes />} />
+                </Route>
       
 
                 {/* Backward Compatibility: Redirect other old /app/* paths to /platform/* */}
@@ -3779,597 +3951,12 @@ export function PlatformRouteElements() {
 
                 {/* PMO Dashboard - redirect to unified platform dashboard */}
                 <Route path="pmo/dashboard" element={<Navigate to="/platform/dashboard" replace />} />
-                <Route path="pmo/testing-centre/*" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <TestingCentreRoutesPmo />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/process-templates/*" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <ProcessTemplatesRoutesPmo />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/itto/templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <ITTOTemplateList />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/itto/drafts" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <ITTODraftsQueue />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/industry-templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <IndustryTemplateList />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/legacy-templates/upload" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <LegacyTemplateUploadPage />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/legacy-templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <LegacyReferenceTemplatesPage />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/invitation-tracker" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOInvitationTracker />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/invitation-tracker/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <InvitationDetailPage />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/industry-templates/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <IndustryTemplateForm />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/industry-templates/on-hold" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <IndustryTemplateOnHold />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/industry-templates/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <IndustryTemplateForm />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/industry-templates/:id" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <IndustryTemplateDetail />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 <Route path="pmo/planning/*" element={<PmoPlanningFederated />} />
                 {/* PMO Governance Routes */}
-                <Route path="pmo/governance/mandate" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOGovernanceMandateTemplate />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PMO Mandate CRUD Routes - maintains PMO sidebar context */}
-                <Route path="pmo/mandates/create" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <ProjectMandateCreate />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/mandates/:mandateId/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <ProjectMandateView />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/mandates/:mandateId/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <ProjectMandateEdit />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/mandates/approvals" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <MandateApprovalDashboard />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/governance/communication-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOGovernanceCMS />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/governance/configuration-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOGovernanceConfigMS />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/governance/quality-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOGovernanceQMS />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/governance/risk-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOGovernanceRMS />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PMO Initiation Routes */}
-                <Route path="pmo/initiation/business-case" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <BusinessCaseListPage />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/initiation/business-case/create" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <BusinessCaseCreate />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/initiation/business-case/:id/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <BusinessCaseViewPage />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/initiation/business-case/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <BusinessCaseEdit />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/initiation/project-brief" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOInitiationProjectBrief />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/initiation/benefits-review-plan" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOInitiationBenefitsReviewPlan />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PMO Oversight Routes */}
-                <Route path="pmo/oversight/risk-register" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightRiskRegister />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/oversight/issue-register" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightIssueRegister />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/registers/changes" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightChangeRegister />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/oversight/quality-register" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightQualityRegister />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/oversight/lessons-log" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightLessonsLog />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/oversight/scope" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightScope />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/oversight/schedules" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOOversightSchedules />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/oversight/delays" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <DelayRegister />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/delays/templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <DelayTemplates />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PMO Reporting Routes */}
-                <Route path="pmo/reporting/highlight-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOReportingHighlight />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/reporting/exception-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOReportingException />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/reporting/end-stage-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOReportingEndStage />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/reporting/end-project-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOReportingEndProject />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/procurement/rfp" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMOProcurementRFP />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/rfp/create" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMORFPCreate />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/rfp/:id/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMORFPView />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/rfp/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMORFPEdit />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 <Route path="pmo/rfp/:id/print" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -4379,1044 +3966,228 @@ export function PlatformRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
-                <Route path="pmo/rfp/:id/import" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMORFPBulkImport />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/rfp/on-hold" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <PMORFPOnHold />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/forms" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <FormTemplateAdmin mode="platform" />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/forms/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <FormTemplateBuilder mode="platform" />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pmo/forms/:templateCode/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMOLayout>
-                            <FormTemplateBuilder mode="platform" />
-                          </PMOLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-      
+                {/*
+                  v808 fix: pmo/forms* above are top-level routes (verified via AST — NOT nested
+                  inside platform/*, despite matching its indentation), so they only ever resolved
+                  at the bare /pmo/forms/... URL. But app/pmo/* further up is a blanket redirect to
+                  the federated pmo_module, which doesn't implement /forms, so /app/pmo/forms/...
+                  (used by the "Manage form fields" link from Organisational Templates) fell through
+                  to the module's unmatched-route fallback instead. These three routes are more
+                  specific than app/pmo/* and win regardless of declaration order, giving the
+                  /app/pmo/forms/... URL the exact same working element tree pmo/forms/... already has.
+                */}
+
                 {/* PM Dashboard Routes */}
-                <Route path="pm/dashboard" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMDashboard />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/team-members" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ProjectUsers />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/invitation-tracker" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMInvitationTracker />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/invitation-tracker/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <InvitationDetailPage />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/profile" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <Settings />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/portfolio-manager/assignments" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PortfolioManagerAssignments />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/programme-manager/assignments" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ProgrammeManagerAssignments />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/industry-templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <IndustryTemplateBrowser />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/industry-plan" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ProjectIndustryPlanView />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/industry-plan/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <IndustryPlanCopyWizard />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/industry-plan/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <IndustryPlanCopyWizard />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/forms" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <FormsGallery mode="platform" basePath="/pm/projects" />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/forms/:templateCode/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <FormNew mode="platform" basePath="/pm/projects" />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/forms/:formInstanceId/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <FormEdit mode="platform" />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/projects/:projectId/forms/:formInstanceId/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <FormView mode="platform" />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/testing-centre/*" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <TestingCentreRoutesPm />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/process-templates/*" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ProcessTemplatesRoutesPm />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* v631 PMIS gap features â€” GAP-01 through GAP-29 */}
                 {PmisGapRouteElements()}
                 {RecordLifecycleRouteElements()}
-                <Route path="pm/itto/templates" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ITTOTemplateList />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/itto/project" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ProjectITTOList />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/itto/drafts" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <ITTODraftsQueue />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/delays" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <DelayRegister />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/delays/drafts" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <DelayRegister />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PM Planning Intelligence — federated planning-hub module */}
                 <Route path="pm/planning/*" element={<PmPlanningFederated />} />
                 {/* â”€â”€ Team Member Plans Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-                <Route path="platform/plans/my-plans" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><MicroPlanList scope="individual" /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/plans/team-workstreams" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><MicroPlanList scope="team" /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/plans/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><MicroPlanForm /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/plans/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><MicroPlanForm /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
       
                 {/* â”€â”€ Team Charter Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-                <Route path="platform/team-charter" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TeamCharterPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/projects/:projectId/team-charter" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TeamCharterPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/team-charter/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TeamCharterEditPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/projects/:projectId/team-charter/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TeamCharterEditPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
       
                 {/* â”€â”€ Decision Log Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-                <Route path="platform/governance/decisions" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><DecisionLogPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/governance/decisions/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><DecisionLogForm /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/governance/decisions/:id" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><DecisionLogDetail /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/governance/decisions/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><DecisionLogForm /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
       
                 {/* â”€â”€ Timesheets Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-                <Route path="platform/timesheets" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><MyTimesheetsPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/timesheets/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TimesheetEntryForm /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/timesheets/team" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TeamTimesheetsPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/timesheets/:id" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TimesheetEntryDetail /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/timesheets/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TimesheetEntryForm /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
       
                 {/* â”€â”€ Communications Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-                <Route path="platform/communications/chat" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><TeamChatPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/communications/video-calls" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><VideoCallsPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="platform/communications/voice-calls" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><VoiceCallsPage /></Layout></ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
       
                 {/* Simulator Team Member Routes */}
-                <Route path="simulator/tm/dashboard" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><SimulatorTMDashboard /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/plans/my-plans" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><MicroPlanList scope="individual" /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/plans/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><MicroPlanForm /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/plans/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><MicroPlanForm /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/decisions" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><DecisionLogPage /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/decisions/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><DecisionLogForm /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/decisions/:id" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><DecisionLogDetail /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/decisions/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><DecisionLogForm /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/timesheets" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><MyTimesheetsPage /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/timesheets/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><TimesheetEntryForm /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/timesheets/:id" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><TimesheetEntryDetail /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/timesheets/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><TimesheetEntryForm /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/team-charter" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><TeamCharterPage /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/communications/chat" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><TeamChatPage /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/communications/video-calls" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><VideoCallsPage /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/tm/communications/voice-calls" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider><ToastProvider>
-                      <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><SimVoiceCallsPage /></SimulatorTMLayout>
-                      </ProtectedRoute>
-                    </ToastProvider></ThemeProvider>
-                  </Suspense>
-                } />
       
                 {/* PM Governance Routes */}
-                <Route path="pm/governance/mandate" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMGovernanceMandateTemplate />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/governance/communication-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMGovernanceCMS />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/governance/configuration-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMGovernanceConfigMS />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/governance/quality-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMGovernanceQMS />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/governance/risk-strategy" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMGovernanceRMS />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PM Initiation Routes */}
-                <Route path="pm/initiation/business-case" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMInitiationBusinessCase />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/initiation/business-case/create" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <BusinessCaseCreate />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/initiation/business-case/:id/view" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <BusinessCaseViewPage />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/initiation/business-case/:id/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <BusinessCaseEdit />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/initiation/project-brief" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMInitiationProjectBrief />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/initiation/pid" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMInitiationPID />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/initiation/benefits-review-plan" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMInitiationBenefitsReviewPlan />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PM Delivery Routes */}
-                <Route path="pm/delivery/work-packages" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMDeliveryWorkPackages />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/delivery/product-description" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMDeliveryProductDescription />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/delivery/project-product-description" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMDeliveryProjectProductDescription />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/delivery/product-status-account" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMDeliveryProductStatusAccount />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/delivery/daily-log" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMDeliveryDailyLog />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PM Controls Routes */}
-                <Route path="pm/controls/risk-register" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMControlsRiskRegister />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/controls/issue-register" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMControlsIssueRegister />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/controls/quality-register" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMControlsQualityRegister />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/controls/configuration-items" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMControlsConfigItems />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/controls/lessons-log" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMControlsLessonsLog />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PM Reporting Routes */}
-                <Route path="pm/reporting/checkpoint-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMReportingCheckpoint />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/reporting/highlight-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMReportingHighlight />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/reporting/issue-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMReportingIssueReports />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/reporting/exception-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMReportingException />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/reporting/end-stage-reports" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMReportingEndStage />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* PM Closure Routes */}
-                <Route path="pm/closure/lessons-report" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMClosureLessonsReport />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="pm/closure/end-project-report" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute>
-                          <PMLayout>
-                            <PMClosureEndProjectReport />
-                          </PMLayout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
       
+                <Route element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <PMOLayout><Outlet /></PMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                }>
+                  <Route path="pmo/testing-centre/*" element={<TestingCentreRoutesPmo />} />
+                  <Route path="pmo/process-templates/*" element={<ProcessTemplatesRoutesPmo />} />
+                  <Route path="pmo/itto/templates" element={<ITTOTemplateList />} />
+                  <Route path="pmo/itto/drafts" element={<ITTODraftsQueue />} />
+                  <Route path="pmo/industry-templates" element={<IndustryTemplateList />} />
+                  <Route path="pmo/legacy-templates/upload" element={<LegacyTemplateUploadPage />} />
+                  <Route path="pmo/legacy-templates" element={<LegacyReferenceTemplatesPage />} />
+                  <Route path="pmo/invitation-tracker" element={<PMOInvitationTracker />} />
+                  <Route path="pmo/invitation-tracker/view" element={<InvitationDetailPage />} />
+                  <Route path="pmo/industry-templates/new" element={<IndustryTemplateForm />} />
+                  <Route path="pmo/industry-templates/on-hold" element={<IndustryTemplateOnHold />} />
+                  <Route path="pmo/industry-templates/:id/edit" element={<IndustryTemplateForm />} />
+                  <Route path="pmo/industry-templates/:id" element={<IndustryTemplateDetail />} />
+                  <Route path="pmo/governance/mandate" element={<PMOGovernanceMandateTemplate />} />
+                  <Route path="pmo/mandates/create" element={<ProjectMandateCreate />} />
+                  <Route path="pmo/mandates/:mandateId/view" element={<ProjectMandateView />} />
+                  <Route path="pmo/mandates/:mandateId/edit" element={<ProjectMandateEdit />} />
+                  <Route path="pmo/mandates/approvals" element={<MandateApprovalDashboard />} />
+                  <Route path="pmo/governance/communication-strategy" element={<PMOGovernanceCMS />} />
+                  <Route path="pmo/governance/configuration-strategy" element={<PMOGovernanceConfigMS />} />
+                  <Route path="pmo/governance/quality-strategy" element={<PMOGovernanceQMS />} />
+                  <Route path="pmo/governance/risk-strategy" element={<PMOGovernanceRMS />} />
+                  <Route path="pmo/initiation/business-case" element={<BusinessCaseListPage />} />
+                  <Route path="pmo/initiation/business-case/create" element={<BusinessCaseCreate />} />
+                  <Route path="pmo/initiation/business-case/:id/view" element={<BusinessCaseViewPage />} />
+                  <Route path="pmo/initiation/business-case/:id/edit" element={<BusinessCaseEdit />} />
+                  <Route path="pmo/initiation/project-brief" element={<PMOInitiationProjectBrief />} />
+                  <Route path="pmo/initiation/benefits-review-plan" element={<PMOInitiationBenefitsReviewPlan />} />
+                  <Route path="pmo/oversight/risk-register" element={<PMOOversightRiskRegister />} />
+                  <Route path="pmo/oversight/issue-register" element={<PMOOversightIssueRegister />} />
+                  <Route path="pmo/registers/changes" element={<PMOOversightChangeRegister />} />
+                  <Route path="pmo/oversight/quality-register" element={<PMOOversightQualityRegister />} />
+                  <Route path="pmo/oversight/lessons-log" element={<PMOOversightLessonsLog />} />
+                  <Route path="pmo/oversight/scope" element={<PMOOversightScope />} />
+                  <Route path="pmo/oversight/schedules" element={<PMOOversightSchedules />} />
+                  <Route path="pmo/oversight/delays" element={<DelayRegister />} />
+                  <Route path="pmo/delays/templates" element={<DelayTemplates />} />
+                  <Route path="pmo/reporting/highlight-reports" element={<PMOReportingHighlight />} />
+                  <Route path="pmo/reporting/exception-reports" element={<PMOReportingException />} />
+                  <Route path="pmo/reporting/end-stage-reports" element={<PMOReportingEndStage />} />
+                  <Route path="pmo/reporting/end-project-reports" element={<PMOReportingEndProject />} />
+                  <Route path="pmo/procurement/rfp" element={<PMOProcurementRFP />} />
+                  <Route path="pmo/rfp/create" element={<PMORFPCreate />} />
+                  <Route path="pmo/rfp/:id/view" element={<PMORFPView />} />
+                  <Route path="pmo/rfp/:id/edit" element={<PMORFPEdit />} />
+                  <Route path="pmo/rfp/:id/import" element={<PMORFPBulkImport />} />
+                  <Route path="pmo/rfp/on-hold" element={<PMORFPOnHold />} />
+                  <Route path="pmo/forms" element={<FormTemplateAdmin mode="platform" />} />
+                  <Route path="pmo/forms/new" element={<FormTemplateBuilder mode="platform" />} />
+                  <Route path="pmo/forms/:templateCode/edit" element={<FormTemplateBuilder mode="platform" />} />
+                  <Route path="app/pmo/forms" element={<FormTemplateAdmin mode="platform" />} />
+                  <Route path="app/pmo/forms/new" element={<FormTemplateBuilder mode="platform" />} />
+                  <Route path="app/pmo/forms/:templateCode/edit" element={<FormTemplateBuilder mode="platform" />} />
+                </Route>
+
+                <Route element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <PMLayout><Outlet /></PMLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                }>
+                  <Route path="pm/dashboard" element={<PMDashboard />} />
+                  <Route path="pm/team-members" element={<ProjectUsers />} />
+                  <Route path="pm/invitation-tracker" element={<PMInvitationTracker />} />
+                  <Route path="pm/invitation-tracker/view" element={<InvitationDetailPage />} />
+                  <Route path="pm/profile" element={<Settings />} />
+                  <Route path="platform/portfolio-manager/assignments" element={<PortfolioManagerAssignments />} />
+                  <Route path="platform/programme-manager/assignments" element={<ProgrammeManagerAssignments />} />
+                  <Route path="pm/industry-templates" element={<IndustryTemplateBrowser />} />
+                  <Route path="pm/projects/:projectId/industry-plan" element={<ProjectIndustryPlanView />} />
+                  <Route path="pm/projects/:projectId/industry-plan/new" element={<IndustryPlanCopyWizard />} />
+                  <Route path="pm/projects/:projectId/industry-plan/edit" element={<IndustryPlanCopyWizard />} />
+                  <Route path="pm/projects/:projectId/forms" element={<FormsGallery mode="platform" basePath="/pm/projects" />} />
+                  <Route path="pm/projects/:projectId/forms/:templateCode/new" element={<FormNew mode="platform" basePath="/pm/projects" />} />
+                  <Route path="pm/projects/:projectId/forms/:formInstanceId/edit" element={<FormEdit mode="platform" />} />
+                  <Route path="pm/projects/:projectId/forms/:formInstanceId/view" element={<FormView mode="platform" />} />
+                  <Route path="pm/testing-centre/*" element={<TestingCentreRoutesPm />} />
+                  <Route path="pm/process-templates/*" element={<ProcessTemplatesRoutesPm />} />
+                  <Route path="pm/itto/templates" element={<ITTOTemplateList />} />
+                  <Route path="pm/itto/project" element={<ProjectITTOList />} />
+                  <Route path="pm/itto/drafts" element={<ITTODraftsQueue />} />
+                  <Route path="pm/delays" element={<DelayRegister />} />
+                  <Route path="pm/delays/drafts" element={<DelayRegister />} />
+                  <Route path="pm/governance/mandate" element={<PMGovernanceMandateTemplate />} />
+                  <Route path="pm/governance/communication-strategy" element={<PMGovernanceCMS />} />
+                  <Route path="pm/governance/configuration-strategy" element={<PMGovernanceConfigMS />} />
+                  <Route path="pm/governance/quality-strategy" element={<PMGovernanceQMS />} />
+                  <Route path="pm/governance/risk-strategy" element={<PMGovernanceRMS />} />
+                  <Route path="pm/initiation/business-case" element={<PMInitiationBusinessCase />} />
+                  <Route path="pm/initiation/business-case/create" element={<BusinessCaseCreate />} />
+                  <Route path="pm/initiation/business-case/:id/view" element={<BusinessCaseViewPage />} />
+                  <Route path="pm/initiation/business-case/:id/edit" element={<BusinessCaseEdit />} />
+                  <Route path="pm/initiation/project-brief" element={<PMInitiationProjectBrief />} />
+                  <Route path="pm/initiation/pid" element={<PMInitiationPID />} />
+                  <Route path="pm/initiation/benefits-review-plan" element={<PMInitiationBenefitsReviewPlan />} />
+                  <Route path="pm/delivery/work-packages" element={<PMDeliveryWorkPackages />} />
+                  <Route path="pm/delivery/product-description" element={<PMDeliveryProductDescription />} />
+                  <Route path="pm/delivery/project-product-description" element={<PMDeliveryProjectProductDescription />} />
+                  <Route path="pm/delivery/product-status-account" element={<PMDeliveryProductStatusAccount />} />
+                  <Route path="pm/delivery/daily-log" element={<PMDeliveryDailyLog />} />
+                  <Route path="pm/controls/risk-register" element={<PMControlsRiskRegister />} />
+                  <Route path="pm/controls/issue-register" element={<PMControlsIssueRegister />} />
+                  <Route path="pm/controls/quality-register" element={<PMControlsQualityRegister />} />
+                  <Route path="pm/controls/configuration-items" element={<PMControlsConfigItems />} />
+                  <Route path="pm/controls/lessons-log" element={<PMControlsLessonsLog />} />
+                  <Route path="pm/reporting/checkpoint-reports" element={<PMReportingCheckpoint />} />
+                  <Route path="pm/reporting/highlight-reports" element={<PMReportingHighlight />} />
+                  <Route path="pm/reporting/issue-reports" element={<PMReportingIssueReports />} />
+                  <Route path="pm/reporting/exception-reports" element={<PMReportingException />} />
+                  <Route path="pm/reporting/end-stage-reports" element={<PMReportingEndStage />} />
+                  <Route path="pm/closure/lessons-report" element={<PMClosureLessonsReport />} />
+                  <Route path="pm/closure/end-project-report" element={<PMClosureEndProjectReport />} />
+                </Route>
+
+                <Route element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider>
+                      <ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>
+                    </ToastProvider></ThemeProvider>
+                  </Suspense>
+                }>
+                  <Route path="platform/plans/my-plans" element={<MicroPlanList scope="individual" />} />
+                  <Route path="platform/plans/team-workstreams" element={<MicroPlanList scope="team" />} />
+                  <Route path="platform/plans/new" element={<MicroPlanForm />} />
+                  <Route path="platform/plans/:id/edit" element={<MicroPlanForm />} />
+                  <Route path="platform/team-charter" element={<TeamCharterPage />} />
+                  <Route path="platform/projects/:projectId/team-charter" element={<TeamCharterPage />} />
+                  <Route path="platform/team-charter/edit" element={<TeamCharterEditPage />} />
+                  <Route path="platform/projects/:projectId/team-charter/edit" element={<TeamCharterEditPage />} />
+                  <Route path="platform/governance/decisions" element={<DecisionLogPage />} />
+                  <Route path="platform/governance/decisions/new" element={<DecisionLogForm />} />
+                  <Route path="platform/governance/decisions/:id" element={<DecisionLogDetail />} />
+                  <Route path="platform/governance/decisions/:id/edit" element={<DecisionLogForm />} />
+                  <Route path="platform/timesheets" element={<MyTimesheetsPage />} />
+                  <Route path="platform/timesheets/new" element={<TimesheetEntryForm />} />
+                  <Route path="platform/timesheets/team" element={<TeamTimesheetsPage />} />
+                  <Route path="platform/timesheets/:id" element={<TimesheetEntryDetail />} />
+                  <Route path="platform/timesheets/:id/edit" element={<TimesheetEntryForm />} />
+                  <Route path="platform/communications/chat" element={<TeamChatPage />} />
+                  <Route path="platform/communications/video-calls" element={<VideoCallsPage />} />
+                  <Route path="platform/communications/voice-calls" element={<VoiceCallsPage />} />
+                </Route>
+
+                <Route element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider>
+                      <ProtectedRoute requiredPlatform="simulator">
+                        <SimulatorTMLayout><Outlet /></SimulatorTMLayout>
+                      </ProtectedRoute>
+                    </ToastProvider></ThemeProvider>
+                  </Suspense>
+                }>
+                  <Route path="simulator/tm/dashboard" element={<SimulatorTMDashboard />} />
+                  <Route path="simulator/tm/plans/my-plans" element={<MicroPlanList scope="individual" />} />
+                  <Route path="simulator/tm/plans/new" element={<MicroPlanForm />} />
+                  <Route path="simulator/tm/plans/:id/edit" element={<MicroPlanForm />} />
+                  <Route path="simulator/tm/decisions" element={<DecisionLogPage />} />
+                  <Route path="simulator/tm/decisions/new" element={<DecisionLogForm />} />
+                  <Route path="simulator/tm/decisions/:id" element={<DecisionLogDetail />} />
+                  <Route path="simulator/tm/decisions/:id/edit" element={<DecisionLogForm />} />
+                  <Route path="simulator/tm/timesheets" element={<MyTimesheetsPage />} />
+                  <Route path="simulator/tm/timesheets/new" element={<TimesheetEntryForm />} />
+                  <Route path="simulator/tm/timesheets/:id" element={<TimesheetEntryDetail />} />
+                  <Route path="simulator/tm/timesheets/:id/edit" element={<TimesheetEntryForm />} />
+                  <Route path="simulator/tm/team-charter" element={<TeamCharterPage />} />
+                  <Route path="simulator/tm/communications/chat" element={<TeamChatPage />} />
+                  <Route path="simulator/tm/communications/video-calls" element={<VideoCallsPage />} />
+                  <Route path="simulator/tm/communications/voice-calls" element={<SimVoiceCallsPage />} />
+                </Route>
+
     </>
   )
 }

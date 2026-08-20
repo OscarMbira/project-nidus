@@ -28,6 +28,12 @@ import CustomFieldRenderer from '../features/local-data-extensions/components/Cu
 import InheritedRiskRegisterFields from '../features/local-data-extensions/components/InheritedRiskRegisterFields'
 import { buildCustomFieldExportParts } from '../features/local-data-extensions/utils/exportMerge'
 import { RecordLifecycleLockBanner, isRecordLifecycleLocked } from '@nidus/ui/RecordLifecycleFieldLock'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const RISK_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -67,10 +73,12 @@ async function buildRiskExport(platformDb, risk, riskAccountId, projectId) {
 }
 
 export default function RiskDetail() {
-  const { riskId } = useParams()
+  const params = useParams()
+  // Nested project route uses :riskId; legacy /platform/risks/:id uses :id
+  const riskParam = params.riskId || params.id
   const { projectId, routeKey, loading: projectRouteLoading } = usePlatformProjectId()
   const { uuid: riskUuid, loading: riskEntityLoading, error: riskResolveError } = useEntityId(
-    riskId && projectId ? riskId : '',
+    riskParam && projectId ? riskParam : '',
     'risk',
     projectId,
   )
@@ -81,7 +89,23 @@ export default function RiskDetail() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showEscalateDialog, setShowEscalateDialog] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !risk) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        risk.created_by,
+        risk.updated_by,
+        risk.risk_owner_user_id,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, risk])
 
   useEffect(() => {
     if (!risk?.project_id) {
@@ -129,8 +153,13 @@ export default function RiskDetail() {
   useEffect(() => {
     if (riskUuid) {
       fetchData()
+      return
     }
-  }, [riskUuid, refreshKey])
+    // Avoid infinite spinner when the route param cannot be resolved
+    if (!projectRouteLoading && !riskEntityLoading) {
+      setLoading(false)
+    }
+  }, [riskUuid, refreshKey, projectRouteLoading, riskEntityLoading])
 
   const handleUpdate = () => {
     setRefreshKey(prev => prev + 1)
@@ -179,6 +208,31 @@ export default function RiskDetail() {
             Back to Risks
           </button>
         </div>
+      </div>
+    )
+  }
+
+  if (showEditForm) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
+        <button
+          type="button"
+          onClick={() => setShowEditForm(false)}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+        >
+          ← Back to risk details
+        </button>
+        <EnhancedRiskForm
+          variant="page"
+          risk={risk}
+          projectId={projectId}
+          riskRegisterId={risk.risk_register_id}
+          onSave={() => {
+            setShowEditForm(false)
+            handleUpdate()
+          }}
+          onCancel={() => setShowEditForm(false)}
+        />
       </div>
     )
   }
@@ -302,40 +356,46 @@ export default function RiskDetail() {
       )}
 
       {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200 dark:border-gray-700">
-        <nav className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'overview'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('responses')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'responses'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-          >
-            Response Actions
-          </button>
-          <button
-            onClick={() => setActiveTab('assessment')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'assessment'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-            }`}
-          >
-            Assessment History ({assessments.length})
-          </button>
-        </nav>
+      <div className="mb-6">
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Risk sections"
+          tabs={[
+            { value: 'overview', label: 'Overview' },
+            { value: 'responses', label: 'Response Actions' },
+            { value: 'assessment', label: `Assessment History (${assessments.length})` },
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
       </div>
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this risk, and how it is classified.">
+          <AuditCard title="Identity" description="How this risk is labelled and tracked.">
+            <AuditField label="Identifier" value={risk.risk_identifier} />
+            <AuditField label="Title" value={risk.risk_title} />
+            <AuditField label="Type" value={humanizeAuditToken(risk.risk_type)} />
+            <AuditField label="Status" value={humanizeAuditToken(risk.status_enum || risk.status)} />
+            <AuditField label="Record status" value={humanizeAuditToken(risk.record_status)} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this risk sits.">
+            <AuditField label="Category" value={humanizeAuditToken(risk.risk_category)} />
+            <AuditField label="Response category" value={humanizeAuditToken(risk.response_category)} />
+            <AuditField label="Risk owner" value={risk.risk_owner?.full_name || risk.risk_owner?.email || (risk.risk_owner_user_id ? auditUserLabels[risk.risk_owner_user_id] : null)} />
+            <AuditField label="Author" value={risk.risk_author?.full_name || risk.risk_author_name} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this risk was created and last changed.">
+            <AuditField label="Created by" value={risk.created_by ? auditUserLabels[risk.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={risk.created_at} />
+            <AuditField label="Updated by" value={risk.updated_by ? auditUserLabels[risk.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={risk.updated_at} />
+            <AuditTimestampPair dateLabel="Date registered" value={risk.date_registered} />
+            <AuditTimestampPair dateLabel="Target mitigation date" value={risk.target_mitigation_date} />
+            <AuditTimestampPair dateLabel="Next review date" value={risk.next_review_date} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
 
       {/* Tab Content */}
       {activeTab === 'overview' && (
@@ -512,19 +572,6 @@ export default function RiskDetail() {
             <RiskAttachments riskId={riskUuid} />
           </div>
         </div>
-      )}
-
-      {showEditForm && risk && (
-        <EnhancedRiskForm
-          risk={risk}
-          projectId={projectId}
-          riskRegisterId={risk.risk_register_id}
-          onSave={() => {
-            setShowEditForm(false)
-            handleUpdate()
-          }}
-          onCancel={() => setShowEditForm(false)}
-        />
       )}
 
       {showEscalateDialog && risk && (

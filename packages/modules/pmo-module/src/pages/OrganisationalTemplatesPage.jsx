@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Search, Copy, FilePlus2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
@@ -10,6 +10,7 @@ import RequireRole from '@nidus/ui/RequireRole'
 import Modal from '@nidus/ui/Modal'
 import Button from '@nidus/ui/Button'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import Pagination from '@nidus/ui/Pagination'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getDisplayRowNumber, withExportRowNumbers } from '@nidus/shared/utils/tableRowNumberUtils'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution.js'
@@ -34,7 +35,10 @@ import {
   orgTemplateDetailPath,
   resolveFormTemplateManagePath,
   resolveOrgTemplatesListBase,
+  parsePmTemplatesPath,
+  buildPmTemplatesListPath,
 } from '@nidus/shared/utils/organisationalTemplateRoutes.js'
+import { resolveProjectRouteKeyFromId } from '@nidus/shared/utils/projectRouteParam.js'
 import {
   toProjectDocumentLabel,
   withCustomNameSuffix,
@@ -44,6 +48,15 @@ import {
   filterRowsByDomainGroup,
   domainGroupHeadingSuffix,
 } from '@nidus/shared/utils/templateDomainGroup.js'
+import {
+  canCopyDownOrgTemplate,
+  canRetireOrgTemplate,
+  toggleIdInSelection,
+  toggleSelectAllFiltered,
+  pruneSelectionToFiltered,
+  partitionSelectedTemplateRows,
+  formatBulkActionSummary,
+} from '@nidus/shared/utils/orgTemplateBulkSelection.js'
 
 /** Project-owned rows: strip stacked "(custom)" / template suffixes for display. */
 function displayRowName(row) {
@@ -59,6 +72,7 @@ function displayRowName(row) {
 
 const EXPORT_COLS = [
   { key: '_rowNumber', label: '#' },
+  { key: 'template_reference', label: 'Template ID' },
   { key: 'name', label: 'Name' },
   { key: 'tier', label: 'Tier' },
   { key: 'domain', label: 'Domain' },
@@ -67,6 +81,7 @@ const EXPORT_COLS = [
 ]
 
 const TIER_LABELS = { portfolio: 'Portfolio', programme: 'Programme', project: 'Project', pmo: 'PMO' }
+const PAGE_SIZE = 20
 
 function methodologyLabel(m) {
   if (m == null || String(m).trim() === '') return 'Common'
@@ -75,27 +90,46 @@ function methodologyLabel(m) {
 }
 
 /**
- * Organisational Templates / Project Templates (v844).
+ * Organisational Templates / Project Templates (v844 / v864).
  * - listVariant="organisational" (default): org customisations; in PM project context,
  *   nearest non–project-own tier for copy-down.
  * - listVariant="project": only this project's copied templates (customise / retire).
- * Routes: /app/pmo/organisational-templates · /platform/templates/organisational · /platform/templates/project
+ * Routes: /app/pmo/organisational-templates · /platform/templates/organisational[/:projectKey] · /platform/templates/project[/:projectKey]
  */
 export default function OrganisationalTemplatesPage({ listVariant = 'organisational' } = {}) {
   const [searchParams] = useSearchParams()
+  const params = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const { projectId: contextProjectId } = usePlatformProjectId()
+  const { projectId: contextProjectId, routeKey } = usePlatformProjectId()
   const isProjectOwnList = listVariant === 'project'
-  const listBase = resolveOrgTemplatesListBase(location.pathname, { listVariant })
-  const detailHref = (row) => orgTemplateDetailPath(listBase, row.template_reference || row.id)
-  // v824: reached from a PM's project context (?entityType=project&entityId=…) shows only the
-  // nearest-tier template per family for THIS project — never the flat, every-tier PMO-admin
-  // view below, which stays exactly as it was for the no-query-param case.
-  const entityType = searchParams.get('entityType') || (isProjectOwnList ? 'project' : null)
+  const parsedPath = useMemo(() => parsePmTemplatesPath(location.pathname), [location.pathname])
+  const pathProjectKey =
+    parsedPath.projectKey ||
+    (parsedPath.kind === 'project' ? parsedPath.ambiguousSegment : null) ||
+    (isProjectOwnList || parsedPath.kind === 'organisational' ? params.projectId : null) ||
+    null
+
+  // v864: prefer path project key; legacy query still accepted until entry redirects.
+  const onPmTemplatesPath =
+    /\/(platform|simulator\/pm)\/templates\/(project|organisational)/.test(location.pathname || '')
+  const entityType =
+    searchParams.get('entityType') ||
+    (isProjectOwnList || (onPmTemplatesPath && (pathProjectKey || contextProjectId))
+      ? 'project'
+      : null)
   const entityId =
-    searchParams.get('entityId') || (isProjectOwnList ? contextProjectId : null) || null
+    searchParams.get('entityId') ||
+    (isProjectOwnList ? contextProjectId : null) ||
+    (onPmTemplatesPath && pathProjectKey ? contextProjectId : null) ||
+    null
   const isProjectScoped = entityType === 'project' && !!entityId
+
+  const listBase = resolveOrgTemplatesListBase(location.pathname, {
+    listVariant,
+    projectKey: pathProjectKey || routeKey || undefined,
+  })
+  const detailHref = (row) => orgTemplateDetailPath(listBase, row.template_reference || row.id)
 
   const [rows, setRows] = useState([])
   const [ancestry, setAncestry] = useState({ programmeId: null, portfolioId: null })
@@ -107,6 +141,9 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
   const [methodologyFilter, setMethodologyFilter] = useState(() => searchParams.get('methodology') || '')
   const [deletingId, setDeletingId] = useState(null)
   const [copyingId, setCopyingId] = useState(null)
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [page, setPage] = useState(1)
   const [creatingBlank, setCreatingBlank] = useState(false)
   const [blankFormModalOpen, setBlankFormModalOpen] = useState(false)
   const [blankFormName, setBlankFormName] = useState('')
@@ -151,23 +188,47 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
     }
   }, [searchParams])
 
-  // PM mounts: keep entity context without stripping domainGroup (v851 submenu links).
+  // v864: PM mounts use /templates/{variant}/<projectKey> (no entityId query).
   useEffect(() => {
     const path = location.pathname || ''
     const isPmTemplatesMount =
       path.includes('/templates/organisational') || path.includes('/templates/project')
     if (!isPmTemplatesMount || !contextProjectId) return
-    if (
-      searchParams.get('entityType') === 'project' &&
-      searchParams.get('entityId') === contextProjectId
-    ) {
-      return
+
+    let cancelled = false
+    ;(async () => {
+      const friendlyKey = await resolveProjectRouteKeyFromId(contextProjectId)
+      if (cancelled || !friendlyKey) return
+      const target = buildPmTemplatesListPath({
+        pathname: path,
+        listVariant: isProjectOwnList ? 'project' : 'organisational',
+        projectKey: friendlyKey,
+        searchParams,
+      })
+      const current = `${path}${location.search || ''}`
+      if (current.split('#')[0] === target) return
+      // Only replace when missing key, UUID in path, or legacy entity query present
+      const hasLegacy = Boolean(searchParams.get('entityId') || searchParams.get('entityType'))
+      const keyed =
+        parsedPath.projectKey ||
+        (parsedPath.kind === 'project' && parsedPath.ambiguousSegment) ||
+        params.projectId
+      if (!hasLegacy && keyed && String(keyed) === String(friendlyKey)) return
+      navigate(target, { replace: true })
+    })()
+    return () => {
+      cancelled = true
     }
-    const next = new URLSearchParams(searchParams)
-    next.set('entityType', 'project')
-    next.set('entityId', contextProjectId)
-    navigate({ pathname: path, search: next.toString() }, { replace: true })
-  }, [location.pathname, contextProjectId, searchParams, navigate])
+  }, [
+    location.pathname,
+    location.search,
+    contextProjectId,
+    searchParams,
+    navigate,
+    isProjectOwnList,
+    parsedPath,
+    params.projectId,
+  ])
 
   useEffect(() => {
     if (!isProjectScoped) {
@@ -219,14 +280,69 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
     const q = search.trim().toLowerCase()
     if (q) {
       list = list.filter((r) =>
-        [r.name, r.domain, r.tier, r.category, r.methodology]
+        [r.template_reference, r.name, r.domain, r.tier, r.category, r.methodology]
           .some((v) => String(v || '').toLowerCase().includes(q)),
       )
     }
-    return list
+    // Default list order (rule 40.1): Name A→Z, then created_at oldest-first.
+    return [...list].sort((a, b) => {
+      const nameCmp = String(displayRowName(a) || '')
+        .localeCompare(String(displayRowName(b) || ''), undefined, { sensitivity: 'base' })
+      if (nameCmp !== 0) return nameCmp
+      const aAt = a?.created_at ? new Date(a.created_at).getTime() : 0
+      const bAt = b?.created_at ? new Date(b.created_at).getTime() : 0
+      return aAt - bAt
+    })
   }, [scopedRows, domainGroup, domainFilter, tierFilter, methodologyFilter, search])
 
   const headingTitle = `${pageTitle}${domainGroupHeadingSuffix(domainGroup)}`
+
+  const filteredIds = useMemo(() => filtered.map((r) => r.id), [filtered])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pagedRows = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE
+    return filtered.slice(start, start + PAGE_SIZE)
+  }, [filtered, safePage])
+  const pageIds = useMemo(() => pagedRows.map((r) => r.id), [pagedRows])
+
+  // Reset to first page when search/filters change the result set.
+  useEffect(() => {
+    setPage(1)
+  }, [search, tierFilter, domainFilter, domainGroup, methodologyFilter, scopedRows.length])
+
+  // Drop selections that fall out of the current filtered set (search/filters).
+  useEffect(() => {
+    setSelectedIds((prev) => {
+      const next = pruneSelectionToFiltered(prev, filteredIds)
+      return next.size === prev.size ? prev : next
+    })
+  }, [filteredIds])
+
+  const selectionCtx = useMemo(
+    () => ({ isProjectScoped, entityId }),
+    [isProjectScoped, entityId],
+  )
+
+  const { copyEligible, retireEligible } = useMemo(
+    () => partitionSelectedTemplateRows(filtered, selectedIds, selectionCtx),
+    [filtered, selectedIds, selectionCtx],
+  )
+
+  const selectedCount = selectedIds.size
+  const copyEligibleCount = copyEligible.length
+  const retireEligibleCount = retireEligible.length
+  const allPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id))
+
+  const toggleRowSelected = (row) => {
+    setSelectedIds((prev) => toggleIdInSelection(prev, row.id))
+  }
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => toggleSelectAllFiltered(prev, pageIds))
+  }
 
   const { columns: exportCols, rows: exportRows } = useMemo(
     () => withExportRowNumbers(
@@ -265,15 +381,10 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
     }
   }
 
-  // v824: fork whichever tier is currently nearest for this project down to Project tier —
-  // reuses copyTemplateNodeForAccount, which already forks from the nearest override (not raw
-  // Global) and enforces the v822 one-copy-per-scope guard.
-  const isAlreadyProjectOwn = (row) => row.tier === 'project' && row.scope_entity_id === entityId
-
   /** Icon-only View / Edit / Retire (v840); Copy-down stays a labelled CTA when applicable. */
   const renderRowActions = (row) => {
-    const canCustomise = !isProjectScoped || isAlreadyProjectOwn(row)
-    const showCopyDown = isProjectScoped && !isAlreadyProjectOwn(row)
+    const canCustomise = canRetireOrgTemplate(row, selectionCtx)
+    const showCopyDown = canCopyDownOrgTemplate(row, selectionCtx)
     const href = detailHref(row)
     const label = displayRowName(row)
     return (
@@ -293,7 +404,7 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
         {showCopyDown && (
           <button
             type="button"
-            disabled={copyingId === row.id}
+            disabled={bulkBusy || copyingId === row.id}
             onClick={() => handleCopyDown(row)}
             title={copyingId === row.id ? 'Copying…' : 'Copy down to my project'}
             aria-label={copyingId === row.id ? 'Copying…' : `Copy ${label} down to my project`}
@@ -307,7 +418,7 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
           <RowActionButton
             variant="delete"
             label={`Retire ${label}`}
-            disabled={deletingId === row.id}
+            disabled={bulkBusy || deletingId === row.id}
             onClick={() => handleDelete(row)}
           />
         )}
@@ -339,6 +450,108 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
       setCopyingId(null)
     }
   }
+
+  const handleBulkCopyDown = async () => {
+    if (!copyEligibleCount) {
+      toast.error('Select at least one template that can be copied down')
+      return
+    }
+    const targets = copyEligible
+    const skipped = selectedCount - targets.length
+    setBulkBusy(true)
+    let ok = 0
+    let failed = 0
+    try {
+      const accountId = await getCurrentUserAccountId()
+      for (const row of targets) {
+        try {
+          await copyTemplateNodeForAccount(platformDb, {
+            accountId,
+            sourceNodeId: row.id,
+            tier: 'project',
+            scopeEntityType: 'project',
+            scopeEntityId: entityId,
+          })
+          ok += 1
+        } catch (e) {
+          if (e.code === 'ALREADY_COPIED') {
+            // Count as skipped — already has a project copy
+          } else {
+            failed += 1
+          }
+        }
+      }
+      const already = targets.length - ok - failed
+      const skippedTotal = skipped + already
+      const summary = formatBulkActionSummary('Copied', { ok, skipped: skippedTotal, failed })
+      if (failed && !ok) toast.error(summary)
+      else if (failed) toast.error(summary)
+      else toast.success(`${summary} — open ${projectTemplatesMenuLabel} to customise`)
+      setSelectedIds(new Set())
+      await loadRows()
+    } catch (e) {
+      toast.error(e.message || 'Bulk copy failed')
+    } finally {
+      setBulkBusy(false)
+    }
+  }
+
+  const handleBulkRetire = async () => {
+    if (!retireEligibleCount) {
+      toast.error('Select at least one template you can retire')
+      return
+    }
+    const where = isProjectOwnList
+      ? 'Project Templates for this project'
+      : 'Organisational Templates or be inherited by downstream tiers'
+    const targets = retireEligible
+    const skipped = selectedCount - targets.length
+    if (
+      !window.confirm(
+        `Retire ${targets.length} selected template${targets.length === 1 ? '' : 's'}? They will no longer appear in ${where}.`,
+      )
+    ) {
+      return
+    }
+    setBulkBusy(true)
+    let ok = 0
+    let failed = 0
+    try {
+      for (const row of targets) {
+        try {
+          if (row.domain === 'process_template') {
+            await archiveProcessTemplateNodeAndContent(platformDb, row)
+          } else {
+            await archiveTemplateNode(platformDb, row.id)
+          }
+          ok += 1
+        } catch {
+          failed += 1
+        }
+      }
+      const summary = formatBulkActionSummary('Retired', { ok, skipped, failed })
+      if (failed && !ok) toast.error(summary)
+      else if (failed) toast.error(summary)
+      else toast.success(summary)
+      setSelectedIds(new Set())
+      await loadRows()
+    } catch (e) {
+      toast.error(e.message || 'Bulk retire failed')
+    } finally {
+      setBulkBusy(false)
+    }
+  }
+
+  const renderSelectCheckbox = (row) => (
+    <input
+      type="checkbox"
+      aria-label={`Select ${displayRowName(row) || 'template'}`}
+      checked={selectedIds.has(row.id)}
+      onChange={() => toggleRowSelected(row)}
+      disabled={bulkBusy}
+      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+    />
+  )
 
   // v852: blank-origin local form — Project Templates / project-scoped org list → project tier;
   // portfolio/programme query context → that tier; otherwise PMO account-level blank.
@@ -409,6 +622,7 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
         ? resolveFormTemplateManagePath(location.pathname, {
             templateCode: code,
             scopeEntityId: blankFormScope.scopeEntityId,
+            scopeEntityType: blankFormScope.scopeEntityType,
             tier: blankFormScope.tier,
             isBlankOrigin: true,
           })
@@ -420,7 +634,18 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
         navigate(detailHref(node))
       }
     } catch (e) {
-      toast.error(e.message || 'Could not create blank form')
+      const msg = String(e?.message || '')
+      if (/row-level security|42501/i.test(msg)) {
+        toast.error(
+          'You do not have permission to create a blank form on this project. A Project Manager role (or PMO Admin) is required.',
+        )
+      } else if (/chk_pm_template_nodes_root_synced|check constraint/i.test(msg)) {
+        toast.error(
+          'Database is missing the blank-form root fix. Apply SQL/v856_pm_template_nodes_allow_blank_local_form_roots.sql, then retry.',
+        )
+      } else {
+        toast.error(msg || 'Could not create blank form')
+      }
     } finally {
       setCreatingBlank(false)
     }
@@ -439,7 +664,7 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
   )
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-7xl space-y-4 p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{headingTitle}</h1>
@@ -547,8 +772,47 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
 
       {!loading && (
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          Showing {filtered.length} of {scopedRows.length} template{scopedRows.length === 1 ? '' : 's'}
+          {filtered.length === scopedRows.length
+            ? `${filtered.length} template${filtered.length === 1 ? '' : 's'}`
+            : `${filtered.length} of ${scopedRows.length} template${scopedRows.length === 1 ? '' : 's'} match filters`}
         </p>
+      )}
+
+      {!loading && selectedCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950/40">
+          <span className="text-sm text-gray-700 dark:text-gray-200">
+            {selectedCount} selected
+          </span>
+          {copyEligibleCount > 0 && (
+            <button
+              type="button"
+              disabled={bulkBusy}
+              onClick={handleBulkCopyDown}
+              className="inline-flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-60"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              {bulkBusy ? 'Working…' : `Copy down selected (${copyEligibleCount})`}
+            </button>
+          )}
+          {retireEligibleCount > 0 && (
+            <button
+              type="button"
+              disabled={bulkBusy}
+              onClick={handleBulkRetire}
+              className="inline-flex items-center gap-1 rounded bg-red-600 px-3 py-1.5 text-sm text-white hover:bg-red-700 disabled:opacity-60"
+            >
+              {bulkBusy ? 'Working…' : `Retire selected (${retireEligibleCount})`}
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={bulkBusy}
+            onClick={() => setSelectedIds(new Set())}
+            className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-white disabled:opacity-60 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            Clear selection
+          </button>
+        </div>
       )}
 
       {loading && <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>}
@@ -587,18 +851,33 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
+                <th className="w-10 px-2 py-2 text-left">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all filtered templates"
+                    checked={allPageSelected}
+                    onChange={toggleSelectAll}
+                    disabled={bulkBusy || !pageIds.length}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900"
+                  />
+                </th>
                 <TableRowNumberHeader />
+                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">Template ID</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">Name</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">Tier</th>
                 <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">Domain</th>
-                <th className="px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">Methodology</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left font-medium text-gray-700 dark:text-gray-200">Methodology</th>
                 <th className="px-3 py-2 text-right font-medium text-gray-700 dark:text-gray-200">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((row, index) => (
+              {pagedRows.map((row, index) => (
                 <tr key={row.id} className="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                  <td className="px-2 py-2">{renderSelectCheckbox(row)}</td>
+                  <TableRowNumberCell number={getDisplayRowNumber(index, { page: safePage, pageSize: PAGE_SIZE })} />
+                  <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-gray-600 dark:text-gray-300">
+                    {row.template_reference || '—'}
+                  </td>
                   <td className="px-3 py-2 text-gray-900 dark:text-gray-100">
                     {displayRowName(row)}
                     {row.parent_node_id ? (
@@ -607,9 +886,9 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
                       <span className="ml-2 text-xs text-gray-400">custom draft</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{TIER_LABELS[row.tier] || row.tier}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-gray-600 dark:text-gray-300">{TIER_LABELS[row.tier] || row.tier}</td>
                   <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{row.domain}</td>
-                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300">{methodologyLabel(row.methodology)}</td>
+                  <td className="whitespace-nowrap px-3 py-2 text-gray-600 dark:text-gray-300">{methodologyLabel(row.methodology)}</td>
                   <td className="px-3 py-2 whitespace-nowrap text-right">
                     {renderRowActions(row)}
                   </td>
@@ -620,14 +899,22 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
         </div>
       )}
 
-      {!loading && viewMode !== 'list' && (
+      {!loading && viewMode !== 'list' && filtered.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((row, index) => (
+          {pagedRows.map((row, index) => (
             <article
               key={row.id}
               className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
             >
-              <div className="mb-2 text-xs text-gray-400">#{getDisplayRowNumber(index)}</div>
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="text-xs text-gray-400">#{getDisplayRowNumber(index, { page: safePage, pageSize: PAGE_SIZE })}</div>
+                {renderSelectCheckbox(row)}
+              </div>
+              {row.template_reference ? (
+                <p className="mb-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                  {row.template_reference}
+                </p>
+              ) : null}
               <h2 className="font-medium text-gray-900 dark:text-gray-100">{displayRowName(row)}</h2>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {TIER_LABELS[row.tier] || row.tier} · {row.domain} · {methodologyLabel(row.methodology)}
@@ -639,6 +926,16 @@ export default function OrganisationalTemplatesPage({ listVariant = 'organisatio
             </article>
           ))}
         </div>
+      )}
+
+      {!loading && filtered.length > PAGE_SIZE && (
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          itemsPerPage={PAGE_SIZE}
+          totalItems={filtered.length}
+        />
       )}
 
       <Modal

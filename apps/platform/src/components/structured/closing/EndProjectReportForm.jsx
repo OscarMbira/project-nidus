@@ -2,11 +2,32 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, Target, TrendingUp, DollarSign, CheckCircle, AlertTriangle, Users, Lightbulb } from 'lucide-react';
 import { createEndProjectReport, updateEndProjectReport } from '../../../services/closingProjectService';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function EndProjectReportForm({ projectId, report, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+
+  useEffect(() => {
+    if (activeSection !== 'audit' || !report) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        report.created_by,
+        report.updated_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeSection, report]);
   const [users, setUsers] = useState([]);
   const [closures, setClosures] = useState([]);
   const [formData, setFormData] = useState({
@@ -518,26 +539,40 @@ export default function EndProjectReportForm({ projectId, report, onClose, onSuc
 
         {/* Section Navigation */}
         <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <nav className="flex overflow-x-auto">
-            {sections.map((section) => {
-              const Icon = section.icon;
-              return (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={`flex items-center gap-2 px-4 py-4 text-xs font-medium border-b-2 whitespace-nowrap transition-colors ${
-                    activeSection === section.id
-                      ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {section.label}
-                </button>
-              );
-            })}
-          </nav>
+          <DetailAuditTabList
+            activeTab={activeSection}
+            onChange={setActiveSection}
+            ariaLabel="End project report sections"
+            tabs={[
+              ...sections.map((s) => ({ value: s.id, label: s.label })),
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
+
+        {activeSection === 'audit' && (
+          <div className="flex-1 overflow-y-auto p-6">
+            {!report?.id ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this end project report, and how it is classified.">
+                <AuditCard title="Identity" description="How this report is labelled and tracked.">
+                  <AuditField label="Title" value={formData.report_title || report.report_title} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.report_status || report.report_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="Where this report sits.">
+                  <AuditField label="Closure recommendation" value={humanizeAuditToken(formData.closure_recommendation || report.closure_recommendation)} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this report was created and last changed.">
+                  <AuditField label="Created by" value={report.created_by ? auditUserLabels[report.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={report.created_at} />
+                  <AuditField label="Updated by" value={report.updated_by ? auditUserLabels[report.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={report.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="p-6">{renderSection()}</div>

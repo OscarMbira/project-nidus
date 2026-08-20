@@ -6,6 +6,9 @@ import { platformIssuePath, platformRiskPath, platformProjectPath } from '@nidus
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
 import { AlertTriangle, TrendingUp, FileText, Link2, Filter, Search, BarChart3, Download } from 'lucide-react'
+import { RowActionButton, DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
+
+const RAID_EMPTY_FILTERS = { raid_type: '', status: '', search: '' }
 import SortToolbar from '@nidus/ui/SortToolbar'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -25,6 +28,8 @@ export default function RAIDLog() {
     status: '',
     search: '',
   })
+  const [raidViewMode, setRaidViewMode] = useViewMode('raid-log', 'list')
+  const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'register'
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'created_at', direction: 'desc' },
@@ -274,7 +279,7 @@ export default function RAIDLog() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
       <button
         onClick={() => navigate(platformProjectPath(routeKey || projectId))}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
@@ -282,64 +287,101 @@ export default function RAIDLog() {
         ← Back to Project
       </button>
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          RAID Log
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          {project?.project_name} - Risks, Assumptions, Issues, and Dependencies
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            RAID Log
+          </h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            {project?.project_name} - Risks, Assumptions, Issues, and Dependencies
+          </p>
+        </div>
+        <DashboardRegisterTabBar
+          value={activeTab}
+          onChange={setActiveTab}
+          registerLabel="Log"
+          ariaLabel="RAID Log sections"
+        />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Items</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <BarChart3 className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Risks</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.risks}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Assumptions</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.assumptions}</p>
-            </div>
-            <FileText className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Issues</p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.issues}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Dependencies</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.dependencies}</p>
-            </div>
-            <Link2 className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+      {activeTab === 'dashboard' && (
+      <div className="space-y-6" role="tabpanel" aria-label="RAID dashboard">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <DashboardStatCard
+          label="Total Items"
+          value={stats.total}
+          icon={BarChart3}
+          iconClassName="text-blue-500"
+          onClick={() => { setFilters(RAID_EMPTY_FILTERS); setActiveTab('register'); }}
+        />
+        <DashboardStatCard
+          label="Risks"
+          value={stats.risks}
+          icon={AlertTriangle}
+          accentClassName="text-red-600 dark:text-red-400"
+          iconClassName="text-red-500"
+          borderClassName="border-red-200 dark:border-red-800"
+          onClick={() => { setFilters({ ...RAID_EMPTY_FILTERS, raid_type: 'risk' }); setActiveTab('register'); }}
+        />
+        <DashboardStatCard
+          label="Assumptions"
+          value={stats.assumptions}
+          icon={FileText}
+          accentClassName="text-blue-600 dark:text-blue-400"
+          iconClassName="text-blue-500"
+          borderClassName="border-blue-200 dark:border-blue-800"
+          onClick={() => { setFilters({ ...RAID_EMPTY_FILTERS, raid_type: 'assumption' }); setActiveTab('register'); }}
+        />
+        <DashboardStatCard
+          label="Issues"
+          value={stats.issues}
+          icon={AlertTriangle}
+          accentClassName="text-orange-600 dark:text-orange-400"
+          iconClassName="text-orange-500"
+          borderClassName="border-orange-200 dark:border-orange-800"
+          onClick={() => { setFilters({ ...RAID_EMPTY_FILTERS, raid_type: 'issue' }); setActiveTab('register'); }}
+        />
+        <DashboardStatCard
+          label="Dependencies"
+          value={stats.dependencies}
+          icon={Link2}
+          accentClassName="text-purple-600 dark:text-purple-400"
+          iconClassName="text-purple-500"
+          borderClassName="border-purple-200 dark:border-purple-800"
+          onClick={() => { setFilters({ ...RAID_EMPTY_FILTERS, raid_type: 'dependency' }); setActiveTab('register'); }}
+        />
       </div>
+      <RegisterOpenItemsWidget
+        title="Recent RAID Items"
+        icon={BarChart3}
+        rows={[...raidItems].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)).slice(0, 5)}
+        totalCount={raidItems.length}
+        columns={[
+          { key: 'code', label: 'Reference', className: 'font-mono text-xs text-gray-700 dark:text-gray-200 whitespace-nowrap' },
+          { key: 'raid_type', label: 'Type', render: (i) => <span className={`px-2 py-1 rounded text-xs capitalize ${getTypeColor(i.raid_type)}`}>{i.raid_type}</span> },
+          { key: 'title', label: 'Title', className: 'font-medium text-gray-900 dark:text-white' },
+          { key: 'status', label: 'Status', className: 'text-gray-500 dark:text-gray-400 capitalize whitespace-nowrap' },
+        ]}
+        rowKey={(i) => `${i.raid_type}-${i.id}`}
+        searchFields={['title', 'code']}
+        onRowClick={(item) => {
+          if (item.raid_type === 'risk') {
+            navigate(platformRiskPath(routeKey || projectId, item.code || item.id))
+          } else if (item.raid_type === 'issue') {
+            navigate(platformIssuePath(routeKey || projectId, item.code || item.id))
+          } else {
+            navigate(platformProjectPath(routeKey || projectId || '', 'risks'))
+          }
+        }}
+        onViewAll={() => setActiveTab('register')}
+        viewAllLabel="Open full RAID Log"
+        emptyMessage="No RAID items yet"
+      />
+      </div>
+      )}
 
+      {activeTab === 'register' && (
+      <div className="space-y-0" role="tabpanel" aria-label="RAID register">
       {/* Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
         <div className="flex items-center gap-4 flex-wrap">
@@ -418,52 +460,60 @@ export default function RAIDLog() {
         ) : raidViewMode === 'list' ? (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="min-w-[64rem] w-full border-collapse">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     <TableRowNumberHeader className="!normal-case whitespace-nowrap" />
-                    <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap">ID / Code</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case whitespace-nowrap min-w-[8rem]">Record ID</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case">Type</TableHeaderCell>
-                    <TableHeaderCell sortable={false} className="!normal-case">Title</TableHeaderCell>
+                    <TableHeaderCell sortable={false} className="!normal-case min-w-[14rem]">Title</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case">Priority</TableHeaderCell>
                     <TableHeaderCell sortable={false} className="!normal-case">Status</TableHeaderCell>
-                    <TableHeaderCell sortable={false} className="!normal-case text-right">Actions</TableHeaderCell>
+                    <TableHeaderCell
+                      sortable={false}
+                      className="!normal-case text-right sticky right-0 min-w-[8.5rem] bg-gray-50 dark:bg-gray-700 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.15)]"
+                    >
+                      Actions
+                    </TableHeaderCell>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {displayRaidItems.map((item, index) => (
-                    <tr key={`${item.raid_type}-${item.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  {displayRaidItems.map((item, index) => {
+                    const goView = () => {
+                      if (item.raid_type === 'risk') {
+                        navigate(platformRiskPath(routeKey || projectId, item.code || item.id))
+                      } else if (item.raid_type === 'issue') {
+                        navigate(platformIssuePath(routeKey || projectId, item.code || item.id))
+                      } else {
+                        navigate(platformProjectPath(routeKey || projectId || '', 'risks'))
+                      }
+                    }
+                    return (
+                    <tr key={`${item.raid_type}-${item.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 group">
                       <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                      <td className="px-6 py-3 text-sm font-mono text-gray-700 dark:text-gray-300">{item.code || '—'}</td>
-                      <td className="px-6 py-3">
+                      <td className="px-4 py-3 text-sm font-mono text-gray-700 dark:text-gray-200 whitespace-nowrap">{item.code || '—'}</td>
+                      <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-xs capitalize ${getTypeColor(item.raid_type)}`}>{item.raid_type}</span>
                       </td>
-                      <td className="px-6 py-3 text-gray-900 dark:text-white max-w-md">
-                        <div className="font-medium truncate">{item.title}</div>
+                      <td className="px-4 py-3 text-gray-900 dark:text-white">
+                        <div className="font-medium">{item.title}</div>
                       </td>
-                      <td className="px-6 py-3">
+                      <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(item.priority_level)}`}>{item.priority_level || 'N/A'}</span>
                       </td>
-                      <td className="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">{item.status || '—'}</td>
-                      <td className="px-6 py-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (item.raid_type === 'risk') {
-                              navigate(platformRiskPath(routeKey || projectId, item.code || item.id))
-                            } else if (item.raid_type === 'issue') {
-                              navigate(platformIssuePath(routeKey || projectId, item.code || item.id))
-                            } else {
-                              navigate(platformProjectPath(routeKey || projectId || '', 'risks'))
-                            }
-                          }}
-                          className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded"
-                        >
-                          View
-                        </button>
+                      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">{item.status || '—'}</td>
+                      <td
+                        className="px-3 py-3 text-right sticky right-0 min-w-[8.5rem] whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="inline-flex items-center gap-1 justify-end">
+                          <RowActionButton variant="view" label="View RAID item" onClick={goView} />
+                          <RowActionButton variant="edit" label="Edit RAID item" onClick={goView} />
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -531,6 +581,8 @@ export default function RAIDLog() {
           ))
         )}
       </div>
+      </div>
+      )}
     </div>
   )
 }

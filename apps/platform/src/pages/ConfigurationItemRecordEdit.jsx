@@ -23,15 +23,15 @@ export default function ConfigurationItemRecordEdit() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (itemId) {
+    if (itemId && projectId) {
       fetchItem()
     }
-  }, [itemId])
+  }, [itemId, projectId])
 
   const fetchItem = async () => {
     try {
       setLoading(true)
-      const data = await getConfigurationItemById(itemId)
+      const data = await getConfigurationItemById(itemId, projectId)
       setItemData(data)
     } catch (error) {
       console.error('Error fetching Configuration Item:', error)
@@ -56,9 +56,9 @@ export default function ConfigurationItemRecordEdit() {
 
     try {
       setSaving(true)
-      await updateConfigurationItem(itemId, itemData)
+      await updateConfigurationItem(itemData.id || itemId, itemData)
       toast.success('Configuration Item updated successfully')
-      navigate(platformProjectPath(routeKey, 'configuration-items', '${itemId}'))
+      navigate(platformProjectPath(routeKey, 'configuration-items', itemData.configuration_item_identifier || itemId))
     } catch (error) {
       console.error('Error updating Configuration Item:', error)
       toast.error('Error updating Configuration Item: ' + error.message)
@@ -68,7 +68,7 @@ export default function ConfigurationItemRecordEdit() {
   }
 
   const handleCancel = () => {
-    navigate(platformProjectPath(routeKey, 'configuration-items', '${itemId}'))
+    navigate(platformProjectPath(routeKey, 'configuration-items', itemData.configuration_item_identifier || itemId))
   }
 
   if (loading) {

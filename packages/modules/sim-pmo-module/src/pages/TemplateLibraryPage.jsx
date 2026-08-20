@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Copy, Eye, Search } from 'lucide-react'
+import { Copy, Eye, Loader2, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { simDb } from '@nidus/supabase'
 import ViewToggle from '@nidus/ui/ViewToggle'
@@ -26,6 +26,10 @@ import {
   filterRowsByDomainGroup,
   domainGroupHeadingSuffix,
 } from '@nidus/shared/utils/templateDomainGroup.js'
+import { formatBulkCopyButtonLabel, runPool } from '@nidus/shared/utils/bulkCopyButtonLabel.js'
+
+const BULK_COPY_BTN =
+  'inline-flex items-center gap-1.5 rounded-md border-2 border-emerald-400 bg-emerald-600 px-3 py-1.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-wait dark:border-emerald-400 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-500'
 
 const EXPORT_COLS = [
   { key: '_rowNumber', label: '#' },
@@ -72,6 +76,7 @@ export default function TemplateLibraryPage() {
   const [methodologyFilter, setMethodologyFilter] = useState(() => searchParams.get('methodology') || '')
   const [copyingId, setCopyingId] = useState(null)
   const [bulkCopying, setBulkCopying] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState(null)
   const [checkedIds, setCheckedIds] = useState(() => new Set())
   const [viewMode, setViewMode] = useViewMode('sim-pmo-template-library', 'list')
   const [scopeNote, setScopeNote] = useState('Organisation default / Methodology Focus')
@@ -330,35 +335,44 @@ export default function TemplateLibraryPage() {
   const handleBulkCopy = async () => {
     const selected = filtered.filter((r) => checkedIds.has(r.id))
     if (!selected.length) return
-    setBulkCopying(true)
-    let copied = 0
     const alreadyCopied = []
+    const toCopy = []
+    for (const row of selected) {
+      if (overrides[row.id]) alreadyCopied.push(row.name)
+      else toCopy.push(row)
+    }
+    if (!toCopy.length) {
+      toast.success(`${alreadyCopied.length} already copied`)
+      return
+    }
+
+    setBulkCopying(true)
+    setBulkProgress({ finished: 0, total: toCopy.length, phase: 'copy' })
+    let copied = 0
+    let finished = 0
     const skipped = []
     const failed = []
     try {
       const accountId = await getCurrentUserAccountId()
-      // Sequential, not parallel — some domains fail by design (form_template) or by
-      // permission gap; a clean per-row report beats one aborted Promise.all batch.
-      for (const row of selected) {
-        // v822: skip rows already copied at this scope up front — no point calling the
-        // service (and no risk of it ever creating a duplicate) when the UI already knows.
-        if (overrides[row.id]) {
-          alreadyCopied.push(row.name)
-          continue
-        }
+      // Small pool: independent copies can overlap, but each row still reports its own
+      // skip/fail so one form_template/permission error does not abort the rest.
+      await runPool(toCopy, 3, async (row) => {
         try {
           await copyOneRow(row, accountId)
           copied += 1
         } catch (e) {
           if (e.code === 'ALREADY_COPIED') {
             alreadyCopied.push(row.name)
-            continue
+          } else {
+            const msg = e.message || 'Copy failed'
+            if (/not supported for domain/.test(msg)) skipped.push(row.name)
+            else failed.push(`${row.name}: ${msg}`)
           }
-          const msg = e.message || 'Copy failed'
-          if (/not supported for domain/.test(msg)) skipped.push(row.name)
-          else failed.push(`${row.name}: ${msg}`)
+        } finally {
+          finished += 1
+          setBulkProgress({ finished, total: toCopy.length, phase: 'copy' })
         }
-      }
+      })
       const parts = [`${copied} copied`]
       if (alreadyCopied.length) parts.push(`${alreadyCopied.length} already copied`)
       if (skipped.length) parts.push(`${skipped.length} skipped (not supported)`)
@@ -368,9 +382,11 @@ export default function TemplateLibraryPage() {
       } else {
         toast.success(parts.join(', '))
       }
+      setBulkProgress({ finished: toCopy.length, total: toCopy.length, phase: 'refresh' })
       await loadRows()
     } finally {
       setBulkCopying(false)
+      setBulkProgress(null)
     }
   }
 
@@ -473,10 +489,21 @@ export default function TemplateLibraryPage() {
               type="button"
               disabled={bulkCopying}
               onClick={handleBulkCopy}
-              className="inline-flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-60"
+              aria-live="polite"
+              className={BULK_COPY_BTN}
             >
-              <Copy className="h-3 w-3" />
-              {bulkCopying ? 'Copying…' : `Copy ${checkedIds.size} to Organisational`}
+              {bulkCopying ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Copy className="h-4 w-4" aria-hidden="true" />
+              )}
+              {formatBulkCopyButtonLabel({
+                busy: bulkCopying,
+                phase: bulkProgress?.phase,
+                finished: bulkProgress?.finished,
+                total: bulkProgress?.total,
+                selectedCount: checkedIds.size,
+              })}
             </button>
           </div>
         </div>

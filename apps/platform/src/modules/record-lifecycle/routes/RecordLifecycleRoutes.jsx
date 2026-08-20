@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Route } from 'react-router-dom'
+import { Route, Outlet } from 'react-router-dom'
 import { Suspense } from 'react'
 import ProtectedRoute from '../../../components/ProtectedRoute'
 import { ThemeProvider } from '@nidus/shared/context/ThemeContext'
@@ -32,6 +32,14 @@ function wrapPm(el) {
   return <Suspense fallback={<Loading />}>{withProviders(<PMLayout>{el}</PMLayout>)}</Suspense>
 }
 
+function wrapPmoOutlet() {
+  return <Suspense fallback={<Loading />}>{withProviders(<PMOLayout><Outlet /></PMOLayout>)}</Suspense>
+}
+
+function wrapPmOutlet() {
+  return <Suspense fallback={<Loading />}>{withProviders(<PMLayout><Outlet /></PMLayout>)}</Suspense>
+}
+
 function LazyPage({ page, service, ...rest }) {
   const [Comp, setComp] = useState(null)
 
@@ -47,16 +55,20 @@ function LazyPage({ page, service, ...rest }) {
 export function RecordLifecycleRouteElements() {
   return (
     <>
-      <Route path="pmo/authorisation/queue" element={wrapPmo(<LazyPage page="AuthorisationQueuePage" service={platformService} pmoView />)} />
-      <Route path="pmo/authorisation/dashboard" element={wrapPmo(<LazyPage page="LifecycleDashboardPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/configure" element={wrapPmo(<LazyPage page="ConfigureLifecycleRulesPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/chains" element={wrapPmo(<LazyPage page="ApprovalChainsOverviewPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/archive-retention" element={wrapPmo(<LazyPage page="ArchiveRetentionRulesPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/archive" element={wrapPmo(<LazyPage page="ArchiveVaultPage" service={platformService} />)} />
+      <Route element={wrapPmoOutlet()}>
+        <Route path="pmo/authorisation/queue" element={<LazyPage page="AuthorisationQueuePage" service={platformService} pmoView />} />
+        <Route path="pmo/authorisation/dashboard" element={<LazyPage page="LifecycleDashboardPage" service={platformService} />} />
+        <Route path="pmo/authorisation/configure" element={<LazyPage page="ConfigureLifecycleRulesPage" service={platformService} />} />
+        <Route path="pmo/authorisation/chains" element={<LazyPage page="ApprovalChainsOverviewPage" service={platformService} />} />
+        <Route path="pmo/authorisation/archive-retention" element={<LazyPage page="ArchiveRetentionRulesPage" service={platformService} />} />
+        <Route path="pmo/authorisation/archive" element={<LazyPage page="ArchiveVaultPage" service={platformService} />} />
+      </Route>
 
-      <Route path="pm/authorisation/queue" element={wrapPm(<LazyPage page="PendingApprovalsPage" service={platformService} />)} />
-      <Route path="pm/authorisation/submitted" element={wrapPm(<LazyPage page="MySubmittedRecordsPage" service={platformService} />)} />
-      <Route path="pm/authorisation/chains" element={wrapPm(<LazyPage page="ApprovalChainsOverviewPage" service={platformService} title="Approval Chains (Read-only)" />)} />
+      <Route element={wrapPmOutlet()}>
+        <Route path="pm/authorisation/queue" element={<LazyPage page="PendingApprovalsPage" service={platformService} />} />
+        <Route path="pm/authorisation/submitted" element={<LazyPage page="MySubmittedRecordsPage" service={platformService} />} />
+        <Route path="pm/authorisation/chains" element={<LazyPage page="ApprovalChainsOverviewPage" service={platformService} title="Approval Chains (Read-only)" />} />
+      </Route>
     </>
   )
 }

@@ -8,6 +8,12 @@ import { X, Save, Loader, AlertCircle } from 'lucide-react'
 import { createCustomRole, updateRole, getRoleWithPermissions } from '../../services/projectRoleService'
 import { appDb } from '../../services/supabaseClient'
 import { useToast } from '@nidus/shared/hooks/useToast'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
@@ -25,8 +31,19 @@ export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
   const [permissions, setPermissions] = useState([])
   const [selectedPermissions, setSelectedPermissions] = useState([])
   const [error, setError] = useState(null)
+  const [formTab, setFormTab] = useState('details')
+  const [roleRecord, setRoleRecord] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const isEditing = !!role
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !roleRecord) return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(appDb, [roleRecord.created_by, roleRecord.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [formTab, roleRecord])
 
   useEffect(() => {
     if (isOpen) {
@@ -64,6 +81,7 @@ export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
       const result = await getRoleWithPermissions(role.id)
       if (result.success) {
         const roleData = result.data
+        setRoleRecord(roleData)
         setFormData({
           roleName: roleData.role_name,
           displayName: roleData.role_display_name,
@@ -92,6 +110,8 @@ export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
     })
     setSelectedPermissions([])
     setError(null)
+    setRoleRecord(null)
+    setFormTab('details')
   }
 
   const handleSubmit = async (e) => {
@@ -166,6 +186,32 @@ export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
             </button>
           </div>
 
+          <div className="mb-4">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          </div>
+
+          {formTab === 'audit' ? (
+            !roleRecord ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this role is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this role, and how it is classified.">
+                <AuditCard title="Identity" description="How this role is labelled and tracked.">
+                  <AuditField label="Role name" value={roleRecord.role_name} />
+                  <AuditField label="Display name" value={roleRecord.role_display_name} />
+                </AuditCard>
+                <AuditCard title="Classification" description="How this role is scoped.">
+                  <AuditField label="Role level" value={roleRecord.role_level} />
+                  <AuditField label="System role" value={roleRecord.is_system_role ? 'Yes' : 'No'} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this role was created and last changed.">
+                  <AuditField label="Created by" value={roleRecord.created_by ? auditUserLabels[roleRecord.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={roleRecord.created_at} />
+                  <AuditField label="Updated by" value={roleRecord.updated_by ? auditUserLabels[roleRecord.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={roleRecord.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
@@ -327,6 +373,7 @@ export default function RoleEditorModal({ projectId, role, isOpen, onClose }) {
               </button>
             </div>
           </form>
+          )}
         </div>
       </div>
     </div>

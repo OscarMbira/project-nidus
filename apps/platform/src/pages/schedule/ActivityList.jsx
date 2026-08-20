@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Plus, LayoutGrid, Table2 } from 'lucide-react'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { listActivities, saveActivity } from '../../services/activityListService'
 import { platformDb } from '@nidus/supabase'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
@@ -35,7 +37,7 @@ function SortTh({ label, col, sortCol, sortDir, onSort }) {
 }
 
 export default function ActivityList() {
-  const { projectId } = useParams()
+  const { projectId, routeKey } = usePlatformProjectId()
   const { canEdit } = useProjectRole(projectId)
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -126,7 +128,7 @@ export default function ActivityList() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 dark:bg-gray-950">
       <nav className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-        <Link to={`/platform/projects/${projectId}`} className="hover:underline">
+        <Link to={platformProjectPath(routeKey)} className="hover:underline">
           Project
         </Link>
         <span className="mx-2">/</span>
@@ -152,7 +154,7 @@ export default function ActivityList() {
               <button type="button" onClick={() => setBulkOpen(true)} className="rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-600">
                 Bulk CSV
               </button>
-              <Link to={`/platform/projects/${projectId}/schedule/activities/new`} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">
+              <Link to={platformProjectPath(routeKey, 'schedule', 'activities', 'new')} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white">
                 <Plus className="h-4 w-4" /> New
               </Link>
             </>
@@ -201,7 +203,7 @@ export default function ActivityList() {
                   <td className="p-3 text-xs">{r.planned_end_date || '—'}</td>
                   <td className="p-3 text-xs">{r.expected_duration != null ? String(r.expected_duration) : '—'}</td>
                   <td className="p-3">
-                    <Link to={`/platform/projects/${projectId}/schedule/activities/${r.id}`} className="text-blue-600 hover:underline dark:text-blue-400">
+                    <Link to={platformProjectPath(routeKey, 'schedule', 'activities', r.activity_code || r.id)} className="text-blue-600 hover:underline dark:text-blue-400">
                       Open
                     </Link>
                   </td>
@@ -215,7 +217,7 @@ export default function ActivityList() {
           {filtered.map((r, index) => (
             <Link
               key={r.id}
-              to={`/platform/projects/${projectId}/schedule/activities/${r.id}`}
+              to={platformProjectPath(routeKey, 'schedule', 'activities', r.activity_code || r.id)}
               className="rounded-xl border border-gray-200 p-4 hover:border-blue-500 dark:border-gray-700"
             >
               <div className="font-mono text-xs text-gray-500">{r.activity_code || '—'}</div>

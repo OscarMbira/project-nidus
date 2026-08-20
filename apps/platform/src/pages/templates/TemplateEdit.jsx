@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getTemplateById, updateTemplate, listTemplateCategories } from '../../services/templateLibraryService'
 import { defaultContentSchemaForType } from '../../services/templateLibraryConstants'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const BASE = '/platform/templates'
 
@@ -16,6 +23,22 @@ export default function TemplateEdit() {
   const [err, setErr] = useState(null)
   const [success, setSuccess] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [templateRecord, setTemplateRecord] = useState(null)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !templateRecord) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        templateRecord.created_by,
+        templateRecord.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, templateRecord])
 
   useEffect(() => {
     ;(async () => {
@@ -27,6 +50,7 @@ export default function TemplateEdit() {
         setLoading(false)
         return
       }
+      setTemplateRecord(data)
       setForm({
         category_id: data.category_id || '',
         template_type_code: data.template_type_code,
@@ -109,6 +133,29 @@ export default function TemplateEdit() {
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Edit template</h1>
       {err && <p className="text-red-600 mb-4">{err}</p>}
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+
+      {activeTab === 'audit' && (
+        <AuditDetailsPanel description="Who created or changed this template, and how it is classified.">
+          <AuditCard title="Identity" description="How this template is labelled and tracked.">
+            <AuditField label="Title" value={form.title || templateRecord?.title} />
+            <AuditField label="Status" value={humanizeAuditToken(form.status || templateRecord?.status)} />
+            <AuditField label="Version" value={form.version || templateRecord?.version} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this template sits.">
+            <AuditField label="Type" value={humanizeAuditToken(form.template_type_code || templateRecord?.template_type_code)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this template was created and last changed.">
+            <AuditField label="Created by" value={templateRecord?.created_by ? auditUserLabels[templateRecord.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={templateRecord?.created_at} />
+            <AuditField label="Updated by" value={templateRecord?.updated_by ? auditUserLabels[templateRecord.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={templateRecord?.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      )}
+
+      {activeTab === 'details' && (
       <div className="space-y-4">
         <label className="block">
           <span className="text-sm">Title</span>
@@ -172,6 +219,7 @@ export default function TemplateEdit() {
           <Save className="h-4 w-4" /> Save
         </button>
       </div>
+      )}
     </div>
   )
 }

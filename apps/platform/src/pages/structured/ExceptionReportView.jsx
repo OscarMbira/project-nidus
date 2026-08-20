@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { ArrowLeft, Edit2, Printer, FileText, Calendar, User, AlertTriangle } from 'lucide-react'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { ArrowLeft, Printer, FileText, Calendar, User, AlertTriangle } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getExceptionReportById } from '../../services/exceptionReportService'
 import { getOptions } from '../../services/exceptionReportOptionsService'
 import { getLessons } from '../../services/exceptionReportLessonsService'
@@ -18,6 +22,13 @@ import BoardPresentationSummary from '../../components/structured/exceptionRepor
 import { format } from 'date-fns'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const EXCEPTION_VIEW_SECTIONS = [
   { title: 'Document Information', fields: [
@@ -42,37 +53,61 @@ export default function ExceptionReportView() {
   const [qualityStatus, setQualityStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+  const [resolvedReportId, setResolvedReportId] = useState(null)
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !report) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        report.created_by,
+        report.updated_by,
+      ])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeTab, report])
   const [showPrintView, setShowPrintView] = useState(false)
 
   useEffect(() => {
-    if (reportId) {
+    if (reportId && projectId) {
       loadReport()
     }
-  }, [reportId])
+  }, [reportId, projectId])
 
   const loadReport = async () => {
     try {
       setLoading(true)
+      const resolvedId = isLikelyDatabaseUuid(reportId)
+        ? reportId
+        : await resolveEntityId('exceptionReport', reportId, projectId)
+      if (!resolvedId) {
+        setReport(null)
+        setLoading(false)
+        return
+      }
+      setResolvedReportId(resolvedId)
       const [
-        reportData, 
-        optionsData, 
+        reportData,
+        optionsData,
         lessonsData,
         approvalsData,
         distributionData,
         qualityChecksData
       ] = await Promise.all([
-        getExceptionReportById(reportId),
-        getOptions(reportId).catch(() => []),
-        getLessons(reportId).catch(() => []),
-        import('../../services/exceptionReportApprovalService').then(m => m.getApprovalStatus(reportId).catch(() => [])),
+        getExceptionReportById(resolvedId),
+        getOptions(resolvedId).catch(() => []),
+        getLessons(resolvedId).catch(() => []),
+        import('../../services/exceptionReportApprovalService').then(m => m.getApprovalStatus(resolvedId).catch(() => [])),
         import('../../services/supabaseClient').then(async ({ supabase }) => {
           const { data } = await supabase
             .from('exception_report_distribution')
             .select('*')
-            .eq('exception_report_id', reportId)
+            .eq('exception_report_id', resolvedId)
           return data || []
         }).catch(() => []),
-        getQualityChecks(reportId).catch(() => [])
+        getQualityChecks(resolvedId).catch(() => [])
       ])
 
       setReport(reportData)
@@ -82,10 +117,14 @@ export default function ExceptionReportView() {
       setDistribution(distributionData)
       setQualityChecks(qualityChecksData)
 
+      if (reportData?.document_ref && reportData.document_ref !== reportId) {
+        navigate(platformProjectPath(routeKey, 'exception-reports', reportData.document_ref), { replace: true })
+      }
+
       // Get quality status
       try {
         const { getQualityCheckStatus } = await import('../../services/exceptionReportQualityService')
-        const status = await getQualityCheckStatus(reportId)
+        const status = await getQualityCheckStatus(resolvedId)
         setQualityStatus(status)
       } catch (err) {
         console.error('Error loading quality status:', err)
@@ -115,7 +154,7 @@ export default function ExceptionReportView() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Exception Report not found</p>
           <button
-            onClick={() => navigate(`/app/projects/${projectId}/exception-reports`)}
+            onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports'))}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Reports
@@ -132,13 +171,14 @@ export default function ExceptionReportView() {
     { id: 'quality', label: 'Quality Checks' },
     { id: 'approvals', label: 'Approvals' },
     { id: 'distribution', label: 'Distribution' },
-    { id: 'history', label: 'Revision History' }
+    { id: 'history', label: 'Revision History' },
+    { id: 'audit', label: 'Audit details' }
   ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/app/projects/${projectId}/exception-reports`)}
+        onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports'))}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -185,13 +225,11 @@ export default function ExceptionReportView() {
           </div>
           <div className="flex gap-2">
             {(report.report_status === 'draft' || report.report_status === 'rejected') && (
-              <button
-                onClick={() => navigate(`/app/projects/${projectId}/exception-reports/${reportId}/edit`)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-              >
-                <Edit2 className="h-4 w-4" />
-                Edit
-              </button>
+              <RowActionButton
+                variant="edit"
+                label="Edit exception report"
+                onClick={() => navigate(platformProjectPath(routeKey, 'exception-reports', report.document_ref || reportId, 'edit'))}
+              />
             )}
             <button
               onClick={() => setShowPrintView(true)}
@@ -206,25 +244,36 @@ export default function ExceptionReportView() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Exception report sections"
+          tabs={tabs.map((tab) => ({ value: tab.id, label: tab.label }))}
+        />
       </div>
 
       {/* Tab Content */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        {activeTab === 'audit' && (
+          <AuditDetailsPanel description="Who created or changed this exception report, and how it is classified.">
+            <AuditCard title="Identity" description="How this report is labelled and tracked.">
+              <AuditField label="Reference" value={report.document_ref} />
+              <AuditField label="Title" value={report.report_title || report.exception_title} />
+              <AuditField label="Status" value={humanizeAuditToken(report.report_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this report sits.">
+              <AuditField label="Exception type" value={humanizeAuditToken(report.exception_type)} />
+              <AuditField label="Report date" value={report.report_date} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this report was created and last changed.">
+              <AuditField label="Created by" value={report.created_by ? auditUserLabels[report.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={report.created_at} />
+              <AuditField label="Updated by" value={report.updated_by ? auditUserLabels[report.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={report.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )}
+
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div>
@@ -356,19 +405,19 @@ export default function ExceptionReportView() {
         )}
 
         {activeTab === 'quality' && (
-          <ExceptionReportQualityCriteria reportId={reportId} mode="view" />
+          <ExceptionReportQualityCriteria reportId={resolvedReportId || reportId} mode="view" />
         )}
 
         {activeTab === 'approvals' && (
-          <ExceptionReportApprovals reportId={reportId} mode="view" />
+          <ExceptionReportApprovals reportId={resolvedReportId || reportId} mode="view" />
         )}
 
         {activeTab === 'distribution' && (
-          <ExceptionReportDistribution reportId={reportId} />
+          <ExceptionReportDistribution reportId={resolvedReportId || reportId} />
         )}
 
         {activeTab === 'history' && (
-          <ExceptionReportRevisionHistory reportId={reportId} />
+          <ExceptionReportRevisionHistory reportId={resolvedReportId || reportId} />
         )}
 
         {activeTab === 'summary' && (
@@ -384,7 +433,7 @@ export default function ExceptionReportView() {
       {report.report_status === 'under_review' && (
         <div className="mt-6">
           <BoardDecisionPanel
-            reportId={reportId}
+            reportId={resolvedReportId || reportId}
             onDecisionRecorded={loadReport}
             mode="edit"
           />

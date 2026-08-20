@@ -11,8 +11,10 @@ import RiskTypeBadge from './RiskTypeBadge';
 import RiskStatusBadge from './RiskStatusBadge';
 import RiskScoreBadge from './RiskScoreBadge';
 import ProximityBadge from './ProximityBadge';
+import RowNumberBadge from '../ui/RowNumberBadge';
+import { RowActionButton } from '@nidus/ui';
 
-export default function RiskCard({ risk, onEdit, onDelete, onEscalate }) {
+export default function RiskCard({ risk, onEdit, onDelete, onEscalate, rowNumber }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
 
@@ -20,7 +22,10 @@ export default function RiskCard({ risk, onEdit, onDelete, onEscalate }) {
     const pSeg =
       (risk.project?.project_code && String(risk.project.project_code).trim()) ||
       risk.project_id;
-    const rSeg = (risk.risk_code && String(risk.risk_code).trim()) || risk.id;
+    const rSeg =
+      (risk.risk_identifier && String(risk.risk_identifier).trim()) ||
+      (risk.risk_code && String(risk.risk_code).trim()) ||
+      risk.id;
     navigate(platformRiskPath(pSeg, rSeg));
   };
 
@@ -30,6 +35,7 @@ export default function RiskCard({ risk, onEdit, onDelete, onEscalate }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
+            {rowNumber != null && <RowNumberBadge number={rowNumber} />}
             <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
               {risk.risk_identifier || risk.risk_code || `#${risk.risk_number || ''}`}
             </span>
@@ -154,23 +160,22 @@ export default function RiskCard({ risk, onEdit, onDelete, onEscalate }) {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            className="text-sm font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-200"
           >
             {expanded ? 'Show Less' : 'Show More'}
           </button>
           <button
             onClick={handleViewDetails}
-            className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            className="px-3 py-1.5 bg-sky-600 text-white rounded hover:bg-sky-700 text-sm"
           >
             View Details
           </button>
           {onEdit && (
-            <button
+            <RowActionButton
+              variant="edit"
+              label="Edit risk"
               onClick={() => onEdit(risk)}
-              className="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
-            >
-              Edit
-            </button>
+            />
           )}
         </div>
       </div>

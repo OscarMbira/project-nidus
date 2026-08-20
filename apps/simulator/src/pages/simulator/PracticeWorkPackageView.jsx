@@ -4,10 +4,18 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Edit } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeWorkPackageById } from '../../services/sim/practiceWorkPackageService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRACTICE_WP_VIEW_SECTIONS = [
   { title: 'Work Package', fields: [
@@ -24,10 +32,20 @@ export default function PracticeWorkPackageView() {
   const projectId = searchParams.get('projectId')
   const [wp, setWp] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id) loadWorkPackage()
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !wp) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [wp.created_by, wp.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, wp])
 
   const loadWorkPackage = async () => {
     try {
@@ -61,11 +79,33 @@ export default function PracticeWorkPackageView() {
             onExportJSON={() => exportRecordToJSON(PRACTICE_WP_VIEW_SECTIONS, wp, `PracticeWorkPackage_${wp.work_package_code || id}`)}
             onExportPrint={() => exportRecordToPrint(PRACTICE_WP_VIEW_SECTIONS, wp, `PracticeWorkPackage_${wp.work_package_code || id}`)}
           />
-          <button onClick={() => navigate(`/simulator/practice-work-packages/${id}/edit?projectId=${projectId}`)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+          <RowActionButton
+            variant="edit"
+            label="Edit work package"
+            onClick={() => navigate(`/simulator/practice-work-packages/${id}/edit?projectId=${projectId}`)}
+          />
         </div>
       </div>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this work package.">
+          <AuditCard title="Identity" description="How this work package is labelled.">
+            <AuditField label="Name" value={wp.work_package_name} />
+            <AuditField label="Code" value={wp.work_package_code} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this work package sits.">
+            <AuditField label="Status" value={humanizeAuditToken(wp.status)} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this work package was created and last changed.">
+            <AuditField label="Created by" value={wp.created_by ? auditUserLabels[wp.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={wp.created_at} />
+            <AuditField label="Updated by" value={wp.updated_by ? auditUserLabels[wp.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={wp.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         <div>
           <h3 className="font-medium mb-2">Description</h3>
@@ -80,6 +120,7 @@ export default function PracticeWorkPackageView() {
           <p className="text-gray-600 dark:text-gray-400">{wp.status}</p>
         </div>
       </div>
+      )}
     </div>
   )
 }

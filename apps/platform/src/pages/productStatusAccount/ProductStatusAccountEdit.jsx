@@ -2,23 +2,23 @@
  * Product Status Account Edit Page
  */
 
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
-import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { useEntityDetailParams } from '@nidus/shared/hooks/useEntityDetailParams.js'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { ArrowLeft } from 'lucide-react'
 import ProductStatusAccountForm from '../../components/productStatusAccount/ProductStatusAccountForm'
 
 export default function ProductStatusAccountEdit() {
-  const { psaId } = useParams()
-  const { projectId, routeKey } = usePlatformProjectId()
+  const { projectId, entityId: psaId, projectRouteKey } = useEntityDetailParams('productStatusAccount', { entityParam: 'psaId' })
   const navigate = useNavigate()
 
   const handleSave = (data) => {
-    navigate(`/app/projects/${projectId}/product-status-accounts/${data.id}`)
+    navigate(platformProjectPath(projectRouteKey, 'product-status-accounts', data.psa_reference || data.id))
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/product-status-accounts/${psaId}`)
+    navigate(platformProjectPath(projectRouteKey, 'product-status-accounts', psaId))
   }
 
   return (

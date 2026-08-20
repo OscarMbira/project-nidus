@@ -248,6 +248,7 @@ export async function invitePmoAdministrator(authUserId, {
       inviter?.email ||
       'Your organisation'
     const resolvedInviterJobTitle = rawProfile?.job_title || ''
+    const resolvedInviterEmail = rawProfile?.email || inviter?.email || ''
     const roleDisplayName = pmoRole?.role_display_name || 'PMO Administrator'
 
     // Invitation row saved — email in background (matches project invitation UX).
@@ -255,6 +256,7 @@ export async function invitePmoAdministrator(authUserId, {
       organisationName: orgLabel,
       roleName: roleDisplayName,
       inviterName: resolvedInviterName,
+      inviterEmail: resolvedInviterEmail,
       inviterJobTitle: resolvedInviterJobTitle,
       message: message || null,
       invitationToken,

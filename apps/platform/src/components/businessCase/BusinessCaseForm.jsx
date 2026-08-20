@@ -4,8 +4,15 @@
  * Sections are shown as tabs for clarity.
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import BusinessCaseFinancials from './BusinessCaseFinancials'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const SECTIONS = [
@@ -35,6 +42,17 @@ const RISK_RATINGS = [
 
 export default function BusinessCaseForm({ data, onChange, errors = {} }) {
   const [activeSection, setActiveSection] = useState('summary')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (activeSection !== 'audit' || !data?.id) return
+    let cancelled = false
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [data.updated_by])
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })()
+    return () => { cancelled = true }
+  }, [activeSection, data?.id, data?.updated_by])
 
   const field = (key) => ({
     value: data[key] ?? '',
@@ -48,22 +66,41 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
   return (
     <div>
       {/* Section tabs */}
-      <div className="flex flex-wrap gap-1 mb-6 border-b border-gray-200 dark:border-gray-700 pb-2">
-        {SECTIONS.map((s, index) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => setActiveSection(s.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-              activeSection === s.id
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            {s.label}
-          </button>
-        ))}
+      <div className="mb-6">
+        <DetailAuditTabList
+          activeTab={activeSection}
+          onChange={setActiveSection}
+          ariaLabel="Business case sections"
+          tabs={[
+            ...SECTIONS.map((s) => ({ value: s.id, label: s.label })),
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
       </div>
+
+      {activeSection === 'audit' && (
+        !data?.id ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this business case is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this business case, and how it is classified.">
+            <AuditCard title="Identity" description="How this business case is labelled and tracked.">
+              <AuditField label="Reference" value={data.case_reference} />
+              <AuditField label="Title" value={data.case_title} />
+              <AuditField label="Status" value={humanizeAuditToken(data.document_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this business case sits.">
+              <AuditField label="Overall risk rating" value={humanizeAuditToken(data.overall_risk_rating)} />
+              <AuditField label="Recommended option" value={humanizeAuditToken(data.recommended_option)} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this business case was created and last changed.">
+              <AuditField label="Created by" value={data.creator ? [data.creator.first_name, data.creator.last_name].filter(Boolean).join(' ') || data.creator.email : null} />
+              <AuditTimestampPair dateLabel="Created at" value={data.created_at} />
+              <AuditField label="Updated by" value={data.updated_by ? auditUserLabels[data.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={data.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
+      )}
 
       {/* Section: Executive Summary */}
       {activeSection === 'summary' && (

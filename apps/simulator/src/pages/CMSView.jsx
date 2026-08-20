@@ -9,7 +9,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
-import { ArrowLeft, Edit2, FileText } from 'lucide-react'
+import { ArrowLeft, FileText } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import CMSViewComponent from '../components/cms/CMSView'
 import { getCMSByProject, getOrCreateCMS } from '../services/communicationManagementStrategyService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
@@ -147,13 +148,7 @@ export default function CMSView() {
               onExportJSON={() => exportRecordToJSON(CMS_VIEW_SECTIONS, cms, `CMS_${cms.cms_reference || cms.id}`)}
               onExportPrint={() => exportRecordToPrint(CMS_VIEW_SECTIONS, cms, `CMS_${cms.cms_reference || cms.id}`)}
             />
-            <button
-              onClick={handleEdit}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-            >
-              <Edit2 className="w-4 h-4" />
-              Edit
-            </button>
+            <RowActionButton variant="edit" label="Edit CMS" onClick={handleEdit} />
           </div>
         </div>
       </div>

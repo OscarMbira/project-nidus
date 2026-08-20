@@ -2,17 +2,34 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getPracticePlan } from '../../../services/sim/practicePlanService'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function SimProjectPlanView() {
   const { projectId } = useParams()
   const navigate = useNavigate()
   const [plan, setPlan] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
   const base = `/simulator/practice-projects/${projectId}/plans`
 
   useEffect(() => {
     if (projectId) loadPlan()
   }, [projectId])
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !plan) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [plan.created_by, plan.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [activeTab, plan])
 
   const loadPlan = async () => {
     setLoading(true)
@@ -38,6 +55,27 @@ export default function SimProjectPlanView() {
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{plan.plan_title}</h1>
       <p className="text-sm text-gray-500 mb-6 capitalize">{plan.status || 'draft'}</p>
+
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+
+      {activeTab === 'audit' ? (
+        <AuditDetailsPanel description="Who created or changed this Project Plan.">
+          <AuditCard title="Identity" description="How this plan is labelled.">
+            <AuditField label="Title" value={plan.plan_title} />
+            <AuditField label="Reference" value={plan.plan_reference} />
+          </AuditCard>
+          <AuditCard title="Classification" description="Where this plan sits.">
+            <AuditField label="Status" value={humanizeAuditToken(plan.status)} />
+            <AuditField label="Baseline" value={plan.is_baseline ? 'Yes' : 'No'} />
+          </AuditCard>
+          <AuditCard title="Record history" description="When this plan was created and last changed.">
+            <AuditField label="Created by" value={plan.created_by ? auditUserLabels[plan.created_by] || null : null} />
+            <AuditTimestampPair dateLabel="Created at" value={plan.created_at} />
+            <AuditField label="Updated by" value={plan.updated_by ? auditUserLabels[plan.updated_by] || null : null} />
+            <AuditTimestampPair dateLabel="Last updated" value={plan.updated_at} />
+          </AuditCard>
+        </AuditDetailsPanel>
+      ) : (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
         {plan.plan_purpose && (
           <div>
@@ -60,6 +98,7 @@ export default function SimProjectPlanView() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

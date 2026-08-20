@@ -16,6 +16,13 @@ import { toast } from 'react-hot-toast';
 import { getProjectTypes, createProjectType, updateProjectType, deleteProjectType } from '../../services/projectTypeService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 // Memoized table row component to prevent unnecessary re-renders
 const TypeTableRow = memo(function TypeTableRow({ type, onEdit, onDelete }) {
@@ -78,6 +85,8 @@ export default function ProjectTypes() {
   const [showForm, setShowForm] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [formTab, setFormTab] = useState('details');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
   // Default form data constant to avoid recreating on each render
   const defaultFormData = useMemo(() => ({
     type_code: '',
@@ -113,16 +122,26 @@ export default function ProjectTypes() {
     loadProjectTypes();
   }, [loadProjectTypes]);
 
+  useEffect(() => {
+    if (formTab !== 'audit' || !editingType) return;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [editingType.created_by, editingType.updated_by]);
+      setAuditUserLabels(labels);
+    })();
+  }, [formTab, editingType]);
+
   // Memoize handleAdd to prevent recreation
   const handleAdd = useCallback(() => {
     setEditingType(null);
     setFormData(defaultFormData);
+    setFormTab('details');
     setShowForm(true);
   }, [defaultFormData]);
 
   // Memoize handleEdit to prevent recreation
   const handleEdit = useCallback((type) => {
     setEditingType(type);
+    setFormTab('details');
     setFormData({
       type_code: type.type_code || '',
       type_name: type.type_name || '',
@@ -257,6 +276,31 @@ export default function ProjectTypes() {
             <h2 className="text-xl font-semibold text-gray-100 mb-4">
               {editingType ? 'Edit Project Type' : 'Add Project Type'}
             </h2>
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+            {formTab === 'audit' ? (
+              <div className="mt-4">
+                {!editingType ? (
+                  <p className="text-sm text-gray-400">Audit details appear after this project type is saved.</p>
+                ) : (
+                  <AuditDetailsPanel description="Who created or changed this project type.">
+                    <AuditCard title="Identity" description="How this type is labelled.">
+                      <AuditField label="Type code" value={editingType.type_code} />
+                      <AuditField label="Type name" value={editingType.type_name} />
+                    </AuditCard>
+                    <AuditCard title="Classification" description="How this type is categorised.">
+                      <AuditField label="Category" value={editingType.type_category} />
+                      <AuditField label="Active" value={editingType.is_active ? 'Yes' : 'No'} />
+                    </AuditCard>
+                    <AuditCard title="Record history" description="When this type was created and last changed.">
+                      <AuditField label="Created by" value={editingType.created_by ? auditUserLabels[editingType.created_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Created at" value={editingType.created_at} />
+                      <AuditField label="Updated by" value={editingType.updated_by ? auditUserLabels[editingType.updated_by] || null : null} />
+                      <AuditTimestampPair dateLabel="Last updated" value={editingType.updated_at} />
+                    </AuditCard>
+                  </AuditDetailsPanel>
+                )}
+              </div>
+            ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -370,6 +414,7 @@ export default function ProjectTypes() {
                 </button>
               </div>
             </form>
+            )}
           </div>
         )}
 

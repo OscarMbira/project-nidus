@@ -15,6 +15,7 @@ import {
   canCreateMasterTemplate,
 } from '../../services/processTemplatesService'
 import { platformDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
   const { slug } = useParams()
@@ -32,6 +33,7 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
   const [notes, setNotes] = useState('')
   const [isMaster, setIsMaster] = useState(canCreateMasterTemplate(roleKey))
   const [saving, setSaving] = useState(false)
+  const [activeTab, setActiveTab] = useState('details')
 
   const { saveDraft, saveStatus } = useDraftQueue(entityType, null, {
     projectId: projectId || undefined,
@@ -98,6 +100,13 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
       <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">New {template.label}</h1>
       <ProcessTemplateProjectScope roleKey={roleKey} sim={sim} />
 
+      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+
+      {activeTab === 'audit' && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
+      )}
+
+      {activeTab === 'details' && (
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 p-5">
         <label className="block">
           <span className="text-sm text-gray-400">Title</span>
@@ -153,6 +162,7 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
           </Link>
         </div>
       </form>
+      )}
     </div>
   )
 }

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { FileText, Eye, Edit2, Plus, Search, Filter } from 'lucide-react'
+import { FileText, Plus, Search, Filter } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getIssueReportsByProject } from '../services/issueReportService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 
@@ -159,21 +160,17 @@ export default function IssueReportsList() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <RowActionButton
+                      variant="view"
+                      label="View issue report"
                       onClick={() => navigate(`/projects/${projectId}/issues/${report.issue_id}/reports/${report.id}`)}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      View
-                    </button>
+                    />
                     {report.report_status === 'draft' && (
-                      <button
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit issue report"
                         onClick={() => navigate(`/projects/${projectId}/issues/${report.issue_id}/reports/${report.id}/edit`)}
-                        className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                        Edit
-                      </button>
+                      />
                     )}
                   </div>
                 </div>

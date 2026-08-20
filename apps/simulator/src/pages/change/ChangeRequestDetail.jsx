@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit2, FileText, Clock, User, DollarSign, Calendar, Package } from 'lucide-react';
+import { ArrowLeft, FileText, Clock, User, DollarSign, Calendar, Package } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import { fetchChangeRequest } from '../../services/changeManagementService';
 import { platformDb } from '@nidus/supabase';
 import ChangeRequestForm from '../../components/change/ChangeRequestForm';
@@ -11,6 +12,12 @@ import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
 import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer';
 import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 const CHANGE_REQUEST_VIEW_SECTIONS = [
   { title: 'Change Request', fields: [
@@ -50,12 +57,27 @@ export default function ChangeRequestDetail() {
   const [activeTab, setActiveTab] = useState('details');
   const [showEditForm, setShowEditForm] = useState(false);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [auditUserLabels, setAuditUserLabels] = useState({});
 
   useEffect(() => {
     if (id) {
       loadRequest();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (activeTab !== 'audit' || !request) return;
+    let cancelled = false;
+    (async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [
+        request.created_by,
+        request.updated_by,
+        request.submitted_by,
+      ]);
+      if (!cancelled) setAuditUserLabels(labels || {});
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, request]);
 
   useEffect(() => {
     if (!request?.project_id) {
@@ -115,6 +137,7 @@ export default function ChangeRequestDetail() {
     { id: 'impact', label: 'Impact Analysis', icon: Package },
     { id: 'assessment', label: 'Assessment', icon: Clock },
     { id: 'log', label: 'Change Log', icon: FileText },
+    { id: 'audit', label: 'Audit details', icon: FileText },
   ];
 
   if (loading) {
@@ -207,42 +230,50 @@ export default function ChangeRequestDetail() {
                 exportRecordToPrint(sections, record, `ChangeRequest_${request.change_reference || id}`);
               }}
             />
-            <button
+            <RowActionButton
+              variant="edit"
+              label="Edit change request"
               onClick={() => setShowEditForm(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit
-            </button>
+            />
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
+      <div className="mb-6">
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Change request sections"
+          tabs={tabs.map((t) => ({ value: t.id, label: t.label }))}
+        />
       </div>
 
       {/* Tab Content */}
       <div>
+        {activeTab === 'audit' && (
+          <AuditDetailsPanel description="Who created or changed this change request, and how it is classified.">
+            <AuditCard title="Identity" description="How this change request is labelled and tracked.">
+              <AuditField label="Reference" value={request.change_reference} />
+              <AuditField label="Title" value={request.change_title} />
+              <AuditField label="Category" value={humanizeAuditToken(request.change_category)} />
+              <AuditField label="Status" value={humanizeAuditToken(request.change_status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this change request sits.">
+              <AuditField label="Priority" value={humanizeAuditToken(request.priority)} />
+              <AuditField label="Requested by" value={request.requested_by?.full_name || request.requested_by?.email} />
+              <AuditField label="Submitted by" value={request.submitted_by ? auditUserLabels[request.submitted_by] || null : null} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this change request was created and last changed.">
+              <AuditField label="Created by" value={request.created_by ? auditUserLabels[request.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={request.created_at} />
+              <AuditField label="Updated by" value={request.updated_by ? auditUserLabels[request.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={request.updated_at} />
+              <AuditTimestampPair dateLabel="Submitted date" value={request.submitted_date} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )}
+
         {activeTab === 'details' && (
           <div className="space-y-6">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">

@@ -3,11 +3,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import PMOOversightHeader from '../../components/pmo/PMOOversightHeader'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -26,6 +27,7 @@ const STMT_COLS = [
 ]
 
 export default function PMOOversightScope() {
+  const navigate = useNavigate()
   const [plans, setPlans] = useState([])
   const [stmts, setStmts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -73,8 +75,8 @@ export default function PMOOversightScope() {
         description="Read-only overview of scope management plans and scope statements."
         icon={FileText}
         stats={[
-          { label: 'Scope plans', value: plans.length },
-          { label: 'Scope statements', value: stmts.length },
+          { label: 'Scope plans', value: plans.length, onClick: () => document.getElementById('pmo-scope-plans')?.scrollIntoView({ behavior: 'smooth' }) },
+          { label: 'Scope statements', value: stmts.length, onClick: () => document.getElementById('pmo-scope-statements')?.scrollIntoView({ behavior: 'smooth' }) },
         ]}
       />
 
@@ -82,7 +84,7 @@ export default function PMOOversightScope() {
         <p className="text-gray-500 dark:text-gray-400">Loading…</p>
       ) : (
         <>
-          <div className="mb-8">
+          <div id="pmo-scope-plans" className="mb-8">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Scope management plans</h2>
               <ExportListMenu columns={PLAN_COLS} data={plans} baseFilename="PMO_scope_plans" />
@@ -109,12 +111,11 @@ export default function PMOOversightScope() {
                       <td className="p-3 text-xs">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
                       <td className="p-3">
                         {r.project?.id ? (
-                          <Link
-                            to={`/platform/projects/${r.project.id}/scope/management-plan`}
-                            className="text-blue-600 hover:underline dark:text-blue-400"
-                          >
-                            View
-                          </Link>
+                          <RowActionButton
+                            variant="view"
+                            label="View scope management plan"
+                            onClick={() => navigate(`/platform/projects/${r.project.id}/scope/management-plan`)}
+                          />
                         ) : (
                           '—'
                         )}
@@ -126,7 +127,7 @@ export default function PMOOversightScope() {
             </div>
           </div>
 
-          <div>
+          <div id="pmo-scope-statements">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Scope statements</h2>
               <ExportListMenu columns={STMT_COLS} data={stmts} baseFilename="PMO_scope_statements" />
@@ -153,12 +154,11 @@ export default function PMOOversightScope() {
                       <td className="p-3 text-xs">{r.updated_at ? new Date(r.updated_at).toLocaleString() : '—'}</td>
                       <td className="p-3">
                         {r.project?.id ? (
-                          <Link
-                            to={`/platform/projects/${r.project.id}/scope/statement`}
-                            className="text-blue-600 hover:underline dark:text-blue-400"
-                          >
-                            View
-                          </Link>
+                          <RowActionButton
+                            variant="view"
+                            label="View scope statement"
+                            onClick={() => navigate(`/platform/projects/${r.project.id}/scope/statement`)}
+                          />
                         ) : (
                           '—'
                         )}

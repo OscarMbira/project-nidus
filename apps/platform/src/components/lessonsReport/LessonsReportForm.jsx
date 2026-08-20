@@ -16,6 +16,12 @@ import LessonsReportAppendicesSection from './LessonsReportAppendicesSection'
 import LessonsReportDistributionSection from './LessonsReportDistributionSection'
 import LessonsReportCompletenessIndicator from './LessonsReportCompletenessIndicator'
 import { validateReportCompleteness } from '../../services/lessonsReportService'
+import { platformDb } from '@nidus/supabase'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 // Auto-save utility (similar to issue reports)
 const enableAutoSave = (reportId, formData, onStatusChange) => {
@@ -57,7 +63,8 @@ const FORM_STEPS = [
   { id: 'lessons', label: 'Significant Lessons', icon: '💡' },
   { id: 'recommendations', label: 'Recommendations', icon: '✅' },
   { id: 'appendices', label: 'Appendices', icon: '📎' },
-  { id: 'distribution', label: 'Distribution & Approval', icon: '📤' }
+  { id: 'distribution', label: 'Distribution & Approval', icon: '📤' },
+  { id: 'audit', label: 'Audit details', icon: '🕒' }
 ]
 
 export default function LessonsReportForm({
@@ -110,6 +117,15 @@ export default function LessonsReportForm({
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [autoSaveStatus, setAutoSaveStatus] = useState({ saved: false })
+  const [auditUserLabels, setAuditUserLabels] = useState({})
+
+  useEffect(() => {
+    if (FORM_STEPS[activeStep]?.id !== 'audit' || !reportId || reportId === 'new') return
+    ;(async () => {
+      const labels = await resolveAuditUserLabels(platformDb, [formData.created_by, formData.updated_by])
+      setAuditUserLabels(labels)
+    })()
+  }, [activeStep, reportId, formData.created_by, formData.updated_by])
   const [autoSaveCleanup, setAutoSaveCleanup] = useState(null)
 
   useEffect(() => {
@@ -330,6 +346,27 @@ export default function LessonsReportForm({
             readOnly={mode === 'view'}
           />
         )
+      case 'audit':
+        return !reportId || reportId === 'new' ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this report is saved.</p>
+        ) : (
+          <AuditDetailsPanel description="Who created or changed this lessons report, and how it is classified.">
+            <AuditCard title="Identity" description="How this report is labelled and tracked.">
+              <AuditField label="Report type" value={humanizeAuditToken(formData.report_type)} />
+              <AuditField label="Status" value={humanizeAuditToken(formData.status)} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Who this report is attributed to.">
+              <AuditField label="Author" value={formData.author_name} />
+              <AuditField label="Prepared by" value={formData.prepared_by_name} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this report was created and last changed.">
+              <AuditField label="Created by" value={formData.created_by ? auditUserLabels[formData.created_by] || null : null} />
+              <AuditTimestampPair dateLabel="Created at" value={formData.created_at} />
+              <AuditField label="Updated by" value={formData.updated_by ? auditUserLabels[formData.updated_by] || null : null} />
+              <AuditTimestampPair dateLabel="Last updated" value={formData.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        )
       default:
         return null
     }
@@ -383,8 +420,10 @@ export default function LessonsReportForm({
         <LessonsReportCompletenessIndicator completeness={completeness} />
       )}
 
-      {/* Auto-save Status */}
-      {mode !== 'view' && autoSaveStatus && reportId && reportId !== 'new' && (
+      {/* Auto-save Status. Gated on autoSaveStatus.timestamp so the banner only appears
+          after a real save attempt — the initial state ({ saved: false }, no timestamp)
+          must not render as a false "save failed" before autosave has ever run. */}
+      {mode !== 'view' && autoSaveStatus?.timestamp && reportId && reportId !== 'new' && (
         <div className={`text-xs px-3 py-1 rounded ${
           autoSaveStatus.saved
             ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
@@ -400,11 +439,11 @@ export default function LessonsReportForm({
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between">
           {FORM_STEPS.map((step, index) => (
-            <div key={step.id} className="flex items-center flex-1">
+            <div key={step.id} className="flex items-center flex-1 min-w-0">
               <button
                 onClick={() => setActiveStep(index)}
                 disabled={mode === 'view'}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all min-w-0 ${
                   index === activeStep
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                     : index < activeStep
@@ -412,11 +451,11 @@ export default function LessonsReportForm({
                     : 'text-gray-400 dark:text-gray-600'
                 } ${mode === 'view' ? 'cursor-default' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700'}`}
               >
-                <span className="text-lg">{step.icon}</span>
-                <span className="text-sm font-medium hidden md:inline">{step.label}</span>
+                <span className="text-lg shrink-0">{step.icon}</span>
+                <span className="text-sm font-medium hidden md:inline leading-tight text-left">{step.label}</span>
               </button>
               {index < FORM_STEPS.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 ${
+                <div className={`flex-1 min-w-[0.5rem] h-0.5 mx-2 ${
                   index < activeStep ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'
                 }`} />
               )}
