@@ -168,6 +168,31 @@ export async function getIndustryCategories() {
 }
 
 /**
+ * Active industry segments (v918) for one industry category — optional sub-industry choice
+ * shown during registration once the user has selected that industry.
+ * @param {string} industryCategoryId
+ * @returns {Promise<{success: boolean, data: array, error: string|null}>}
+ */
+export async function getIndustrySegments(industryCategoryId) {
+  if (!industryCategoryId) return { success: true, data: [], error: null }
+  try {
+    const { data, error } = await supabase
+      .from('industry_segments')
+      .select('id, name, description')
+      .eq('industry_category_id', industryCategoryId)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [], error: null }
+  } catch (error) {
+    console.error('getIndustrySegments:', error)
+    return { success: false, data: [], error: error.message || 'Failed to load industry segments' }
+  }
+}
+
+/**
  * This organisation's own custom roles (built-in roles are shown separately, read-only).
  * @param {string} accountId
  * @returns {Promise<{success: boolean, data: array, error: string|null}>}
@@ -636,6 +661,7 @@ export default {
   getRoleMenuGrants,
   getAssignableProjectRoles,
   getIndustryCategories,
+  getIndustrySegments,
   getRoleById,
   getGrantableMenuItems,
   createOrgCustomRole,

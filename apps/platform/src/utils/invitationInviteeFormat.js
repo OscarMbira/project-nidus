@@ -192,13 +192,17 @@ export function personalizeInvitationMessage(message, ctx = {}) {
 }
 
 /**
- * Sparse `public.users` patch so an invitation's NAME and ROLE become the new
- * user's profile Full Name and Job Title.
+ * Sparse `public.users` patch so an invitation's NAME becomes the new user's
+ * profile Full Name.
  *
  * - Invitee name → `full_name` (and first/last) when the current full_name is
  *   missing or still the email handle (e.g. "qualityassurance").
- * - `role_display_name` → `job_title` when job_title is blank.
- * Does not overwrite a real, user-edited name or job title.
+ * Does not overwrite a real, user-edited name.
+ *
+ * v918/Phase 6: no longer copies `role_display_name` into `job_title` — job_title
+ * is genuinely free-text profile info, not a mirror of the security role granted
+ * by this invitation (PRD decision 4). The invitee's own professional role, if
+ * they choose one on the accept page, is saved separately via professional_role_id.
  *
  * @param {Record<string, unknown>} invitation  validate_invitation_token row
  * @param {Record<string, unknown>} [existingUser]  public.users row if any
@@ -208,12 +212,8 @@ export function buildInvitationUserProfilePatch(invitation = {}, existingUser = 
   const names = resolveInviteeNamesForInvitation(invitation)
   const email = String(existingUser.email ?? invitation.invited_email ?? '').trim()
   const currentFull = String(existingUser.full_name ?? '').trim()
-  const currentJob = String(existingUser.job_title ?? '').trim()
   const currentFirst = String(existingUser.first_name ?? '').trim()
   const currentLast = String(existingUser.last_name ?? '').trim()
-  const roleTitle = String(
-    invitation.role_display_name ?? invitation.role?.role_display_name ?? '',
-  ).trim()
 
   const patch = {}
   const shouldReplaceName =
@@ -226,10 +226,6 @@ export function buildInvitationUserProfilePatch(invitation = {}, existingUser = 
   } else {
     if (names.first && !currentFirst) patch.first_name = names.first
     if (names.last && !currentLast) patch.last_name = names.last
-  }
-
-  if (roleTitle && !currentJob) {
-    patch.job_title = roleTitle
   }
 
   return patch

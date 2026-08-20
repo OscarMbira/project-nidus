@@ -571,6 +571,8 @@ import {
   OrgRoleDetail,
   ManageMenuBundles,
   MenuBundleDetail,
+  OrganisationIndustrySettings,
+  GettingStarted,
   SystemRoleCatalog,
   SystemRoleEditPage,
   AssignRolesToProjects,
@@ -867,6 +869,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <PlatformDashboard />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="getting-started" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GettingStarted />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3666,6 +3675,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <OrgRoleDetail forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="admin/organisation-industries" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationIndustrySettings />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

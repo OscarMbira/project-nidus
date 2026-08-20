@@ -157,6 +157,26 @@ describe('inferPmoCategoryId', () => {
     expect(withDbRow.children?.some((c) => c.menu_code === 'pmo-people-manage-menu-bundles')).toBe(true)
   })
 
+  it('maps Industries & Capabilities to People & Resources and survives the flat-mode leaf filter (v918 — same two-allowlist trap as v914 Manage Menu Bundles)', () => {
+    const node = {
+      menu_code: 'pmo-people-organisation-industries',
+      menu_label: 'Industries & Capabilities',
+      route_path: '/platform/admin/organisation-industries',
+    }
+    expect(inferPmoCategoryId(node)).toBe('pmo-cat-teams')
+    expect(matchPeopleLeaf(node)).toBe(true)
+
+    const withDbRow = nestV671CategoryNode(
+      {
+        menu_code: 'pmo-cat-teams',
+        menu_label: 'People & Resources',
+        children: [{ ...node, children: [] }],
+      },
+      'pmo',
+    )
+    expect(withDbRow.children?.some((c) => c.menu_code === 'pmo-people-organisation-industries')).toBe(true)
+  })
+
   it('does not inject Manage Roles from the JS canonical list', () => {
     const codes = getV671CanonicalLeaves('people').map((n) => n.menu_code)
     expect(codes).not.toContain('pmo-people-manage-roles')

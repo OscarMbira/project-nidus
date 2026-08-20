@@ -585,7 +585,7 @@ function inferPlatformCategoryId(node = {}) {
     return 'pmo-cat-knowledge-assets'
   }
   if (
-    /\/platform\/teams|\/pm\/teams|manager assignment|appointment tracker|people.resource|people & resources|team capacity|resource directory|send invitation|assign roles to project|manage roles|manage-roles|manage menu bundles|manage-menu-bundles|invitation-tracker|send-role-invites/.test(
+    /\/platform\/teams|\/pm\/teams|manager assignment|appointment tracker|people.resource|people & resources|team capacity|resource directory|send invitation|assign roles to project|manage roles|manage-roles|manage menu bundles|manage-menu-bundles|invitation-tracker|send-role-invites|organisation-industries|industries & capabilities/.test(
       signal
     )
   ) {
@@ -615,7 +615,7 @@ function inferPlatformCategoryId(node = {}) {
     return 'pmo-cat-admin'
   }
   if (
-    /\/platform\/admin\/(invitation|send-role|assign-roles|manage-roles|manage-menu-bundles|email-settings|email-sender|invitation-settings)/.test(path)
+    /\/platform\/admin\/(invitation|send-role|assign-roles|manage-roles|manage-menu-bundles|organisation-industries|email-settings|email-sender|invitation-settings)/.test(path)
   ) {
     if (/email|sender profile|invitation template|invitation expiry|\/comms\//.test(signal)) {
       return 'pmo-cat-email-notifications'

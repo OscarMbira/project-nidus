@@ -14,6 +14,13 @@ const mockGetUser = vi.hoisted(() => vi.fn())
 const mockRpc = vi.hoisted(() => vi.fn())
 const mockSignInWithPassword = vi.hoisted(() => vi.fn())
 const mockFrom = vi.hoisted(() => vi.fn())
+const mockGetProfessionalRoles = vi.hoisted(() => vi.fn())
+const mockUpdateUserProfessionalRole = vi.hoisted(() => vi.fn())
+
+vi.mock('../../../services/professionalRoleService', () => ({
+  getProfessionalRoles: (...args) => mockGetProfessionalRoles(...args),
+  updateUserProfessionalRole: (...args) => mockUpdateUserProfessionalRole(...args),
+}))
 
 vi.mock('../../../services/invitationService', () => ({
   getInvitationAcceptContext: (...args) => mockGetInvitationAcceptContext(...args),
@@ -131,6 +138,12 @@ beforeEach(() => {
 
   // Default RPC: email has no auth account → 'new' state
   mockRpc.mockResolvedValue({ data: false, error: null })
+
+  mockGetProfessionalRoles.mockResolvedValue({
+    success: true,
+    data: [{ id: 'role-pm-1', role_label: 'Project Manager' }],
+  })
+  mockUpdateUserProfessionalRole.mockResolvedValue({ success: true })
 })
 
 // ── Test suites ───────────────────────────────────────────────────────────────
@@ -161,7 +174,7 @@ describe('InvitationAccept — authenticated user (already signed in)', () => {
     await waitFor(() => expect(mockAcceptInvitation).toHaveBeenCalledWith('tok-1', 'db-user-1'))
   })
 
-  it('copies invitation name and role onto the user profile on accept', async () => {
+  it('copies invitation name onto the user profile on accept, never job_title (v918 decision 4)', async () => {
     const updateMock = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
     mockFrom.mockReturnValue({
       select: () => ({
@@ -190,13 +203,28 @@ describe('InvitationAccept — authenticated user (already signed in)', () => {
 
     await waitFor(() => expect(mockAcceptInvitation).toHaveBeenCalledWith('tok-1', 'db-user-1'))
     await waitFor(() => expect(updateMock).toHaveBeenCalled())
-    const payload = updateMock.mock.calls.find((c) => c[0]?.full_name || c[0]?.job_title)?.[0]
+    const payload = updateMock.mock.calls.find((c) => c[0]?.full_name)?.[0]
     expect(payload).toMatchObject({
       full_name: 'Jane Doe',
       first_name: 'Jane',
       last_name: 'Doe',
-      job_title: 'Quality Assurance (PM)',
     })
+    expect(payload?.job_title).toBeUndefined()
+  })
+
+  it('saves the selected professional role (optional, informational-only) on accept', async () => {
+    const user = userEvent.setup()
+    renderInvitation()
+    await waitFor(() => expect(screen.getByRole('button', { name: /Accept Invitation/i })).toBeInTheDocument())
+
+    const roleSelect = await screen.findByLabelText(/Professional role/i)
+    await user.selectOptions(roleSelect, 'role-pm-1')
+    await user.click(screen.getByRole('button', { name: /Accept Invitation/i }))
+
+    await waitFor(() => expect(mockAcceptInvitation).toHaveBeenCalledWith('tok-1', 'db-user-1'))
+    await waitFor(() =>
+      expect(mockUpdateUserProfessionalRole).toHaveBeenCalledWith('db-user-1', 'role-pm-1'),
+    )
   })
 
   it('opens decline confirmation and declines', async () => {

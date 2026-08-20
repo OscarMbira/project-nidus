@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, createElement } from 'react'
 import { useLocation } from 'react-router-dom'
 import { platformDb } from '../services/supabaseClient'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { applySimulatorRegistryFallback } from '@nidus/config/menuRegistryUtils'
 import { stripVirtualMenuItems } from '@nidus/config/menuDbOnlyUtils'
 import {
@@ -274,6 +275,30 @@ function buildSidebarPresentation(hierarchy = [], layoutHint = null) {
 const MENU_LOAD_TIMEOUT_MS = 45000
 const MENU_HYDRATE_MAX_ROUNDS = 12
 const LINK_AUTH_TIMEOUT_MS = 8000
+
+// v918/v924 — SaaS Industry-Aware Tenant Provisioning: temporary local kill-switch for the new
+// org-industry-availability filter, until admin.feature_flags is actually wired into
+// Platform/Simulator (CLAUDE.md documents that exception but the audit for this initiative
+// found it unimplemented — this is the first real consumer of it, tracked as a follow-up).
+// Defaults OFF: with this false, useMenu.js's behavior is byte-for-byte identical to before
+// this initiative — no risk to existing sidebar rendering until explicitly enabled for testing.
+const INDUSTRY_MENU_AVAILABILITY_ENABLED = false
+
+/**
+ * Pure fail-open filter: narrow menuIds to whatever the org-availability RPC allows, but never
+ * to an empty set — an empty result from get_account_available_menu_item_ids almost certainly
+ * means unseeded/misconfigured industry_pack_menu_items, not "this org has access to nothing"
+ * (v918/v924/Phase 10). Extracted from fetchMenuFromDB's inline filter so it's independently
+ * unit-testable without needing a live RPC or the availability flag flipped on.
+ * @param {string[]} menuIds
+ * @param {string[]|Set<string>} availableIds
+ * @returns {string[]}
+ */
+export function applyOrgMenuAvailabilityFilter(menuIds, availableIds) {
+  const available = availableIds instanceof Set ? availableIds : new Set(availableIds)
+  const filtered = menuIds.filter((id) => available.has(id))
+  return filtered.length > 0 ? filtered : menuIds
+}
 
 async function resolveAuthUser() {
   const { data: { session } } = await platformDb.auth.getSession()
@@ -668,6 +693,36 @@ export async function fetchMenuFromDB(user, { raw = false, pathname = '', layout
   }
 
   let uniqueMenuIds = [...new Set((roleMenuRows || []).map((r) => r.menu_item_id).filter(Boolean))]
+
+  // v918/v924 — org-industry-availability filter, applied to role-granted ids only, strictly
+  // before category-placeholder ids are unioned in below (those are structural tree scaffolding,
+  // not capability grants, and must never be filtered). Fails open on any error (network,
+  // unresolvable account mid-registration, etc.) — never blocks or narrows the existing
+  // role-grant-only behavior just because this new layer had trouble resolving.
+  if (INDUSTRY_MENU_AVAILABILITY_ENABLED && uniqueMenuIds.length > 0) {
+    try {
+      const accountId = await getCurrentUserAccountId()
+      if (accountId) {
+        const { data: availableRows, error: availabilityError } = await platformDb.rpc(
+          'get_account_available_menu_item_ids',
+          { p_account_id: accountId },
+        )
+        if (!availabilityError && Array.isArray(availableRows)) {
+          const availableIds = availableRows.map((r) => r.menu_item_id)
+          const filtered = applyOrgMenuAvailabilityFilter(uniqueMenuIds, availableIds)
+          // Array.prototype.filter always returns a new array reference, even when every
+          // element matches — so reference equality here can only mean the helper's own
+          // fail-open branch returned the original array back unchanged.
+          if (filtered === uniqueMenuIds) {
+            console.warn('useMenu: org-industry-availability filter would empty the menu — showing role grants unfiltered instead')
+          }
+          uniqueMenuIds = filtered
+        }
+      }
+    } catch (availabilityErr) {
+      console.warn('useMenu: org-industry-availability filter failed, showing role grants unfiltered:', availabilityErr?.message || availabilityErr)
+    }
+  }
 
   // Round 4 — parallel: PMO category IDs + nothing else yet (categoryIds needed before hydration)
   const hierarchyLayout = resolvePlatformHierarchyLayout(layoutBase.layout)

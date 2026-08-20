@@ -640,7 +640,7 @@ export function matchNotificationPreferencesLeaf(node) {
 export function matchPeopleLeaf(node) {
   const s = signal(node)
   return (
-    /manager assignment|appointment tracker|assignment settings|invitation tracker|send invitation|assign roles|manage roles|manage-roles|manage menu bundles|manage-menu-bundles|add users|resource directory|team capacity|people.resource|project.members/.test(
+    /manager assignment|appointment tracker|assignment settings|invitation tracker|send invitation|assign roles|manage roles|manage-roles|manage menu bundles|manage-menu-bundles|organisation-industries|industries & capabilities|add users|resource directory|team capacity|people.resource|project.members/.test(
       s
     ) && !/stakeholder register/.test(s)
   )

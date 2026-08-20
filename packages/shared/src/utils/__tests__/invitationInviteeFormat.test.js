@@ -95,7 +95,7 @@ describe('invitationInviteeFormat', () => {
     ).toBe('Oscar Mbirablogging')
   })
 
-  it('buildInvitationUserProfilePatch maps invitation name to full_name and role to job_title', () => {
+  it('buildInvitationUserProfilePatch maps invitation name to full_name, never touches job_title', () => {
     expect(
       buildInvitationUserProfilePatch(
         {
@@ -114,11 +114,10 @@ describe('invitationInviteeFormat', () => {
       full_name: 'Arun Quality Manager',
       first_name: 'Arun',
       last_name: 'Quality Manager',
-      job_title: 'Quality Assurance',
     })
   })
 
-  it('buildInvitationUserProfilePatch does not overwrite a real profile name or job title', () => {
+  it('buildInvitationUserProfilePatch does not overwrite a real profile name', () => {
     expect(
       buildInvitationUserProfilePatch(
         {
@@ -135,6 +134,18 @@ describe('invitationInviteeFormat', () => {
         },
       ),
     ).toEqual({})
+  })
+
+  it('buildInvitationUserProfilePatch never sets job_title from role_display_name (v918 decision 4)', () => {
+    const patch = buildInvitationUserProfilePatch(
+      {
+        invited_first_name: 'Arun',
+        invited_last_name: 'Quality Manager',
+        role_display_name: 'Quality Assurance',
+      },
+      { full_name: '', email: 'qualityassurance@projectastute.com', job_title: '' },
+    )
+    expect(patch.job_title).toBeUndefined()
   })
 
   it('prepends Dear greeting when name not in body', () => {

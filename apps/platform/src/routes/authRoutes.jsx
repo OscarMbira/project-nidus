@@ -544,6 +544,10 @@ import {
   PlatformAccountSetup,
   PlatformChoice,
   OrganisationSetup,
+  IndustrySelectionStep,
+  ProfessionalRoleStep,
+  RegistrationReviewStep,
+  WorkspaceSetupStep,
   OrganisationVerificationNotice,
   VerifyOrganisation,
   ProjectTypeSelection,
@@ -900,6 +904,42 @@ export function AuthRouteElements() {
                     <ThemeProvider>
                       <ProtectedRoute>
                         <OrganisationSetup />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="onboarding/industry-selection" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <IndustrySelectionStep />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="onboarding/professional-role" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <ProfessionalRoleStep />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="onboarding/review" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <RegistrationReviewStep />
+                      </ProtectedRoute>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="onboarding/workspace-setup" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ProtectedRoute>
+                        <WorkspaceSetupStep />
                       </ProtectedRoute>
                     </ThemeProvider>
                   </Suspense>

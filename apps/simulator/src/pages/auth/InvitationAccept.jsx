@@ -8,6 +8,7 @@ import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { appDb as supabase } from '@nidus/supabase'
 import { getInvitationAcceptContext, getInvitationByToken } from '../../services/invitationService'
 import { acceptInvitation, declineInvitationByToken } from '../../services/projectMembershipService'
+import { getProfessionalRoles, updateUserProfessionalRole } from '../../services/professionalRoleService'
 import { getPostLoginRoute } from '../../services/postLoginRouter'
 import { normalizeSupabaseAuthError } from '@nidus/shared/utils/authErrorMessage'
 import { Lock, Mail, AlertCircle, Loader, CheckCircle, XCircle, UserCheck } from 'lucide-react'
@@ -93,10 +94,21 @@ export default function InvitationAccept() {
   })
   const [declineReason, setDeclineReason] = useState('unavailable')
   const [declineNote, setDeclineNote] = useState('')
+  const [professionalRoles, setProfessionalRoles] = useState([])
+  const [professionalRoleId, setProfessionalRoleId] = useState('')
 
   useEffect(() => {
     loadInvitation()
   }, [token])
+
+  // v918/Phase 6: same professional-role field used at registration, offered here too so
+  // invited users get the same informational capture regardless of how they joined
+  // (PRD decision 4). Independent of the invitation itself, so it loads in parallel.
+  useEffect(() => {
+    getProfessionalRoles().then((result) => {
+      if (result.success) setProfessionalRoles(result.data)
+    })
+  }, [])
 
   useEffect(() => {
     if (
@@ -171,7 +183,17 @@ export default function InvitationAccept() {
         throw new Error(res.error || 'Failed to accept invitation.')
       }
     }
-    await _applyInvitationUserDefaults(userId)
+    await Promise.all([
+      _applyInvitationUserDefaults(userId),
+      _saveProfessionalRoleIfSelected(userId),
+    ])
+  }
+
+  /** Informational-only — never blocks acceptance if it fails. */
+  async function _saveProfessionalRoleIfSelected(userId) {
+    if (!professionalRoleId) return
+    const res = await updateUserProfessionalRole(userId, professionalRoleId)
+    if (!res.success) console.warn('[accept] professional role save skipped:', res.error)
   }
 
   // ── Load invitation ────────────────────────────────────────────────────────
@@ -437,7 +459,12 @@ export default function InvitationAccept() {
               .select('id')
               .eq('auth_user_id', newUser.id)
               .maybeSingle()
-            if (uRow?.id) await _applyInvitationUserDefaults(uRow.id)
+            if (uRow?.id) {
+              await Promise.all([
+                _applyInvitationUserDefaults(uRow.id),
+                _saveProfessionalRoleIfSelected(uRow.id),
+              ])
+            }
           }
         } catch (profileErr) {
           console.warn('[accept] profile defaults skipped:', profileErr?.message)
@@ -617,6 +644,27 @@ export default function InvitationAccept() {
       invitation.invited_email
     : ''
 
+  // v918/Phase 6: same optional field on every panel — left blank, an existing
+  // professional_role_id (e.g. set at registration) is never touched.
+  const ProfessionalRoleField = professionalRoles.length > 0 ? (
+    <div>
+      <label htmlFor="invitation-accept-professional-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Professional role (optional)
+      </label>
+      <select
+        id="invitation-accept-professional-role"
+        value={professionalRoleId}
+        onChange={(e) => setProfessionalRoleId(e.target.value)}
+        className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+      >
+        <option value="">Prefer not to say</option>
+        {professionalRoles.map((role) => (
+          <option key={role.id} value={role.id}>{role.role_label}</option>
+        ))}
+      </select>
+    </div>
+  ) : null
+
   // Panel A — Already authenticated (session active)
   const AuthenticatedPanel = (
     <form onSubmit={handleAcceptAuthenticated} className="space-y-4">
@@ -641,6 +689,8 @@ export default function InvitationAccept() {
           onAcceptanceChange={setAcceptanceFields}
         />
       )}
+
+      {ProfessionalRoleField}
 
       <div className="flex flex-col gap-3 pt-2">
         <button
@@ -728,6 +778,8 @@ export default function InvitationAccept() {
         />
       )}
 
+      {ProfessionalRoleField}
+
       <div className="flex flex-col gap-3 pt-2">
         <button
           type="submit"
@@ -790,6 +842,8 @@ export default function InvitationAccept() {
           />
         </div>
       </div>
+
+      {ProfessionalRoleField}
 
       <div className="flex flex-col gap-3 pt-2">
         <button

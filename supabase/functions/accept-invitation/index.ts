@@ -131,7 +131,12 @@ serve(async (req) => {
       }
     }
     if (!inviteeFullName) inviteeFullName = email.split('@')[0];
-    const inviteeJobTitle = String(inv.role_display_name ?? '').trim();
+    // v918/Phase 6: job_title is genuinely free-text profile info, not a mirror of the
+    // security role. Previously this line copied inv.role_display_name into job_title,
+    // conflating "what security role was I granted" with "what do I do" — closed per
+    // PRD decision 4. job_title is left unset here; the invitee's professional role (if
+    // they choose one on the accept page) is saved separately via professional_role_id.
+    const inviteeJobTitle = '';
 
     function isHandleLikeName(name: string, userEmail: string) {
       const n = String(name ?? '').trim().toLowerCase();

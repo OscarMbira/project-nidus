@@ -236,6 +236,32 @@ export const createOrganisation = async (organisationData) => {
 };
 
 /**
+ * Provisions (or re-provisions) an organisation's industry selection (v918/v923). Single
+ * authoritative write path for account_industries — used both right after registration and
+ * later from Organisation Settings when industries change. Idempotent: safe to retry.
+ * @param {string} accountId
+ * @param {string[]} industryCategoryIds
+ * @param {string} primaryIndustryId - must be one of industryCategoryIds
+ * @param {(string|null)[]} [industrySegmentIds] - same length/order as industryCategoryIds, null entries allowed
+ * @returns {Promise<{success: boolean, error: string|null}>}
+ */
+export const provisionOrganisationTenant = async (accountId, industryCategoryIds, primaryIndustryId, industrySegmentIds = null) => {
+  try {
+    const { error } = await platformDb.rpc('provision_organisation_tenant', {
+      p_account_id: accountId,
+      p_industry_category_ids: industryCategoryIds,
+      p_primary_industry_id: primaryIndustryId,
+      p_industry_segment_ids: industrySegmentIds,
+    });
+    if (error) throw error;
+    return { success: true, error: null };
+  } catch (error) {
+    console.error('provisionOrganisationTenant:', error);
+    return { success: false, error: error.message || 'Failed to provision organisation industries' };
+  }
+};
+
+/**
  * Verify organisation via token
  * @param {string} token - Verification token
  * @returns {Promise<Object>} Verified organisation
@@ -599,6 +625,7 @@ const generateAccountCode = (name) => {
 
 export default {
   createOrganisation,
+  provisionOrganisationTenant,
   verifyOrganisation,
   resendVerificationEmail,
   checkTrialEligibility,

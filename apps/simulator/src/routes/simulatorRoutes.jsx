@@ -561,6 +561,7 @@ import {
   OrgRoleDetail,
   ManageMenuBundles,
   MenuBundleDetail,
+  OrganisationIndustrySettings,
   SystemRoleCatalog,
   SystemRoleEditPage,
   AssignRolesToProjects,
@@ -4752,6 +4753,19 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <SimulatorPMOLayout>
                             <OrgRoleDetail forceEdit />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/organisation-industries" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrganisationIndustrySettings />
                           </SimulatorPMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>
