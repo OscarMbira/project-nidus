@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Save, ArrowRight, ArrowLeft, AlertTriangle, TrendingUp, FileText, Target, Users, CheckCircle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { createRisk, updateRisk } from '../../services/riskService'
@@ -18,9 +18,13 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import SimilarRiskPanel from './SimilarRiskPanel'
+import { addRiskCategory, addRiskSubcategory, findSimilarRisks, getRiskCatalogueAccess, listRiskCatalogue } from '../../services/riskCategoryCatalogService'
+import { similarCatalogueNames } from '../../utils/riskCategoryMatch'
 
 export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
   const location = useLocation()
+  const navigate = useNavigate()
   // PM/PMO register routes always use the in-page surface; default elsewhere is page too.
   const variant =
     resolveOversightFormVariant(location.pathname) === 'page'
@@ -72,6 +76,17 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [newTag, setNewTag] = useState('')
+  const [riskCategories, setRiskCategories] = useState([])
+  const [subCategories, setSubCategories] = useState([])
+  const [subCategoriesError, setSubCategoriesError] = useState('')
+  const [canAddCatalogue, setCanAddCatalogue] = useState(false)
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [draftCategory, setDraftCategory] = useState('')
+  const [showAddSubcategory, setShowAddSubcategory] = useState(false)
+  const [draftSubcategory, setDraftSubcategory] = useState('')
+  const [titleSimilarRisks, setTitleSimilarRisks] = useState([])
+  const [draftSimilarNames, setDraftSimilarNames] = useState([])
+  const [draftSimilarRisks, setDraftSimilarRisks] = useState([])
   const [formTab, setFormTab] = useState('wizard')
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
@@ -196,9 +211,99 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
     }
   }
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const access = await getRiskCatalogueAccess(accountId)
+      if (cancelled) return
+      setCanAddCatalogue(Boolean(access.canAdd))
+      const listed = await listRiskCatalogue(access.accountId || accountId)
+      if (cancelled) return
+      if (!listed.success) {
+        setRiskCategories([])
+        setSubCategories([])
+        setSubCategoriesError(listed.error || 'Sub-categories could not be loaded.')
+        return
+      }
+      setSubCategoriesError('')
+      setRiskCategories((listed.categories || []).filter((row) => row.is_active))
+      setSubCategories((listed.subcategories || []).filter((row) => row.is_active))
+    })()
+    return () => { cancelled = true }
+  }, [accountId])
+
+  useEffect(() => {
+    const handle = setTimeout(async () => {
+      if (!accountId) return
+      const risks = await findSimilarRisks(accountId, formData.risk_title, projectId)
+      setTitleSimilarRisks(risks.success ? risks.data : [])
+    }, 400)
+    return () => clearTimeout(handle)
+  }, [formData.risk_title, accountId, projectId])
+
+  useEffect(() => {
+    const draft = showAddSubcategory ? draftSubcategory : (showAddCategory ? draftCategory : '')
+    const category = riskCategories.find((row) => row.category_name === formData.risk_category || row.category_code === formData.risk_category)
+    const pool = showAddSubcategory
+      ? subCategories
+        .filter((row) => row.category_code === category?.category_code)
+        .map((row) => ({ name: row.subcategory_name, value: row.subcategory_name }))
+      : riskCategories.map((row) => ({ name: row.category_name, value: row.category_name }))
+    setDraftSimilarNames(similarCatalogueNames(draft, pool))
+    const handle = setTimeout(async () => {
+      if (!accountId || draft.trim().length < 2) {
+        setDraftSimilarRisks([])
+        return
+      }
+      const risks = await findSimilarRisks(accountId, draft, projectId)
+      setDraftSimilarRisks(risks.success ? risks.data : [])
+    }, 400)
+    return () => clearTimeout(handle)
+  }, [draftCategory, draftSubcategory, showAddCategory, showAddSubcategory, riskCategories, subCategories, formData.risk_category, accountId, projectId])
+
+  const saveDraftCategory = async () => {
+    if (!accountId) return
+    const result = await addRiskCategory(accountId, draftCategory)
+    if (!result.success) {
+      setSubCategoriesError(result.error)
+      return
+    }
+    const created = result.data
+    setRiskCategories((prev) => [...prev, created])
+    handleChange('risk_category', created.category_name)
+    setDraftCategory('')
+    setShowAddCategory(false)
+    setSubCategoriesError('')
+  }
+
+  const saveDraftSubcategory = async () => {
+    const category = riskCategories.find((row) => row.category_name === formData.risk_category || row.category_code === formData.risk_category)
+    if (!accountId || !category) return
+    const result = await addRiskSubcategory(accountId, category.category_code, draftSubcategory)
+    if (!result.success) {
+      setSubCategoriesError(result.error)
+      return
+    }
+    const created = result.data
+    setSubCategories((prev) => [...prev, created])
+    handleChange('sub_category', created.subcategory_name)
+    setDraftSubcategory('')
+    setShowAddSubcategory(false)
+    setSubCategoriesError('')
+  }
+
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error for this field
+    setFormData(prev => {
+      const next = { ...prev, [field]: value }
+      if (field === 'risk_category' && value !== prev.risk_category) {
+        const category = riskCategories.find((row) => row.category_name === value || row.category_code === value)
+        const stillValid = subCategories.some(
+          (row) => row.category_code === category?.category_code && row.subcategory_name === prev.sub_category
+        )
+        if (!stillValid) next.sub_category = ''
+      }
+      return next
+    })
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }))
     }
@@ -341,6 +446,8 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
   const renderStepContent = () => {
     const riskScore = calculateRiskScore()
     const riskLevel = getRiskLevel(riskScore)
+    const selectedCategory = riskCategories.find((row) => row.category_name === formData.risk_category || row.category_code === formData.risk_category)
+    const openSimilarRisk = (risk) => navigate(location.pathname.startsWith('/simulator') ? `/simulator/practice-risk-register/${risk.id}` : `/platform/risks/${risk.id}`)
 
     switch (activeStep) {
       case 1:
@@ -368,6 +475,7 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                 }`}
                 placeholder="e.g., Key vendor may not deliver on time"
               />
+              <SimilarRiskPanel names={[]} risks={titleSimilarRisks} onOpenRisk={openSimilarRisk} />
               {errors.risk_title && <p className="text-sm text-red-600 mt-1">{errors.risk_title}</p>}
             </div>
 
@@ -406,28 +514,45 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
                   Category *
                 </label>
                 <select
-                  value={formData.risk_category}
+                  value={selectedCategory ? selectedCategory.category_name : formData.risk_category}
                   onChange={(e) => handleChange('risk_category', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${
                     errors.risk_category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 >
                   <option value="">Select Category</option>
-                  <option value="schedule">Schedule</option>
-                  <option value="cost">Cost</option>
-                  <option value="quality">Quality</option>
-                  <option value="scope">Scope</option>
-                  <option value="resource">Resource</option>
-                  <option value="technical">Technical</option>
-                  <option value="legal">Legal</option>
-                  <option value="regulatory">Regulatory</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="operational">Operational</option>
-                  <option value="strategic">Strategic</option>
-                  <option value="external">External</option>
-                  <option value="organizational">Organizational</option>
-                  <option value="other">Other</option>
+                  {formData.risk_category && !selectedCategory && (
+                    <option value={formData.risk_category}>{formData.risk_category}</option>
+                  )}
+                  {riskCategories.map((row) => (
+                    <option key={row.id} value={row.category_name}>{row.category_name}</option>
+                  ))}
                 </select>
+                {canAddCatalogue && (
+                  <button type="button" className="mt-2 text-sm font-medium text-blue-700 hover:underline dark:text-blue-300" onClick={() => setShowAddCategory((open) => !open)}>
+                    Add category
+                  </button>
+                )}
+                {showAddCategory && (
+                  <div className="mt-2">
+                    <div className="flex gap-2">
+                      <input
+                        value={draftCategory}
+                        onChange={(e) => setDraftCategory(e.target.value)}
+                        placeholder="New category name"
+                        maxLength={100}
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      />
+                      <button type="button" onClick={saveDraftCategory} className="px-3 py-2 bg-blue-600 text-white rounded-lg">Save</button>
+                    </div>
+                    <SimilarRiskPanel
+                      names={draftSimilarNames}
+                      risks={draftSimilarRisks}
+                      onPickName={(item) => { handleChange('risk_category', item.name); setShowAddCategory(false); setDraftCategory('') }}
+                      onOpenRisk={openSimilarRisk}
+                    />
+                  </div>
+                )}
                 {errors.risk_category && <p className="text-sm text-red-600 mt-1">{errors.risk_category}</p>}
               </div>
             </div>
@@ -478,13 +603,56 @@ export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSa
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Sub-Category
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.sub_category}
                 onChange={(e) => handleChange('sub_category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Optional sub-category"
-              />
+                disabled={!formData.risk_category}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-60"
+              >
+                <option value="">
+                  {formData.risk_category ? 'Select sub-category' : 'Select a category first'}
+                </option>
+                {formData.sub_category && !subCategories.some(
+                  (row) => row.category_code === selectedCategory?.category_code && row.subcategory_name === formData.sub_category
+                ) && (
+                  <option value={formData.sub_category}>{formData.sub_category}</option>
+                )}
+                {subCategories
+                  .filter((row) => row.category_code === selectedCategory?.category_code)
+                  .map((row) => (
+                    <option key={row.id || `${row.category_code}-${row.subcategory_name}`} value={row.subcategory_name}>
+                      {row.subcategory_name}
+                    </option>
+                  ))}
+              </select>
+              {canAddCatalogue && selectedCategory && (
+                <button type="button" className="mt-2 text-sm font-medium text-blue-700 hover:underline dark:text-blue-300" onClick={() => setShowAddSubcategory((open) => !open)}>
+                  Add sub-category
+                </button>
+              )}
+              {showAddSubcategory && selectedCategory && (
+                <div className="mt-2">
+                  <div className="flex gap-2">
+                    <input
+                      value={draftSubcategory}
+                      onChange={(e) => setDraftSubcategory(e.target.value)}
+                      placeholder="New sub-category name"
+                      maxLength={100}
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                    <button type="button" onClick={saveDraftSubcategory} className="px-3 py-2 bg-blue-600 text-white rounded-lg">Save</button>
+                  </div>
+                  <SimilarRiskPanel
+                    names={draftSimilarNames}
+                    risks={draftSimilarRisks}
+                    onPickName={(item) => { handleChange('sub_category', item.name); setShowAddSubcategory(false); setDraftSubcategory('') }}
+                    onOpenRisk={openSimilarRisk}
+                  />
+                </div>
+              )}
+              {subCategoriesError && (
+                <p className="text-sm text-red-600 mt-1">{subCategoriesError}</p>
+              )}
             </div>
 
             <div>

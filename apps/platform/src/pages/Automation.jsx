@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Plus, Play, Pause, Settings, Trash2, Filter, Search, Zap } from 'lucide-react'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function Automation() {
@@ -148,42 +149,10 @@ export default function Automation() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Rules</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <Zap className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
-            </div>
-            <Play className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Executions</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.executions}</p>
-            </div>
-            <Zap className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Errors</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.errors}</p>
-            </div>
-            <Zap className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Rules" value={stats.total} icon={Zap} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Active" value={stats.active} icon={Play} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Executions" value={stats.executions} icon={Zap} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
+        <DashboardStatCard label="Errors" value={stats.errors} icon={Zap} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
       </div>
 
       {/* Filters */}

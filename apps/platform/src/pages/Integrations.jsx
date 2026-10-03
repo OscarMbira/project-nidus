@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Plus, Plug, CheckCircle, XCircle, RefreshCw, Settings, Trash2, Play, Pause } from 'lucide-react'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function Integrations() {
@@ -157,42 +158,10 @@ export default function Integrations() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Integrations</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <Plug className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Connected</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.connected}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Syncing</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.syncing}</p>
-            </div>
-            <RefreshCw className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Integrations" value={stats.total} icon={Plug} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Active" value={stats.active} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Connected" value={stats.connected} icon={CheckCircle} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" borderClassName="border-blue-200 dark:border-blue-800" />
+        <DashboardStatCard label="Syncing" value={stats.syncing} icon={RefreshCw} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
       </div>
 
       {/* Integration Types */}

@@ -93,10 +93,19 @@ export async function getInterProjectDependencies(filters = {}) {
   return data
 }
 
+const DEPENDENCY_KEY_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /**
- * Get a single dependency by ID
+ * Get a single dependency by id or dependency code.
  */
 export async function getInterProjectDependency(dependencyId) {
+  return getInterProjectDependencyByKey(dependencyId)
+}
+
+export async function getInterProjectDependencyByKey(key) {
+  const value = decodeURIComponent(String(key || '').trim())
+  if (!value) throw new Error('Dependency not found')
+  const column = DEPENDENCY_KEY_UUID.test(value) ? 'id' : 'dependency_code'
   const { data, error } = await platformDb
     .from('inter_project_dependencies')
     .select(`
@@ -134,12 +143,26 @@ export async function getInterProjectDependency(dependencyId) {
         resource_code
       )
     `)
-    .eq('id', dependencyId)
+    .eq(column, value)
     .eq('is_deleted', false)
-    .single()
+    .limit(2)
 
   if (error) throw error
-  return data
+  if (!data?.length) throw new Error('Dependency not found')
+  if (data.length > 1) throw new Error('More than one dependency uses this code. Open it from the list again.')
+  return data[0]
+}
+
+/** public.users.id for the signed-in account. Auth ids are not valid on users(id) foreign keys. */
+async function currentPublicUserId(authUserId) {
+  const { data, error } = await platformDb
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle()
+  if (error) throw error
+  if (!data?.id) throw new Error('Could not resolve your user record')
+  return data.id
 }
 
 /**
@@ -148,6 +171,7 @@ export async function getInterProjectDependency(dependencyId) {
 export async function saveInterProjectDependency(dependencyData, dependencyId = null) {
   const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
+  const publicUserId = await currentPublicUserId(user.id)
 
   // Check for circular dependencies before saving
   if (!dependencyId && dependencyData.source_project_id && dependencyData.target_project_id) {
@@ -165,10 +189,13 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
 
   const updateData = {
     ...dependencyData,
-    updated_by: user.id,
+    updated_by: publicUserId,
   }
+  const dependencyCode = String(updateData.dependency_code ?? '').trim()
 
   if (dependencyId) {
+    if (dependencyCode) updateData.dependency_code = dependencyCode
+    else delete updateData.dependency_code
     const { data, error } = await platformDb
       .from('inter_project_dependencies')
       .update(updateData)
@@ -179,9 +206,11 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
     if (error) throw error
     return data
   } else {
-    updateData.created_by = user.id
+    // Blank code is assigned by trg_apply_admin_display_id (v1120). A typed code is kept.
+    updateData.dependency_code = dependencyCode
+    updateData.created_by = publicUserId
     if (!updateData.dependency_owner_user_id) {
-      updateData.dependency_owner_user_id = user.id
+      updateData.dependency_owner_user_id = publicUserId
     }
     if (!updateData.dependency_identified_date) {
       updateData.dependency_identified_date = new Date().toISOString().split('T')[0]
@@ -193,6 +222,14 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
       .single()
 
     if (error) throw error
+    if (!dependencyCode && data?.id) {
+      const { data: refreshed } = await platformDb
+        .from('inter_project_dependencies')
+        .select('dependency_code')
+        .eq('id', data.id)
+        .maybeSingle()
+      if (refreshed?.dependency_code) data.dependency_code = refreshed.dependency_code
+    }
     return data
   }
 }
@@ -203,14 +240,15 @@ export async function saveInterProjectDependency(dependencyData, dependencyId = 
 export async function deleteInterProjectDependency(dependencyId) {
   const { data: { user } } = await platformDb.auth.getUser()
   if (!user) throw new Error('User not authenticated')
+  const publicUserId = await currentPublicUserId(user.id)
 
   const { data, error } = await platformDb
     .from('inter_project_dependencies')
     .update({
       is_deleted: true,
       deleted_at: new Date().toISOString(),
-      deleted_by: user.id,
-      updated_by: user.id,
+      deleted_by: publicUserId,
+      updated_by: publicUserId,
     })
     .eq('id', dependencyId)
     .select()

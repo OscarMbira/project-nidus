@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, CheckCircle, Plus, Calendar, Clock } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import {
   getPracticeQualityReviews,
   deletePracticeQualityReview
@@ -98,7 +99,7 @@ export default function PracticeQualityReviews() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <button
-          onClick={() => navigate('/simulator/practice-quality-register' + (selectedProjectId ? `?projectId=${selectedProjectId}` : ''))}
+          onClick={() => navigate(-1)}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
         >
           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -162,9 +163,9 @@ export default function PracticeQualityReviews() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {reviews.map(r => (
+              {reviews.map((r, index) => (
                 <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                  <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-6 py-4">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{r.review_title}</div>
                     {r.review_reference && <div className="text-xs text-gray-500">{r.review_reference}</div>}
@@ -180,7 +181,7 @@ export default function PracticeQualityReviews() {
                   </td>
                   <td className="px-6 py-4 text-sm">{r.overall_score != null ? `${Math.round(r.overall_score)}%` : '—'}</td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => handleDelete(r)} disabled={deleting === r.id} className="text-red-600 hover:text-red-800 dark:text-red-400 disabled:opacity-50 text-sm">Delete</button>
+                    <RowActionButton variant="delete" label="Delete review" onClick={() => handleDelete(r)} disabled={deleting === r.id} />
                   </td>
                 </tr>
               ))}

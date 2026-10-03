@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, FileText, Lightbulb, ArrowRight, AlertCircle, TrendingUp } from 'lucide-react';
-import { getClosureDashboardStats } from '../../../services/closingProjectService';
+import { CheckCircle, FileText, Lightbulb, ArrowRight, AlertCircle, TrendingUp, Archive, Target } from 'lucide-react';
+import { getClosureDashboardStats, archiveProjectClosure } from '../../../services/closingProjectService';
+import { supabase } from '../../../services/supabaseClient';
 
 export default function ProjectClosureDashboard({ projectId }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -24,6 +26,23 @@ export default function ProjectClosureDashboard({ projectId }) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!stats?.closureId || stats?.archivedAt) return;
+    if (!window.confirm('Archive this project closure? This does not delete any data.')) return;
+    setArchiving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      await archiveProjectClosure(stats.closureId, user.id);
+      await loadDashboardStats();
+    } catch (err) {
+      console.error('Error archiving project closure:', err);
+      setError(err.message);
+    } finally {
+      setArchiving(false);
     }
   };
 
@@ -90,6 +109,16 @@ export default function ProjectClosureDashboard({ projectId }) {
       bgColor: 'bg-orange-50 dark:bg-orange-900/20',
       iconColor: 'text-orange-600 dark:text-orange-400',
       borderColor: 'border-orange-200 dark:border-orange-800'
+    },
+    {
+      title: 'Benefits Transition',
+      value: stats.benefitsTransitionStatus.replace('_', ' '),
+      subtitle: stats.archivedAt ? 'archived' : 'active',
+      icon: Target,
+      color: 'teal',
+      bgColor: 'bg-teal-50 dark:bg-teal-900/20',
+      iconColor: 'text-teal-600 dark:text-teal-400',
+      borderColor: 'border-teal-200 dark:border-teal-800'
     }
   ];
 
@@ -180,6 +209,29 @@ export default function ProjectClosureDashboard({ projectId }) {
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Handover documentation in progress: {stats.handoverStatus.replace('-', ' ')}
               </span>
+            </div>
+          )}
+
+          {stats.closureExists && (
+            <div className="flex items-center justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Archive className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {stats.archivedAt
+                    ? `Archived on ${new Date(stats.archivedAt).toLocaleString()}`
+                    : 'Not yet archived'}
+                </span>
+              </div>
+              {!stats.archivedAt && (
+                <button
+                  type="button"
+                  onClick={handleArchive}
+                  disabled={archiving}
+                  className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                >
+                  {archiving ? 'Archiving...' : 'Archive'}
+                </button>
+              )}
             </div>
           )}
         </div>

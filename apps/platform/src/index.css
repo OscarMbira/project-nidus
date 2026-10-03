@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* Sidebar offset/transform classes are returned from this helper. Tailwind only
+   emits utilities it can see as complete strings in a scanned file. */
+@source "../../../packages/shared/src/hooks/useSidebarCollapsed.js";
 
 /* CRITICAL: Tailwind v4 requires this custom variant definition for dark mode */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -32,6 +35,16 @@ html:not(.dark) {
 /* Ensure body also respects dark mode */
 body.dark {
   color-scheme: dark;
+}
+
+/* Disabled <select> elements (read-only form views, e.g. a record's "View" mode
+   rendered via <fieldset disabled>) render as a flat, non-interactive field —
+   no dropdown arrow, since there's nothing to open. System-wide, not per-form. */
+select:disabled {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: default;
 }
 
 /* Screen reader only class for accessibility */

@@ -9,6 +9,13 @@ import { ArrowLeft } from 'lucide-react'
 import { getPracticeTaskById, createPracticeTask, updatePracticeTask } from '../../services/sim/practiceTaskService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import { simDb } from '@nidus/supabase'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRACTICE_TASK_VIEW_SECTIONS = [
   { title: 'Task', fields: [
@@ -36,12 +43,22 @@ export default function PracticeTaskDetail() {
     estimated_hours: '',
     percentage_complete: 0
   })
+  const [formTab, setFormTab] = useState('details')
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
     if (id && id !== 'create') {
       loadTask()
     }
   }, [id])
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !task) return
+    (async () => {
+      const labels = await resolveAuditUserLabels(simDb, [task.created_by, task.updated_by])
+      setAuditUserLabels(labels || {})
+    })()
+  }, [formTab, task])
 
   const loadTask = async () => {
     try {
@@ -84,7 +101,7 @@ export default function PracticeTaskDetail() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/simulator/practice-tasks?projectId=${projectId}`)}
+        onClick={() => navigate(-1)}
         className="mb-4 inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -108,6 +125,31 @@ export default function PracticeTaskDetail() {
         )}
       </div>
 
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+          {!task ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this task is saved.</p>
+          ) : (
+            <AuditDetailsPanel description="Who created or changed this task.">
+              <AuditCard title="Identity" description="How this task is labelled.">
+                <AuditField label="Name" value={task.task_name} />
+              </AuditCard>
+              <AuditCard title="Classification" description="How this task is tracked.">
+                <AuditField label="Status" value={humanizeAuditToken(task.status)} />
+                <AuditField label="Priority" value={humanizeAuditToken(task.priority)} />
+              </AuditCard>
+              <AuditCard title="Record history" description="When this task was created and last changed.">
+                <AuditField label="Created by" value={task.created_by ? auditUserLabels[task.created_by] || null : null} />
+                <AuditTimestampPair dateLabel="Created at" value={task.created_at} />
+                <AuditField label="Updated by" value={task.updated_by ? auditUserLabels[task.updated_by] || null : null} />
+                <AuditTimestampPair dateLabel="Last updated" value={task.updated_at} />
+              </AuditCard>
+            </AuditDetailsPanel>
+          )}
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Task Name *</label>
@@ -195,7 +237,7 @@ export default function PracticeTaskDetail() {
         <div className="flex justify-end gap-4">
           <button
             type="button"
-            onClick={() => navigate(`/simulator/practice-tasks?projectId=${projectId}`)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Cancel
@@ -209,6 +251,7 @@ export default function PracticeTaskDetail() {
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

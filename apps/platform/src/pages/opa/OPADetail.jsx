@@ -116,9 +116,9 @@ export default function OPADetail() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <Link to="/platform/opa" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
+      <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
         <ArrowLeft className="h-4 w-4" /> Back
-      </Link>
+      </button>
       <div className="flex flex-wrap justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{row.title}</h1>

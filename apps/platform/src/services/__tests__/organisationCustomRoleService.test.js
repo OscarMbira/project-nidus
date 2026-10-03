@@ -265,6 +265,7 @@ describe('organisationCustomRoleService', () => {
         p_excluded_menu_item_ids: [],
         p_role_level: 6,
         p_menu_item_ids: ['mi-1', 'mi-2'],
+        p_role_skills: null,
       })
     })
 
@@ -304,6 +305,7 @@ describe('organisationCustomRoleService', () => {
         p_excluded_menu_item_ids: ['mi-1'],
         p_role_level: 4,
         p_menu_item_ids: [],
+        p_role_skills: null,
       })
     })
 
@@ -617,6 +619,7 @@ describe('organisationCustomRoleService', () => {
         p_is_governance_only: true,
         p_add_menu_item_ids: ['mi-2'],
         p_remove_menu_item_ids: ['mi-3'],
+        p_role_skills: null,
       })
     })
   })
@@ -698,6 +701,7 @@ describe('organisationCustomRoleService', () => {
         p_is_governance_only: false,
         p_add_menu_item_ids: ['mi-1'],
         p_remove_menu_item_ids: ['mi-2'],
+        p_role_skills: null,
       })
       expect(call[1]).not.toHaveProperty('p_role_name')
     })

@@ -5,20 +5,34 @@
 
 import { useNavigate } from 'react-router-dom'
 import DependencyForm from '../../components/dependencies/DependencyForm'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
 export default function DependencyCreatePage() {
   const navigate = useNavigate()
+  const { showSuccess, modal } = useSuccessModal()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+      <div className="max-w-4xl mx-auto">
         <DependencyForm
           dependency={null}
-          onSave={() => navigate('/platform/dependencies')}
-          onCancel={() => navigate('/platform/dependencies')}
           usePageLayout
+          backToList="/platform/dependencies"
+          onSave={(saved) => {
+            const recordId = String(saved?.dependency_code || saved?.id || '').trim()
+            const name = saved?.dependency_name || recordId
+            showSuccess({
+              recordId,
+              operation: 'created',
+              message: `Created dependency ${name}.`,
+              okLabel: 'Back to Dependency Register',
+              onOk: () => navigate('/platform/dependencies'),
+            })
+          }}
+          onCancel={() => navigate('/platform/dependencies')}
         />
       </div>
+      {modal}
     </div>
   )
 }

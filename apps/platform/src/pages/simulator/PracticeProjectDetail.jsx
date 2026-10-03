@@ -106,7 +106,7 @@ export default function PracticeProjectDetail() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/simulator/practice-projects')}
+          onClick={() => navigate(-1)}
           className="mb-4 inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

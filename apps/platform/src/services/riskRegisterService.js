@@ -36,17 +36,18 @@ export async function createRiskRegister(projectId) {
 
     if (error) throw error;
 
-    // Fetch the created register
-    const { data: register, error: fetchError } = await platformDb
+    // Fetch the created register — not .single(), same reasoning as getRiskRegisterByProject.
+    const { data: registers, error: fetchError } = await platformDb
       .from('risk_registers')
       .select('*')
       .eq('project_id', projectId)
       .eq('is_deleted', false)
-      .single();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
     if (fetchError) throw fetchError;
 
-    return { success: true, data: register };
+    return { success: true, data: registers?.[0] || null };
   } catch (error) {
     console.error('Error creating risk register:', error);
     return { success: false, error: error.message };
@@ -60,6 +61,9 @@ export async function createRiskRegister(projectId) {
  */
 export async function getRiskRegisterByProject(projectId) {
   try {
+    // Not .single() — if duplicate register rows exist for this project (legacy data / a past
+    // race on create), .single() 406s the whole page instead of just picking one. Oldest-first
+    // so an existing register is stable across reloads even with dupes present.
     const { data, error } = await platformDb
       .from('risk_registers')
       .select(`
@@ -69,17 +73,12 @@ export async function getRiskRegisterByProject(projectId) {
       `)
       .eq('project_id', projectId)
       .eq('is_deleted', false)
-      .single();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
-    if (error) {
-      // Register doesn't exist yet - return null
-      if (error.code === 'PGRST116') {
-        return { success: true, data: null };
-      }
-      throw error;
-    }
+    if (error) throw error;
 
-    return { success: true, data };
+    return { success: true, data: data?.[0] || null };
   } catch (error) {
     console.error('Error fetching risk register:', error);
     return { success: false, error: error.message };

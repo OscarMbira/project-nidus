@@ -1,21 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Calendar from 'react-calendar'
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns'
+import { format, isSameDay } from 'date-fns'
 import 'react-calendar/dist/Calendar.css'
-import { supabase } from '../services/supabaseClient'
+import { platformDb } from '@nidus/supabase'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 
 export default function TasksCalendar() {
+  const navigate = useNavigate()
+  const { projectId: contextProjectId, loading: projectContextLoading } = usePlatformProjectId()
   const [tasks, setTasks] = useState([])
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [filterProject, setFilterProject] = useState('all')
-  const [viewMode, setViewMode] = useState('month') // 'month' or 'day'
+  const [filterProject, setFilterProject] = useState(null)
   const [selectedDateTasks, setSelectedDateTasks] = useState([])
-  const navigate = useNavigate()
+  const userChangedFilter = useRef(false)
 
   useEffect(() => {
+    if (userChangedFilter.current || projectContextLoading) return
+    setFilterProject(contextProjectId || 'all')
+  }, [contextProjectId, projectContextLoading])
+
+  useEffect(() => {
+    if (filterProject == null) return
     fetchData()
   }, [filterProject])
 
@@ -23,12 +31,20 @@ export default function TasksCalendar() {
     updateSelectedDateTasks()
   }, [selectedDate, tasks])
 
+  const goToCreateTask = useCallback(() => {
+    navigate('/platform/tasks/create', {
+      state: {
+        dueDate: selectedDate,
+        ...(filterProject && filterProject !== 'all' ? { projectId: filterProject } : {}),
+      },
+    })
+  }, [navigate, selectedDate, filterProject])
+
   const fetchData = async () => {
     try {
       setLoading(true)
 
-      // Fetch projects for filter
-      const { data: projectsData, error: projectsError } = await supabase
+      const { data: projectsData, error: projectsError } = await platformDb
         .from('projects')
         .select('id, project_name, project_code')
         .eq('is_deleted', false)
@@ -36,12 +52,15 @@ export default function TasksCalendar() {
 
       if (projectsError) throw projectsError
 
-      // Fetch tasks
-      let tasksQuery = supabase
+      let tasksQuery = platformDb
         .from('tasks')
         .select(`
-          *,
-          projects:project_id (id, project_name, project_code),
+          id,
+          task_name,
+          task_description,
+          priority,
+          due_date,
+          projects:project_id (id, project_name),
           task_statuses:status_id (status_name, status_color),
           assigned_user:assigned_to_user_id (id, full_name, email)
         `)
@@ -56,7 +75,6 @@ export default function TasksCalendar() {
 
       if (tasksError) {
         if (tasksError.code === '42P01') {
-          console.log('Tasks table not found - please run v06_task_management_tables.sql first')
           setTasks([])
         } else {
           throw tasksError
@@ -105,14 +123,15 @@ export default function TasksCalendar() {
 
       return (
         <div className="flex flex-wrap gap-1 justify-center mt-1">
-          {dayTasks.slice(0, 3).map((task, index) => (
+          {dayTasks.slice(0, 3).map((task) => (
             <div
               key={task.id}
               className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}
               title={task.task_name}
-            />          ))}
+            />
+          ))}
           {dayTasks.length > 3 && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-700 dark:text-gray-200">
               +{dayTasks.length - 3}
             </span>
           )}
@@ -132,43 +151,47 @@ export default function TasksCalendar() {
     return null
   }
 
-  if (loading) {
+  if (loading || filterProject == null) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-24">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading calendar...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
+          <p className="mt-4 text-gray-700 dark:text-gray-200">Loading calendar...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6 flex justify-between items-center">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Task Calendar
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
             View and manage tasks by date
           </p>
         </div>
         <div className="flex gap-3">
           <select
             value={filterProject}
-            onChange={(e) => setFilterProject(e.target.value)}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            onChange={(e) => {
+              userChangedFilter.current = true
+              setFilterProject(e.target.value)
+            }}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Projects</option>
-            {projects.map((project, index) => (
+            {projects.map((project) => (
               <option key={project.id} value={project.id}>
                 {project.project_name}
               </option>
             ))}
           </select>
           <button
-            onClick={() => navigate('/tasks/create', { state: { dueDate: selectedDate } })}
+            type="button"
+            onClick={goToCreateTask}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
             + New Task
@@ -177,7 +200,6 @@ export default function TasksCalendar() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <Calendar
@@ -190,7 +212,6 @@ export default function TasksCalendar() {
           </div>
         </div>
 
-        {/* Selected Date Tasks */}
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -199,11 +220,12 @@ export default function TasksCalendar() {
 
             {selectedDateTasks.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                <p className="text-gray-700 dark:text-gray-200 mb-4">
                   No tasks scheduled for this date
                 </p>
                 <button
-                  onClick={() => navigate('/tasks/create', { state: { dueDate: selectedDate } })}
+                  type="button"
+                  onClick={goToCreateTask}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm"
                 >
                   Create Task
@@ -211,10 +233,10 @@ export default function TasksCalendar() {
               </div>
             ) : (
               <div className="space-y-3">
-                {selectedDateTasks.map((task, index) => (
+                {selectedDateTasks.map((task) => (
                   <div
                     key={task.id}
-                    onClick={() => navigate(`/tasks/${task.id}`)}
+                    onClick={() => navigate(`/platform/tasks/${task.id}`)}
                     className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow border-l-4"
                     style={{
                       borderLeftColor: task.task_statuses?.status_color || '#6B7280'
@@ -224,16 +246,16 @@ export default function TasksCalendar() {
                       <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                         {task.task_name}
                       </h3>
-                      <span className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></span>
+                      <span className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`} />
                     </div>
                     {task.task_description && (
-                      <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 line-clamp-2">
+                      <p className="text-xs text-gray-700 dark:text-gray-200 mb-2 line-clamp-2">
                         {task.task_description}
                       </p>
                     )}
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
                       {task.projects && (
-                        <span>📁 {task.projects.project_name}</span>
+                        <span>{task.projects.project_name}</span>
                       )}
                       {task.task_statuses && (
                         <span
@@ -251,7 +273,7 @@ export default function TasksCalendar() {
                             {task.assigned_user.full_name?.charAt(0) || task.assigned_user.email?.charAt(0) || 'U'}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-600 dark:text-gray-300">
+                        <span className="text-xs text-gray-700 dark:text-gray-200">
                           {task.assigned_user.full_name || task.assigned_user.email}
                         </span>
                       </div>
@@ -264,29 +286,27 @@ export default function TasksCalendar() {
         </div>
       </div>
 
-      {/* Legend */}
       <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Legend</h3>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Critical</span>
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-sm text-gray-700 dark:text-gray-200">Critical</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">High</span>
+            <div className="w-3 h-3 rounded-full bg-orange-500" />
+            <span className="text-sm text-gray-700 dark:text-gray-200">High</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Medium</span>
+            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="text-sm text-gray-700 dark:text-gray-200">Medium</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">Low</span>
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <span className="text-sm text-gray-700 dark:text-gray-200">Low</span>
           </div>
         </div>
       </div>
     </div>
   )
 }
-

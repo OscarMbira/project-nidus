@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { ShieldCheck, FileText, Trash2, AlertTriangle, Clock, CheckCircle } from 'lucide-react'
+import DashboardStatCard from '../ui/DashboardStatCard'
 
 export default function GDPRDashboard() {
   const [stats, setStats] = useState({
@@ -66,45 +67,10 @@ export default function GDPRDashboard() {
     <div className="space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Consents</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total_consents}</p>
-            </div>
-            <ShieldCheck className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Pending Exports</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pending_exports}</p>
-            </div>
-            <FileText className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Pending Deletions</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.pending_deletions}</p>
-            </div>
-            <Trash2 className="h-8 w-8 text-red-600 dark:text-red-400" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Active Breaches</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.active_breaches}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Consents" value={stats.total_consents} icon={ShieldCheck} iconClassName="text-blue-600 dark:text-blue-400" />
+        <DashboardStatCard label="Pending Exports" value={stats.pending_exports} icon={FileText} iconClassName="text-yellow-600 dark:text-yellow-400" />
+        <DashboardStatCard label="Pending Deletions" value={stats.pending_deletions} icon={Trash2} iconClassName="text-red-600 dark:text-red-400" />
+        <DashboardStatCard label="Active Breaches" value={stats.active_breaches} icon={AlertTriangle} iconClassName="text-orange-600 dark:text-orange-400" />
       </div>
 
       {/* Export Requests */}

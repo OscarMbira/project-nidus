@@ -21,5 +21,11 @@ export function resolveInitiationContext(pathname = '') {
 
 export function resolveBenefitsReviewPlanViewPath(projectId, pathname = '') {
   if (!projectId) return null
-  return `/platform/projects/${projectId}/benefits/review-plan`
+  // Stay inside the current PM/PMO sidebar layout instead of dropping into the generic
+  // /platform/projects/* shell (a different, collapsed Sidebar) — see resolveInitiationContext.
+  // Prefer project_code when callers pass it; UUID also resolves via usePlatformProjectId.
+  const context = resolveInitiationContext(pathname)
+  const key = encodeURIComponent(String(projectId).trim())
+  const base = context === 'pm' ? '/pm/projects' : context === 'pmo' ? '/pmo/projects' : '/platform/projects'
+  return `${base}/${key}/benefits/review-plan`
 }

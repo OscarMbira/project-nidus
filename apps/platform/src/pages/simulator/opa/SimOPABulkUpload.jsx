@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Papa from 'papaparse'
 import { bulkImportOPAFromParsedRows } from '../../../services/sim/simOPAService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 
 export default function SimOPABulkUpload() {
+  const navigate = useNavigate()
   const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState(null)
@@ -25,9 +26,9 @@ export default function SimOPABulkUpload() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
-      <Link to="/simulator/opa" className="text-gray-400">
+      <button type="button" onClick={() => navigate(-1)} className="text-gray-400">
         Back
-      </Link>
+      </button>
       <h1 className="text-xl font-bold text-white my-4">OPA bulk upload</h1>
       <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
       <button type="button" disabled={busy} onClick={run} className="ml-4 px-4 py-2 bg-sky-600 text-white rounded-lg">

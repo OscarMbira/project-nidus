@@ -6,33 +6,27 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3 } from 'lucide-react'
 import StakeholderMonitoringDashboard from '../../components/stakeholders/StakeholderMonitoringDashboard'
-import { platformDb } from '@nidus/supabase'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
 
 export default function StakeholderMonitoringPage() {
   const navigate = useNavigate()
+  const { projects: assignedProjects, currentProjectId, loading: projectCtxLoading } = useCurrentProject()
   const [projectId, setProjectId] = useState('')
-  const [projects, setProjects] = useState([])
-  const [loading, setLoading] = useState(true)
+  const projects = assignedProjects.map((p) => ({
+    id: p.projectId,
+    project_name: p.projectName,
+    project_code: p.projectCode,
+  }))
 
   useEffect(() => {
-    loadProjects()
-  }, [])
-
-  const loadProjects = async () => {
-    try {
-      const { data } = await platformDb.from('projects').select('id, project_name, project_code').eq('is_deleted', false).order('project_name', { ascending: true })
-      setProjects(data || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }
+    if (projectCtxLoading || projectId || !currentProjectId) return
+    setProjectId(currentProjectId)
+  }, [projectCtxLoading, currentProjectId, projectId])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-4">
-        <button onClick={() => navigate('/platform/stakeholders/register')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         </button>
         <div className="flex-1">

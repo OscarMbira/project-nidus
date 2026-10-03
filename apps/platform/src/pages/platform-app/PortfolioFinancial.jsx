@@ -6,13 +6,14 @@ import {
   savePortfolioBudget,
   deletePortfolioBudget,
 } from '../../services/portfolioService'
+import { platformDb } from '@nidus/supabase'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import SelectField from '@nidus/ui/SelectField'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const BUDGET_TYPES   = ['Capital', 'Operational', 'Programme', 'Contingency', 'Reserve']
 const BUDGET_STATUSES = ['draft', 'approved', 'active', 'closed', 'cancelled']
-const CURRENCIES     = ['USD', 'EUR', 'GBP', 'ZAR', 'AED', 'AUD', 'CAD']
 
 function statusBadge(s) {
   const map = {
@@ -65,6 +66,7 @@ export default function PortfolioFinancial() {
   const [filterType, setFilterType]           = useState('')
   const [filterStatus, setFilterStatus]       = useState('')
   const [filterCurrency, setFilterCurrency]   = useState('')
+  const [currencies, setCurrencies] = useState([])
 
   // Modal
   const [showModal, setShowModal] = useState(false)
@@ -93,6 +95,20 @@ export default function PortfolioFinancial() {
   }, [filterPortfolio, filterType, filterStatus, filterCurrency])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await platformDb
+        .from('currencies')
+        .select('code, name')
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .order('name', { ascending: true })
+      if (!cancelled) setCurrencies(data || [])
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = rows.filter(r => {
     if (!search) return true
@@ -221,7 +237,7 @@ export default function PortfolioFinancial() {
           { val: filterPortfolio, set: setFilterPortfolio, placeholder: 'All Portfolios', opts: portfolios.map(p => ({ v: p.id, l: `${p.portfolio_code} — ${p.portfolio_name}` })) },
           { val: filterType,      set: setFilterType,      placeholder: 'All Types',      opts: BUDGET_TYPES.map(t => ({ v: t, l: t })) },
           { val: filterStatus,    set: setFilterStatus,    placeholder: 'All Statuses',   opts: BUDGET_STATUSES.map(s => ({ v: s, l: s })) },
-          { val: filterCurrency,  set: setFilterCurrency,  placeholder: 'All Currencies', opts: CURRENCIES.map(c => ({ v: c, l: c })) },
+          { val: filterCurrency,  set: setFilterCurrency,  placeholder: 'All Currencies', opts: currencies.map(c => ({ v: c.code, l: c.code })) },
         ].map((f, i) => (
           <select key={i} value={f.val} onChange={e => f.set(e.target.value)}
             className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
@@ -319,10 +335,14 @@ export default function PortfolioFinancial() {
                 </div>
                 <div>
                   <label className="block text-gray-400 text-sm mb-1">Currency</label>
-                  <select value={form.budget_currency} onChange={e => setForm(f => ({ ...f, budget_currency: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
-                    {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <SelectField
+                    options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}` }))}
+                    value={form.budget_currency}
+                    onChange={(value) => setForm(f => ({ ...f, budget_currency: value }))}
+                    placeholder="Select a currency..."
+                    searchPlaceholder="Search currencies..."
+                    forceSearchable
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">

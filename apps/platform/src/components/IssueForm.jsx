@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { format } from 'date-fns'
-import { Save, User, Calendar, AlertTriangle, Package, X } from 'lucide-react'
+import { Save, User, Calendar, AlertTriangle, Package, X, Plus } from 'lucide-react'
 import FormSurface from './ui/FormSurface'
+import SelectField from '@nidus/ui/SelectField'
+import RowActionButton from '@nidus/ui/RowActionButton'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import RecordLifecycleFieldLock, { isRecordLifecycleLocked } from '@nidus/ui/RecordLifecycleFieldLock'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -16,6 +19,109 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { HoldButton } from './ui/HoldButton'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import toast from 'react-hot-toast'
+
+function idsFromLink(many, single) {
+  const list = Array.isArray(many) ? many.map((id) => String(id || '')).filter(Boolean) : []
+  if (list.length) return list
+  return single ? [String(single)] : []
+}
+
+function LinkValueList({ label, placeholder, options, values, onChange }) {
+  const [draft, setDraft] = useState('')
+  const draftRef = useRef('')
+
+  const choose = (value) => {
+    const next = value || ''
+    draftRef.current = next
+    setDraft(next)
+  }
+
+  const add = (raw) => {
+    const id = String(raw ?? draftRef.current ?? '').trim()
+    if (!id || values.includes(id)) return
+    onChange([...values, id])
+    draftRef.current = ''
+    setDraft('')
+  }
+
+  const available = options.filter((opt) => opt.value && !values.includes(String(opt.value)))
+  const labelFor = (id) => options.find((opt) => String(opt.value) === String(id))?.label || 'Linked item'
+
+  return (
+    <div
+      className="space-y-2"
+      onKeyDown={(e) => {
+        if (e.key !== 'Enter' || !draftRef.current) return
+        e.preventDefault()
+        add(draftRef.current)
+      }}
+    >
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
+        <table className="min-w-full">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-300 w-12">#</th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-300">{label}</th>
+              <th className="px-3 py-2 text-right text-xs font-medium text-gray-600 dark:text-gray-300 w-24">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {values.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-3 py-3 text-sm text-gray-700 dark:text-gray-200">None recorded.</td>
+              </tr>
+            ) : (
+              values.map((id, index) => (
+                <tr key={id} className="border-t border-gray-200 dark:border-gray-700">
+                  <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">{index + 1}</td>
+                  <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{labelFor(id)}</td>
+                  <td className="px-3 py-2 text-right">
+                    <RowActionButton
+                      variant="delete"
+                      label={`Remove ${labelFor(id)}`}
+                      onClick={() => onChange(values.filter((value) => value !== id))}
+                    />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <SelectField
+            forceSearchable
+            options={available}
+            value={draft}
+            onChange={choose}
+            placeholder={placeholder}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => add(draft)}
+          disabled={!draft}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none text-white text-sm font-medium"
+        >
+          <Plus className="h-4 w-4" /> Add
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ownershipMemberOptions(members, emptyLabel) {
+  return [
+    { value: '', label: emptyLabel, description: '' },
+    ...members.map((member) => ({
+      value: member.user_id,
+      label: member.user?.full_name || member.user?.email || 'Unknown',
+      description: member.role?.role_display_name || '',
+    })),
+  ]
+}
 
 const ISSUE_FORM_TABS = [
   { value: 'details', label: 'Details' },
@@ -135,10 +241,10 @@ export default function IssueForm({
     affects_baseline: false,
     affected_areas: [],
     related_product_id: '',
-    task_id: '',
-    work_package_id: '',
-    user_story_id: '',
-    kanban_card_id: '',
+    task_ids: [],
+    work_package_ids: [],
+    user_story_ids: [],
+    kanban_card_ids: [],
     tags: [],
   })
   const [teamMembers, setTeamMembers] = useState([])
@@ -246,10 +352,10 @@ export default function IssueForm({
           affects_baseline: issue.affects_baseline || false,
           affected_areas: issue.affected_areas || [],
           related_product_id: issue.related_product_id || '',
-          task_id: issue.task_id || '',
-          work_package_id: issue.work_package_id || issue.related_work_package_id || '',
-          user_story_id: issue.user_story_id || '',
-          kanban_card_id: issue.kanban_card_id || '',
+          task_ids: idsFromLink(issue.linked_task_ids, issue.task_id),
+          work_package_ids: idsFromLink(issue.linked_work_package_ids, issue.work_package_id || issue.related_work_package_id),
+          user_story_ids: idsFromLink(issue.linked_user_story_ids, issue.user_story_id),
+          kanban_card_ids: idsFromLink(issue.linked_kanban_card_ids, issue.kanban_card_id),
           tags: issue.tags || [],
         })
         if (issue.issue_register_id) {
@@ -260,10 +366,10 @@ export default function IssueForm({
         setFormData(prev => ({
           ...prev,
           date_raised: format(new Date(), 'yyyy-MM-dd'),
-          task_id: linkedTaskId || '',
-          work_package_id: linkedWorkPackageId || '',
-          user_story_id: linkedUserStoryId || '',
-          kanban_card_id: linkedKanbanCardId || '',
+          task_ids: linkedTaskId ? [linkedTaskId] : [],
+          work_package_ids: linkedWorkPackageId ? [linkedWorkPackageId] : [],
+          user_story_ids: linkedUserStoryId ? [linkedUserStoryId] : [],
+          kanban_card_ids: linkedKanbanCardId ? [linkedKanbanCardId] : [],
         }))
       }
       fetchTeamMembers()
@@ -305,7 +411,8 @@ export default function IssueForm({
         .select(`
           id,
           user_id,
-          user:user_id (id, email, full_name)
+          user:user_id (id, email, full_name),
+          role:project_roles (role_display_name)
         `)
         .eq('project_id', projectId)
         .eq('is_active', true)
@@ -533,11 +640,15 @@ export default function IssueForm({
         owner_id: formData.owner_id || formData.assigned_to_user_id || null,
         assigned_to_user_id: formData.owner_id || formData.assigned_to_user_id || null,
         related_product_id: formData.related_product_id || null,
-        related_work_package_id: formData.work_package_id || null,
-        task_id: formData.task_id || null,
-        work_package_id: formData.work_package_id || null,
-        user_story_id: formData.user_story_id || null,
-        kanban_card_id: formData.kanban_card_id || null,
+        related_work_package_id: formData.work_package_ids[0] || null,
+        task_id: formData.task_ids[0] || null,
+        work_package_id: formData.work_package_ids[0] || null,
+        user_story_id: formData.user_story_ids[0] || null,
+        kanban_card_id: formData.kanban_card_ids[0] || null,
+        linked_task_ids: formData.task_ids,
+        linked_work_package_ids: formData.work_package_ids,
+        linked_user_story_ids: formData.user_story_ids,
+        linked_kanban_card_ids: formData.kanban_card_ids,
         due_date: formData.due_date || null,
         status: issue ? issue.status : 'draft',
       }
@@ -771,64 +882,48 @@ export default function IssueForm({
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Raised By
                     </label>
-                    <select
-                      name="raised_by_id"
+                    <SelectField
+                      forceSearchable
+                      descriptionColumnLabel="Role"
+                      options={ownershipMemberOptions(teamMembers, 'Select...')}
                       value={formData.raised_by_id}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">Select...</option>
-                      {teamMembers.map((member) => (
-                        <option key={member.user_id} value={member.user_id}>
-                          {member.user?.full_name || member.user?.email}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleChange({ target: { name: 'raised_by_id', value } })}
+                      placeholder="Select..."
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Author (Documented By)
                     </label>
-                    <select
-                      name="author_id"
+                    <SelectField
+                      forceSearchable
+                      descriptionColumnLabel="Role"
+                      options={ownershipMemberOptions(teamMembers, 'Select...')}
                       value={formData.author_id}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">Select...</option>
-                      {teamMembers.map((member) => (
-                        <option key={member.user_id} value={member.user_id}>
-                          {member.user?.full_name || member.user?.email}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => handleChange({ target: { name: 'author_id', value } })}
+                      placeholder="Select..."
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       <User className="h-4 w-4 inline mr-1" />
                       Owner (Responsible)
                     </label>
-                    <select
-                      name="owner_id"
+                    <SelectField
+                      forceSearchable
+                      descriptionColumnLabel="Role"
+                      options={ownershipMemberOptions(teamMembers, 'Unassigned')}
                       value={formData.owner_id}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         setFormData((prev) => ({
                           ...prev,
-                          owner_id: e.target.value,
-                          assigned_to_user_id: e.target.value,
+                          owner_id: value,
+                          assigned_to_user_id: value,
                         }))
                       }}
-                      className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 ${
-                        errors.owner_id ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                      }`}
-                    >
-                      <option value="">Unassigned</option>
-                      {teamMembers.map((member) => (
-                        <option key={member.user_id} value={member.user_id}>
-                          {member.user?.full_name || member.user?.email}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Unassigned"
+                      className={errors.owner_id ? '[&>button]:border-red-500' : ''}
+                    />
                   </div>
                 </div>
               </div>
@@ -969,33 +1064,33 @@ export default function IssueForm({
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.impact_description}</p>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Priority Rationale
-                      </label>
-                      <textarea
-                        name="priority_rationale"
-                        value={formData.priority_rationale}
-                        onChange={handleChange}
-                        rows={2}
-                        placeholder="Why this priority level?"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Severity Rationale
-                      </label>
-                      <textarea
-                        name="severity_rationale"
-                        value={formData.severity_rationale}
-                        onChange={handleChange}
-                        rows={2}
-                        placeholder="Why this severity level?"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Priority Rationale
+                    </label>
+                    <MultiLineListInput
+                      viewModeId="issue-priority-rationale"
+                      id="issue_priority_rationale"
+                      value={formData.priority_rationale || ''}
+                      onChange={(next) => setFormData((prev) => ({ ...prev, priority_rationale: next }))}
+                      placeholder="Why this priority level?"
+                      ariaLabelPrefix="priority reason"
+                      itemColumnLabel="Reason"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Severity Rationale
+                    </label>
+                    <MultiLineListInput
+                      viewModeId="issue-severity-rationale"
+                      id="issue_severity_rationale"
+                      value={formData.severity_rationale || ''}
+                      onChange={(next) => setFormData((prev) => ({ ...prev, severity_rationale: next }))}
+                      placeholder="Why this severity level?"
+                      ariaLabelPrefix="severity reason"
+                      itemColumnLabel="Reason"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1104,79 +1199,38 @@ export default function IssueForm({
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Link to Related Items (Optional)
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Link to Task
-                    </label>
-                    <select
-                      name="task_id"
-                      value={formData.task_id}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">No Task Link</option>
-                      {tasks.map((task) => (
-                        <option key={task.id} value={task.id}>
-                          {task.task_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Link to Work Package
-                    </label>
-                    <select
-                      name="work_package_id"
-                      value={formData.work_package_id}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">No Work Package Link</option>
-                      {workPackages.map((wp) => (
-                        <option key={wp.id} value={wp.id}>
-                          {wp.work_package_code || wp.work_package_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Link to User Story
-                    </label>
-                    <select
-                      name="user_story_id"
-                      value={formData.user_story_id}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">No User Story Link</option>
-                      {userStories.map((story) => (
-                        <option key={story.id} value={story.id}>
-                          {story.story_title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Link to Kanban Card
-                    </label>
-                    <select
-                      name="kanban_card_id"
-                      value={formData.kanban_card_id}
-                      onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">No Kanban Card Link</option>
-                      {kanbanCards.map((card) => (
-                        <option key={card.id} value={card.id}>
-                          {card.card_title}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="space-y-6">
+                  <LinkValueList
+                    label="Link to Task"
+                    placeholder="Select a task…"
+                    options={tasks.map((task) => ({ value: task.id, label: task.task_name || 'Task' }))}
+                    values={formData.task_ids}
+                    onChange={(task_ids) => setFormData((prev) => ({ ...prev, task_ids }))}
+                  />
+                  <LinkValueList
+                    label="Link to Work Package"
+                    placeholder="Select a work package…"
+                    options={workPackages.map((wp) => ({
+                      value: wp.id,
+                      label: wp.work_package_code || wp.work_package_name || 'Work package',
+                    }))}
+                    values={formData.work_package_ids}
+                    onChange={(work_package_ids) => setFormData((prev) => ({ ...prev, work_package_ids }))}
+                  />
+                  <LinkValueList
+                    label="Link to User Story"
+                    placeholder="Select a user story…"
+                    options={userStories.map((story) => ({ value: story.id, label: story.story_title || 'User story' }))}
+                    values={formData.user_story_ids}
+                    onChange={(user_story_ids) => setFormData((prev) => ({ ...prev, user_story_ids }))}
+                  />
+                  <LinkValueList
+                    label="Link to Kanban Card"
+                    placeholder="Select a kanban card…"
+                    options={kanbanCards.map((card) => ({ value: card.id, label: card.card_title || 'Kanban card' }))}
+                    values={formData.kanban_card_ids}
+                    onChange={(kanban_card_ids) => setFormData((prev) => ({ ...prev, kanban_card_ids }))}
+                  />
                 </div>
               </div>
           </div>

@@ -13,9 +13,12 @@ import { fetchContextStructured } from '@nidus/shared/utils/contextFetcher'
 import { buildTemplateAnswer } from '@nidus/shared/utils/dataAnswerTemplates'
 import { fetchDocContext } from '@nidus/shared/utils/docFetcher'
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 const AI_DATA_SUMMARY_URL = import.meta.env.VITE_AI_DATA_SUMMARY_URL || ''
 const AI_DOCS_URL = import.meta.env.VITE_AI_DOCS_URL || ''
+// ai-chat Edge Function — holds GEMINI_API_KEY as a server secret. Replaces the old
+// VITE_GEMINI_API_KEY direct-from-browser call, which embedded the key in the client bundle and
+// got flagged/revoked by Google's leak detection (found live 2026-09-11).
+const AI_CHAT_URL = import.meta.env.VITE_AI_CHAT_URL || ''
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Conversation management
@@ -190,21 +193,6 @@ export async function saveMessageFeedback(messageId, userId, rating) {
 
 const GEMINI_TIMEOUT_MS = 30_000
 
-// Gemini base URL (everything before the model name)
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta'
-
-// Preferred models newest-first. First available one wins.
-const GEMINI_MODEL_PREFERENCE = [
-  'gemini-2.5-flash',
-  'gemini-2.0-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-1.5-flash-latest',
-  'gemini-1.5-flash',
-]
-
-// Cached model name for this browser session — avoids repeated ListModels calls.
-let resolvedGeminiModel = null
-
 /** Create an AbortController that auto-cancels after `ms` milliseconds. */
 function timedAbort(ms) {
   const controller = new AbortController()
@@ -290,66 +278,22 @@ async function callDocsSummary(chunks, formattedText, question, onChunk) {
 }
 
 /**
- * Discover the best available Gemini model for this API key.
- * Calls ListModels once and caches the result for the session.
- * Returns the model name (e.g. 'gemini-2.0-flash') or throws if none found.
- */
-async function discoverGeminiModel() {
-  if (resolvedGeminiModel) return resolvedGeminiModel
-
-  const abort = timedAbort(10_000)
-  let listData
-  try {
-    const res = await fetch(`${GEMINI_BASE}/models?key=${GEMINI_KEY}`, { signal: abort.signal })
-    listData = await res.json()
-  } catch {
-    // Network error during discovery — fall through to preference list without filtering
-    listData = null
-  }
-
-  if (listData?.models?.length) {
-    // Build a set of available model base-names (strip "models/" prefix)
-    const available = new Set(
-      listData.models
-        .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
-        .map((m) => m.name.replace('models/', ''))
-    )
-    const match = GEMINI_MODEL_PREFERENCE.find((m) => available.has(m))
-    if (match) {
-      resolvedGeminiModel = match
-      console.info('[AI] Gemini model resolved via ListModels:', match)
-      return match
-    }
-  }
-
-  // Fallback: use the first entry in the preference list without validation
-  resolvedGeminiModel = GEMINI_MODEL_PREFERENCE[0]
-  console.warn('[AI] ListModels unavailable — defaulting to:', resolvedGeminiModel)
-  return resolvedGeminiModel
-}
-
-/**
- * Call Gemini for a generic knowledge question (no project data).
- * Auto-discovers the current model — never needs a .env update.
+ * Call the ai-chat Edge Function for a generic knowledge question (no project data).
+ * Model discovery and the Gemini API key both live server-side now (supabase/functions/
+ * ai-chat) — this client only ever sees the proxy URL, never the key.
  */
 async function callGemini(question) {
-  if (!GEMINI_KEY) {
-    throw new Error('Gemini API key not set. Add VITE_GEMINI_API_KEY to .env.development.')
+  if (!AI_CHAT_URL) {
+    throw new Error('AI chat proxy not configured. Add VITE_AI_CHAT_URL to .env.')
   }
-
-  const model = await discoverGeminiModel()
-  const url = `${GEMINI_BASE}/models/${model}:generateContent?key=${GEMINI_KEY}`
 
   const abort = timedAbort(GEMINI_TIMEOUT_MS)
   let response
   try {
-    response = await fetch(url, {
+    response = await fetch(AI_CHAT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: question }] }],
-        generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
-      }),
+      body: JSON.stringify({ question }),
       signal: abort.signal,
     })
   } catch (err) {
@@ -357,20 +301,14 @@ async function callGemini(question) {
     throw new Error(`Gemini network error: ${err.message}`)
   }
 
-  if (response.status === 404) {
-    // Chosen model was deprecated — clear cache and try once more with discovery
-    resolvedGeminiModel = null
-    throw new Error('Gemini model not found — will retry with latest model on next message.')
-  }
-
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    const msg = body?.error?.message || response.statusText
+    const msg = body?.error || response.statusText
     throw new Error(`Gemini error ${response.status}: ${msg}`)
   }
 
   const data = await response.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received from Gemini.'
+  return data.answer || 'No response received from Gemini.'
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformIssuePath, platformRiskPath, platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
@@ -79,7 +80,7 @@ export default function RAIDLog() {
       setProject(projectData)
     } catch (error) {
       console.error('Error fetching data:', error)
-      alert('Error: ' + error.message)
+      toast.error(error.message || 'Failed to load')
     } finally {
       setLoading(false)
     }

@@ -8,10 +8,11 @@ import { useState, useEffect } from 'react';
 import { Save, Building2 } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 import { useNavigate } from 'react-router-dom';
+import SelectField from '@nidus/ui/SelectField';
 
-const input = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const label = 'block text-sm font-medium text-gray-300 mb-1';
-const card  = 'rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-sm';
+const input = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const label = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1';
+const card  = 'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm';
 
 export default function OrganisationProfile() {
   const [form, setForm]       = useState({ name: '', contact_email: '', phone: '', industry: '', country_id: '' });
@@ -50,7 +51,13 @@ export default function OrganisationProfile() {
     if (!accountId) return;
     setSaving(true);
     try {
-      await platformDb.from('accounts').update({ ...form, updated_at: new Date().toISOString() }).eq('id', accountId);
+      await platformDb.from('accounts').update({
+        name: form.name,
+        contact_email: form.contact_email,
+        phone: form.phone,
+        industry: form.industry,
+        country_id: form.country_id || null,
+      }).eq('id', accountId);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } finally {
@@ -59,33 +66,34 @@ export default function OrganisationProfile() {
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const countryOptions = countries.map((c) => ({ value: c.id, label: c.country_name }));
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 flex items-center justify-center text-gray-500 dark:text-gray-400">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6 max-w-2xl">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 text-gray-900 dark:text-gray-100 max-w-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <Building2 size={24} className="text-blue-400" />
+        <Building2 size={24} className="text-blue-600 dark:text-blue-400" />
         <div>
           <h1 className="text-2xl font-bold">Organisation Profile</h1>
-          <p className="text-gray-400 text-sm">Update your organisation's details.</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Update your organisation&apos;s details.</p>
         </div>
       </div>
 
       {saved && (
-        <div className="mb-4 rounded-lg bg-green-900/50 border border-green-700 px-4 py-3 text-green-300 text-sm">
+        <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/50 border border-green-200 dark:border-green-700 px-4 py-3 text-green-800 dark:text-green-300 text-sm">
           Organisation profile saved successfully.
         </div>
       )}
 
       <form onSubmit={handleSave} className={card}>
-        <div className="grid grid-cols-1 gap-5">
+        <div className="space-y-4">
           <div>
-            <label className={label}>Organisation Name <span className="text-red-400">*</span></label>
+            <label className={label}>Organisation Name</label>
             <input className={input} value={form.name} onChange={set('name')} required />
           </div>
           <div>
@@ -102,19 +110,21 @@ export default function OrganisationProfile() {
           </div>
           <div>
             <label className={label}>Country</label>
-            <select className={input} value={form.country_id} onChange={set('country_id')}>
-              <option value="">— Select country —</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>{c.country_name}</option>
-              ))}
-            </select>
+            <SelectField
+              options={countryOptions}
+              value={form.country_id}
+              onChange={(v) => setForm((f) => ({ ...f, country_id: v }))}
+              placeholder="— Select country —"
+              searchPlaceholder="Search country..."
+              forceSearchable
+            />
           </div>
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="mt-6 flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
+          className="mt-6 flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 rounded-lg text-sm font-medium transition-colors"
         >
           <Save size={15} /> {saving ? 'Saving…' : 'Save Profile'}
         </button>

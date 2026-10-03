@@ -7,14 +7,16 @@
  * — kept code-complete now so switching it on later needs no further build.
  */
 import React, { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader } from 'lucide-react';
 import { verifyEmailToken } from '../../services/registrationEmailService';
 import AuthPublicLayout from '../../components/auth/AuthPublicLayout';
 
 export default function VerifyEmail() {
+  const { token: pathToken } = useParams();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
+  // Prefer short-path /v/:token; keep ?token= for older emails still in flight.
+  const token = (pathToken || searchParams.get('token') || '').trim();
   const [status, setStatus] = useState('verifying'); // verifying | success | error
   const [userEmail, setUserEmail] = useState('');
 
@@ -38,7 +40,7 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <AuthPublicLayout>
+    <AuthPublicLayout hidePlatformButton hideSimulatorButton>
       <div className="max-w-md w-full text-center bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8">
         {status === 'verifying' && (
           <>

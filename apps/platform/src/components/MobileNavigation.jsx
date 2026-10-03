@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, Home, LayoutDashboard, FolderKanban, Settings, HelpCircle, LogOut } from 'lucide-react'
 import { useMenu } from '@nidus/shared/hooks/useMenu'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
 import { resolveMenuRoutePath, menuPathIsActive } from '@nidus/shared/utils/sidebarRouteUtils'
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
@@ -13,6 +14,8 @@ export default function MobileNavigation() {
   const location = useLocation()
   const navigate = useNavigate()
   const { menuItems, loading } = useMenu()
+  // Same fallback as Sidebar.jsx — see its comment for the incident this fixes.
+  const { projectId: currentProjectId } = usePlatformProjectId()
   const isSimulatorContext = (location.pathname || '').startsWith('/simulator')
 
   useEffect(() => {
@@ -172,6 +175,7 @@ export default function MobileNavigation() {
                         menuItems={contextMenuItems}
                         onClick={handleMenuItemClick}
                         level={0}
+                        currentProjectId={currentProjectId}
                       />
                     ))}
                   </div>
@@ -239,17 +243,17 @@ export default function MobileNavigation() {
   )
 }
 
-function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
+function MobileMenuItem({ item, menuItems, onClick, level = 0, currentProjectId = null }) {
   const location = useLocation()
   const children = (Array.isArray(item.children) && item.children.length > 0)
     ? item.children
     : (menuItems?.filter(child => child.parent_menu_id === item.id) || [])
   const hasChildren = children.length > 0
-  const resolved = resolveMenuRoutePath(item.route_path, location.pathname)
+  const resolved = resolveMenuRoutePath(item.route_path, location.pathname, currentProjectId)
   const linkTo = !item.route_path ? '#' : (resolved === '/' ? '/platform/dashboard' : resolved)
   const childActive = children.some((ch) => {
     if (!ch.route_path) return false
-    const r = resolveMenuRoutePath(ch.route_path, location.pathname)
+    const r = resolveMenuRoutePath(ch.route_path, location.pathname, currentProjectId)
     return menuPathIsActive(location.pathname, r, location.search)
   })
   const [isExpanded, setIsExpanded] = useState(childActive)
@@ -347,6 +351,7 @@ function MobileMenuItem({ item, menuItems, onClick, level = 0 }) {
               menuItems={menuItems}
               onClick={onClick}
               level={level + 1}
+              currentProjectId={currentProjectId}
             />
           ))}
         </SidebarNavTier>

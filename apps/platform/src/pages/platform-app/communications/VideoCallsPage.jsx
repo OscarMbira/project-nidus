@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Video, Plus, Search, ExternalLink, Calendar, Clock, Pencil, Trash2, X, Save } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'

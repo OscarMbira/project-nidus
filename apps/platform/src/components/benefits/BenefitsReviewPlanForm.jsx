@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { FileText, X, Save, Calendar, User, Target, Users, DollarSign, BarChart3, AlertTriangle, CheckCircle } from 'lucide-react';
+import { FileText, Save, Calendar, User, Target, Users, DollarSign, BarChart3, AlertTriangle, CheckCircle } from 'lucide-react';
 import { saveBenefitsReviewPlan } from '../../services/benefitsReviewPlanService';
 import { platformDb, supabase } from '../../services/supabaseClient';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
@@ -12,7 +12,35 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import MeasurementTimingLinkTable from './MeasurementTimingLinkTable';
+import ScopeItemsWithOwnerTable from './ScopeItemsWithOwnerTable';
+
+/** Coerce DB text / legacy JSON-array values into a newline-joined string for MultiLineListInput. */
+function toMultilineText(value) {
+  if (value == null || value === '') return '';
+  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean).join('\n');
+  const raw = String(value);
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean).join('\n');
+    } catch {
+      /* keep as plain text */
+    }
+  }
+  return raw;
+}
+
+const LIST_FIELD_KEYS = [
+  'benefits_coverage_notes',
+  'resources_description',
+  'performance_review_criteria',
+  'dis_benefits_description',
+  'measurement_approach',
+];
 
 export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCancel }) {
   const [formData, setFormData] = useState({
@@ -39,7 +67,7 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
     performance_review_approach: '',
     performance_review_frequency: '',
     performance_review_criteria: '',
-    dis_benefits_included: false,
+    dis_benefits_included: true,
     dis_benefits_description: '',
     status: 'draft',
     document_location: '',
@@ -69,10 +97,14 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
 
   useEffect(() => {
     if (plan) {
-      setFormData({
+      const next = {
         ...plan,
         plan_date: plan.plan_date || new Date().toISOString().split('T')[0],
-      });
+      };
+      for (const key of LIST_FIELD_KEYS) {
+        next[key] = toMultilineText(plan[key]);
+      }
+      setFormData(next);
     }
     fetchLookupData();
   }, [plan, projectId]);
@@ -113,6 +145,28 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
     }));
   };
 
+  const setListField = (name, value) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const listField = (name, label, { viewModeId, itemColumnLabel, placeholder, hint }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      {hint && (
+        <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">{hint}</p>
+      )}
+      <MultiLineListInput
+        viewModeId={viewModeId}
+        id={`brp_${name}`}
+        value={formData[name] || ''}
+        onChange={(v) => setListField(name, v)}
+        placeholder={placeholder}
+        ariaLabelPrefix={itemColumnLabel.toLowerCase()}
+        itemColumnLabel={itemColumnLabel}
+      />
+    </div>
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -120,6 +174,7 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
     try {
       const submitData = {
         ...formData,
+        document_ref: (formData.document_ref || '').trim() || '',
         estimated_review_effort_hours: formData.estimated_review_effort_hours || null,
         estimated_review_cost: formData.estimated_review_cost || null,
         baseline_recording_date: formData.baseline_recording_date || null,
@@ -179,7 +234,7 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
                   value={formData.document_ref}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="BRP-2026-001"
+                  placeholder="Auto-generated if empty (e.g. BRP-2026-001)"
                 />
               </div>
 
@@ -338,33 +393,17 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
       case 'scope':
         return (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                3. Scope Description
-              </label>
-              <textarea
-                name="scope_description"
-                value={formData.scope_description}
-                onChange={handleChange}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Describe what benefits are to be measured..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Benefits Coverage Notes
-              </label>
-              <textarea
-                name="benefits_coverage_notes"
-                value={formData.benefits_coverage_notes}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Notes on which benefits are covered..."
-              />
-            </div>
+            <ScopeItemsWithOwnerTable
+              value={formData.scope_description || ''}
+              onChange={(next) => setListField('scope_description', next)}
+              users={users}
+            />
+            {listField('benefits_coverage_notes', 'Benefits Coverage Notes', {
+              viewModeId: 'brp-benefits-coverage-notes',
+              itemColumnLabel: 'Coverage note',
+              placeholder: 'e.g. Excludes intangible brand benefits',
+              hint: 'Add one coverage note per line.',
+            })}
           </div>
         );
 
@@ -390,52 +429,30 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
       case 'measurement':
         return (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                5. Benefits Measurement Approach
-              </label>
-              <textarea
-                name="measurement_approach"
-                value={formData.measurement_approach}
-                onChange={handleChange}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Describe how to measure achievement of expected benefits..."
-              />
-            </div>
+            {listField('measurement_approach', '5. Benefits Measurement Approach', {
+              viewModeId: 'brp-measurement-approach',
+              itemColumnLabel: 'Measurement Point',
+              placeholder: 'e.g. Track % of users completing self-service journeys weekly',
+              hint: 'Add one measurement approach point per line. These points can be linked to timing below.',
+            })}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Measurement Timing Rationale
-              </label>
-              <textarea
-                name="measurement_timing_rationale"
-                value={formData.measurement_timing_rationale}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Describe suitable timing for measurement, together with reasons..."
-              />
-            </div>
+            <MeasurementTimingLinkTable
+              approachValue={formData.measurement_approach || ''}
+              value={formData.measurement_timing_rationale || ''}
+              onChange={(next) => setListField('measurement_timing_rationale', next)}
+            />
           </div>
         );
 
       case 'resources':
         return (
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                6. Resources Description
-              </label>
-              <textarea
-                name="resources_description"
-                value={formData.resources_description}
-                onChange={handleChange}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                placeholder="Describe what resources are needed to carry out the review work..."
-              />
-            </div>
+            {listField('resources_description', '6. Resources Description', {
+              viewModeId: 'brp-resources-description',
+              itemColumnLabel: 'Resource',
+              placeholder: 'e.g. Benefits analyst — 2 days for data collection',
+              hint: 'Add one resource need per line.',
+            })}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
@@ -552,42 +569,33 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Review Frequency
-                </label>
-                <select
-                  name="performance_review_frequency"
-                  value={formData.performance_review_frequency}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value="">Select frequency...</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="quarterly">Quarterly</option>
-                  <option value="annually">Annually</option>
-                  <option value="stage_end">End of Stage</option>
-                  <option value="project_end">End of Project</option>
-                  <option value="on_demand">On Demand</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Review Criteria
-                </label>
-                <textarea
-                  name="performance_review_criteria"
-                  value={formData.performance_review_criteria}
-                  onChange={handleChange}
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Criteria for performance review..."
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Review Frequency
+              </label>
+              <select
+                name="performance_review_frequency"
+                value={formData.performance_review_frequency}
+                onChange={handleChange}
+                className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select frequency...</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annually">Annually</option>
+                <option value="stage_end">End of Stage</option>
+                <option value="project_end">End of Project</option>
+                <option value="on_demand">On Demand</option>
+              </select>
             </div>
+
+            {listField('performance_review_criteria', 'Review Criteria', {
+              viewModeId: 'brp-performance-review-criteria',
+              itemColumnLabel: 'Criterion',
+              placeholder: 'e.g. Benefit realised within ±10% of forecast',
+              hint: 'Add one review criterion per line.',
+            })}
           </div>
         );
 
@@ -608,19 +616,12 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
             </div>
 
             {formData.dis_benefits_included && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Dis-benefits Description
-                </label>
-                <textarea
-                  name="dis_benefits_description"
-                  value={formData.dis_benefits_description}
-                  onChange={handleChange}
-                  rows={6}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="Describe how dis-benefits will be measured and reviewed..."
-                />
-              </div>
+              listField('dis_benefits_description', 'Dis-benefits for measurement and review', {
+                viewModeId: 'brp-dis-benefits-description',
+                itemColumnLabel: 'Dis-benefit',
+                placeholder: 'e.g. Temporary productivity dip during cutover — track via helpdesk tickets',
+                hint: 'Add one dis-benefit (and how it will be measured/reviewed) per line.',
+              })
             )}
           </div>
         );
@@ -631,30 +632,21 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {plan ? 'Edit Benefits Review Plan' : 'Create Benefits Review Plan'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Header */}
+      <div className="border-b border-gray-200 dark:border-gray-700 p-6 flex items-center gap-3">
+        <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {plan ? 'Edit Benefits Review Plan' : 'Create Benefits Review Plan'}
+        </h2>
+      </div>
 
-        <div className="px-6 pt-4">
-          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
-        </div>
+      <div className="px-6 pt-4">
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      </div>
 
-        {formTab === 'audit' && (
-          <div className="p-6 overflow-y-auto">
+      {formTab === 'audit' && (
+          <div className="p-6">
             {!plan?.id ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this plan is saved.</p>
             ) : (
@@ -705,13 +697,13 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
         </div>
 
         {/* Form Content */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+        <form onSubmit={handleSubmit}>
           <div className="p-6">
             {renderSection()}
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg">
             <button
               type="button"
               onClick={onCancel}
@@ -731,7 +723,6 @@ export default function BenefitsReviewPlanForm({ plan, projectId, onSave, onCanc
         </form>
         </>
         )}
-      </div>
     </div>
   );
 }

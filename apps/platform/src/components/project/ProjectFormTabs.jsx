@@ -67,6 +67,36 @@ function ProjectFormTabs({ activeTab, setActiveTab, formData }) {
       id: 'programme',
       label: 'Programme',
       description: 'Link to programme'
+    },
+    {
+      id: 'constraints',
+      label: 'Constraints',
+      description: 'Known limitations'
+    },
+    {
+      id: 'assumptions',
+      label: 'Assumptions',
+      description: 'Planning assumptions'
+    },
+    {
+      id: 'deliverables',
+      label: 'Deliverables',
+      description: 'Key outputs'
+    },
+    {
+      id: 'stakeholders',
+      label: 'Stakeholders',
+      description: 'Manage register'
+    },
+    {
+      id: 'milestones',
+      label: 'Main Milestones',
+      description: 'Manage register'
+    },
+    {
+      id: 'approvals',
+      label: 'Approvals',
+      description: 'Required sign-offs'
     }
   ]
 
@@ -155,13 +185,31 @@ function ProjectFormTabs({ activeTab, setActiveTab, formData }) {
       case 'programme':
         return !!formData.programme_id
 
+      case 'constraints':
+        return !!(formData.project_constraints && formData.project_constraints.trim())
+
+      case 'assumptions':
+        return !!(formData.project_assumptions && formData.project_assumptions.trim())
+
+      case 'deliverables':
+        return !!(formData.key_deliverables && formData.key_deliverables.trim())
+
+      case 'stakeholders':
+        return false
+
+      case 'milestones':
+        return false
+
+      case 'approvals':
+        return !!(formData.required_approvals && formData.required_approvals.trim())
+
       default:
         return false
     }
   }
 
   return (
-    <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+    <div className="mb-6 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
       <p
         id="project-form-steps-heading"
         className="px-1 pt-3 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"

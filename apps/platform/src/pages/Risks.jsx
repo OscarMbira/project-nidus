@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
@@ -15,6 +16,7 @@ import ViewToggle from '@nidus/ui/ViewToggle'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import RecordLifecycleListHeader from '@nidus/ui/RecordLifecycleListHeader'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import useRecordLifecycleFilter from '@nidus/shared/hooks/useRecordLifecycleFilter'
 import { applyRecordStatusFilter } from '@nidus/shared/utils/lifecycleListUtils'
 
@@ -98,7 +100,7 @@ export default function Risks() {
       setProject(projectData)
     } catch (error) {
       console.error('Error fetching data:', error)
-      alert('Error: ' + error.message)
+      toast.error(error.message || 'Failed to load')
     } finally {
       setLoading(false)
     }
@@ -162,7 +164,7 @@ export default function Risks() {
       setRisks(data || [])
     } catch (error) {
       console.error('Error fetching risks:', error)
-      alert('Error loading risks: ' + error.message)
+      toast.error('Error loading risks: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -290,69 +292,13 @@ export default function Risks() {
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Total Risks</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-sky-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
-                  <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">High</p>
-                  <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.high}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-orange-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Medium</p>
-                  <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.medium}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-yellow-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Low</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.low}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-gray-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Threats</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.threats}</p>
-                </div>
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-              </div>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-800 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Opportunities</p>
-                  <p className="text-2xl font-bold text-teal-700 dark:text-teal-300">{stats.opportunities}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-teal-500" />
-              </div>
-            </div>
+            <DashboardStatCard label="Total Risks" value={stats.total} icon={AlertTriangle} iconClassName="text-sky-500" />
+            <DashboardStatCard label="Critical" value={stats.critical} icon={AlertTriangle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
+            <DashboardStatCard label="High" value={stats.high} icon={AlertTriangle} accentClassName="text-orange-600 dark:text-orange-400" iconClassName="text-orange-500" borderClassName="border-orange-200 dark:border-orange-800" />
+            <DashboardStatCard label="Medium" value={stats.medium} icon={AlertTriangle} accentClassName="text-yellow-600 dark:text-yellow-400" iconClassName="text-yellow-500" borderClassName="border-yellow-200 dark:border-yellow-800" />
+            <DashboardStatCard label="Low" value={stats.low} icon={AlertTriangle} iconClassName="text-gray-500" />
+            <DashboardStatCard label="Threats" value={stats.threats} icon={AlertTriangle} iconClassName="text-red-500" />
+            <DashboardStatCard label="Opportunities" value={stats.opportunities} icon={TrendingUp} accentClassName="text-teal-700 dark:text-teal-300" iconClassName="text-teal-500" borderClassName="border-teal-200 dark:border-teal-800" />
           </div>
 
           <div className="flex justify-end">

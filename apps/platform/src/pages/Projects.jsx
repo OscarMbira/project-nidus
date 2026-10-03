@@ -24,7 +24,7 @@ import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
-import { ProjectGridCard, ProjectListRow } from '../components/project/ProjectsListViews';
+import { ProjectGridCard, ProjectListRow, getProjectMethodologyLabel } from '../components/project/ProjectsListViews';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
 import { useViewMode } from '@nidus/shared/hooks/useViewMode';
 import ViewToggle from '@nidus/ui/ViewToggle';
@@ -36,6 +36,7 @@ const PROJECT_COLUMNS = [
   { key: 'project_code', label: 'Code' },
   { key: 'project_description', label: 'Description' },
   { key: 'status_name', label: 'Status' },
+  { key: 'methodology_label', label: 'Methodology' },
   { key: 'planned_start_date', label: 'Planned Start' },
   { key: 'planned_end_date', label: 'Planned End' },
   { key: 'percentage_complete', label: '% Complete' }
@@ -321,6 +322,7 @@ export default function Projects() {
       displayProjects.map((p) => ({
         ...p,
         status_name: p.project_statuses?.status_name ?? '',
+        methodology_label: getProjectMethodologyLabel(p) ?? '',
         ...(cfMatrix[p.id] || {}),
       })),
     [displayProjects, cfMatrix]
@@ -549,6 +551,12 @@ export default function Projects() {
                       className="!text-gray-300 !normal-case"
                     >
                       Status
+                    </TableHeaderCell>
+                    <TableHeaderCell
+                      sortable={false}
+                      className="!text-gray-300 !normal-case"
+                    >
+                      Methodology
                     </TableHeaderCell>
                     <TableHeaderCell
                       sortable

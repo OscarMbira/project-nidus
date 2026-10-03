@@ -35,14 +35,7 @@ export default function PmoAdminUserManagement() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
-    if (!billingEnabled) {
-      navigate('/platform/dashboard', { replace: true })
-    }
-  }, [billingEnabled, navigate])
-
   const load = useCallback(async () => {
-    if (!billingEnabled) return
     setLoading(true)
     setError(null)
     try {
@@ -73,13 +66,11 @@ export default function PmoAdminUserManagement() {
     } finally {
       setLoading(false)
     }
-  }, [navigate, billingEnabled])
+  }, [navigate])
 
   useEffect(() => {
-    if (billingEnabled) load()
-  }, [load, billingEnabled])
-
-  if (!billingEnabled) return null
+    load()
+  }, [load])
 
   const handleInvite = async (e) => {
     e.preventDefault()
@@ -155,7 +146,9 @@ export default function PmoAdminUserManagement() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            PMO administrators and billing privilege delegation
+            {billingEnabled
+              ? 'PMO administrators and billing privilege delegation'
+              : 'PMO administrators for this organisation'}
           </p>
         </div>
       </div>
@@ -177,7 +170,8 @@ export default function PmoAdminUserManagement() {
             <UserPlus className="h-5 w-5" /> Invite PMO Administrator
           </h2>
           <p className="text-sm text-gray-500 mb-4">
-            Invited users receive <strong>pmo_admin</strong> only — no billing privileges unless you grant them separately.
+            Invited users receive <strong>pmo_admin</strong>
+            {billingEnabled ? ' only — no billing privileges unless you grant them separately.' : '.'}
           </p>
           <form onSubmit={handleInvite} className="grid gap-3 sm:grid-cols-2">
             <input
@@ -223,7 +217,7 @@ export default function PmoAdminUserManagement() {
                     {admin.label}
                   </span>
                 </div>
-                {access.canGrant && !admin.isAccountOwner && (
+                {billingEnabled && access.canGrant && !admin.isAccountOwner && (
                   <button
                     type="button"
                     disabled={busy}

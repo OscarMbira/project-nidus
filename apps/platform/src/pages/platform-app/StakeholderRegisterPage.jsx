@@ -6,15 +6,17 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Plus, Users2, Upload, Search } from 'lucide-react'
+import { ArrowLeft, Plus, Users2, Upload, Search, UserCheck, AlertCircle } from 'lucide-react'
 import { getStakeholders } from '../../services/stakeholderService'
 import StakeholderRegister from '../../components/stakeholders/StakeholderRegister'
 import StakeholderImportModal from '../../components/stakeholders/StakeholderImportModal'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
-import { DashboardRegisterTabBar } from '@nidus/ui'
+import { DashboardRegisterTabBar, DashboardStatCard, RegisterOpenItemsWidget } from '@nidus/ui'
+import { platformDb } from '../../services/supabaseClient'
+import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import { platformDb } from '@nidus/supabase'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
 
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_reference', label: 'Record ID' },
@@ -24,14 +26,74 @@ const EXPORT_COLUMNS = [
   { key: 'email', label: 'Email' },
   { key: 'stakeholder_status', label: 'Status' },
 ]
-const PROJECTS_LIMIT = 200
 const SEARCH_DEBOUNCE_MS = 350
+
+const REGISTER_FOCUS_LABELS = {
+  active: 'Active',
+  internal: 'Internal',
+  external: 'External',
+  decision: 'Decision makers',
+  influencer: 'Influencers',
+}
+
+function titleCase(value) {
+  const text = String(value || '').trim()
+  if (!text) return '—'
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+function stakeholderTypeBadgeClass(type) {
+  switch ((type || '').toLowerCase()) {
+    case 'internal':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+    case 'external':
+      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+    case 'customer':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+    case 'supplier':
+      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+    case 'regulator':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+  }
+}
+
+function StakeholderTypeCell({ stakeholder }) {
+  return (
+    <div>
+      <span className={`inline-block px-2 py-1 text-xs font-medium rounded capitalize ${stakeholderTypeBadgeClass(stakeholder.stakeholder_type)}`}>
+        {stakeholder.stakeholder_type || 'N/A'}
+      </span>
+      {stakeholder.is_decision_maker && (
+        <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">Decision Maker</div>
+      )}
+      {stakeholder.is_influencer && (
+        <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">Influencer</div>
+      )}
+    </div>
+  )
+}
+
+function stakeholderMatchesFocus(stakeholder, focus) {
+  if (focus === 'active') return (stakeholder.stakeholder_status || 'active') === 'active'
+  if (focus === 'internal') return (stakeholder.stakeholder_type || '').toLowerCase() === 'internal'
+  if (focus === 'external') return (stakeholder.stakeholder_type || '').toLowerCase() === 'external'
+  if (focus === 'decision') return !!stakeholder.is_decision_maker
+  if (focus === 'influencer') return !!stakeholder.is_influencer
+  return true
+}
 
 export default function StakeholderRegisterPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projects: assignedProjects, currentProjectId, currentProject, setCurrentProject, loading: projectCtxLoading } = useCurrentProject()
   const [stakeholders, setStakeholders] = useState([])
-  const [projects, setProjects] = useState([])
+  const projects = assignedProjects.map((p) => ({
+    id: p.projectId,
+    project_name: p.projectName,
+    project_code: p.projectCode,
+  }))
   const [projectId, setProjectId] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -40,6 +102,7 @@ export default function StakeholderRegisterPage() {
   const [toast, setToast] = useState(null)
   const [showImportModal, setShowImportModal] = useState(false)
   const [pageTab, setPageTab] = useState('dashboard') // 'dashboard' | 'register'
+  const [registerFocus, setRegisterFocus] = useState('')
   const [viewMode, setViewMode] = useViewMode('platform-stakeholder-register', 'list')
 
   useEffect(() => {
@@ -49,38 +112,6 @@ export default function StakeholderRegisterPage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  const loadProjects = useCallback(async () => {
-    try {
-      const { data } = await platformDb
-        .from('projects')
-        .select('id, project_name, project_code')
-        .eq('is_deleted', false)
-        .order('project_name', { ascending: true })
-        .limit(PROJECTS_LIMIT)
-      setProjects(data || [])
-    } catch (e) {
-      console.error(e)
-    }
-  }, [])
-
-  const loadFirst50Stakeholders = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
-    try {
-      const data = await getStakeholders({
-        limit: 50,
-        ...(debouncedSearch ? { search: debouncedSearch } : {}),
-      })
-      setStakeholders(data || [])
-    } catch (e) {
-      console.error(e)
-      setLoadError(e?.message || 'Failed to load stakeholders')
-      setStakeholders([])
-    } finally {
-      setLoading(false)
-    }
-  }, [debouncedSearch])
-
   const loadStakeholders = useCallback(async () => {
     if (!projectId) return
     setLoading(true)
@@ -88,6 +119,7 @@ export default function StakeholderRegisterPage() {
     try {
       const data = await getStakeholders({
         project_id: projectId,
+        limit: 500,
         ...(debouncedSearch ? { search: debouncedSearch } : {}),
       })
       setStakeholders(data || [])
@@ -101,47 +133,37 @@ export default function StakeholderRegisterPage() {
   }, [projectId, debouncedSearch])
 
   useEffect(() => {
+    if (projectCtxLoading) return
+    if (!currentProjectId) return
+    setProjectId((prev) => (prev === currentProjectId ? prev : currentProjectId))
+  }, [currentProjectId, projectCtxLoading])
+
+  useEffect(() => {
     if (location.state?.toast) {
       setToast(location.state.toast)
       if (projectId) loadStakeholders()
-      else loadFirst50Stakeholders()
       navigate(location.pathname, { replace: true, state: {} })
     }
-  }, [location.state?.toast, projectId, loadStakeholders, loadFirst50Stakeholders, navigate])
+  }, [location.state?.toast, projectId, loadStakeholders, navigate])
 
-  // Load projects once after first paint (keeps shell fast)
+  // Load stakeholders for the current project only
   useEffect(() => {
-    const raf = requestAnimationFrame(() => { loadProjects() })
-    return () => cancelAnimationFrame(raf)
-  }, [loadProjects])
-
-  // Load stakeholders after first paint; re-run when project or search changes
-  useEffect(() => {
+    if (projectCtxLoading || !projectId) {
+      if (!projectCtxLoading && !projectId && !currentProjectId) {
+        setStakeholders([])
+        setLoading(false)
+      }
+      return
+    }
     setLoading(true)
-    const raf = requestAnimationFrame(() => {
-      if (projectId) loadStakeholders()
-      else loadFirst50Stakeholders()
-    })
+    const raf = requestAnimationFrame(() => { loadStakeholders() })
     return () => cancelAnimationFrame(raf)
-  }, [projectId, debouncedSearch, loadStakeholders, loadFirst50Stakeholders])
+  }, [projectId, debouncedSearch, projectCtxLoading, currentProjectId, loadStakeholders])
 
   // Preload form chunk so /register/new opens fast
   useEffect(() => {
     import('./StakeholderFormPage')
   }, [])
-
-  const exportData = useMemo(
-    () =>
-      stakeholders.map((s) => ({
-        stakeholder_reference: s.stakeholder_reference || '',
-        stakeholder_name: s.stakeholder_name,
-        stakeholder_type: s.stakeholder_type || '',
-        stakeholder_organization: s.stakeholder_organization || '',
-        email: s.email || '',
-        stakeholder_status: s.stakeholder_status || '',
-      })),
-    [stakeholders]
-  )
 
   const dashboardStats = useMemo(() => {
     const byType = {}
@@ -165,6 +187,51 @@ export default function StakeholderRegisterPage() {
     }
   }, [stakeholders])
 
+  const registerRows = useMemo(
+    () => stakeholders.filter((s) => stakeholderMatchesFocus(s, registerFocus)),
+    [stakeholders, registerFocus]
+  )
+
+  const exportData = useMemo(
+    () =>
+      registerRows.map((s) => ({
+        stakeholder_reference: s.stakeholder_reference || '',
+        stakeholder_name: s.stakeholder_name,
+        stakeholder_type: s.stakeholder_type || '',
+        stakeholder_organization: s.stakeholder_organization || '',
+        email: s.email || '',
+        stakeholder_status: s.stakeholder_status || '',
+      })),
+    [registerRows]
+  )
+
+  const keyStakeholders = useMemo(
+    () => stakeholders.filter((s) => s.is_decision_maker || s.is_influencer),
+    [stakeholders]
+  )
+
+  const notYetPrioritised = useMemo(
+    () => stakeholders.filter((s) => s.is_affected_by_project && !s.is_decision_maker && !s.is_influencer),
+    [stakeholders]
+  )
+
+  const openRegister = (focus = '') => {
+    setRegisterFocus(focus)
+    setPageTab('register')
+  }
+
+  const projectOptions = useMemo(() => {
+    const rows = [...projects]
+    if (currentProject && !rows.some((p) => p.id === currentProject.projectId)) {
+      rows.unshift({
+        id: currentProject.projectId,
+        project_name: currentProject.projectName,
+        project_code: currentProject.projectCode,
+      })
+    }
+    return rows
+  }, [projects, currentProject])
+
   return (
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
       <div className="mb-6 flex flex-col gap-4">
@@ -172,9 +239,17 @@ export default function StakeholderRegisterPage() {
           <div className="flex items-start gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => navigate('/platform/stakeholders/register')}
+              onClick={() => {
+                if (pageTab === 'register') {
+                  setRegisterFocus('')
+                  setPageTab('dashboard')
+                  return
+                }
+                const projectKey = currentProject?.projectCode || currentProjectId || projectId
+                navigate(projectKey ? `/pm/dashboard?projectId=${encodeURIComponent(projectKey)}` : '/pm/dashboard')
+              }}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shrink-0"
-              aria-label="Back"
+              aria-label={pageTab === 'register' ? 'Back to stakeholder dashboard' : 'Back to project dashboard'}
             >
               <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
@@ -201,7 +276,7 @@ export default function StakeholderRegisterPage() {
               columns={EXPORT_COLUMNS}
               data={exportData}
               baseFilename="Stakeholder-Register"
-              disabled={stakeholders.length === 0}
+              disabled={registerRows.length === 0}
             />
             <button
               type="button"
@@ -232,20 +307,116 @@ export default function StakeholderRegisterPage() {
       )}
 
       {pageTab === 'dashboard' && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" role="tabpanel" aria-label="Stakeholder dashboard">
-          {[
-            { label: 'Total', value: dashboardStats.total, accent: 'text-gray-900 dark:text-white' },
-            { label: 'Active', value: dashboardStats.active, accent: 'text-emerald-700 dark:text-emerald-300' },
-            { label: 'Internal', value: dashboardStats.internal, accent: 'text-blue-700 dark:text-blue-300' },
-            { label: 'External', value: dashboardStats.external, accent: 'text-purple-700 dark:text-purple-300' },
-            { label: 'Decision makers', value: dashboardStats.decisionMakers, accent: 'text-sky-700 dark:text-sky-300' },
-            { label: 'Influencers', value: dashboardStats.influencers, accent: 'text-amber-700 dark:text-amber-300' },
-          ].map((card) => (
-            <div key={card.label} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{card.label}</p>
-              <p className={`text-2xl font-bold ${card.accent}`}>{loading ? '—' : card.value}</p>
-            </div>
-          ))}
+        <div className="space-y-6" role="tabpanel" aria-label="Stakeholder dashboard">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              { label: 'Total', value: dashboardStats.total, focus: '', accent: 'text-gray-900 dark:text-white' },
+              { label: 'Active', value: dashboardStats.active, focus: 'active', accent: 'text-emerald-700 dark:text-emerald-300' },
+              { label: 'Internal', value: dashboardStats.internal, focus: 'internal', accent: 'text-blue-700 dark:text-blue-300' },
+              { label: 'External', value: dashboardStats.external, focus: 'external', accent: 'text-purple-700 dark:text-purple-300' },
+              { label: 'Decision makers', value: dashboardStats.decisionMakers, focus: 'decision', accent: 'text-sky-700 dark:text-sky-300' },
+              { label: 'Influencers', value: dashboardStats.influencers, focus: 'influencer', accent: 'text-amber-700 dark:text-amber-300' },
+            ].map((card) => (
+              <DashboardStatCard
+                key={card.label}
+                label={card.label}
+                value={loading ? '—' : card.value}
+                accentClassName={card.accent}
+                onClick={() => openRegister(card.focus)}
+              />
+            ))}
+          </div>
+
+          <RegisterOpenItemsWidget
+            title="People who can move this project"
+            icon={UserCheck}
+            rows={keyStakeholders}
+            loading={loading}
+            storageKey="stakeholder-register-key-people"
+            columns={[
+              {
+                key: 'stakeholder_name',
+                label: 'Name',
+                className: 'font-medium text-gray-900 dark:text-gray-100',
+                render: (s) => (
+                  <span className="inline-flex items-center gap-2">
+                    <StakeholderAvatar db={platformDb} stakeholder={s} sizeClassName="h-7 w-7" />
+                    {s.stakeholder_name}
+                  </span>
+                ),
+              },
+              {
+                key: 'project_role',
+                label: 'Role on this project',
+                render: (s) => s.project_role || s.stakeholder_title || '—',
+              },
+              { key: 'stakeholder_organization', label: 'Organisation', render: (s) => s.stakeholder_organization || '—' },
+              {
+                key: 'stakeholder_type',
+                label: 'Type',
+                className: 'whitespace-normal',
+                sortAccessor: (s) => [
+                  s.stakeholder_type || '',
+                  s.is_decision_maker ? 'Decision Maker' : '',
+                  s.is_influencer ? 'Influencer' : '',
+                ].filter(Boolean).join(' '),
+                render: (s) => <StakeholderTypeCell stakeholder={s} />,
+              },
+              { key: 'interest_level', label: 'Interest', render: (s) => titleCase(s.interest_level) },
+              {
+                key: 'why',
+                label: 'Why they matter',
+                sortAccessor: (s) => (s.is_decision_maker ? 'Decision maker' : 'Influencer'),
+                render: (s) => (s.is_decision_maker ? 'Decision maker' : 'Influencer'),
+              },
+            ]}
+            rowKey={(s) => s.id}
+            searchFields={['stakeholder_name', 'project_role', 'stakeholder_organization']}
+            onRowClick={(s) => navigate(`/platform/stakeholders/register/view/${s.id}`)}
+            onViewAll={() => openRegister('')}
+            viewAllLabel="Open the full register"
+            emptyMessage="No decision makers or influencers yet. Mark them on each stakeholder so this list shows who to engage first."
+          />
+
+          <RegisterOpenItemsWidget
+            title="Affected, but not yet prioritised"
+            icon={AlertCircle}
+            rows={notYetPrioritised}
+            loading={loading}
+            storageKey="stakeholder-register-not-prioritised"
+            columns={[
+              {
+                key: 'stakeholder_name',
+                label: 'Name',
+                className: 'font-medium text-gray-900 dark:text-gray-100',
+                render: (s) => (
+                  <span className="inline-flex items-center gap-2">
+                    <StakeholderAvatar db={platformDb} stakeholder={s} sizeClassName="h-7 w-7" />
+                    {s.stakeholder_name}
+                  </span>
+                ),
+              },
+              {
+                key: 'project_role',
+                label: 'Role on this project',
+                render: (s) => s.project_role || s.stakeholder_title || '—',
+              },
+              { key: 'stakeholder_organization', label: 'Organisation', render: (s) => s.stakeholder_organization || '—' },
+              { key: 'interest_level', label: 'Interest', render: (s) => titleCase(s.interest_level) },
+              {
+                key: 'reach',
+                label: 'How to reach them',
+                sortAccessor: (s) => s.email || s.phone || s.mobile || '',
+                render: (s) => s.email || s.phone || s.mobile || 'No contact yet',
+              },
+            ]}
+            rowKey={(s) => s.id}
+            searchFields={['stakeholder_name', 'project_role', 'stakeholder_organization', 'email']}
+            onRowClick={(s) => navigate(`/platform/stakeholders/register/view/${s.id}`)}
+            onViewAll={() => openRegister('')}
+            viewAllLabel="Open the full register"
+            emptyMessage="Everyone the project affects is already marked as a decision maker or an influencer."
+          />
         </div>
       )}
 
@@ -257,11 +428,15 @@ export default function StakeholderRegisterPage() {
           <select
             id="stakeholder-register-project"
             value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value
+              setProjectId(next)
+              if (next) setCurrentProject(next)
+            }}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[44px]"
           >
-            <option value="">Select project</option>
-            {projects.map(p => (
+            {!projectId && <option value="">Select project</option>}
+            {projectOptions.map(p => (
               <option key={p.id} value={p.id}>{p.project_name} {p.project_code ? `(${p.project_code})` : ''}</option>
             ))}
           </select>
@@ -296,11 +471,9 @@ export default function StakeholderRegisterPage() {
         {loading && (
           <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" aria-hidden /></div>
         )}
-        {!loading && !projectId && stakeholders.length > 0 && (
+        {!loading && !projectId && (
           <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-            {debouncedSearch
-              ? `Showing up to 50 stakeholders matching “${debouncedSearch}” (ordered by name). Select a project to narrow by project.`
-              : 'Showing first 50 stakeholders (ordered by name). Select a project above to filter by project. Use Search register to filter by name, reference, or organization.'}
+            Select the current project to see its stakeholders.
           </p>
         )}
         {!loading && projectId && debouncedSearch && (
@@ -308,14 +481,25 @@ export default function StakeholderRegisterPage() {
             Filtered by search “{debouncedSearch}” within the selected project.
           </p>
         )}
+        {!loading && registerFocus && (
+          <div className="mb-3 flex items-center gap-2 text-sm">
+            <span className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+              {REGISTER_FOCUS_LABELS[registerFocus]} only
+            </span>
+            <button type="button" onClick={() => setRegisterFocus('')} className="text-blue-600 dark:text-blue-400 hover:underline">
+              Clear
+            </button>
+          </div>
+        )}
         {!loading && (
           <StakeholderRegister
-            stakeholders={stakeholders}
+            stakeholders={registerRows}
             loadError={loadError}
             viewMode={viewMode}
+            projectId={projectId}
             onEdit={(s) => navigate(`/platform/stakeholders/register/edit/${s.id}`, { state: { projectId: projectId || s.project_id } })}
             onView={(s) => navigate(`/platform/stakeholders/register/view/${s.id}`)}
-            onRefresh={projectId ? loadStakeholders : loadFirst50Stakeholders}
+            onRefresh={loadStakeholders}
             onDeleteSuccess={(s) => setToast({ type: 'success', message: `Stakeholder "${s.stakeholder_name}" (${s.stakeholder_reference || s.id}) deleted successfully.` })}
           />
         )}
@@ -329,7 +513,7 @@ export default function StakeholderRegisterPage() {
           onClose={() => setShowImportModal(false)}
           onImportComplete={() => {
             setShowImportModal(false)
-            projectId ? loadStakeholders() : loadFirst50Stakeholders()
+            if (projectId) loadStakeholders()
           }}
         />
       )}

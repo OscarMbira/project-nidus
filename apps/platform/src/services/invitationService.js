@@ -1133,6 +1133,44 @@ export async function getInvitationAcceptContext(token) {
   }
 }
 
+/**
+ * Pre-auth "I was invited" lookup (v982 Phase 1, task D). Calls the SECURITY DEFINER
+ * RPC `check_pending_invitation_by_email` (SQL/v982_pending_invitation_lookup.sql).
+ * Deliberately returns nothing beyond found/organisationName — no token, no id — so
+ * this unauthenticated screen cannot be used to act on (accept/decline/resend) an
+ * invitation directly (decision 5 in the v982 plan).
+ * @param {string} email
+ * @returns {Promise<{success: boolean, found: boolean, organisationName: string|null, error: string|null}>}
+ */
+export async function checkPendingInvitationByEmail(email) {
+  const trimmed = String(email ?? '').trim()
+  if (!trimmed) {
+    return { success: false, found: false, organisationName: null, error: 'Email is required' }
+  }
+  try {
+    const { data, error } = await appDb.rpc('check_pending_invitation_by_email', {
+      p_email: trimmed,
+    })
+    if (error) throw error
+
+    const row = Array.isArray(data) ? data[0] : data
+    return {
+      success: true,
+      found: Boolean(row?.found),
+      organisationName: row?.organisation_name ?? null,
+      error: null,
+    }
+  } catch (error) {
+    console.error('Error checking pending invitation by email:', error)
+    return {
+      success: false,
+      found: false,
+      organisationName: null,
+      error: error.message || 'Failed to check for a pending invitation',
+    }
+  }
+}
+
 export default {
   generateInvitationToken,
   sendProjectInvitation,
@@ -1145,5 +1183,6 @@ export default {
   getInvitationAcceptContext,
   resolveOrganisationNameForProject,
   resolveProjectPlannedDatesForProject,
+  checkPendingInvitationByEmail,
 }
 

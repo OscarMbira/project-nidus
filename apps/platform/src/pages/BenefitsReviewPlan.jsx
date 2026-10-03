@@ -4,9 +4,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { resolveInitiationContext } from '@nidus/shared/utils/initiationRouteUtils';
 import { ArrowLeft, Plus, FileText, Target, DollarSign, Calendar, AlertTriangle, History, CheckCircle, Share2 } from 'lucide-react';
 import { getBenefitsReviewPlans, getPlanBenefits, getPlanResources, getReviewSchedule } from '../services/benefitsReviewPlanService';
 import { getDisBenefitsForPlan } from '../services/disBenefitsService';
@@ -22,21 +23,26 @@ import BenefitsReviewSchedule from '../components/benefits/BenefitsReviewSchedul
 import DisBenefitsSection from '../components/benefits/DisBenefitsSection';
 import { exportBenefitsReviewPlanToPDF, printBenefitsReviewPlan } from '@nidus/shared/utils/benefitsReviewPlanExport';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
 
 const BRP_VIEW_SECTIONS = [
   { title: 'Plan', fields: [
-    { key: 'brp_reference', label: 'Reference' },
+    { key: 'document_ref', label: 'Reference' },
     { key: 'plan_title', label: 'Title' },
     { key: 'status', label: 'Status' }
   ]}
 ];
 
 export default function BenefitsReviewPlan() {
-  const { projectId, routeKey } = usePlatformProjectId();
+  const { projectId, routeKey, loading: projectIdLoading, error: projectIdError } = usePlatformProjectId();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const wantsCreate = searchParams.get('create') === '1';
+  // Back link stays inside the current PM/PMO sidebar area instead of always bouncing to PMO.
+  const initiationContext = resolveInitiationContext(location.pathname);
+  const backToListPath = initiationContext === 'pm'
+    ? '/pm/initiation/benefits-review-plan'
+    : '/pmo/initiation/benefits-review-plan';
   const [plan, setPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -51,10 +57,21 @@ export default function BenefitsReviewPlan() {
   const [distribution, setDistribution] = useState([]);
 
   useEffect(() => {
+    // usePlatformProjectId() resolves the friendly project code in the URL to a real
+    // project UUID asynchronously. Wait for that to finish (and require a resolved id)
+    // before fetching — otherwise an early call with project_id=null skips the project
+    // filter server-side and returns the most recently created plan for ANY project.
+    if (projectIdLoading) return;
+    if (!projectId) {
+      setPlan(null);
+      setLoading(false);
+      return;
+    }
     fetchPlan();
-  }, [projectId, wantsCreate]);
+  }, [projectId, projectIdLoading, wantsCreate]);
 
   const fetchPlan = async () => {
+    if (!projectId) return;
     try {
       setLoading(true);
       const plans = await getBenefitsReviewPlans({ project_id: projectId });
@@ -211,7 +228,30 @@ export default function BenefitsReviewPlan() {
     alert('Distribution management coming soon');
   };
 
-  if (loading) {
+  if (!projectIdLoading && !projectId) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button
+          onClick={() => navigate(backToListPath)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Benefits Review Plans
+        </button>
+        <div className="text-center py-12">
+          <FileText className="h-12 w-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
+          <p className="text-gray-700 dark:text-gray-300 font-medium">Project not found</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {projectIdError === 'not_found'
+              ? 'This project could not be resolved. Go back and select a valid project.'
+              : 'No project was specified for this Benefits Review Plan.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading || projectIdLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
@@ -227,7 +267,7 @@ export default function BenefitsReviewPlan() {
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => navigate('/pmo/initiation/benefits-review-plan')}
+          onClick={() => navigate(backToListPath)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -241,13 +281,9 @@ export default function BenefitsReviewPlan() {
           {!showForm && plan && (
             <div className="flex items-center gap-2">
               <ExportRecordButtons
-                onExportPPT={() => exportRecordToPPT(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportWord={() => exportRecordToWord(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportExcel={() => exportRecordToExcel(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportCSV={() => exportRecordToCSV(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportXML={() => exportRecordToXML(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportJSON={() => exportRecordToJSON(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportPrint={() => exportRecordToPrint(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
+                sections={BRP_VIEW_SECTIONS}
+                record={plan}
+                baseFilename={`BenefitsReviewPlan_${plan.document_ref || plan.brp_reference || plan.id}`}
               />
               <button
                 onClick={handleEdit}

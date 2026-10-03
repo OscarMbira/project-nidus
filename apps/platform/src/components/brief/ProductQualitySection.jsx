@@ -1,85 +1,72 @@
 /**
  * Product Quality Section
- * Quality expectations, acceptance criteria
+ * Quality expectations and acceptance criteria — multi-line list fields (rule 67).
  */
 
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+
 export default function ProductQualitySection({ formData, onChange, errors = {}, readOnly = false }) {
-  const handleChange = (e) => {
-    onChange(e)
+  const setListField = (name, value) => {
+    onChange({ target: { name, value } })
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-          Quality Expectations
+          Product quality expectations
         </h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          Define quality standards and acceptance criteria for project products
+          Quality standards and acceptance criteria for the products above. Add one item per line.
         </p>
       </div>
 
-      {/* Customer Quality Expectations */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Customer Quality Expectations
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Customer quality expectations
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.customer_quality_expectations || 'Not specified'}
-          </p>
-        ) : (
-          <textarea
-            name="customer_quality_expectations"
-            value={formData.customer_quality_expectations || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Quality standards expected by the customer..."
-          />
-        )}
+        <MultiLineListInput
+          viewModeId="brief-quality-customer"
+          id="brief_customer_quality_expectations"
+          value={formData.customer_quality_expectations || ''}
+          onChange={(v) => setListField('customer_quality_expectations', v)}
+          placeholder="e.g. All critical transactions reconcilable within T+1"
+          ariaLabelPrefix="quality expectation"
+          itemColumnLabel="Expectation"
+          disabled={readOnly}
+        />
       </div>
 
-      {/* User Acceptance Criteria */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          User Acceptance Criteria
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          User acceptance criteria
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.user_acceptance_criteria || 'Not specified'}
-          </p>
-        ) : (
-          <textarea
-            name="user_acceptance_criteria"
-            value={formData.user_acceptance_criteria || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="How users will accept the product. Define measurable acceptance criteria..."
-          />
-        )}
+        <MultiLineListInput
+          viewModeId="brief-quality-uac"
+          id="brief_user_acceptance_criteria"
+          value={formData.user_acceptance_criteria || ''}
+          onChange={(v) => setListField('user_acceptance_criteria', v)}
+          placeholder="e.g. UAT signed off by retail operations lead"
+          ariaLabelPrefix="acceptance criterion"
+          itemColumnLabel="Criterion"
+          disabled={readOnly}
+        />
       </div>
 
-      {/* Operations & Maintenance Criteria */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Operations & Maintenance Criteria
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Operations & maintenance criteria
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.operations_maintenance_criteria || 'Not specified'}
-          </p>
-        ) : (
-          <textarea
-            name="operations_maintenance_criteria"
-            value={formData.operations_maintenance_criteria || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Criteria for operations and maintenance acceptance..."
-          />
-        )}
+        <MultiLineListInput
+          viewModeId="brief-quality-ops"
+          id="brief_operations_maintenance_criteria"
+          value={formData.operations_maintenance_criteria || ''}
+          onChange={(v) => setListField('operations_maintenance_criteria', v)}
+          placeholder="e.g. Run-books handed over and ops team trained"
+          ariaLabelPrefix="ops criterion"
+          itemColumnLabel="Criterion"
+          disabled={readOnly}
+        />
       </div>
     </div>
   )

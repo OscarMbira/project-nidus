@@ -75,7 +75,7 @@ export default function PortfolioFormPage() {
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 text-center">
           <p className="text-red-400 mb-4">{error}</p>
           <button
-            onClick={() => navigate('/platform/portfolio')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Portfolio list
@@ -94,7 +94,7 @@ export default function PortfolioFormPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6 flex flex-wrap items-center gap-4">
           <button
-            onClick={() => navigate('/platform/portfolio')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-700 rounded-lg text-gray-400 hover:text-gray-100"
             aria-label="Back to list"
           >

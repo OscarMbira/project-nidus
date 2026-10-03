@@ -49,15 +49,17 @@ describe('End Project Report Service', () => {
 
       mockSupabase.from.mockReturnValueOnce({
         insert: vi.fn(() => ({
-          select: vi.fn(() => Promise.resolve({
-            data: [{
-              id: 'report-123',
-              ...reportData,
-              document_ref: 'EPR-PROJ001-001',
-              approval_status: 'draft',
-              closure_type: 'normal'
-            }],
-            error: null
+          select: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
+              data: {
+                id: 'report-123',
+                ...reportData,
+                document_ref: 'EPR-PROJ001-001',
+                approval_status: 'draft',
+                closure_type: 'normal'
+              },
+              error: null
+            }))
           }))
         }))
       })
@@ -81,14 +83,16 @@ describe('End Project Report Service', () => {
 
       mockSupabase.from.mockReturnValueOnce({
         insert: vi.fn(() => ({
-          select: vi.fn(() => Promise.resolve({
-            data: [{
-              id: 'report-123',
-              report_title: 'End Project Report',
-              approval_status: 'draft',
-              closure_type: 'normal'
-            }],
-            error: null
+          select: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
+              data: {
+                id: 'report-123',
+                report_title: 'End Project Report',
+                approval_status: 'draft',
+                closure_type: 'normal'
+              },
+              error: null
+            }))
           }))
         }))
       })
@@ -173,12 +177,14 @@ describe('End Project Report Service', () => {
       mockSupabase.from.mockReturnValueOnce({
         update: vi.fn(() => ({
           eq: vi.fn(() => ({
-            select: vi.fn(() => Promise.resolve({
-              data: [{
-                id: 'report-123',
-                ...updates
-              }],
-              error: null
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({
+                data: {
+                  id: 'report-123',
+                  ...updates
+                },
+                error: null
+              }))
             }))
           }))
         }))

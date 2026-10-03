@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Briefcase, Plus, Search, BarChart3, TrendingUp, Target, Eye, Edit2, Trash2 } from 'lucide-react';
+import { Briefcase, Plus, Search, BarChart3, TrendingUp, Target, Eye, Edit2, Trash2, Users } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 import { getPortfolios, deletePortfolio } from '../../services/portfolioService';
 import ExportListMenu from '@nidus/ui/ExportListMenu';
@@ -88,7 +88,7 @@ export default function Portfolio() {
         }
         const { data: userRecord } = await platformDb.from('users').select('id').eq('auth_user_id', user.id).single();
         if (!userRecord) return null;
-        const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).single();
+        const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).maybeSingle();
         if (account) return account.id;
         const { data: project } = await platformDb.from('projects').select('account_id').eq('owner_user_id', userRecord.id).eq('is_deleted', false).limit(1).maybeSingle();
         return project?.account_id ?? null;
@@ -267,6 +267,15 @@ export default function Portfolio() {
                       aria-label="Edit portfolio"
                     >
                       <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/platform/portfolio/${portfolio.id}/members`); }}
+                      className="p-2 rounded-lg text-gray-400 hover:text-emerald-400 hover:bg-gray-700"
+                      title="Members"
+                      aria-label="Manage portfolio members"
+                    >
+                      <Users className="h-4 w-4" />
                     </button>
                     <button
                       type="button"

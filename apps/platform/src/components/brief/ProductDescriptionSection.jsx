@@ -107,8 +107,18 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
 
   if (!briefId) {
     return (
-      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-        Please save the brief first before adding products
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+            Product description
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Define the products that will be delivered by this project.
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Please save the brief first before adding products.
+          </p>
+        </div>
       </div>
     )
   }
@@ -117,11 +127,11 @@ export default function ProductDescriptionSection({ briefId, readOnly = false })
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-            5. Project Product Description
+          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+            Product description
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Define the products that will be delivered by this project
+            Define the products that will be delivered by this project.
           </p>
         </div>
         {!readOnly && (

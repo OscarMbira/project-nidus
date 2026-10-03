@@ -211,19 +211,48 @@ export const createOrganisation = async (organisationData) => {
   }
   */
 
-  // Assign founder roles: legal account owner + operational PMO admin
+  // Assign founder roles: legal account owner always; operational PMO admin conditional
+  // on registration path (v982 Phase 1, decision 3/6 + task E). 'individual'/'freelancer'
+  // organisations always get it (no one else exists to hold it); a 'business'/'company'
+  // organisation gets it only if the Organisation Setup toggle was left on (default on,
+  // preserving pre-v982 behaviour). Callers that don't pass wantsPmoAdmin at all (i.e.
+  // any code path that didn't go through the v982 entry-choice + toggle) keep the old
+  // unconditional grant — no regression for those.
   try {
     const ownerResult = await assignSystemRole(authUser.id, 'account_owner');
     if (!ownerResult.success) {
       console.warn('Failed to assign Account Owner role. User may need to be assigned manually.');
     }
-    const roleResult = await assignSystemRole(authUser.id, 'pmo_admin');
-    if (!roleResult.success) {
-      console.warn('Failed to assign PMO Admin role. User may need to be assigned manually.');
+    const shouldGrantPmoAdmin =
+      organisationData.type === 'individual' ||
+      organisationData.type === 'freelancer' ||
+      organisationData.wantsPmoAdmin === true ||
+      organisationData.wantsPmoAdmin === undefined;
+    if (shouldGrantPmoAdmin) {
+      const roleResult = await assignSystemRole(authUser.id, 'pmo_admin');
+      if (!roleResult.success) {
+        console.warn('Failed to assign PMO Admin role. User may need to be assigned manually.');
+      }
     }
   } catch (roleError) {
     console.error('Error assigning founder roles:', roleError);
     // Don't throw - organisation is created, roles can be assigned later
+  }
+
+  // Sync already-published Global Templates onto this brand-new account (v1001) — without this,
+  // an account created after the last Admin "publish" run has zero is_system_synced templates
+  // and Template Library shows "No templates yet" even though Admin has genuinely published some.
+  // Best-effort, same non-blocking pattern as the role assignment above.
+  try {
+    const { error: templateSyncError } = await platformDb.rpc('sync_global_templates_to_account', {
+      p_target_account_id: finalOrganisationData.id,
+    });
+    if (templateSyncError) {
+      console.warn('Failed to sync Global Templates to new account. Can be re-run manually later:', templateSyncError.message);
+    }
+  } catch (templateSyncError) {
+    console.error('Error syncing Global Templates to new account:', templateSyncError);
+    // Don't throw - organisation is created, templates can be synced later
   }
 
   // Return data (email verification disabled)
@@ -336,7 +365,7 @@ export const resendVerificationEmail = async (organisationId) => {
     .select('*')
     .eq('id', organisationId)
     .eq('owner_user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (orgError || !org) {
     throw new Error('Organisation not found');
@@ -593,18 +622,39 @@ const updateExistingOrganisation = async (organisationId, organisationData, user
     // Don't throw - organisation is updated, email can be resent
   }
 
-  // Assign founder roles if not already assigned
+  // Assign founder roles if not already assigned — same conditional PMO admin logic as
+  // the create path above (v982 Phase 1, task E).
   try {
     const { data: { user: authUser } } = await platformDb.auth.getUser();
     if (authUser) {
       await assignSystemRole(authUser.id, 'account_owner');
-      const roleResult = await assignSystemRole(authUser.id, 'pmo_admin');
-      if (!roleResult.success) {
-        console.warn('Failed to assign PMO Admin role. User may need to be assigned manually.');
+      const shouldGrantPmoAdmin =
+        organisationData.type === 'individual' ||
+        organisationData.type === 'freelancer' ||
+        organisationData.wantsPmoAdmin === true ||
+        organisationData.wantsPmoAdmin === undefined;
+      if (shouldGrantPmoAdmin) {
+        const roleResult = await assignSystemRole(authUser.id, 'pmo_admin');
+        if (!roleResult.success) {
+          console.warn('Failed to assign PMO Admin role. User may need to be assigned manually.');
+        }
       }
     }
   } catch (roleError) {
     console.error('Error assigning founder roles:', roleError);
+  }
+
+  // Sync already-published Global Templates onto this account if it hasn't happened yet (v1001)
+  // — idempotent, safe to call on an already-synced account (no-op there).
+  try {
+    const { error: templateSyncError } = await platformDb.rpc('sync_global_templates_to_account', {
+      p_target_account_id: data.id,
+    });
+    if (templateSyncError) {
+      console.warn('Failed to sync Global Templates to account. Can be re-run manually later:', templateSyncError.message);
+    }
+  } catch (templateSyncError) {
+    console.error('Error syncing Global Templates to account:', templateSyncError);
   }
 
   return data;

@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowLeft, LayoutGrid, List } from 'lucide-react'
 import toast from 'react-hot-toast'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { listCostEntries, createCostEntry, deleteCostEntry } from '../../services/projectCostService'
 import { platformDb } from '@nidus/supabase'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -12,7 +13,10 @@ import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const VIEW_KEY = 'proj-cost-view'
 
 export default function ProjectCostManagement() {
-  const { projectId } = useParams()
+  // rule 16.1: the URL segment is the friendly project_code (e.g. PRJ-CRDB-20230717-01), not a
+  // UUID — passing it straight into .eq('id', ...)/project_id filters (the previous useParams()
+  // code did) throws "invalid input syntax for type uuid" (HTTP 400) on every query here.
+  const { projectId, routeKey } = usePlatformProjectId()
   const { canManage, readOnlyExecutive } = useFinancialPermissions()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -82,7 +86,7 @@ export default function ProjectCostManagement() {
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link to={`/platform/projects/${projectId}`} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link to={`/platform/projects/${routeKey || projectId}`} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
               <ArrowLeft className="h-5 w-5" />
             </Link>
             <div>
@@ -91,7 +95,7 @@ export default function ProjectCostManagement() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <ExportListMenu columns={exportCols} data={rows} baseFilename={`project_costs_${projectId}`} />
+            <ExportListMenu columns={exportCols} data={rows} baseFilename={`project_costs_${routeKey || projectId}`} />
             <button type="button" onClick={() => setView('table')} className={`p-2 rounded border ${view === 'table' ? 'bg-blue-600 text-white' : 'border-gray-600'}`} aria-label="Table">
               <List className="h-5 w-5" />
             </button>

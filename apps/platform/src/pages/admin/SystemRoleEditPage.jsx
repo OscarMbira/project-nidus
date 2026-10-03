@@ -14,6 +14,7 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import {
   isSystemAdmin,
   getRoleById,
@@ -41,6 +42,7 @@ export default function SystemRoleEditPage() {
   const [roleLevel, setRoleLevel] = useState(1)
   const [industryCategoryId, setIndustryCategoryId] = useState('')
   const [isGovernanceOnly, setIsGovernanceOnly] = useState(false)
+  const [roleSkills, setRoleSkills] = useState('')
   const [menuGrants, setMenuGrants] = useState([])
   const [excludedMenuItemIds, setExcludedMenuItemIds] = useState(new Set())
   const [saving, setSaving] = useState(false)
@@ -70,6 +72,7 @@ export default function SystemRoleEditPage() {
     setRoleLevel(roleRes.data.role_level ?? 1)
     setIndustryCategoryId(roleRes.data.industry_category_id || '')
     setIsGovernanceOnly(!!roleRes.data.is_governance_only)
+    setRoleSkills(roleRes.data.role_skills || '')
 
     const grantsRes = await getRoleMenuGrants(roleRes.data.role_name, null)
     if (grantsRes.success) setMenuGrants(grantsRes.data)
@@ -88,14 +91,15 @@ export default function SystemRoleEditPage() {
         roleLevel: role?.role_level ?? 1,
         industryCategoryId: role?.industry_category_id || '',
         isGovernanceOnly: !!role?.is_governance_only,
+        roleSkills: role?.role_skills || '',
       }),
     [role],
   )
   const isDirty = useMemo(
     () =>
       !loading &&
-      JSON.stringify({ displayName, description, roleLevel, industryCategoryId, isGovernanceOnly }) !== baselineSnapshot,
-    [loading, displayName, description, roleLevel, industryCategoryId, isGovernanceOnly, baselineSnapshot],
+      JSON.stringify({ displayName, description, roleLevel, industryCategoryId, isGovernanceOnly, roleSkills }) !== baselineSnapshot,
+    [loading, displayName, description, roleLevel, industryCategoryId, isGovernanceOnly, roleSkills, baselineSnapshot],
   )
   const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved changes to this built-in role.')
 
@@ -117,6 +121,10 @@ export default function SystemRoleEditPage() {
       setError('Role name is required')
       return
     }
+    if (!roleSkills.trim()) {
+      setError('At least one required skill is needed for this role')
+      return
+    }
 
     setSaving(true)
     setError(null)
@@ -129,6 +137,7 @@ export default function SystemRoleEditPage() {
       industryCategoryId: industryCategoryId || null,
       isGovernanceOnly,
       removeMenuItemIds: Array.from(excludedMenuItemIds),
+      roleSkills: roleSkills.trim(),
     })
     setSaving(false)
     if (!result.success) {
@@ -161,7 +170,7 @@ export default function SystemRoleEditPage() {
         <p className="text-sm text-gray-600 dark:text-gray-400">
           System Role Catalog is restricted to platform system administrators.
         </p>
-        <button onClick={() => navigate('/platform/dashboard')} className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
+        <button onClick={() => navigate(-1)} className="text-blue-600 dark:text-blue-400 hover:underline text-sm">
           Back to Dashboard
         </button>
       </div>
@@ -246,6 +255,25 @@ export default function SystemRoleEditPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Required skills *
+              </label>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                What someone in this role needs to know or be able to do. One per line. Shared with
+                every organisation using this built-in role.
+              </p>
+              <MultiLineListInput
+                viewModeId="system-role-skills"
+                id="system_role_skills"
+                value={roleSkills}
+                onChange={setRoleSkills}
+                placeholder="e.g. Stakeholder Communication"
+                ariaLabelPrefix="skill"
+                itemColumnLabel="Skill"
               />
             </div>
 

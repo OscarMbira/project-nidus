@@ -589,6 +589,25 @@ export async function deleteBenefitAttribution(attributionId) {
 // ================================================
 
 /**
+ * Get a single benefit realization report by id
+ */
+export async function getBenefitRealizationReport(reportId) {
+  const { data, error } = await platformDb
+    .from('benefit_realization_reports')
+    .select(`
+      *,
+      report_owner:report_owner_user_id (id, email, full_name),
+      generated_by:generated_by_user_id (id, email, full_name)
+    `)
+    .eq('id', reportId)
+    .eq('is_deleted', false)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
+/**
  * Get benefit realization reports
  */
 export async function getBenefitRealizationReports(filters = {}) {

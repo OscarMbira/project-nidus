@@ -37,7 +37,8 @@ export function createGapListPage({
 }
 
 /** Specialized page shells that delegate to list hub or custom views */
-export { default as OKRDashboardPage } from '../pages/OKRDashboardPage'
+// v963 Phase 8 (GAP-03): OKRDashboardPage stub removed — real OKR pages now live at
+// apps/platform/src/pages/okr/ (see PmisGapRoutes.jsx).
 export { default as WorkloadHeatmapPage } from '../pages/WorkloadHeatmapPage'
 export { default as UniversalCalendarPage } from '../pages/UniversalCalendarPage'
 export { default as PlanningPokerPage } from '../pages/PlanningPokerPage'

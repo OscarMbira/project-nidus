@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { Package, TrendingUp, AlertCircle, Clock, CheckCircle } from 'lucide-react'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 import { getProductStatusAccountByProject, getStatusSummary } from '../../services/productStatusAccountService'
 import ProductStatusAccountCard from '../../components/productStatusAccount/ProductStatusAccountCard'
 import PSAStatusIndicator from '../../components/productStatusAccount/PSAStatusIndicator'
@@ -90,45 +91,10 @@ export default function ProductStatusAccountDashboard() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_products || 0}</p>
-              </div>
-              <Package className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.in_progress || 0}</p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">At Risk</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.at_risk || 0}</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-orange-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.completed || 0}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
+          <DashboardStatCard label="Total Products" value={summary.total_products || 0} icon={Package} iconClassName="text-blue-500" />
+          <DashboardStatCard label="In Progress" value={summary.in_progress || 0} icon={Clock} iconClassName="text-yellow-500" />
+          <DashboardStatCard label="At Risk" value={summary.at_risk || 0} icon={AlertCircle} iconClassName="text-orange-500" />
+          <DashboardStatCard label="Completed" value={summary.completed || 0} icon={CheckCircle} iconClassName="text-green-500" />
         </div>
       )}
 

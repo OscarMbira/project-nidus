@@ -4,6 +4,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
@@ -102,6 +103,10 @@ export default function LessonsReportEdit() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       {/* reportId is the real UUID (report.id), not the friendly route param — the form
           and its children (HoldButton, completeness check, section queries) all key
           their fetches on a real lessons_reports.id. */}

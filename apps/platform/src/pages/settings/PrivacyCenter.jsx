@@ -1,140 +1,144 @@
+/**
+ * Privacy Center — self-service GDPR (v1108 rewrite). Reached from Settings.jsx's Privacy tab.
+ * Route: /platform/settings/privacy
+ * Fixed the same auth-uid-vs-internal-user-id bug gdprService.js itself had: every call here
+ * previously passed supabase.auth.getUser()'s raw auth uid as "userId", but consent_logs/
+ * data_export_requests/etc. all FK user_id to public.users(id), not auth.users(id) — now resolved
+ * via getCurrentUserInternalUserId() first.
+ */
 import { useState, useEffect } from 'react'
-import { recordConsent, getConsentHistory, requestDataExport, requestDataDeletion, updatePrivacyPreferences, getPrivacyPreferences } from '../../services/gdprService'
+import toast from 'react-hot-toast'
+import {
+  recordConsent, getConsentHistory, requestDataExport, requestDataDeletion, cancelDataDeletionRequest,
+  updatePrivacyPreferences, getPrivacyPreferences,
+} from '../../services/gdprService'
 import { supabase } from '../../services/supabaseClient'
+import { getCurrentUserInternalUserId } from '../../utils/accountResolution'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
 export default function PrivacyCenter() {
+  const { showSuccess, modal } = useSuccessModal()
+  const [internalUserId, setInternalUserId] = useState(null)
   const [privacyPrefs, setPrivacyPrefs] = useState({
     allow_marketing_emails: false,
     allow_analytics_tracking: false,
     allow_third_party_sharing: false,
-    data_retention_preference: 'standard'
+    data_retention_preference: 'standard',
   })
   const [consentHistory, setConsentHistory] = useState([])
   const [exportRequests, setExportRequests] = useState([])
   const [deletionRequests, setDeletionRequests] = useState([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [confirmingDeletion, setConfirmingDeletion] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
 
-  useEffect(() => {
-    fetchPrivacyData()
-  }, [])
-
-  const fetchPrivacyData = async () => {
+  const fetchPrivacyData = async (userId) => {
     try {
       setLoading(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
       const [prefsResult, consentResult] = await Promise.all([
-        getPrivacyPreferences(user.id),
-        getConsentHistory(user.id)
+        getPrivacyPreferences(userId),
+        getConsentHistory(userId),
       ])
 
       if (prefsResult.success && prefsResult.data) {
         setPrivacyPrefs(prefsResult.data)
       }
-
       if (consentResult.success) {
         setConsentHistory(consentResult.data || [])
       }
 
-      // Fetch export/deletion requests
-      const { data: exports } = await supabase
-        .from('data_export_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_deleted', false)
-        .order('requested_at', { ascending: false })
-
-      const { data: deletions } = await supabase
-        .from('data_deletion_requests')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_deleted', false)
-        .order('requested_at', { ascending: false })
+      const [{ data: exports }, { data: deletions }] = await Promise.all([
+        supabase.from('data_export_requests').select('*').eq('user_id', userId).eq('is_deleted', false).order('requested_at', { ascending: false }),
+        supabase.from('data_deletion_requests').select('*').eq('user_id', userId).eq('is_deleted', false).order('requested_at', { ascending: false }),
+      ])
 
       if (exports) setExportRequests(exports)
       if (deletions) setDeletionRequests(deletions)
     } catch (error) {
       console.error('Error fetching privacy data:', error)
+      toast.error('Failed to load privacy data')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSavePreferences = async () => {
-    try {
-      setSaving(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const result = await updatePrivacyPreferences(user.id, privacyPrefs)
-      if (result.success) {
-        alert('Privacy preferences saved successfully')
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const userId = await getCurrentUserInternalUserId()
+      if (cancelled) return
+      if (!userId) {
+        setLoading(false)
+        return
       }
-    } catch (error) {
-      console.error('Error saving preferences:', error)
-      alert('Failed to save preferences')
+      setInternalUserId(userId)
+      await fetchPrivacyData(userId)
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const handleSavePreferences = async () => {
+    if (!internalUserId) return
+    setSaving(true)
+    try {
+      const result = await updatePrivacyPreferences(internalUserId, privacyPrefs)
+      if (result.success) {
+        showSuccess({ recordId: internalUserId, operation: 'updated', message: 'Privacy preferences saved.' })
+      } else {
+        toast.error(result.message || 'Failed to save preferences')
+      }
     } finally {
       setSaving(false)
     }
   }
 
   const handleRequestDataExport = async () => {
-    if (!confirm('Request a copy of your data? This may take up to 30 days to process.')) return
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const result = await requestDataExport(user.id, 'json')
-      if (result.success) {
-        alert('Data export request submitted. You will be notified when it\'s ready.')
-        fetchPrivacyData()
-      }
-    } catch (error) {
-      console.error('Error requesting data export:', error)
-      alert('Failed to request data export')
+    if (!internalUserId) return
+    const result = await requestDataExport(internalUserId, 'json')
+    if (result.success) {
+      showSuccess({ recordId: result.data.id, operation: 'created', message: "Data export request submitted. You'll see it here once it's ready to download." })
+      fetchPrivacyData(internalUserId)
+    } else {
+      toast.error(result.message || 'Failed to request data export')
     }
   }
 
   const handleRequestDataDeletion = async () => {
-    const confirmText = prompt(
-      'This action cannot be undone. Type "DELETE" to confirm that you want to permanently delete your account and all associated data.'
-    )
-    
-    if (confirmText !== 'DELETE') {
-      alert('Deletion cancelled. You must type "DELETE" to confirm.')
+    if (!internalUserId) return
+    if (deleteConfirmText.trim().toUpperCase() !== 'DELETE') {
+      toast.error('Type DELETE to confirm')
       return
     }
+    const result = await requestDataDeletion(internalUserId)
+    if (result.success) {
+      setConfirmingDeletion(false)
+      setDeleteConfirmText('')
+      showSuccess({
+        recordId: result.data.id,
+        operation: 'created',
+        message: 'Data deletion request submitted. Your account will be anonymized in 30 days unless you cancel the request before then.',
+      })
+      fetchPrivacyData(internalUserId)
+    } else {
+      toast.error(result.message || 'Failed to request data deletion')
+    }
+  }
 
-    if (!confirm('Are you absolutely sure? This will permanently delete your account and all data. This action cannot be undone.')) return
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const result = await requestDataDeletion(user.id)
-      if (result.success) {
-        alert('Data deletion request submitted. Your account will be deleted within 30 days unless you contact support to cancel.')
-        fetchPrivacyData()
-      }
-    } catch (error) {
-      console.error('Error requesting data deletion:', error)
-      alert('Failed to request data deletion')
+  const handleCancelDeletion = async (requestId) => {
+    const result = await cancelDataDeletionRequest(requestId)
+    if (result.success) {
+      showSuccess({ recordId: requestId, operation: 'updated', message: 'Data deletion request cancelled.' })
+      fetchPrivacyData(internalUserId)
+    } else {
+      toast.error(result.message || 'Failed to cancel deletion request')
     }
   }
 
   const handleConsentChange = async (consentType, given) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      await recordConsent(user.id, consentType, given, `User ${given ? 'granted' : 'withdrew'} consent for ${consentType}`)
-      fetchPrivacyData()
-    } catch (error) {
-      console.error('Error recording consent:', error)
-    }
+    if (!internalUserId) return
+    await recordConsent(internalUserId, consentType, given, `User ${given ? 'granted' : 'withdrew'} consent for ${consentType}`)
+    fetchPrivacyData(internalUserId)
   }
 
   if (loading) {
@@ -150,6 +154,7 @@ export default function PrivacyCenter() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {modal}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Privacy Center
@@ -164,7 +169,7 @@ export default function PrivacyCenter() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Privacy Preferences
         </h2>
-        
+
         <div className="space-y-4">
           <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
             <div>
@@ -239,7 +244,7 @@ export default function PrivacyCenter() {
         <button
           onClick={handleSavePreferences}
           disabled={saving}
-          className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="mt-6 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 min-h-[44px]"
         >
           {saving ? 'Saving...' : 'Save Preferences'}
         </button>
@@ -253,12 +258,12 @@ export default function PrivacyCenter() {
           </h2>
           <button
             onClick={handleRequestDataExport}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-sm min-h-[44px]"
           >
             Request Data Export
           </button>
         </div>
-        
+
         {exportRequests.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
             No data export requests
@@ -292,7 +297,7 @@ export default function PrivacyCenter() {
                   <a
                     href={request.export_file_path}
                     download
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    className="mt-2 inline-block text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
                   >
                     Download exported data →
                   </a>
@@ -305,23 +310,57 @@ export default function PrivacyCenter() {
 
       {/* Data Deletion Requests */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-700 p-6 mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Right to be Forgotten
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Request permanent deletion of your account and all associated data
+              Request permanent anonymization of your account and Tier-1 records
             </p>
           </div>
-          <button
-            onClick={handleRequestDataDeletion}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm"
-          >
-            Request Account Deletion
-          </button>
+          {!confirmingDeletion ? (
+            <button
+              onClick={() => setConfirmingDeletion(true)}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm min-h-[44px]"
+            >
+              Request Account Deletion
+            </button>
+          ) : null}
         </div>
-        
+
+        {confirmingDeletion && (
+          <div className="mb-4 p-4 rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20 space-y-3">
+            <p className="text-sm text-red-800 dark:text-red-300">
+              This cannot be undone once processed. Your account and your Tier-1 module records
+              (Risks, Issues, Changes, Assumptions, Constraints, Daily Log entries, Lessons) will
+              be anonymized after a 30-day grace period. Type <strong>DELETE</strong> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="DELETE"
+              className="w-full sm:w-48 px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setConfirmingDeletion(false); setDeleteConfirmText('') }}
+                className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRequestDataDeletion}
+                disabled={deleteConfirmText.trim().toUpperCase() !== 'DELETE'}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors text-sm disabled:opacity-40 min-h-[44px]"
+              >
+                Confirm Deletion Request
+              </button>
+            </div>
+          </div>
+        )}
+
         {deletionRequests.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
             No deletion requests
@@ -333,7 +372,7 @@ export default function PrivacyCenter() {
                 key={request.id}
                 className="p-4 border border-red-200 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-900/20"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
                       Deletion Request
@@ -350,13 +389,24 @@ export default function PrivacyCenter() {
                       </p>
                     )}
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded ${
-                    request.request_status === 'completed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-                    request.request_status === 'processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                  }`}>
-                    {request.request_status}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 text-xs rounded ${
+                      request.request_status === 'completed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+                      request.request_status === 'processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                      request.request_status === 'rejected' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                    }`}>
+                      {request.request_status}
+                    </span>
+                    {request.request_status === 'pending' && (
+                      <button
+                        onClick={() => handleCancelDeletion(request.id)}
+                        className="text-xs font-medium text-sky-700 dark:text-sky-400 hover:underline"
+                      >
+                        Cancel request
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -369,7 +419,7 @@ export default function PrivacyCenter() {
         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Consent History
         </h2>
-        
+
         {consentHistory.length === 0 ? (
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
             No consent history
@@ -406,4 +456,3 @@ export default function PrivacyCenter() {
     </div>
   )
 }
-

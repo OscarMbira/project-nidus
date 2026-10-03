@@ -3,6 +3,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useState, useEffect } from 'react'
@@ -54,13 +55,21 @@ export default function ProjectPlanViewPage() {
   }
 
   return (
-    <ProjectPlanView
-      planId={planId}
-      onEdit={(plan) => navigate(`/app/projects/${projectId}/plans/project-plan/edit?planId=${plan.id}`)}
-      onExport={(plan) => {
-        // Export functionality
-        console.log('Export plan:', plan)
-      }}
-    />
+    <>
+      <div className="max-w-7xl mx-auto px-4 pt-6">
+        <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+      </div>
+      <ProjectPlanView
+        planId={planId}
+        onEdit={(plan) => navigate(`/app/projects/${projectId}/plans/project-plan/edit?planId=${plan.id}`)}
+        onExport={(plan) => {
+          // Export functionality
+          console.log('Export plan:', plan)
+        }}
+      />
+    </>
   )
 }

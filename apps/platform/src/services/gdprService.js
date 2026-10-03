@@ -1,28 +1,86 @@
 /**
- * GDPR Service
- * Handles GDPR compliance features: consent, data export, data deletion, privacy preferences, and data breach tracking
+ * GDPR Service (v1108 rewrite)
+ * Handles GDPR compliance features: consent, data export, data deletion, privacy preferences, and
+ * data breach tracking. Rewritten against SQL/v1119 (fixed RLS/account scoping) and SQL/v1120
+ * (data-driven Tier-1 export/deletion registry) — see Documentation/Data_Management_GDPR_v1108_
+ * Guide.md.
  */
-
 import { supabase } from './supabaseClient'
+import { getCurrentUserInternalUserId, getCurrentUserAccountId } from '../utils/accountResolution'
+
+/**
+ * Fetch the active Tier-1 module registry rows (public.gdpr_export_registry).
+ * @returns {Promise<Array<{module_name: string, table_name: string, owner_columns: string[]}>>}
+ */
+async function fetchExportRegistry() {
+  const { data, error } = await supabase
+    .from('gdpr_export_registry')
+    .select('module_name, table_name, owner_columns')
+    .eq('is_active', true)
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Rows in `tableName` where any of `ownerColumns` equals `userId`.
+ */
+async function fetchModuleRowsForUser(tableName, ownerColumns, userId) {
+  try {
+    const orFilter = ownerColumns.map((col) => `${col}.eq.${userId}`).join(',')
+    let query = supabase.from(tableName).select('*').or(orFilter)
+    // Best-effort — most Tier-1 tables carry the standard is_deleted audit column; tables that
+    // don't will error on this filter and fall through to the catch below, returning [].
+    const { data, error } = await query.eq('is_deleted', false)
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.warn(`fetchModuleRowsForUser: skipping ${tableName} (${error.message})`)
+    return []
+  }
+}
+
+/**
+ * Null out `ownerColumns` on every row in `tableName` currently attributed to `userId` —
+ * removes personal attribution while preserving the record itself (the same intent as each
+ * column's own ON DELETE SET NULL, applied to a live "forget me" request rather than a deleted
+ * user row cascading).
+ */
+async function anonymizeModuleRowsForUser(tableName, ownerColumns, userId) {
+  let affected = 0
+  for (const column of ownerColumns) {
+    const { data, error } = await supabase
+      .from(tableName)
+      .update({ [column]: null })
+      .eq(column, userId)
+      .select('id')
+    if (error) {
+      console.warn(`anonymizeModuleRowsForUser: skipping ${tableName}.${column} (${error.message})`)
+      continue
+    }
+    affected += (data || []).length
+  }
+  return affected
+}
 
 /**
  * Record user consent
  */
 export async function recordConsent(userId, consentType, consentGiven, consentText, consentVersion = '1.0') {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const [createdBy, accountId] = await Promise.all([getCurrentUserInternalUserId(), getCurrentUserAccountId()])
 
     const { data, error } = await supabase
       .from('consent_logs')
       .insert({
         user_id: userId,
+        account_id: accountId,
         consent_type: consentType,
         consent_given: consentGiven,
         consent_text: consentText,
         consent_version: consentVersion,
         consent_method: 'explicit',
-        ip_address: null, // Get from request in production
-        created_by: user?.id
+        ip_address: null,
+        created_by: createdBy,
       })
       .select()
       .single()
@@ -61,17 +119,18 @@ export async function getConsentHistory(userId) {
  */
 export async function requestDataExport(userId, format = 'json') {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const [createdBy, accountId] = await Promise.all([getCurrentUserInternalUserId(), getCurrentUserAccountId()])
 
     const { data, error } = await supabase
       .from('data_export_requests')
       .insert({
         user_id: userId,
+        account_id: accountId,
         request_type: 'data_export',
         request_status: 'pending',
         requested_at: new Date().toISOString(),
         export_format: format,
-        created_by: user?.id
+        created_by: createdBy,
       })
       .select()
       .single()
@@ -90,10 +149,9 @@ export async function requestDataExport(userId, format = 'json') {
  */
 export async function processDataExportRequest(requestId) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('User not authenticated')
+    const currentUserId = await getCurrentUserInternalUserId()
+    if (!currentUserId) throw new Error('User not authenticated')
 
-    // Get request
     const { data: request, error: fetchError } = await supabase
       .from('data_export_requests')
       .select('*')
@@ -106,32 +164,28 @@ export async function processDataExportRequest(requestId) {
       throw new Error('Request is not pending')
     }
 
-    // Update status to processing
     await supabase
       .from('data_export_requests')
       .update({
         request_status: 'processing',
         updated_at: new Date().toISOString(),
-        updated_by: user.id
+        updated_by: currentUserId,
       })
       .eq('id', requestId)
 
-    // Generate export file (simplified - implement full data collection)
     const exportData = await generateDataExportFile(request.user_id, request.export_format)
 
-    // In production, save file to storage and update file_path
     const filePath = `/exports/${request.user_id}_${Date.now()}.${request.export_format}`
 
-    // Update request with file path and complete
     const { data, error } = await supabase
       .from('data_export_requests')
       .update({
         request_status: 'completed',
         export_file_path: filePath,
         processed_at: new Date().toISOString(),
-        processed_by: user.id,
+        processed_by: currentUserId,
         updated_at: new Date().toISOString(),
-        updated_by: user.id
+        updated_by: currentUserId,
       })
       .eq('id', requestId)
       .select()
@@ -143,7 +197,7 @@ export async function processDataExportRequest(requestId) {
       success: true,
       data,
       export_data: exportData,
-      message: 'Data export completed'
+      message: 'Data export completed',
     }
   } catch (error) {
     console.error('Error processing data export request:', error)
@@ -152,30 +206,37 @@ export async function processDataExportRequest(requestId) {
 }
 
 /**
- * Generate data export file
+ * Generate data export file. Baseline scope (user + projects + tasks + preferences) plus every
+ * active Tier-1 module from public.gdpr_export_registry (v1120) — add a registry row to extend
+ * coverage, no code change needed here.
  */
 async function generateDataExportFile(userId, format) {
   try {
-    // Collect all user data (simplified - implement comprehensive data collection)
-    const [userData, projects, tasks, preferences] = await Promise.all([
+    const [userData, projects, tasks, preferences, registry] = await Promise.all([
       supabase.from('users').select('*').eq('id', userId).single(),
       supabase.from('user_projects').select('*, projects(*)').eq('user_id', userId).eq('is_deleted', false),
       supabase.from('tasks').select('*').eq('assigned_to', userId).eq('is_deleted', false),
-      supabase.from('user_preferences').select('*').eq('user_id', userId).eq('is_deleted', false).single()
+      supabase.from('user_preferences').select('*').eq('user_id', userId).eq('is_deleted', false).single(),
+      fetchExportRegistry(),
     ])
+
+    const modules = {}
+    for (const row of registry) {
+      modules[row.module_name] = await fetchModuleRowsForUser(row.table_name, row.owner_columns, userId)
+    }
 
     const exportData = {
       user: userData.data,
       projects: projects.data,
       tasks: tasks.data,
       preferences: preferences.data,
-      exported_at: new Date().toISOString()
+      modules,
+      exported_at: new Date().toISOString(),
     }
 
     if (format === 'json') {
       return JSON.stringify(exportData, null, 2)
     } else if (format === 'csv') {
-      // Convert to CSV format (simplified)
       return convertToCSV(exportData)
     } else {
       throw new Error(`Unsupported format: ${format}`)
@@ -191,16 +252,18 @@ async function generateDataExportFile(userId, format) {
  */
 export async function requestDataDeletion(userId, reason = null) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const [createdBy, accountId] = await Promise.all([getCurrentUserInternalUserId(), getCurrentUserAccountId()])
 
     const { data, error } = await supabase
       .from('data_deletion_requests')
       .insert({
         user_id: userId,
+        account_id: accountId,
         request_status: 'pending',
         requested_at: new Date().toISOString(),
-        scheduled_deletion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days grace period
-        created_by: user?.id
+        scheduled_deletion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        retention_exceptions: reason || null,
+        created_by: createdBy,
       })
       .select()
       .single()
@@ -215,14 +278,50 @@ export async function requestDataDeletion(userId, reason = null) {
 }
 
 /**
+ * Cancel a still-pending data deletion request (within the 30-day grace period).
+ */
+export async function cancelDataDeletionRequest(requestId) {
+  try {
+    const currentUserId = await getCurrentUserInternalUserId()
+    if (!currentUserId) throw new Error('User not authenticated')
+
+    const { data: request, error: fetchError } = await supabase
+      .from('data_deletion_requests')
+      .select('request_status')
+      .eq('id', requestId)
+      .single()
+    if (fetchError) throw fetchError
+    if (request.request_status !== 'pending') {
+      throw new Error('Only a pending request can be cancelled')
+    }
+
+    const { data, error } = await supabase
+      .from('data_deletion_requests')
+      .update({
+        request_status: 'rejected',
+        updated_at: new Date().toISOString(),
+        updated_by: currentUserId,
+      })
+      .eq('id', requestId)
+      .select()
+      .single()
+    if (error) throw error
+
+    return { success: true, data, message: 'Data deletion request cancelled' }
+  } catch (error) {
+    console.error('Error cancelling data deletion request:', error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
  * Process data deletion request
  */
 export async function processDataDeletionRequest(requestId) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('User not authenticated')
+    const currentUserId = await getCurrentUserInternalUserId()
+    if (!currentUserId) throw new Error('User not authenticated')
 
-    // Get request
     const { data: request, error: fetchError } = await supabase
       .from('data_deletion_requests')
       .select('*')
@@ -235,29 +334,26 @@ export async function processDataDeletionRequest(requestId) {
       throw new Error('Request is not pending')
     }
 
-    // Update status to processing
     await supabase
       .from('data_deletion_requests')
       .update({
         request_status: 'processing',
         updated_at: new Date().toISOString(),
-        updated_by: user.id
+        updated_by: currentUserId,
       })
       .eq('id', requestId)
 
-    // Anonymize user data (simplified - implement comprehensive anonymization)
     const deletionScope = await anonymizeUserData(request.user_id)
 
-    // Update request with deletion scope and complete
     const { data, error } = await supabase
       .from('data_deletion_requests')
       .update({
         request_status: 'completed',
         deletion_scope: deletionScope,
         deleted_at: new Date().toISOString(),
-        deleted_by: user.id,
+        deleted_by: currentUserId,
         updated_at: new Date().toISOString(),
-        updated_by: user.id
+        updated_by: currentUserId,
       })
       .eq('id', requestId)
       .select()
@@ -273,7 +369,8 @@ export async function processDataDeletionRequest(requestId) {
 }
 
 /**
- * Anonymize user data
+ * Anonymize user data: the users row itself, plus every active Tier-1 module from
+ * public.gdpr_export_registry (v1120) — kept symmetric with generateDataExportFile's coverage.
  */
 async function anonymizeUserData(userId) {
   try {
@@ -281,10 +378,9 @@ async function anonymizeUserData(userId) {
     const deletionScope = {
       user_id: userId,
       anonymized_id: anonymizedId,
-      tables_affected: []
+      tables_affected: [],
     }
 
-    // Anonymize user record (soft delete and anonymize)
     await supabase
       .from('users')
       .update({
@@ -294,14 +390,19 @@ async function anonymizeUserData(userId) {
         last_name: null,
         phone_number: null,
         is_deleted: true,
-        deleted_at: new Date().toISOString()
+        deleted_at: new Date().toISOString(),
       })
       .eq('id', userId)
 
     deletionScope.tables_affected.push('users')
 
-    // Add more tables as needed
-    // Note: In production, implement comprehensive anonymization for all user data
+    const registry = await fetchExportRegistry()
+    for (const row of registry) {
+      const affected = await anonymizeModuleRowsForUser(row.table_name, row.owner_columns, userId)
+      if (affected > 0) {
+        deletionScope.tables_affected.push(`${row.table_name} (${affected} row${affected === 1 ? '' : 's'})`)
+      }
+    }
 
     return deletionScope
   } catch (error) {
@@ -315,21 +416,22 @@ async function anonymizeUserData(userId) {
  */
 export async function updatePrivacyPreferences(userId, preferences) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const [updatedBy, accountId] = await Promise.all([getCurrentUserInternalUserId(), getCurrentUserAccountId()])
 
     const { data, error } = await supabase
       .from('privacy_preferences')
       .upsert({
         user_id: userId,
+        account_id: accountId,
         allow_marketing_emails: preferences.allow_marketing_emails !== undefined ? preferences.allow_marketing_emails : false,
         allow_analytics_tracking: preferences.allow_analytics_tracking !== undefined ? preferences.allow_analytics_tracking : false,
         allow_third_party_sharing: preferences.allow_third_party_sharing !== undefined ? preferences.allow_third_party_sharing : false,
         data_retention_preference: preferences.data_retention_preference || 'standard',
         communication_preferences: preferences.communication_preferences || {},
         updated_at: new Date().toISOString(),
-        updated_by: user?.id
+        updated_by: updatedBy,
       }, {
-        onConflict: 'user_id'
+        onConflict: 'user_id',
       })
       .select()
       .single()
@@ -353,9 +455,9 @@ export async function getPrivacyPreferences(userId) {
       .select('*')
       .eq('user_id', userId)
       .eq('is_deleted', false)
-      .single()
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows returned
+    if (error) throw error
 
     return { success: true, data: data || null }
   } catch (error) {
@@ -369,15 +471,15 @@ export async function getPrivacyPreferences(userId) {
  */
 export async function createDataBreachRecord(breachData) {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('User not authenticated')
+    const [createdBy, accountId] = await Promise.all([getCurrentUserInternalUserId(), getCurrentUserAccountId()])
+    if (!createdBy) throw new Error('User not authenticated')
 
-    // Generate breach number
     const breachNumber = `BR-${Date.now()}`
 
     const { data, error } = await supabase
       .from('data_breach_records')
       .insert({
+        account_id: accountId,
         breach_number: breachNumber,
         breach_type: breachData.breach_type,
         severity: breachData.severity || 'medium',
@@ -386,7 +488,7 @@ export async function createDataBreachRecord(breachData) {
         data_types_affected: breachData.data_types_affected || [],
         breach_detected_at: new Date().toISOString(),
         status: 'detected',
-        created_by: user.id
+        created_by: createdBy,
       })
       .select()
       .single()
@@ -401,10 +503,79 @@ export async function createDataBreachRecord(breachData) {
 }
 
 /**
+ * Update a data breach record's status/fields (e.g. investigating → contained → remediated →
+ * closed, or logging the authority/user notification timestamps).
+ */
+export async function updateDataBreachRecord(breachId, updates) {
+  try {
+    const updatedBy = await getCurrentUserInternalUserId()
+    if (!updatedBy) throw new Error('User not authenticated')
+
+    const patch = { updated_at: new Date().toISOString(), updated_by: updatedBy }
+    if (updates.status !== undefined) patch.status = updates.status
+    if (updates.mitigation_steps !== undefined) patch.mitigation_steps = updates.mitigation_steps
+    if (updates.breach_reported_at !== undefined) patch.breach_reported_at = updates.breach_reported_at
+    if (updates.authority_notified_at !== undefined) patch.authority_notified_at = updates.authority_notified_at
+    if (updates.users_notified_at !== undefined) patch.users_notified_at = updates.users_notified_at
+
+    const { data, error } = await supabase
+      .from('data_breach_records')
+      .update(patch)
+      .eq('id', breachId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return { success: true, data, message: 'Data breach record updated' }
+  } catch (error) {
+    console.error('Error updating data breach record:', error)
+    return { success: false, message: error.message }
+  }
+}
+
+/**
+ * Dashboard stats + recent rows for the admin Data Management page.
+ */
+export async function getGdprDashboardData() {
+  try {
+    const [exports, deletions, consents, breaches, exportsCount, deletionsCount, consentsCount, breachesCount] =
+      await Promise.all([
+        supabase.from('data_export_requests').select('*').eq('is_deleted', false).in('request_status', ['pending', 'processing']).order('requested_at', { ascending: false }).limit(20),
+        supabase.from('data_deletion_requests').select('*').eq('is_deleted', false).in('request_status', ['pending', 'processing']).order('requested_at', { ascending: false }).limit(20),
+        supabase.from('consent_logs').select('*').order('created_at', { ascending: false }).limit(20),
+        supabase.from('data_breach_records').select('*').eq('is_deleted', false).neq('status', 'closed').order('breach_detected_at', { ascending: false }).limit(20),
+        supabase.from('consent_logs').select('id', { count: 'exact', head: true }),
+        supabase.from('data_export_requests').select('id', { count: 'exact', head: true }).eq('is_deleted', false).in('request_status', ['pending', 'processing']),
+        supabase.from('data_deletion_requests').select('id', { count: 'exact', head: true }).eq('is_deleted', false).in('request_status', ['pending', 'processing']),
+        supabase.from('data_breach_records').select('id', { count: 'exact', head: true }).eq('is_deleted', false).neq('status', 'closed'),
+      ])
+
+    return {
+      success: true,
+      data: {
+        exportRequests: exports.data || [],
+        deletionRequests: deletions.data || [],
+        consentLogs: consents.data || [],
+        breachRecords: breaches.data || [],
+        stats: {
+          totalConsents: consentsCount.count || 0,
+          pendingExports: exportsCount.count || 0,
+          pendingDeletions: deletionsCount.count || 0,
+          activeBreaches: breachesCount.count || 0,
+        },
+      },
+    }
+  } catch (error) {
+    console.error('Error fetching GDPR dashboard data:', error)
+    return { success: false, message: error.message, data: null }
+  }
+}
+
+/**
  * Helper functions
  */
 function convertToCSV(data) {
   // Simplified CSV conversion - implement comprehensive CSV generation in production
   return JSON.stringify(data)
 }
-

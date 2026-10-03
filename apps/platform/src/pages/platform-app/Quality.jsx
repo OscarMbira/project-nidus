@@ -37,7 +37,7 @@ export default function Quality() {
           .from('accounts')
           .select('id')
           .eq('owner_user_id', userRecord.id)
-          .single();
+          .maybeSingle();
 
         if (account) {
           setOrganizationId(account.id);

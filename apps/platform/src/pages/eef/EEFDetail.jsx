@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { deleteEEF, getEEFById } from '../../services/eefService'
@@ -105,9 +105,9 @@ export default function EEFDetail() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <Link to="/platform/eef" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
+      <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
         <ArrowLeft className="h-4 w-4" /> Back
-      </Link>
+      </button>
       <div className="flex flex-wrap justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{row.title}</h1>
         <div className="flex flex-wrap gap-2">

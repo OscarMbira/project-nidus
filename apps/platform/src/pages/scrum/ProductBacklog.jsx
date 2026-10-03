@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 import {
   DndContext,
   DragOverlay,
@@ -56,17 +57,23 @@ export default function ProductBacklog() {
       // Fetch project
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('*, project_methodologies!inner (methodologies:methodology_id (methodology_name, methodology_code))')
+        .select('*, project_methodologies (methodologies:methodology_id (methodology_name, methodology_code))')
         .eq('id', projectId)
         .eq('is_deleted', false)
         .single()
 
       if (projectError) throw projectError
 
-      // Check if project uses Scrum methodology
-      const methodology = projectData.project_methodologies?.[0]?.methodologies
-      if (methodology?.methodology_code !== 'scrum') {
-        throw new Error('This project does not use Scrum methodology')
+      // Check if project uses Scrum/Agile methodology. project_methodologies (a separate
+      // junction table) is never populated by Create/Edit — delivery_methodology is the real,
+      // user-facing field, so it's the authoritative check; project_methodologies (if a row
+      // ever exists) is honoured too for backward compatibility.
+      const pmRaw = projectData.project_methodologies
+      const methodology = (Array.isArray(pmRaw) ? pmRaw[0] : pmRaw)?.methodologies
+      const track = normalizeProjectDeliveryTrack(projectData.delivery_methodology)
+      const usesScrumOrAgile = methodology?.methodology_code === 'scrum' || track === 'agile' || track === 'hybrid'
+      if (!usesScrumOrAgile) {
+        throw new Error('This project does not use Scrum/Agile methodology')
       }
 
       setProject(projectData)
@@ -304,7 +311,7 @@ export default function ProductBacklog() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/projects/' + projectId)}
+          onClick={() => navigate(-1)}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
         >
           ← Back to Project

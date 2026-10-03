@@ -5,6 +5,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { supabase } from '../../services/supabaseClient'
 import { computeSprintForecast } from '../../services/sprintForecastService'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
+import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 
 export default function AgileMetricsHub() {
   const { projectId, routeKey, loading: pidLoading, error: pidErr } = usePlatformProjectId()
@@ -23,7 +24,16 @@ export default function AgileMetricsHub() {
           .eq('project_id', projectId)
           .limit(1)
           .maybeSingle()
-        const mc = pm?.methodologies?.methodology_code
+        let mc = pm?.methodologies?.methodology_code
+        if (!mc) {
+          const { data: proj } = await supabase
+            .from('projects')
+            .select('delivery_methodology')
+            .eq('id', projectId)
+            .maybeSingle()
+          const track = normalizeProjectDeliveryTrack(proj?.delivery_methodology)
+          mc = track ? proj.delivery_methodology : null
+        }
         if (!cancelled) setCode(mc || null)
         const fc = await computeSprintForecast(projectId)
         if (!cancelled) setForecast(fc)

@@ -1,14 +1,16 @@
 /**
  * Team Lead — manage team members and functional roles (v345)
- * Route: /platform/teams/my-team
+ * Routes: /platform/my-team (sidebar) and /platform/teams/my-team
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Users, UserPlus, Pencil, Trash2, Search } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { isPmoAdmin } from '../../services/organisationRoleService'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
 import {
   getMyTeams,
+  getTeamsForProject,
   getAllTeamsWithMembers,
   getTeamMembers,
   getTeamFunctionalRoles,
@@ -26,11 +28,27 @@ import ViewToggle from '@nidus/ui/ViewToggle'
 import SortToolbar from '@nidus/ui/SortToolbar'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
-import { useToast } from '@nidus/shared/hooks/useToast'
+import toast from 'react-hot-toast'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const MEMBERS_VIEW_KEY = 'nidus-my-team-members-view'
 const ROLES_VIEW_KEY = 'nidus-my-team-roles-view'
+
+const PROJECT_MANAGER_ROLE_KEYS = new Set([
+  'project_manager',
+  'pm_project_manager',
+  'project manager',
+])
+
+function userIsProjectManager(project) {
+  if (!project) return false
+  const keys = project.roleKeys || []
+  if (keys.some((key) => PROJECT_MANAGER_ROLE_KEYS.has(String(key || '').trim().toLowerCase()))) {
+    return true
+  }
+  const label = String(project.roleDisplayName || '').toLowerCase()
+  return label.split('/').some((part) => part.trim() === 'project manager')
+}
 
 function readView(key, fallback = 'list') {
   try {
@@ -43,7 +61,8 @@ function readView(key, fallback = 'list') {
 }
 
 export default function MyTeam() {
-  const { showToast } = useToast()
+  const { currentProjectId, currentProject, loading: projectLoading } = useCurrentProject()
+  const seesProjectTeams = Boolean(currentProjectId) && userIsProjectManager(currentProject)
   const [pmo, setPmo] = useState(false)
   const [pmoMode, setPmoMode] = useState('mine')
   const [loading, setLoading] = useState(true)
@@ -89,29 +108,43 @@ export default function MyTeam() {
       if (res.success) setTeamList(res.data || [])
       else {
         setTeamList([])
-        showToast('error', res.error || 'Failed to load teams')
+        toast.error(res.error || 'Failed to load teams')
+      }
+    } else if (seesProjectTeams) {
+      const res = await getTeamsForProject(currentProjectId)
+      if (res.success) setTeamList(res.data || [])
+      else {
+        setTeamList([])
+        toast.error(res.error || 'Failed to load teams')
       }
     } else {
       const res = await getMyTeams(user.id)
       if (res.success) setTeamList(res.data || [])
       else {
         setTeamList([])
-        showToast('error', res.error || 'Failed to load teams')
+        toast.error(res.error || 'Failed to load teams')
       }
     }
-  }, [pmoMode, showToast])
+  }, [pmoMode, seesProjectTeams, currentProjectId])
 
   useEffect(() => {
+    if (projectLoading) return undefined
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      await loadTeamIndex()
-      if (!cancelled) setLoading(false)
+      try {
+        await loadTeamIndex()
+      } catch (err) {
+        console.error('My Team load failed:', err)
+        toast.error(err.message || 'Failed to load My Team')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
     })()
     return () => {
       cancelled = true
     }
-  }, [loadTeamIndex])
+  }, [loadTeamIndex, projectLoading])
 
   useEffect(() => {
     if (!teamList.length) {
@@ -135,13 +168,13 @@ export default function MyTeam() {
         getTeamFunctionalRoles(selectedTeamId),
       ])
       if (m.success) setMembers(m.data || [])
-      else showToast('error', m.error || 'Failed to load members')
+      else toast.error(m.error || 'Failed to load members')
       if (r.success) setFunctionalRoles(r.data || [])
-      else showToast('error', r.error || 'Failed to load roles')
+      else toast.error(r.error || 'Failed to load roles')
     } finally {
       setMembersLoading(false)
     }
-  }, [selectedTeamId, showToast])
+  }, [selectedTeamId])
 
   useEffect(() => {
     if (selectedTeamId) loadMembersAndRoles()
@@ -250,9 +283,9 @@ export default function MyTeam() {
     const res = await removeTeamMember(row.id)
     if (res.success) {
       setSuccessBanner({ op: 'removed', id: row.id })
-      showToast('success', 'Member removed from team')
+      toast.success('Member removed from team')
       loadMembersAndRoles()
-    } else showToast('error', res.error || 'Remove failed')
+    } else toast.error(res.error || 'Remove failed')
   }
 
   const handleDeleteRole = async (fr) => {
@@ -260,9 +293,9 @@ export default function MyTeam() {
     const res = await deleteTeamFunctionalRole(selectedTeamId, fr.id)
     if (res.success) {
       setSuccessBanner({ op: 'role_deleted', id: fr.id, label: fr.role_label })
-      showToast('success', 'Functional role deleted')
+      toast.success('Functional role deleted')
       loadMembersAndRoles()
-    } else showToast('error', res.error || 'Delete failed')
+    } else toast.error(res.error || 'Delete failed')
   }
 
   const onSaveNewRole = async (label) => {
@@ -270,10 +303,10 @@ export default function MyTeam() {
     const res = await addTeamFunctionalRole(selectedTeamId, label)
     if (res.success) {
       setSuccessBanner({ op: 'role_added', id: res.data?.id, label })
-      showToast('success', 'Functional role added')
+      toast.success('Functional role added')
       setRoleModal(null)
       loadMembersAndRoles()
-    } else showToast('error', res.error || 'Save failed')
+    } else toast.error(res.error || 'Save failed')
   }
 
   const onSaveEditRole = async (label) => {
@@ -281,38 +314,37 @@ export default function MyTeam() {
     const res = await updateTeamFunctionalRole(roleModal.row.id, label)
     if (res.success) {
       setSuccessBanner({ op: 'role_updated', id: roleModal.row.id, label })
-      showToast('success', 'Functional role updated')
+      toast.success('Functional role updated')
       setRoleModal(null)
       loadMembersAndRoles()
-    } else showToast('error', res.error || 'Save failed')
+    } else toast.error(res.error || 'Save failed')
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-[40vh] flex items-center justify-center text-gray-400 dark:text-gray-500">
-        Loading…
-      </div>
-    )
-  }
+  const openProjectName = currentProject?.projectName || 'this project'
+  const emptyTeamMessage = pmo && pmoMode === 'all'
+    ? 'No active teams found.'
+    : seesProjectTeams
+      ? `No teams are recorded for ${openProjectName}.`
+      : 'You are not the lead of any active team. A project manager sees every team on the open project.'
 
-  if (!teamList.length) {
+  if (loading || projectLoading || !teamList.length) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">My Team</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          {pmo && pmoMode === 'all'
-            ? 'No active teams found.'
-            : 'You are not the lead of any active team, or no teams are available. PMO users can switch to “All teams” to manage every team.'}
-        </p>
-        {pmo && (
-          <button
-            type="button"
-            onClick={() => setPmoMode(pmoMode === 'all' ? 'mine' : 'all')}
-            className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white"
-          >
-            {pmoMode === 'all' ? 'Show my teams only' : 'Show all teams'}
-          </button>
-        )}
+      <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">My Team</h1>
+        <div className="max-w-3xl rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-base text-gray-900 dark:text-gray-100">
+            {loading || projectLoading ? 'Loading teams…' : emptyTeamMessage}
+          </p>
+          {!loading && !projectLoading && pmo && (
+            <button
+              type="button"
+              onClick={() => setPmoMode(pmoMode === 'all' ? 'mine' : 'all')}
+              className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white"
+            >
+              {pmoMode === 'all' ? 'Show my teams only' : 'Show all teams'}
+            </button>
+          )}
+        </div>
       </div>
     )
   }
@@ -332,7 +364,9 @@ export default function MyTeam() {
             My Team
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage members and functional role labels for teams you lead.
+            {seesProjectTeams
+              ? 'Teams on this project.'
+              : 'Manage members and functional role labels for teams you lead.'}
           </p>
         </div>
         {pmo && (

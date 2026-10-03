@@ -46,7 +46,7 @@ export default function Strategy() {
           .from('accounts')
           .select('id')
           .eq('owner_user_id', userRecord.id)
-          .single();
+          .maybeSingle();
 
         if (account) {
           setOrganizationId(account.id);
@@ -57,7 +57,7 @@ export default function Strategy() {
             .eq('owner_user_id', userRecord.id)
             .eq('is_deleted', false)
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (project?.account_id) {
             setOrganizationId(project.account_id);

@@ -91,7 +91,7 @@ export default function StageGateForm() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-6 max-w-2xl">
-      <button onClick={() => navigate('/platform/stage-gates')} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5">
         <ArrowLeft size={15} /> Back to Stage Gates
       </button>
       <div className="flex items-center gap-3 mb-6">
@@ -102,7 +102,7 @@ export default function StageGateForm() {
       {saved && (
         <div className="mb-5 rounded-lg bg-green-900/50 border border-green-700 px-4 py-3 text-green-300 text-sm">
           Stage gate <strong>{saved.id}</strong> {saved.operation.toLowerCase()} successfully.
-          <button onClick={() => navigate('/platform/stage-gates')} className="ml-3 underline">Back to list</button>
+          <button onClick={() => navigate(-1)} className="ml-3 underline">Back to list</button>
         </div>
       )}
 
@@ -179,7 +179,7 @@ export default function StageGateForm() {
           <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors">
             <Save size={15} /> {saving ? 'Saving…' : isEdit ? 'Update' : 'Create'}
           </button>
-          <button type="button" onClick={() => navigate('/platform/stage-gates')} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm transition-colors">
+          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm transition-colors">
             Cancel
           </button>
         </div>

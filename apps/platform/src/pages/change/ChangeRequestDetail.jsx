@@ -1,52 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Clock, User, DollarSign, Calendar, Package } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { ArrowLeft, FileText, Clock, User, DollarSign, Calendar, Package, Gavel, Wrench } from 'lucide-react';
 import { RowActionButton } from '@nidus/ui';
-import { fetchChangeRequest } from '../../services/changeManagementService';
+import { fetchChangeRequest, fetchChangeAssessment } from '../../services/changeManagementService';
 import { platformDb } from '@nidus/supabase';
 import ChangeRequestForm from '../../components/change/ChangeRequestForm';
 import ChangeAssessmentForm from '../../components/change/ChangeAssessmentForm';
 import ChangeImpactAnalysis from '../../components/change/ChangeImpactAnalysis';
 import ChangeLog from '../../components/change/ChangeLog';
+import ChangeDecisions from '../../components/change/ChangeDecisions';
+import ChangeImplementation from '../../components/change/ChangeImplementation';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
 import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer';
-import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
-
-const CHANGE_REQUEST_VIEW_SECTIONS = [
-  { title: 'Change Request', fields: [
-    { key: 'change_reference', label: 'Reference' },
-    { key: 'change_title', label: 'Title' },
-    { key: 'change_status', label: 'Status' }
-  ]}
-];
-
-async function buildChangeRequestExport(platformDbClient, reqRow, crAccountId) {
-  const base = reqRow;
-  const pid = reqRow?.project_id;
-  if (!platformDbClient || !crAccountId || !pid || !reqRow?.id) {
-    return { sections: CHANGE_REQUEST_VIEW_SECTIONS, record: base };
-  }
-  try {
-    const { section, mergedRecord } = await buildCustomFieldExportParts(
-      platformDbClient,
-      crAccountId,
-      'change_request',
-      reqRow.id,
-      pid
-    );
-    const sections = section ? [...CHANGE_REQUEST_VIEW_SECTIONS, section] : CHANGE_REQUEST_VIEW_SECTIONS;
-    return { sections, record: { ...base, ...mergedRecord } };
-  } catch {
-    return { sections: CHANGE_REQUEST_VIEW_SECTIONS, record: base };
-  }
-}
+import { buildChangeRequestExport, changeRequestExportFilename } from '../../utils/changeRequestExport';
 
 export default function ChangeRequestDetail() {
   const { id } = useParams();
@@ -57,6 +30,8 @@ export default function ChangeRequestDetail() {
   const [activeTab, setActiveTab] = useState('details');
   const [showEditForm, setShowEditForm] = useState(false);
   const [showAssessmentForm, setShowAssessmentForm] = useState(false);
+  const [assessment, setAssessment] = useState(null);
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
   const [auditUserLabels, setAuditUserLabels] = useState({});
 
   useEffect(() => {
@@ -64,6 +39,43 @@ export default function ChangeRequestDetail() {
       loadRequest();
     }
   }, [id]);
+
+  const loadAssessment = async () => {
+    try {
+      setAssessmentLoading(true);
+      const data = await fetchChangeAssessment(id);
+      setAssessment(data || null);
+    } catch (error) {
+      console.error('Error loading assessment:', error);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      loadAssessment();
+    }
+  }, [id]);
+
+  const [exportSections, setExportSections] = useState([]);
+  const [exportRecord, setExportRecord] = useState(null);
+
+  useEffect(() => {
+    if (!request) {
+      setExportSections([]);
+      setExportRecord(null);
+      return;
+    }
+    let cancelled = false;
+    buildChangeRequestExport(platformDb, request, assessment, crAccountId).then(({ sections, record }) => {
+      if (!cancelled) {
+        setExportSections(sections);
+        setExportRecord(record);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [request, assessment, crAccountId]);
 
   useEffect(() => {
     if (activeTab !== 'audit' || !request) return;
@@ -105,7 +117,7 @@ export default function ChangeRequestDetail() {
       setRequest(data);
     } catch (error) {
       console.error('Error loading change request:', error);
-      alert('Error loading change request: ' + error.message);
+      toast.error('Error loading change request: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -136,6 +148,8 @@ export default function ChangeRequestDetail() {
     { id: 'details', label: 'Details', icon: FileText },
     { id: 'impact', label: 'Impact Analysis', icon: Package },
     { id: 'assessment', label: 'Assessment', icon: Clock },
+    { id: 'decisions', label: 'Decisions', icon: Gavel },
+    { id: 'implementation', label: 'Implementation', icon: Wrench },
     { id: 'log', label: 'Change Log', icon: FileText },
     { id: 'audit', label: 'Audit details', icon: FileText },
   ];
@@ -179,12 +193,12 @@ export default function ChangeRequestDetail() {
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
           </button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               {request.change_reference}: {request.change_title}
             </h1>
             <div className="flex items-center gap-4 mt-2">
-              <span className={`px-3 py-1 text-sm font-medium rounded-full capitalize ${getStatusColor(request.change_status)}`}>
-                {request.change_status?.replace('-', ' ')}
+              <span className={`px-3 py-1 text-sm font-medium rounded-full capitalize ${getStatusColor(request.status)}`}>
+                {request.status?.replace('-', ' ')}
               </span>
               {request.priority && (
                 <span className={`px-3 py-1 text-sm font-medium rounded capitalize ${
@@ -201,34 +215,9 @@ export default function ChangeRequestDetail() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <ExportRecordButtons
-              onExportPPT={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToPPT(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
-              onExportWord={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToWord(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
-              onExportExcel={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToExcel(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
-              onExportCSV={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToCSV(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
-              onExportXML={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToXML(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
-              onExportJSON={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToJSON(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
-              onExportPrint={async () => {
-                const { sections, record } = await buildChangeRequestExport(platformDb, request, crAccountId);
-                exportRecordToPrint(sections, record, `ChangeRequest_${request.change_reference || id}`);
-              }}
+              sections={exportSections}
+              record={exportRecord}
+              baseFilename={changeRequestExportFilename(request)}
             />
             <RowActionButton
               variant="edit"
@@ -257,19 +246,20 @@ export default function ChangeRequestDetail() {
               <AuditField label="Reference" value={request.change_reference} />
               <AuditField label="Title" value={request.change_title} />
               <AuditField label="Category" value={humanizeAuditToken(request.change_category)} />
-              <AuditField label="Status" value={humanizeAuditToken(request.change_status)} />
+              <AuditField label="Status" value={humanizeAuditToken(request.status)} />
             </AuditCard>
             <AuditCard title="Classification" description="Where this change request sits.">
               <AuditField label="Priority" value={humanizeAuditToken(request.priority)} />
-              <AuditField label="Requested by" value={request.requested_by?.full_name || request.requested_by?.email} />
-              <AuditField label="Submitted by" value={request.submitted_by ? auditUserLabels[request.submitted_by] || null : null} />
+              <AuditField label="Requested by" value={request.submitted_by_user?.full_name || request.submitted_by_user?.email} />
+              <AuditField label="Owner" value={request.owner?.full_name || request.owner?.email} />
+              <AuditField label="Approver" value={request.current_approver?.full_name || request.current_approver?.email} />
             </AuditCard>
             <AuditCard title="Record history" description="When this change request was created and last changed.">
               <AuditField label="Created by" value={request.created_by ? auditUserLabels[request.created_by] || null : null} />
               <AuditTimestampPair dateLabel="Created at" value={request.created_at} />
               <AuditField label="Updated by" value={request.updated_by ? auditUserLabels[request.updated_by] || null : null} />
               <AuditTimestampPair dateLabel="Last updated" value={request.updated_at} />
-              <AuditTimestampPair dateLabel="Submitted date" value={request.submitted_date} />
+              <AuditTimestampPair dateLabel="Submission date" value={request.submission_date} />
             </AuditCard>
           </AuditDetailsPanel>
         )}
@@ -289,8 +279,8 @@ export default function ChangeRequestDetail() {
                   <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                     Status
                   </label>
-                  <span className={`px-2 py-1 text-sm font-medium rounded-full capitalize ${getStatusColor(request.change_status)}`}>
-                    {request.change_status?.replace('-', ' ')}
+                  <span className={`px-2 py-1 text-sm font-medium rounded-full capitalize ${getStatusColor(request.status)}`}>
+                    {request.status?.replace('-', ' ')}
                   </span>
                 </div>
                 <div>
@@ -305,26 +295,42 @@ export default function ChangeRequestDetail() {
                   </label>
                   <p className="text-gray-900 dark:text-white capitalize">{request.priority || 'N/A'}</p>
                 </div>
-                {request.submitted_date && (
+                {request.submission_date && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Submitted Date
                     </label>
                     <p className="text-gray-900 dark:text-white">
-                      {new Date(request.submitted_date).toLocaleDateString()}
+                      {new Date(request.submission_date).toLocaleDateString()}
                     </p>
                   </div>
                 )}
-                {request.requested_by && (
+                {request.submitted_by_user && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Requested By
                     </label>
                     <p className="text-gray-900 dark:text-white">
-                      {request.requested_by.full_name || request.requested_by.email || 'Unknown'}
+                      {request.submitted_by_user.full_name || request.submitted_by_user.email || 'Unknown'}
                     </p>
                   </div>
                 )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Owner
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {request.owner?.full_name || request.owner?.email || 'Not assigned'}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Approver
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {request.current_approver?.full_name || request.current_approver?.email || 'Not yet assigned'}
+                  </p>
+                </div>
                 {request.change_description && (
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
@@ -332,6 +338,36 @@ export default function ChangeRequestDetail() {
                     </label>
                     <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
                       {request.change_description}
+                    </p>
+                  </div>
+                )}
+                {request.business_rationale && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                      Business rationale
+                    </label>
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                      {request.business_rationale}
+                    </p>
+                  </div>
+                )}
+                {request.impact_summary && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Impact
+                    </label>
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                      {request.impact_summary}
+                    </p>
+                  </div>
+                )}
+                {request.status_reason && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Decision Notes
+                    </label>
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                      {request.status_reason}
                     </p>
                   </div>
                 )}
@@ -363,45 +399,79 @@ export default function ChangeRequestDetail() {
 
         {activeTab === 'assessment' && (
           <div>
-            {request.change_status === 'submitted' || request.change_status === 'under-assessment' ? (
+            {showAssessmentForm ? (
               <ChangeAssessmentForm
-                changeRequest={request}
-                onSave={() => {
-                  loadRequest();
+                projectId={request.project_id}
+                changeRequestId={request.id}
+                assessment={assessment}
+                accountId={crAccountId}
+                onSuccess={() => {
+                  loadAssessment();
                   setShowAssessmentForm(false);
                 }}
-                onCancel={() => setShowAssessmentForm(false)}
+                onClose={() => setShowAssessmentForm(false)}
               />
             ) : (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                {request.assessment && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Assessment Details</h3>
-                    {request.assessment.assessment_summary && (
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Assessment</h3>
+                  {!assessmentLoading && (
+                    <RowActionButton
+                      variant="edit"
+                      label={assessment ? 'Edit assessment' : 'Create assessment'}
+                      onClick={() => setShowAssessmentForm(true)}
+                    />
+                  )}
+                </div>
+                {assessmentLoading ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Loading assessment…</p>
+                ) : assessment ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {assessment.impact_level && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                          Assessment Summary
-                        </label>
-                        <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
-                          {request.assessment.assessment_summary}
-                        </p>
+                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Overall Impact Level</label>
+                        <p className="text-gray-900 dark:text-white capitalize">{assessment.impact_level}</p>
                       </div>
                     )}
-                    {request.assessment.recommendation && (
+                    {assessment.recommendation && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
-                          Recommendation
-                        </label>
-                        <p className="text-gray-900 dark:text-white capitalize">
-                          {request.assessment.recommendation}
-                        </p>
+                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Decision</label>
+                        <p className="text-gray-900 dark:text-white capitalize">{assessment.recommendation.replace(/-/g, ' ')}</p>
+                      </div>
+                    )}
+                    {assessment.impact_summary && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Impact Summary</label>
+                        <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{assessment.impact_summary}</p>
+                      </div>
+                    )}
+                    {assessment.recommendation_rationale && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Decision Rationale</label>
+                        <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{assessment.recommendation_rationale}</p>
+                      </div>
+                    )}
+                    {assessment.conditions && (
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Conditions</label>
+                        <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{assessment.conditions}</p>
                       </div>
                     )}
                   </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No assessment recorded yet.</p>
                 )}
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'decisions' && (
+          <ChangeDecisions changeRequestId={request.id} projectId={request.project_id} />
+        )}
+
+        {activeTab === 'implementation' && (
+          <ChangeImplementation changeRequestId={request.id} projectId={request.project_id} />
         )}
 
         {activeTab === 'log' && (
@@ -409,15 +479,18 @@ export default function ChangeRequestDetail() {
         )}
       </div>
 
-      {/* Edit Form Modal */}
+      {/* Edit Form — non-modal, in-page panel (rule 65) */}
       {showEditForm && (
         <ChangeRequestForm
+          variant="page"
+          projectId={request?.project_id}
           request={request}
-          onSave={() => {
+          accountId={crAccountId}
+          onSuccess={() => {
             loadRequest();
             setShowEditForm(false);
           }}
-          onCancel={() => setShowEditForm(false)}
+          onClose={() => setShowEditForm(false)}
         />
       )}
     </div>

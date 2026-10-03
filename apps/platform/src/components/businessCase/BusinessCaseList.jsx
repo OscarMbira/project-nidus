@@ -118,7 +118,11 @@ export default function BusinessCaseList({ basePath = '/pmo/initiation/business-
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600 dark:text-gray-400 mb-2">No business cases found</p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
-            {statusFilter || search ? 'Try adjusting your filters.' : 'Create your first business case from this list.'}
+            {statusFilter || search
+              ? 'Try adjusting your filters.'
+              : projectId
+                ? 'No business case linked to this project yet.'
+                : 'Create your first business case from this list.'}
           </p>
           {!statusFilter && !search && (
             <button

@@ -20,7 +20,7 @@ export default function ProjectPlanEdit() {
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/plans/project-plan`)
+    navigate(-1)
   }
 
   if (!planId) {

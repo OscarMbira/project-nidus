@@ -1,117 +1,103 @@
 /**
  * Scope Section
- * Scope, exclusions, constraints, assumptions
+ * Scope, exclusions, constraints, assumptions — multi-line list fields (rule 67).
  */
 
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+
 export default function ScopeSection({ formData, onChange, errors = {}, readOnly = false }) {
-  const handleChange = (e) => {
-    onChange(e)
+  const setListField = (name, value) => {
+    onChange({ target: { name, value } })
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-          Project Scope
+          Project scope
         </h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-          Define what is included and excluded from the project
+          Define what is included and excluded from the project. Add one item per line.
         </p>
       </div>
 
-      {/* Project Scope */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Project Scope <span className="text-red-500">*</span>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Project scope <span className="text-red-500">*</span>
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.project_scope || 'Not specified'}
-          </p>
-        ) : (
-          <>
-            <textarea
-              name="project_scope"
-              value={formData.project_scope || ''}
-              onChange={handleChange}
-              rows={6}
-              className={`w-full px-3 py-2 border rounded-lg ${
-                errors.project_scope ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } bg-white dark:bg-gray-700 text-gray-900 dark:text-white`}
-              placeholder="What's included in the project? Describe the major deliverables and work..."
-              required
-            />
-            {errors.project_scope && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_scope}</p>
-            )}
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Minimum 100 characters required
-            </p>
-          </>
+        <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+          Major deliverables and work included. One item per line.
+        </p>
+        <MultiLineListInput
+          viewModeId="brief-scope-included"
+          id="brief_project_scope"
+          value={formData.project_scope || ''}
+          onChange={(v) => setListField('project_scope', v)}
+          placeholder="e.g. Retail deposits product configuration in Temenos T24"
+          ariaLabelPrefix="scope item"
+          itemColumnLabel="In scope"
+          disabled={readOnly}
+        />
+        {errors.project_scope && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_scope}</p>
         )}
       </div>
 
-      {/* Scope Exclusions */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Scope Exclusions
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Scope exclusions
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.scope_exclusions || 'Not specified'}
-          </p>
-        ) : (
-          <textarea
-            name="scope_exclusions"
-            value={formData.scope_exclusions || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="What's explicitly NOT included in the project? Be clear about boundaries..."
-          />
-        )}
+        <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+          Explicitly out of scope. One item per line.
+        </p>
+        <MultiLineListInput
+          viewModeId="brief-scope-exclusions"
+          id="brief_scope_exclusions"
+          value={formData.scope_exclusions || ''}
+          onChange={(v) => setListField('scope_exclusions', v)}
+          placeholder="e.g. Mobile channel redesign (separate programme)"
+          ariaLabelPrefix="exclusion"
+          itemColumnLabel="Exclusion"
+          disabled={readOnly}
+        />
       </div>
 
-      {/* Constraints */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Constraints
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.constraints || 'Not specified'}
-          </p>
-        ) : (
-          <textarea
-            name="constraints"
-            value={formData.constraints || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Limitations: resources, time, budget, regulatory, technical..."
-          />
-        )}
+        <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+          Limitations (resources, time, budget, regulatory, technical). One per line.
+        </p>
+        <MultiLineListInput
+          viewModeId="brief-scope-constraints"
+          id="brief_constraints"
+          value={formData.constraints || ''}
+          onChange={(v) => setListField('constraints', v)}
+          placeholder="e.g. Must go live before end of fiscal year"
+          ariaLabelPrefix="constraint"
+          itemColumnLabel="Constraint"
+          disabled={readOnly}
+        />
       </div>
 
-      {/* Assumptions */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Assumptions
         </label>
-        {readOnly ? (
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-            {formData.assumptions || 'Not specified'}
-          </p>
-        ) : (
-          <textarea
-            name="assumptions"
-            value={formData.assumptions || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="What we're assuming to be true for the project to succeed..."
-          />
-        )}
+        <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+          What must be true for the project to succeed. One per line.
+        </p>
+        <MultiLineListInput
+          viewModeId="brief-scope-assumptions"
+          id="brief_assumptions"
+          value={formData.assumptions || ''}
+          onChange={(v) => setListField('assumptions', v)}
+          placeholder="e.g. Source system data quality meets agreed thresholds"
+          ariaLabelPrefix="assumption"
+          itemColumnLabel="Assumption"
+          disabled={readOnly}
+        />
       </div>
     </div>
   )

@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { listEvmSnapshots, upsertEvmSnapshot, computeEvmMetrics } from '../../services/evmService'
 import { platformDb } from '@nidus/supabase'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ProjectEVMPage() {
-  const { projectId } = useParams()
+  const { projectId } = usePlatformProjectId()
   const { canManage, readOnlyExecutive } = useFinancialPermissions()
   const [rows, setRows] = useState([])
   const [project, setProject] = useState(null)

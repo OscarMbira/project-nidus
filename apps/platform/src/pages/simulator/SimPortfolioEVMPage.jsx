@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { simDb } from '../../services/supabase/supabaseClient'
@@ -17,6 +17,7 @@ const EXPORT_COLS = [
 ]
 
 export default function SimPortfolioEVMPage() {
+  const navigate = useNavigate()
   const [portfolios, setPortfolios] = useState([])
   const [selected, setSelected] = useState(null)
   const [rollup, setRollup] = useState([])
@@ -89,12 +90,13 @@ export default function SimPortfolioEVMPage() {
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link
-              to="/simulator/practice-portfolio"
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
               className="p-2 rounded-lg border border-gray-700"
             >
               <ArrowLeft className="h-5 w-5" />
-            </Link>
+            </button>
             <h1 className="text-xl font-bold">Practice portfolio EVM</h1>
           </div>
           <ExportListMenu columns={EXPORT_COLS} data={exportRows} baseFilename="sim_portfolio_evm_rollup" disabled={!exportRows.length} />

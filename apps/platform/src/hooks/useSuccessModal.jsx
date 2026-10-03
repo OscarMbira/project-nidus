@@ -16,8 +16,8 @@ import SuccessConfirmationModal from '@nidus/ui/SuccessConfirmationModal'
 export function useSuccessModal() {
   const [state, setState] = useState(null)
 
-  const showSuccess = useCallback(({ recordId, operation = 'updated', message, onOk, okLabel } = {}) => {
-    setState({ recordId, operation, message, onOk, okLabel })
+  const showSuccess = useCallback(({ recordId, subject, operation = 'updated', message, onOk, okLabel } = {}) => {
+    setState({ recordId, subject, operation, message, onOk, okLabel })
   }, [])
 
   const close = useCallback(() => setState(null), [])
@@ -33,6 +33,7 @@ export function useSuccessModal() {
       isOpen
       onClose={handleOk}
       operation={state.operation}
+      subject={state.subject}
       recordId={state.recordId}
       message={state.message}
       okLabel={state.okLabel}

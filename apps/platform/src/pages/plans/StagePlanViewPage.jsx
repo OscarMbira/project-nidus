@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
@@ -31,18 +32,26 @@ export default function StagePlanViewPage() {
   }, [stagePlanId, projectId])
 
   return (
-    <StagePlanView
-      planId={resolvedPlanId}
-      onEdit={(plan) => navigate(platformProjectPath(routeKey, 'plans', 'stage-plan', plan.plan_reference || plan.id, 'edit'))}
-      onLoaded={(plan) => {
-        if (plan?.plan_reference && plan.plan_reference !== stagePlanId) {
-          navigate(platformProjectPath(routeKey, 'plans', 'stage-plan', plan.plan_reference), { replace: true })
-        }
-      }}
-      onExport={(plan) => {
-        // Export functionality
-        console.log('Export plan:', plan)
-      }}
-    />
+    <>
+      <div className="max-w-7xl mx-auto px-4 pt-6">
+        <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+      </div>
+      <StagePlanView
+        planId={resolvedPlanId}
+        onEdit={(plan) => navigate(platformProjectPath(routeKey, 'plans', 'stage-plan', plan.plan_reference || plan.id, 'edit'))}
+        onLoaded={(plan) => {
+          if (plan?.plan_reference && plan.plan_reference !== stagePlanId) {
+            navigate(platformProjectPath(routeKey, 'plans', 'stage-plan', plan.plan_reference), { replace: true })
+          }
+        }}
+        onExport={(plan) => {
+          // Export functionality
+          console.log('Export plan:', plan)
+        }}
+      />
+    </>
   )
 }

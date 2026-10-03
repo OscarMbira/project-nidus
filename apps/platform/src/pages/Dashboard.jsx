@@ -6,6 +6,14 @@ import { isPmoAdmin as checkIsPmoAdmin, getOrganisationUsers } from '../services
 import { Briefcase, UserPlus, Shield, Building2, ArrowRight } from 'lucide-react'
 import AIInsightsPanel from '../components/ai/AIInsightsPanel'
 
+async function lookupMap(client, table, select, ids) {
+  const map = new Map()
+  if (!ids.length) return map
+  const { data } = await client.from(table).select(select).in('id', ids)
+  for (const row of data || []) map.set(row.id, row)
+  return map
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState({
     totalProjects: 0,
@@ -34,30 +42,47 @@ export default function Dashboard() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setLoading(false); return }
 
-      // Fire all independent queries in parallel
+      // Fire all independent queries in parallel. No embed syntax here (e.g. project_statuses:status_id)
+      // — several of these relationships aren't reliably discoverable by PostgREST in this schema, so
+      // lookups are resolved separately below instead of risking a 400 on the whole query.
       const [projectsRes, tasksRes, methodologyRes, adminFlag] = await Promise.all([
         supabase
           .from('projects')
-          .select('id, project_name, percentage_complete, project_statuses:status_id (status_name, status_color)')
+          .select('id, project_name, percentage_complete, status_id')
           .eq('is_deleted', false)
           .order('created_at', { ascending: false })
           .limit(10),
         supabase
           .from('tasks')
-          .select('id, task_name, due_date, projects:project_id (id, project_name), task_statuses:status_id (status_name, status_color)')
+          .select('id, task_name, due_date, project_id, status_id')
           .eq('is_deleted', false)
           .order('created_at', { ascending: false })
           .limit(10),
         supabase
           .from('project_methodologies')
-          .select('methodology_id, methodologies:methodology_id (methodology_name, methodology_color)')
+          .select('methodology_id')
           .eq('is_deleted', false),
         checkIsPmoAdmin(user.id),
       ])
 
-      const projects = projectsRes.data || []
-      const tasks = (tasksRes.error?.code !== '42P01' ? tasksRes.data : null) || []
-      const methodologyData = (methodologyRes.error?.code !== '42P01' ? methodologyRes.data : null) || []
+      const rawProjects = projectsRes.data || []
+      const rawTasks = (tasksRes.error?.code !== '42P01' ? tasksRes.data : null) || []
+      const rawMethodologyData = (methodologyRes.error?.code !== '42P01' ? methodologyRes.data : null) || []
+
+      const [projectStatusMap, taskStatusMap, methodologyMap, taskProjectMap] = await Promise.all([
+        lookupMap(supabase, 'project_statuses', 'id, status_name, status_color', [...new Set(rawProjects.map(p => p.status_id).filter(Boolean))]),
+        lookupMap(supabase, 'task_statuses', 'id, status_name, status_color', [...new Set(rawTasks.map(t => t.status_id).filter(Boolean))]),
+        lookupMap(supabase, 'methodologies', 'id, methodology_name, methodology_color', [...new Set(rawMethodologyData.map(m => m.methodology_id).filter(Boolean))]),
+        lookupMap(supabase, 'projects', 'id, project_name', [...new Set(rawTasks.map(t => t.project_id).filter(Boolean))]),
+      ])
+
+      const projects = rawProjects.map(p => ({ ...p, project_statuses: projectStatusMap.get(p.status_id) || null }))
+      const tasks = rawTasks.map(t => ({
+        ...t,
+        task_statuses: taskStatusMap.get(t.status_id) || null,
+        projects: taskProjectMap.get(t.project_id) || null,
+      }))
+      const methodologyData = rawMethodologyData.map(m => ({ ...m, methodologies: methodologyMap.get(m.methodology_id) || null }))
 
       // Compute stats — today computed once for overdues
       const today = new Date()
@@ -113,7 +138,7 @@ export default function Dashboard() {
             .from('accounts')
             .select('id, account_name, account_code')
             .eq('owner_user_id', userRecordRes.data.id)
-            .single()
+            .maybeSingle()
           if (org) setOrganisation(org)
         }
       }

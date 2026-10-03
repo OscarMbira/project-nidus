@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { simDb } from '@nidus/supabase'
 import { Play, Trophy, Target, TrendingUp, BookOpen, Award } from 'lucide-react'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 
 export default function SimulatorDashboard() {
   const [stats, setStats] = useState({
@@ -115,53 +116,10 @@ export default function SimulatorDashboard() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Scenarios</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.activeScenarios}</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
-              <Play className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.completedScenarios}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-              <Target className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Score</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.totalScore}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Certificates</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.certificatesEarned}</p>
-            </div>
-            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center">
-              <Award className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            </div>
-          </div>
-        </div>
+        <DashboardStatCard label="Active Scenarios" value={stats.activeScenarios} icon={Play} iconClassName="text-purple-600 dark:text-purple-400" />
+        <DashboardStatCard label="Completed" value={stats.completedScenarios} icon={Target} iconClassName="text-green-600 dark:text-green-400" />
+        <DashboardStatCard label="Total Score" value={stats.totalScore} icon={TrendingUp} iconClassName="text-blue-600 dark:text-blue-400" />
+        <DashboardStatCard label="Certificates" value={stats.certificatesEarned} icon={Award} iconClassName="text-amber-600 dark:text-amber-400" />
       </div>
 
       {/* Recent Scenarios */}

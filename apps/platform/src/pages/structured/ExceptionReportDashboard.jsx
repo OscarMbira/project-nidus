@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { Plus, AlertTriangle, FileText, CheckCircle, Clock, XCircle } from 'lucide-react'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 import { supabase } from '../../services/supabaseClient'
 import { getExceptionReportsByProject } from '../../services/exceptionReportService'
 import ExceptionReportStatusBadge from '../../components/structured/exceptionReport/ExceptionReportStatusBadge'
@@ -100,60 +101,12 @@ export default function ExceptionReportDashboard() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Exceptions</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalExceptions}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Need Reports</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.exceptionsWithoutReports}</p>
-            </div>
-            <FileText className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Reports</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalReports}</p>
-            </div>
-            <FileText className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Draft</p>
-              <p className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.draftReports}</p>
-            </div>
-            <FileText className="h-8 w-8 text-gray-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">In Review</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.submittedReports}</p>
-            </div>
-            <Clock className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.approvedReports}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Exceptions" value={stats.totalExceptions} icon={AlertTriangle} iconClassName="text-orange-500" />
+        <DashboardStatCard label="Need Reports" value={stats.exceptionsWithoutReports} icon={FileText} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" />
+        <DashboardStatCard label="Total Reports" value={stats.totalReports} icon={FileText} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Draft" value={stats.draftReports} icon={FileText} accentClassName="text-gray-600 dark:text-gray-400" iconClassName="text-gray-500" />
+        <DashboardStatCard label="In Review" value={stats.submittedReports} icon={Clock} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" />
+        <DashboardStatCard label="Approved" value={stats.approvedReports} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" />
       </div>
 
       {/* Exceptions Needing Reports */}

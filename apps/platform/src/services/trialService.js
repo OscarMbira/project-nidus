@@ -232,7 +232,7 @@ export const getUserTrialProjects = async () => {
     .from('accounts')
     .select('id')
     .eq('owner_user_id', user.id)
-    .single();
+    .maybeSingle();
 
   if (!account) {
     return [];

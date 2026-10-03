@@ -448,3 +448,134 @@ export function buildSnapshotFromTemplate(template) {
     })),
   }
 }
+
+// ── Template governance (v982 Phase 2, SQL/v984_pmo_industry_template_governance.sql) ─────────
+// Per-organisation governance profile for a global industry template: declared required stage
+// gates + an optional required approval-chain template. classification_id NULL = the account's
+// default profile for the template; non-null = an override for that specific classification
+// (decision 3 — classifications drive which governance profile a project inherits).
+
+const GOVERNANCE = 'pmo_industry_template_governance'
+const GOVERNANCE_SELECT = 'id, account_id, template_id, classification_id, required_stage_gate_names, required_approval_chain_template_id, notes, is_active, created_by, updated_by, created_at, updated_at'
+
+/**
+ * All governance profiles an organisation has defined for one template (default + any
+ * classification-specific overrides).
+ * @returns {Promise<Array<object>>}
+ */
+export async function getTemplateGovernanceProfiles(accountId, templateId) {
+  if (!accountId || !templateId) return []
+  const { data, error } = await platformDb
+    .from(GOVERNANCE)
+    .select(GOVERNANCE_SELECT)
+    .eq('account_id', accountId)
+    .eq('template_id', templateId)
+    .eq('is_deleted', false)
+    .order('classification_id', { ascending: true, nullsFirst: true })
+  throwIf(error, 'Failed to load template governance profiles')
+  return data || []
+}
+
+/** Upsert one governance profile (by account_id + template_id + classification_id). */
+export async function saveTemplateGovernanceProfile(payload) {
+  const { account_id, template_id, classification_id = null, required_stage_gate_names = [], required_approval_chain_template_id = null, notes = null, id } = payload
+  if (!account_id || !template_id) throw new Error('Missing account or template id')
+
+  const row = {
+    account_id,
+    template_id,
+    classification_id,
+    required_stage_gate_names,
+    required_approval_chain_template_id,
+    notes,
+    is_active: true,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (id) {
+    const { data, error } = await platformDb.from(GOVERNANCE).update(row).eq('id', id).select(GOVERNANCE_SELECT).single()
+    throwIf(error, 'Failed to update template governance profile')
+    return data
+  }
+
+  const { data, error } = await platformDb
+    .from(GOVERNANCE)
+    .upsert([row], { onConflict: 'account_id,template_id,classification_id' })
+    .select(GOVERNANCE_SELECT)
+    .single()
+  throwIf(error, 'Failed to save template governance profile')
+  return data
+}
+
+export async function deleteTemplateGovernanceProfile(id) {
+  const { error } = await platformDb.from(GOVERNANCE).update({ is_deleted: true, is_active: false }).eq('id', id)
+  throwIf(error, 'Failed to delete template governance profile')
+}
+
+/**
+ * Resolves the single MOST SPECIFIC governance profile for a project: an exact
+ * (account, template, classification) match beats the account's (account, template, NULL)
+ * default, which beats no profile at all.
+ */
+async function resolveGovernanceProfile(accountId, templateId, classificationId) {
+  const profiles = await getTemplateGovernanceProfiles(accountId, templateId)
+  if (profiles.length === 0) return null
+  if (classificationId) {
+    const specific = profiles.find((p) => p.classification_id === classificationId && p.is_active)
+    if (specific) return specific
+  }
+  return profiles.find((p) => p.classification_id === null && p.is_active) || null
+}
+
+/**
+ * Auto-provisions the stage gates a template's governance profile declares onto a newly-created
+ * project — the "creating a project from a classified template auto-provisions its governance"
+ * behaviour (PRD user story 7, plan task B). Targets public.stage_gate_reviews (the verified,
+ * DDL-backed, routed table — see v984's header note on the stage_gates/stage_gate_reviews
+ * naming ambiguity found during investigation). Idempotent: skips any gate name that already
+ * exists (active) for the project, so re-running (e.g. re-applying the same template) never
+ * duplicates gates.
+ * @param {string} projectId
+ * @param {string} templateId
+ * @param {string|null} actorUserId - internal users.id of the acting user (created_by)
+ * @returns {Promise<{provisioned: string[], skipped: string[]}>}
+ */
+export async function provisionTemplateGovernanceForProject(projectId, templateId, actorUserId = null) {
+  if (!projectId || !templateId) return { provisioned: [], skipped: [] }
+
+  const { data: project, error: projectError } = await platformDb
+    .from('projects')
+    .select('id, account_id, classification_id')
+    .eq('id', projectId)
+    .maybeSingle()
+  throwIf(projectError, 'Failed to load project for governance provisioning')
+  if (!project?.account_id) return { provisioned: [], skipped: [] }
+
+  const profile = await resolveGovernanceProfile(project.account_id, templateId, project.classification_id)
+  const gateNames = (profile?.required_stage_gate_names || []).filter(Boolean)
+  if (gateNames.length === 0) return { provisioned: [], skipped: [] }
+
+  const { data: existingGates, error: existingError } = await platformDb
+    .from('stage_gate_reviews')
+    .select('gate_name')
+    .eq('project_id', projectId)
+    .eq('is_deleted', false)
+  throwIf(existingError, 'Failed to check existing stage gates')
+  const existingNames = new Set((existingGates || []).map((g) => g.gate_name))
+
+  const toInsert = gateNames.filter((name) => !existingNames.has(name))
+  if (toInsert.length === 0) return { provisioned: [], skipped: gateNames }
+
+  const { error: insertError } = await platformDb.from('stage_gate_reviews').insert(
+    toInsert.map((gate_name) => ({
+      project_id: projectId,
+      gate_name,
+      status: 'draft',
+      is_deleted: false,
+      created_by: actorUserId,
+    })),
+  )
+  throwIf(insertError, 'Failed to provision stage gates from template governance')
+
+  return { provisioned: toInsert, skipped: gateNames.filter((n) => existingNames.has(n)) }
+}

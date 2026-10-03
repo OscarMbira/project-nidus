@@ -102,7 +102,7 @@ export default function ProgrammeEdit() {
       <div className="mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(`${basePath}/${id}`)}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />

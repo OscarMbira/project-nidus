@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { BookOpen, Plus, Search, Filter, Calendar, List, Clock, AlertCircle, CheckCircle, Download, Grid, History } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getDailyLogByProject, getSummary } from '../services/dailyLogService';
 import { getEntries, addEntry, updateEntry, deleteEntry, completeEntry } from '../services/dailyLogEntryService';
 import { getOverdueEntries } from '../services/dailyLogEntryService';
@@ -323,22 +324,10 @@ export default function DailyLogView() {
       {/* Summary Stats */}
       {summary && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-transparent dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total Entries</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{summary.total_entries || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-transparent dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Open</div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{summary.open_entries || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-transparent dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Completed</div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{summary.completed_entries || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-transparent dark:border-gray-700">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Overdue</div>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.overdue_entries || 0}</div>
-          </div>
+          <DashboardStatCard label="Total Entries" value={summary.total_entries || 0} borderClassName="border-transparent dark:border-gray-700" />
+          <DashboardStatCard label="Open" value={summary.open_entries || 0} accentClassName="text-blue-600 dark:text-blue-400" borderClassName="border-transparent dark:border-gray-700" />
+          <DashboardStatCard label="Completed" value={summary.completed_entries || 0} accentClassName="text-green-600 dark:text-green-400" borderClassName="border-transparent dark:border-gray-700" />
+          <DashboardStatCard label="Overdue" value={summary.overdue_entries || 0} accentClassName="text-red-600 dark:text-red-400" borderClassName="border-transparent dark:border-gray-700" />
         </div>
       )}
 

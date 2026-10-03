@@ -24,8 +24,14 @@ async function resolveProjectTypeId(projectId) {
 
 /**
  * Send email via Supabase Edge Function (sender profiles resolved server-side).
+ * Exported (unlike sendEmail() below) because the edge function resolves its own
+ * email_configurations row using the service_role key — this is the correct entry
+ * point for callers that may not yet have RLS access to email_configurations/
+ * email_logs themselves (e.g. a just-registered user with no admin role assigned
+ * yet — see registrationEmailService.js's sendWelcomeEmail/sendAccountVerificationEmail,
+ * which call this directly instead of sendEmail() for exactly that reason).
  */
-async function sendEmailViaSupabase(to, subject, htmlBody, config, { projectTypeId, templateId = null } = {}) {
+export async function sendEmailViaSupabase(to, subject, htmlBody, config, { projectTypeId, templateId = null } = {}) {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || window.location.origin.replace(/\/$/, '')
     const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY

@@ -212,6 +212,7 @@ export async function fetchChangeRequests(projectIdOrFilters) {
         project:projects(id, project_name, project_code, account_id),
         change_board:change_board(id, board_name),
         submitted_by_user:users!change_requests_submitted_by_fkey(full_name, email),
+        owner:users!change_requests_owner_user_id_fkey(full_name, email),
         current_approver:users!change_requests_current_approver_user_id_fkey(full_name, email)
       `)
       .eq('is_deleted', false)
@@ -269,7 +270,9 @@ export async function fetchChangeRequest(requestId) {
         *,
         project:projects(id, project_name, project_code),
         change_board:change_board(id, board_name),
-        submitted_by_user:users!change_requests_submitted_by_fkey(full_name, email)
+        submitted_by_user:users!change_requests_submitted_by_fkey(full_name, email),
+        owner:users!change_requests_owner_user_id_fkey(full_name, email),
+        current_approver:users!change_requests_current_approver_user_id_fkey(full_name, email)
       `)
       .eq('id', requestId)
       .eq('is_deleted', false)

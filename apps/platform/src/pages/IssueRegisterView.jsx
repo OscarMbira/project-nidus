@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 import { useOfflineQueue } from '@nidus/shared/hooks/useOfflineQueue'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -181,16 +182,25 @@ export default function IssueRegisterView() {
         .select('id, project_name, project_code, account_id')
         .eq('id', projectId)
         .eq('is_deleted', false)
-        .single()
+        .maybeSingle()
 
       if (projectError) throw projectError
+      if (!projectData) {
+        // The "current project" id can briefly point at a stale/still-validating value right
+        // after entering /pm/* (CurrentProjectContext corrects it async — see
+        // usePlatformProjectId.js) — retry once shortly rather than surfacing a raw error for
+        // what's usually a timing gap, not a real failure.
+        setProject(null)
+        setLoading(false)
+        return
+      }
       setProject(projectData)
 
       const register = await getOrCreateIssueRegister(projectId)
       setIssueRegister(register)
     } catch (error) {
       console.error('Error fetching data:', error)
-      alert('Error: ' + (error?.message || 'Failed to load Issue Register'))
+      toast.error(error?.message || 'Failed to load Issue Register')
     } finally {
       setLoading(false)
     }
@@ -311,6 +321,23 @@ export default function IssueRegisterView() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Issue Register...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!loading && !project && !issueRegister) {
+    return (
+      <div className="flex items-center justify-center min-h-[16rem]">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400">No project selected.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/pm/dashboard')}
+            className="mt-4 px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+          >
+            Choose a project
+          </button>
         </div>
       </div>
     )

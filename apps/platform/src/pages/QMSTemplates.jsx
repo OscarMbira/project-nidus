@@ -57,7 +57,7 @@ export default function QMSTemplates() {
           .eq('owner_user_id', userData.id)
           .eq('is_deleted', false)
           .limit(1)
-          .single()
+          .maybeSingle()
 
         if (accountData) {
           setAccountId(accountData.id)

@@ -5,8 +5,8 @@
  * IMPORTANT: Organisation/Account is created manually by the user via the organization setup form
  * after their first successful login. This wizard allows user to:
  * 1. Update account information (optional - if organisation already exists)
- * 2. Create first project (required)
- * 3. Assign Project Manager role to user in the project
+ * 2. Create first project (optional - can be skipped and created later from the Projects page)
+ * 3. Assign Project Manager role to user in the project (only when a project was created)
  * 
  * If no organisation exists, user is redirected to /onboarding/organisation-setup
  */
@@ -45,7 +45,7 @@ export default function PlatformAccountSetup() {
 
   const steps = [
     { number: 1, title: 'Account Information', icon: Briefcase, optional: true },
-    { number: 2, title: 'Create First Project', icon: Users },
+    { number: 2, title: 'Create First Project', icon: Users, optional: true },
     { number: 3, title: 'Review & Confirm', icon: CheckCircle },
   ]
 
@@ -123,10 +123,10 @@ export default function PlatformAccountSetup() {
   }
 
   const handleComplete = async () => {
-    if (!projectName.trim()) {
-      toast.error('Project name is required')
-      return
-    }
+    // Create First Project is optional (skippable) — only create a project below when the
+    // user actually entered a name. Otherwise finish setup and let them create one later from
+    // the Projects page.
+    const wantsProject = Boolean(projectName.trim())
 
     setLoading(true)
     try {
@@ -228,8 +228,10 @@ export default function PlatformAccountSetup() {
         }
       }
 
-      // Get account ID (use existing account or create one)
-      // Note: get_user_accounts returns account_id, not id
+      // Get account ID (use existing account or create one) — resolved regardless of whether
+      // a project is being created below, because without a linked account the dashboard has
+      // nothing to show (no organisation, no role, menu can't load). Skipping the project must
+      // not also skip this safety net.
       let accountId = account?.account_id || account?.id
       if (!accountId) {
         const accountsResult = await getUserAccounts()
@@ -245,101 +247,103 @@ export default function PlatformAccountSetup() {
         }
       }
 
-      // Create first project
-      const { data: projectStatus } = await supabase
-        .from('project_statuses')
-        .select('id')
-        .eq('status_name', 'Planning')
-        .maybeSingle()
-
-      // Generate unique project code
-      const timestamp = Date.now().toString().slice(-8)
-      const projectCode = `PROJ-${timestamp}`
-
-      const { data: newProject, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          account_id: accountId,
-          project_code: projectCode,
-          project_name: projectName,
-          project_description: projectDescription || null,
-          project_manager_user_id: userData.id,
-          owner_user_id: userData.id, // Set owner as well
-          planned_start_date: startDate || null,
-          planned_end_date: endDate || null,
-          status_id: projectStatus?.id || null,
-        })
-        .select()
-        .maybeSingle()
-
-      if (projectError) {
-        console.error('Project creation error details:', projectError)
-        throw new Error(`Failed to create project: ${projectError.message}`)
-      }
-
-      if (!newProject) {
-        throw new Error('Project was not created. Please try again.')
-      }
-
-      // Assign Project Manager role to user in the project
-      // We'll create the membership directly since we already have the internal user ID
-      // This avoids RLS issues with looking up the user again
-      try {
-        // Get project manager role from project_roles (template)
-        const { data: pmRole, error: roleError } = await supabase
-          .from('project_roles')
+      if (wantsProject) {
+        // Create first project
+        const { data: projectStatus } = await supabase
+          .from('project_statuses')
           .select('id')
-          .eq('role_name', 'project_manager')
-          .eq('is_template', true)
-          .eq('is_active', true)
+          .eq('status_name', 'Planning')
           .maybeSingle()
 
-        if (roleError) {
-          console.error('Error fetching project manager role:', roleError)
-        } else if (pmRole) {
-          // Check if membership already exists
-          const { data: existingMembership } = await supabase
-            .from('project_memberships')
+        // Generate unique project code
+        const timestamp = Date.now().toString().slice(-8)
+        const projectCode = `PROJ-${timestamp}`
+
+        const { data: newProject, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            account_id: accountId,
+            project_code: projectCode,
+            project_name: projectName,
+            project_description: projectDescription || null,
+            project_manager_user_id: userData.id,
+            owner_user_id: userData.id, // Set owner as well
+            planned_start_date: startDate || null,
+            planned_end_date: endDate || null,
+            status_id: projectStatus?.id || null,
+          })
+          .select()
+          .maybeSingle()
+
+        if (projectError) {
+          console.error('Project creation error details:', projectError)
+          throw new Error(`Failed to create project: ${projectError.message}`)
+        }
+
+        if (!newProject) {
+          throw new Error('Project was not created. Please try again.')
+        }
+
+        // Assign Project Manager role to user in the project
+        // We'll create the membership directly since we already have the internal user ID
+        // This avoids RLS issues with looking up the user again
+        try {
+          // Get project manager role from project_roles (template)
+          const { data: pmRole, error: roleError } = await supabase
+            .from('project_roles')
             .select('id')
-            .eq('project_id', newProject.id)
-            .eq('user_id', userData.id)
+            .eq('role_name', 'project_manager')
+            .eq('is_template', true)
+            .eq('is_active', true)
             .maybeSingle()
 
-          if (existingMembership) {
-            // Update existing membership
-            const { error: updateError } = await supabase
+          if (roleError) {
+            console.error('Error fetching project manager role:', roleError)
+          } else if (pmRole) {
+            // Check if membership already exists
+            const { data: existingMembership } = await supabase
               .from('project_memberships')
-              .update({
-                project_role_id: pmRole.id,
-                is_active: true,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingMembership.id)
+              .select('id')
+              .eq('project_id', newProject.id)
+              .eq('user_id', userData.id)
+              .maybeSingle()
 
-            if (updateError) {
-              console.error('Error updating project membership:', updateError)
-            }
-          } else {
-            // Create new membership
-            const { error: membershipError } = await supabase
-              .from('project_memberships')
-              .insert({
-                project_id: newProject.id,
-                user_id: userData.id,
-                project_role_id: pmRole.id,
-                invitation_status: 'accepted',
-                accepted_at: new Date().toISOString(),
-                is_active: true
-              })
+            if (existingMembership) {
+              // Update existing membership
+              const { error: updateError } = await supabase
+                .from('project_memberships')
+                .update({
+                  project_role_id: pmRole.id,
+                  is_active: true,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', existingMembership.id)
 
-            if (membershipError) {
-              console.error('Error creating project membership:', membershipError)
+              if (updateError) {
+                console.error('Error updating project membership:', updateError)
+              }
+            } else {
+              // Create new membership
+              const { error: membershipError } = await supabase
+                .from('project_memberships')
+                .insert({
+                  project_id: newProject.id,
+                  user_id: userData.id,
+                  project_role_id: pmRole.id,
+                  invitation_status: 'accepted',
+                  accepted_at: new Date().toISOString(),
+                  is_active: true
+                })
+
+              if (membershipError) {
+                console.error('Error creating project membership:', membershipError)
+              }
             }
           }
+        } catch (roleAssignError) {
+          console.error('Error assigning project role:', roleAssignError)
+          // Don't fail if role assignment fails, but log it
         }
-      } catch (roleAssignError) {
-        console.error('Error assigning project role:', roleAssignError)
-        // Don't fail if role assignment fails, but log it
       }
 
       // Note: Platform subscription is automatically created when user registers
@@ -347,7 +351,7 @@ export default function PlatformAccountSetup() {
       // No need to create it manually here.
 
       // Show success message
-      toast.success('Account setup complete! Redirecting to dashboard...')
+      toast.success(wantsProject ? 'Account setup complete! Redirecting to dashboard...' : 'Account setup complete!')
 
       // Small delay to show success message, then navigate
       setTimeout(() => {
@@ -517,25 +521,34 @@ export default function PlatformAccountSetup() {
               )}
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-900 dark:text-white mb-2">First Project</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Name: {projectName}</p>
-              {projectDescription && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">Description: {projectDescription}</p>
-              )}
-              {startDate && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">Start Date: {new Date(startDate).toLocaleDateString()}</p>
-              )}
-              {endDate && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">End Date: {new Date(endDate).toLocaleDateString()}</p>
-              )}
-            </div>
+            {projectName.trim() ? (
+              <>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">First Project</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Name: {projectName}</p>
+                  {projectDescription && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Description: {projectDescription}</p>
+                  )}
+                  {startDate && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Start Date: {new Date(startDate).toLocaleDateString()}</p>
+                  )}
+                  {endDate && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">End Date: {new Date(endDate).toLocaleDateString()}</p>
+                  )}
+                </div>
 
-            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-              <p className="text-sm text-green-800 dark:text-green-300">
-                ✓ You will be assigned as Project Manager for this project.
-              </p>
-            </div>
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+                  <p className="text-sm text-green-800 dark:text-green-300">
+                    ✓ You will be assigned as Project Manager for this project.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">First Project</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Skipped — you can create a project any time from the Projects page.</p>
+              </div>
+            )}
           </div>
         )
 

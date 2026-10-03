@@ -414,10 +414,12 @@ function splitArrowSeparatedList(text) {
 
 /**
  * Shared guard for short comma/semicolon list items (roles, codes, tags).
- * Rejects long prose clauses.
+ * Rejects long prose clauses and numeric thousand-grouped amounts ("420,000").
  */
 function isShortListItemSet(items) {
   if (!items || items.length < 2) return false
+  // "420,000" / "1,234.56" must stay a single scalar — never bullet each digit group.
+  if (items.every((item) => /^\d+(?:\.\d+)?$/.test(String(item).trim()))) return false
   const allVeryShort = items.every((item) => item.length <= 12 && wordCount(item) <= 2)
   // Need 3+ items, or 2+ if every token is a short code/name (acronym lists).
   if (items.length < 3 && !allVeryShort) return false
@@ -432,6 +434,23 @@ function isShortListItemSet(items) {
     return false
   }
   return true
+}
+
+/**
+ * True when the whole string is a single formatted amount / currency value
+ * (thousand separators must not become list bullets).
+ * Examples: 420,000 · $85,000 · USD 1,234.56 · 1,234.50 ZAR
+ */
+function looksLikeFormattedAmount(text) {
+  const s = String(text || '').trim()
+  if (!s || !s.includes(',')) return false
+  const currency = '(?:[$€£¥]|USD|EUR|GBP|ZAR|AUD|CAD|NZD|CHF|JPY|CNY|INR)'
+  const grouped = '-?\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?'
+  const re = new RegExp(
+    `^(?:${currency}\\s*)?${grouped}(?:\\s*${currency})?$`,
+    'i',
+  )
+  return re.test(s)
 }
 
 /**
@@ -469,6 +488,8 @@ function splitPlainCommaList(text) {
   if (!s || !s.includes(',')) return null
   // Don't steal dash-prefixed forms (handled separately with prefix drop).
   if (/\s*[—–]\s+/.test(s) || /\s+-\s+/.test(s)) return null
+  // Keep "420,000" / "$1,234.56" as a single value (not bullet lines).
+  if (looksLikeFormattedAmount(s)) return null
 
   const items = splitCommaSeparatedItems(s)
   if (!isShortListItemSet(items)) return null

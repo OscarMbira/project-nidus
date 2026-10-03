@@ -6,6 +6,8 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { listProjectFunctionalRoles } from '../../services/teamService'
 import { Shield, Plus, LayoutGrid, List, Search, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
@@ -37,6 +39,13 @@ function SortHeader({ label, sortKey, sort, onSort }) {
   )
 }
 
+function skillLines(text) {
+  return String(text || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+}
+
 function sortRoles(roles, sort) {
   if (!sort.key) return roles
   const sorted = [...roles].sort((a, b) => {
@@ -53,6 +62,7 @@ function sortRoles(roles, sort) {
 
 export default function ManageRoles() {
   const navigate = useNavigate()
+  const { currentProjectId, currentProject } = useCurrentProject()
   const [viewMode, setViewMode] = useViewMode('manage-roles', 'list')
   const [builtInViewMode, setBuiltInViewMode] = useViewMode('manage-roles-builtin', 'list')
   const [activeSection, setActiveSection] = useState('builtin')
@@ -62,6 +72,7 @@ export default function ManageRoles() {
   const [canManage, setCanManage] = useState(false)
   const [builtInRoles, setBuiltInRoles] = useState([])
   const [customRoles, setCustomRoles] = useState([])
+  const [projectRoles, setProjectRoles] = useState([])
   const [industryCategories, setIndustryCategories] = useState([])
   const [search, setSearch] = useState('')
   const [sort, setSort] = useState({ key: null, dir: 'asc' })
@@ -97,6 +108,21 @@ export default function ManageRoles() {
     loadAll()
   }, [loadAll])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      if (!currentProjectId) {
+        setProjectRoles([])
+        return
+      }
+      const res = await listProjectFunctionalRoles(currentProjectId)
+      if (!cancelled) setProjectRoles(res.success ? res.data || [] : [])
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [currentProjectId])
+
   const handleSort = (key) => {
     setSort((prev) => {
       if (prev.key !== key) return { key, dir: 'asc' }
@@ -130,6 +156,22 @@ export default function ManageRoles() {
       return String(a.created_at || '').localeCompare(String(b.created_at || ''))
     })
   }, [customRoles, search, sort])
+
+  const filteredProjectRoles = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const rows = q
+      ? projectRoles.filter((role) => {
+          const label = String(role.role_label || '').toLowerCase()
+          const skills = String(role.required_skills || '').toLowerCase()
+          return label.includes(q) || skills.includes(q)
+        })
+      : projectRoles
+    return [...rows].sort((a, b) =>
+      String(a.role_label || '').localeCompare(String(b.role_label || ''), undefined, { sensitivity: 'base' }),
+    )
+  }, [projectRoles, search])
+
+  const customTabCount = filteredCustomRoles.length + filteredProjectRoles.length
 
   // Default: alphabetical by display name (rule 40.1) — built-ins have no created_at tie-breaker need
   const filteredBuiltInRoles = useMemo(() => {
@@ -192,7 +234,7 @@ export default function ManageRoles() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/platform/dashboard')}
+            onClick={() => navigate(-1)}
             className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -256,7 +298,7 @@ export default function ManageRoles() {
               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
         >
-          Custom Roles ({filteredCustomRoles.length})
+          Custom Roles ({customTabCount})
         </button>
       </div>
 
@@ -386,8 +428,12 @@ export default function ManageRoles() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Custom Roles ({filteredCustomRoles.length})</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Created by your organisation, usable across all your projects</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Custom Roles ({customTabCount})</h2>
+            <p className="text-sm text-gray-700 dark:text-gray-200">
+              {currentProject?.projectName
+                ? `Roles on ${currentProject.projectName}, plus organisation access roles.`
+                : 'Created by your organisation, usable across all your projects'}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -417,9 +463,42 @@ export default function ManageRoles() {
           </div>
         </div>
 
-        {filteredCustomRoles.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            {customRoles.length === 0 ? (
+        {filteredProjectRoles.length > 0 && (
+          <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-100 uppercase tracking-wider">#</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-100 uppercase tracking-wider">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-100 uppercase tracking-wider">Required Skills</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-100 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredProjectRoles.map((role, index) => (
+                  <tr key={role.id}>
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 tabular-nums">{getDisplayRowNumber(index)}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{role.role_label}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
+                      {skillLines(role.required_skills).length
+                        ? skillLines(role.required_skills).map((line, lineIndex) => (
+                          <div key={`${role.id}-${lineIndex}`}>{line}</div>
+                        ))
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <RowActionButton variant="view" label="View project role" onClick={() => navigate('/platform/project-roles')} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {filteredCustomRoles.length === 0 && filteredProjectRoles.length === 0 ? (
+          <div className="p-8 text-center text-gray-700 dark:text-gray-200">
+            {customRoles.length === 0 && projectRoles.length === 0 ? (
               <>
                 No custom roles yet.{' '}
                 {canManage && (
@@ -432,7 +511,7 @@ export default function ManageRoles() {
               'No roles match your search.'
             )}
           </div>
-        ) : viewMode === 'list' ? (
+        ) : filteredCustomRoles.length === 0 ? null : viewMode === 'list' ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900/40">

@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ChevronLeft } from 'lucide-react'
 import { createPracticeBusinessCase } from '../../services/sim/practiceBusinessCaseService'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -51,6 +52,7 @@ export default function PracticeBusinessCaseCreate() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [activeSection, setActiveSection] = useState(0)
+  const [formTab, setFormTab] = useState('wizard')
   const [formData, setFormData] = useState(INITIAL_FORM)
   const [newOption, setNewOption] = useState({ title: '', description: '', is_recommended: false })
 
@@ -118,6 +120,18 @@ export default function PracticeBusinessCaseCreate() {
         </div>
       )}
 
+      <DetailAuditTabList
+        activeTab={formTab}
+        onChange={setFormTab}
+        tabs={[{ value: 'wizard', label: 'Wizard' }, { value: 'audit', label: 'Audit details' }]}
+      />
+
+      {formTab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this business case is saved.</p>
+        </div>
+      ) : (
+      <>
       {/* Section tabs */}
       <div className="flex gap-1 mb-6 overflow-x-auto">
         {SECTIONS.map((s, i) => (
@@ -444,6 +458,8 @@ export default function PracticeBusinessCaseCreate() {
           </div>
         </div>
       </div>
+      </>
+      )}
     </div>
   )
 }

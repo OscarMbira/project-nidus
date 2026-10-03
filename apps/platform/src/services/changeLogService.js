@@ -57,7 +57,7 @@ export async function fetchAccessibleProjects() {
 
     let query = platformDb
       .from('change_requests')
-      .select('project_id, project:project_id(id, project_name)')
+      .select('project_id, project:project_id(id, project_name, project_code)')
       .eq('is_deleted', false)
       .not('project_id', 'is', null)
 
@@ -123,7 +123,7 @@ export async function fetchChangeLog(filters = {}) {
           id, change_reference, change_title,
           change_category, priority, status,
           project_id,
-          project:project_id(id, project_name)
+          project:project_id(id, project_name, project_code)
         ),
         performed_by_user:performed_by(id, full_name, email),
         created_by_user:created_by(id, full_name, email)
@@ -172,7 +172,7 @@ export async function fetchChangeLogEntry(id) {
         change_request:change_request_id(
           id, change_reference, change_title, status,
           project_id,
-          project:project_id(id, project_name)
+          project:project_id(id, project_name, project_code)
         ),
         performed_by_user:performed_by(id, full_name, email),
         created_by_user:created_by(id, full_name, email)
@@ -216,7 +216,7 @@ export async function createChangeLogEntry(payload) {
       })
       .select(`
         *,
-        change_request:change_request_id(id, change_reference, change_title, project_id, project:project_id(id, project_name)),
+        change_request:change_request_id(id, change_reference, change_title, project_id, project:project_id(id, project_name, project_code)),
         performed_by_user:performed_by(id, full_name, email)
       `)
       .single()
@@ -256,7 +256,7 @@ export async function updateChangeLogEntry(id, payload) {
       .eq('is_deleted', false)
       .select(`
         *,
-        change_request:change_request_id(id, change_reference, change_title, project_id, project:project_id(id, project_name)),
+        change_request:change_request_id(id, change_reference, change_title, project_id, project:project_id(id, project_name, project_code)),
         performed_by_user:performed_by(id, full_name, email)
       `)
       .single()

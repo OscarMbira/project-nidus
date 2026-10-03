@@ -56,12 +56,110 @@ export async function getByProjectId(projectId) {
 }
 
 /**
- * Save budget categories for a project (replaces existing)
+ * Snapshot the project's CURRENT budget lines into project_budget_revisions, before they're
+ * overwritten. No-op (not an error) when there's nothing to snapshot yet — a brand-new project
+ * with no prior lines has no revision to preserve.
+ */
+async function snapshotCurrentRevision(projectId, userId) {
+  const { data: current, error: fetchErr } = await platformDb
+    .from('project_budget_categories')
+    .select('category_name, budget_amount, funding_source_id, display_order')
+    .eq('project_id', projectId)
+    .order('display_order', { ascending: true });
+  if (fetchErr) throw fetchErr;
+  if (!current || current.length === 0) return;
+
+  const { data: projectRow, error: projErr } = await platformDb
+    .from('projects')
+    .select('budget_currency, budget_approval_status')
+    .eq('id', projectId)
+    .maybeSingle();
+  if (projErr) throw projErr;
+
+  const { data: lastRevision, error: lastErr } = await platformDb
+    .from('project_budget_revisions')
+    .select('revision_number')
+    .eq('project_id', projectId)
+    .order('revision_number', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (lastErr) throw lastErr;
+
+  const nextRevisionNumber = (lastRevision?.revision_number || 0) + 1;
+  const totalAmount = current.reduce((sum, c) => sum + (Number(c.budget_amount) || 0), 0);
+
+  const { error: insertErr } = await platformDb.from('project_budget_revisions').insert({
+    project_id: projectId,
+    revision_number: nextRevisionNumber,
+    budget_categories: current,
+    total_amount: totalAmount,
+    currency: projectRow?.budget_currency || null,
+    approval_status_at_revision: projectRow?.budget_approval_status || null,
+    created_by: userId || null,
+  });
+  if (insertErr) throw insertErr;
+}
+
+/**
+ * Get budget revision history for a project, most recent first.
+ */
+export async function getRevisions(projectId) {
+  try {
+    const { data, error } = await platformDb
+      .from('project_budget_revisions')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('is_deleted', false)
+      .order('revision_number', { ascending: false });
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (e) {
+    const msg = e?.message || e?.details || String(e);
+    console.error('Error fetching project budget revisions:', msg);
+    return { success: false, error: msg, data: [] };
+  }
+}
+
+/**
+ * Set the project's budget approval status, recording who approved it and when (only when moving
+ * to 'approved' — rejecting or resetting to pending clears the audit fields).
+ */
+export async function setApprovalStatus(projectId, status, userId) {
+  try {
+    const patch = { budget_approval_status: status };
+    if (status === 'approved') {
+      patch.budget_approved_by = userId || null;
+      patch.budget_approved_at = new Date().toISOString();
+    } else {
+      patch.budget_approved_by = null;
+      patch.budget_approved_at = null;
+    }
+    const { data, error } = await platformDb
+      .from('projects')
+      .update(patch)
+      .eq('id', projectId)
+      .select('budget_approval_status, budget_approved_by, budget_approved_at')
+      .single();
+    if (error) throw error;
+    return { success: true, data };
+  } catch (e) {
+    const msg = e?.message || e?.details || String(e);
+    console.error('Error setting budget approval status:', msg);
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Save budget categories for a project (replaces existing). Snapshots the outgoing set into
+ * project_budget_revisions first, so the previous budget structure is never lost.
  * @param {string} projectId
  * @param {Array<{ category_name: string, budget_amount: number, funding_source_id?: string }>} categories
+ * @param {string} [userId] - current app user id, recorded on the revision snapshot
  */
-export async function saveForProject(projectId, categories) {
+export async function saveForProject(projectId, categories, userId) {
   try {
+    await snapshotCurrentRevision(projectId, userId);
+
     const { error: delErr } = await withTimeout(
       platformDb.from('project_budget_categories').delete().eq('project_id', projectId),
       BUDGET_STEP_MS,
@@ -103,4 +201,4 @@ export async function saveForProject(projectId, categories) {
   }
 }
 
-export default { getByProjectId, saveForProject };
+export default { getByProjectId, saveForProject, getRevisions, setApprovalStatus };

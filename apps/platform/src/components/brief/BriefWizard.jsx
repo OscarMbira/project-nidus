@@ -7,13 +7,17 @@ import { useState } from 'react'
 import { CheckCircle, Circle, ArrowRight, ArrowLeft } from 'lucide-react'
 
 const WIZARD_STEPS = [
-  { id: 'metadata', label: 'Metadata', description: 'Basic information and references' },
-  { id: 'definition', label: 'Project Definition', description: 'Background, objectives, and scope' },
-  { id: 'business-case', label: 'Business Case', description: 'Outline business case summary' },
-  { id: 'products', label: 'Products', description: 'Product descriptions and quality' },
-  { id: 'approach', label: 'Approach', description: 'Project approach and methodology' },
-  { id: 'team', label: 'Team', description: 'Team structure and roles' },
-  { id: 'review', label: 'Review', description: 'Lessons learned and references' },
+  { id: 'definition', label: 'Project definition', description: 'Background and objectives' },
+  { id: 'scope', label: 'Scope & exclusions', description: 'Scope, constraints, and assumptions' },
+  { id: 'tolerances', label: 'Project tolerances', description: 'Time, cost, quality, and related limits' },
+  { id: 'stakeholders', label: 'Interested parties', description: 'Users and known interested parties' },
+  { id: 'interfaces', label: 'Interfaces', description: 'Internal and external interfaces' },
+  { id: 'business-case', label: 'Outline business case', description: 'Outline business case summary' },
+  { id: 'products', label: 'Product description', description: 'Project product description and quality' },
+  { id: 'approach', label: 'Project approach', description: 'How the project will be delivered' },
+  { id: 'team', label: 'Team structure', description: 'Project management team structure' },
+  { id: 'roles', label: 'Role descriptions', description: 'Key role descriptions' },
+  { id: 'references', label: 'References', description: 'Supporting references' },
 ]
 
 export default function BriefWizard({ 

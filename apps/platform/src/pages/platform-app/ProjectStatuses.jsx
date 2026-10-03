@@ -262,7 +262,7 @@ export default function ProjectStatuses() {
   const headerContent = useMemo(() => (
     <div className="mb-8">
       <button
-        onClick={() => navigate('/platform/pmo-admin')}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-gray-400 hover:text-gray-300 mb-4"
       >
         <ArrowLeft className="h-5 w-5" />

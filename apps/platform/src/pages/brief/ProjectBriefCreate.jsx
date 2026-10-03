@@ -6,20 +6,48 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 
-import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { ArrowLeft, Save, FileText } from 'lucide-react'
 import { createBrief, createBriefFromMandate, getBriefByProject } from '../../services/projectBriefService'
 import { validateCompleteness } from '../../services/briefValidationService'
 import ProjectBriefForm from '../../components/brief/ProjectBriefForm'
-import BriefCompletionProgress from '../../components/brief/BriefCompletionProgress'
 import QualityCriteriaChecklist from '../../components/brief/QualityCriteriaChecklist'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import {
+  resolveBriefCharterMode,
+  briefCharterLabels,
+  briefCharterDocPath,
+  resolveProjectWorkspaceBasePath,
+} from '@nidus/shared/utils/briefCharterTerminology.js'
+
+const BRIEF_EXPORT_SECTIONS = [
+  { title: 'Basic Information', fields: [
+    { key: 'brief_reference', label: 'Reference' },
+    { key: 'version_number', label: 'Version' },
+    { key: 'document_status', label: 'Status' },
+  ]},
+  { title: 'Background', fields: [{ key: 'background', label: 'Background' }] },
+  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Project Objectives' }] },
+  { title: 'Scope', fields: [
+    { key: 'project_scope', label: 'Project Scope' },
+    { key: 'scope_exclusions', label: 'Scope Exclusions' },
+  ]},
+  { title: 'Business Case', fields: [
+    { key: 'outline_business_case_summary', label: 'Outline Business Case Summary' },
+    { key: 'business_option_selected', label: 'Business Option Selected' },
+    { key: 'dis_benefits_description', label: 'Dis-benefits' },
+  ]},
+]
 
 export default function ProjectBriefCreate() {
   const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
   const navigate = useNavigate()
   const location = useLocation()
   const mandateId = location.state?.mandateId
+  const mode = resolveBriefCharterMode(location.pathname)
+  const labels = briefCharterLabels(mode)
+  const basePath = resolveProjectWorkspaceBasePath(location.pathname)
+  const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode, basePath)
 
   const [formData, setFormData] = useState({
     project_id: projectId,
@@ -37,6 +65,8 @@ export default function ProjectBriefCreate() {
     assumptions: '',
     outline_business_case_summary: '',
     business_option_selected: '',
+    dis_benefits_included: true,
+    dis_benefits_description: '',
     product_description: '',
     customer_quality_expectations: '',
     user_acceptance_criteria: '',
@@ -95,14 +125,15 @@ export default function ProjectBriefCreate() {
 
   const validateForm = () => {
     const newErrors = {}
-    if (!formData.background || formData.background.length < 100) {
-      newErrors.background = 'Background is required (minimum 100 characters)'
+    const hasListItems = (v) => String(v || '').split(/\r?\n/).some((line) => line.trim())
+    if (!hasListItems(formData.background)) {
+      newErrors.background = 'Add at least one background point'
     }
-    if (!formData.project_objectives || formData.project_objectives.length < 100) {
-      newErrors.project_objectives = 'Project objectives are required (minimum 100 characters)'
+    if (!hasListItems(formData.project_objectives)) {
+      newErrors.project_objectives = 'Add at least one project objective'
     }
-    if (!formData.project_scope || formData.project_scope.length < 100) {
-      newErrors.project_scope = 'Project scope is required (minimum 100 characters)'
+    if (!hasListItems(formData.project_scope)) {
+      newErrors.project_scope = 'Add at least one in-scope item'
     }
     if (!formData.outline_business_case_summary || formData.outline_business_case_summary.length < 100) {
       newErrors.outline_business_case_summary = 'Business case summary is required (minimum 100 characters)'
@@ -110,8 +141,8 @@ export default function ProjectBriefCreate() {
     if (!formData.project_approach_description || formData.project_approach_description.length < 100) {
       newErrors.project_approach_description = 'Project approach description is required (minimum 100 characters)'
     }
-    if (!formData.team_structure_description || formData.team_structure_description.length < 50) {
-      newErrors.team_structure_description = 'Team structure description is required (minimum 50 characters)'
+    if (!hasListItems(formData.team_structure_description)) {
+      newErrors.team_structure_description = 'Add at least one team structure point'
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -123,10 +154,10 @@ export default function ProjectBriefCreate() {
       const brief = await createBrief(projectId, formData)
       // Update formData with created brief ID for subsequent operations
       setFormData(prev => ({ ...prev, id: brief.id, brief_reference: brief.brief_reference }))
-      alert('Brief saved as draft!')
+      alert(`${labels.singular} saved as draft!`)
     } catch (error) {
       console.error('Error saving brief:', error)
-      alert('Error saving brief: ' + error.message)
+      alert(`Error saving ${labels.singular.toLowerCase()}: ` + error.message)
     } finally {
       setSaving(false)
     }
@@ -153,10 +184,10 @@ export default function ProjectBriefCreate() {
         constraints: brief.constraints,
         customer_quality_expectations: brief.customer_quality_expectations
       }))
-      alert('Brief created from mandate! You can now edit and complete it.')
+      alert(`${labels.singular} created from mandate! You can now edit and complete it.`)
     } catch (error) {
       console.error('Error creating brief from mandate:', error)
-      alert('Error creating brief: ' + error.message)
+      alert(`Error creating ${labels.singular.toLowerCase()}: ` + error.message)
     } finally {
       setSaving(false)
     }
@@ -174,7 +205,7 @@ export default function ProjectBriefCreate() {
       if (formData.id) {
         const completeness = await validateCompleteness(formData.id)
         if (completeness.completion_percentage < 100) {
-          if (!confirm(`Brief is only ${completeness.completion_percentage}% complete. Submit anyway?`)) {
+          if (!confirm(`${labels.singular} is only ${completeness.completion_percentage}% complete. Submit anyway?`)) {
             return
           }
         }
@@ -189,11 +220,11 @@ export default function ProjectBriefCreate() {
         ...formData,
         document_status: 'under_review'
       })
-      alert('Brief submitted for approval!')
-      navigate(platformProjectPath(routeKey, 'brief', 'view'))
+      alert(`${labels.singular} submitted for approval!`)
+      navigate(docPath('view'))
     } catch (error) {
       console.error('Error submitting brief:', error)
-      alert('Error submitting brief: ' + error.message)
+      alert(`Error submitting ${labels.singular.toLowerCase()}: ` + error.message)
     } finally {
       setSaving(false)
     }
@@ -204,16 +235,16 @@ export default function ProjectBriefCreate() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-            Brief Already Exists
+            {labels.singular} Already Exists
           </h2>
           <p className="text-yellow-700 dark:text-yellow-300 mb-4">
-            A brief already exists for this project. You can view or edit it.
+            A {labels.singular.toLowerCase()} already exists for this project. You can view or edit it.
           </p>
           <button
-            onClick={() => navigate(platformProjectPath(routeKey, 'brief', 'view'))}
+            onClick={() => navigate(docPath('view'))}
             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg"
           >
-            View Existing Brief
+            View Existing {labels.singular}
           </button>
         </div>
       </div>
@@ -230,10 +261,21 @@ export default function ProjectBriefCreate() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </button>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Project Brief</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Create a new project brief for this project
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{labels.createPageTitle}</h1>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              {labels.createPageSubtitle}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:pt-1">
+            <ExportRecordButtons
+              sections={BRIEF_EXPORT_SECTIONS}
+              record={formData}
+              baseFilename={`${labels.singular}_${formData.brief_reference || 'Draft'}`}
+            />
+          </div>
+        </div>
       </div>
 
       {mandateId && (
@@ -244,7 +286,7 @@ export default function ProjectBriefCreate() {
                 Create from Mandate
               </h3>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                You can auto-populate this brief from the mandate
+                You can auto-populate this {labels.singular.toLowerCase()} from the mandate
               </p>
             </div>
             <button
@@ -258,11 +300,6 @@ export default function ProjectBriefCreate() {
           </div>
         </div>
       )}
-
-      {/* Completion Progress */}
-      <div className="mb-6">
-        <BriefCompletionProgress briefId={formData.id} />
-      </div>
 
       {/* Quality Criteria (shown after brief is created) */}
       {formData.id && (

@@ -67,7 +67,7 @@ export default function CheckoutCancel() {
         {/* Back to Home */}
         <div className="text-center">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(-1)}
             className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

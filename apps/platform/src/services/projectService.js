@@ -71,12 +71,35 @@ export function mergeMyPmProjectIds({ managedRows = [], membershipRows = [], use
 }
 
 /**
- * Get projects assigned to the current user as Project Manager.
- * Sources: projects.project_manager_user_id, PM project_memberships, project-scoped PM user_roles.
+ * Merge project IDs where the user is assigned in ANY active role (not just PM/manager roles).
+ * For surfaces like Timesheets where any team member — not only PMs — needs to see/log against
+ * their own assigned project(s). Pure helper for unit tests — does not query the DB.
+ * @param {{ managedRows?: Array<{id?: string}>, membershipRows?: Array<{project_id?: string}>, userRoleRows?: Array<{project_id?: string}> }} sources
+ * @returns {string[]}
+ */
+export function mergeMyAssignedProjectIds({ managedRows = [], membershipRows = [], userRoleRows = [] } = {}) {
+  const ids = new Set();
+  for (const p of managedRows) {
+    if (p?.id) ids.add(p.id);
+  }
+  for (const m of membershipRows) {
+    if (m?.project_id) ids.add(m.project_id);
+  }
+  for (const ur of userRoleRows) {
+    if (ur?.project_id) ids.add(ur.project_id);
+  }
+  return [...ids];
+}
+
+/**
+ * Get projects assigned to the current user as Project Manager (default), or in any active role
+ * when options.anyRole is true (e.g. Timesheets, where any team member — not only PMs — needs
+ * their own assigned project(s)).
+ * Sources: projects.project_manager_user_id, project_memberships, project-scoped user_roles.
  * Does not use user_projects — that table is blanket-granted for RLS demos (v825/v826) and over-includes.
  * @param {string} userId - User ID (public.users.id)
  * @param {Object} filters - Filter options (status_id; search is applied client-side when set)
- * @param {{ signal?: AbortSignal }} [options]
+ * @param {{ signal?: AbortSignal, anyRole?: boolean }} [options]
  * @returns {Promise<Object>} Projects data
  */
 export async function getMyProjects(userId, filters = {}, options = {}) {
@@ -123,7 +146,8 @@ export async function getMyProjects(userId, filters = {}, options = {}) {
       console.warn('getMyProjects: user_roles', userRolesRes.error.message);
     }
 
-    const ids = mergeMyPmProjectIds({
+    const mergeFn = options.anyRole ? mergeMyAssignedProjectIds : mergeMyPmProjectIds;
+    const ids = mergeFn({
       managedRows: managedRes.data || [],
       membershipRows: membershipsRes.error ? [] : membershipsRes.data || [],
       userRoleRows: userRolesRes.error ? [] : userRolesRes.data || [],
@@ -147,6 +171,8 @@ export async function getMyProjects(userId, filters = {}, options = {}) {
         actual_end_date,
         health_status,
         percentage_complete,
+        delivery_methodology,
+        project_methodologies (methodologies:methodology_id (methodology_name, methodology_color)),
         created_at,
         is_deleted
       `)
@@ -225,6 +251,8 @@ export async function getAllProjects(organizationId, filters = {}, options = {})
         health_status,
         percentage_complete,
         owner_user_id,
+        delivery_methodology,
+        project_methodologies (methodologies:methodology_id (methodology_name, methodology_color)),
         created_at
       `)
       .eq('account_id', organizationId)

@@ -1,7 +1,15 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { X, Save, User, Mail, Target, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 import { saveStakeholder } from '../../services/stakeholderService';
+import {
+  addStakeholderDepartment,
+  addStakeholderOrganisation,
+  loadStakeholderCatalogues,
+} from '../../services/stakeholderCatalogueService';
+import SelectField from '../ui/SelectField';
 import { platformDb } from '../../services/supabaseClient';
+import StakeholderPhotoField from '../ui/StakeholderPhotoField';
+import { saveStakeholderPhoto } from '@nidus/shared/services/stakeholderPhotoService';
 import SearchableSelect from '../ui/SearchableSelect';
 import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue';
 import { buildIanaTimezoneSelectOptions } from '@nidus/shared/utils/ianaTimezoneOptions';
@@ -11,6 +19,57 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import MultiLineListInput, { joinMultiLineValue, parseMultiLineValue } from '@nidus/ui/MultiLineListInput';
+
+function filledContactEntries(list) {
+  return (list || [])
+    .map((value, index) => ({ index, value: String(value || '').trim() }))
+    .filter((entry) => entry.value);
+}
+
+function primaryIndexMissing(list, selectedIndex) {
+  const filled = filledContactEntries(list);
+  if (filled.length < 2) return false;
+  return !filled.some((entry) => entry.index === selectedIndex);
+}
+
+function primaryValueAt(list, selectedIndex) {
+  const filled = filledContactEntries(list);
+  if (filled.length < 2) return filled[0]?.value || '';
+  return filled.find((entry) => entry.index === selectedIndex)?.value || '';
+}
+
+function orderByPrimaryIndex(list, selectedIndex) {
+  const filled = filledContactEntries(list);
+  const chosen = filled.find((entry) => entry.index === selectedIndex);
+  if (!chosen || filled.length < 2) return filled.map((entry) => entry.value);
+  return [
+    chosen.value,
+    ...filled.filter((entry) => entry.index !== selectedIndex).map((entry) => entry.value),
+  ];
+}
+
+function initialPrimaryIndex(list, primary) {
+  const target = String(primary || '').trim();
+  if (!target) return null;
+  const index = (list || []).findIndex((value) => String(value || '').trim() === target);
+  return index >= 0 ? index : null;
+}
+
+function appendUniqueLine(current, nextValue) {
+  const next = String(nextValue || '').trim();
+  if (!next) return current || '';
+  const lines = parseMultiLineValue(current || '');
+  if (lines.some((line) => line.toLowerCase() === next.toLowerCase())) return current || '';
+  return joinMultiLineValue([...lines, next]);
+}
+
+function roleLabel(value, roleOptions) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  const match = (roleOptions || []).find((opt) => opt.value === raw || opt.label === raw);
+  return match?.label || raw;
+}
 
 const DEFAULT_FORM_DATA = {
   stakeholder_reference: '',
@@ -37,6 +96,7 @@ const DEFAULT_FORM_DATA = {
   is_powerful: false,
   is_negatively_affected: false,
   is_positively_affected: false,
+  interest_level: '',
   availability_hours_per_week: null,
   time_zone: '',
   availability_constraints: '',
@@ -73,12 +133,23 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
   const [stakeholders, setStakeholders] = useState([]);
   const [roles, setRoles] = useState([]);
   const [rolesLoading, setRolesLoading] = useState(true);
+  const [organisationOptions, setOrganisationOptions] = useState([]);
+  const [departmentOptions, setDepartmentOptions] = useState([]);
+  const [catalogueAccountId, setCatalogueAccountId] = useState(null);
+  const [catalogueError, setCatalogueError] = useState('');
+  const [contactPrimaryError, setContactPrimaryError] = useState('');
+  const [primaryContactIndex, setPrimaryContactIndex] = useState({
+    emails: null,
+    phones: null,
+    mobiles: null,
+  });
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('projects-basic');
+  const [pendingPhoto, setPendingPhoto] = useState(null);
+  const [activeTab, setActiveTab] = useState('assign-projects');
   const [auditUserLabels, setAuditUserLabels] = useState({});
 
-  const TAB_IDS = ['projects-basic', 'contact', 'project-role', 'availability', 'notes'];
-  const TAB_LABELS = ['Assign & Basic Information', 'Contact Information', 'Project Role & Characteristics', 'Availability', 'Notes & Requirements'];
+  const TAB_IDS = ['assign-projects', 'basic', 'contact', 'project-role', 'characteristics', 'availability', 'requirements', 'expectations', 'notes'];
+  const TAB_LABELS = ['Assign to project(s)', 'Basic Information', 'Contact Information', 'Project Role', 'Characteristics', 'Availability', 'Requirements', 'Expectations', 'Notes'];
 
   useEffect(() => {
     if (activeTab !== 'audit' || !stakeholder) return;
@@ -96,6 +167,37 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
     () => roles.map((r) => ({ value: r.role_name, label: r.role_display_name || r.role_name })),
     [roles]
   );
+
+  useEffect(() => {
+    if (!roleOptions.length) return;
+    setFormData((prev) => {
+      const lines = parseMultiLineValue(prev.project_role);
+      if (!lines.length) return prev;
+      const next = joinMultiLineValue(lines.map((line) => roleLabel(line, roleOptions)));
+      if (next === (prev.project_role || '')) return prev;
+      return { ...prev, project_role: next };
+    });
+  }, [roleOptions]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const projectKey = projectIds[0] || projectId || stakeholder?.project_id || null;
+    (async () => {
+      let accountId = null;
+      if (projectKey) {
+        const { data } = await platformDb.from('projects').select('account_id').eq('id', projectKey).maybeSingle();
+        accountId = data?.account_id || null;
+      }
+      if (cancelled) return;
+      setCatalogueAccountId(accountId);
+      const catalogues = await loadStakeholderCatalogues(accountId);
+      if (cancelled) return;
+      setOrganisationOptions(catalogues.organisations);
+      setDepartmentOptions(catalogues.departments);
+    })();
+    return () => { cancelled = true; };
+  }, [projectIds, projectId, stakeholder?.project_id]);
+
   const selectedProjectIds = useMemo(() => new Set(projectIds), [projectIds]);
 
   const timezoneOptions = useMemo(() => buildIanaTimezoneSelectOptions(), []);
@@ -137,6 +239,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
         is_powerful: stakeholder.is_powerful || false,
         is_negatively_affected: stakeholder.is_negatively_affected || false,
         is_positively_affected: stakeholder.is_positively_affected ?? (stakeholder.is_affected_by_project ? true : false),
+        interest_level: stakeholder.interest_level || '',
         availability_hours_per_week: stakeholder.availability_hours_per_week || null,
         time_zone: stakeholder.time_zone || '',
         availability_constraints: stakeholder.availability_constraints || '',
@@ -146,6 +249,20 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
         expectations: stakeholder.expectations || '',
         identification_source: stakeholder.identification_source || '',
         identification_date: stakeholder.identification_date ? stakeholder.identification_date.slice(0, 10) : '',
+      });
+      const loadedEmails = Array.isArray(stakeholder.emails) && stakeholder.emails.length > 0
+        ? stakeholder.emails
+        : (stakeholder.email ? [stakeholder.email] : ['']);
+      const loadedPhones = Array.isArray(stakeholder.phones) && stakeholder.phones.length > 0
+        ? stakeholder.phones
+        : (stakeholder.phone ? [stakeholder.phone] : ['']);
+      const loadedMobiles = Array.isArray(stakeholder.mobiles) && stakeholder.mobiles.length > 0
+        ? stakeholder.mobiles
+        : (stakeholder.mobile ? [stakeholder.mobile] : ['']);
+      setPrimaryContactIndex({
+        emails: initialPrimaryIndex(loadedEmails, stakeholder.email),
+        phones: initialPrimaryIndex(loadedPhones, stakeholder.phone),
+        mobiles: initialPrimaryIndex(loadedMobiles, stakeholder.mobile),
       });
     }
     const nextProjectIds = stakeholder
@@ -245,7 +362,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
   }, []);
 
   const updateContactEntry = useCallback((field, index, value) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const arr = [...(prev[field] || [''])];
       arr[index] = value;
       return { ...prev, [field]: arr };
@@ -259,20 +376,98 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
     }));
   }, []);
 
+  const rememberOption = (setter, label) => {
+    const next = String(label || '').trim();
+    if (!next) return;
+    setter((prev) => {
+      if (prev.some((opt) => String(opt.value).toLowerCase() === next.toLowerCase())) return prev;
+      return [...prev, { value: next, label: next }].sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+    });
+  };
+
+  const withCurrentOption = (options, current) => {
+    const value = String(current || '').trim();
+    if (!value || options.some((opt) => opt.value === value)) return options;
+    return [{ value, label: value }, ...options];
+  };
+
+  const addOrganisationName = async (name) => {
+    setCatalogueError('');
+    if (!catalogueAccountId) {
+      setCatalogueError('Choose a project first so this organisation can be saved.');
+      return;
+    }
+    try {
+      const saved = await addStakeholderOrganisation(catalogueAccountId, name);
+      setFormData((prev) => ({ ...prev, stakeholder_organization: saved }));
+      rememberOption(setOrganisationOptions, saved);
+    } catch (error) {
+      setCatalogueError(error?.message || 'Could not add this organisation.');
+    }
+  };
+
+  const addDepartmentName = async (name) => {
+    setCatalogueError('');
+    if (!catalogueAccountId) {
+      setCatalogueError('Choose a project first so this department can be saved.');
+      return;
+    }
+    try {
+      const saved = await addStakeholderDepartment(catalogueAccountId, name);
+      setFormData((prev) => ({ ...prev, stakeholder_department: saved }));
+      rememberOption(setDepartmentOptions, saved);
+    } catch (error) {
+      setCatalogueError(error?.message || 'Could not add this department.');
+    }
+  };
+
   const removeContactEntry = useCallback((field, index) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const arr = [...(prev[field] || [])];
       if (arr.length <= 1) return prev;
       arr.splice(index, 1);
       return { ...prev, [field]: arr };
     });
+    setPrimaryContactIndex((prev) => {
+      const current = prev[field];
+      if (current == null) return prev;
+      if (current === index) return { ...prev, [field]: null };
+      if (current > index) return { ...prev, [field]: current - 1 };
+      return prev;
+    });
   }, []);
+
+  const persistPendingPhoto = async (saved) => {
+    if (!pendingPhoto || !saved?.id) return saved;
+    const result = await saveStakeholderPhoto(platformDb, {
+      id: saved.id,
+      accountId: saved.account_id || catalogueAccountId,
+      ownerUserId: saved.user_id,
+      file: pendingPhoto,
+      previousPath: saved.photo_path || null,
+    });
+    if (!result.success) {
+      throw new Error(result.message || 'Stakeholder saved, but the picture could not be stored.');
+    }
+    return { ...saved, photo_path: result.data };
+  };
 
   /** Failsafe: if the Supabase client never settles, still exit "Saving..." (timers can be throttled in background tabs). */
   const UI_SAVE_TIMEOUT_MS = 55000;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const missingPrimary = [
+      primaryIndexMissing(formData.emails, primaryContactIndex.emails) ? 'email address' : '',
+      primaryIndexMissing(formData.phones, primaryContactIndex.phones) ? 'phone number' : '',
+      primaryIndexMissing(formData.mobiles, primaryContactIndex.mobiles) ? 'mobile number' : '',
+    ].filter(Boolean);
+    if (missingPrimary.length) {
+      setActiveTab('contact');
+      setContactPrimaryError(`Select a primary ${missingPrimary.join(', ')}.`);
+      return;
+    }
+    setContactPrimaryError('');
     setSaving(true);
     let uiTimeoutId;
     const uiTimeoutPromise = new Promise((_, reject) => {
@@ -290,14 +485,18 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
     try {
       await Promise.race([
         (async () => {
-          const emailsList = (formData.emails || []).map(s => (s || '').trim()).filter(Boolean);
-          const phonesList = (formData.phones || []).map(s => (s || '').trim()).filter(Boolean);
-          const mobilesList = (formData.mobiles || []).map(s => (s || '').trim()).filter(Boolean);
+          const emailsList = orderByPrimaryIndex(formData.emails, primaryContactIndex.emails);
+          const phonesList = orderByPrimaryIndex(formData.phones, primaryContactIndex.phones);
+          const mobilesList = orderByPrimaryIndex(formData.mobiles, primaryContactIndex.mobiles);
+          const typedReference = String(formData.stakeholder_reference || '').trim();
           const baseData = {
             ...formData,
-            email: emailsList[0] ?? formData.email ?? '',
-            phone: phonesList[0] ?? formData.phone ?? '',
-            mobile: mobilesList[0] ?? formData.mobile ?? '',
+            stakeholder_reference: stakeholder
+              ? (typedReference || stakeholder.stakeholder_reference || null)
+              : (typedReference || null),
+            email: primaryValueAt(formData.emails, primaryContactIndex.emails),
+            phone: primaryValueAt(formData.phones, primaryContactIndex.phones),
+            mobile: primaryValueAt(formData.mobiles, primaryContactIndex.mobiles),
             emails: emailsList.length ? emailsList : null,
             phones: phonesList.length ? phonesList : null,
             mobiles: mobilesList.length ? mobilesList : null,
@@ -305,30 +504,41 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             user_id: formData.user_id || null,
             availability_hours_per_week: formData.availability_hours_per_week ? parseFloat(formData.availability_hours_per_week) : null,
             is_affected_by_project: !!(formData.is_negatively_affected || formData.is_positively_affected),
+            interest_level: formData.interest_level || null,
             identification_source: formData.identification_source || null,
             identification_date: formData.identification_date || null,
           };
 
           if (stakeholder) {
-            baseData.project_id = stakeholder.project_id || projectId || formData.project_id;
+            baseData.project_id = stakeholder.project_id ?? null;
+            baseData.account_id = stakeholder.account_id || catalogueAccountId || null;
             baseData.reports_to_stakeholder_id = formData.reports_to_stakeholder_id || null;
-            const saved = await saveStakeholder(baseData, stakeholder.id);
+            const saved = await persistPendingPhoto(await saveStakeholder(baseData, stakeholder.id));
             onSave(saved);
             return;
           }
 
-          const idsToUse = projectIds.length ? projectIds : (projectId ? [projectId] : [formData.project_id].filter(Boolean));
+          const idsToUse = projectIds.length ? projectIds : [];
 
           if (idsToUse.length === 0) {
-            const submitData = { ...baseData, project_id: null, reports_to_stakeholder_id: formData.reports_to_stakeholder_id || null };
-            const saved = await saveStakeholder(submitData, null);
+            if (!catalogueAccountId) {
+              alert('Open a project in the organisation before adding a stakeholder to every project.');
+              return;
+            }
+            const submitData = {
+              ...baseData,
+              project_id: null,
+              account_id: catalogueAccountId,
+              reports_to_stakeholder_id: formData.reports_to_stakeholder_id || null,
+            };
+            const saved = await persistPendingPhoto(await saveStakeholder(submitData, null));
             onSave(saved);
             return;
           }
 
           if (idsToUse.length === 1) {
             const submitData = { ...baseData, project_id: idsToUse[0], reports_to_stakeholder_id: formData.reports_to_stakeholder_id || null };
-            const saved = await saveStakeholder(submitData, null);
+            const saved = await persistPendingPhoto(await saveStakeholder(submitData, null));
             onSave(saved);
             return;
           }
@@ -336,7 +546,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
           const savedList = [];
           for (const pid of idsToUse) {
             const submitData = { ...baseData, project_id: pid };
-            const saved = await saveStakeholder(submitData, null);
+            const saved = await persistPendingPhoto(await saveStakeholder(submitData, null));
             savedList.push(saved);
           }
           onSave(savedList);
@@ -387,7 +597,19 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
     if (readOnly || !canCreateDraft) return;
     setSavingDraft(true);
     try {
-      await saveDraft(formData, { projectId: projectId || undefined, entityTitle: formData.stakeholder_name || 'Untitled stakeholder' });
+      let pendingPhotoDataUrl = null;
+      if (pendingPhoto) {
+        pendingPhotoDataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(pendingPhoto);
+        });
+      }
+      await saveDraft(
+        { ...formData, pendingPhotoDataUrl },
+        { projectId: projectId || undefined, entityTitle: formData.stakeholder_name || 'Untitled stakeholder' }
+      );
     } catch (e) {
       console.error(e);
       alert(e?.message || 'Failed to save draft');
@@ -399,11 +621,95 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
   const handleRestoreDraft = async () => {
     try {
       const data = await resumeDraft();
-      if (data) setFormData((prev) => ({ ...prev, ...data }));
+      if (data) {
+        const { pendingPhotoDataUrl, ...rest } = data;
+        setFormData((prev) => ({ ...prev, ...rest }));
+        if (pendingPhotoDataUrl) {
+          const blob = await (await fetch(pendingPhotoDataUrl)).blob();
+          setPendingPhoto(new File([blob], 'photo.png', { type: blob.type || 'image/png' }));
+        }
+      }
       dismissExistingDraft();
     } catch (e) {
       console.error(e);
     }
+  };
+
+  const renderContactList = (field, { label, type, placeholder, addLabel, noun }) => {
+    const values = formData[field] || [''];
+    const showPrimary = values.length > 1;
+    const selectedIndex = primaryContactIndex[field];
+    const missing = primaryIndexMissing(values, selectedIndex);
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {label}
+        </label>
+        {showPrimary && (
+          <p className="mb-2 text-sm text-gray-800 dark:text-gray-100">
+            More than one {noun}. Choose one primary.
+          </p>
+        )}
+        <div className="space-y-3">
+          {values.map((val, idx) => {
+            const trimmed = String(val || '').trim();
+            const isPrimary = selectedIndex === idx && Boolean(trimmed);
+            return (
+              <div key={`${field}-${idx}`} className="space-y-1">
+                <div className="flex gap-2 items-center">
+                  <input
+                    type={type}
+                    value={val}
+                    onChange={(e) => updateContactEntry(field, idx, e.target.value)}
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder={placeholder}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeContactEntry(field, idx)}
+                    disabled={values.length <= 1}
+                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
+                    aria-label={`Remove ${noun}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                {showPrimary && (
+                  <button
+                    type="button"
+                    disabled={!trimmed}
+                    onClick={() => {
+                      if (!trimmed) return;
+                      setPrimaryContactIndex((prev) => ({ ...prev, [field]: idx }));
+                      setContactPrimaryError('');
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
+                      isPrimary
+                        ? 'bg-blue-600 border-blue-600 text-white'
+                        : 'bg-white dark:bg-gray-700 border-gray-400 dark:border-gray-300 text-gray-900 dark:text-white'
+                    } disabled:opacity-40 disabled:cursor-not-allowed`}
+                    aria-pressed={isPrimary}
+                  >
+                    {isPrimary ? 'Primary' : 'Set as primary'}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => addContactEntry(field)}
+            className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            <Plus className="h-4 w-4" />
+            {addLabel}
+          </button>
+          {missing && (
+            <p className="text-sm text-red-700 dark:text-red-300">Select one primary {noun}.</p>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const formContent = (
@@ -443,7 +749,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             <AuditCard title="Classification" description="Where this stakeholder sits.">
               <AuditField label="Category" value={humanizeAuditToken(formData.stakeholder_category || stakeholder.stakeholder_category)} />
               <AuditField label="Organization" value={formData.stakeholder_organization || stakeholder.stakeholder_organization} />
-              <AuditField label="Project role" value={formData.project_role || stakeholder.project_role} />
+              <AuditField label="Project role" value={parseMultiLineValue(formData.project_role || stakeholder.project_role || '').join(', ') || null} />
             </AuditCard>
             <AuditCard title="Record history" description="When this stakeholder was created and last changed.">
               <AuditField label="Created by" value={stakeholder.created_by ? auditUserLabels[stakeholder.created_by] || null : null} />
@@ -456,23 +762,24 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
         )
       )}
 
-          {/* Tab: Assign to project(s) + Basic Information (merged) */}
-          <div className="space-y-6" style={{ display: activeTab === 'projects-basic' ? 'block' : 'none' }}>
-            <div className="space-y-4">
+          {/* Tab: Assign to project(s) */}
+          <div className="space-y-4" style={{ display: activeTab === 'assign-projects' ? 'block' : 'none' }}>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
                 {stakeholder ? 'Project' : 'Assign to project(s)'}
               </h3>
               {stakeholder ? (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {stakeholder.project?.project_name || 'This stakeholder is assigned to one project. Edit project-specific details below.'}
+                <p className="text-sm text-gray-700 dark:text-gray-200">
+                  {stakeholder.project_id
+                    ? (stakeholder.project?.project_name || 'This stakeholder is assigned to one project.')
+                    : 'This stakeholder is on every project in the organisation. A project can remove them if they are not needed there.'}
                 </p>
               ) : (
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Select one or more projects <span className="text-red-500">*</span>
+                    Select one or more projects
                   </label>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Check each project this stakeholder will be assigned to. The same stakeholder (e.g. ICT Department) can be assigned to many projects.
+                  <p className="text-sm text-gray-700 dark:text-gray-200">
+                    Check the projects this stakeholder belongs to. Leave every project unchecked to add them to all projects in the organisation. A PMO, project manager, team manager, or team member can later remove them from a project that does not need them.
                   </p>
                   <div className="rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 focus-within:border-blue-500 dark:focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/20 transition-colors">
                     <div className="max-h-56 overflow-y-auto p-3 space-y-1">
@@ -513,7 +820,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                     {projects.length > 0 && (
                       <div className="px-3 py-2 border-t border-gray-200 dark:border-gray-600 bg-gray-100/50 dark:bg-gray-800/50 rounded-b-lg text-sm text-gray-600 dark:text-gray-400">
                         {projectIds.length === 0 ? (
-                          'No project selected — stakeholder will be created independently; you can assign to projects later.'
+                          'No project selected. This stakeholder will appear on every project in the organisation.'
                         ) : (
                           <span className="font-medium text-gray-700 dark:text-gray-300">{projectIds.length} project{projectIds.length !== 1 ? 's' : ''} selected</span>
                         )}
@@ -522,13 +829,25 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                   </div>
                 </div>
               )}
-            </div>
+          </div>
 
-            <div className="space-y-4">
+          {/* Tab: Basic Information */}
+          <div className="space-y-4" style={{ display: activeTab === 'basic' ? 'block' : 'none' }}>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
                 Basic Information
               </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <StakeholderPhotoField
+                db={platformDb}
+                stakeholder={stakeholder
+                  ? { ...stakeholder, stakeholder_name: formData.stakeholder_name }
+                  : { stakeholder_name: formData.stakeholder_name }}
+                category={formData.stakeholder_category}
+                accountId={catalogueAccountId || stakeholder?.account_id}
+                readOnly={readOnly}
+                pendingFile={stakeholder ? null : pendingPhoto}
+                onPendingFile={setPendingPhoto}
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Stakeholder Reference
@@ -538,9 +857,13 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                   name="stakeholder_reference"
                   value={formData.stakeholder_reference}
                   onChange={handleChange}
+                  disabled={readOnly}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., SH-001"
+                  placeholder="Leave blank to generate"
                 />
+                <p className="mt-1 text-xs text-gray-700 dark:text-gray-200">
+                  Leave this blank and a reference is assigned when you save. Type one only if you already have a reference to keep.
+                </p>
               </div>
 
               <div>
@@ -567,6 +890,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                   name="stakeholder_title"
                   value={formData.stakeholder_title}
                   onChange={handleChange}
+                  disabled={readOnly}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., Project Manager"
                 />
@@ -576,13 +900,22 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Organization
                 </label>
-                <input
-                  type="text"
-                  name="stakeholder_organization"
+                <SelectField
                   value={formData.stakeholder_organization}
-                  onChange={handleChange}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, stakeholder_organization: value || '' }))}
+                  options={withCurrentOption(organisationOptions, formData.stakeholder_organization)}
+                  placeholder="Search organisations"
+                  searchPlaceholder="Search organisations..."
+                  forceSearchable
+                  allowCustom={!readOnly}
+                  disabled={readOnly}
+                  openAbove
+                  customValueActions={readOnly ? [] : [{
+                    key: 'add-organisation',
+                    label: (term) => `Add "${term}" to organisations`,
+                    onSelect: addOrganisationName,
+                  }]}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., Acme Corporation"
                 />
               </div>
 
@@ -590,15 +923,27 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Department
                 </label>
-                <input
-                  type="text"
-                  name="stakeholder_department"
+                <SelectField
                   value={formData.stakeholder_department}
-                  onChange={handleChange}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, stakeholder_department: value || '' }))}
+                  options={withCurrentOption(departmentOptions, formData.stakeholder_department)}
+                  placeholder="Search departments"
+                  searchPlaceholder="Search departments..."
+                  forceSearchable
+                  allowCustom={!readOnly}
+                  disabled={readOnly}
+                  openAbove
+                  customValueActions={readOnly ? [] : [{
+                    key: 'add-department',
+                    label: (term) => `Add "${term}" to departments`,
+                    onSelect: addDepartmentName,
+                  }]}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="e.g., IT Department"
                 />
               </div>
+              {catalogueError && (
+                <p className="md:col-span-2 text-sm text-red-700 dark:text-red-300">{catalogueError}</p>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -689,7 +1034,6 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 />
               </div>
             </div>
-            </div>
           </div>
 
           {/* Tab: Contact Information */}
@@ -698,114 +1042,31 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               <Mail className="h-5 w-5" />
               Contact Information
             </h3>
+            {contactPrimaryError && (
+              <p className="text-sm text-red-700 dark:text-red-300">{contactPrimaryError}</p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email addresses
-                </label>
-                <div className="space-y-2">
-                  {(formData.emails || ['']).map((val, idx) => (
-                    <div key={`email-${idx}`} className="flex gap-2 items-center">
-                      <input
-                        type="email"
-                        value={val}
-                        onChange={(e) => updateContactEntry('emails', idx, e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="email@example.com"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeContactEntry('emails', idx)}
-                        disabled={(formData.emails || []).length <= 1}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-                        aria-label="Remove email"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addContactEntry('emails')}
-                    className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add another email
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Phone numbers
-                </label>
-                <div className="space-y-2">
-                  {(formData.phones || ['']).map((val, idx) => (
-                    <div key={`phone-${idx}`} className="flex gap-2 items-center">
-                      <input
-                        type="tel"
-                        value={val}
-                        onChange={(e) => updateContactEntry('phones', idx, e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="+1 (555) 123-4567"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeContactEntry('phones', idx)}
-                        disabled={(formData.phones || []).length <= 1}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-                        aria-label="Remove phone"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addContactEntry('phones')}
-                    className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add another phone
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Mobile numbers
-                </label>
-                <div className="space-y-2">
-                  {(formData.mobiles || ['']).map((val, idx) => (
-                    <div key={`mobile-${idx}`} className="flex gap-2 items-center">
-                      <input
-                        type="tel"
-                        value={val}
-                        onChange={(e) => updateContactEntry('mobiles', idx, e.target.value)}
-                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="+1 (555) 987-6543"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeContactEntry('mobiles', idx)}
-                        disabled={(formData.mobiles || []).length <= 1}
-                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed"
-                        aria-label="Remove mobile"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => addContactEntry('mobiles')}
-                    className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add another mobile
-                  </button>
-                </div>
-              </div>
+              {renderContactList('emails', {
+                label: 'Email addresses',
+                type: 'email',
+                placeholder: 'email@example.com',
+                addLabel: 'Add another email',
+                noun: 'email address',
+              })}
+              {renderContactList('phones', {
+                label: 'Phone numbers',
+                type: 'tel',
+                placeholder: '+1 (555) 123-4567',
+                addLabel: 'Add another phone',
+                noun: 'phone number',
+              })}
+              {renderContactList('mobiles', {
+                label: 'Mobile numbers',
+                type: 'tel',
+                placeholder: '+1 (555) 987-6543',
+                addLabel: 'Add another mobile',
+                noun: 'mobile number',
+              })}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -840,30 +1101,51 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </div>
           </div>
 
-          {/* Tab: Project Role & Characteristics */}
           <div className="space-y-4" style={{ display: activeTab === 'project-role' ? 'block' : 'none' }}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Project Role & Characteristics
+              Project Role
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Project Role
+                  Project roles
                 </label>
                 <SearchableSelect
                   options={roleOptions}
-                  value={formData.project_role}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, project_role: val || '' }))}
-                  placeholder="Select or type their role in this project"
+                  value=""
+                  onChange={(val) => setFormData((prev) => ({
+                    ...prev,
+                    project_role: appendUniqueLine(prev.project_role, roleLabel(val, roleOptions)),
+                  }))}
+                  placeholder="Select or type a role, then add another"
                   searchPlaceholder="Search roles..."
                   allowCustom
                   loading={rolesLoading}
                   openAbove
                   maxDropdownHeight={280}
                 />
+                <div className="mt-3">
+                  <MultiLineListInput
+                    viewModeId="stakeholder-project-roles"
+                    value={formData.project_role || ''}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, project_role: value }))}
+                    itemColumnLabel="Project role"
+                    placeholder="Or type a role"
+                    ariaLabelPrefix="project role"
+                    disabled={readOnly}
+                  />
+                </div>
               </div>
+            </div>
+          </div>
 
+          <div className="space-y-4" style={{ display: activeTab === 'characteristics' ? 'block' : 'none' }}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Characteristics
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Organization Level
@@ -903,68 +1185,48 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 </div>
               )}
 
-              <div className="md:col-span-2">
-                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                  <label className="flex items-center gap-2">
+              <div className="md:col-span-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {[
+                  { name: 'is_decision_maker', label: 'Decision Maker' },
+                  { name: 'is_influencer', label: 'Influencer' },
+                  { name: 'is_powerful', label: 'Powerful' },
+                  { name: 'is_negatively_affected', label: 'Negatively affected' },
+                  { name: 'is_positively_affected', label: 'Positively affected' },
+                ].map((item, index) => (
+                  <label key={item.name} className="flex items-center gap-3 px-4 py-3">
+                    <span className="w-6 shrink-0 text-sm tabular-nums text-gray-700 dark:text-gray-200">{index + 1}</span>
                     <input
                       type="checkbox"
-                      name="is_decision_maker"
-                      checked={formData.is_decision_maker}
+                      name={item.name}
+                      checked={formData[item.name]}
                       onChange={handleChange}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Decision Maker
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {item.label}
                     </span>
                   </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="is_influencer"
-                      checked={formData.is_influencer}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Influencer
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="is_powerful"
-                      checked={formData.is_powerful}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Powerful
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="is_negatively_affected"
-                      checked={formData.is_negatively_affected}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Negatively affected
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      name="is_positively_affected"
-                      checked={formData.is_positively_affected}
-                      onChange={handleChange}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Positively affected
-                    </span>
-                  </label>
+                ))}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
+                  <span className="w-6 shrink-0 text-sm tabular-nums text-gray-700 dark:text-gray-200">6</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Interest</span>
+                  {[
+                    { value: 'high', label: 'High' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'low', label: 'Low' },
+                  ].map((option) => (
+                    <label key={option.value} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="interest_level"
+                        value={option.value}
+                        checked={formData.interest_level === option.value}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-900 dark:text-gray-100">{option.label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
@@ -1030,68 +1292,64 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
 
               <div className="md:col-span-3">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Availability Constraints
+                  Availability constraints
                 </label>
-                <textarea
-                  name="availability_constraints"
-                  value={formData.availability_constraints}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe availability constraints..."
+                <MultiLineListInput
+                  viewModeId="stakeholder-availability-constraints"
+                  value={formData.availability_constraints || ''}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, availability_constraints: value }))}
+                  itemColumnLabel="Constraint"
+                  placeholder="One constraint"
+                  ariaLabelPrefix="availability constraint"
+                  disabled={readOnly}
                 />
               </div>
             </div>
           </div>
 
-          {/* Tab: Notes, Requirements & Expectations */}
           <div className="space-y-4" style={{ display: activeTab === 'notes' ? 'block' : 'none' }}>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-              Notes, Requirements & Expectations
+              Notes
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Special Requirements
-                </label>
-                <textarea
-                  name="special_requirements"
-                  value={formData.special_requirements}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Specific requirements, constraints, or conditions for this stakeholder..."
-                />
-              </div>
+            <MultiLineListInput
+              viewModeId="stakeholder-notes"
+              value={formData.notes || ''}
+              onChange={(value) => setFormData((prev) => ({ ...prev, notes: value }))}
+              itemColumnLabel="Note"
+              placeholder="One note"
+              ariaLabelPrefix="note"
+              disabled={readOnly}
+            />
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Expectations
-                </label>
-                <textarea
-                  name="expectations"
-                  value={formData.expectations}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List key expectations the stakeholder has from this project..."
-                />
-              </div>
-            </div>
+          <div className="space-y-4" style={{ display: activeTab === 'requirements' ? 'block' : 'none' }}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Requirements
+            </h3>
+            <MultiLineListInput
+              viewModeId="stakeholder-requirements"
+              value={formData.special_requirements || ''}
+              onChange={(value) => setFormData((prev) => ({ ...prev, special_requirements: value }))}
+              itemColumnLabel="Requirement"
+              placeholder="One requirement"
+              ariaLabelPrefix="requirement"
+              disabled={readOnly}
+            />
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Notes
-              </label>
-              <textarea
-                name="notes"
-                value={formData.notes}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Additional notes..."
-              />
-            </div>
+          <div className="space-y-4" style={{ display: activeTab === 'expectations' ? 'block' : 'none' }}>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Expectations
+            </h3>
+            <MultiLineListInput
+              viewModeId="stakeholder-expectations"
+              value={formData.expectations || ''}
+              onChange={(value) => setFormData((prev) => ({ ...prev, expectations: value }))}
+              itemColumnLabel="Expectation"
+              placeholder="One expectation"
+              ariaLabelPrefix="expectation"
+              disabled={readOnly}
+            />
           </div>
 
           {/* Form Actions */}
@@ -1141,8 +1399,8 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
   }
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 flex justify-center">
-      <div className="w-3/4 max-w-5xl bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+      <div className="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
         {header}
         {formContent}
       </div>

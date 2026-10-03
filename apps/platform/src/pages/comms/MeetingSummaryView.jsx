@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAppRoutePrefix } from '@nidus/shared/hooks/useAppRoutePrefix'
 import { platformDb, simDb } from '@nidus/supabase'
@@ -8,6 +9,7 @@ import { exportListToWord, exportListToPPT } from '@nidus/shared/utils/exportUti
 
 export default function MeetingSummaryView() {
   const { meetingId } = useParams()
+  const navigate = useNavigate()
   const basePath = `${useAppRoutePrefix()}/comms`
   const { meeting, isSim } = useCommsApi()
   const [summary, setSummary] = useState(null)
@@ -62,6 +64,10 @@ export default function MeetingSummaryView() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <div className="flex flex-wrap justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{meet?.title || 'Meeting summaries'}</h1>
         <div className="flex gap-2">

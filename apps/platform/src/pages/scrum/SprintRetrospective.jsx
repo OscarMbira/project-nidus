@@ -194,7 +194,7 @@ export default function SprintRetrospective() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}/scrum/sprint/${sprintId}/board`)}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Sprint Board

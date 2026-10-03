@@ -6,18 +6,16 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ArrowLeft, Table2, Plus, List, Target, Search, PauseCircle } from 'lucide-react'
 import {
-  getStakeholders,
   getStakeholderAssessmentMatrix,
-  saveStakeholderAssessmentMatrix,
   deleteStakeholderAssessmentMatrix,
 } from '../../services/stakeholderService'
 import StakeholderSEAM from '../../components/stakeholders/StakeholderSEAM'
 import StakeholderAssessmentMatrixList from '../../components/stakeholders/StakeholderAssessmentMatrixList'
-import StakeholderAssessmentMatrixForm from '../../components/stakeholders/StakeholderAssessmentMatrixForm'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { assessmentFormPath } from '@nidus/shared/utils/assessmentMatrixRoute'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { mapAssessmentRowToSeamDisplay, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
-import { platformDb } from '@nidus/supabase'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
 
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_name', label: 'Stakeholder' },
@@ -30,36 +28,20 @@ const EXPORT_COLUMNS = [
 export default function StakeholderAssessmentMatrixPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projects: assignedProjects, currentProjectId, loading: projectCtxLoading } = useCurrentProject()
   const [projectId, setProjectId] = useState(() => location.state?.projectId || '')
-  const [projects, setProjects] = useState([])
-  const [stakeholders, setStakeholders] = useState([])
+  const projects = assignedProjects.map((p) => ({
+    id: p.projectId,
+    project_name: p.projectName,
+    project_code: p.projectCode,
+  }))
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('matrix')
   const [search, setSearch] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const { showSuccess, modal: successModal } = useSuccessModal()
-  const [draftInitial, setDraftInitial] = useState(null)
-
-  const loadProjects = useCallback(async () => {
-    const { data } = await platformDb
-      .from('projects')
-      .select('id, project_name, project_code')
-      .eq('is_deleted', false)
-      .order('project_name', { ascending: true })
-    setProjects(data || [])
-  }, [])
-
-  const loadStakeholders = useCallback(async () => {
-    if (!projectId) {
-      setStakeholders([])
-      return
-    }
-    const data = await getStakeholders({ project_id: projectId })
-    setStakeholders(data || [])
-  }, [projectId])
+  const matrixBase = '/platform/stakeholders/assessment-matrix'
 
   const loadMatrix = useCallback(async () => {
     if (!projectId) {
@@ -80,49 +62,35 @@ export default function StakeholderAssessmentMatrixPage() {
   }, [projectId])
 
   useEffect(() => {
-    loadProjects()
-  }, [loadProjects])
+    if (projectCtxLoading || projectId || !currentProjectId) return
+    setProjectId(currentProjectId)
+  }, [projectCtxLoading, currentProjectId, projectId])
 
   useEffect(() => {
-    loadStakeholders()
     loadMatrix()
-  }, [projectId, loadStakeholders, loadMatrix])
+  }, [projectId, loadMatrix])
 
   useEffect(() => {
     const draft = location.state?.draftData || location.state?.formData
-    if (draft) {
-      setDraftInitial(draft)
-      if (draft.project_id) setProjectId(draft.project_id)
-      setShowForm(true)
-      setEditing(draft.id ? draft : null)
-      navigate(location.pathname, { replace: true, state: {} })
-    }
+    if (!draft) return
+    navigate(assessmentFormPath(matrixBase, 'new'), { replace: true, state: location.state })
   }, [])
 
   const seamRows = useMemo(() => records.map(mapAssessmentRowToSeamDisplay), [records])
 
-  const handleSave = async (formData) => {
-    const saved = await saveStakeholderAssessmentMatrix(formData, editing?.id)
-    setShowForm(false)
-    setEditing(null)
-    setDraftInitial(null)
-    showSuccess({
-      message: `${editing?.id ? 'Assessment updated' : 'Assessment created'} successfully.`,
-      recordId: saved.id,
-      operation: editing?.id ? 'updated' : 'created',
-    })
-    loadMatrix()
+  const openAssessment = (record, action) => {
+    navigate(assessmentFormPath(matrixBase, action, record), { state: { projectId } })
   }
 
   const handleDelete = async (record) => {
-    const name = record.stakeholder?.stakeholder_name || 'this stakeholder'
+    const name = record.stakeholder?.stakeholder_name || record.stakeholder_name || 'this stakeholder'
     if (!window.confirm(`Remove assessment for ${name}?`)) return
     setDeletingId(record.id)
     try {
       await deleteStakeholderAssessmentMatrix(record.id)
       showSuccess({
         message: 'Assessment deleted.',
-        recordId: record.id,
+        recordId: record.stakeholder?.stakeholder_reference || record.stakeholder_reference || name,
         operation: 'deleted',
       })
       loadMatrix()
@@ -146,17 +114,17 @@ export default function StakeholderAssessmentMatrixPage() {
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <button
           type="button"
-          onClick={() => navigate('/platform/stakeholders/register')}
-          className="p-2 hover:bg-gray-800 rounded-lg"
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
         >
-          <ArrowLeft className="h-5 w-5 text-gray-400" />
+          <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Table2 className="h-8 w-8 text-amber-500" />
             Stakeholder Assessment Matrix
           </h1>
-          <p className="mt-1 text-gray-400">
+          <p className="mt-1 text-gray-600 dark:text-gray-400">
             Current (C) and desired (D) engagement levels per stakeholder
           </p>
         </div>
@@ -165,7 +133,7 @@ export default function StakeholderAssessmentMatrixPage() {
             type="button"
             onClick={() => setView('matrix')}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-              view === 'matrix' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'
+              view === 'matrix' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
             }`}
           >
             <Target className="h-4 w-4" /> Matrix
@@ -174,7 +142,7 @@ export default function StakeholderAssessmentMatrixPage() {
             type="button"
             onClick={() => setView('list')}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-              view === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'
+              view === 'list' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
             }`}
           >
             <List className="h-4 w-4" /> List
@@ -187,18 +155,14 @@ export default function StakeholderAssessmentMatrixPage() {
           />
           <Link
             to="/platform/stakeholders/assessment-matrix/on-hold"
-            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-800"
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-100 dark:border-gray-600 dark:text-gray-100 dark:hover:bg-gray-700"
           >
             <PauseCircle className="h-4 w-4" /> On hold
           </Link>
           <button
             type="button"
             disabled={!projectId}
-            onClick={() => {
-              setEditing(null)
-              setDraftInitial(null)
-              setShowForm(true)
-            }}
+            onClick={() => navigate(assessmentFormPath(matrixBase, 'new'), { state: { projectId } })}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium disabled:opacity-50"
           >
             <Plus className="h-5 w-5" /> Add Assessment
@@ -210,11 +174,11 @@ export default function StakeholderAssessmentMatrixPage() {
 
       <div className="mb-4 flex flex-wrap gap-4 items-end">
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Project</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project</label>
           <select
             value={projectId}
             onChange={(e) => setProjectId(e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
+            className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="">Select project</option>
             {projects.map((p) => (
@@ -226,7 +190,7 @@ export default function StakeholderAssessmentMatrixPage() {
         </div>
         {view === 'list' && (
           <div className="flex-1 min-w-[200px] max-w-md">
-            <label className="block text-sm font-medium text-gray-300 mb-2">Search</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
               <input
@@ -234,7 +198,7 @@ export default function StakeholderAssessmentMatrixPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Stakeholder or gap…"
-                className="w-full pl-10 pr-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-white"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
           </div>
@@ -242,44 +206,28 @@ export default function StakeholderAssessmentMatrixPage() {
       </div>
 
       {!projectId ? (
-        <div className="bg-gray-800 rounded-lg border border-gray-700 p-12 text-center text-gray-400">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center text-gray-700 dark:text-gray-200">
           Select a project to manage assessments.
         </div>
       ) : view === 'matrix' ? (
         <StakeholderSEAM
           rows={seamRows}
           loading={loading}
-          onEdit={(row) => {
-            setEditing(row.raw || row)
-            setShowForm(true)
-          }}
+          onView={(row) => openAssessment(row, 'view')}
+          onEdit={(row) => openAssessment(row, 'edit')}
+          onDelete={handleDelete}
+          deletingId={deletingId}
           onStakeholderClick={(id) => navigate(`/platform/stakeholders/register/view/${id}`)}
         />
       ) : (
         <StakeholderAssessmentMatrixList
           records={records}
           search={search}
-          onEdit={(r) => {
-            setEditing(r)
-            setShowForm(true)
-          }}
+          onView={(row) => openAssessment(row, 'view')}
+          onEdit={(row) => openAssessment(row, 'edit')}
           onDelete={handleDelete}
           onStakeholderClick={(id) => navigate(`/platform/stakeholders/register/view/${id}`)}
           deletingId={deletingId}
-        />
-      )}
-
-      {showForm && (
-        <StakeholderAssessmentMatrixForm
-          record={editing || draftInitial}
-          projectId={projectId}
-          stakeholders={stakeholders}
-          onSave={handleSave}
-          onCancel={() => {
-            setShowForm(false)
-            setEditing(null)
-            setDraftInitial(null)
-          }}
         />
       )}
     </div>

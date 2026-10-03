@@ -142,7 +142,7 @@ export default function SimPortfolioCategories() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <button
-            onClick={() => navigate('/simulator/practice-portfolio')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-gray-400 hover:text-gray-300 mb-4"
           >
             <ArrowLeft className="h-5 w-5" />

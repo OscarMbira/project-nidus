@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Eye, Edit, FileText, Search } from 'lucide-react'
 import { getAllMandates, getUnlinkedMandates } from '../../services/projectMandateService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
 
 /** All mandate fields for list export; Word/PPT choose-fields modal shows these (user picks up to 10). */
 const MANDATE_COLUMNS = [
@@ -37,6 +38,7 @@ const STATUS_COLORS = {
 function MandateList() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projectId: currentProjectId, loading: projectIdLoading } = usePlatformProjectId()
   const [mandates, setMandates] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -47,9 +49,13 @@ function MandateList() {
   const [viewMode, setViewMode] = useState('all') // 'all' or 'unlinked'
   const [searchInput, setSearchInput] = useState('') // Separate state for input to enable debouncing
 
-  // Detect context from current route - PMO routes start with /pmo
+  // Detect context from current route - PMO routes start with /pmo, PM routes with /pm/
   const isPMOContext = location.pathname.startsWith('/pmo')
-  const basePath = isPMOContext ? '/pmo/mandates' : '/platform/mandates'
+  const isPMContext = location.pathname.startsWith('/pm/')
+  const basePath = isPMOContext ? '/pmo/mandates' : isPMContext ? '/pm/mandates' : '/platform/mandates'
+  // Delivery / Project Setup opens this list with a current project selected — scope to it.
+  // PMO "All Mandates" with no resolvable project keeps the org-wide + unlinked toggles.
+  const scopeToCurrentProject = Boolean(currentProjectId) && !isPMOContext
 
   // Debounce search input
   useEffect(() => {
@@ -60,18 +66,38 @@ function MandateList() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
-  // Fetch mandates when filters or viewMode changes; cancel previous fetch when deps change or unmount
+  // When scoped to a project, unlinked mode does not apply
+  useEffect(() => {
+    if (scopeToCurrentProject && viewMode === 'unlinked') {
+      setViewMode('all')
+    }
+  }, [scopeToCurrentProject, viewMode])
+
+  // Fetch mandates when filters, viewMode, or current project changes
   useEffect(() => {
     let cancelled = false
+
+    if (scopeToCurrentProject && projectIdLoading) {
+      setLoading(true)
+      setMandates([])
+      return () => { cancelled = true }
+    }
+
     setLoading(true)
     setError(null)
 
     const load = async () => {
       try {
-        const data =
-          viewMode === 'unlinked'
-            ? await getUnlinkedMandates()
-            : await getAllMandates(null, filters)
+        let data
+        if (!scopeToCurrentProject && viewMode === 'unlinked') {
+          data = await getUnlinkedMandates()
+        } else {
+          const queryFilters = { ...filters }
+          if (scopeToCurrentProject && currentProjectId) {
+            queryFilters.project_id = currentProjectId
+          }
+          data = await getAllMandates(null, queryFilters)
+        }
         if (!cancelled) setMandates(data || [])
       } catch (err) {
         if (!cancelled) {
@@ -85,7 +111,7 @@ function MandateList() {
     }
     load()
     return () => { cancelled = true }
-  }, [filters, viewMode])
+  }, [filters, viewMode, scopeToCurrentProject, currentProjectId, projectIdLoading])
 
   // Preload Create page chunk on hover only (avoids extra work on initial load)
   const preloadCreate = useCallback(() => {
@@ -173,28 +199,30 @@ function MandateList() {
             <option value="archived">Archived</option>
           </select>
 
-          <div className="flex space-x-2">
-            <button
-              onClick={() => handleViewModeChange('all')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'all' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              All Mandates
-            </button>
-            <button
-              onClick={() => handleViewModeChange('unlinked')}
-              className={`px-4 py-2 rounded-lg transition-colors ${
-                viewMode === 'unlinked' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
-            >
-              Unlinked (Ready for Project)
-            </button>
-          </div>
+          {!scopeToCurrentProject && (
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handleViewModeChange('all')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  viewMode === 'all' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                All Mandates
+              </button>
+              <button
+                onClick={() => handleViewModeChange('unlinked')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  viewMode === 'unlinked' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                Unlinked (Ready for Project)
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -219,14 +247,16 @@ function MandateList() {
           <p className="text-gray-600 dark:text-gray-400 mb-4">
             {filters.search || filters.status 
               ? 'No mandates match your filters' 
-              : 'No mandates found'}
+              : scopeToCurrentProject
+                ? 'No mandate linked to this project yet'
+                : 'No mandates found'}
           </p>
           <button
             onClick={handleCreateClick}
             onMouseEnter={preloadCreate}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Create Your First Mandate
+            {scopeToCurrentProject ? 'Create Mandate' : 'Create Your First Mandate'}
           </button>
         </div>
       ) : (

@@ -83,7 +83,8 @@ function Modal({
       announcement.setAttribute('aria-live', 'polite')
       announcement.setAttribute('aria-atomic', 'true')
       announcement.className = 'sr-only'
-      announcement.textContent = `Modal opened: ${title}`
+      const spokenTitle = typeof title === 'string' ? title : (ariaLabel || 'Dialog')
+      announcement.textContent = `Modal opened: ${spokenTitle}`
       document.body.appendChild(announcement)
 
       const timeoutId = setTimeout(() => {
@@ -99,7 +100,7 @@ function Modal({
         }
       }
     }
-  }, [isOpen, title])
+  }, [isOpen, title, ariaLabel])
 
   if (!isOpen) return null
 

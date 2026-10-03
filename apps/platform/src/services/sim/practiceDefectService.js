@@ -28,7 +28,7 @@ export async function getPracticeDefectById(defectId) {
   const { data, error } = await simDb
     .from('practice_defects')
     .select(
-      '*, test_cases:practice_test_cases(id, test_case_ref, title), test_case_executions:practice_test_case_executions(id, status, actual_result)',
+      '*, test_cases:practice_test_cases(id, test_case_ref, title), test_case_executions:practice_test_case_executions!execution_id(id, status, actual_result)',
     )
     .eq('id', defectId)
     .eq('is_deleted', false)
@@ -85,6 +85,26 @@ export async function getPracticeDefectHistory(defectId) {
   return data || []
 }
 
+function httpUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value) ? value : null
+}
+
+async function withPreviewUrls(rows) {
+  const list = rows || []
+  const paths = [...new Set(list.map((row) => row.file_path).filter(Boolean))]
+  const signedByPath = {}
+  if (paths.length) {
+    const { data } = await simDb.storage.from(BUCKET).createSignedUrls(paths, 3600)
+    for (const item of data || []) {
+      if (item?.path && item.signedUrl && !item.error) signedByPath[item.path] = item.signedUrl
+    }
+  }
+  return list.map((row) => ({
+    ...row,
+    preview_url: signedByPath[row.file_path] || httpUrl(row.file_url),
+  }))
+}
+
 export async function getPracticeDefectAttachments(defectId) {
   const { data, error } = await simDb
     .from('practice_defect_attachments')
@@ -92,7 +112,7 @@ export async function getPracticeDefectAttachments(defectId) {
     .eq('defect_id', defectId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data || []
+  return withPreviewUrls(data || [])
 }
 
 export async function uploadPracticeDefectAttachment({
@@ -110,15 +130,12 @@ export async function uploadPracticeDefectAttachment({
     contentType: file.type || undefined,
   })
   if (upErr) throw upErr
-  const { data: pub } = simDb.storage.from(BUCKET).getPublicUrl(path)
-  const { data: signed } = await simDb.storage.from(BUCKET).createSignedUrl(path, 3600)
-  const file_url = signed?.signedUrl || pub?.publicUrl || path
   const { data, error } = await simDb
     .from('practice_defect_attachments')
     .insert({
       defect_id: defectId,
       file_name: file.name,
-      file_url,
+      file_url: path,
       file_path: path,
       file_type: file.type || null,
       file_size: file.size ?? null,
@@ -128,7 +145,8 @@ export async function uploadPracticeDefectAttachment({
     .select()
     .single()
   if (error) throw error
-  return { attachment: data, signedUrl: signed?.signedUrl || null }
+  const [withPreview] = await withPreviewUrls([data])
+  return { attachment: withPreview, signedUrl: withPreview.preview_url }
 }
 
 export async function deletePracticeDefectAttachment(attachmentId) {

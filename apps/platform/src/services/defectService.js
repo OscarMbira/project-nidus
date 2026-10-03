@@ -1,4 +1,5 @@
 import { platformDb } from './supabase/supabaseClient'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DEFECT_BUCKET = 'defect-attachments'
 
@@ -18,13 +19,22 @@ export async function getDefects(projectId, filters = {}) {
 
   const { data, error } = await query
   if (error) throw error
-  return data || []
+  const rows = data || []
+  const labels = await resolveAuditUserLabels(
+    platformDb,
+    rows.flatMap((row) => [row.reported_by, row.assigned_to]),
+  )
+  return rows.map((row) => ({
+    ...row,
+    reported_by_name: row.reported_by ? labels[row.reported_by] || null : null,
+    assigned_to_name: row.assigned_to ? labels[row.assigned_to] || null : null,
+  }))
 }
 
 export async function getDefectById(defectId) {
   const { data, error } = await platformDb
     .from('defects')
-    .select('*, test_cases(id, test_case_ref, title), test_case_executions(id, status, actual_result)')
+    .select('*, test_cases(id, test_case_ref, title, project_id), test_case_executions!execution_id(id, status, actual_result)')
     .eq('id', defectId)
     .eq('is_deleted', false)
     .single()
@@ -95,6 +105,27 @@ export async function getDefectHistory(defectId) {
   return data || []
 }
 
+function httpUrl(value) {
+  return typeof value === 'string' && /^https?:\/\//i.test(value) ? value : null
+}
+
+/** One storage round-trip for every preview on the defect. */
+async function withPreviewUrls(rows) {
+  const list = rows || []
+  const paths = [...new Set(list.map((row) => row.file_path).filter(Boolean))]
+  const signedByPath = {}
+  if (paths.length) {
+    const { data } = await platformDb.storage.from(DEFECT_BUCKET).createSignedUrls(paths, 3600)
+    for (const item of data || []) {
+      if (item?.path && item.signedUrl && !item.error) signedByPath[item.path] = item.signedUrl
+    }
+  }
+  return list.map((row) => ({
+    ...row,
+    preview_url: signedByPath[row.file_path] || httpUrl(row.file_url),
+  }))
+}
+
 export async function getDefectAttachments(defectId) {
   const { data, error } = await platformDb
     .from('defect_attachments')
@@ -102,7 +133,7 @@ export async function getDefectAttachments(defectId) {
     .eq('defect_id', defectId)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return data || []
+  return withPreviewUrls(data || [])
 }
 
 /**
@@ -126,17 +157,12 @@ export async function uploadDefectAttachment({
   })
   if (upErr) throw upErr
 
-  const { data: pub } = platformDb.storage.from(DEFECT_BUCKET).getPublicUrl(path)
-  const { data: signed } = await platformDb.storage.from(DEFECT_BUCKET).createSignedUrl(path, 3600)
-
-  const file_url = signed?.signedUrl || pub?.publicUrl || path
-
   const { data, error } = await platformDb
     .from('defect_attachments')
     .insert({
       defect_id: defectId,
       file_name: file.name,
-      file_url,
+      file_url: path,
       file_path: path,
       file_type: file.type || null,
       file_size: file.size ?? null,
@@ -146,7 +172,9 @@ export async function uploadDefectAttachment({
     .select()
     .single()
   if (error) throw error
-  return { attachment: data, signedUrl: signed?.signedUrl || null }
+
+  const [withPreview] = await withPreviewUrls([data])
+  return { attachment: withPreview, signedUrl: withPreview.preview_url }
 }
 
 export async function deleteDefectAttachment(attachmentId) {
@@ -196,6 +224,32 @@ export async function generateAndSaveCursorPrompt(defectId, promptText) {
   return updateDefect(defectId, { cursor_prompt_generated: true, cursor_prompt_text: promptText })
 }
 
+/** All attachments across every (non-deleted) defect for a project — the Evidence tab. */
+export async function getProjectDefectAttachments(projectId, { screenshotsOnly = false } = {}) {
+  let query = platformDb
+    .from('defect_attachments')
+    .select('*, defects!inner(id, defect_ref, title, project_id, is_deleted)')
+    .eq('defects.project_id', projectId)
+    .eq('defects.is_deleted', false)
+    .order('created_at', { ascending: false })
+  if (screenshotsOnly) query = query.eq('is_screenshot', true)
+  const { data, error } = await query
+  if (error) throw error
+  return withPreviewUrls(data || [])
+}
+
+/** Defect field-change history across a whole project — the Evidence > History tab. */
+export async function getProjectDefectHistory(projectId) {
+  const { data, error } = await platformDb
+    .from('defect_history')
+    .select('*, defects!inner(id, defect_ref, title, project_id, is_deleted)')
+    .eq('defects.project_id', projectId)
+    .eq('defects.is_deleted', false)
+    .order('changed_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
 export async function getDefectStats(projectId) {
   const { data, error } = await platformDb
     .from('defects')
@@ -229,6 +283,8 @@ export default {
   uploadDefectAttachment,
   deleteDefectAttachment,
   getDefectStats,
+  getProjectDefectAttachments,
+  getProjectDefectHistory,
   getTestingCentreDefects,
   createDefectFromTestResult,
   createDefectFromDiagnostic,

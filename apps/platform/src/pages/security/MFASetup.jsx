@@ -56,7 +56,7 @@ export default function MFASetup() {
 
       <MFAEnrollment
         onComplete={handleComplete}
-        onCancel={() => navigate('/settings/security')}
+        onCancel={() => navigate(-1)}
       />
     </div>
   )

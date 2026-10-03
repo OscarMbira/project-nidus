@@ -109,6 +109,7 @@ export default function SendRoleInvites() {
   const [projectContextLoading, setProjectContextLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('invitation')
   const [managerAppointmentTerms, setManagerAppointmentTerms] = useState(MANAGER_APPOINTMENT_EMPTY)
+  const [projectDefaultTerms, setProjectDefaultTerms] = useState({ startDate: '', endDate: '', budget: null })
   const [reportingCandidates, setReportingCandidates] = useState([])
   const [inviterUserId, setInviterUserId] = useState(null)
   const prevRoleIdRef = useRef('')
@@ -175,6 +176,7 @@ export default function SendRoleInvites() {
       setProjectContext(null)
       setAccountDefaultExpiryDays(INVITE_EXPIRY_FALLBACK_DAYS)
       setInviteExpirySelect('account')
+      setProjectDefaultTerms({ startDate: '', endDate: '', budget: null })
       return
     }
     let cancelled = false
@@ -185,13 +187,18 @@ export default function SendRoleInvites() {
           platformDb
             .from('projects')
             .select(
-              'project_name, account_id, accounts(account_display_name, account_name, company_name)',
+              'project_name, account_id, planned_start_date, planned_end_date, budget_amount, accounts(account_display_name, account_name, company_name)',
             )
             .eq('id', selectedProject)
             .maybeSingle(),
           loadInvitationProjectContext(selectedProject),
         ])
         if (cancelled) return
+        setProjectDefaultTerms({
+          startDate: proj?.planned_start_date ? String(proj.planned_start_date).slice(0, 10) : '',
+          endDate: proj?.planned_end_date ? String(proj.planned_end_date).slice(0, 10) : '',
+          budget: proj?.budget_amount ?? null,
+        })
         if (pErr || !proj) {
           setProjectName('')
           setAccountId(null)
@@ -703,10 +710,12 @@ export default function SendRoleInvites() {
 
   const roleSelectOptions = useMemo(
     () =>
-      availableRoles.map((role) => ({
-        value: role.id,
-        label: role.role_display_name || role.role_name,
-      })),
+      availableRoles
+        .map((role) => ({
+          value: role.id,
+          label: role.role_display_name || role.role_name,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
     [availableRoles],
   )
 
@@ -1129,6 +1138,9 @@ export default function SendRoleInvites() {
                   onChange={setManagerAppointmentTerms}
                   eligibleUsers={reportingCandidates}
                   storageKey={`nidus-mgr-appt-send-${selectedProject}`}
+                  defaultAssignmentStartDate={projectDefaultTerms.startDate}
+                  defaultAssignmentEndDate={projectDefaultTerms.endDate}
+                  defaultBudgetAuthorityLimit={projectDefaultTerms.budget}
                 />
               )}
 

@@ -13,7 +13,7 @@ export default function BenefitCreatePage() {
       <BenefitForm
         usePageLayout
         onSave={() => navigate('/platform/benefits')}
-        onCancel={() => navigate('/platform/benefits')}
+        onCancel={() => navigate(-1)}
       />
     </div>
   )

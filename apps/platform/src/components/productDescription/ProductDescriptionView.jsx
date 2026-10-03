@@ -4,7 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { FileText, Package, BookOpen, Target, Award, Users, CheckCircle, History, Download, BarChart3, Link as LinkIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { FileText, Package, BookOpen, Target, Award, Users, CheckCircle, History, Download, BarChart3, Link as LinkIcon, ArrowLeft } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
@@ -60,6 +61,7 @@ const VIEW_TABS = [...TABS.map((t) => ({ value: t.id, label: t.label })), { valu
 
 export default function ProductDescriptionView({ pdId, onEdit, onExport }) {
   const { theme } = useThemeContext()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('introduction')
   const [pd, setPd] = useState(null)
   const [compositionItems, setCompositionItems] = useState([])
@@ -208,6 +210,13 @@ export default function ProductDescriptionView({ pdId, onEdit, onExport }) {
   return (
     <div className={`${theme === 'dark' ? 'dark' : ''} bg-white dark:bg-gray-900 min-h-screen`}>
       <div className="max-w-7xl mx-auto px-4 py-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">

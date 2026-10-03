@@ -132,7 +132,7 @@ export default function HelpCenter() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <button
-            onClick={() => navigate('/help')}
+            onClick={() => navigate(-1)}
             className="mb-6 text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
           >
             ← Back to Help Center
@@ -208,7 +208,7 @@ export default function HelpCenter() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               For support, please submit feedback through the Help button in the application or contact your administrator.
             </p>
-            <Button onClick={() => navigate('/help')}>
+            <Button onClick={() => navigate(-1)}>
               Back to Help Center
             </Button>
           </div>

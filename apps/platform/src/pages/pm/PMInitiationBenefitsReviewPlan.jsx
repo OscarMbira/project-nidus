@@ -1,7 +1,6 @@
 /**
  * PM Initiation - Benefits Review Plan
- * Shows Benefits Review Plans relevant to the PM's projects.
- * Fixed: replaced auto-create single plan with proper list view.
+ * Shows Benefits Review Plans for the current project (via BenefitsReviewPlanList + usePlatformProjectId).
  */
 
 import BenefitsReviewPlanList from '../benefitsReviewPlan/BenefitsReviewPlanList'
@@ -16,7 +15,7 @@ export default function PMInitiationBenefitsReviewPlan() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Benefits Review Plans</h1>
             <p className="mt-1 text-gray-600 dark:text-gray-400">
-              Manage Benefits Review Plans for your projects
+              Manage Benefits Review Plans for the current project
             </p>
           </div>
         </div>

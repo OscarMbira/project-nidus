@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { listDependencies, saveDependency, softDeleteDependency } from '../../services/activityDependencyService'
 import { listActivities } from '../../services/activityListService'
@@ -16,7 +17,7 @@ const COLS = [
 ]
 
 export default function ActivitySequencing() {
-  const { projectId } = useParams()
+  const { projectId } = usePlatformProjectId()
   const { canEdit } = useProjectRole(projectId)
   const [deps, setDeps] = useState([])
   const [acts, setActs] = useState([])

@@ -24,6 +24,16 @@ export async function getPBSTree(projectId) {
   return nestPBS(data || [])
 }
 
+export async function getPBSNode(id) {
+  const { data, error } = await platformDb
+    .from('plan_pbs_nodes')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
 export async function createPBSNode(payload) {
   const row = {
     project_id: payload.project_id,

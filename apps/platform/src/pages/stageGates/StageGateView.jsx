@@ -68,7 +68,7 @@ export default function StageGateView() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-6 max-w-2xl">
-      <button onClick={() => navigate('/platform/stage-gates')} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5">
         <ArrowLeft size={15} /> Back
       </button>
 

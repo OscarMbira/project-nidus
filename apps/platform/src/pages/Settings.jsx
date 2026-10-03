@@ -5,17 +5,18 @@ import { updateUserProfile } from '../services/userProfileService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { ProfilePictureSection, ProfileSignatureSection } from '@nidus/ui'
 import {
-  User, 
-  Bell, 
-  Shield, 
-  Globe, 
-  Palette, 
-  Key, 
-  Mail, 
+  User,
+  Bell,
+  Shield,
+  Globe,
+  Palette,
+  Key,
+  Mail,
   Building2,
   Save,
   Eye,
-  EyeOff
+  EyeOff,
+  Lock
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -229,7 +230,8 @@ export default function Settings() {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'organisation', label: 'Organisation', icon: Building2 }
+    { id: 'organisation', label: 'Organisation', icon: Building2 },
+    { id: 'privacy', label: 'Privacy', icon: Lock, onClick: () => navigate('/platform/settings/privacy') },
   ]
 
   return (
@@ -265,7 +267,7 @@ export default function Settings() {
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={tab.onClick || (() => setActiveTab(tab.id))}
                     className={`
                       flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm
                       ${activeTab === tab.id
@@ -363,8 +365,8 @@ export default function Settings() {
                   </button>
                 </div>
               </div>
-              <ProfilePictureSection db={platformDb} accountId={accountId} initials={getInitialsFromName(profileData.full_name)} />
-              <ProfileSignatureSection db={platformDb} accountId={accountId} />
+              <ProfilePictureSection db={platformDb} accountId={accountId} initials={getInitialsFromName(profileData.full_name)} authUserId={user?.id} />
+              <ProfileSignatureSection db={platformDb} accountId={accountId} authUserId={user?.id} />
             </div>
           )}
 

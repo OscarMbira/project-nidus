@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { listEvmSnapshots } from '../../services/evmService'
@@ -7,6 +7,7 @@ import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PortfolioEVMPage() {
+  const navigate = useNavigate()
   const [portfolios, setPortfolios] = useState([])
   const [selected, setSelected] = useState(null)
   const [rollup, setRollup] = useState([])
@@ -55,9 +56,9 @@ export default function PortfolioEVMPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
-          <Link to="/platform/portfolio" className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
             <ArrowLeft className="h-5 w-5" />
-          </Link>
+          </button>
           <h1 className="text-xl font-bold">Portfolio EVM</h1>
         </div>
         <select value={selected || ''} onChange={(e) => setSelected(e.target.value || null)} className="rounded-lg border border-gray-600 bg-gray-950 px-3 py-2 text-sm max-w-md">

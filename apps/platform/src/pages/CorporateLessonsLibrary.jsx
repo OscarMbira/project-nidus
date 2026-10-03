@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Building2, Search, Star, Eye } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getCorporateLessonsByCategory, searchCorporateLessons } from '../services/corporateLessonsService';
 import { platformDb } from '@nidus/supabase';
 import LessonCard from '../components/lessonsLog/LessonCard';
@@ -117,30 +118,17 @@ export default function CorporateLessonsLibrary() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500">Total Lessons</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{lessons.length}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            <Star className="w-4 h-4" />
-            Avg Rating
-          </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {lessons.length > 0
+        <DashboardStatCard label="Total Lessons" value={lessons.length} />
+        <DashboardStatCard
+          label="Avg Rating"
+          icon={Star}
+          value={
+            lessons.length > 0
               ? (lessons.reduce((sum, l) => sum + (l.corporate_metadata?.usefulness_rating || 0), 0) / lessons.length).toFixed(1)
-              : '0.0'}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500 flex items-center gap-1">
-            <Eye className="w-4 h-4" />
-            Total Views
-          </p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            {lessons.reduce((sum, l) => sum + (l.corporate_metadata?.view_count || 0), 0)}
-          </p>
-        </div>
+              : '0.0'
+          }
+        />
+        <DashboardStatCard label="Total Views" icon={Eye} value={lessons.reduce((sum, l) => sum + (l.corporate_metadata?.view_count || 0), 0)} />
       </div>
 
       {/* Lessons List */}

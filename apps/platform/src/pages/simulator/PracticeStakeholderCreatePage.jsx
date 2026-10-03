@@ -9,6 +9,9 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useDraftQueue } from '../../hooks/useDraftQueue'
 import { createPracticeStakeholder } from '../../services/sim/practiceStakeholderService'
+import { simDb } from '../../services/supabase/supabaseClient'
+import StakeholderPhotoField from '../../components/ui/StakeholderPhotoField'
+import { saveStakeholderPhoto } from '@nidus/shared/services/stakeholderPhotoService'
 
 const DEFAULT_FORM = {
   stakeholder_name: '',
@@ -32,6 +35,7 @@ export default function PracticeStakeholderCreatePage() {
   const isResumingDraft = location.state?.isResumingDraft === true
   const draftFormData = location.state?.formData || null
 
+  const [pendingPhoto, setPendingPhoto] = useState(null)
   const [formData, setFormData] = useState(() => {
     if (draftFormData && typeof draftFormData === 'object') {
       return { ...DEFAULT_FORM, ...draftFormData }
@@ -116,6 +120,18 @@ export default function PracticeStakeholderCreatePage() {
         notes: formData.notes?.trim() || null,
       })
       if (result.success) {
+        if (pendingPhoto && result.data?.id && result.data?.user_id) {
+          const photo = await saveStakeholderPhoto(simDb, {
+            table: 'practice_stakeholder_register',
+            id: result.data.id,
+            ownerUserId: result.data.user_id,
+            file: pendingPhoto,
+            isPractice: true,
+          })
+          if (!photo.success) {
+            alert(photo.message || 'Stakeholder created, but the picture could not be stored.')
+          }
+        }
         navigate('/simulator/practice-stakeholders/register', {
           replace: true,
           state: { projectId: projectId || formData.practice_project_id, toast: { type: 'success', message: `Practice stakeholder created. ID: ${result.data?.id}` } },
@@ -161,6 +177,14 @@ export default function PracticeStakeholderCreatePage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <StakeholderPhotoField
+          db={simDb}
+          stakeholder={{ stakeholder_name: formData.stakeholder_name }}
+          category="individual"
+          isPractice
+          pendingFile={pendingPhoto}
+          onPendingFile={setPendingPhoto}
+        />
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
           <input name="stakeholder_name" value={formData.stakeholder_name} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Stakeholder name" />

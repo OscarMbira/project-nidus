@@ -1,6 +1,6 @@
 /**
  * MandateCompletionProgress Component
- * Shows completion progress for mandate sections (12 sections total)
+ * Shows completion progress for the brief mandate sections
  * Works for both Platform and Simulator
  */
 
@@ -16,17 +16,11 @@ export default function MandateCompletionProgress({ progress, isPractice = false
   }
 
   const sectionLabels = {
-    purpose: '1. Purpose',
-    authority: '2. Authority Responsible',
-    background: '3. Background',
-    objectives: '4. Project Objectives',
-    scope: '5. Scope (Deliverables)',
-    constraints: '6. Constraints',
-    interfaces: '7. Interfaces',
-    quality: '8. Quality Expectations',
-    businessCase: '9. Outline Business Case',
-    roles: '11. Proposed Roles',
-    stakeholders: '12. Customers & Users',
+    title: 'Title',
+    scope: 'Scope',
+    responsibilities: 'Responsibilities',
+    objectives: 'Objectives',
+    constraints: 'Key constraints',
   }
 
   const getProgressColor = (percentage) => {
@@ -85,7 +79,7 @@ export default function MandateCompletionProgress({ progress, isPractice = false
           <div className="flex items-start">
             <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" />
             <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              Complete all sections before submitting for review.
+              Complete the brief sections above. Formal approval submission is optional — verbal or statement mandates can be confirmed without it.
             </p>
           </div>
         </div>

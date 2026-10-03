@@ -50,7 +50,10 @@ export const BUSINESS_CASE_EXPORT_SECTIONS = [
   },
   {
     title: 'Dis-benefits',
-    fields: [{ key: 'dis_benefits_summary', label: 'Dis-benefits' }],
+    fields: [
+      { key: 'dis_benefits_included_label', label: 'Capturing Dis-benefits' },
+      { key: 'dis_benefits_summary', label: 'Dis-benefits' },
+    ],
   },
   {
     title: 'Timescale',
@@ -64,6 +67,10 @@ export const BUSINESS_CASE_EXPORT_SECTIONS = [
   {
     title: 'Costs & Investment',
     fields: [
+      { key: 'budget_currency', label: 'Currency' },
+      { key: 'budget_type', label: 'Budget Type' },
+      { key: 'budget_approval_status', label: 'Budget Approval Status' },
+      { key: 'budget_categories_summary', label: 'Budget Categories' },
       { key: 'estimated_development_cost', label: 'Estimated Development Cost' },
       { key: 'estimated_ongoing_cost', label: 'Estimated Ongoing Cost' },
       { key: 'funding_source', label: 'Funding Source' },
@@ -114,14 +121,22 @@ function formatBenefitsSummary(benefits = []) {
     .join('\n')
 }
 
-function formatDisBenefitsSummary(disBenefits = []) {
-  if (!disBenefits.length) return ''
-  return disBenefits
-    .map((d) => {
-      const sev = d.severity ? ` [${d.severity}]` : ''
-      return `${d.dis_benefit_description || 'Dis-benefit'}${sev}${d.impact_description ? `\n  Impact: ${d.impact_description}` : ''}`
-    })
-    .join('\n')
+function formatDisBenefitsSummary(businessCase = {}) {
+  if (businessCase.dis_benefits_included === false) {
+    return 'Not captured for this business case'
+  }
+  const fromDescription = (businessCase.dis_benefits_description || '').trim()
+  const rows = businessCase.dis_benefits || []
+  const fromRows = rows.length
+    ? rows
+        .map((d) => {
+          const sev = d.severity ? ` [${d.severity}]` : ''
+          return `${d.dis_benefit_description || 'Dis-benefit'}${sev}${d.impact_description ? `\n  Impact: ${d.impact_description}` : ''}`
+        })
+        .join('\n')
+    : ''
+  if (fromDescription && fromRows) return `${fromDescription}\n${fromRows}`
+  return fromDescription || fromRows || ''
 }
 
 /**
@@ -129,6 +144,17 @@ function formatDisBenefitsSummary(disBenefits = []) {
  * @param {object} businessCase
  * @returns {object}
  */
+function formatBudgetCategoriesSummary(categories = []) {
+  if (!Array.isArray(categories) || !categories.length) return ''
+  return categories
+    .map((row) => {
+      const name = row.category_name || 'Category'
+      const amount = formatMoney(row.amount)
+      return `${name}: ${amount}${row.funding_source_id ? ` (funding ${row.funding_source_id})` : ''}`
+    })
+    .join('\n')
+}
+
 export function buildBusinessCaseExportRecord(businessCase = {}) {
   return {
     ...businessCase,
@@ -138,7 +164,9 @@ export function buildBusinessCaseExportRecord(businessCase = {}) {
       OPTION_LABELS[businessCase.recommended_option] || businessCase.recommended_option || '',
     options_summary: formatOptionsSummary(businessCase.options),
     benefits_summary: formatBenefitsSummary(businessCase.benefits),
-    dis_benefits_summary: formatDisBenefitsSummary(businessCase.dis_benefits),
+    dis_benefits_included_label: businessCase.dis_benefits_included === false ? 'No' : 'Yes',
+    dis_benefits_summary: formatDisBenefitsSummary(businessCase),
+    budget_categories_summary: formatBudgetCategoriesSummary(businessCase.budget_categories),
     estimated_development_cost: formatMoney(businessCase.estimated_development_cost),
     estimated_ongoing_cost: formatMoney(businessCase.estimated_ongoing_cost),
     npv: formatMoney(businessCase.npv),

@@ -19,6 +19,7 @@ import StakeholderRelationships from './StakeholderRelationships'
 import { exportRecordToWord, exportRecordToExcel, exportRecordToPPT, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import { getCompletenessPercent } from '@nidus/shared/utils/stakeholderCompleteness'
 import { platformDb } from '@nidus/supabase'
+import StakeholderAvatar from '../ui/StakeholderAvatar'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -128,7 +129,10 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{stakeholder.stakeholder_name}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+          <StakeholderAvatar db={platformDb} stakeholder={stakeholder} sizeClassName="h-12 w-12" />
+          {stakeholder.stakeholder_name}
+        </h2>
         <div className="flex items-center gap-2">
           <div className="relative">
             <button
@@ -229,8 +233,9 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
       <section className={sectionClass}>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><Target className="h-5 w-5" /> Project role & characteristics</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><div className={labelClass}>Project role</div><div className={valueClass}>{stakeholder.project_role || '—'}</div></div>
+          <div><div className={labelClass}>Project role</div><div className={`${valueClass} whitespace-pre-line`}>{stakeholder.project_role || '—'}</div></div>
           <div><div className={labelClass}>Organization level</div><div className={valueClass}>{stakeholder.organization_level || '—'}</div></div>
+          <div><div className={labelClass}>Interest</div><div className={valueClass}>{stakeholder.interest_level ? stakeholder.interest_level.charAt(0).toUpperCase() + stakeholder.interest_level.slice(1) : '—'}</div></div>
           <div><div className={labelClass}>Decision maker</div><div className={valueClass}>{stakeholder.is_decision_maker ? 'Yes' : 'No'}</div></div>
           <div><div className={labelClass}>Influencer</div><div className={valueClass}>{stakeholder.is_influencer ? 'Yes' : 'No'}</div></div>
           <div><div className={labelClass}>Status</div><div className={valueClass}>{stakeholder.stakeholder_status || '—'}</div></div>
@@ -241,9 +246,9 @@ export default function StakeholderProfile({ stakeholder, onEdit }) {
       <section className={sectionClass}>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><FileText className="h-5 w-5" /> Requirements & expectations</h3>
         <div className="space-y-3">
-          <div><div className={labelClass}>Special requirements</div><div className={valueClass}>{stakeholder.special_requirements || '—'}</div></div>
-          <div><div className={labelClass}>Expectations</div><div className={valueClass}>{stakeholder.expectations || '—'}</div></div>
-          <div><div className={labelClass}>Notes</div><div className={valueClass}>{stakeholder.notes || '—'}</div></div>
+          <div><div className={labelClass}>Special requirements</div><div className={`${valueClass} whitespace-pre-line`}>{stakeholder.special_requirements || '—'}</div></div>
+          <div><div className={labelClass}>Expectations</div><div className={`${valueClass} whitespace-pre-line`}>{stakeholder.expectations || '—'}</div></div>
+          <div><div className={labelClass}>Notes</div><div className={`${valueClass} whitespace-pre-line`}>{stakeholder.notes || '—'}</div></div>
         </div>
       </section>
 

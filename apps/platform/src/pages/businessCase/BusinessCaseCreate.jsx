@@ -11,6 +11,13 @@ import { createBusinessCase } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import BusinessCaseForm from '../../components/businessCase/BusinessCaseForm'
 import { resolveInitiationBasePath } from '@nidus/shared/utils/initiationRouteUtils'
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import {
+  BUSINESS_CASE_EXPORT_SECTIONS,
+  buildBusinessCaseExportRecord,
+  businessCaseExportFilename,
+} from '@nidus/shared/utils/businessCaseExportSections'
 
 const emptyForm = () => ({
   case_title: '',
@@ -24,6 +31,10 @@ const emptyForm = () => ({
   end_date: '',
   timescale_description: '',
   key_milestones: '',
+  budget_currency: 'USD',
+  budget_type: '',
+  budget_approval_status: '',
+  budget_categories: [],
   estimated_development_cost: '',
   estimated_ongoing_cost: '',
   funding_source: '',
@@ -35,14 +46,18 @@ const emptyForm = () => ({
   investment_appraisal_notes: '',
   major_risks: '',
   overall_risk_rating: '',
+  dis_benefits_included: true,
+  dis_benefits_description: '',
 })
 
 export default function BusinessCaseCreate() {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToastContext()
+  const { projectId: currentProjectId } = usePlatformProjectId()
 
   const basePath = resolveInitiationBasePath(location.pathname)
+  const isPmContext = location.pathname.startsWith('/pm/')
 
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
@@ -76,12 +91,22 @@ export default function BusinessCaseCreate() {
     try {
       const payload = {
         ...form,
+        budget_categories: Array.isArray(form.budget_categories)
+          ? form.budget_categories.map((row) => ({
+              category_name: row.category_name || '',
+              amount: row.amount !== '' && row.amount != null ? Number(row.amount) : null,
+              funding_source_id: row.funding_source_id || null,
+            }))
+          : [],
+        budget_type: form.budget_type || null,
+        budget_approval_status: form.budget_approval_status || null,
         estimated_development_cost: form.estimated_development_cost ? parseFloat(form.estimated_development_cost) : null,
         estimated_ongoing_cost: form.estimated_ongoing_cost ? parseFloat(form.estimated_ongoing_cost) : null,
         npv: form.npv ? parseFloat(form.npv) : null,
         roi_percentage: form.roi_percentage ? parseFloat(form.roi_percentage) : null,
         payback_period_months: form.payback_period_months ? parseInt(form.payback_period_months, 10) : null,
         discount_rate: form.discount_rate ? parseFloat(form.discount_rate) : null,
+        ...(isPmContext && currentProjectId ? { project_id: currentProjectId } : {}),
       }
 
       const created = await createBusinessCase(payload)
@@ -105,13 +130,24 @@ export default function BusinessCaseCreate() {
         >
           <ArrowLeft className="w-4 h-4" /> Back to Business Cases
         </button>
-        <div className="flex items-center gap-3">
-          <FileText className="w-7 h-7 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">New Business Case</h1>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <FileText className="w-7 h-7 text-blue-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">New Business Case</h1>
+            </div>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Complete all sections to create a new business case document. Required fields are marked with *.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:pt-1">
+            <ExportRecordButtons
+              sections={BUSINESS_CASE_EXPORT_SECTIONS}
+              record={buildBusinessCaseExportRecord(form)}
+              baseFilename={businessCaseExportFilename(form)}
+            />
+          </div>
         </div>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Complete all sections to create a new business case document. Required fields are marked with *.
-        </p>
       </div>
 
       {/* Form */}
@@ -119,14 +155,16 @@ export default function BusinessCaseCreate() {
         <BusinessCaseForm data={form} onChange={handleChange} errors={errors} />
 
         {/* Actions — inside the card so they don't hang outside */}
-        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap justify-end items-center gap-3">
           <button
+            type="button"
             onClick={() => navigate(basePath)}
             className="px-5 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
             className="flex items-center gap-2 px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"

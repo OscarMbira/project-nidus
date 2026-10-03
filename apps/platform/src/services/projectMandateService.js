@@ -559,7 +559,7 @@ export async function canEditMandate(mandateId, userId = null) {
     if (!mandate) return false
 
     // Can edit if: status is draft or rejected AND not linked to a project
-    const canEdit = ['draft', 'rejected'].includes(mandate.document_status) && !mandate.project_id
+    const canEdit = ['draft', 'rejected'].includes(mandate.document_status)
     return canEdit
   } catch (error) {
     console.warn('canEditMandate check failed:', error)
@@ -1229,27 +1229,32 @@ export async function getStakeholders(mandateId) {
 // Validation Functions
 // ============================================================================
 
+function mandateListHasItems(value) {
+  if (!value) return false
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value
+    if (Array.isArray(parsed)) return parsed.some((v) => String(v || '').trim())
+  } catch {
+    /* plain text */
+  }
+  return String(value).split(/\r?\n/).some((l) => l.trim())
+}
+
 /**
- * Validate mandate completeness
+ * Validate mandate completeness (brief mandate: title + four key areas)
  */
 export async function validateMandate(mandateId) {
   const mandate = await getMandateById(mandateId)
-  const deliverables = await getDeliverables(mandateId)
-  const stakeholders = await getStakeholders(mandateId)
-  
   const errors = []
-  
-  // Required fields
+
   if (!mandate.mandate_title) errors.push('Mandate title is required')
-  if (!mandate.purpose || mandate.purpose.length < 20) errors.push('Purpose must be at least 20 characters')
-  if (!mandate.background || mandate.background.length < 100) errors.push('Background must be at least 100 characters')
-  if (!mandate.project_objectives || mandate.project_objectives.length < 100) errors.push('Project objectives must be at least 100 characters')
-  if (!mandate.outline_business_case || mandate.outline_business_case.length < 100) errors.push('Outline business case must be at least 100 characters')
-  
-  // Required for submission
-  if (deliverables.length === 0) errors.push('At least one deliverable is required')
-  if (stakeholders.length === 0) errors.push('At least one customer/user is required')
-  
+  if (!mandateListHasItems(mandate.scope)) errors.push('At least one scope point is required')
+  if (!mandate.proposed_executive_name?.trim() && !mandate.proposed_pm_name?.trim()) {
+    errors.push('Executive and/or Project Manager must be named')
+  }
+  if (!mandateListHasItems(mandate.project_objectives)) errors.push('At least one objective is required')
+  if (!mandateListHasItems(mandate.constraints)) errors.push('At least one key constraint is required')
+
   return {
     isValid: errors.length === 0,
     errors
@@ -1257,35 +1262,24 @@ export async function validateMandate(mandateId) {
 }
 
 /**
- * Check completeness - returns completion % for 12 sections
+ * Check completeness — brief mandate (title + Scope / Responsibilities / Objectives / Constraints)
  */
 export async function checkCompleteness(mandateId) {
   const mandate = await getMandateById(mandateId)
-  const deliverables = await getDeliverables(mandateId)
-  const dependencies = await getDependencies(mandateId)
-  const stakeholders = await getStakeholders(mandateId)
-  const documents = await getAssociatedDocuments(mandateId)
-  
+
   const sections = {
-    purpose: !!mandate.purpose && mandate.purpose.length >= 20,
-    authority: !!mandate.authority_responsible,
-    background: !!mandate.background && mandate.background.length >= 100,
-    objectives: !!mandate.project_objectives && mandate.project_objectives.length >= 100,
-    scope: deliverables.length > 0,
-    constraints: !!mandate.constraints,
-    interfaces: !!mandate.interfaces,
-    quality: !!mandate.quality_expectations && !!mandate.quality_priority,
-    businessCase: !!mandate.outline_business_case && mandate.outline_business_case.length >= 100,
-    documents: documents.length > 0,
-    roles: !!(mandate.proposed_executive_id || mandate.proposed_executive_name || mandate.proposed_pm_id || mandate.proposed_pm_name),
-    stakeholders: stakeholders.length > 0,
+    title: !!mandate.mandate_title?.trim(),
+    scope: mandateListHasItems(mandate.scope),
+    responsibilities: !!(mandate.proposed_executive_name?.trim() || mandate.proposed_pm_name?.trim()),
+    objectives: mandateListHasItems(mandate.project_objectives),
+    constraints: mandateListHasItems(mandate.constraints),
   }
-  
+
   const completed = Object.values(sections).filter(Boolean).length
   const total = Object.keys(sections).length
-  
+
   return {
-    percentage: Math.round((completed / total) * 100),
+    percentage: total === 0 ? 0 : Math.round((completed / total) * 100),
     completed,
     total,
     sections

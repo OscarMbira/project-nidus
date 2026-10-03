@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SmartAmountInput from '../ui/SmartAmountInput'
+import MultiLineListInput from '../project/MultiLineListInput'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   REPORTING_FREQUENCY_OPTIONS,
@@ -29,8 +30,25 @@ export default function ManagerAppointmentForm({
   eligibleUsers = [],
   storageKey = 'nidus-manager-appt-draft',
   defaultReportingToUserId = '',
+  defaultAssignmentStartDate = '',
+  defaultAssignmentEndDate = '',
+  defaultBudgetAuthorityLimit = null,
 }) {
   const [form, setForm] = useState({ ...EMPTY, ...value })
+
+  // Sync out on every form change (functional setForm calls below can land in any order
+  // within the same React commit — e.g. several defaults applying at once — so onChange and
+  // the localStorage draft must be derived from the state React actually settles on, not
+  // computed eagerly inside each individual patch() call).
+  useEffect(() => {
+    onChange?.(form)
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(form))
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form])
 
   useEffect(() => {
     try {
@@ -38,7 +56,6 @@ export default function ManagerAppointmentForm({
       if (raw && !value?.assignmentStartDate) {
         const parsed = JSON.parse(raw)
         setForm((f) => ({ ...f, ...parsed }))
-        onChange?.({ ...EMPTY, ...parsed })
       }
     } catch {
       /* ignore */
@@ -54,15 +71,28 @@ export default function ManagerAppointmentForm({
     }
   }, [defaultReportingToUserId, eligibleUsers])
 
-  const patch = (partial) => {
-    const next = { ...form, ...partial }
-    setForm(next)
-    onChange?.(next)
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(next))
-    } catch {
-      /* ignore */
+  // Pre-fill assignment dates and budget authority from the selected project — only while the
+  // field is still empty, so this never overwrites a value the PMO has already typed/restored.
+  useEffect(() => {
+    if (defaultAssignmentStartDate && !form.assignmentStartDate) {
+      patch({ assignmentStartDate: defaultAssignmentStartDate })
     }
+  }, [defaultAssignmentStartDate])
+
+  useEffect(() => {
+    if (defaultAssignmentEndDate && !form.assignmentEndDate) {
+      patch({ assignmentEndDate: defaultAssignmentEndDate })
+    }
+  }, [defaultAssignmentEndDate])
+
+  useEffect(() => {
+    if (defaultBudgetAuthorityLimit != null && (form.budgetAuthorityLimit == null || form.budgetAuthorityLimit === '')) {
+      patch({ budgetAuthorityLimit: defaultBudgetAuthorityLimit })
+    }
+  }, [defaultBudgetAuthorityLimit])
+
+  const patch = (partial) => {
+    setForm((prev) => ({ ...prev, ...partial }))
   }
 
   return (
@@ -156,35 +186,36 @@ export default function ManagerAppointmentForm({
           <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Authority notes
           </label>
-          <textarea
-            rows={2}
+          <MultiLineListInput
+            id="authority_notes_input"
             value={form.authorityNotes}
-            onChange={(e) => patch({ authorityNotes: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
-            placeholder="Decision scope: team, scope, procurement…"
+            onChange={(v) => patch({ authorityNotes: v })}
+            placeholder="e.g. Decision scope: team, scope, procurement…"
+            ariaLabelPrefix="authority note"
           />
         </div>
         <div className="md:col-span-2">
           <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Known constraints
           </label>
-          <textarea
-            rows={2}
+          <MultiLineListInput
+            id="known_constraints_input"
             value={form.knownConstraints}
-            onChange={(e) => patch({ knownConstraints: e.target.value })}
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+            onChange={(v) => patch({ knownConstraints: v })}
+            placeholder="e.g. Fixed go-live date…"
+            ariaLabelPrefix="constraint"
           />
         </div>
         <div className="md:col-span-2">
           <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
             Reference document
           </label>
-          <input
-            type="text"
+          <MultiLineListInput
+            id="reference_document_input"
             value={form.referenceDocument}
-            onChange={(e) => patch({ referenceDocument: e.target.value })}
-            placeholder="Mandate / brief / PID reference"
-            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"
+            onChange={(v) => patch({ referenceDocument: v })}
+            placeholder="e.g. Mandate / brief / PID reference"
+            ariaLabelPrefix="reference document"
           />
         </div>
         <div className="md:col-span-2">

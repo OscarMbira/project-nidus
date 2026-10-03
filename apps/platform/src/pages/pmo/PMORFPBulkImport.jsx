@@ -33,7 +33,7 @@ export default function PMORFPBulkImport() {
 
   return (
     <div className="max-w-4xl mx-auto py-8">
-      <button onClick={() => navigate(`/pmo/rfp/${id}/view`)} className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6">
+      <button onClick={() => navigate(-1)} className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6">
         <ArrowLeft className="w-4 h-4 mr-2" /> Back to RFP
       </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Bulk Import Line Items</h1>

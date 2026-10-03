@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Shield, Settings, Users, Database, Building2, Key, Bell, FileText, UserCheck } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Shield, Settings, Users, Database, Building2, FileText, UserCheck } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 import { getAccountById } from '../../services/accountService';
 import OrganisationMethodologySettings from '../../components/platform/OrganisationMethodologySettings';
@@ -16,10 +16,13 @@ const cardClass =
 
 export default function PMOAdmin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [organizationId, setOrganizationId] = useState(null);
   const [account, setAccount] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'users', 'settings', 'security', 'billing', 'data'
+  const [activeTab, setActiveTab] = useState(
+    location.pathname.endsWith('/settings') ? 'settings' : 'overview',
+  );
 
   useEffect(() => {
     loadOrganization();
@@ -50,7 +53,7 @@ export default function PMOAdmin() {
           .from('accounts')
           .select('id')
           .eq('owner_user_id', userRecord.id)
-          .single();
+          .maybeSingle();
 
         if (accountData) {
           setOrganizationId(accountData.id);
@@ -61,7 +64,7 @@ export default function PMOAdmin() {
             .eq('owner_user_id', userRecord.id)
             .eq('is_deleted', false)
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (project?.account_id) {
             setOrganizationId(project.account_id);
@@ -99,11 +102,10 @@ export default function PMOAdmin() {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Building2 },
-    { id: 'users', label: 'Users & Roles', icon: Users },
+    { id: 'users', label: 'Users & Roles', icon: Users, onClick: () => navigate('/platform/pmo-admin/users') },
     { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'security', label: 'Security', icon: Key },
-    { id: 'billing', label: 'Billing', icon: FileText },
-    { id: 'data', label: 'Data Management', icon: Database },
+    { id: 'billing', label: 'Billing', icon: FileText, onClick: () => navigate('/platform/subscription/billing-history') },
+    { id: 'data', label: 'Data Management', icon: Database, onClick: () => navigate('/platform/pmo-admin/data-management') },
   ];
 
   return (
@@ -129,7 +131,7 @@ export default function PMOAdmin() {
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={tab.onClick || (() => setActiveTab(tab.id))}
                   className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     isActive
                       ? 'border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400'
@@ -181,7 +183,7 @@ export default function PMOAdmin() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
                   icon: UserCheck,
@@ -195,7 +197,7 @@ export default function PMOAdmin() {
                   title: 'User Management',
                   description: 'Manage users, roles, and permissions',
                   action: 'Manage Users →',
-                  onClick: () => setActiveTab('users'),
+                  onClick: () => navigate('/platform/pmo-admin/users'),
                 },
                 {
                   icon: Settings,
@@ -203,13 +205,6 @@ export default function PMOAdmin() {
                   description: 'Configure organization preferences',
                   action: 'Configure →',
                   onClick: () => setActiveTab('settings'),
-                },
-                {
-                  icon: Key,
-                  title: 'Security',
-                  description: 'Manage security settings and access',
-                  action: 'Security Settings →',
-                  onClick: () => setActiveTab('security'),
                 },
               ].map((item) => {
                 const Icon = item.icon;
@@ -233,41 +228,46 @@ export default function PMOAdmin() {
         )}
 
         {activeTab === 'settings' && (
-          <div className={`${cardClass} p-6`}>
-            <OrganisationMethodologySettings accountId={organizationId} />
-          </div>
-        )}
-
-        {(activeTab === 'users' ||
-          activeTab === 'security' ||
-          activeTab === 'billing' ||
-          activeTab === 'data') && (
-          <div className={`${cardClass} p-12`}>
-            <div className="text-center max-w-2xl mx-auto">
-              <Shield
-                className="h-20 w-20 text-emerald-600 dark:text-emerald-400 mx-auto mb-4 opacity-50"
-                aria-hidden
-              />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                {activeTab === 'users' && 'User Management'}
-                {activeTab === 'security' && 'Security Settings'}
-                {activeTab === 'billing' && 'Billing & Subscription'}
-                {activeTab === 'data' && 'Data Management'}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
-                This feature is being enhanced with full functionality. Basic management is available
-                through individual project settings.
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/platform/dashboard')}
-                className="px-6 py-3 rounded-lg font-medium bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 transition-colors"
-              >
-                Back to Dashboard
-              </button>
+          <div className="space-y-6">
+            {account && (
+              <div className={`${cardClass} p-6`}>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  Account Information
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Account Name</p>
+                    <p className="text-gray-900 dark:text-gray-100">{account.account_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Account Code</p>
+                    <p className="text-gray-900 dark:text-gray-100">{account.account_code || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Account Type</p>
+                    <p className="text-gray-900 dark:text-gray-100">{account.account_type || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                    <span
+                      className={`inline-block px-2 py-1 text-xs font-medium rounded ${
+                        account.is_active
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      {account.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div className={`${cardClass} p-6`}>
+              <OrganisationMethodologySettings accountId={organizationId} />
             </div>
           </div>
         )}
+
       </div>
     </div>
   );

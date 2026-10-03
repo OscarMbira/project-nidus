@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RowActionButton } from '@nidus/ui';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
@@ -35,6 +35,7 @@ import HandoverChecklist from '../../components/structured/closing/HandoverCheck
 export default function ClosingProject() {
   const { projectId, routeKey } = usePlatformProjectId();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,6 +49,7 @@ export default function ClosingProject() {
 
   // Modal states
   const [showClosureForm, setShowClosureForm] = useState(false);
+  const [closureFormSection, setClosureFormSection] = useState('basic');
   const [showEndReportForm, setShowEndReportForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
   const [showActionForm, setShowActionForm] = useState(false);
@@ -64,13 +66,33 @@ export default function ClosingProject() {
     }
   }, [projectId]);
 
+  // Deep links for the sidebar's Project Closure leaves (taxonomy §3) that are facets of THIS
+  // page rather than separate pages — Closure Checklist / Outstanding Items / Handover /
+  // Benefits Transition / Closure Report / Final Acceptance each get their own findable sidebar
+  // entry via ?tab=&section= on this same route (same "?tab= deep link" pattern already used
+  // elsewhere in this codebase for PMO dashboard tabs).
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const section = searchParams.get('section');
+    if (tab) setActiveTab(tab);
+    if (section === 'approval') {
+      setActiveTab('closure');
+      setClosureFormSection('approval');
+      setShowClosureForm(true);
+    } else if (section === 'benefits') {
+      setActiveTab('closure');
+      setClosureFormSection('benefits');
+      setShowClosureForm(true);
+    }
+  }, [searchParams]);
+
   const loadProjectData = async () => {
     try {
       const { data, error } = await supabase
         .from('projects')
         .select('id, project_name, project_code, project_status')
         .eq('id', projectId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       setProject(data);
@@ -527,6 +549,7 @@ export default function ClosingProject() {
         <ProjectClosureForm
           projectId={projectId}
           closure={closure}
+          initialSection={closureFormSection}
           onClose={() => setShowClosureForm(false)}
           onSuccess={handleClosureSuccess}
         />

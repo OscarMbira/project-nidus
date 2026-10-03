@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DashboardStatCard from '../ui/DashboardStatCard';
 
 /**
  * ProgressDashboard Component
@@ -355,27 +356,18 @@ const ProgressDashboard = ({
 /**
  * StatCard Component
  */
-const StatCard = ({ icon, label, value, color, subtitle }) => {
-  const colorClasses = {
-    green: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
-    blue: 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-    red: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-    amber: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
-    gray: 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-800',
-    purple: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
-  };
-
-  return (
-    <div className={`p-4 rounded-lg border ${colorClasses[color]}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-2xl">{icon}</span>
-        <span className="text-3xl font-bold text-gray-900 dark:text-white">{value}</span>
-      </div>
-      <div className="text-sm font-medium text-gray-900 dark:text-white">{label}</div>
-      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{subtitle}</div>
-    </div>
-  );
+const STAT_CARD_BORDER_CLASSES = {
+  green: 'border-green-200 dark:border-green-800',
+  blue: 'border-blue-200 dark:border-blue-800',
+  red: 'border-red-200 dark:border-red-800',
+  amber: 'border-amber-200 dark:border-amber-800',
+  gray: 'border-gray-200 dark:border-gray-800',
+  purple: 'border-purple-200 dark:border-purple-800'
 };
+
+const StatCard = ({ label, value, color, subtitle }) => (
+  <DashboardStatCard label={label} value={value} description={subtitle} borderClassName={STAT_CARD_BORDER_CLASSES[color]} />
+);
 
 /**
  * HealthCard Component

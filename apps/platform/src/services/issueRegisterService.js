@@ -34,17 +34,18 @@ export async function createIssueRegister(projectId) {
 
     if (error) throw error;
 
-    // Fetch the created register
-    const { data: register, error: fetchError } = await supabase
+    // Fetch the created register — not .single(), same reasoning as getIssueRegisterByProject.
+    const { data: registers, error: fetchError } = await supabase
       .from('issue_registers')
       .select('*')
       .eq('project_id', projectId)
       .eq('is_deleted', false)
-      .single();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
     if (fetchError) throw fetchError;
 
-    return register;
+    return registers?.[0] || null;
   } catch (error) {
     console.error('Error creating issue register:', error);
     throw error;
@@ -58,6 +59,9 @@ export async function createIssueRegister(projectId) {
  */
 export async function getIssueRegisterByProject(projectId) {
   try {
+    // Not .single() — if duplicate register rows exist for this project (legacy data /
+    // a past race on create), .single() 406s the whole page instead of just picking one.
+    // Oldest-first so an existing register is stable across reloads even with dupes present.
     const { data, error } = await supabase
       .from('issue_registers')
       .select(`
@@ -66,11 +70,12 @@ export async function getIssueRegisterByProject(projectId) {
       `)
       .eq('project_id', projectId)
       .eq('is_deleted', false)
-      .single();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+    if (error) throw error;
 
-    return data || null;
+    return data?.[0] || null;
   } catch (error) {
     console.error('Error fetching issue register:', error);
     throw error;

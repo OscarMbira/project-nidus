@@ -21,6 +21,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import MenuItemPicker from '../../components/MenuItemPicker'
 import {
   toggleMenuItemSelection,
@@ -62,6 +63,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
   const [description, setDescription] = useState('')
   const [roleLevel, setRoleLevel] = useState(4)
   const [isGovernanceOnly, setIsGovernanceOnly] = useState(false)
+  const [roleSkills, setRoleSkills] = useState('')
 
   // Same picker (create AND edit, v914) — pick from the full grantable universe.
   const [grantableMenuItems, setGrantableMenuItems] = useState([])
@@ -146,6 +148,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
     setDisplayName(roleRes.data.role_display_name || '')
     setDescription(roleRes.data.role_description || '')
     setIsGovernanceOnly(!!roleRes.data.is_governance_only)
+    setRoleSkills(roleRes.data.role_skills || '')
 
     const grantsRes = await getRoleMenuGrants(roleRes.data.role_name, roleRes.data.account_id ?? null)
     if (grantsRes.success) {
@@ -166,6 +169,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
         displayName: role?.role_display_name || '',
         description: role?.role_description || '',
         isGovernanceOnly: !!role?.is_governance_only,
+        roleSkills: role?.role_skills || '',
         menuItemIds: [...originalGrantMenuItemIds].sort(),
       }),
     [role, originalGrantMenuItemIds],
@@ -174,10 +178,10 @@ export default function OrgRoleDetail({ forceEdit = false }) {
     if (loading || readOnly) return false
     const currentMenuItemIds = expandSelectedMenuItemIds(selectedMenuItemIds, grantableMenuItems).sort()
     return (
-      JSON.stringify({ displayName, description, isGovernanceOnly, menuItemIds: currentMenuItemIds }) !==
+      JSON.stringify({ displayName, description, isGovernanceOnly, roleSkills, menuItemIds: currentMenuItemIds }) !==
       baselineSnapshot
     )
-  }, [loading, readOnly, displayName, description, isGovernanceOnly, selectedMenuItemIds, grantableMenuItems, baselineSnapshot])
+  }, [loading, readOnly, displayName, description, isGovernanceOnly, roleSkills, selectedMenuItemIds, grantableMenuItems, baselineSnapshot])
   const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved role changes.')
 
   const goToList = () => navigate(MANAGE_ROLES_PATH)
@@ -207,6 +211,10 @@ export default function OrgRoleDetail({ forceEdit = false }) {
       setError('Role name is required')
       return
     }
+    if (!roleSkills.trim()) {
+      setError('At least one required skill is needed for this role')
+      return
+    }
 
     setSaving(true)
     setError(null)
@@ -231,6 +239,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
         isGovernanceOnly,
         addMenuItemIds,
         removeMenuItemIds,
+        roleSkills: roleSkills.trim(),
       })
       setSaving(false)
       if (!result.success) {
@@ -254,6 +263,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
       roleLevel: Number(roleLevel) || 4,
       isGovernanceOnly,
       menuItemIds,
+      roleSkills: roleSkills.trim(),
     })
     setSaving(false)
     if (!result.success) {
@@ -367,6 +377,25 @@ export default function OrgRoleDetail({ forceEdit = false }) {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Required skills *
+              </label>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                What someone in this role needs to know or be able to do. One per line.
+              </p>
+              <MultiLineListInput
+                viewModeId="org-role-skills"
+                id="org_role_skills"
+                value={roleSkills}
+                onChange={setRoleSkills}
+                placeholder="e.g. Stakeholder Communication"
+                ariaLabelPrefix="skill"
+                itemColumnLabel="Skill"
+                disabled={readOnly}
               />
             </div>
 

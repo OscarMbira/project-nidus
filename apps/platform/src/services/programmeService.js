@@ -119,6 +119,11 @@ export async function saveProgramme(programmeData, programmeId = null, options =
   } else {
     // Create
     updateData.created_by = user.id
+    // v982 Phase 3: a new programme must carry its owning account so the RLS scoping fix (v994)
+    // can see it — programmes had no tenant-scoping column before this phase (see v989's header).
+    if (!updateData.account_id) {
+      updateData.account_id = options.accountId || (await getCurrentUserAccountId())
+    }
     const { data, error } = await platformDb
       .from('programmes')
       .insert(updateData)

@@ -156,7 +156,7 @@ export default function DirectingProject() {
               </div>
             </div>
             <button
-              onClick={() => navigate('/projects')}
+              onClick={() => navigate(-1)}
               className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
             >
               Back to Projects
@@ -172,7 +172,7 @@ export default function DirectingProject() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
         <div className="max-w-4xl mx-auto">
           <button
-            onClick={() => navigate(`/projects/${projectId}`)}
+            onClick={() => navigate(-1)}
             className="mb-6 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -209,7 +209,7 @@ export default function DirectingProject() {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <button
-            onClick={() => navigate(`/projects/${projectId}`)}
+            onClick={() => navigate(-1)}
             className="mb-4 flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             <ArrowLeft className="h-4 w-4" />

@@ -272,6 +272,105 @@ export async function deleteSimTeamFunctionalRole(practiceTeamId, roleId) {
   }
 }
 
+/**
+ * Practice-project scoped functional roles catalog (v1084).
+ */
+export async function listPracticeProjectFunctionalRoles(practiceProjectId) {
+  try {
+    if (!practiceProjectId) {
+      return { success: false, data: [], error: 'Practice project id is required' }
+    }
+    const { data, error } = await simDb
+      .from('practice_project_functional_roles')
+      .select(
+        'id, practice_project_id, role_label, required_skills, sort_order, is_active, created_at, updated_at',
+      )
+      .eq('practice_project_id', practiceProjectId)
+      .eq('is_active', true)
+      .order('role_label', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('listPracticeProjectFunctionalRoles:', error)
+    return { success: false, data: [], error: error.message }
+  }
+}
+
+/**
+ * Replace active practice-project role catalog rows.
+ * @param {string} practiceProjectId
+ * @param {Array<{role:string, skills?:string}>} rows
+ */
+export async function replacePracticeProjectFunctionalRoles(practiceProjectId, rows = []) {
+  try {
+    if (!practiceProjectId) {
+      return { success: false, error: 'Practice project id is required' }
+    }
+
+    const cleaned = (Array.isArray(rows) ? rows : [])
+      .map((r) => ({
+        role: String(r?.role || '').trim(),
+        skills: String(r?.skills || '').trim() || null,
+      }))
+      .filter((r) => r.role)
+
+    const { data: existingAll, error: exErr } = await simDb
+      .from('practice_project_functional_roles')
+      .select('id, practice_project_id, role_label, required_skills, sort_order, is_active')
+      .eq('practice_project_id', practiceProjectId)
+    if (exErr) throw exErr
+    const existing = existingAll || []
+    const keep = new Set(cleaned.map((r) => r.role.toLowerCase()))
+
+    for (const row of existing) {
+      if (!keep.has(String(row.role_label || '').toLowerCase())) {
+        if (row.is_active === false) continue
+        const { error } = await simDb
+          .from('practice_project_functional_roles')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', row.id)
+        if (error) throw error
+      }
+    }
+
+    let sort = 10
+    for (const row of cleaned) {
+      const match = existing.find(
+        (e) => String(e.role_label || '').toLowerCase() === row.role.toLowerCase(),
+      )
+      if (match) {
+        const { error } = await simDb
+          .from('practice_project_functional_roles')
+          .update({
+            role_label: row.role,
+            required_skills: row.skills,
+            sort_order: sort,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', match.id)
+        if (error) throw error
+      } else {
+        const { error } = await simDb.from('practice_project_functional_roles').insert({
+          practice_project_id: practiceProjectId,
+          role_label: row.role,
+          required_skills: row.skills,
+          sort_order: sort,
+          is_active: true,
+        })
+        if (error) throw error
+      }
+      sort += 10
+    }
+
+    return listPracticeProjectFunctionalRoles(practiceProjectId)
+  } catch (error) {
+    console.error('replacePracticeProjectFunctionalRoles:', error)
+    return { success: false, data: [], error: error.message }
+  }
+}
+
 /** PMO-style: all practice teams for simulator owner scope — limited to teams user can see via RLS */
 /**
  * Sum allocation % for an auth user across active practice team memberships (optional UI warning).

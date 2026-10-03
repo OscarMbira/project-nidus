@@ -13,7 +13,7 @@ export default function UserAvatarBadge({
   avatarPath,
   initials,
   sizeClassName = 'w-7 h-7 sm:w-8 sm:h-8',
-  zoomable = false,
+  zoomable = true,
   refreshNonce = 0,
 }) {
   const [signedUrl, setSignedUrl] = useState(() => (avatarPath ? peekAvatarDisplayUrl(avatarPath) : null))
@@ -48,7 +48,7 @@ export default function UserAvatarBadge({
           src={signedUrl}
           alt="Your profile picture"
           imgClassName={imgClassName}
-          hoverPreviewClassName="h-48 w-48 rounded-full object-cover"
+          hoverPreviewClassName="rounded-full object-cover"
           priority
         />
       )

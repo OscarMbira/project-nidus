@@ -35,6 +35,7 @@ import { isTeamMemberAppointmentRole, isManagerAppointmentRole } from '@nidus/sh
 import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../pm/ManagerAppointmentForm'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import SelectField from '@nidus/ui/SelectField'
 
 const MODE_INVITE = 'invite'
 const INVITE_UI_FAILSAFE_MS = INVITE_HARD_LIMIT_MS + 4_000
@@ -792,22 +793,19 @@ export default function InviteUserForm({
             Role *
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-3 h-5 w-5 text-gray-400 pointer-events-none" />
-            <select
+            <SelectField
               required
               value={roleId}
-              onChange={(e) => {
-                setRoleId(e.target.value)
-              }}
-              className="pl-10 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="">Select a role</option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.role_display_name || role.role_name}
-                </option>
-              ))}
-            </select>
+              onChange={setRoleId}
+              options={roles.map((role) => ({
+                value: role.id,
+                label: role.role_display_name || role.role_name,
+              }))}
+              placeholder="Select a role"
+              searchPlaceholder="Search roles..."
+              icon={User}
+              className="w-full"
+            />
           </div>
         </div>
 

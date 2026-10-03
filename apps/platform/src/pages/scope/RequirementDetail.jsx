@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
@@ -205,6 +206,14 @@ export default function RequirementDetail() {
         <span className="mx-2">/</span>
         <span className="text-gray-700 dark:text-gray-300">{isNew ? 'New' : 'Detail'}</span>
       </nav>
+
+      <button
+        onClick={() => navigate(-1)}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
 
       <div className="mb-6 flex flex-wrap justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{isNew ? 'New requirement' : 'Requirement'}</h1>

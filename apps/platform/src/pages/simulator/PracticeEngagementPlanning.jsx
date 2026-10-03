@@ -69,7 +69,7 @@ export default function PracticeEngagementPlanning() {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-4">
-        <button onClick={() => navigate('/simulator/practice-stakeholders/register' + (selectedProjectId ? `?projectId=${selectedProjectId}` : ''))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         </button>
         <div className="flex-1">

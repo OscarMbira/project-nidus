@@ -6,14 +6,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ArrowLeft, Table2, Plus, List, Target, Search, PauseCircle } from 'lucide-react'
 import {
-  getPracticeStakeholders,
   getPracticeStakeholderAssessmentMatrix,
-  savePracticeStakeholderAssessmentMatrix,
   deletePracticeStakeholderAssessmentMatrix,
 } from '../../services/sim/practiceStakeholderService'
 import StakeholderSEAM from '../../components/stakeholders/StakeholderSEAM'
 import StakeholderAssessmentMatrixList from '../../components/stakeholders/StakeholderAssessmentMatrixList'
-import StakeholderAssessmentMatrixForm from '../../components/stakeholders/StakeholderAssessmentMatrixForm'
+import { assessmentFormPath } from '@nidus/shared/utils/assessmentMatrixRoute'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { mapAssessmentRowToSeamDisplay, prettySeamLevel } from '../../utils/stakeholderSEAMUtils'
@@ -33,16 +31,13 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
   const location = useLocation()
   const [projectId, setProjectId] = useState(() => location.state?.practice_project_id || location.state?.projectId || '')
   const [projects, setProjects] = useState([])
-  const [stakeholders, setStakeholders] = useState([])
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('matrix')
   const [search, setSearch] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [editing, setEditing] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const { showSuccess, modal: successModal } = useSuccessModal()
-  const [draftInitial, setDraftInitial] = useState(null)
+  const matrixBase = '/simulator/practice-stakeholders/assessment-matrix'
 
   const loadProjects = useCallback(async () => {
     try {
@@ -56,15 +51,6 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
       console.error(e)
     }
   }, [])
-
-  const loadStakeholders = useCallback(async () => {
-    if (!projectId) {
-      setStakeholders([])
-      return
-    }
-    const res = await getPracticeStakeholders(projectId)
-    if (res.success) setStakeholders(res.data || [])
-  }, [projectId])
 
   const loadMatrix = useCallback(async () => {
     if (!projectId) {
@@ -97,58 +83,33 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
   }, [loadProjects])
 
   useEffect(() => {
-    loadStakeholders()
     loadMatrix()
-  }, [projectId, loadStakeholders, loadMatrix])
+  }, [projectId, loadMatrix])
 
   useEffect(() => {
     const draft = location.state?.draftData || location.state?.formData
-    if (draft) {
-      const normalized = {
-        ...draft,
-        project_id: draft.practice_project_id || draft.project_id,
-        stakeholder_id: draft.practice_stakeholder_id || draft.stakeholder_id,
-      }
-      setDraftInitial(normalized)
-      if (normalized.project_id) setProjectId(normalized.project_id)
-      setShowForm(true)
-      setEditing(normalized.id ? normalized : null)
-      navigate(location.pathname, { replace: true, state: {} })
-    }
+    if (!draft) return
+    navigate(assessmentFormPath(matrixBase, 'new'), { replace: true, state: location.state })
   }, [])
 
   const seamRows = useMemo(() => records.map(mapAssessmentRowToSeamDisplay), [records])
 
-  const handleSave = async (formData) => {
-    const payload = {
-      practice_project_id: projectId,
-      practice_stakeholder_id: formData.stakeholder_id,
-      assessment_date: formData.assessment_date,
-      current_level: formData.current_level,
-      desired_level: formData.desired_level,
-      notes: formData.notes,
-    }
-    const res = await savePracticeStakeholderAssessmentMatrix(payload, editing?.id)
-    if (!res.success) throw new Error(res.error)
-    setShowForm(false)
-    setEditing(null)
-    setDraftInitial(null)
-    showSuccess({
-      message: `${editing?.id ? 'Assessment updated' : 'Assessment created'} successfully.`,
-      recordId: res.data.id,
-      operation: editing?.id ? 'updated' : 'created',
-    })
-    loadMatrix()
+  const openAssessment = (record, action) => {
+    navigate(assessmentFormPath(matrixBase, action, record), { state: { projectId } })
   }
 
   const handleDelete = async (record) => {
-    const name = record.stakeholder?.stakeholder_name || 'this stakeholder'
+    const name = record.stakeholder?.stakeholder_name || record.practice_stakeholder?.stakeholder_name || record.stakeholder_name || 'this stakeholder'
     if (!window.confirm(`Remove assessment for ${name}?`)) return
     setDeletingId(record.id)
     try {
       const res = await deletePracticeStakeholderAssessmentMatrix(record.id)
       if (!res.success) throw new Error(res.error)
-      showSuccess({ message: 'Assessment deleted.', recordId: record.id, operation: 'deleted' })
+      showSuccess({
+        message: 'Assessment deleted.',
+        recordId: record.stakeholder?.stakeholder_reference || record.stakeholder_reference || name,
+        operation: 'deleted',
+      })
       loadMatrix()
     } catch (e) {
       alert(e?.message || 'Delete failed')
@@ -163,12 +124,6 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
     current_level: prettySeamLevel(r.current_level),
     desired_level: prettySeamLevel(r.desired_level),
     gap_summary: r.gap_summary || '',
-  }))
-
-  const simStakeholders = stakeholders.map((s) => ({
-    id: s.id,
-    stakeholder_name: s.stakeholder_name,
-    stakeholder_reference: s.stakeholder_reference,
   }))
 
   return (
@@ -222,11 +177,7 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
           <button
             type="button"
             disabled={!projectId}
-            onClick={() => {
-              setEditing(null)
-              setDraftInitial(null)
-              setShowForm(true)
-            }}
+            onClick={() => navigate(assessmentFormPath(matrixBase, 'new'), { state: { projectId } })}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
           >
             <Plus className="h-5 w-5" /> Add Assessment
@@ -278,38 +229,20 @@ export default function PracticeStakeholderAssessmentMatrixPage() {
         <StakeholderSEAM
           rows={seamRows}
           loading={loading}
-          onEdit={(row) => {
-            setEditing(row.raw || row)
-            setShowForm(true)
-          }}
+          onView={(row) => openAssessment(row, 'view')}
+          onEdit={(row) => openAssessment(row, 'edit')}
+          onDelete={handleDelete}
+          deletingId={deletingId}
         />
       ) : (
         <StakeholderAssessmentMatrixList
           records={records}
           search={search}
-          onEdit={(r) => {
-            setEditing(r)
-            setShowForm(true)
-          }}
+          onView={(row) => openAssessment(row, 'view')}
+          onEdit={(row) => openAssessment(row, 'edit')}
           onDelete={handleDelete}
           deletingId={deletingId}
           pageId="practice-stakeholder-assessment-matrix"
-        />
-      )}
-
-      {showForm && (
-        <StakeholderAssessmentMatrixForm
-          record={editing || draftInitial}
-          projectId={projectId}
-          stakeholders={simStakeholders}
-          onSave={handleSave}
-          onCancel={() => {
-            setShowForm(false)
-            setEditing(null)
-            setDraftInitial(null)
-          }}
-          entityType="practice_stakeholder_assessment_matrix"
-          formRoute="/simulator/practice-stakeholders/assessment-matrix"
         />
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useLanguageContext } from '@nidus/shared/context/LanguageContext'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -286,12 +287,13 @@ export default function FormEdit({ mode = 'platform', basePath = '/platform/proj
   return (
     <div className="mx-auto w-full md:w-3/4 space-y-4 p-4 text-gray-900 dark:text-gray-100">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link
-          to={listPath}
-          className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
         >
-          ← Back to records
-        </Link>
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         <div className="flex flex-wrap items-center gap-2">
           {versionStatus.checked && versionStatus.isOutdated && (
             <button

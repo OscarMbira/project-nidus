@@ -1,8 +1,10 @@
 /**
  * Wraps create/edit forms as a modal overlay or an in-page panel (PMO oversight).
  * @param {'modal'|'page'} variant
+ * @param {string|null} backLabel - when set (page variant only), shows a "← {backLabel}" link
+ *   above the panel that calls onClose, for forms drilled into from a list/register.
  */
-import { X } from 'lucide-react'
+import { ArrowLeft, X } from 'lucide-react'
 
 export default function FormSurface({
   variant = 'modal',
@@ -13,6 +15,7 @@ export default function FormSurface({
   children,
   maxWidthClass = 'max-w-4xl',
   className = '',
+  backLabel = null,
 }) {
   const header = (
     <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
@@ -48,7 +51,21 @@ export default function FormSurface({
   )
 
   if (variant === 'page') {
-    return <div className="mt-6 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">{panel}</div>
+    return (
+      <div className="mt-6">
+        {backLabel ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to {backLabel}
+          </button>
+        ) : null}
+        <div className="rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">{panel}</div>
+      </div>
+    )
   }
 
   return (

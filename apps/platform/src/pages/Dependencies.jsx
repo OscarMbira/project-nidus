@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Link2, AlertTriangle, CheckCircle, Target, TrendingUp, FolderKanban, Search, Plus, Network } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getInterProjectDependencies, getDependencyDashboardStats } from '../services/dependencyService';
 import DependencyList from '../components/dependencies/DependencyList';
 import DependencyForm from '../components/dependencies/DependencyForm';
@@ -51,7 +53,7 @@ export default function Dependencies() {
       setStats(statsData);
     } catch (error) {
       console.error('Error fetching dependency data:', error);
-      alert('Error loading dependencies: ' + error.message);
+      toast.error('Error loading dependencies: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -117,64 +119,35 @@ export default function Dependencies() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Dependencies</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total || 0}</p>
-              </div>
-              <Link2 className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.identified || 0} identified
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">At Risk</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.atRisk || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.blocked || 0} blocked
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-orange-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.onCriticalPath || 0} on critical path
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Resolved</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.resolved || 0}</p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-gray-500" />
-            </div>
-          </div>
+          <DashboardStatCard label="Total Dependencies" value={stats.total || 0} icon={Link2} iconClassName="text-blue-500" />
+          <DashboardStatCard
+            label="Active"
+            value={stats.active || 0}
+            description={`${stats.identified || 0} identified`}
+            icon={CheckCircle}
+            accentClassName="text-green-600 dark:text-green-400"
+            iconClassName="text-green-500"
+            borderClassName="border-green-200 dark:border-green-800"
+          />
+          <DashboardStatCard
+            label="At Risk"
+            value={stats.atRisk || 0}
+            description={`${stats.blocked || 0} blocked`}
+            icon={AlertTriangle}
+            accentClassName="text-orange-600 dark:text-orange-400"
+            iconClassName="text-orange-500"
+            borderClassName="border-orange-200 dark:border-orange-800"
+          />
+          <DashboardStatCard
+            label="Critical"
+            value={stats.critical || 0}
+            description={`${stats.onCriticalPath || 0} on critical path`}
+            icon={AlertTriangle}
+            accentClassName="text-red-600 dark:text-red-400"
+            iconClassName="text-red-500"
+            borderClassName="border-red-200 dark:border-red-800"
+          />
+          <DashboardStatCard label="Resolved" value={stats.resolved || 0} icon={CheckCircle} iconClassName="text-gray-500" />
         </div>
       )}
 

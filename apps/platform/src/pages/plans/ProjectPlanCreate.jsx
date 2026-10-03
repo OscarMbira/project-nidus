@@ -16,7 +16,7 @@ export default function ProjectPlanCreate() {
   }
 
   const handleCancel = () => {
-    navigate(`/app/projects/${projectId}/plans`)
+    navigate(-1)
   }
 
   return (

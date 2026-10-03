@@ -35,7 +35,7 @@ export default function IssueScaleConfig() {
         .select('id')
         .eq('owner_user_id', userData.id)
         .eq('is_deleted', false)
-        .single()
+        .maybeSingle()
 
       if (!account) {
         // Try to get organisation from project membership

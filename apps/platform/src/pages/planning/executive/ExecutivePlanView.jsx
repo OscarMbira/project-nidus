@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PlanningProjectBar, { usePlanningProjectId } from '../../../components/planning/PlanningProjectBar'
 import { platformDb } from '@nidus/supabase'
@@ -7,6 +8,7 @@ import * as healthApi from '../../../services/planHealthScoreService'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ExecutivePlanView() {
+  const navigate = useNavigate()
   const isSim = useLocation().pathname.includes('/simulator/')
   const projectId = usePlanningProjectId()
   const [milestones, setMilestones] = useState([])
@@ -36,6 +38,10 @@ export default function ExecutivePlanView() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 px-4 py-6">
       <div className="max-w-4xl mx-auto">
+        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white mb-4 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         <h1 className="text-xl font-semibold text-white mb-2">Executive decision view</h1>
         <PlanningProjectBar isSim={isSim} />
         {!projectId && <p className="text-amber-400/90 text-sm">Select a project.</p>}

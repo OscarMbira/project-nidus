@@ -4,7 +4,8 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CheckSquare, Plus, Edit } from 'lucide-react'
+import { CheckSquare, Plus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { getPracticeQMS, createPracticeQMS, updatePracticeQMS } from '../../services/sim/practiceQMSService'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 
@@ -76,9 +77,7 @@ export default function PracticeQMSList() {
         <div className="flex gap-2">
           {qms && <ExportListMenu columns={PRACTICE_QMS_COLUMNS} data={[qms]} baseFilename="PracticeQMS" />}
           {qms && !editing && (
-          <button onClick={() => setEditing(true)} className="inline-flex items-center px-4 py-2 border rounded-lg">
-            <Edit className="h-4 w-4 mr-2" /> Edit
-          </button>
+            <RowActionButton variant="edit" label="Edit QMS" onClick={() => setEditing(true)} />
           )}
         </div>
       </div>

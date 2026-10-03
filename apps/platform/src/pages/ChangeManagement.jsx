@@ -6,7 +6,6 @@ import { platformDb } from '@nidus/supabase';
 import {
   LayoutDashboard,
   List,
-  ArrowLeft,
   Settings
 } from 'lucide-react';
 import {
@@ -34,7 +33,7 @@ export default function ChangeManagement() {
 
   const [editingRequest, setEditingRequest] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-management-requests', 'grid');
+  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-management-requests', 'list');
 
   useEffect(() => {
     if (projectId) {
@@ -47,7 +46,7 @@ export default function ChangeManagement() {
     try {
       const { data, error } = await platformDb
         .from('projects')
-        .select('id, project_name, project_code, project_status, account_id')
+        .select('id, project_name, project_code, account_id')
         .eq('id', projectId)
         .single();
 
@@ -70,10 +69,6 @@ export default function ChangeManagement() {
     }
   };
 
-  const handleBack = () => {
-    navigate(`/projects/${projectId}`);
-  };
-
   const handleRequestSuccess = () => {
     loadChangeData();
     setShowRequestForm(false);
@@ -92,8 +87,7 @@ export default function ChangeManagement() {
   };
 
   const handleSelectRequest = (request) => {
-    setSelectedRequest(request);
-    setShowAssessmentForm(true);
+    navigate(`/platform/change-requests/${request.id}`);
   };
 
   const tabs = [
@@ -108,6 +102,22 @@ export default function ChangeManagement() {
         return <ChangeManagementDashboard projectId={projectId} />;
 
       case 'requests':
+        if (showRequestForm) {
+          return (
+            <ChangeRequestForm
+              variant="page"
+              backLabel="Change Requests"
+              projectId={projectId}
+              request={editingRequest}
+              accountId={project?.account_id || null}
+              onClose={() => {
+                setShowRequestForm(false);
+                setEditingRequest(null);
+              }}
+              onSuccess={handleRequestSuccess}
+            />
+          );
+        }
         return (
           <ChangeRequestList
             requests={requests}
@@ -169,12 +179,6 @@ export default function ChangeManagement() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleBack}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Change Management
@@ -217,19 +221,6 @@ export default function ChangeManagement() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderTabContent()}
       </div>
-
-      {showRequestForm && (
-        <ChangeRequestForm
-          projectId={projectId}
-          request={editingRequest}
-          accountId={project?.account_id || null}
-          onClose={() => {
-            setShowRequestForm(false);
-            setEditingRequest(null);
-          }}
-          onSuccess={handleRequestSuccess}
-        />
-      )}
 
       {showAssessmentForm && selectedRequest && (
         <ChangeAssessmentForm

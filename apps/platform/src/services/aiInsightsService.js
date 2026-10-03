@@ -8,8 +8,11 @@
 import { platformDb } from './supabase/supabaseClient'
 import { isValidAccountId } from '@nidus/shared/utils/accountResolution'
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta'
+// Gemini now runs entirely server-side via the ai-chat Supabase Edge Function (supabase/
+// functions/ai-chat), which reads GEMINI_API_KEY as a server secret — never a VITE_-prefixed
+// variable, which gets baked into the client bundle (found live 2026-09-11: the key that used
+// to live here got flagged and revoked by Google's leak detection).
+const AI_CHAT_URL = import.meta.env.VITE_AI_CHAT_URL || ''
 
 /** Fetch data for rule-based insight categories (RLS applies) */
 async function fetchInsightData() {
@@ -102,28 +105,17 @@ function buildRuleBasedInsights(data) {
 
 /** Optional: send aggregated rule-based text to Gemini for a short narrative (Phase 6.2) */
 async function generateGeminiNarrative(ruleBasedText) {
-  if (!GEMINI_KEY || !ruleBasedText) return null
+  if (!AI_CHAT_URL || !ruleBasedText) return null
   try {
-    const model = 'gemini-1.5-flash'
-    const res = await fetch(
-      `${GEMINI_BASE}/models/${model}:generateContent?key=${GEMINI_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            role: 'user',
-            parts: [{
-              text: `Based on these project management data points, write 2 to 4 very short bullet-point insights for the dashboard. No preamble. Bullets only.\n\n${ruleBasedText}`,
-            }],
-          }],
-          generationConfig: { maxOutputTokens: 512, temperature: 0.3 },
-        }),
-      }
-    )
+    const question = `Based on these project management data points, write 2 to 4 very short bullet-point insights for the dashboard. No preamble. Bullets only.\n\n${ruleBasedText}`
+    const res = await fetch(AI_CHAT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question }),
+    })
     if (!res.ok) return null
     const json = await res.json()
-    const text = json.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const text = json.answer || ''
     if (!text.trim()) return null
     return text.trim().split(/\n+/).filter(Boolean).slice(0, 5).map((line) => ({
       text: line.replace(/^[-*•]\s*/, '').trim(),

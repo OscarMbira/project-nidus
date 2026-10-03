@@ -9,6 +9,7 @@
  */
 
 import { supabase } from './supabaseClient'
+import { unionProjectRoleRows } from '@nidus/shared/services/projectRoleRows.js'
 
 /**
  * Get all available roles for selection (excluding system/admin roles)
@@ -369,29 +370,43 @@ export async function getUserProjectRoles(authUserId) {
         return { success: false, data: [], error: 'User not found' }
       }
 
-      const { data, error } = await supabase
-        .from('project_memberships')
-        .select(`
-          id,
-          project_id,
-          projects:project_id (
-            project_name,
-            project_code
-          ),
-          project_roles:project_role_id (
-            role_name,
-            role_display_name,
-            permissions,
-            is_governance_only
-          ),
-          is_active
-        `)
-        .eq('user_id', user.id)
-        .eq('is_active', true)
+      const [membershipResult, ledResult] = await Promise.all([
+        supabase
+          .from('project_memberships')
+          .select(`
+            id,
+            project_id,
+            projects:project_id (
+              project_name,
+              project_code
+            ),
+            project_roles:project_role_id (
+              role_name,
+              role_display_name,
+              role_level,
+              permissions,
+              is_governance_only
+            ),
+            is_active
+          `)
+          .eq('user_id', user.id)
+          .eq('is_active', true),
+        supabase
+          .from('projects')
+          .select('id, project_name, project_code, project_manager_user_id, owner_user_id')
+          .eq('is_deleted', false)
+          .or(`project_manager_user_id.eq.${user.id},owner_user_id.eq.${user.id}`),
+      ])
 
-      if (error) throw error
+      if (membershipResult.error && ledResult.error) throw membershipResult.error
 
-      return { success: true, data: data || [], error: null }
+      const merged = unionProjectRoleRows(
+        membershipResult.error ? [] : membershipResult.data,
+        ledResult.error ? [] : ledResult.data,
+        user.id,
+      )
+
+      return { success: true, data: merged, error: null }
     } catch (error) {
       console.error('Error getting user project roles:', error)
       return {

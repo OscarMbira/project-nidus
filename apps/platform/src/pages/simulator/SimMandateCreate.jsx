@@ -126,7 +126,7 @@ function SimMandateCreate() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/simulator/mandates/list')}
+          onClick={() => navigate(-1)}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -272,7 +272,7 @@ function SimMandateCreate() {
         <div className="flex justify-end space-x-4">
           <button
             type="button"
-            onClick={() => navigate('/simulator/mandates/list')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Cancel

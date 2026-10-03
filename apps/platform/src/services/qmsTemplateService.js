@@ -163,7 +163,7 @@ export async function getTemplates(accountId) {
           .eq('owner_user_id', userData.id)
           .eq('is_deleted', false)
           .limit(1)
-          .single()
+          .maybeSingle()
 
         if (accountData) {
           accountId = accountData.id

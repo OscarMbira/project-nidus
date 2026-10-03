@@ -154,6 +154,66 @@ export async function submitForApproval(mandateId, approverId) {
 }
 
 /**
+ * Confirm a mandate without formal PMO approval workflow.
+ * Use when the mandate was given verbally or by statement instruction.
+ * Marks the mandate approved and records an audit row on mandate_approvals.
+ *
+ * @param {string} mandateId
+ * @param {string} [comments] - optional note (defaults to a standard verbal/statement note)
+ */
+export async function confirmMandateWithoutFormalApproval(mandateId, comments) {
+  const user = await getCurrentUser()
+  const now = new Date().toISOString()
+  const note = (comments && String(comments).trim())
+    || 'Confirmed without formal approval — verbal or statement instruction.'
+
+  const { data: existing, error: loadError } = await platformDb
+    .from('project_mandates')
+    .select('id, document_status')
+    .eq('id', mandateId)
+    .eq('is_deleted', false)
+    .single()
+
+  if (loadError) throw loadError
+  if (!existing) throw new Error('Mandate not found')
+  if (!['draft', 'rejected'].includes(existing.document_status)) {
+    throw new Error('Only draft or rejected mandates can be confirmed without formal approval')
+  }
+
+  const { data: mandate, error: mandateError } = await platformDb
+    .from('project_mandates')
+    .update({
+      document_status: 'approved',
+      updated_by: user.id,
+      updated_at: now,
+    })
+    .eq('id', mandateId)
+    .select()
+    .single()
+
+  if (mandateError) throw mandateError
+
+  const { data: approval, error: approvalError } = await platformDb
+    .from('mandate_approvals')
+    .insert({
+      mandate_id: mandateId,
+      approver_name: user.full_name,
+      approval_status: 'approved',
+      approval_comments: note,
+      approval_date: now.split('T')[0],
+      approval_at: now,
+      created_by: user.id,
+      updated_by: user.id,
+    })
+    .select()
+    .single()
+
+  if (approvalError) throw approvalError
+
+  return { mandate, approval }
+}
+
+/**
  * Approve a mandate
  * @param {string} approvalId - mandate_approvals id
  * @param {string} [approverId] - unused, kept for API compatibility

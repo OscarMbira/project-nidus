@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Calendar } from 'lucide-react';
+import DashboardStatCard from '../ui/DashboardStatCard';
 import { supabase } from '../../services/supabaseClient';
 import { fetchChangeRequests } from '../../services/changeManagementService';
 
@@ -89,53 +90,10 @@ export default function ChangeBoardDashboard({ projectId, boardId = null }) {
     <div className="space-y-6">
       {/* Board Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Pending Review</p>
-              <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">
-                {stats.pending}
-              </p>
-            </div>
-            <Clock className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Under Review</p>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.underReview}
-              </p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {stats.approved}
-              </p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Rejected</p>
-              <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                {stats.rejected}
-              </p>
-            </div>
-            <XCircle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Pending Review" value={stats.pending} icon={Clock} accentClassName="text-orange-600 dark:text-orange-400" iconClassName="text-orange-500" />
+        <DashboardStatCard label="Under Review" value={stats.underReview} icon={AlertTriangle} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" />
+        <DashboardStatCard label="Approved" value={stats.approved} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Rejected" value={stats.rejected} icon={XCircle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
       </div>
 
       {/* Board Members */}

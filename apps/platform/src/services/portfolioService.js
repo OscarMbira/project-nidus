@@ -73,6 +73,9 @@ const PORTFOLIO_COLUMNS = [
   'portfolio_start_date', 'portfolio_end_date', 'portfolio_status', 'parent_portfolio_id',
   'portfolio_goals', 'governance_model', 'review_frequency', 'delivery_methodology_track', 'total_budget', 'budget_currency',
   'tags', 'custom_fields', 'notes',
+  // v982 Phase 3: account_id (SQL/v989) — the RLS scoping fix (v994) needs this set on create,
+  // since portfolios had no tenant-scoping column before this phase (see v989's header).
+  'account_id',
 ]
 
 /** Cache app user id by auth user id so save does only 1 round trip after first time */
@@ -119,6 +122,13 @@ export async function savePortfolio(portfolioData, portfolioId = null, options =
   const appUserId = await getAppUserId(user.id)
   const applyInheritance = options.applyFieldTemplateInheritance === true
   const payload = buildPortfolioPayload(portfolioData, appUserId, !portfolioId)
+
+  // v982 Phase 3: a new portfolio must carry its owning account so the RLS scoping fix (v994) can
+  // see it. Existing portfolios keep whatever account_id v989's backfill resolved (or NULL) —
+  // updates never overwrite it unless the caller explicitly passes one.
+  if (!portfolioId && !payload.account_id) {
+    payload.account_id = options.accountId || (await getCurrentUserAccountId())
+  }
 
   if (portfolioId) {
     const { data, error } = await platformDb

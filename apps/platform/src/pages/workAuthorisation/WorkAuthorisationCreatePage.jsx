@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import * as platformSvc from '../../services/workAuthorisationService'
 import * as simSvc from '../../services/simWorkAuthorisationService'
@@ -177,9 +177,9 @@ export default function WorkAuthorisationCreatePage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 text-gray-900 dark:text-gray-100">
       <div className="mb-6">
-        <Link to={basePath} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+        <button type="button" onClick={() => navigate(-1)} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
           ← Back to list
-        </Link>
+        </button>
         <h1 className="text-2xl font-bold mt-2">{id ? 'Edit draft' : 'New work authorisation'}</h1>
       </div>
 

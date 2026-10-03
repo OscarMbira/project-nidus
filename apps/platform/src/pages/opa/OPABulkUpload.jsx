@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload } from 'lucide-react'
 import Papa from 'papaparse'
 import { bulkImportOPAFromParsedRows } from '../../services/opaService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 export default function OPABulkUpload() {
+  const navigate = useNavigate()
   const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState(null)
@@ -42,9 +43,9 @@ export default function OPABulkUpload() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <Link to="/platform/opa" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
+      <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
         <ArrowLeft className="h-4 w-4" /> Back
-      </Link>
+      </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Bulk upload OPA (CSV)</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
         Required column: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">title</code>. Optional: opa_type, status, version, category_code, description, document_reference,

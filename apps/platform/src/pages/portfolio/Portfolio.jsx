@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FolderKanban, TrendingUp, AlertTriangle, DollarSign, Search } from 'lucide-react';
+import DashboardStatCard from '../../components/ui/DashboardStatCard';
 import { getPortfolios } from '../../services/portfolioService';
 import PortfolioList from '../../components/portfolio/PortfolioList';
 import PortfolioForm from '../../components/portfolio/PortfolioForm';
@@ -82,51 +83,11 @@ export default function Portfolio() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Portfolios</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <FolderKanban className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Planning</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.planning}</p>
-            </div>
-            <FolderKanban className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-gray-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Projects</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.totalProjects}</p>
-            </div>
-            <FolderKanban className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Portfolios" value={stats.total} icon={FolderKanban} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Active" value={stats.active} icon={TrendingUp} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Planning" value={stats.planning} icon={FolderKanban} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" borderClassName="border-blue-200 dark:border-blue-800" />
+        <DashboardStatCard label="Completed" value={stats.completed} icon={TrendingUp} iconClassName="text-gray-500" />
+        <DashboardStatCard label="Total Projects" value={stats.totalProjects} icon={FolderKanban} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
       </div>
 
       {/* Filters */}

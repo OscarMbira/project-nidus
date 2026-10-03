@@ -489,7 +489,7 @@ export default function ProgrammeDetail() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate(basePath)}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -525,6 +525,13 @@ export default function ProgrammeDetail() {
               onExportPrint={() => exportRecordToPrint(PROGRAMME_VIEW_SECTIONS, programme, `Programme_${programme.programme_code || programmeUuid}`)}
             />
             <RowActionButton variant="edit" label="Edit programme" onClick={() => setShowForm(true)} />
+            <button
+              type="button"
+              onClick={() => navigate(`/platform/programme/${programmeUuid}/members`)}
+              className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Members
+            </button>
           </div>
         </div>
       </div>

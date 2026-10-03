@@ -5,7 +5,9 @@
 
 import { useState, useEffect } from 'react'
 import { Star, Pencil } from 'lucide-react'
-import { getStakeholderCommunications, saveStakeholderCommunication } from '../../services/stakeholderService'
+import { getStakeholderCommunications, getStakeholders, saveStakeholderCommunication } from '../../services/stakeholderService'
+import { platformDb } from '../../services/supabaseClient'
+import StakeholderAvatar from '../ui/StakeholderAvatar'
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -26,6 +28,7 @@ function StarRating({ value, max = 5, size = 'sm' }) {
 
 export default function CommunicationLog({ projectId }) {
   const [logs, setLogs] = useState([])
+  const [people, setPeople] = useState([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -38,8 +41,13 @@ export default function CommunicationLog({ projectId }) {
   })
 
   useEffect(() => {
-    if (projectId) loadLogs()
-    else setLogs([])
+    if (projectId) {
+      loadLogs()
+      getStakeholders({ project_id: projectId }).then((rows) => setPeople(rows || [])).catch(() => setPeople([]))
+    } else {
+      setLogs([])
+      setPeople([])
+    }
   }, [projectId])
 
   const loadLogs = async () => {
@@ -112,10 +120,22 @@ export default function CommunicationLog({ projectId }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-            {logs.map(log => (
+            {logs.map((log, index) => (
               <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">{log.communication_subject || '—'}</td>
+                <td className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                  <div>{log.communication_subject || '—'}</div>
+                  {Array.isArray(log.stakeholder_ids) && log.stakeholder_ids.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {people.filter((person) => log.stakeholder_ids.includes(person.id)).map((person) => (
+                        <span key={person.id} className="inline-flex items-center gap-1 text-xs text-gray-700 dark:text-gray-200">
+                          <StakeholderAvatar db={platformDb} stakeholder={person} sizeClassName="h-5 w-5" />
+                          {person.stakeholder_name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{log.communication_type || '—'}</td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{log.actual_date ? new Date(log.actual_date).toLocaleDateString() : '—'}</td>
                 <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{log.communication_status || '—'}</td>

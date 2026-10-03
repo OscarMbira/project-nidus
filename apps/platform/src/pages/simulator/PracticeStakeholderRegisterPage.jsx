@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom'
 import { getPracticeStakeholders } from '../../services/sim/practiceStakeholderService'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
+import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
@@ -113,7 +114,12 @@ export default function PracticeStakeholderRegisterPage() {
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {stakeholders.map(s => (
                 <tr key={s.id} onClick={() => navigate(`/simulator/practice-stakeholders/${s.id}?projectId=${selectedProjectId}`)} className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{s.stakeholder_name}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="inline-flex items-center gap-2">
+                      <StakeholderAvatar db={simDb} stakeholder={s} syncFromProfile={false} sizeClassName="h-7 w-7" />
+                      {s.stakeholder_name}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{s.stakeholder_organization || '—'}</td>
                   <td className="px-6 py-4 text-sm">{s.stakeholder_type || '—'}</td>
                   <td className="px-6 py-4 text-sm">{s.stakeholder_status || '—'}</td>

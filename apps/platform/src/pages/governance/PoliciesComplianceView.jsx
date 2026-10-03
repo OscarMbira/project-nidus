@@ -33,7 +33,7 @@ export default function PoliciesComplianceView() {
   if(!r) return <div className="min-h-screen bg-gray-900 text-gray-100 p-6">Policy not found.</div>;
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-6 max-w-2xl">
-      <button onClick={()=>navigate('/platform/governance/policies')} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5"><ArrowLeft size={15}/>Back</button>
+      <button onClick={()=>navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5"><ArrowLeft size={15}/>Back</button>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3"><FileCheck size={22} className="text-blue-400"/><h1 className="text-2xl font-bold">{r.policy_name}</h1></div>
         <RowActionButton

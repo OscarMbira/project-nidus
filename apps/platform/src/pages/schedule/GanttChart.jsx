@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { listActivities } from '../../services/activityListService'
 import ScheduleGanttView from '../../components/schedule/GanttChart'
 
 export default function GanttChartPage() {
-  const { projectId } = useParams()
+  const { projectId } = usePlatformProjectId()
   const { canEdit } = useProjectRole(projectId)
   const [activities, setActivities] = useState([])
   const [loading, setLoading] = useState(true)

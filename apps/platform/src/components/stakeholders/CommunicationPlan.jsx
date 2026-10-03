@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, Plus, Edit2, Trash2, Send, Calendar, User, Mail } from 'lucide-react';
-import { supabase } from '../../services/supabaseClient';
+import { supabase, platformDb } from '../../services/supabaseClient';
+import StakeholderAvatar from '../ui/StakeholderAvatar';
 import { getStakeholders } from '../../services/stakeholderService';
 
 export default function CommunicationPlan({ projectId }) {
@@ -424,7 +425,8 @@ export default function CommunicationPlan({ projectId }) {
                         }}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-sm text-gray-900 dark:text-white inline-flex items-center gap-2">
+                        <StakeholderAvatar db={platformDb} stakeholder={stakeholder} sizeClassName="h-6 w-6" />
                         {stakeholder.stakeholder_name}
                       </span>
                     </label>

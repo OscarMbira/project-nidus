@@ -174,9 +174,244 @@ export async function getGettingStartedSummary(accountId) {
   }
 }
 
+/**
+ * Which real (non-Cross-Industry) industry pack, if any, "owns" each menu item this account's
+ * selected industries make available — used by the pack-grouped sidebar (v930) to bucket the
+ * already-resolved menu tree into top-level sections. Cross-Industry's own items are
+ * deliberately excluded: they belong in the sidebar's "Core Project Management" section, same
+ * as any menu item never classified into any industry_pack_menu_items row at all (v930 PRD
+ * decision 6 — fail-open items and the Generic PM pack both read as "Core").
+ * @param {string} accountId
+ * @returns {Promise<{success: boolean, data: {sections: Array<{packId: string, industryCategoryId: string, packName: string, isPrimary: boolean}>, menuCodeToPack: Map<string, string>}, error: string|null}>}
+ */
+/**
+ * @param {string} accountId
+ * @param {string[] | null} [restrictToIndustryCategoryIds] — when provided, only these
+ *   industries' sections/menu items are included even if the account has more selected.
+ *   Used to narrow project-scoped roles (pm/tm layout) to just their assigned project(s)'
+ *   industries; org-wide roles pass null and see every account-selected industry as before.
+ */
+export async function getMenuItemIndustryPackMap(accountId, restrictToIndustryCategoryIds = null) {
+  const empty = { sections: [], menuCodeToPack: new Map() }
+  if (!accountId) return { success: true, data: empty, error: null }
+  try {
+    const [industriesRes, crossIndustryRes] = await Promise.all([
+      supabase
+        .from('account_industries')
+        .select('industry_category_id, is_primary')
+        .eq('account_id', accountId)
+        .order('is_primary', { ascending: false }),
+      supabase.from('industry_categories').select('id').eq('name', 'Cross-Industry').eq('is_active', true).maybeSingle(),
+    ])
+    if (industriesRes.error) throw industriesRes.error
+
+    const crossIndustryId = crossIndustryRes.data?.id || null
+    // Every industry the ACCOUNT has enabled (unrestricted) — needed so an excluded pack's menu
+    // codes still resolve to a real owner below and get dropped, instead of falling through to
+    // 'core' (which is groupMenuTreeByIndustryPack's default for a menu_code with no owner at
+    // all). `restrictToIndustryCategoryIds` narrows which of these actually get a section shown.
+    const allRealIndustries = (industriesRes.data || []).filter(
+      (r) => r.industry_category_id && r.industry_category_id !== crossIndustryId
+    )
+    if (allRealIndustries.length === 0) return { success: true, data: empty, error: null }
+
+    let restrictedIndustries = allRealIndustries
+    if (Array.isArray(restrictToIndustryCategoryIds)) {
+      const allowed = new Set(restrictToIndustryCategoryIds)
+      restrictedIndustries = allRealIndustries.filter((r) => allowed.has(r.industry_category_id))
+    }
+
+    const allIndustryCategoryIds = allRealIndustries.map((r) => r.industry_category_id)
+    const primaryById = new Map(allRealIndustries.map((r) => [r.industry_category_id, !!r.is_primary]))
+
+    const { data: allPacks, error: packsErr } = await supabase
+      .from('industry_packs')
+      .select('id, industry_category_id, pack_name')
+      .in('industry_category_id', allIndustryCategoryIds)
+      .eq('is_active', true)
+    if (packsErr) throw packsErr
+    if (!allPacks || allPacks.length === 0) return { success: true, data: empty, error: null }
+
+    const restrictedCategoryIds = new Set(restrictedIndustries.map((r) => r.industry_category_id))
+
+    // Preserve the account_industries primary-first order, not the packs query's own order.
+    // Only restricted (allowed) industries get a rendered section.
+    const sections = allIndustryCategoryIds
+      .filter((catId) => restrictedCategoryIds.has(catId))
+      .map((catId) => allPacks.find((p) => p.industry_category_id === catId))
+      .filter(Boolean)
+      .map((p) => ({
+        packId: p.id,
+        industryCategoryId: p.industry_category_id,
+        packName: p.pack_name,
+        isPrimary: !!primaryById.get(p.industry_category_id),
+      }))
+
+    // Built from EVERY enabled-industry pack (not just the restricted/shown ones) so
+    // groupMenuTreeByIndustryPack's pruneToOwner correctly identifies an excluded pack's menu
+    // codes as "owned by a pack that isn't being shown" (drop) rather than "no owner" (keep as
+    // core) — see the comment above allRealIndustries for the live incident this fixes.
+    const { data: items, error: itemsErr } = await supabase
+      .from('industry_pack_menu_items')
+      .select('industry_pack_id, menu_items(menu_code)')
+      .in('industry_pack_id', allPacks.map((p) => p.id))
+    if (itemsErr) throw itemsErr
+
+    const menuCodeToPack = new Map()
+    ;(items || []).forEach((row) => {
+      const code = row.menu_items?.menu_code
+      if (code) menuCodeToPack.set(code, row.industry_pack_id)
+    })
+
+    return { success: true, data: { sections, menuCodeToPack }, error: null }
+  } catch (error) {
+    console.error('getMenuItemIndustryPackMap:', error)
+    return { success: false, data: empty, error: error.message || 'Failed to load industry pack menu map' }
+  }
+}
+
+/**
+ * The organisation's own selected industries, with display names — for the project
+ * wizard's "Industry" dropdown, which is restricted to what the Account Owner/PMO already
+ * picked in Organisation Industries settings rather than the full industry_categories list.
+ * Excludes Cross-Industry (always-on baseline, not a real selectable industry).
+ */
+export async function getOrgIndustryOptions(accountId) {
+  if (!accountId) return { success: true, data: [], error: null }
+  try {
+    const [industriesRes, crossIndustryRes] = await Promise.all([
+      supabase
+        .from('account_industries')
+        .select('industry_category_id, is_primary')
+        .eq('account_id', accountId)
+        .order('is_primary', { ascending: false }),
+      supabase.from('industry_categories').select('id').eq('name', 'Cross-Industry').eq('is_active', true).maybeSingle(),
+    ])
+    if (industriesRes.error) throw industriesRes.error
+
+    const crossIndustryId = crossIndustryRes.data?.id || null
+    const realIndustries = (industriesRes.data || []).filter(
+      (r) => r.industry_category_id && r.industry_category_id !== crossIndustryId
+    )
+    if (realIndustries.length === 0) return { success: true, data: [], error: null }
+
+    const categoryIds = realIndustries.map((r) => r.industry_category_id)
+    const { data: categories, error: catErr } = await supabase
+      .from('industry_categories')
+      .select('id, name')
+      .in('id', categoryIds)
+    if (catErr) throw catErr
+
+    const nameById = new Map((categories || []).map((c) => [c.id, c.name]))
+    const options = realIndustries
+      .map((r) => ({
+        id: r.industry_category_id,
+        name: nameById.get(r.industry_category_id) || 'Unknown industry',
+        is_primary: !!r.is_primary,
+      }))
+      .filter((o) => nameById.has(o.id))
+      .sort((a, b) => a.name.localeCompare(b.name))
+
+    return { success: true, data: options, error: null }
+  } catch (error) {
+    console.error('getOrgIndustryOptions:', error)
+    return { success: false, data: [], error: error.message || 'Failed to load organisation industries' }
+  }
+}
+
+/**
+ * The single currently-open project's own industry_category_id(s) (v1106: a project may now
+ * carry several — same return shape as getUserProjectIndustryIds, so both plug into
+ * getMenuItemIndustryPackMap's restrictToIndustryCategoryIds the same way).
+ *
+ * Replaces the old "union across every project this user is assigned to" behaviour for the
+ * pm/tm-layout sidebar (found live 2026-09-10): a Project Manager who also holds a role on an
+ * unrelated Information Technology project was seeing that pack's whole menu block while
+ * viewing an unrelated project, because the sidebar's industry filter was scoped to the user's
+ * entire project portfolio rather than the one project actually open. The sidebar should
+ * reflect the project you're looking at, not every project you happen to manage.
+ *
+ * Reads public.project_industries first (a project may carry several). When that set is
+ * empty, or the junction table is not available yet, falls back to the synced primary
+ * pointer projects.industry_category_id. Callers that still get an empty list should show
+ * the organisation's selected industries (pass null into getMenuItemIndustryPackMap) rather
+ * than hiding every industry pack.
+ */
+export async function getProjectIndustryCategoryIds(projectId) {
+  if (!projectId) return { success: true, data: [], error: null }
+  try {
+    const { data: junctionRows, error: junctionErr } = await supabase
+      .from('project_industries')
+      .select('industry_category_id')
+      .eq('project_id', projectId)
+
+    const junctionIds = junctionErr
+      ? []
+      : [...new Set((junctionRows || []).map((r) => r.industry_category_id).filter(Boolean))]
+    if (junctionIds.length > 0) {
+      return { success: true, data: junctionIds, error: null }
+    }
+
+    const { data: project, error: projectErr } = await supabase
+      .from('projects')
+      .select('industry_category_id')
+      .eq('id', projectId)
+      .maybeSingle()
+    if (projectErr) throw projectErr
+
+    return {
+      success: true,
+      data: project?.industry_category_id ? [project.industry_category_id] : [],
+      error: null,
+    }
+  } catch (error) {
+    console.error('getProjectIndustryCategoryIds:', error)
+    return { success: false, data: [], error: error.message || 'Failed to load project industry' }
+  }
+}
+
+/**
+ * Distinct industry_category_ids of the projects this user holds a project-scoped role on
+ * (user_roles.project_id IS NOT NULL). Superseded by getProjectIndustryCategoryIds for the
+ * pm/tm-layout sidebar (see its comment) — kept as a general-purpose utility, not currently
+ * called from useMenu.js.
+ */
+export async function getUserProjectIndustryIds(userId) {
+  if (!userId) return { success: true, data: [], error: null }
+  try {
+    const { data: roleRows, error: roleErr } = await supabase
+      .from('user_roles')
+      .select('project_id')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .not('project_id', 'is', null)
+    if (roleErr) throw roleErr
+
+    const projectIds = [...new Set((roleRows || []).map((r) => r.project_id).filter(Boolean))]
+    if (projectIds.length === 0) return { success: true, data: [], error: null }
+
+    const { data: projectRows, error: projErr } = await supabase
+      .from('projects')
+      .select('industry_category_id')
+      .in('id', projectIds)
+      .not('industry_category_id', 'is', null)
+    if (projErr) throw projErr
+
+    const industryIds = [...new Set((projectRows || []).map((r) => r.industry_category_id).filter(Boolean))]
+    return { success: true, data: industryIds, error: null }
+  } catch (error) {
+    console.error('getUserProjectIndustryIds:', error)
+    return { success: false, data: [], error: error.message || 'Failed to load project industries' }
+  }
+}
+
 export default {
   getOrgIndustries,
   getOrgCapabilities,
   toggleOrganisationCapability,
   getGettingStartedSummary,
+  getMenuItemIndustryPackMap,
+  getOrgIndustryOptions,
+  getUserProjectIndustryIds,
+  getProjectIndustryCategoryIds,
 }

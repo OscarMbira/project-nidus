@@ -218,7 +218,7 @@ export default function LessonsReportView() {
         reportId={report.id}
         reportType={report.report_type}
         mode="view"
-        onCancel={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports'))}
+        onCancel={() => navigate(-1)}
       />
     </div>
   )

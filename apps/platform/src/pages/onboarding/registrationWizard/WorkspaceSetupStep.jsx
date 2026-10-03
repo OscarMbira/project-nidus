@@ -10,8 +10,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Rocket, AlertTriangle } from 'lucide-react';
+import { supabase } from '@nidus/supabase';
 import { createOrganisation, provisionOrganisationTenant } from '../../../services/organisationService';
 import { updateUserProfessionalRole } from '../../../services/professionalRoleService';
+import { getUserSystemRoles } from '../../../services/roleService';
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal';
 import WizardStepLayout from './WizardStepLayout';
 
@@ -58,12 +60,32 @@ export default function WorkspaceSetupStep() {
         console.warn('WorkspaceSetupStep: professional role save failed (non-blocking):', roleResult.error);
       }
 
+      // v982 Phase 1 (task F): land declined-PMO Account Owners in the Account &
+      // Subscription zone (with its "Invite a PMO Administrator" CTA) instead of the
+      // default Getting Started page. Checked against the role the user actually holds
+      // post-provisioning — not the toggle state — so a silent grant failure still
+      // routes here rather than to a page assuming PMO access exists.
+      let landingRoute = '/platform/getting-started';
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const systemRoles = await getUserSystemRoles(authUser.id);
+          const hasPmoAdmin = systemRoles.success
+            && systemRoles.data.some((r) => r.roles?.role_name === 'pmo_admin');
+          if (!hasPmoAdmin) {
+            landingRoute = '/platform/subscription';
+          }
+        }
+      } catch (landingErr) {
+        console.warn('WorkspaceSetupStep: could not resolve PMO Admin status for landing route (non-blocking):', landingErr?.message);
+      }
+
       setStatus('idle');
       showSuccess({
         recordId: organisation.account_code || organisation.account_name,
         operation: 'created',
         message: 'Your workspace is ready.',
-        onOk: () => navigate('/platform/getting-started', { replace: true }),
+        onOk: () => navigate(landingRoute, { replace: true }),
       });
     } catch (error) {
       console.error('WorkspaceSetupStep: setup failed:', error);

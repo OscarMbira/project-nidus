@@ -4,6 +4,8 @@ import { DashboardStatCard } from '@nidus/ui'
 import { supabase } from '../../services/supabaseClient'
 import { useCurrentProject } from '../../context/CurrentProjectContext'
 import { fetchProjectMilestones } from '../../services/ganttService'
+import { getMilestoneSummary } from '../../services/milestoneService'
+import { getGovernanceActions } from '../../services/governanceActionService'
 import PMBoardMemberDashboard from './PMBoardMemberDashboard'
 import {
   Briefcase,
@@ -16,7 +18,8 @@ import {
   FileText,
   Layers,
   GraduationCap,
-  Flag
+  Flag,
+  ListTodo
 } from 'lucide-react'
 
 const EMPTY_STATS = {
@@ -28,11 +31,15 @@ const EMPTY_STATS = {
   lessonsLogged: 0
 }
 
+const EMPTY_MILESTONE_SUMMARY = { total: 0, planned: 0, at_risk: 0, achieved: 0, missed: 0, slipped: 0 }
+
 export default function PMDashboard() {
   const navigate = useNavigate()
   const { currentProjectId, currentProject, loading: projectLoading } = useCurrentProject()
   const [stats, setStats] = useState(EMPTY_STATS)
   const [milestones, setMilestones] = useState([])
+  const [milestoneSummary, setMilestoneSummary] = useState(EMPTY_MILESTONE_SUMMARY)
+  const [upcomingActions, setUpcomingActions] = useState([])
   const [loading, setLoading] = useState(true)
 
   const isBoardMemberOnly = !!currentProject?.isGovernanceOnly
@@ -41,6 +48,8 @@ export default function PMDashboard() {
     if (!currentProjectId || isBoardMemberOnly) {
       setStats(EMPTY_STATS)
       setMilestones([])
+      setMilestoneSummary(EMPTY_MILESTONE_SUMMARY)
+      setUpcomingActions([])
       setLoading(false)
       return
     }
@@ -58,6 +67,8 @@ export default function PMDashboard() {
         reportsRes,
         lessonsRes,
         milestonesRes,
+        milestoneSummaryRes,
+        actionsRes,
       ] = await Promise.allSettled([
         supabase.from('work_packages').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('is_deleted', false).in('status', ['authorized', 'accepted', 'in_progress']),
         supabase.from('risks').select('id', { count: 'exact', head: true }).eq('project_id', projectId).in('status', ['identified', 'assessed', 'mitigated', 'monitored']).eq('is_deleted', false),
@@ -66,6 +77,8 @@ export default function PMDashboard() {
         supabase.from('checkpoint_reports').select('id', { count: 'exact', head: true }).eq('project_id', projectId).in('status', ['draft', 'submitted']),
         supabase.from('lessons_learned').select('id', { count: 'exact', head: true }).eq('project_id', projectId).eq('is_deleted', false),
         fetchProjectMilestones(projectId),
+        getMilestoneSummary(projectId),
+        getGovernanceActions({ projectId, status: 'pending', limit: 5 }),
       ])
 
       const count = (res) => (res.status === 'fulfilled' && !res.value.error ? (res.value.count ?? 0) : 0)
@@ -84,6 +97,13 @@ export default function PMDashboard() {
         ? milestonesRes.value.filter((m) => m.milestone_date >= today).slice(0, 5)
         : []
       setMilestones(upcoming)
+
+      setMilestoneSummary(
+        milestoneSummaryRes.status === 'fulfilled' && milestoneSummaryRes.value.success
+          ? milestoneSummaryRes.value.data
+          : EMPTY_MILESTONE_SUMMARY
+      )
+      setUpcomingActions(actionsRes.status === 'fulfilled' ? actionsRes.value : [])
     } catch (error) {
       console.error('Error loading PM dashboard data:', error)
     } finally {
@@ -255,6 +275,66 @@ export default function PMDashboard() {
             ))}
           </ul>
         )}
+      </div>
+
+      {/* Milestone Summary (v966 Phase 11) / Upcoming Actions (v966 Phase 12) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <Flag className="h-5 w-5 inline-block mr-2 text-blue-600 dark:text-blue-400" />
+            Milestone Summary
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <Link
+              to={`/platform/milestones${currentProjectKey ? `?projectId=${encodeURIComponent(currentProjectKey)}` : ''}`}
+              className="rounded-lg bg-gray-50 dark:bg-gray-700/50 p-3 text-center hover:shadow-sm transition-shadow"
+            >
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{loading ? '...' : milestoneSummary.total}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total</p>
+            </Link>
+            <Link
+              to={`/platform/milestones?status=at_risk${currentProjectKey ? `&projectId=${encodeURIComponent(currentProjectKey)}` : ''}`}
+              className="rounded-lg bg-amber-50 dark:bg-amber-900/20 p-3 text-center hover:shadow-sm transition-shadow"
+            >
+              <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{loading ? '...' : milestoneSummary.at_risk}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">At Risk</p>
+            </Link>
+            <Link
+              to={`/platform/milestones?status=achieved${currentProjectKey ? `&projectId=${encodeURIComponent(currentProjectKey)}` : ''}`}
+              className="rounded-lg bg-green-50 dark:bg-green-900/20 p-3 text-center hover:shadow-sm transition-shadow"
+            >
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{loading ? '...' : milestoneSummary.achieved}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Achieved</p>
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <ListTodo className="h-5 w-5 inline-block mr-2 text-blue-600 dark:text-blue-400" />
+            Upcoming Actions
+          </h2>
+          {loading ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading…</p>
+          ) : upcomingActions.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400">No pending governance actions for this project.</p>
+          ) : (
+            <ul className="divide-y divide-gray-100 dark:divide-gray-700">
+              {upcomingActions.map((a) => (
+                <li key={`${a.action_type}-${a.action_id}`} className="flex items-center justify-between py-2 gap-3">
+                  {a.view_path ? (
+                    <Link to={a.view_path} className="text-sm text-gray-700 dark:text-gray-300 hover:underline truncate">
+                      {a.record_label}
+                    </Link>
+                  ) : (
+                    <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{a.record_label}</span>
+                  )}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{a.due_date || a.action_type_label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Delivery Overview */}

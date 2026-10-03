@@ -43,7 +43,7 @@ export default function StagePlanCreate() {
   }
 
   const handleCancel = () => {
-    navigate(platformProjectPath(routeKey, 'plans'))
+    navigate(-1)
   }
 
   if (!projectPlanId) {

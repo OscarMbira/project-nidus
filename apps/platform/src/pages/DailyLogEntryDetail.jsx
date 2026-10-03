@@ -226,7 +226,7 @@ export default function DailyLogEntryDetail() {
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => navigate(`/app/projects/${projectId}/daily-log`)}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
         >
           <ArrowLeft className="w-4 h-4" />

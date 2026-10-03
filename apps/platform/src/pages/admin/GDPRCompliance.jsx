@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { processDataExportRequest, processDataDeletionRequest, createDataBreachRecord } from '../../services/gdprService'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -151,50 +152,10 @@ export default function GDPRCompliance() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Consents</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stats.total_consents || 0}</p>
-            </div>
-            <div className="bg-green-500 rounded-lg p-3">
-              <span className="text-white text-2xl">✓</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Exports</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stats.pending_exports || 0}</p>
-            </div>
-            <div className="bg-blue-500 rounded-lg p-3">
-              <span className="text-white text-2xl">📥</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Deletions</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stats.pending_deletions || 0}</p>
-            </div>
-            <div className="bg-red-500 rounded-lg p-3">
-              <span className="text-white text-2xl">🗑️</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Breaches</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{stats.active_breaches || 0}</p>
-            </div>
-            <div className="bg-orange-500 rounded-lg p-3">
-              <span className="text-white text-2xl">⚠️</span>
-            </div>
-          </div>
-        </div>
+        <DashboardStatCard label="Total Consents" value={stats.total_consents || 0} />
+        <DashboardStatCard label="Pending Exports" value={stats.pending_exports || 0} />
+        <DashboardStatCard label="Pending Deletions" value={stats.pending_deletions || 0} />
+        <DashboardStatCard label="Active Breaches" value={stats.active_breaches || 0} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

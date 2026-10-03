@@ -93,7 +93,7 @@ export default function AppointmentTermsCard({ record, className = '' }) {
           <FileText className="h-4 w-4 text-blue-500 shrink-0" />
           <div>
             <dt className="text-xs font-medium text-gray-500 dark:text-gray-400">Reference document</dt>
-            <dd className="text-sm text-gray-800 dark:text-gray-200">{record.reference_document}</dd>
+            <dd className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{record.reference_document}</dd>
           </div>
         </div>
       ) : null}

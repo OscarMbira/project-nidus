@@ -13,9 +13,15 @@ describe('initiationRouteUtils', () => {
     expect(resolveInitiationBasePath('/pm/initiation/business-case/abc/view')).toBe('/pm/initiation/business-case')
   })
 
-  it('resolves benefits review plan project view path', () => {
+  it('resolves benefits review plan project view path under PMO shell', () => {
     expect(resolveBenefitsReviewPlanViewPath('proj-1', '/pmo/initiation/benefits-review-plan')).toBe(
-      '/platform/projects/proj-1/benefits/review-plan'
+      '/pmo/projects/proj-1/benefits/review-plan'
+    )
+  })
+
+  it('resolves benefits review plan project view path under PM shell', () => {
+    expect(resolveBenefitsReviewPlanViewPath('SEED334-PRJ-08', '/pm/initiation/benefits-review-plan')).toBe(
+      '/pm/projects/SEED334-PRJ-08/benefits/review-plan'
     )
   })
 })

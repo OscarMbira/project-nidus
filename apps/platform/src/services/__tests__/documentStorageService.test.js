@@ -23,40 +23,32 @@ import {
 } from '../documentStorageService';
 
 // Mock Supabase client
+// Stable query/bucket objects: the service and the tests must share the same vi.fn instances,
+// so a test's .mockResolvedValue() reaches the call the service actually makes.
 const { mockStorage, mockPlatformDb } = vi.hoisted(() => {
-  const mockStorage = {
-    from: vi.fn(() => ({
-      upload: vi.fn(),
-      download: vi.fn(),
-      remove: vi.fn(),
-      createSignedUrl: vi.fn(),
-      list: vi.fn()
-    }))
+  const storageBucket = {
+    upload: vi.fn(),
+    download: vi.fn(),
+    remove: vi.fn(),
+    createSignedUrl: vi.fn(),
+    list: vi.fn()
   };
+  const mockStorage = {
+    from: vi.fn(() => storageBucket)
+  };
+
+  const queryChain = {};
+  const chainable = ['select', 'insert', 'update', 'delete', 'upsert', 'eq', 'neq', 'in', 'is', 'gt', 'gte', 'lt', 'lte', 'order', 'limit', 'range', 'or', 'not', 'filter', 'match'];
+  chainable.forEach((method) => {
+    queryChain[method] = vi.fn(() => queryChain);
+  });
+  queryChain.single = vi.fn();
+  queryChain.maybeSingle = vi.fn();
 
   const mockPlatformDb = {
     storage: mockStorage,
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(),
-          maybeSingle: vi.fn()
-        }))
-      })),
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn()
-        }))
-      })),
-      update: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn()
-          }))
-        }))
-      })),
-      rpc: vi.fn()
-    })),
+    from: vi.fn(() => queryChain),
+    rpc: vi.fn(),
     auth: {
       getUser: vi.fn()
     }
@@ -142,7 +134,7 @@ describe('Document Storage Service', () => {
       });
 
       it('should handle zero bytes', () => {
-        expect(formatFileSize(0)).toBe('0.00 B');
+        expect(formatFileSize(0)).toBe('0 B');
       });
     });
 
@@ -153,7 +145,8 @@ describe('Document Storage Service', () => {
 
         const result = validateFile(validFile);
         expect(result.valid).toBe(true);
-        expect(result.errors).toHaveLength(0);
+        expect(result.error).toBeUndefined();
+        expect(result.extension).toBe('pdf');
       });
 
       it('should reject files with invalid extensions', () => {
@@ -162,7 +155,7 @@ describe('Document Storage Service', () => {
 
         const result = validateFile(invalidFile);
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('extension'))).toBe(true);
+        expect(result.error).toMatch(/not allowed/);
       });
 
       it('should reject files that are too large', () => {
@@ -171,7 +164,7 @@ describe('Document Storage Service', () => {
 
         const result = validateFile(largeFile);
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('size') || e.includes('50MB'))).toBe(true);
+        expect(result.error).toMatch(/size/);
       });
 
       it('should reject empty files', () => {
@@ -180,7 +173,7 @@ describe('Document Storage Service', () => {
 
         const result = validateFile(emptyFile);
         expect(result.valid).toBe(false);
-        expect(result.errors.some(e => e.includes('empty') || e.includes('size'))).toBe(true);
+        expect(result.error).toMatch(/size/);
       });
     });
   });
@@ -248,54 +241,33 @@ describe('Document Storage Service', () => {
   });
 
   describe('getProjectStorageUsage', () => {
-    it('should calculate total storage usage for a project', async () => {
-      const mockDocuments = [
-        { file_size: 1024 * 1024 }, // 1MB
-        { file_size: 2 * 1024 * 1024 }, // 2MB
-        { file_size: 512 * 1024 } // 512KB
-      ];
-
-      mockPlatformDb.from().select().eq().eq.mockResolvedValue({ 
-        data: mockDocuments, 
-        error: null 
-      });
+    it('should return total storage usage for a project from the database function', async () => {
+      mockPlatformDb.rpc.mockResolvedValue({ data: 3584 * 1024, error: null });
 
       const result = await getProjectStorageUsage('project-123');
 
-      expect(result).toBeGreaterThan(0);
-      expect(mockPlatformDb.from).toHaveBeenCalledWith('project_documents');
+      expect(result).toBe(3584 * 1024);
+      expect(mockPlatformDb.rpc).toHaveBeenCalledWith('calculate_project_storage_usage', {
+        p_project_id: 'project-123'
+      });
     });
   });
 
   describe('checkProjectStorageLimit', () => {
-    it('should return true when under limit', async () => {
-      const mockDocuments = [
-        { file_size: 10 * 1024 * 1024 } // 10MB
-      ];
-
-      mockPlatformDb.from().select().eq().eq.mockResolvedValue({ 
-        data: mockDocuments, 
-        error: null 
-      });
+    it('should report not over limit when usage is under the limit', async () => {
+      mockPlatformDb.rpc.mockResolvedValue({ data: 10 * 1024 * 1024, error: null });
 
       const result = await checkProjectStorageLimit('project-123');
 
-      expect(result.withinLimit).toBe(true);
+      expect(result.isOverLimit).toBe(false);
     });
 
-    it('should return false when over limit', async () => {
-      const mockDocuments = [
-        { file_size: 600 * 1024 * 1024 } // 600MB (over 500MB limit)
-      ];
-
-      mockPlatformDb.from().select().eq().eq.mockResolvedValue({ 
-        data: mockDocuments, 
-        error: null 
-      });
+    it('should report over limit when usage exceeds the limit', async () => {
+      mockPlatformDb.rpc.mockResolvedValue({ data: 600 * 1024 * 1024, error: null });
 
       const result = await checkProjectStorageLimit('project-123');
 
-      expect(result.withinLimit).toBe(false);
+      expect(result.isOverLimit).toBe(true);
     });
   });
 });
