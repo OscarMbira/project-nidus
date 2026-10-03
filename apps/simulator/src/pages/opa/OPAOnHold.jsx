@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { listOPAs } from '../../services/opaService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -24,9 +24,9 @@ export default function OPAOnHold() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <Link to="/platform/opa" className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
+      <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-6">
         <ArrowLeft className="h-4 w-4" /> All OPAs
-      </Link>
+      </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">OPA drafts & on hold</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Records marked on hold. Open one to continue editing.</p>
       {loading ? (

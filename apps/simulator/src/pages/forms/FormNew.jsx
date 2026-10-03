@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import {
   formInstancePathSegmentFromRow,
@@ -142,12 +143,13 @@ export default function FormNew({ mode = 'platform', basePath = '/platform/proje
 
   return (
     <div className="mx-auto w-full md:w-3/4 space-y-4 p-4 text-gray-900 dark:text-gray-100">
-      <Link
-        to={listPath}
-        className="inline-block text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+      <button
+        onClick={() => navigate(-1)}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
       >
-        ← Back to records
-      </Link>
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <h1 className="text-lg font-semibold">New Form: {template?.name || templateCode}</h1>
 
       {examples.length > 0 && (

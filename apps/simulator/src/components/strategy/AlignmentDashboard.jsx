@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
+import DashboardStatCard from '../ui/DashboardStatCard';
 import { getAlignmentScores, getStrategicAlignmentDashboardStats } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
@@ -88,59 +89,10 @@ export default function AlignmentDashboard({ portfolioId = null, projectId = nul
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Average Alignment</p>
-              <p className={`text-3xl font-bold ${scoreColor}`}>
-                {Math.round(averageScore)}
-              </p>
-            </div>
-            <Target className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Objectives</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {stats?.totalObjectives || 0}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats?.activeObjectives || 0} active
-              </p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Project Mappings</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {stats?.totalMappings || 0}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats?.activeMappings || 0} active
-              </p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Mapped Projects</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {stats?.projectsWithMappings || 0}
-              </p>
-            </div>
-            <BarChart3 className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Average Alignment" value={Math.round(averageScore)} icon={Target} iconClassName="text-blue-500" accentClassName={scoreColor} />
+        <DashboardStatCard label="Total Objectives" value={stats?.totalObjectives || 0} description={`${stats?.activeObjectives || 0} active`} icon={CheckCircle} iconClassName="text-green-500" />
+        <DashboardStatCard label="Project Mappings" value={stats?.totalMappings || 0} description={`${stats?.activeMappings || 0} active`} icon={TrendingUp} iconClassName="text-purple-500" />
+        <DashboardStatCard label="Mapped Projects" value={stats?.projectsWithMappings || 0} icon={BarChart3} iconClassName="text-orange-500" />
       </div>
 
       {/* Objectives by Category */}

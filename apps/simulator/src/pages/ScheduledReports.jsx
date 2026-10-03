@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Plus, Calendar, Play, Pause, Edit2, Trash2, Mail, Clock, AlertCircle } from 'lucide-react'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function ScheduledReports() {
@@ -132,7 +133,7 @@ export default function ScheduledReports() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate('/reports')}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -161,48 +162,10 @@ export default function ScheduledReports() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Schedules</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{schedules.length}</p>
-            </div>
-            <Calendar className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {schedules.filter(s => s.is_active).length}
-              </p>
-            </div>
-            <Play className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Paused</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {schedules.filter(s => !s.is_active).length}
-              </p>
-            </div>
-            <Pause className="h-8 w-8 text-gray-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">With Errors</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {schedules.filter(s => s.error_count > 0).length}
-              </p>
-            </div>
-            <AlertCircle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Schedules" value={schedules.length} icon={Calendar} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Active" value={schedules.filter(s => s.is_active).length} icon={Play} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Paused" value={schedules.filter(s => !s.is_active).length} icon={Pause} iconClassName="text-gray-500" />
+        <DashboardStatCard label="With Errors" value={schedules.filter(s => s.error_count > 0).length} icon={AlertCircle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
       </div>
 
       {/* Schedules List */}

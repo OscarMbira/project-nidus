@@ -11,7 +11,10 @@ import {
   USER_SIGNATURES_BUCKET,
 } from '@nidus/shared/services/processTemplateSignatoryService'
 import { normalizeImageFile, fileFromClipboardData } from '@nidus/shared/utils/imageFileUtils'
+import { withTimeout } from '@nidus/shared/utils/asyncUtils'
 import ZoomableImage from './ZoomableImage'
+
+const UPLOAD_TIMEOUT_MS = 20000
 
 /**
  * "Signature" section for the My Profile page (v894) — view/replace/remove the
@@ -19,7 +22,7 @@ import ZoomableImage from './ZoomableImage'
  * wherever a process-template document is signed (v868). This is the first
  * place a user can manage it without needing to go sign a document first.
  */
-export default function ProfileSignatureSection({ db, accountId }) {
+export default function ProfileSignatureSection({ db, accountId, authUserId = null }) {
   const [saved, setSaved] = useState(null)
   const [signedUrl, setSignedUrl] = useState(null)
   const [showPasteHint, setShowPasteHint] = useState(false)
@@ -28,12 +31,12 @@ export default function ProfileSignatureSection({ db, accountId }) {
 
   useEffect(() => {
     let cancelled = false
-    getSavedSignature(db).then((result) => {
+    getSavedSignature(db, authUserId).then((result) => {
       if (cancelled) return
       if (result.success) setSaved(result.data)
     })
     return () => { cancelled = true }
-  }, [db])
+  }, [db, authUserId])
 
   useEffect(() => {
     let cancelled = false
@@ -59,7 +62,11 @@ export default function ProfileSignatureSection({ db, accountId }) {
     }
     setBusy(true)
     try {
-      const result = await saveSignatureImage(db, normalized, accountId)
+      const result = await withTimeout(
+        saveSignatureImage(db, normalized, accountId, authUserId),
+        UPLOAD_TIMEOUT_MS,
+        'Saving the signature timed out. Check your connection and try again.',
+      )
       if (!result.success) {
         toast.error(result.message || 'Failed to save signature')
         return
@@ -67,6 +74,8 @@ export default function ProfileSignatureSection({ db, accountId }) {
       setSaved(result.data)
       setShowPasteHint(false)
       toast.success('Signature updated')
+    } catch (error) {
+      toast.error(error?.message || 'Failed to save signature')
     } finally {
       setBusy(false)
     }
@@ -75,7 +84,11 @@ export default function ProfileSignatureSection({ db, accountId }) {
   const handleRemove = async () => {
     setBusy(true)
     try {
-      const result = await deleteSavedSignature(db)
+      const result = await withTimeout(
+        deleteSavedSignature(db, authUserId),
+        UPLOAD_TIMEOUT_MS,
+        'Removing the signature timed out. Check your connection and try again.',
+      )
       if (!result.success) {
         toast.error(result.message || 'Failed to remove signature')
         return
@@ -83,6 +96,8 @@ export default function ProfileSignatureSection({ db, accountId }) {
       setSaved(null)
       setSignedUrl(null)
       toast.success('Signature removed')
+    } catch (error) {
+      toast.error(error?.message || 'Failed to remove signature')
     } finally {
       setBusy(false)
     }

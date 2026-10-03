@@ -121,7 +121,7 @@ export default function MethodologyDashboard() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Methodology not found</p>
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
             Back to Dashboard

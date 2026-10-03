@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { RowActionButton } from '@nidus/ui'
 import { getIndustryPlanService } from '../../services/resolvers/industryPlanServiceResolver'
@@ -44,6 +45,10 @@ export default function ProjectIndustryPlanView({ isSim = false }) {
   if (!plan) {
     return (
       <div className="p-6">
+        <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         <p className="text-sm text-slate-500 mb-4">No industry plan for this project yet.</p>
         <Link to={newPath} className="text-blue-600 text-sm">
           Browse industry templates →
@@ -57,6 +62,10 @@ export default function ProjectIndustryPlanView({ isSim = false }) {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <div className="flex flex-wrap justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">{plan.plan_title}</h1>

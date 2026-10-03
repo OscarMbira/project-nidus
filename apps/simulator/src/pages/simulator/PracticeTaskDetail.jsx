@@ -101,7 +101,7 @@ export default function PracticeTaskDetail() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/simulator/practice-tasks?projectId=${projectId}`)}
+        onClick={() => navigate(-1)}
         className="mb-4 inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
@@ -237,7 +237,7 @@ export default function PracticeTaskDetail() {
         <div className="flex justify-end gap-4">
           <button
             type="button"
-            onClick={() => navigate(`/simulator/practice-tasks?projectId=${projectId}`)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             Cancel

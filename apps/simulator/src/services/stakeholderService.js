@@ -1,5 +1,6 @@
 import { platformDb } from './supabaseClient'
-import { buildGapSummary } from '@nidus/shared/utils/stakeholderSEAMUtils'
+import { applyAssessmentDecisionLevels, buildGapSummary, SEAM_LEVELS } from '@nidus/shared/utils/stakeholderSEAMUtils'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 
 /**
  * Stakeholder Service - API functions for Stakeholder Management module
@@ -40,6 +41,7 @@ function withTimeout(promise, ms, label) {
  */
 const STAKEHOLDER_WRITE_KEYS = new Set([
   'project_id',
+  'account_id',
   'user_id',
   'stakeholder_reference',
   'stakeholder_name',
@@ -65,6 +67,7 @@ const STAKEHOLDER_WRITE_KEYS = new Set([
   'is_powerful',
   'is_negatively_affected',
   'is_positively_affected',
+  'interest_level',
   'is_affected_by_project',
   'availability_hours_per_week',
   'time_zone',
@@ -79,7 +82,7 @@ const STAKEHOLDER_WRITE_KEYS = new Set([
   'identification_date',
 ])
 
-const UUID_LIKE_KEYS = new Set(['project_id', 'user_id', 'reports_to_stakeholder_id'])
+const UUID_LIKE_KEYS = new Set(['project_id', 'account_id', 'user_id', 'reports_to_stakeholder_id'])
 
 /**
  * @param {Record<string, unknown>} raw
@@ -95,6 +98,7 @@ export function pickStakeholderWritePayload(raw) {
     if (key === 'time_zone' && typeof v === 'string' && v.length > 100) {
       v = v.slice(0, 100)
     }
+    if (key === 'interest_level' && (v === '' || v == null)) v = null
     if (v !== undefined) out[key] = v
   }
   return out
@@ -222,42 +226,108 @@ export async function getStakeholders(filters = {}) {
     p_search: filters.search || null,
   })
 
+  let projectRows = []
   if (!rpcError && Array.isArray(rpcData)) {
-    return rpcData
+    projectRows = rpcData
+  } else {
+    // Fallback if RPC not deployed (e.g. v304.4 not run)
+    let query = platformDb
+      .from('stakeholders')
+      .select('*')
+      .eq('is_deleted', false)
+
+    if (filters.project_id) {
+      query = query.eq('project_id', filters.project_id)
+    }
+
+    if (filters.stakeholder_type) {
+      query = query.eq('stakeholder_type', filters.stakeholder_type)
+    }
+
+    if (filters.stakeholder_status) {
+      query = query.eq('stakeholder_status', filters.stakeholder_status)
+    }
+
+    if (filters.search) {
+      query = query.or(`stakeholder_name.ilike.%${filters.search}%,stakeholder_reference.ilike.%${filters.search}%,stakeholder_organization.ilike.%${filters.search}%`)
+    }
+
+    query = query.order('stakeholder_name', { ascending: true })
+
+    if (filters.limit != null && filters.limit > 0) {
+      query = query.limit(filters.limit)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    projectRows = data || []
   }
 
-  // Fallback if RPC not deployed (e.g. v304.4 not run)
+  if (!filters.project_id) return projectRows
+
+  try {
+    const organisationRows = await organisationStakeholdersForProject(
+      filters.project_id,
+      filters.search || null,
+      limit
+    )
+    const seen = new Set(projectRows.map((row) => row.id))
+    const merged = [...projectRows]
+    for (const row of organisationRows) {
+      if (!seen.has(row.id)) merged.push(row)
+    }
+    merged.sort((a, b) => String(a.stakeholder_name || '').localeCompare(String(b.stakeholder_name || ''), undefined, { sensitivity: 'base' }))
+    return merged.slice(0, limit)
+  } catch (mergeError) {
+    console.error(mergeError)
+    return projectRows
+  }
+}
+
+/**
+ * Organisation stakeholders (no project) that still apply to this project.
+ * Missing columns or the exclusion table leave the project list unchanged.
+ */
+async function organisationStakeholdersForProject(projectId, search, limit) {
+  const { data: project, error: projectError } = await platformDb
+    .from('projects')
+    .select('account_id')
+    .eq('id', projectId)
+    .maybeSingle()
+  if (projectError || !project?.account_id) return []
+
+  const { data: excluded, error: exclusionError } = await platformDb
+    .from('stakeholder_project_exclusions')
+    .select('stakeholder_id')
+    .eq('project_id', projectId)
+  if (exclusionError) return []
+
+  const excludedIds = new Set((excluded || []).map((row) => row.stakeholder_id))
   let query = platformDb
     .from('stakeholders')
     .select('*')
     .eq('is_deleted', false)
+    .is('project_id', null)
+    .eq('account_id', project.account_id)
 
-  if (filters.project_id) {
-    query = query.eq('project_id', filters.project_id)
+  if (search) {
+    query = query.or(`stakeholder_name.ilike.%${search}%,stakeholder_reference.ilike.%${search}%,stakeholder_organization.ilike.%${search}%`)
   }
 
-  if (filters.stakeholder_type) {
-    query = query.eq('stakeholder_type', filters.stakeholder_type)
-  }
+  const { data, error } = await query.order('stakeholder_name', { ascending: true }).limit(limit)
+  if (error) return []
+  return (data || []).filter((row) => !excludedIds.has(row.id))
+}
 
-  if (filters.stakeholder_status) {
-    query = query.eq('stakeholder_status', filters.stakeholder_status)
-  }
-
-  if (filters.search) {
-    query = query.or(`stakeholder_name.ilike.%${filters.search}%,stakeholder_reference.ilike.%${filters.search}%,stakeholder_organization.ilike.%${filters.search}%`)
-  }
-
-  query = query.order('stakeholder_name', { ascending: true })
-
-  if (filters.limit != null && filters.limit > 0) {
-    query = query.limit(filters.limit)
-  }
-
-  const { data, error } = await query
-
+/**
+ * Hide an organisation stakeholder from one project. They stay on the other projects.
+ */
+export async function excludeStakeholderFromProject(stakeholderId, projectId) {
+  const { error } = await platformDb.rpc('exclude_stakeholder_from_project', {
+    p_stakeholder_id: stakeholderId,
+    p_project_id: projectId,
+  })
   if (error) throw error
-  return data
 }
 
 /**
@@ -321,6 +391,14 @@ export async function saveStakeholder(stakeholderData, stakeholderId = null) {
   )
 
   if (error) throw error
+  if (!String(data?.stakeholder_reference || '').trim() && data?.id) {
+    const { data: refreshed } = await platformDb
+      .from('stakeholders')
+      .select('*')
+      .eq('id', data.id)
+      .maybeSingle()
+    if (refreshed) return refreshed
+  }
   return data
 }
 
@@ -347,6 +425,11 @@ export async function deleteStakeholder(stakeholderId) {
     .single()
 
   if (error) throw error
+  if (data?.photo_path) {
+    const { deleteStoredStakeholderPhoto } = await import('@nidus/shared/services/stakeholderPhotoService')
+    await deleteStoredStakeholderPhoto(platformDb, data.photo_path)
+    await platformDb.from('stakeholders').update({ photo_path: null }).eq('id', stakeholderId)
+  }
   return data
 }
 
@@ -433,7 +516,10 @@ export async function getStakeholderAssessmentMatrix(filters = {}) {
         id,
         stakeholder_name,
         stakeholder_reference,
-        stakeholder_type
+        stakeholder_type,
+        photo_path,
+        user_id,
+        account_id
       ),
       project:project_id (
         id,
@@ -456,12 +542,31 @@ export async function getStakeholderAssessmentMatrixById(id) {
     .from('stakeholder_assessment_matrix')
     .select(`
       *,
-      stakeholder:stakeholder_id (id, stakeholder_name, stakeholder_reference),
+      stakeholder:stakeholder_id (id, stakeholder_name, stakeholder_reference, photo_path, user_id, account_id),
       project:project_id (id, project_name, project_code)
     `)
     .eq('id', id)
     .eq('is_deleted', false)
     .single()
+  if (error) throw error
+  return data
+}
+
+/** Load one assessment by its id or by the stakeholder reference in the URL. */
+export async function getStakeholderAssessmentByRouteKey(key) {
+  const wanted = String(key || '').trim()
+  if (!wanted) return null
+  if (isLikelyDatabaseUuid(wanted)) return getStakeholderAssessmentMatrixById(wanted)
+  const { data, error } = await platformDb
+    .from('stakeholder_assessment_matrix')
+    .select(`
+      *,
+      stakeholder:stakeholder_id!inner (id, stakeholder_name, stakeholder_reference, photo_path, user_id, account_id),
+      project:project_id (id, project_name, project_code)
+    `)
+    .eq('is_deleted', false)
+    .ilike('stakeholder.stakeholder_reference', wanted)
+    .maybeSingle()
   if (error) throw error
   return data
 }
@@ -540,7 +645,10 @@ export async function getStakeholderAnalysis(filters = {}) {
         id,
         stakeholder_name,
         stakeholder_reference,
-        stakeholder_type
+        stakeholder_type,
+        photo_path,
+        user_id,
+        account_id
       ),
       project:project_id (
         id,
@@ -550,6 +658,10 @@ export async function getStakeholderAnalysis(filters = {}) {
       analyzed_by_user:analyzed_by (id, email, full_name)
     `)
     .eq('is_deleted', false)
+
+  if (filters.id) {
+    query = query.eq('id', filters.id)
+  }
 
   if (filters.project_id) {
     query = query.eq('project_id', filters.project_id)
@@ -628,7 +740,15 @@ export async function getStakeholderEngagement(filters = {}) {
       stakeholder:stakeholder_id (
         id,
         stakeholder_name,
-        stakeholder_reference
+        stakeholder_reference,
+        stakeholder_type,
+        is_decision_maker,
+        is_influencer,
+        special_requirements,
+        expectations,
+        photo_path,
+        user_id,
+        account_id
       ),
       project:project_id (
         id,
@@ -637,6 +757,11 @@ export async function getStakeholderEngagement(filters = {}) {
       )
     `)
     .eq('is_deleted', false)
+
+  if (filters.id) {
+    if (isLikelyDatabaseUuid(String(filters.id))) query = query.eq('id', filters.id)
+    else query = query.ilike('engagement_reference', filters.id)
+  }
 
   if (filters.project_id) {
     query = query.eq('project_id', filters.project_id)
@@ -688,6 +813,23 @@ export async function saveStakeholderEngagement(engagementData, engagementId = n
     if (error) throw error
     return data
   }
+}
+
+export async function deleteStakeholderEngagement(engagementId) {
+  const platformUserId = await getPlatformUserId()
+  const patch = { is_deleted: true, deleted_at: new Date().toISOString() }
+  if (platformUserId) {
+    patch.deleted_by = platformUserId
+    patch.updated_by = platformUserId
+  }
+  const { data, error } = await platformDb
+    .from('stakeholder_engagement')
+    .update(patch)
+    .eq('id', engagementId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
 }
 
 /**
@@ -762,6 +904,83 @@ export async function saveStakeholderCommunication(logData, logId = null) {
 /**
  * Get communication plans
  */
+export async function getCommunicationInformationOptions() {
+  const { data, error } = await platformDb
+    .from('communication_information_options')
+    .select('option_kind, option_code, option_label, sort_order')
+    .eq('is_deleted', false)
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true })
+    .order('option_label', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function canMaintainCommunicationInformationOptions() {
+  const { data, error } = await platformDb.rpc('user_can_maintain_communication_options')
+  if (error) return false
+  return data === true
+}
+
+export async function listCommunicationInformationOptions() {
+  const { data, error } = await platformDb
+    .from('communication_information_options')
+    .select('id, option_kind, option_code, option_label, sort_order, is_active, created_at, updated_at')
+    .eq('is_deleted', false)
+    .order('option_label', { ascending: true })
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function getCommunicationInformationOption(optionKind, optionCode) {
+  const { data, error } = await platformDb
+    .from('communication_information_options')
+    .select('id, option_kind, option_code, option_label, sort_order, is_active, created_at, updated_at')
+    .eq('is_deleted', false)
+    .eq('option_kind', optionKind)
+    .eq('option_code', optionCode)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function saveCommunicationInformationOption(payload, existingId) {
+  const row = {
+    option_kind: payload.option_kind,
+    option_code: payload.option_code,
+    option_label: payload.option_label,
+    sort_order: payload.sort_order,
+    is_active: payload.is_active,
+    updated_at: new Date().toISOString(),
+  }
+  if (existingId) {
+    const { data, error } = await platformDb
+      .from('communication_information_options')
+      .update(row)
+      .eq('id', existingId)
+      .select('id, option_kind, option_code, option_label')
+      .single()
+    if (error) throw error
+    return data
+  }
+  const { data, error } = await platformDb
+    .from('communication_information_options')
+    .insert(row)
+    .select('id, option_kind, option_code, option_label')
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteCommunicationInformationOption(id) {
+  const { error } = await platformDb
+    .from('communication_information_options')
+    .update({ is_deleted: true, is_active: false, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function getCommunicationPlans(filters = {}) {
   let query = platformDb
     .from('communication_plans')
@@ -778,6 +997,10 @@ export async function getCommunicationPlans(filters = {}) {
 
   if (filters.project_id) {
     query = query.eq('project_id', filters.project_id)
+  }
+  if (filters.id) {
+    if (isLikelyDatabaseUuid(String(filters.id))) query = query.eq('id', filters.id)
+    else query = query.ilike('plan_reference', filters.id)
   }
 
   const { data, error } = await query.order('created_at', { ascending: false })
@@ -827,6 +1050,26 @@ export async function saveCommunicationPlan(planData, planId = null) {
   }
 }
 
+/**
+ * Soft-delete a communication plan.
+ */
+export async function deleteCommunicationPlan(planId) {
+  const platformUserId = await getPlatformUserId()
+  const patch = { is_deleted: true, deleted_at: new Date().toISOString() }
+  if (platformUserId) {
+    patch.deleted_by = platformUserId
+    patch.updated_by = platformUserId
+  }
+  const { data, error } = await platformDb
+    .from('communication_plans')
+    .update(patch)
+    .eq('id', planId)
+    .select('id, plan_name')
+    .single()
+  if (error) throw error
+  return data
+}
+
 // ================================================
 // ENGAGEMENT ACTIONS (per-stakeholder action plan)
 // ================================================
@@ -839,7 +1082,7 @@ export async function getEngagementActions(filters = {}) {
     .from('stakeholder_engagement_actions')
     .select(`
       *,
-      stakeholder:stakeholder_id (id, stakeholder_name, stakeholder_reference),
+      stakeholder:stakeholder_id (id, stakeholder_name, stakeholder_reference, photo_path, user_id, account_id),
       owner:owner_user_id (id, full_name, email)
     `)
     .eq('is_deleted', false)
@@ -1062,11 +1305,13 @@ export default {
   getStakeholder,
   saveStakeholder,
   deleteStakeholder,
+  excludeStakeholderFromProject,
   importStakeholders,
   
   // Stakeholder Assessment Matrix
   getStakeholderAssessmentMatrix,
   getStakeholderAssessmentMatrixById,
+  getStakeholderAssessmentByRouteKey,
   saveStakeholderAssessmentMatrix,
   deleteStakeholderAssessmentMatrix,
   pickAssessmentMatrixWritePayload,
@@ -1083,10 +1328,18 @@ export default {
   // Stakeholder Engagement
   getStakeholderEngagement,
   saveStakeholderEngagement,
+  deleteStakeholderEngagement,
   
   // Communication Plans
+  getCommunicationInformationOptions,
+  canMaintainCommunicationInformationOptions,
+  listCommunicationInformationOptions,
+  getCommunicationInformationOption,
+  saveCommunicationInformationOption,
+  deleteCommunicationInformationOption,
   getCommunicationPlans,
   saveCommunicationPlan,
+  deleteCommunicationPlan,
   
   // Engagement Actions
   getEngagementActions,

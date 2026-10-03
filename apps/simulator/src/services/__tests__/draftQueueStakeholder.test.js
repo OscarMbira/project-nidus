@@ -104,7 +104,7 @@ describe('draftQueueService – stakeholder entity', () => {
   describe('draft queue config – stakeholder_assessment_matrix', () => {
     it('getEntityConfig returns assessment matrix config', () => {
       const config = getEntityConfig('stakeholder_assessment_matrix');
-      expect(config?.createRoute).toBe('/platform/stakeholders/assessment-matrix');
+      expect(config?.createRoute).toBe('/platform/stakeholders/assessment-matrix/new');
       expect(config?.holdQueueRoute).toBe('/platform/stakeholders/assessment-matrix/on-hold');
     });
 

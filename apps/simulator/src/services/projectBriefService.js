@@ -43,6 +43,8 @@ export async function createBrief(projectId, briefData) {
       interfaces: briefData.interfaces || null,
       outline_business_case_summary: briefData.outline_business_case_summary || null,
       business_option_selected: briefData.business_option_selected || null,
+      dis_benefits_included: briefData.dis_benefits_included !== false,
+      dis_benefits_description: briefData.dis_benefits_description || null,
       product_description: briefData.product_description || null,
       customer_quality_expectations: briefData.customer_quality_expectations || null,
       user_acceptance_criteria: briefData.user_acceptance_criteria || null,

@@ -5,6 +5,7 @@ import { simDb } from '../supabase/supabaseClient'
 import { isTestCaseUuidSegment } from '../testCaseService'
 
 export async function getPracticeTestCases(practiceProjectId, filters = {}) {
+  if (!practiceProjectId) return []
   let query = simDb
     .from('practice_test_cases')
     .select(`
@@ -38,13 +39,13 @@ export async function getPracticeTestCaseById(caseIdOrRef) {
     .select(`
       *,
       suite:practice_test_suites(id, name),
-      steps:practice_test_case_steps(id, step_number, action, expected_result, test_data),
-      created_by_user:users!practice_test_cases_created_by_fkey(id, full_name, email)
+      steps:practice_test_case_steps(id, step_number, action, expected_result, test_data)
     `)
     .eq(col, key)
     .eq('is_deleted', false)
     .maybeSingle()
   if (error) throw error
+  if (data?.steps) data.steps.sort((a, b) => (a.step_number || 0) - (b.step_number || 0))
   return data ?? null
 }
 

@@ -179,16 +179,16 @@ export default function ChangeManagementDashboard({ projectId }) {
           Change Board Status
         </h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
               Board Status
             </span>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
               stats.boardExists
                 ? stats.boardStatus === 'active'
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                  ? 'bg-green-100 text-green-900 dark:bg-green-800 dark:text-white'
+                  : 'bg-gray-100 text-gray-900 dark:bg-gray-600 dark:text-gray-100'
+                : 'bg-red-100 text-red-900 dark:bg-red-800 dark:text-white'
             }`}>
               {stats.boardExists ? stats.boardStatus : 'Not configured'}
             </span>
@@ -237,34 +237,34 @@ export default function ChangeManagementDashboard({ projectId }) {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-3">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           Change Management Summary
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <p className="text-blue-800 dark:text-blue-400 mb-1">
+            <p className="text-base text-gray-900 dark:text-gray-100 mb-1">
               <span className="font-semibold">{stats.submittedRequests}</span> new submissions
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-500">
+            <p className="text-sm text-gray-700 dark:text-gray-200">
               Awaiting initial assessment
             </p>
           </div>
           <div>
-            <p className="text-blue-800 dark:text-blue-400 mb-1">
+            <p className="text-base text-gray-900 dark:text-gray-100 mb-1">
               <span className="font-semibold">{stats.underAssessment + stats.pendingApproval}</span> in workflow
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-500">
+            <p className="text-sm text-gray-700 dark:text-gray-200">
               Being assessed or awaiting approval
             </p>
           </div>
           <div>
-            <p className="text-blue-800 dark:text-blue-400 mb-1">
+            <p className="text-base text-gray-900 dark:text-gray-100 mb-1">
               <span className="font-semibold">
                 {Math.round((stats.implementedRequests / Math.max(stats.totalRequests, 1)) * 100)}%
               </span> completion rate
             </p>
-            <p className="text-xs text-blue-700 dark:text-blue-500">
+            <p className="text-sm text-gray-700 dark:text-gray-200">
               Of all changes implemented
             </p>
           </div>

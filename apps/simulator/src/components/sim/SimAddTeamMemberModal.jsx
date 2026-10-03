@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { X, Loader, AlertTriangle } from 'lucide-react'
 import {
   getSimAssignablePracticeMembers,
-  getSimTeamFunctionalRoles,
+  listPracticeProjectFunctionalRoles,
   getSimUserTotalTeamAllocation,
   addSimTeamMember,
 } from '../../services/sim/simTeamService'
@@ -31,7 +31,7 @@ export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId,
       setLoading(true)
       const [a, r] = await Promise.all([
         getSimAssignablePracticeMembers(practiceProjectId, practiceTeamId),
-        getSimTeamFunctionalRoles(practiceTeamId),
+        listPracticeProjectFunctionalRoles(practiceProjectId),
       ])
       if (cancelled) return
       if (a.success) setAssignable(a.data || [])

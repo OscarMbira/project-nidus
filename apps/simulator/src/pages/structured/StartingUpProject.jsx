@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../../services/supabaseClient'
+import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 
 export default function StartingUpProject() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -27,7 +28,7 @@ export default function StartingUpProject() {
         .from('projects')
         .select(`
           *,
-          project_methodologies!inner (
+          project_methodologies (
             methodologies:methodology_id (methodology_name, methodology_code)
           )
         `)
@@ -37,10 +38,20 @@ export default function StartingUpProject() {
 
       if (projectError) throw projectError
 
-      // Check if project uses structured/traditional methodology
+      // Check if project uses structured/traditional methodology. project_methodologies (a
+      // separate junction table) is never populated by Create/Edit — delivery_methodology is
+      // the real, user-facing field, so it's the authoritative check; project_methodologies
+      // (if a row ever exists) is honoured too for backward compatibility.
       // Note: 'prince2' is checked for database backward compatibility only
-      const methodology = projectData.project_methodologies?.[0]?.methodologies
-      if (methodology?.methodology_code !== 'prince2' && methodology?.methodology_code !== 'structured_pm') {
+      const pmRaw = projectData.project_methodologies
+      const methodology = (Array.isArray(pmRaw) ? pmRaw[0] : pmRaw)?.methodologies
+      const track = normalizeProjectDeliveryTrack(projectData.delivery_methodology)
+      const usesStructured =
+        methodology?.methodology_code === 'prince2' ||
+        methodology?.methodology_code === 'structured_pm' ||
+        track === 'structured' ||
+        track === 'hybrid'
+      if (!usesStructured) {
         throw new Error('This project does not use structured/traditional methodology')
       }
 
@@ -96,7 +107,7 @@ export default function StartingUpProject() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate(`/projects/${projectId}`)}
+          onClick={() => navigate(-1)}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
         >
           ← Back to Project

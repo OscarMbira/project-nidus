@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import Papa from 'papaparse'
 import { bulkImportEEFFromParsedRows } from '../../../services/sim/simEEFService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
 
 export default function SimEEFBulkUpload() {
+  const navigate = useNavigate()
   const [file, setFile] = useState(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState(null)
@@ -25,9 +26,9 @@ export default function SimEEFBulkUpload() {
 
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
-      <Link to="/simulator/eef" className="text-gray-400 mb-4 inline-block">
+      <button type="button" onClick={() => navigate(-1)} className="text-gray-400 mb-4 inline-block">
         Back
-      </Link>
+      </button>
       <h1 className="text-xl font-bold text-white mb-4">Bulk upload (CSV)</h1>
       <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} className="mb-4" />
       <button type="button" disabled={busy} onClick={run} className="px-4 py-2 bg-sky-600 text-white rounded-lg">

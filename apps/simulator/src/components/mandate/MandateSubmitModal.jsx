@@ -16,7 +16,7 @@ export default function MandateSubmitModal({ mandate, onConfirm, onCancel, submi
               <FileText className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Submit for Approval
+              Submit for approval (optional)
             </h2>
           </div>
           <button
@@ -39,7 +39,9 @@ export default function MandateSubmitModal({ mandate, onConfirm, onCancel, submi
             </p>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Once submitted, the mandate will be locked for editing until it is approved or rejected by a PMO Administrator.
+            Formal approval is optional. Use this only when your organisation requires a PMO approval chain.
+            For verbal or statement instruction, use <strong>Confirm without formal approval</strong> instead.
+            Once submitted formally, the mandate is locked for editing until approved or rejected.
           </p>
         </div>
 

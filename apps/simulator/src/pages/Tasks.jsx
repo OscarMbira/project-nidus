@@ -3,10 +3,12 @@
  * Optimized with memoization, parallel fetching, and debounced search
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ListChecks, Plus, Search, Filter, Calendar, LayoutGrid } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import { getCurrentUserAccountId, getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution';
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js';
 import { getMyTasks, getAllTasks } from '../services/taskService';
 import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
@@ -26,18 +28,22 @@ const TASK_COLUMNS = [
 
 export default function Tasks() {
   const navigate = useNavigate();
+  const { projectId: contextProjectId, loading: projectContextLoading } = usePlatformProjectId();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [identityLoaded, setIdentityLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [filterProject, setFilterProject] = useState('all');
+  // null until the header project resolves, then that project (or 'all' if none)
+  const [filterProject, setFilterProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [taskStatuses, setTaskStatuses] = useState([]);
   const [organizationId, setOrganizationId] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [activeView, setActiveView] = useState('my'); // 'my' or 'all'
+  const [activeView, setActiveView] = useState('all');
   const [viewMode, setViewMode] = useViewMode('tasks', 'grid');
+  const userChangedFilter = useRef(false);
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'created_at', direction: 'desc' },
@@ -67,59 +73,29 @@ export default function Tasks() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Memoize loadUserAndOrganization with useCallback
-  const loadUserAndOrganization = useCallback(async () => {
+  useEffect(() => {
+    if (userChangedFilter.current || projectContextLoading) return;
+    setFilterProject(contextProjectId || 'all');
+  }, [contextProjectId, projectContextLoading]);
+
+  const loadIdentity = useCallback(async () => {
     try {
-      const { data: { user } } = await platformDb.auth.getUser();
-      if (!user) {
-        navigate('/auth/login');
-        return;
-      }
-
-      // Get user record
-      const { data: userRecord } = await platformDb
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (userRecord) {
-        setUserId(userRecord.id);
-
-        // Get account
-        const { data: account } = await platformDb
-          .from('accounts')
-          .select('id')
-          .eq('owner_user_id', userRecord.id)
-          .single();
-
-        if (account) {
-          setOrganizationId(account.id);
-        } else {
-          // Try through projects
-          const { data: project } = await platformDb
-            .from('projects')
-            .select('account_id')
-            .eq('owner_user_id', userRecord.id)
-            .eq('is_deleted', false)
-            .limit(1)
-            .single();
-
-          if (project?.account_id) {
-            setOrganizationId(project.account_id);
-          }
-        }
-      }
+      const [accountId, internalUserId] = await Promise.all([
+        getCurrentUserAccountId(),
+        getCurrentUserInternalUserId(),
+      ]);
+      setUserId(internalUserId);
+      setOrganizationId(accountId);
     } catch (error) {
       console.error('Error loading user and organization:', error);
     } finally {
-      setLoading(false);
+      setIdentityLoaded(true);
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
-    loadUserAndOrganization();
-  }, [loadUserAndOrganization]);
+    loadIdentity();
+  }, [loadIdentity]);
 
   // Memoize loadProjects with useCallback
   const loadProjects = useCallback(async () => {
@@ -157,7 +133,17 @@ export default function Tasks() {
 
   // Memoize loadTasks with useCallback
   const loadTasks = useCallback(async () => {
-    if (!organizationId || !userId) return;
+    if (filterProject == null) return;
+    if (activeView === 'my' && !userId) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+    if (activeView === 'all' && !organizationId) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);
@@ -184,19 +170,15 @@ export default function Tasks() {
     }
   }, [organizationId, userId, activeView, filterStatus, filterProject, debouncedSearchTerm]);
 
-  // Parallel load projects, statuses, and tasks when organizationId/userId changes
   useEffect(() => {
-    if (organizationId && userId) {
-      // Load projects and statuses in parallel (they don't depend on each other)
-      Promise.all([
-        loadProjects(),
-        loadTaskStatuses()
-      ]).then(() => {
-        // Then load tasks
-        loadTasks();
-      });
-    }
-  }, [organizationId, userId, loadProjects, loadTaskStatuses, loadTasks]);
+    if (!identityLoaded || filterProject == null) return;
+    Promise.all([
+      loadProjects(),
+      loadTaskStatuses()
+    ]).then(() => {
+      loadTasks();
+    });
+  }, [identityLoaded, filterProject, loadProjects, loadTaskStatuses, loadTasks]);
 
   // Memoize filtered tasks to avoid recalculation on every render
   const filteredTasks = useMemo(() => {
@@ -225,7 +207,15 @@ export default function Tasks() {
     }
   }, []);
 
-  if (loading && !organizationId) {
+  const goToCreateTask = useCallback(() => {
+    navigate('/platform/tasks/create', {
+      state: filterProject && filterProject !== 'all'
+        ? { projectId: filterProject }
+        : undefined,
+    });
+  }, [navigate, filterProject]);
+
+  if (!identityLoaded || projectContextLoading || filterProject == null) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -263,7 +253,7 @@ export default function Tasks() {
                 Calendar
               </button>
               <button
-                onClick={() => navigate('/platform/tasks/create')}
+                onClick={goToCreateTask}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 <Plus className="h-5 w-5" />
@@ -345,8 +335,11 @@ export default function Tasks() {
           </div>
           <div>
             <select
-              value={filterProject}
-              onChange={(e) => setFilterProject(e.target.value)}
+              value={filterProject || 'all'}
+              onChange={(e) => {
+                userChangedFilter.current = true;
+                setFilterProject(e.target.value);
+              }}
               className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
               <option value="all">All Projects</option>
@@ -374,7 +367,7 @@ export default function Tasks() {
             </p>
             {!searchTerm && (
               <button
-                onClick={() => navigate('/platform/tasks/create')}
+                onClick={goToCreateTask}
                 className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Create Task

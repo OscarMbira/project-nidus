@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, Calendar, TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { getStakeholderEngagement, saveStakeholderEngagement } from '../../services/stakeholderService';
+import { platformDb } from '../../services/supabaseClient';
+import StakeholderAvatar from '../ui/StakeholderAvatar';
 
 export default function EngagementTracker({ projectId, stakeholders = [] }) {
   const [engagement, setEngagement] = useState([]);
@@ -62,6 +64,10 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'neutral':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+      case 'unaware':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+      case 'resistant':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
       case 'unsupportive':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
       case 'blocking':
@@ -139,7 +145,9 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                   className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div>
+                    <div className="flex items-start gap-2">
+                      <StakeholderAvatar db={platformDb} stakeholder={stakeholder} sizeClassName="h-8 w-8" />
+                      <div>
                       <h4 className="font-medium text-gray-900 dark:text-white">
                         {stakeholder.stakeholder_name}
                       </h4>
@@ -148,6 +156,7 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                           {stakeholder.stakeholder_title}
                         </p>
                       )}
+                      </div>
                     </div>
                     {!isEditing && (
                       <button
@@ -173,9 +182,11 @@ export default function EngagementTracker({ projectId, stakeholders = [] }) {
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           >
                             <option value="">Select level...</option>
-                            <option value="leading">Leading</option>
-                            <option value="supportive">Supportive</option>
+                            <option value="unaware">Unaware</option>
+                            <option value="resistant">Resistant</option>
                             <option value="neutral">Neutral</option>
+                            <option value="supportive">Supportive</option>
+                            <option value="leading">Leading</option>
                             <option value="unsupportive">Unsupportive</option>
                             <option value="blocking">Blocking</option>
                           </select>

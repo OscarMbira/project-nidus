@@ -113,7 +113,7 @@ export default function Dashboard() {
             .from('accounts')
             .select('id, account_name, account_code')
             .eq('owner_user_id', userRecordRes.data.id)
-            .single()
+            .maybeSingle()
           if (org) setOrganisation(org)
         }
       }

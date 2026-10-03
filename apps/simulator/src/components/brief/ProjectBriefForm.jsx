@@ -1,6 +1,7 @@
 /**
  * Project Brief Form Component
- * Main form container with tabs for all brief sections
+ * Tabs aligned to the standard Project Brief contents (definition through references).
+ * Audit details tab retained (system-wide record CRUD rule).
  */
 
 import { useState, useEffect } from 'react'
@@ -24,9 +25,24 @@ import ProductQualitySection from './ProductQualitySection'
 import ProjectApproachSection from './ProjectApproachSection'
 import TeamStructureSection from './TeamStructureSection'
 import RoleDescriptionsSection from './RoleDescriptionsSection'
-import LessonsReviewSection from './LessonsReviewSection'
 import ReferencesSection from './ReferencesSection'
 import BriefCompletionProgress from './BriefCompletionProgress'
+
+/** Canonical Project Brief sections — matches the approved brief outline. */
+const BRIEF_CONTENT_TABS = [
+  { id: 'metadata', label: 'Document metadata' },
+  { id: 'definition', label: 'Project definition' },
+  { id: 'scope', label: 'Scope & exclusions' },
+  { id: 'tolerances', label: 'Project tolerances' },
+  { id: 'stakeholders', label: 'Interested parties' },
+  { id: 'interfaces', label: 'Interfaces' },
+  { id: 'business-case', label: 'Outline business case' },
+  { id: 'products', label: 'Product description' },
+  { id: 'approach', label: 'Project approach' },
+  { id: 'team', label: 'Team structure' },
+  { id: 'roles', label: 'Role descriptions' },
+  { id: 'references', label: 'References' },
+]
 
 export default function ProjectBriefForm({
   formData,
@@ -56,23 +72,6 @@ export default function ProjectBriefForm({
     return () => { cancelled = true }
   }, [activeTab, formData?.id, formData?.created_by, formData?.updated_by])
 
-  const tabs = [
-    { id: 'metadata', label: 'Metadata', icon: '📄' },
-    { id: 'definition', label: 'Project Definition', icon: '🎯' },
-    { id: 'scope', label: 'Scope', icon: '📋' },
-    { id: 'tolerances', label: 'Tolerances', icon: '⚖️' },
-    { id: 'stakeholders', label: 'Stakeholders', icon: '👥' },
-    { id: 'interfaces', label: 'Interfaces', icon: '🔗' },
-    { id: 'business-case', label: 'Business Case', icon: '💼' },
-    { id: 'products', label: 'Products', icon: '📦' },
-    { id: 'quality', label: 'Quality', icon: '✨' },
-    { id: 'approach', label: 'Approach', icon: '🚀' },
-    { id: 'team', label: 'Team Structure', icon: '👔' },
-    { id: 'roles', label: 'Roles', icon: '🎭' },
-    { id: 'lessons', label: 'Lessons', icon: '📚' },
-    { id: 'references', label: 'References', icon: '📖' }
-  ]
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'metadata':
@@ -90,17 +89,18 @@ export default function ProjectBriefForm({
       case 'business-case':
         return <OutlineBusinessCaseSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
       case 'products':
-        return <ProductDescriptionSection briefId={formData.id} readOnly={readOnly} />
-      case 'quality':
-        return <ProductQualitySection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
+        return (
+          <div className="space-y-8">
+            <ProductDescriptionSection briefId={formData.id} readOnly={readOnly} />
+            <ProductQualitySection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
+          </div>
+        )
       case 'approach':
         return <ProjectApproachSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
       case 'team':
         return <TeamStructureSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
       case 'roles':
         return <RoleDescriptionsSection briefId={formData.id} readOnly={readOnly} />
-      case 'lessons':
-        return <LessonsReviewSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
       case 'references':
         return <ReferencesSection briefId={formData.id} readOnly={readOnly} />
       case 'audit':
@@ -130,12 +130,10 @@ export default function ProjectBriefForm({
 
   return (
     <div className="space-y-6">
-      {/* Completion Progress */}
       {!readOnly && formData.id && (
         <BriefCompletionProgress briefId={formData.id} />
       )}
 
-      {/* Tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="border-b border-gray-200 dark:border-gray-700 px-2">
           <DetailAuditTabList
@@ -143,21 +141,19 @@ export default function ProjectBriefForm({
             onChange={setActiveTab}
             ariaLabel="Project brief sections"
             tabs={[
-              ...tabs.map((tab) => ({ value: tab.id, label: `${tab.icon} ${tab.label}` })),
+              ...BRIEF_CONTENT_TABS.map((tab) => ({ value: tab.id, label: tab.label })),
               { value: 'audit', label: 'Audit details' },
             ]}
           />
         </div>
 
-        {/* Tab Content */}
         <div className="p-6">
           {renderTabContent()}
         </div>
       </div>
 
-      {/* Action Buttons */}
       {!readOnly && (
-        <div className="flex justify-end gap-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div className="flex flex-wrap justify-end items-center gap-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
           {showHoldButton && (
             <HoldButton
               entityType="project_brief"
@@ -181,7 +177,7 @@ export default function ProjectBriefForm({
               type="button"
               onClick={onSave}
               disabled={saving}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save'}
             </button>
@@ -191,7 +187,7 @@ export default function ProjectBriefForm({
               type="button"
               onClick={onSubmit}
               disabled={saving}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg disabled:opacity-50"
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               {saving ? 'Submitting...' : 'Submit for Approval'}
             </button>

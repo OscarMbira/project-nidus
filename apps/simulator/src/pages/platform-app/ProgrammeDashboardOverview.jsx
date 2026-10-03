@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch, DollarSign } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch, DollarSign, ArrowLeft } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { getProgrammeRollupsForDashboard } from '../../services/programmeService'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
@@ -28,6 +29,7 @@ function MetricCard({ title, value, subtitle, icon: Icon, iconBg, iconColor, onC
 }
 
 export default function ProgrammeDashboardOverview() {
+  const navigate = useNavigate()
   const [accountId, setAccountId] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -121,6 +123,13 @@ export default function ProgrammeDashboardOverview() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <BarChart3 className="h-8 w-8 text-purple-400" />

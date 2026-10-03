@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { getStakeholderManagementStats, getStakeholderAnalysis, getStakeholders } from '../../services/stakeholderService'
 import { Users2, Target, MessageSquare, AlertTriangle } from 'lucide-react'
+import DashboardStatCard from '../ui/DashboardStatCard'
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -52,23 +53,10 @@ export default function StakeholderMonitoringDashboard({ projectId }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm"><Users2 className="h-5 w-5" /> Total</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalStakeholders}</div>
-          <div className="text-xs text-gray-500">stakeholders</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">Active</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.activeStakeholders}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm"><Target className="h-5 w-5" /> Analysed</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalAnalysis}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm"><MessageSquare className="h-5 w-5" /> Engagement plans</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalEngagement}</div>
-        </div>
+        <DashboardStatCard label="Total" value={stats.totalStakeholders} description="stakeholders" icon={Users2} />
+        <DashboardStatCard label="Active" value={stats.activeStakeholders} accentClassName="text-green-600 dark:text-green-400" />
+        <DashboardStatCard label="Analysed" value={stats.totalAnalysis} icon={Target} />
+        <DashboardStatCard label="Engagement plans" value={stats.totalEngagement} icon={MessageSquare} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

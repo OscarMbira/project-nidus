@@ -245,7 +245,7 @@ export async function inviteUserWithRole(email, roleName, inviterAuthUserId, mes
       .from('accounts')
       .select('id, account_name')
       .eq('owner_user_id', inviter.id)
-      .single();
+      .maybeSingle();
 
     if (!org) {
       return {
@@ -401,7 +401,7 @@ export async function getOrganisationUsers(authUserId, alreadyVerifiedAdmin = fa
       .from('accounts')
       .select('id')
       .eq('owner_user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (!org) {
       return { success: false, data: [], error: 'Organisation not found' };
@@ -776,7 +776,7 @@ export async function addNamedContact(authUserId, fullName, email = null) {
     .from('accounts')
     .select('id')
     .eq('owner_user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!org) throw new Error('Organisation not found')
 

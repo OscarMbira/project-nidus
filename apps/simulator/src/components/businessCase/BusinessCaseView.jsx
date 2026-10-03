@@ -185,10 +185,22 @@ export default function BusinessCaseViewComponent({
 
       {/* Section 5: Dis-benefits */}
       <Section title="Section 5 — Dis-benefits / Negative Consequences">
-        {businessCase.dis_benefits?.length > 0
-          ? <BusinessCaseDisBenefits caseId={businessCase.id} disBenefits={businessCase.dis_benefits} readOnly />
-          : <p className="text-sm text-gray-500 dark:text-gray-400 italic">No dis-benefits recorded.</p>
-        }
+        {businessCase.dis_benefits_included === false ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+            Dis-benefits are not captured for this business case.
+          </p>
+        ) : (
+          <>
+            {businessCase.dis_benefits_description ? (
+              <Field label="Dis-benefits" value={businessCase.dis_benefits_description} multiline />
+            ) : null}
+            {businessCase.dis_benefits?.length > 0 ? (
+              <BusinessCaseDisBenefits caseId={businessCase.id} disBenefits={businessCase.dis_benefits} readOnly />
+            ) : !businessCase.dis_benefits_description ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 italic">No dis-benefits recorded.</p>
+            ) : null}
+          </>
+        )}
       </Section>
 
       {/* Section 6: Timescale */}

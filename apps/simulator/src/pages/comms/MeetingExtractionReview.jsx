@@ -1,4 +1,5 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState, useCallback } from 'react'
 import { useAppRoutePrefix } from '@nidus/shared/hooks/useAppRoutePrefix'
 import { platformDb, simDb } from '@nidus/supabase'
@@ -33,6 +34,7 @@ function buildExtractionViewHref({ isSim, kind, recordId, practiceProjectId, rou
 
 export default function MeetingExtractionReview() {
   const { meetingId } = useParams()
+  const navigate = useNavigate()
   const routePrefix = useAppRoutePrefix()
   const basePath = `${routePrefix}/comms`
   const isSim = useIsSimulator()
@@ -163,9 +165,10 @@ export default function MeetingExtractionReview() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      <Link to={`${basePath}/pending-review`} className="text-sm text-cyan-600">
-        ← Pending reviews
-      </Link>
+      <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Meeting extraction</h1>
       <div className="space-y-4">
         {issues.map((row) => (

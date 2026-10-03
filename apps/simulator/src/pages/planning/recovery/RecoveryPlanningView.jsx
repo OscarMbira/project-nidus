@@ -1,11 +1,13 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useLocation, useSearchParams } from 'react-router-dom'
+import { useLocation, useSearchParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PlanningProjectBar, { usePlanningProjectId } from '../../../components/planning/PlanningProjectBar'
 import * as api from '../../../services/planRecoveryService'
 import * as simApi from '../../../services/sim/simPlanRecoveryService'
 
 export default function RecoveryPlanningView() {
+  const navigate = useNavigate()
   const isSim = useLocation().pathname.includes('/simulator/')
   const [searchParams] = useSearchParams()
   const projectId = usePlanningProjectId()
@@ -39,6 +41,10 @@ export default function RecoveryPlanningView() {
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 px-4 py-6">
       <div className="max-w-4xl mx-auto">
+        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white mb-4 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
         <h1 className="text-xl font-semibold text-white mb-2">Recovery planning</h1>
         <PlanningProjectBar isSim={isSim} />
         {contextBanner && (

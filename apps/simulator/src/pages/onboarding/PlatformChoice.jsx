@@ -18,7 +18,7 @@ export default function PlatformChoice() {
   const handlePlatformChoice = (platform) => {
     setLoading(true)
     if (platform === 'platform') {
-      navigate('/onboarding/platform-account-setup', { replace: true })
+      navigate('/onboarding/organisation-setup', { replace: true })
     } else {
       navigate('/onboarding/simulator-welcome', { replace: true })
     }

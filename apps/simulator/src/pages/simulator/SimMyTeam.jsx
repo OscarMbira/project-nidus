@@ -4,28 +4,26 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { Users, UserPlus, Search } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '../../services/supabase/supabaseClient'
 import { isPmoAdmin } from '../../services/organisationRoleService'
 import {
-  getSimMyTeams,
+  getSimTeamsVisibleToUser,
   getSimAllTeamsWithMembers,
   getSimTeamMembers,
-  getSimTeamFunctionalRoles,
-  addSimTeamFunctionalRole,
-  updateSimTeamFunctionalRole,
-  deleteSimTeamFunctionalRole,
+  listPracticeProjectFunctionalRoles,
   removeSimTeamMember,
 } from '../../services/sim/simTeamService'
 import SimAddTeamMemberModal from '../../components/sim/SimAddTeamMemberModal'
 import SimEditTeamMemberModal from '../../components/sim/SimEditTeamMemberModal'
-import SimManageFunctionalRoleModal from '../../components/sim/SimManageFunctionalRoleModal'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import ViewToggle from '../../components/ui/ViewToggle'
 import SortToolbar from '../../components/ui/SortToolbar'
 import { useSortableTable } from '../../hooks/useSortableTable'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 import { useToast } from '../../hooks/useToast'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
@@ -45,6 +43,7 @@ function readView(key, fallback = 'list') {
 export default function SimMyTeam() {
   const { showToast } = useToast()
   const [pmo, setPmo] = useState(false)
+  const [seesProjectTeams, setSeesProjectTeams] = useState(false)
   const [pmoMode, setPmoMode] = useState('mine')
   const [loading, setLoading] = useState(true)
   const [teamList, setTeamList] = useState([])
@@ -60,7 +59,6 @@ export default function SimMyTeam() {
   const [successBanner, setSuccessBanner] = useState(null)
   const [addOpen, setAddOpen] = useState(false)
   const [editMember, setEditMember] = useState(null)
-  const [roleModal, setRoleModal] = useState(null)
 
   const memberSort = useSortableTable({
     defaultSort: { column: 'name', direction: 'asc' },
@@ -92,7 +90,8 @@ export default function SimMyTeam() {
         showToast('error', res.error || 'Failed to load practice teams')
       }
     } else {
-      const res = await getSimMyTeams()
+      const res = await getSimTeamsVisibleToUser()
+      setSeesProjectTeams(Boolean(res.managesProjects))
       if (res.success) setTeamList(res.data || [])
       else {
         setTeamList([])
@@ -128,11 +127,15 @@ export default function SimMyTeam() {
 
   const loadMembersAndRoles = useCallback(async () => {
     if (!selectedTeamId) return
+    const team = teamList.find((t) => t.id === selectedTeamId)
+    const practiceProjectId = team?.practice_project_id
     setMembersLoading(true)
     try {
       const [m, r] = await Promise.all([
         getSimTeamMembers(selectedTeamId),
-        getSimTeamFunctionalRoles(selectedTeamId),
+        practiceProjectId
+          ? listPracticeProjectFunctionalRoles(practiceProjectId)
+          : Promise.resolve({ success: true, data: [] }),
       ])
       if (m.success) setMembers(m.data || [])
       else showToast('error', m.error || 'Failed to load members')
@@ -141,7 +144,7 @@ export default function SimMyTeam() {
     } finally {
       setMembersLoading(false)
     }
-  }, [selectedTeamId, showToast])
+  }, [selectedTeamId, teamList, showToast])
 
   useEffect(() => {
     if (selectedTeamId) loadMembersAndRoles()
@@ -256,67 +259,36 @@ export default function SimMyTeam() {
     } else showToast('error', res.error || 'Remove failed')
   }
 
-  const handleDeleteRole = async (fr) => {
-    if (!selectedTeamId) return
-    const res = await deleteSimTeamFunctionalRole(selectedTeamId, fr.id)
-    if (res.success) {
-      setSuccessBanner({ op: 'role_deleted', id: fr.id, label: fr.role_label })
-      showToast('success', 'Functional role deleted')
-      loadMembersAndRoles()
-    } else showToast('error', res.error || 'Delete failed')
-  }
-
-  const onSaveNewRole = async (label) => {
-    if (!selectedTeamId) return
-    const res = await addSimTeamFunctionalRole(selectedTeamId, label)
-    if (res.success) {
-      setSuccessBanner({ op: 'role_added', id: res.data?.id, label })
-      showToast('success', 'Functional role added')
-      setRoleModal(null)
-      loadMembersAndRoles()
-    } else showToast('error', res.error || 'Save failed')
-  }
-
-  const onSaveEditRole = async (label) => {
-    if (!roleModal?.row) return
-    const res = await updateSimTeamFunctionalRole(roleModal.row.id, label)
-    if (res.success) {
-      setSuccessBanner({ op: 'role_updated', id: roleModal.row.id, label })
-      showToast('success', 'Functional role updated')
-      setRoleModal(null)
-      loadMembersAndRoles()
-    } else showToast('error', res.error || 'Save failed')
-  }
-
   const practiceProjectId = selectedTeam?.practice_project_id
   const practiceProjectName = selectedTeam?.practice_projects?.project_name || '—'
+  const projectRolesPath = practiceProjectId
+    ? `/simulator/practice-project-roles?practiceProjectId=${encodeURIComponent(practiceProjectId)}`
+    : '/simulator/practice-project-roles'
 
-  if (loading) {
+  if (loading || !teamList.length) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center text-gray-400 dark:text-gray-500">
-        Loading…
-      </div>
-    )
-  }
-
-  if (!teamList.length) {
-    return (
-      <div className="max-w-3xl mx-auto p-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">My Practice Team</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          {pmo && pmoMode === 'all'
-            ? 'No active practice teams found.'
-            : 'You are not the lead of any active practice team. PMO users can switch to “All teams” to manage teams visible to you.'}
-        </p>
-        {pmo && (
-          <button
-            type="button"
-            onClick={() => setPmoMode(pmoMode === 'all' ? 'mine' : 'all')}
-            className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white"
-          >
-            {pmoMode === 'all' ? 'Show my teams only' : 'Show all teams'}
-          </button>
-        )}
+      <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">My Practice Team</h1>
+        <div className="max-w-3xl rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          <p className="text-base text-gray-900 dark:text-gray-100">
+            {loading
+              ? 'Loading teams…'
+              : pmo && pmoMode === 'all'
+                ? 'No active practice teams found.'
+                : seesProjectTeams
+                  ? 'No teams are recorded for this practice project.'
+                  : 'You are not the lead of any active practice team.'}
+          </p>
+          {!loading && pmo && (
+            <button
+              type="button"
+              onClick={() => setPmoMode(pmoMode === 'all' ? 'mine' : 'all')}
+              className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white"
+            >
+              {pmoMode === 'all' ? 'Show my teams only' : 'Show all teams'}
+            </button>
+          )}
+        </div>
       </div>
     )
   }
@@ -330,7 +302,9 @@ export default function SimMyTeam() {
             My Practice Team
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            Manage members and functional role labels for practice teams you lead.
+            {seesProjectTeams
+              ? 'Teams on the practice projects you manage.'
+              : 'Manage members and functional role labels for practice teams you lead.'}
           </p>
         </div>
         {pmo && (
@@ -616,13 +590,12 @@ export default function SimMyTeam() {
                 baseFilename={`sim-functional-roles-${selectedTeam?.team_name || 'export'}`}
                 disabled={!roleExportRows.length}
               />
-              <button
-                type="button"
-                onClick={() => setRoleModal({ mode: 'add' })}
+              <Link
+                to={projectRolesPath}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white min-h-[44px]"
               >
-                Add role
-              </button>
+                Manage Project Roles
+              </Link>
             </div>
           </div>
 
@@ -671,7 +644,6 @@ export default function SimMyTeam() {
                         </span>
                       </button>
                     </th>
-                    <th className="text-right px-3 py-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -680,19 +652,6 @@ export default function SimMyTeam() {
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                       <td className="px-3 py-2 text-gray-900 dark:text-white">{fr.role_label}</td>
                       <td className="px-3 py-2 tabular-nums">{fr._count}</td>
-                      <td className="px-3 py-2 text-right">
-                        <RowActionButton
-                          variant="edit"
-                          label="Edit role"
-                          onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                        />
-                        <RowActionButton
-                          variant="delete"
-                          label="Delete role"
-                          onClick={() => handleDeleteRole(fr)}
-                          disabled={fr._count > 0}
-                        />
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -707,20 +666,7 @@ export default function SimMyTeam() {
                 >
                   <div className="font-medium text-gray-900 dark:text-white">{fr.role_label}</div>
                   <div className="text-sm text-gray-500 mt-1">Members using: {fr._count}</div>
-                  <div className="mt-3 flex gap-2 justify-end">
-                  <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                    <RowActionButton
-                      variant="edit"
-                      label="Edit role"
-                      onClick={() => setRoleModal({ mode: 'edit', row: fr })}
-                    />
-                    <RowActionButton
-                      variant="delete"
-                      label="Delete role"
-                      onClick={() => handleDeleteRole(fr)}
-                      disabled={fr._count > 0}
-                    />
-                  </div>
+                  <div className="mt-2 text-xs text-gray-500">#{getDisplayRowNumber(index)}</div>
                 </div>
               ))}
             </div>
@@ -743,20 +689,12 @@ export default function SimMyTeam() {
         isOpen={!!editMember}
         onClose={() => setEditMember(null)}
         practiceTeamId={selectedTeamId}
+        practiceProjectId={practiceProjectId}
         member={editMember}
         onSuccess={() => {
           setSuccessBanner({ op: 'member_updated', id: editMember?.id })
           loadMembersAndRoles()
         }}
-      />
-
-      <SimManageFunctionalRoleModal
-        isOpen={!!roleModal}
-        onClose={() => setRoleModal(null)}
-        mode={roleModal?.mode === 'edit' ? 'edit' : 'add'}
-        title={roleModal?.mode === 'edit' ? 'Edit functional role' : 'Add functional role'}
-        initialLabel={roleModal?.row?.role_label || ''}
-        onSave={roleModal?.mode === 'edit' ? onSaveEditRole : onSaveNewRole}
       />
     </div>
   )

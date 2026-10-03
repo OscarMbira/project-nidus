@@ -61,6 +61,10 @@ export default function ChangeAssessmentForm({
     quality_impact_description: assessment?.quality_impact_description || '',
     quality_impact_level: assessment?.quality_impact_level || 'none',
 
+    // Benefits Impact
+    benefits_impact_description: assessment?.benefits_impact_description || '',
+    benefits_impact_level: assessment?.benefits_impact_level || 'neutral',
+
     // Resource Impact
     resource_impact_description: assessment?.resource_impact_description || '',
     resource_impact_level: assessment?.resource_impact_level || 'none',
@@ -428,6 +432,43 @@ export default function ChangeAssessmentForm({
                 </div>
               </div>
             </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Benefits Impact
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    Impact on Expected Benefits *
+                  </label>
+                  <select
+                    value={formData.benefits_impact_level}
+                    onChange={(e) => setFormData({ ...formData, benefits_impact_level: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    required
+                  >
+                    <option value="positive">Positive</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="negative">Negative</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                    Benefits Impact Description
+                  </label>
+                  <textarea
+                    value={formData.benefits_impact_description}
+                    onChange={(e) => setFormData({ ...formData, benefits_impact_description: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    placeholder="Describe the effect on this project's expected benefits..."
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         );
 
@@ -703,6 +744,7 @@ export default function ChangeAssessmentForm({
                   <AuditCard title="Classification" description="Where this assessment sits.">
                     <AuditField label="Cost impact level" value={humanizeAuditToken(formData.cost_impact_level || assessment.cost_impact_level)} />
                     <AuditField label="Schedule impact level" value={humanizeAuditToken(formData.schedule_impact_level || assessment.schedule_impact_level)} />
+                    <AuditField label="Benefits impact" value={humanizeAuditToken(formData.benefits_impact_level || assessment.benefits_impact_level)} />
                     <AuditField label="Implementation complexity" value={humanizeAuditToken(formData.implementation_complexity || assessment.implementation_complexity)} />
                     <AuditField label="Assessed by" value={assessment.assessed_by ? auditUserLabels[assessment.assessed_by] || null : null} />
                   </AuditCard>

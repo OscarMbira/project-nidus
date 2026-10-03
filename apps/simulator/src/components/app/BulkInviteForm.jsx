@@ -23,6 +23,7 @@ import {
   sendBulkInvitations,
 } from '../../services/bulkInviteService'
 import { createProjectRoleTemplates, deriveRoleSlug } from '../../services/bulkRoleService'
+import SelectField from '@nidus/ui/SelectField'
 import { saveDraft, loadDraft, updateDraftResults } from '../../services/bulkInviteDraftService'
 import {
   getProjectManagerAssignableRoles,
@@ -439,19 +440,18 @@ export default function BulkInviteForm({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Default role (for rows without a role in file) *
             </label>
-            <select
+            <SelectField
               value={defaultRoleId}
-              onChange={(e) => setDefaultRoleId(e.target.value)}
-              className="w-full max-w-md rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              onChange={setDefaultRoleId}
               required
-            >
-              <option value="">Select role…</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.role_display_name}
-                </option>
-              ))}
-            </select>
+              placeholder="Select role…"
+              searchPlaceholder="Search roles..."
+              options={roles.map((r) => ({
+                value: r.id,
+                label: r.role_display_name,
+              }))}
+              className="w-full max-w-md rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            />
 
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium text-gray-700 dark:text-gray-300">Invitation message</legend>
@@ -633,11 +633,17 @@ export default function BulkInviteForm({
                           </td>
                           <td className="px-3 py-2">
                             {ve.error_type === 'no_role' ? (
-                              <select
+                              <SelectField
                                 className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1 text-xs"
                                 value={row.role_id || ''}
-                                onChange={(e) => {
-                                  const role = roles.find((r) => r.id === e.target.value)
+                                placeholder="Assign…"
+                                searchPlaceholder="Search roles..."
+                                options={roles.map((r) => ({
+                                  value: r.id,
+                                  label: r.role_display_name,
+                                }))}
+                                onChange={(nextId) => {
+                                  const role = roles.find((r) => r.id === nextId)
                                   updateRow(row.rowIndex, {
                                     role_id: role?.id,
                                     role_name: role?.role_name,
@@ -646,14 +652,7 @@ export default function BulkInviteForm({
                                   })
                                   runValidation(rows)
                                 }}
-                              >
-                                <option value="">Assign…</option>
-                                {roles.map((r) => (
-                                  <option key={r.id} value={r.id}>
-                                    {r.role_display_name}
-                                  </option>
-                                ))}
-                              </select>
+                              />
                             ) : (
                               row.role_display_name || row.role_name || '—'
                             )}
@@ -866,11 +865,17 @@ export default function BulkInviteForm({
                             New role: {row.role_display_name}
                           </span>
                         ) : (
-                          <select
+                          <SelectField
                             className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-2 py-1 text-xs"
                             value={row.role_id || ''}
-                            onChange={(e) => {
-                              const role = roles.find((r) => r.id === e.target.value)
+                            placeholder="Select role…"
+                            searchPlaceholder="Search roles..."
+                            options={roles.map((r) => ({
+                              value: r.id,
+                              label: r.role_display_name,
+                            }))}
+                            onChange={(nextId) => {
+                              const role = roles.find((r) => r.id === nextId)
                               updateRow(row.rowIndex, {
                                 role_id: role?.id,
                                 role_name: role?.role_name,
@@ -878,13 +883,7 @@ export default function BulkInviteForm({
                                 isNewRole: false,
                               })
                             }}
-                          >
-                            {roles.map((r) => (
-                              <option key={r.id} value={r.id}>
-                                {r.role_display_name}
-                              </option>
-                            ))}
-                          </select>
+                          />
                         )}
                       </td>
                     </tr>

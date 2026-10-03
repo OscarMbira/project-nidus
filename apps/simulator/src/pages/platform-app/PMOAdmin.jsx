@@ -50,7 +50,7 @@ export default function PMOAdmin() {
           .from('accounts')
           .select('id')
           .eq('owner_user_id', userRecord.id)
-          .single();
+          .maybeSingle();
 
         if (accountData) {
           setOrganizationId(accountData.id);
@@ -61,7 +61,7 @@ export default function PMOAdmin() {
             .eq('owner_user_id', userRecord.id)
             .eq('is_deleted', false)
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (project?.account_id) {
             setOrganizationId(project.account_id);

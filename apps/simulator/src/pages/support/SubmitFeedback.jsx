@@ -201,7 +201,7 @@ export default function SubmitFeedback() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/help')}
+                onClick={() => navigate(-1)}
               >
                 Cancel
               </Button>

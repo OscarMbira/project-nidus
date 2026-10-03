@@ -69,7 +69,7 @@ export async function getCloneSourceRoles(accountId) {
       .from('project_roles')
       .select(
         'id, role_name, role_display_name, role_description, role_level, is_governance_only, account_id, ' +
-        'is_active, created_at, updated_at, ' +
+        'is_active, created_at, updated_at, role_skills, ' +
         'industry_category_id, industry_category:industry_categories(id, name)'
       )
       .eq('is_template', true)
@@ -89,7 +89,7 @@ export async function getCloneSourceRoles(accountId) {
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const ROLE_BY_ID_SELECT =
   'id, role_name, role_display_name, role_description, role_level, is_governance_only, account_id, ' +
-  'is_active, created_at, updated_at, ' +
+  'is_active, created_at, updated_at, role_skills, ' +
   'industry_category_id, industry_category:industry_categories(id, name)'
 
 /**
@@ -203,7 +203,7 @@ export async function getOrgCustomRoles(accountId) {
 
     const { data, error } = await supabase
       .from('project_roles')
-      .select('id, role_name, role_display_name, role_description, role_level, is_governance_only, is_active, account_id, created_at, updated_at')
+      .select('id, role_name, role_display_name, role_description, role_level, is_governance_only, is_active, account_id, created_at, updated_at, role_skills')
       .eq('is_template', true)
       .eq('account_id', accountId)
       .order('role_display_name', { ascending: true })
@@ -250,6 +250,52 @@ export async function getRoleMenuGrants(roleName, accountId = null) {
   }
 }
 
+// get_assignable_project_roles barely changes within a session (it moves only when a custom
+// role is created/edited/deleted) but was being re-fetched from scratch on every ProjectUsers
+// page load / project switch (v1169 rule-66 pass). Same sessionStorage + in-flight de-dupe
+// pattern as getGrantableMenuItems() above, keyed per account+project since p_project_id can
+// narrow the result. Invalidated by every custom/built-in role mutation in this file.
+const ASSIGNABLE_PROJECT_ROLES_CACHE_TTL_MS = 5 * 60 * 1000
+const ASSIGNABLE_PROJECT_ROLES_SESSION_PREFIX = 'nidus:assignableProjectRoles:v1:'
+const _assignableProjectRolesInFlight = new Map()
+
+function readAssignableProjectRolesSessionCache(cacheKey) {
+  if (typeof sessionStorage === 'undefined') return null
+  try {
+    const raw = sessionStorage.getItem(ASSIGNABLE_PROJECT_ROLES_SESSION_PREFIX + cacheKey)
+    if (!raw) return null
+    const entry = JSON.parse(raw)
+    if (!entry?.cachedAt || !Array.isArray(entry?.data)) return null
+    if (Date.now() - entry.cachedAt >= ASSIGNABLE_PROJECT_ROLES_CACHE_TTL_MS) return null
+    return entry.data
+  } catch {
+    return null
+  }
+}
+
+function writeAssignableProjectRolesSessionCache(cacheKey, data) {
+  if (typeof sessionStorage === 'undefined') return
+  try {
+    sessionStorage.setItem(
+      ASSIGNABLE_PROJECT_ROLES_SESSION_PREFIX + cacheKey,
+      JSON.stringify({ cachedAt: Date.now(), data })
+    )
+  } catch {
+    // Storage full or unavailable — ignore; next load just fetches from DB.
+  }
+}
+
+export function invalidateAssignableProjectRolesCache() {
+  if (typeof sessionStorage === 'undefined') return
+  try {
+    Object.keys(sessionStorage)
+      .filter((key) => key.startsWith(ASSIGNABLE_PROJECT_ROLES_SESSION_PREFIX))
+      .forEach((key) => sessionStorage.removeItem(key))
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Roles the current user is allowed to assign to someone else — built-in + this org's custom
  * roles, capped at the caller's own highest project-tier role_level (v906/v908). Org-wide admin
@@ -264,13 +310,29 @@ export async function getAssignableProjectRoles(projectId = null) {
     const accountId = await getCurrentUserAccountId()
     if (!accountId) return { success: false, data: [], error: 'Could not resolve your organisation' }
 
-    const { data, error } = await supabase.rpc('get_assignable_project_roles', {
-      p_account_id: accountId,
-      p_project_id: projectId,
+    const cacheKey = `${accountId}:${projectId || 'null'}`
+    const cached = readAssignableProjectRolesSessionCache(cacheKey)
+    if (cached) return { success: true, data: cached, error: null }
+
+    if (_assignableProjectRolesInFlight.has(cacheKey)) {
+      return _assignableProjectRolesInFlight.get(cacheKey)
+    }
+
+    const fetchPromise = (async () => {
+      const { data, error } = await supabase.rpc('get_assignable_project_roles', {
+        p_account_id: accountId,
+        p_project_id: projectId,
+      })
+
+      if (error) throw error
+      writeAssignableProjectRolesSessionCache(cacheKey, data || [])
+      return { success: true, data: data || [], error: null }
+    })().finally(() => {
+      _assignableProjectRolesInFlight.delete(cacheKey)
     })
 
-    if (error) throw error
-    return { success: true, data: data || [], error: null }
+    _assignableProjectRolesInFlight.set(cacheKey, fetchPromise)
+    return fetchPromise
   } catch (error) {
     console.error('getAssignableProjectRoles:', error)
     return { success: false, data: [], error: error.message || 'Failed to load assignable roles' }
@@ -480,6 +542,8 @@ async function _fetchGrantableMenuItems() {
  * @param {string[]} [params.excludedMenuItemIds] - clone mode only
  * @param {number} [params.roleLevel] - from-scratch mode only, defaults to 4
  * @param {string[]} [params.menuItemIds] - from-scratch mode only
+ * @param {string} [params.roleSkills] - required (v1110 rejects blank), unless cloning a role that
+ *   already has skills
  * @returns {Promise<{success: boolean, data: {projectRoleId: string, roleId: string}|null, error: string|null}>}
  */
 export async function createOrgCustomRole({
@@ -490,6 +554,7 @@ export async function createOrgCustomRole({
   excludedMenuItemIds = [],
   roleLevel = 4,
   menuItemIds = [],
+  roleSkills = null,
 }) {
   try {
     const accountId = await getCurrentUserAccountId()
@@ -504,10 +569,12 @@ export async function createOrgCustomRole({
       p_excluded_menu_item_ids: excludedMenuItemIds,
       p_role_level: roleLevel,
       p_menu_item_ids: menuItemIds,
+      p_role_skills: roleSkills,
     })
 
     if (error) throw error
     const row = Array.isArray(data) ? data[0] : data
+    invalidateAssignableProjectRolesCache()
 
     return {
       success: true,
@@ -528,6 +595,8 @@ export async function createOrgCustomRole({
  * @param {boolean} params.isGovernanceOnly
  * @param {string[]} [params.addMenuItemIds]
  * @param {string[]} [params.removeMenuItemIds]
+ * @param {string} [params.roleSkills] - omit to keep the existing value; the final value can
+ *   never be blank (v1110 rejects it)
  */
 export async function updateOrgCustomRole({
   projectRoleId,
@@ -536,6 +605,7 @@ export async function updateOrgCustomRole({
   isGovernanceOnly,
   addMenuItemIds = [],
   removeMenuItemIds = [],
+  roleSkills = null,
 }) {
   try {
     const { error } = await supabase.rpc('update_org_custom_role', {
@@ -545,9 +615,11 @@ export async function updateOrgCustomRole({
       p_is_governance_only: isGovernanceOnly,
       p_add_menu_item_ids: addMenuItemIds,
       p_remove_menu_item_ids: removeMenuItemIds,
+      p_role_skills: roleSkills,
     })
 
     if (error) throw error
+    invalidateAssignableProjectRolesCache()
     return { success: true, error: null }
   } catch (error) {
     console.error('updateOrgCustomRole:', error)
@@ -560,6 +632,7 @@ export async function deactivateOrgCustomRole(projectRoleId) {
   try {
     const { error } = await supabase.rpc('deactivate_org_custom_role', { p_project_role_id: projectRoleId })
     if (error) throw error
+    invalidateAssignableProjectRolesCache()
     return { success: true, error: null }
   } catch (error) {
     console.error('deactivateOrgCustomRole:', error)
@@ -572,6 +645,7 @@ export async function deleteOrgCustomRole(projectRoleId) {
   try {
     const { error } = await supabase.rpc('delete_org_custom_role', { p_project_role_id: projectRoleId })
     if (error) throw error
+    invalidateAssignableProjectRolesCache()
     return { success: true, error: null }
   } catch (error) {
     console.error('deleteOrgCustomRole:', error)
@@ -618,6 +692,8 @@ export async function isSystemAdmin() {
  * @param {boolean} params.isGovernanceOnly
  * @param {string[]} [params.addMenuItemIds]
  * @param {string[]} [params.removeMenuItemIds]
+ * @param {string} [params.roleSkills] - omit to keep the existing value; the final value can
+ *   never be blank (v1110 rejects it)
  * @returns {Promise<{success: boolean, error: string|null}>}
  */
 export async function updateBuiltinRole({
@@ -629,6 +705,7 @@ export async function updateBuiltinRole({
   isGovernanceOnly,
   addMenuItemIds = [],
   removeMenuItemIds = [],
+  roleSkills = null,
 }) {
   try {
     const { error } = await supabase.rpc('update_builtin_role', {
@@ -640,6 +717,7 @@ export async function updateBuiltinRole({
       p_is_governance_only: isGovernanceOnly,
       p_add_menu_item_ids: addMenuItemIds,
       p_remove_menu_item_ids: removeMenuItemIds,
+      p_role_skills: roleSkills,
     })
 
     if (error) throw error
@@ -647,10 +725,36 @@ export async function updateBuiltinRole({
     // any built-in role can grant" pool from — invalidate so Create Role/Bundle don't serve a
     // stale cached pool for the rest of the TTL after a system_admin changes it here.
     invalidateGrantableMenuItemsCache()
+    // role_level/display_name changes also affect get_assignable_project_roles' output.
+    invalidateAssignableProjectRolesCache()
     return { success: true, error: null }
   } catch (error) {
     console.error('updateBuiltinRole:', error)
     return { success: false, error: error.message || 'Failed to update role' }
+  }
+}
+
+/**
+ * Backfills role_skills on the caller's OWN organisation's custom role, only when that role's
+ * skills are currently blank (v1110 `fill_org_custom_role_skills_if_blank`). No-op for a
+ * built-in role or another organisation's role. Used by "Add from Built-in Roles" (v1105) so
+ * editing a custom role's skills while adding it to a project also saves them back to the
+ * source role — never to a built-in role, never overwriting skills that already exist.
+ * @param {string} projectRoleId
+ * @param {string} roleSkills
+ * @returns {Promise<{success: boolean, filled: boolean, error: string|null}>}
+ */
+export async function fillOrgCustomRoleSkillsIfBlank(projectRoleId, roleSkills) {
+  try {
+    const { data, error } = await supabase.rpc('fill_org_custom_role_skills_if_blank', {
+      p_project_role_id: projectRoleId,
+      p_role_skills: roleSkills,
+    })
+    if (error) throw error
+    return { success: true, filled: !!data, error: null }
+  } catch (error) {
+    console.error('fillOrgCustomRoleSkillsIfBlank:', error)
+    return { success: false, filled: false, error: error.message || 'Failed to save skills' }
   }
 }
 
@@ -670,4 +774,5 @@ export default {
   deleteOrgCustomRole,
   isSystemAdmin,
   updateBuiltinRole,
+  fillOrgCustomRoleSkillsIfBlank,
 }

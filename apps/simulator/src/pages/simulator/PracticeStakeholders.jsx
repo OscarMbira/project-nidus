@@ -6,7 +6,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { getPracticeStakeholders } from '../../services/sim/practiceStakeholderService'
+import { simDb } from '../../services/supabase/supabaseClient'
+import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import RowNumberBadge from '../../components/ui/RowNumberBadge'
 import { useViewMode } from '../../hooks/useViewMode'
 import ViewToggle from '../../components/ui/ViewToggle'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
@@ -124,7 +127,12 @@ export default function PracticeStakeholders() {
                   onClick={() => goTo(stakeholder.id)}
                   className="cursor-pointer hover:bg-gray-700/50 dark:hover:bg-gray-700"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{stakeholder.stakeholder_name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="inline-flex items-center gap-2">
+                      <StakeholderAvatar db={simDb} stakeholder={stakeholder} syncFromProfile={false} sizeClassName="h-7 w-7" />
+                      {stakeholder.stakeholder_name}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{stakeholder.stakeholder_organization || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{stakeholder.stakeholder_type || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{stakeholder.stakeholder_status}</td>
@@ -142,7 +150,10 @@ export default function PracticeStakeholders() {
               onClick={() => goTo(stakeholder.id)}
               className="text-left bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow min-h-[160px] min-w-0"
             >
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">{stakeholder.stakeholder_name}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 inline-flex items-center gap-2">
+                <StakeholderAvatar db={simDb} stakeholder={stakeholder} syncFromProfile={false} sizeClassName="h-8 w-8" />
+                {stakeholder.stakeholder_name}
+              </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">{stakeholder.stakeholder_organization || '—'}</p>
               <div className="flex flex-wrap gap-2">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />

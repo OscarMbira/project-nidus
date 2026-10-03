@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, TrendingDown, Search, Filter } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getDependencyImpacts } from '../services/dependencyService';
 import SortToolbar from '@nidus/ui/SortToolbar';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
@@ -74,7 +75,7 @@ export default function DependencyImpacts() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/platform/dependencies')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -93,55 +94,11 @@ export default function DependencyImpacts() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Impacts</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-gray-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Potential</p>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.potential}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Realized</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.realized}</p>
-            </div>
-            <TrendingDown className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Mitigated</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.mitigated}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Impacts" value={stats.total} icon={AlertTriangle} iconClassName="text-gray-500" />
+        <DashboardStatCard label="Potential" value={stats.potential} icon={AlertTriangle} accentClassName="text-yellow-600 dark:text-yellow-400" iconClassName="text-yellow-500" borderClassName="border-yellow-200 dark:border-yellow-800" />
+        <DashboardStatCard label="Realized" value={stats.realized} icon={TrendingDown} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
+        <DashboardStatCard label="Mitigated" value={stats.mitigated} icon={AlertTriangle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Critical" value={stats.critical} icon={AlertTriangle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
       </div>
 
       {/* Filters */}

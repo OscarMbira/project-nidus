@@ -47,9 +47,9 @@ export default function SimOPADetail() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link to="/simulator/opa" className="text-gray-400 mb-4 inline-block">
+      <button type="button" onClick={() => navigate(-1)} className="text-gray-400 mb-4 inline-block">
         Back
-      </Link>
+      </button>
       <h1 className="text-2xl font-bold text-white mb-4">{row.title}</h1>
       {provenance && (
         <Link

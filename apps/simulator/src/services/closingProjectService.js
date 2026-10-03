@@ -86,6 +86,70 @@ export async function updateProjectClosure(closureId, updates) {
   }
 }
 
+/**
+ * Update the benefits transition status on a project closure (v963 PMIS Core Gap Closure —
+ * Phase 7). Extends project_closures rather than a new table (SQL/v963e_project_closures_
+ * benefits_transition_archive.sql). NOTE: this Simulator copy shares the same public.
+ * project_closures table as Platform (via `supabase` = platformDb here, not simDb — a
+ * pre-existing condition of this file, not introduced by this change); there is no separate
+ * sim.project_closures table to mirror.
+ * @param {string} closureId - Project closure ID
+ * @param {'not_started'|'in_progress'|'complete'} status
+ * @param {string} userId - Acting user's internal users.id (for updated_by)
+ * @returns {Promise<Object>} Updated closure
+ */
+export async function updateBenefitsTransitionStatus(closureId, status, userId) {
+  try {
+    const { data, error } = await supabase
+      .from('project_closures')
+      .update({
+        benefits_transition_status: status,
+        updated_by: userId || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', closureId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error('Error updating benefits transition status:', error);
+    throw error;
+  }
+}
+
+/**
+ * Archive a project closure (v963 PMIS Core Gap Closure — Phase 7). Sets archived_at/
+ * archived_by; does not delete or otherwise change the record's other fields.
+ * @param {string} closureId - Project closure ID
+ * @param {string} userId - Acting user's internal users.id (for archived_by/updated_by)
+ * @returns {Promise<Object>} Updated closure
+ */
+export async function archiveProjectClosure(closureId, userId) {
+  try {
+    const { data, error } = await supabase
+      .from('project_closures')
+      .update({
+        archived_at: new Date().toISOString(),
+        archived_by: userId || null,
+        updated_by: userId || null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', closureId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error('Error archiving project closure:', error);
+    throw error;
+  }
+}
+
 // ===========================
 // END PROJECT REPORTS
 // ===========================
@@ -475,7 +539,7 @@ export async function getClosureDashboardStats(projectId) {
     ] = await Promise.all([
       supabase
         .from('project_closures')
-        .select('id, closure_status, closure_phase, checklist_completion_percentage')
+        .select('id, closure_status, closure_phase, checklist_completion_percentage, benefits_transition_status, archived_at, archived_by')
         .eq('project_id', projectId)
         .eq('is_deleted', false)
         .maybeSingle(),
@@ -508,6 +572,7 @@ export async function getClosureDashboardStats(projectId) {
     const handover = handoverResult.data;
 
     return {
+      closureId: closure?.id || null,
       closureExists: !!closure,
       closureStatus: closure?.closure_status || 'not-started',
       closurePhase: closure?.closure_phase || 'preparation',
@@ -517,7 +582,11 @@ export async function getClosureDashboardStats(projectId) {
       totalActions: actions.length,
       completedActions: actions.filter(a => a.action_status === 'completed').length,
       handoverExists: !!handover,
-      handoverStatus: handover?.handover_status || 'not-started'
+      handoverStatus: handover?.handover_status || 'not-started',
+      // v963 Phase 7 — Benefits Transition / Archive
+      benefitsTransitionStatus: closure?.benefits_transition_status || 'not_started',
+      archivedAt: closure?.archived_at || null,
+      archivedBy: closure?.archived_by || null
     };
   } catch (error) {
     console.error('Error fetching closure dashboard stats:', error);
@@ -530,6 +599,8 @@ export default {
   fetchProjectClosure,
   createProjectClosure,
   updateProjectClosure,
+  updateBenefitsTransitionStatus,
+  archiveProjectClosure,
 
   // End Project Reports
   fetchEndProjectReport,

@@ -22,11 +22,10 @@ import BenefitsReviewSchedule from '../components/benefits/BenefitsReviewSchedul
 import DisBenefitsSection from '../components/benefits/DisBenefitsSection';
 import { exportBenefitsReviewPlanToPDF, printBenefitsReviewPlan } from '@nidus/shared/utils/benefitsReviewPlanExport';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
 
 const BRP_VIEW_SECTIONS = [
   { title: 'Plan', fields: [
-    { key: 'brp_reference', label: 'Reference' },
+    { key: 'document_ref', label: 'Reference' },
     { key: 'plan_title', label: 'Title' },
     { key: 'status', label: 'Status' }
   ]}
@@ -241,13 +240,9 @@ export default function BenefitsReviewPlan() {
           {!showForm && plan && (
             <div className="flex items-center gap-2">
               <ExportRecordButtons
-                onExportPPT={() => exportRecordToPPT(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportWord={() => exportRecordToWord(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportExcel={() => exportRecordToExcel(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportCSV={() => exportRecordToCSV(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportXML={() => exportRecordToXML(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportJSON={() => exportRecordToJSON(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
-                onExportPrint={() => exportRecordToPrint(BRP_VIEW_SECTIONS, plan, `BenefitsReviewPlan_${plan.brp_reference || plan.id}`)}
+                sections={BRP_VIEW_SECTIONS}
+                record={plan}
+                baseFilename={`BenefitsReviewPlan_${plan.document_ref || plan.brp_reference || plan.id}`}
               />
               <button
                 onClick={handleEdit}

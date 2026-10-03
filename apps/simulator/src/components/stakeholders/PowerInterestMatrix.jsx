@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Target, AlertCircle, CheckCircle, TrendingUp, Info, Edit2 } from 'lucide-react';
 import { getStakeholderAnalysis } from '../../services/stakeholderService';
+import { platformDb } from '../../services/supabaseClient';
+import StakeholderAvatar from '../ui/StakeholderAvatar';
 
 function quadrantFromPowerInterest(power, interest) {
   const high = (v) => v >= 4;
@@ -311,7 +313,10 @@ export default function PowerInterestMatrix({ projectId, stakeholders = [], refr
                         tabIndex={0}
                         onKeyDown={(e) => e.key === 'Enter' && onStakeholderClick && stakeholderId && onStakeholderClick(stakeholderId)}
                       >
-                        <span className="font-medium">{name}</span>
+                        <span className="font-medium inline-flex items-center gap-2">
+                          <StakeholderAvatar db={platformDb} stakeholder={stakeholder} sizeClassName="h-6 w-6" />
+                          {name}
+                        </span>
                         {item.power_level != null && item.interest_level != null && (
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             Power: {item.power_level}/5, Interest: {item.interest_level}/5

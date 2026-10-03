@@ -5,6 +5,8 @@ import ViewToggle from '../ui/ViewToggle'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '../../services/supabaseClient'
+import StakeholderAvatar from '../ui/StakeholderAvatar'
 import RowNumberBadge from '../ui/RowNumberBadge'
 import { RowActionButton } from '@nidus/ui'
 
@@ -15,14 +17,16 @@ function sortIndicator(direction) {
 }
 
 const thClass =
-  'px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase cursor-pointer select-none hover:text-gray-200'
+  'px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase cursor-pointer select-none hover:text-gray-800 dark:hover:text-gray-100'
 
 export default function StakeholderAssessmentMatrixList({
   records = [],
   search = '',
+  onView,
   onEdit,
   onDelete,
   onStakeholderClick,
+  syncFromProfile = true,
   deletingId = null,
   pageId = 'stakeholder-assessment-matrix',
 }) {
@@ -59,7 +63,7 @@ export default function StakeholderAssessmentMatrixList({
 
   if (!displayRows.length) {
     return (
-      <div className="bg-gray-800 rounded-lg border border-gray-700 p-8 text-center text-gray-400">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center text-gray-700 dark:text-gray-200">
         {search ? 'No assessments match your search.' : 'No assessment records.'}
       </div>
     )
@@ -80,32 +84,43 @@ export default function StakeholderAssessmentMatrixList({
                 key={r.id}
                 className={`rounded-lg border p-4 ${
                   hasGap
-                    ? 'border-amber-700/50 bg-amber-950/20'
-                    : 'border-gray-700 bg-gray-800'
+                    ? 'border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-900/20'
+                    : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'
                 }`}
               >
                 <div className="flex items-start gap-2 mb-1">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
-                  <h4 className="font-medium text-white min-w-0">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 min-w-0">
                   {onStakeholderClick ? (
                     <button
                       type="button"
-                      className="text-blue-400 hover:underline text-left"
+                      className="text-blue-600 dark:text-blue-400 hover:underline text-left"
                       onClick={() => onStakeholderClick(r.stakeholder_id)}
                     >
-                      {r.stakeholder?.stakeholder_name || '—'}
+                      <span className="inline-flex items-center gap-2">
+                        <StakeholderAvatar db={platformDb} stakeholder={r.stakeholder} syncFromProfile={syncFromProfile} sizeClassName="h-6 w-6" />
+                        {r.stakeholder?.stakeholder_name || '—'}
+                      </span>
                     </button>
                   ) : (
-                    r.stakeholder?.stakeholder_name || '—'
+                    <span className="inline-flex items-center gap-2">
+                      <StakeholderAvatar db={platformDb} stakeholder={r.stakeholder} syncFromProfile={syncFromProfile} sizeClassName="h-6 w-6" />
+                      {r.stakeholder?.stakeholder_name || '—'}
+                    </span>
                   )}
                 </h4>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{r.assessment_date}</p>
-                <p className="text-sm text-gray-300 mt-2">
+                <p className="text-xs text-gray-700 dark:text-gray-200 mt-1">{r.assessment_date}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-200 mt-2">
                   C: {prettySeamLevel(r.current_level)} · D: {prettySeamLevel(r.desired_level)}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">{r.gap_summary || 'Aligned'}</p>
+                <p className="text-xs text-gray-700 dark:text-gray-200 mt-1">{r.gap_summary || 'Aligned'}</p>
                 <div className="mt-3 flex gap-2 justify-end">
+                  <RowActionButton
+                    variant="view"
+                    label="View assessment"
+                    onClick={() => onView?.(r)}
+                  />
                   <RowActionButton
                     variant="edit"
                     label="Edit assessment"
@@ -123,9 +138,9 @@ export default function StakeholderAssessmentMatrixList({
           })}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-700 bg-gray-800">
-          <table className="min-w-full divide-y divide-gray-700">
-            <thead className="bg-gray-900/80">
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
               <tr>
                 <TableRowNumberHeader className="!normal-case" />
                 {[
@@ -139,37 +154,49 @@ export default function StakeholderAssessmentMatrixList({
                     {label} {sortIndicator(getSortDirectionForColumn(key))}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase">
+                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {displayRows.map((r, index) => (
-                <tr key={r.id} className="hover:bg-gray-700/40">
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                  <td className="px-4 py-3 text-sm text-white">
+                  <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                     {onStakeholderClick ? (
                       <button
                         type="button"
-                        className="text-blue-400 hover:underline"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
                         onClick={() => onStakeholderClick(r.stakeholder_id)}
                       >
-                        {r.stakeholder?.stakeholder_name || '—'}
+                        <span className="inline-flex items-center gap-2">
+                          <StakeholderAvatar db={platformDb} stakeholder={r.stakeholder} syncFromProfile={syncFromProfile} sizeClassName="h-6 w-6" />
+                          {r.stakeholder?.stakeholder_name || '—'}
+                        </span>
                       </button>
                     ) : (
-                      r.stakeholder?.stakeholder_name || '—'
+                      <span className="inline-flex items-center gap-2">
+                        <StakeholderAvatar db={platformDb} stakeholder={r.stakeholder} syncFromProfile={syncFromProfile} sizeClassName="h-6 w-6" />
+                        {r.stakeholder?.stakeholder_name || '—'}
+                      </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{r.assessment_date}</td>
-                  <td className="px-4 py-3 text-sm text-gray-300 capitalize">
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">{r.assessment_date}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 capitalize">
                     {prettySeamLevel(r.current_level)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-300 capitalize">
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200 capitalize">
                     {prettySeamLevel(r.desired_level)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-300">{r.gap_summary || 'Aligned'}</td>
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">{r.gap_summary || 'Aligned'}</td>
                   <td className="px-4 py-3 text-right text-sm">
+                    <div className="flex justify-end gap-1">
+                    <RowActionButton
+                      variant="view"
+                      label="View assessment"
+                      onClick={() => onView?.(r)}
+                    />
                     <RowActionButton
                       variant="edit"
                       label="Edit assessment"
@@ -181,6 +208,7 @@ export default function StakeholderAssessmentMatrixList({
                       onClick={() => onDelete?.(r)}
                       disabled={deletingId === r.id}
                     />
+                    </div>
                   </td>
                 </tr>
               ))}

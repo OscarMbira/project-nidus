@@ -22,10 +22,14 @@ import ProjectFormTabs from '../components/project/ProjectFormTabs'
 import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
 import ProjectPlanningOverview from '../components/planning/ProjectPlanningOverview'
 import { mapDbProjectToWizardForm, normalizeEmbeddedList } from '@nidus/shared/utils/projectWizardFormUtils'
+import { normalizeProjectDeliveryTrack } from '@nidus/config/methodologyMenuUtils'
 import { getByProjectId } from '../services/projectBudgetCategoryService'
 import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
 import { getFundingSources } from '../services/fundingSourceService'
 import { getBudgetCategories } from '../services/budgetCategoryService'
+import { getStakeholders } from '../services/stakeholderService'
+import { listMilestones } from '../services/milestoneService'
+import { getOrgIndustryOptions } from '../services/organisationIndustryService.js'
 import PmoDashboardInsightsSection from '../components/app/dashboard/PmoDashboardInsightsSection'
 
 const PROJECT_EXPORT_SECTIONS = [
@@ -62,6 +66,17 @@ async function buildProjectExportSectionsAndRecord(platformDb, project, projectI
   }
 }
 
+const DELIVERY_METHODOLOGY_LABELS = {
+  hybrid: 'Hybrid (all tracks)',
+  structured: 'Structured / Traditional',
+  standards_based: 'Standards-Based Process Groups',
+  agile: 'Agile & Lean',
+  Structured: 'Structured (legacy)',
+  Agile: 'Agile (legacy)',
+  Hybrid: 'Hybrid (legacy)',
+  Waterfall: 'Waterfall (legacy)',
+}
+
 export default function ProjectsDetail() {
   const { projectId, routeKey, loading: routeResolving, error: routeError } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -81,10 +96,12 @@ export default function ProjectsDetail() {
 
   const [wizardActiveTab, setWizardActiveTab] = useState('details')
   const [wizardFormData, setWizardFormData] = useState(null)
-  const [methodologies, setMethodologies] = useState([])
   const [wizardFundingSources, setWizardFundingSources] = useState([])
   const [wizardBudgetCategories, setWizardBudgetCategories] = useState([])
   const [wizardLifecycleTemplates, setWizardLifecycleTemplates] = useState([])
+  const [wizardStakeholders, setWizardStakeholders] = useState([])
+  const [orgIndustries, setOrgIndustries] = useState([])
+  const [wizardMilestones, setWizardMilestones] = useState([])
 
   /** Decoded segment for links: prefer code once project is loaded */
   const urlProjectSegment = useMemo(() => {
@@ -251,16 +268,8 @@ export default function ProjectsDetail() {
         const catRes = await getByProjectId(projectId)
         const rows = catRes?.success && Array.isArray(catRes.data) ? catRes.data : []
         const mapped = mapDbProjectToWizardForm(project, methodologyId, rows, legacyBudget)
-        const { data: methData, error: methErr } = await platformDb
-          .from('methodologies')
-          .select('*')
-          .eq('is_active', true)
-          .eq('is_deleted', false)
-          .order('methodology_name', { ascending: true })
-        if (methErr) throw methErr
         if (!cancelled) {
           setWizardFormData(mapped)
-          setMethodologies(methData || [])
         }
       } catch (e) {
         console.error('Failed to build project wizard view:', e)
@@ -305,6 +314,45 @@ export default function ProjectsDetail() {
     prevWizardDeliveryRef.current = onDelivery
   }, [wizardActiveTab, loadWizardLifecycle])
 
+  const loadWizardStakeholders = useCallback(() => {
+    if (!projectId) return
+    getStakeholders({ project_id: projectId })
+      .then((rows) => {
+        if (Array.isArray(rows)) setWizardStakeholders(rows)
+      })
+      .catch((err) => console.error('Wizard stakeholders:', err))
+  }, [projectId])
+
+  const loadWizardMilestones = useCallback(() => {
+    if (!projectId) return
+    listMilestones(projectId)
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) setWizardMilestones(res.data)
+      })
+      .catch((err) => console.error('Wizard milestones:', err))
+  }, [projectId])
+
+  const prevWizardStakeholdersRef = useRef(false)
+  useEffect(() => {
+    const onStakeholders = wizardActiveTab === 'stakeholders'
+    if (onStakeholders && !prevWizardStakeholdersRef.current) loadWizardStakeholders()
+    prevWizardStakeholdersRef.current = onStakeholders
+  }, [wizardActiveTab, loadWizardStakeholders])
+
+  const prevWizardMilestonesRef = useRef(false)
+  useEffect(() => {
+    const onMilestones = wizardActiveTab === 'milestones'
+    if (onMilestones && !prevWizardMilestonesRef.current) loadWizardMilestones()
+    prevWizardMilestonesRef.current = onMilestones
+  }, [wizardActiveTab, loadWizardMilestones])
+
+  useEffect(() => {
+    if (!project?.account_id) return
+    getOrgIndustryOptions(project.account_id)
+      .then((res) => { if (res.success) setOrgIndustries(res.data) })
+      .catch((err) => console.error('Failed to load organisation industries:', err))
+  }, [project?.account_id])
+
   const noop = useCallback(() => {})
   const noopAuthority = useCallback(() => noop, [noop])
 
@@ -326,6 +374,14 @@ export default function ProjectsDetail() {
     if (!project?.status_id) return []
     return [{ value: project.status_id, label: project.project_statuses?.status_name || '—' }]
   }, [project])
+
+  const industryOptions = useMemo(() => {
+    if (!orgIndustries.length) return []
+    return orgIndustries.map((ind) => ({
+      value: ind.id,
+      label: ind.is_primary ? `${ind.name} (Primary)` : ind.name,
+    }))
+  }, [orgIndustries])
 
   if (loading) {
     return (
@@ -356,7 +412,7 @@ export default function ProjectsDetail() {
             <p className="text-gray-400 text-sm leading-relaxed mb-6">{detail}</p>
             <button
               type="button"
-              onClick={() => navigate('/platform/projects')}
+              onClick={() => navigate(-1)}
               className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors shadow-sm"
             >
               Back to Projects
@@ -370,7 +426,7 @@ export default function ProjectsDetail() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate('/platform/projects')}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Projects
@@ -461,7 +517,11 @@ export default function ProjectsDetail() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Methodology</h3>
-            {project.project_methodologies && project.project_methodologies[0]?.methodologies ? (
+            {project.delivery_methodology ? (
+              <p className="text-gray-900 dark:text-white">
+                {DELIVERY_METHODOLOGY_LABELS[project.delivery_methodology] || project.delivery_methodology}
+              </p>
+            ) : project.project_methodologies && project.project_methodologies[0]?.methodologies ? (
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 rounded"
@@ -568,6 +628,7 @@ export default function ProjectsDetail() {
               handleChange={noop}
               projectTypeOptions={projectTypeOptions}
               statusOptions={statusOptions}
+              industryOptions={industryOptions}
               handleProjectTypeChange={noop}
               handleProjectStatusChange={noop}
               handleAuthorityNameChange={noopAuthority}
@@ -597,7 +658,8 @@ export default function ProjectsDetail() {
                     }
                   : null
               }
-              methodologies={methodologies}
+              stakeholderRows={wizardStakeholders}
+              milestoneRows={wizardMilestones}
             />
           </div>
         </div>
@@ -620,10 +682,12 @@ export default function ProjectsDetail() {
 
       {/* Structured PM Modules */}
       {/* Note: 'prince2' methodology_code checked for database backward compatibility only */}
-      {project.project_methodologies && 
-       project.project_methodologies[0]?.methodologies &&
-       (project.project_methodologies[0].methodologies.methodology_code === 'prince2' ||
-        project.project_methodologies[0].methodologies.methodology_code === 'structured_pm') && (
+      {(
+       (project.project_methodologies?.[0]?.methodologies &&
+        (project.project_methodologies[0].methodologies.methodology_code === 'prince2' ||
+         project.project_methodologies[0].methodologies.methodology_code === 'structured_pm')) ||
+       ['structured', 'hybrid'].includes(normalizeProjectDeliveryTrack(project.delivery_methodology))
+      ) && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Structured Project Management Processes
@@ -891,9 +955,10 @@ export default function ProjectsDetail() {
       </div>
 
       {/* Scrum Modules */}
-      {project.project_methodologies && 
-       project.project_methodologies[0]?.methodologies &&
-       project.project_methodologies[0].methodologies.methodology_code === 'scrum' && (
+      {(
+       project.project_methodologies?.[0]?.methodologies?.methodology_code === 'scrum' ||
+       ['agile', 'hybrid'].includes(normalizeProjectDeliveryTrack(project.delivery_methodology))
+      ) && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Scrum Modules
@@ -959,9 +1024,10 @@ export default function ProjectsDetail() {
       )}
 
       {/* Kanban Modules */}
-      {project.project_methodologies && 
-       project.project_methodologies[0]?.methodologies &&
-       project.project_methodologies[0].methodologies.methodology_code === 'kanban' && (
+      {(
+       project.project_methodologies?.[0]?.methodologies?.methodology_code === 'kanban' ||
+       ['agile', 'hybrid'].includes(normalizeProjectDeliveryTrack(project.delivery_methodology))
+      ) && (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Kanban Modules
@@ -993,10 +1059,12 @@ export default function ProjectsDetail() {
         </div>
       )}
 
-      {project.project_methodologies &&
-        project.project_methodologies[0]?.methodologies &&
-        (project.project_methodologies[0].methodologies.methodology_code === 'scrum' ||
-          project.project_methodologies[0].methodologies.methodology_code === 'kanban') && (
+      {(
+        (project.project_methodologies?.[0]?.methodologies &&
+          (project.project_methodologies[0].methodologies.methodology_code === 'scrum' ||
+            project.project_methodologies[0].methodologies.methodology_code === 'kanban')) ||
+        ['agile', 'hybrid'].includes(normalizeProjectDeliveryTrack(project.delivery_methodology))
+      ) && (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Agile extensions (XP / Lean)

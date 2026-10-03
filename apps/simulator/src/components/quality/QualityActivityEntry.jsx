@@ -156,14 +156,14 @@ export default function QualityActivityEntry({ activity, onView }) {
           </thead>
           <tbody>
             <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <TableRowNumberCell number={getDisplayRowNumber(0)} />
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Quality Activity</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.planned_date)}</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.forecast_date)}</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.actual_date)}</td>
             </tr>
             <tr>
-                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <TableRowNumberCell number={getDisplayRowNumber(1)} />
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300">Sign-Off</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.sign_off_planned_date)}</td>
               <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-900 dark:text-white text-center">{formatDate(activity.sign_off_forecast_date)}</td>

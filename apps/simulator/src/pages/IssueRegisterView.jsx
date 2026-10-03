@@ -188,9 +188,18 @@ export default function IssueRegisterView() {
         .select('id, project_name, project_code, account_id')
         .eq('id', projectId)
         .eq('is_deleted', false)
-        .single()
+        .maybeSingle()
 
       if (projectError) throw projectError
+      if (!projectData) {
+        // The "current project" id can briefly point at a stale/still-validating value right
+        // after entering /pm/* (CurrentProjectContext corrects it async — see
+        // usePlatformProjectId.js) — bail out gracefully rather than surfacing a raw error for
+        // what's usually a timing gap, not a real failure.
+        setProject(null)
+        setLoading(false)
+        return
+      }
       setProject(projectData)
 
       const register = await getOrCreateIssueRegister(projectId)
@@ -318,6 +327,23 @@ export default function IssueRegisterView() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Issue Register...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!loading && !project && !issueRegister) {
+    return (
+      <div className="flex items-center justify-center min-h-[16rem]">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400">No project selected.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/simulator/pm/dashboard')}
+            className="mt-4 px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+          >
+            Choose a project
+          </button>
         </div>
       </div>
     )

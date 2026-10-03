@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  getBenefitsReviewPlan, 
+import {
+  getBenefitsReviewPlan,
   saveBenefitsReviewPlan,
   getOrCreatePlanForProject,
   requestApproval,
@@ -13,54 +13,47 @@ import {
   addBenefitToPlan
 } from '../benefitsReviewPlanService';
 
-// Mock Supabase and platformDb
-const mockPlatformDb = {
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ 
-            data: { 
-              id: 'test-plan-id',
-              project_id: 'test-project-id',
-              plan_title: 'Test Plan',
-              status: 'draft',
-              version_number: '1.0'
-            }, 
-            error: null 
-          }))
-        }))
-      }))
-    })),
-    insert: vi.fn(() => ({
-      select: vi.fn(() => ({
-        single: vi.fn(() => Promise.resolve({ 
-          data: { id: 'test-plan-id' }, 
-          error: null 
-        }))
-      }))
-    })),
-    update: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(() => Promise.resolve({ 
-            data: { id: 'test-plan-id' }, 
-            error: null 
-          }))
-        }))
-      }))
-    }))
-  }))
-};
+// Each query consumes the next result queued by the test, in the order the service issues them.
+// Unqueued queries fall back to a benign success result.
+const { mockPlatformDb, mockSupabase } = vi.hoisted(() => {
+  const queue = [];
+  const fallback = { data: { id: 'test-plan-id' }, error: null };
+  const nextResult = () => {
+    const item = queue.length ? queue.shift() : fallback;
+    if (item && item.__reject) return Promise.reject(item.__reject);
+    return Promise.resolve(item);
+  };
+  const makeBuilder = () => {
+    const builder = {};
+    const chainable = [
+      'select', 'insert', 'update', 'delete', 'upsert',
+      'eq', 'neq', 'in', 'is', 'gt', 'gte', 'lt', 'lte',
+      'order', 'limit', 'range', 'or', 'not', 'filter', 'match'
+    ];
+    chainable.forEach((method) => {
+      builder[method] = vi.fn(() => builder);
+    });
+    builder.single = vi.fn(() => nextResult());
+    builder.maybeSingle = vi.fn(() => nextResult());
+    builder.then = (resolve, reject) => nextResult().then(resolve, reject);
+    return builder;
+  };
 
-const mockSupabase = {
-  auth: {
-    getUser: vi.fn(() => Promise.resolve({
-      data: { user: { id: 'test-auth-user-id' } },
-      error: null
-    }))
-  }
-};
+  return {
+    mockPlatformDb: {
+      queue,
+      from: vi.fn(() => makeBuilder())
+    },
+    mockSupabase: {
+      auth: {
+        getUser: vi.fn(() => Promise.resolve({
+          data: { user: { id: 'test-auth-user-id' } },
+          error: null
+        }))
+      }
+    }
+  };
+});
 
 vi.mock('../supabaseClient', () => ({
   platformDb: mockPlatformDb,
@@ -77,25 +70,28 @@ vi.mock('../benefitsReviewPlanBusinessCaseService', () => ({
   autoLinkBusinessCase: vi.fn(() => Promise.resolve({ success: true }))
 }));
 
+const queueResult = (result) => mockPlatformDb.queue.push(result);
+const queueReject = (error) => mockPlatformDb.queue.push({ __reject: error });
+
 describe('Benefits Review Plan Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPlatformDb.queue.length = 0;
   });
 
   describe('getBenefitsReviewPlan', () => {
     it('should retrieve a plan by ID', async () => {
       const planId = 'test-plan-id';
+      queueResult({ data: { id: planId, plan_title: 'Test Plan' }, error: null });
+
       const result = await getBenefitsReviewPlan(planId);
-      
+
       expect(result).toBeDefined();
       expect(mockPlatformDb.from).toHaveBeenCalledWith('benefits_review_plans');
     });
 
     it('should handle errors when plan not found', async () => {
-      mockPlatformDb.from().select().eq().eq().single.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Plan not found' }
-      });
+      queueResult({ data: null, error: { message: 'Plan not found' } });
 
       await expect(getBenefitsReviewPlan('invalid-id')).rejects.toThrow();
     });
@@ -110,6 +106,7 @@ describe('Benefits Review Plan Service', () => {
       };
 
       const result = await saveBenefitsReviewPlan(planData);
+
       expect(result).toBeDefined();
       expect(mockPlatformDb.from).toHaveBeenCalledWith('benefits_review_plans');
     });
@@ -118,9 +115,9 @@ describe('Benefits Review Plan Service', () => {
       const planData = {
         plan_title: 'Updated Plan'
       };
-      const planId = 'test-plan-id';
 
-      const result = await saveBenefitsReviewPlan(planData, planId);
+      const result = await saveBenefitsReviewPlan(planData, 'test-plan-id');
+
       expect(result).toBeDefined();
       expect(mockPlatformDb.from).toHaveBeenCalledWith('benefits_review_plans');
     });
@@ -128,49 +125,24 @@ describe('Benefits Review Plan Service', () => {
 
   describe('getOrCreatePlanForProject', () => {
     it('should return existing plan if found', async () => {
-      mockPlatformDb.from().select().eq().eq().single.mockResolvedValueOnce({
-        data: { id: 'existing-plan-id' },
-        error: null
-      });
+      queueResult({ data: { id: 'existing-plan-id' }, error: null });
 
       const result = await getOrCreatePlanForProject('test-project-id');
+
       expect(result).toBeDefined();
       expect(result.id).toBe('existing-plan-id');
     });
 
     it('should create new plan if not found', async () => {
-      // First call: no existing plan
-      mockPlatformDb.from().select().eq().eq().single.mockResolvedValueOnce({
-        data: null,
-        error: { code: 'PGRST116' }
-      });
-
-      // Mock project query
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { project_name: 'Test Project' },
-              error: null
-            }))
-          }))
-        }))
-      });
-
-      // Mock insert for new plan
-      mockPlatformDb.from.mockReturnValueOnce({
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { id: 'new-plan-id' },
-              error: null
-            }))
-          }))
-        }))
-      });
+      queueResult({ data: null, error: { code: 'PGRST116' } });
+      queueResult({ data: { id: 'user-record-id' }, error: null });
+      queueResult({ data: { project_name: 'Test Project' }, error: null });
+      queueResult({ data: { id: 'new-plan-id' }, error: null });
 
       const result = await getOrCreatePlanForProject('test-project-id');
+
       expect(result).toBeDefined();
+      expect(result.id).toBe('new-plan-id');
     });
   });
 
@@ -179,64 +151,16 @@ describe('Benefits Review Plan Service', () => {
       const planId = 'test-plan-id';
       const approverIds = ['approver-1', 'approver-2'];
 
-      // Mock user lookup
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: 'test-user-id' },
-                error: null
-              }))
-            }))
-          }))
-        }))
-      });
-
-      // Mock plan version lookup
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { version_number: '1.0' },
-              error: null
-            }))
-          }))
-        }))
-      });
-
-      // Mock approver lookups
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { id: 'approver-1', email: 'approver@test.com', full_name: 'Approver 1' },
-              error: null
-            }))
-          }))
-        }))
-      });
-
-      // Mock approval insert
-      mockPlatformDb.from.mockReturnValueOnce({
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { id: 'approval-1' },
-              error: null
-            }))
-          }))
-        }))
-      });
-
-      // Mock plan status update
-      mockPlatformDb.from.mockReturnValueOnce({
-        update: vi.fn(() => ({
-          eq: vi.fn(() => Promise.resolve({ error: null }))
-        }))
-      });
+      queueResult({ data: { id: 'test-user-id' }, error: null });
+      queueResult({ data: { version_number: '1.0' }, error: null });
+      queueResult({ data: { id: 'approver-1', email: 'approver@test.com', full_name: 'Approver 1' }, error: null });
+      queueResult({ data: { id: 'approver-2', email: 'approver2@test.com', full_name: 'Approver 2' }, error: null });
+      queueResult({ data: { id: 'approval-1' }, error: null });
+      queueResult({ data: { id: 'approval-2' }, error: null });
+      queueResult({ error: null });
 
       const result = await requestApproval(planId, approverIds);
+
       expect(result).toBeDefined();
     });
   });
@@ -247,54 +171,14 @@ describe('Benefits Review Plan Service', () => {
       const status = 'approved';
       const comments = 'Looks good';
 
-      // Mock user lookup
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: 'test-user-id' },
-                error: null
-              }))
-            }))
-          }))
-        }))
-      });
-
-      // Mock approval update
-      mockPlatformDb.from.mockReturnValueOnce({
-        update: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: approvalId, review_plan_id: 'test-plan-id' },
-                error: null
-              }))
-            }))
-          }))
-        }))
-      });
-
-      // Mock all approvals check
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            in: vi.fn(() => Promise.resolve({
-              data: [],
-              error: null
-            }))
-          }))
-        }))
-      });
-
-      // Mock plan status update
-      mockPlatformDb.from.mockReturnValueOnce({
-        update: vi.fn(() => ({
-          eq: vi.fn(() => Promise.resolve({ error: null }))
-        }))
-      });
+      queueResult({ data: { id: 'test-user-id' }, error: null });
+      queueResult({ data: { id: approvalId, review_plan_id: 'test-plan-id' }, error: null });
+      queueResult({ data: { id: approvalId, review_plan_id: 'test-plan-id' }, error: null });
+      queueResult({ data: [], error: null });
+      queueResult({ error: null });
 
       const result = await recordApproval(approvalId, status, comments);
+
       expect(result).toBeDefined();
     });
   });
@@ -302,15 +186,10 @@ describe('Benefits Review Plan Service', () => {
   describe('getPlanBenefits', () => {
     it('should retrieve benefits for a plan', async () => {
       const planId = 'test-plan-id';
-      
-      mockPlatformDb.from().select().eq().eq.mockReturnValue({
-        order: vi.fn(() => Promise.resolve({
-          data: [{ id: 'coverage-1', benefit_id: 'benefit-1' }],
-          error: null
-        }))
-      });
+      queueResult({ data: [{ id: 'coverage-1', benefit_id: 'benefit-1' }], error: null });
 
       const result = await getPlanBenefits(planId);
+
       expect(result).toBeDefined();
       expect(Array.isArray(result)).toBe(true);
     });
@@ -325,33 +204,11 @@ describe('Benefits Review Plan Service', () => {
         priority: 'high'
       };
 
-      // Mock user lookup
-      mockPlatformDb.from.mockReturnValueOnce({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn(() => Promise.resolve({
-                data: { id: 'test-user-id' },
-                error: null
-              }))
-            }))
-          }))
-        }))
-      });
-
-      // Mock insert
-      mockPlatformDb.from.mockReturnValueOnce({
-        insert: vi.fn(() => ({
-          select: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({
-              data: { id: 'coverage-id' },
-              error: null
-            }))
-          }))
-        }))
-      });
+      queueResult({ data: { id: 'test-user-id' }, error: null });
+      queueResult({ data: { id: 'coverage-id' }, error: null });
 
       const result = await addBenefitToPlan(planId, benefitId, coverageData);
+
       expect(result).toBeDefined();
     });
   });

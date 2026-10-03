@@ -8,6 +8,9 @@ import RiskComplexitySection from './RiskComplexitySection'
 import DocumentGovernanceSection from './DocumentGovernanceSection'
 import PortfolioAssignmentSection from './PortfolioAssignmentSection'
 import ProgrammeAssignmentSection from './ProgrammeAssignmentSection'
+import MultiLineListInput from './MultiLineListInput'
+import StakeholderQuickCaptureSection from './StakeholderQuickCaptureSection'
+import MilestoneQuickCaptureSection from './MilestoneQuickCaptureSection'
 import { Briefcase, Network } from 'lucide-react'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -23,6 +26,7 @@ function ProjectWizardPanels({
   handleChange,
   projectTypeOptions,
   statusOptions,
+  industryOptions = [],
   handleProjectTypeChange,
   handleProjectStatusChange,
   handleAuthorityNameChange,
@@ -38,10 +42,16 @@ function ProjectWizardPanels({
   onProgrammeChange,
   portfolioReadOnlySummary,
   programmeReadOnlySummary,
-  methodologies = [],
+  stakeholderRows = [],
+  onAddStakeholder,
+  onRemoveStakeholder,
+  addingStakeholder = false,
+  milestoneRows = [],
+  onAddMilestone,
+  onRemoveMilestone,
+  addingMilestone = false,
 }) {
   const isView = mode === 'view'
-  const showMethodology = (mode === 'edit' || mode === 'view') && Array.isArray(methodologies) && methodologies.length > 0
 
   return (
     <>
@@ -150,41 +160,59 @@ function ProjectWizardPanels({
               </div>
             </div>
 
-            {showMethodology && (
-              <div>
-                <label htmlFor="methodology_id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Methodology <span className="text-red-500">*</span>
-                </label>
-                {isView ? (
-                  <p className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white">
-                    {methodologies.find((m) => m.id === formData.methodology_id)?.methodology_name || '—'}
-                  </p>
-                ) : (
-                  <>
-                    <select
-                      id="methodology_id"
-                      name="methodology_id"
-                      value={formData.methodology_id}
-                      onChange={handleChange}
-                      required
-                      className={`w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
-                        errors.methodology_id ? 'border-red-500' : 'border-gray-300'
-                      } focus:border-blue-500 dark:border-gray-600`}
-                    >
-                      <option value="">Select a methodology</option>
-                      {methodologies.map((m, index) => (
-                        <option key={m.id} value={m.id}>
-                          {m.methodology_name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.methodology_id && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.methodology_id}</p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Industry / Sector
+              </label>
+              <SearchableSelect
+                options={industryOptions}
+                value={formData.industry_category_id}
+                onChange={(v) => handleChange({ target: { name: 'industry_category_id', value: v } })}
+                placeholder={industryOptions.length > 0 ? 'Select an industry' : 'No industries configured for this organisation'}
+                searchPlaceholder="Search industries..."
+                disabled={isView || industryOptions.length === 0}
+              />
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Which of your organisation's industries this project belongs to. Configure available industries in PMO Admin → Organisation Industries.
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Success Criteria
+              </label>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                How success will be measured for this project. Add one per line.
+              </p>
+              <MultiLineListInput
+                id="success_criteria_input"
+                value={formData.success_criteria}
+                onChange={(v) => handleChange({ target: { name: 'success_criteria', value: v } })}
+                placeholder="e.g. Core banking platform live with zero critical defects..."
+                ariaLabelPrefix="success criterion"
+                disabled={isView}
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Classification
+              </label>
+              <select
+                value={formData.project_classification}
+                onChange={(e) => handleChange({ target: { name: 'project_classification', value: e.target.value } })}
+                disabled={isView}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">Select a classification</option>
+                <option value="strategic">Strategic</option>
+                <option value="tactical">Tactical</option>
+                <option value="operational">Operational</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                How central this project is to organisational strategy versus routine delivery.
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
@@ -468,6 +496,118 @@ function ProjectWizardPanels({
             <ProgrammeAssignmentSection programmeId={selectedProgrammeId} selection={selectedProgramme} onChange={onProgrammeChange} />
           )}
         </>
+      )}
+
+      {activeTab === 'constraints' && (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Constraints</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Known limitations on how this project can be delivered — schedule, budget, resourcing, technical, or regulatory. Add one per line.
+            </p>
+          </div>
+          <MultiLineListInput
+            id="project_constraints_input"
+            value={formData.project_constraints}
+            onChange={(v) => handleChange({ target: { name: 'project_constraints', value: v } })}
+            placeholder="e.g. Fixed go-live date of 30 June 2027..."
+            ariaLabelPrefix="constraint"
+            disabled={isView}
+          />
+        </div>
+      )}
+
+      {activeTab === 'assumptions' && (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Assumptions</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Planning assumptions being made about this project — things believed to be true but not yet confirmed. Add one per line.
+            </p>
+          </div>
+          <MultiLineListInput
+            id="project_assumptions_input"
+            value={formData.project_assumptions}
+            onChange={(v) => handleChange({ target: { name: 'project_assumptions', value: v } })}
+            placeholder="e.g. Key vendor resources will remain available for the project duration..."
+            ariaLabelPrefix="assumption"
+            disabled={isView}
+          />
+        </div>
+      )}
+
+      {activeTab === 'deliverables' && (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Deliverables</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              The key outputs this project will produce. Add one per line.
+            </p>
+          </div>
+          <MultiLineListInput
+            id="key_deliverables_input"
+            value={formData.key_deliverables}
+            onChange={(v) => handleChange({ target: { name: 'key_deliverables', value: v } })}
+            placeholder="e.g. Migrated core banking platform..."
+            ariaLabelPrefix="deliverable"
+            disabled={isView}
+          />
+        </div>
+      )}
+
+      {activeTab === 'stakeholders' && (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Stakeholders</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Capture the stakeholders identified for this project now, before roles are assigned — kept as audit information. Assigned roles can inherit these or add their own later.
+            </p>
+          </div>
+          <StakeholderQuickCaptureSection
+            rows={stakeholderRows}
+            onAdd={onAddStakeholder}
+            onRemove={onRemoveStakeholder}
+            disabled={isView}
+            adding={addingStakeholder}
+          />
+        </div>
+      )}
+
+      {activeTab === 'milestones' && (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Main Milestones</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Capture the main milestones identified for this project now, before roles are assigned — kept as audit information. Assigned roles can inherit these or add their own later.
+            </p>
+          </div>
+          <MilestoneQuickCaptureSection
+            rows={milestoneRows}
+            onAdd={onAddMilestone}
+            onRemove={onRemoveMilestone}
+            disabled={isView}
+            adding={addingMilestone}
+          />
+        </div>
+      )}
+
+      {activeTab === 'approvals' && (
+        <div className="space-y-6">
+          <div className="mb-4">
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Approvals</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Required approvals or sign-offs for this project — who or which body needs to approve, and for what. Add one per line.
+            </p>
+          </div>
+          <MultiLineListInput
+            id="required_approvals_input"
+            value={formData.required_approvals}
+            onChange={(v) => handleChange({ target: { name: 'required_approvals', value: v } })}
+            placeholder="e.g. Steering committee sign-off on go-live date..."
+            ariaLabelPrefix="approval"
+            disabled={isView}
+          />
+        </div>
       )}
     </>
   )

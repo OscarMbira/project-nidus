@@ -8,6 +8,7 @@ import { ArrowLeft, Target } from 'lucide-react'
 import { getPracticeStakeholderAnalysis } from '../../services/sim/practiceStakeholderService'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
+import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
 import ExportListMenu from '../../components/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
@@ -71,7 +72,7 @@ export default function PracticeStakeholderAnalysis() {
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-4">
-        <button onClick={() => navigate('/simulator/practice-stakeholders/register' + (selectedProjectId ? `?projectId=${selectedProjectId}` : ''))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         </button>
         <div className="flex-1">
@@ -106,10 +107,15 @@ export default function PracticeStakeholderAnalysis() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {analysis.map(a => (
+              {analysis.map((a, index) => (
                 <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{a.practice_stakeholder?.stakeholder_name || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <span className="inline-flex items-center gap-2">
+                      <StakeholderAvatar db={simDb} stakeholder={a.practice_stakeholder} syncFromProfile={false} sizeClassName="h-7 w-7" />
+                      {a.practice_stakeholder?.stakeholder_name || '—'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-sm">{a.power_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.interest_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm capitalize">{a.matrix_quadrant?.replace('-', ' ') || '—'}</td>

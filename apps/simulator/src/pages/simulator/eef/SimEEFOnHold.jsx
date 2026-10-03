@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { listEEFs } from '../../../services/sim/simEEFService'
 import { getCurrentUserAccountId } from '../../../utils/accountResolution'
@@ -19,9 +19,9 @@ export default function SimEEFOnHold() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      <Link to="/simulator/eef" className="inline-flex items-center gap-2 text-gray-400 mb-6">
+      <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-gray-400 mb-6">
         <ArrowLeft className="h-4 w-4" /> All
-      </Link>
+      </button>
       <h1 className="text-xl font-bold text-white mb-4">EEF on hold</h1>
       <ul className="divide-y divide-gray-700 rounded-lg border border-gray-700 bg-gray-800">
         {rows.map((r) => (

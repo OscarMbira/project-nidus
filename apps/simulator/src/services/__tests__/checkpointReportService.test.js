@@ -21,13 +21,13 @@ import {
 } from '../checkpointReportService'
 
 // Mock Supabase
-const mockSupabase = {
+const mockSupabase = vi.hoisted(() => ({
   auth: {
     getUser: vi.fn(() => Promise.resolve({ data: { user: { id: 'user-123' } } }))
   },
   from: vi.fn(),
   rpc: vi.fn()
-}
+}))
 
 vi.mock('../supabaseClient', () => ({
   supabase: mockSupabase
@@ -48,16 +48,25 @@ describe('Checkpoint Report Service', () => {
       }
 
       mockSupabase.from.mockReturnValueOnce({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({ data: { id: 'user-db-1', full_name: 'Test User', email: 'u@test.com' }, error: null }))
+          }))
+        }))
+      })
+      mockSupabase.from.mockReturnValueOnce({
         insert: vi.fn(() => ({
-          select: vi.fn(() => Promise.resolve({
-            data: [{
-              id: 'report-123',
-              ...reportData,
-              document_ref: 'CPR-PROJ001-WP01-001',
-              version_no: '1.0',
-              status: 'draft'
-            }],
-            error: null
+          select: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
+              data: {
+                id: 'report-123',
+                ...reportData,
+                document_ref: 'CPR-PROJ001-WP01-001',
+                version_no: '1.0',
+                status: 'draft'
+              },
+              error: null
+            }))
           }))
         }))
       })
@@ -88,7 +97,9 @@ describe('Checkpoint Report Service', () => {
       mockSupabase.from.mockReturnValueOnce({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({ data: mockReport, error: null }))
+            eq: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: mockReport, error: null }))
+            }))
           }))
         }))
       })
@@ -103,7 +114,9 @@ describe('Checkpoint Report Service', () => {
       mockSupabase.from.mockReturnValueOnce({
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
-            single: vi.fn(() => Promise.resolve({ data: null, error: { message: 'Not found' } }))
+            eq: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({ data: null, error: { message: 'Not found' } }))
+            }))
           }))
         }))
       })
@@ -123,7 +136,9 @@ describe('Checkpoint Report Service', () => {
         select: vi.fn(() => ({
           eq: vi.fn(() => ({
             eq: vi.fn(() => ({
-              order: vi.fn(() => Promise.resolve({ data: mockReports, error: null }))
+              order: vi.fn(() => ({
+                order: vi.fn(() => Promise.resolve({ data: mockReports, error: null }))
+              }))
             }))
           }))
         }))
@@ -143,7 +158,9 @@ describe('Checkpoint Report Service', () => {
           eq: vi.fn(() => ({
             eq: vi.fn(() => ({
               eq: vi.fn(() => ({
-                order: vi.fn(() => Promise.resolve({ data: mockReports, error: null }))
+                order: vi.fn(() => ({
+                  order: vi.fn(() => Promise.resolve({ data: mockReports, error: null }))
+                }))
               }))
             }))
           }))
@@ -164,11 +181,20 @@ describe('Checkpoint Report Service', () => {
       }
 
       mockSupabase.from.mockReturnValueOnce({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({ data: { id: 'user-db-1' }, error: null }))
+          }))
+        }))
+      })
+      mockSupabase.from.mockReturnValueOnce({
         update: vi.fn(() => ({
           eq: vi.fn(() => ({
-            select: vi.fn(() => Promise.resolve({
-              data: [{ id: 'report-123', ...updates }],
-              error: null
+            select: vi.fn(() => ({
+              single: vi.fn(() => Promise.resolve({
+                data: { id: 'report-123', ...updates },
+                error: null
+              }))
             }))
           }))
         }))
@@ -182,6 +208,13 @@ describe('Checkpoint Report Service', () => {
 
   describe('deleteCheckpointReport', () => {
     it('should soft delete checkpoint report', async () => {
+      mockSupabase.from.mockReturnValueOnce({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({ data: { id: 'user-db-1' }, error: null }))
+          }))
+        }))
+      })
       mockSupabase.from.mockReturnValueOnce({
         update: vi.fn(() => ({
           eq: vi.fn(() => Promise.resolve({ error: null }))
@@ -204,8 +237,10 @@ describe('Checkpoint Report Service', () => {
           eq: vi.fn(() => ({
             eq: vi.fn(() => ({
               order: vi.fn(() => ({
-                limit: vi.fn(() => ({
-                  single: vi.fn(() => Promise.resolve({ data: mockReport, error: null }))
+                order: vi.fn(() => ({
+                  limit: vi.fn(() => ({
+                    single: vi.fn(() => Promise.resolve({ data: mockReport, error: null }))
+                  }))
                 }))
               }))
             }))
@@ -213,7 +248,7 @@ describe('Checkpoint Report Service', () => {
         }))
       })
 
-      const result = await getLatestCheckpointReport('wp-123')
+      const result = await getLatestCheckpointReport('3f2b9c1e-8d4a-4b7e-9c2d-1a5f6e7b8c9d')
       expect(result).toBeDefined()
       expect(result.id).toBe('report-latest')
     })
@@ -271,7 +306,7 @@ describe('Checkpoint Report Service', () => {
         blocking_issues: ['Criterion 2 failed']
       }
 
-      mockSupabase.rpc.mockResolvedValueOnce({ data: mockStatus, error: null })
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [mockStatus], error: null })
 
       const result = await getQualityCheckStatus('report-123')
       expect(result).toBeDefined()
@@ -287,7 +322,7 @@ describe('Checkpoint Report Service', () => {
         blocking_issues: []
       }
 
-      mockSupabase.rpc.mockResolvedValueOnce({ data: mockStatus, error: null })
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [mockStatus], error: null })
 
       const result = await canSubmitForApproval('report-123')
       expect(result).toBe(true)
@@ -299,7 +334,7 @@ describe('Checkpoint Report Service', () => {
         blocking_issues: ['Criterion 2 failed']
       }
 
-      mockSupabase.rpc.mockResolvedValueOnce({ data: mockStatus, error: null })
+      mockSupabase.rpc.mockResolvedValueOnce({ data: [mockStatus], error: null })
 
       const result = await canSubmitForApproval('report-123')
       expect(result).toBe(false)

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getMandateViewData } from '../../services/projectMandateService'
-import { submitForApproval } from '../../services/mandateWorkflowService'
+import { submitForApproval, confirmMandateWithoutFormalApproval } from '../../services/mandateWorkflowService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import ConstraintListItem from '../../components/constraints/ConstraintListItem'
 import MandateSubmitModal from '../../components/mandate/MandateSubmitModal'
@@ -73,6 +73,7 @@ export default function ProjectMandateView() {
   const [stakeholders, setStakeholders] = useState([])
   const [approvalHistory, setApprovalHistory] = useState([])
   const [showSubmitModal, setShowSubmitModal] = useState(false)
+  const [confirmingWithoutApproval, setConfirmingWithoutApproval] = useState(false)
 
   const fetchMandate = useCallback(async () => {
     if (!mandateIdentifier) return
@@ -102,7 +103,7 @@ export default function ProjectMandateView() {
         .filter(s => !s.is_deleted)
         .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
 
-      const editable = ['draft', 'rejected'].includes(data.document_status) && !data.project_id
+      const editable = ['draft', 'rejected'].includes(data.document_status)
       const creatable =
         data.document_status === 'approved' &&
         data.project_id === null &&
@@ -196,6 +197,7 @@ export default function ProjectMandateView() {
   }
 
   const canSubmitForApproval = mandate && (mandate.document_status === 'draft' || mandate.document_status === 'rejected') && !approvalPending
+  const canConfirmWithoutApproval = canSubmitForApproval
 
   const REQUEST_TIMEOUT_MS = 30000
 
@@ -216,6 +218,25 @@ export default function ProjectMandateView() {
       setShowSubmitModal(false)
     } finally {
       setSubmittingForApproval(false)
+    }
+  }
+
+  const handleConfirmWithoutFormalApproval = async () => {
+    if (!mandate?.id || !canConfirmWithoutApproval) return
+    const ok = window.confirm(
+      'Confirm this mandate without formal approval?\n\nUse this when the mandate was given verbally or by statement instruction. Formal PMO approval is optional.',
+    )
+    if (!ok) return
+    setConfirmingWithoutApproval(true)
+    try {
+      await confirmMandateWithoutFormalApproval(mandate.id)
+      toast.success('Mandate confirmed without formal approval')
+      await fetchMandate()
+    } catch (error) {
+      console.error('Error confirming mandate:', error)
+      toast.error(error?.message || 'Failed to confirm mandate')
+    } finally {
+      setConfirmingWithoutApproval(false)
     }
   }
 
@@ -286,14 +307,28 @@ export default function ProjectMandateView() {
               record={mandate}
               baseFilename={`Mandate_${mandate.mandate_reference || mandate.id}`}
             />
+            {canConfirmWithoutApproval && (
+              <button
+                type="button"
+                onClick={handleConfirmWithoutFormalApproval}
+                disabled={confirmingWithoutApproval || submittingForApproval}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
+                title="For verbal or statement instruction — formal approval is optional"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {confirmingWithoutApproval ? 'Confirming…' : 'Confirm without formal approval'}
+              </button>
+            )}
             {canSubmitForApproval && (
               <button
+                type="button"
                 onClick={() => setShowSubmitModal(true)}
-                disabled={submittingForApproval}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 flex items-center"
+                disabled={submittingForApproval || confirmingWithoutApproval}
+                className="px-4 py-2 border border-amber-600 text-amber-700 dark:text-amber-300 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/30 disabled:opacity-50 flex items-center"
+                title="Optional — only when a formal approval chain is needed"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Submit for approval
+                Submit for approval (optional)
               </button>
             )}
             {canCreate && (

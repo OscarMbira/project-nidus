@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getActionsByUser } from '../services/lessonActionService';
 import { platformDb } from '@nidus/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -117,28 +118,10 @@ export default function MyLessonActions() {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500">Total</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white">{actions.length}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500">Pending</p>
-          <p className="text-2xl font-bold text-orange-600">
-            {actions.filter(a => a.status === 'pending').length}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500">In Progress</p>
-          <p className="text-2xl font-bold text-yellow-600">
-            {actions.filter(a => a.status === 'in_progress').length}
-          </p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-sm text-gray-500">Completed</p>
-          <p className="text-2xl font-bold text-green-600">
-            {actions.filter(a => a.status === 'completed').length}
-          </p>
-        </div>
+        <DashboardStatCard label="Total" value={actions.length} />
+        <DashboardStatCard label="Pending" value={actions.filter(a => a.status === 'pending').length} accentClassName="text-orange-600" />
+        <DashboardStatCard label="In Progress" value={actions.filter(a => a.status === 'in_progress').length} accentClassName="text-yellow-600" />
+        <DashboardStatCard label="Completed" value={actions.filter(a => a.status === 'completed').length} accentClassName="text-green-600" />
       </div>
 
       {/* Actions List */}

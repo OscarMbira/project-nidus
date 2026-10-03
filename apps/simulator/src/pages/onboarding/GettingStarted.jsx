@@ -5,39 +5,68 @@
  * now redirects here instead of straight to the dashboard). Route: /platform/getting-started
  */
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Rocket, Loader, MailWarning } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckCircle2, Rocket, Loader, MailWarning, UserPlus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import { getGettingStartedSummary } from '../../services/organisationIndustryService';
+import { getMyProfessionalRoleCode } from '../../services/professionalRoleService';
 import {
   getMyVerificationStatus,
   requestEmailVerificationToken,
   sendAccountVerificationEmail,
 } from '../../services/registrationEmailService';
 
+// PMO/Portfolio/Programme-facing roles aren't funneled into "create a project" —
+// they use the existing Portfolio/Programme create flows whenever they're ready,
+// not necessarily on their very first visit. Project Manager/Team Member/Other/
+// unset roles keep the original "Create My First Project" default.
+const ROLE_PRIMARY_CTA = {
+  portfolio_manager: { label: 'Create Portfolio', path: '/platform/portfolio/create' },
+  programme_manager: { label: 'Create Programme', path: '/platform/programme/create' },
+  pmo_professional: { label: 'Go to Dashboard', path: '/platform/dashboard' },
+};
+
+const QUICK_LINKS = [
+  { label: 'Create Portfolio', path: '/platform/portfolio/create' },
+  { label: 'Create Programme', path: '/platform/programme/create' },
+  { label: 'Create Project', path: '/platform/projects/create' },
+];
+
 export default function GettingStarted() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // v982 Phase 1 (task F): Simulator has no Account & Subscription zone route mounted
+  // today (documented gap — see WorkspaceSetupStep.jsx), so a declined-PMO Account Owner
+  // stays on this landing page and gets the "Invite a PMO Administrator" CTA inline
+  // instead of a redirect.
+  const showInvitePmoCta = Boolean(location.state?.showInvitePmoCta);
   const [loading, setLoading] = useState(true);
   const [packs, setPacks] = useState([]);
   const [verification, setVerification] = useState(null);
   const [resending, setResending] = useState(false);
+  const [roleCode, setRoleCode] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const accountId = await getCurrentUserAccountId();
-      const [result, verificationResult] = await Promise.all([
+      const [result, verificationResult, roleResult] = await Promise.all([
         getGettingStartedSummary(accountId),
         getMyVerificationStatus(),
+        getMyProfessionalRoleCode(),
       ]);
       if (cancelled) return;
       if (result.success) setPacks(result.data);
       setVerification(verificationResult);
+      setRoleCode(roleResult.roleCode);
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, []);
+
+  const primaryCta = ROLE_PRIMARY_CTA[roleCode] || { label: 'Create My First Project', path: '/platform/projects/create' };
+  const isPmoRole = roleCode === 'pmo_professional' || roleCode === 'portfolio_manager' || roleCode === 'programme_manager';
 
   const handleResendVerification = async () => {
     setResending(true);
@@ -61,6 +90,16 @@ export default function GettingStarted() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Project Nidus</h1>
           <p className="text-gray-600 dark:text-gray-400">Your workspace is ready. Here's what's included.</p>
         </div>
+
+        {showInvitePmoCta && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+            <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <p className="flex-1 text-sm text-blue-800 dark:text-blue-200">
+              No one has PMO Admin access yet. Invite someone into that role, or grant it to yourself later
+              from Organisation Settings.
+            </p>
+          </div>
+        )}
 
         {!loading && verification && !verification.isVerified && (
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
@@ -112,19 +151,41 @@ export default function GettingStarted() {
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
             type="button"
-            onClick={() => navigate('/platform/projects/create')}
+            onClick={() => navigate(primaryCta.path)}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition"
           >
-            Create My First Project
+            {primaryCta.label}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/platform/dashboard')}
-            className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium py-3 px-4 rounded-lg transition"
-          >
-            Go to Dashboard
-          </button>
+          {primaryCta.path !== '/platform/dashboard' && (
+            <button
+              type="button"
+              onClick={() => navigate('/platform/dashboard')}
+              className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-medium py-3 px-4 rounded-lg transition"
+            >
+              Go to Dashboard
+            </button>
+          )}
         </div>
+
+        {isPmoRole && (
+          <div className="pt-1 text-center">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              No need to set anything up right now — create these whenever you're ready:
+            </p>
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+              {QUICK_LINKS.map((link) => (
+                <button
+                  key={link.path}
+                  type="button"
+                  onClick={() => navigate(link.path)}
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 underline hover:no-underline"
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

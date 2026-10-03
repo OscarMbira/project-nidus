@@ -5,6 +5,13 @@
 
 import { FileText, Edit2, Download, Share2, CheckCircle, Clock, XCircle, Archive, Printer } from 'lucide-react';
 import { RowActionButton } from '@nidus/ui';
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
+import {
+  parseMeasurementPoints,
+  parseMeasurementTimingLinks,
+} from '@nidus/shared/utils/measurementTimingUtils';
+import { parseScopeItemsWithOwners } from '@nidus/shared/utils/scopeItemsWithOwnersUtils';
 
 export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onApprove, onDistribute, onPrint }) {
   if (!plan) {
@@ -99,12 +106,41 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
       {/* Content Sections */}
       <div className="p-6 space-y-8">
         {/* 3. Scope */}
-        {plan.scope_description && (
+        {(plan.scope_description || plan.benefits_coverage_notes) && (
           <section>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3 border-b-2 border-gray-300 dark:border-gray-600 pb-2">
               3. Scope
             </h2>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{plan.scope_description}</p>
+            {(() => {
+              const scopeRows = parseScopeItemsWithOwners(plan.scope_description);
+              if (!scopeRows.length) return null;
+              return (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <TableRowNumberHeader />
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wide">
+                          Scope item
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wide">
+                          Benefit owner
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                      {scopeRows.map((row, index) => (
+                        <tr key={`${row.item}-${index}`}>
+                          <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                          <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{row.item}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{row.owner_name || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
             {plan.benefits_coverage_notes && (
               <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Benefits Coverage Notes:</p>
@@ -125,18 +161,51 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
         )}
 
         {/* 5. Benefits Measurement */}
-        {plan.measurement_approach && (
+        {(plan.measurement_approach || plan.measurement_timing_rationale) && (
           <section>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3 border-b-2 border-gray-300 dark:border-gray-600 pb-2">
               5. Benefits Measurement
             </h2>
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-4">{plan.measurement_approach}</p>
-            {plan.measurement_timing_rationale && (
-              <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timing Rationale:</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{plan.measurement_timing_rationale}</p>
+            {plan.measurement_approach && (
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Measurement Approach</p>
+                <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-200">
+                  {parseMeasurementPoints(plan.measurement_approach).map((point, index) => (
+                    <li key={`${point}-${index}`}>{point}</li>
+                  ))}
+                </ul>
               </div>
             )}
+            {(() => {
+              const timingRows = parseMeasurementTimingLinks(plan.measurement_timing_rationale);
+              if (!timingRows.length) return null;
+              return (
+                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-gray-700">
+                      <tr>
+                        <TableRowNumberHeader />
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wide">
+                          Measurement Point
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wide">
+                          Measurement Timing
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-100 dark:divide-gray-700">
+                      {timingRows.map((row, index) => (
+                        <tr key={`${row.point}-${index}`}>
+                          <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                          <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{row.point || '—'}</td>
+                          <td className="px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{row.timing || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </section>
         )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, TrendingUp, DollarSign, Target, AlertTriangle } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getBenefits, getBenefitsDashboardStats, getBenefitsVsCosts } from '../services/benefitsService';
 import BenefitsRealizationChart from '../components/benefits/BenefitsRealizationChart';
 
@@ -61,7 +62,7 @@ export default function BenefitsRealization() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/benefits')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -81,53 +82,10 @@ export default function BenefitsRealization() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Realization Rate</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                  {Math.round(stats.realizationPercentage || 0)}%
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Realized Benefits</p>
-                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {stats.realized || 0} / {stats.total || 0}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Estimated Value</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  ${(stats.totalEstimatedValue || 0).toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-purple-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Realized Value</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  ${(stats.totalRealizedValue || 0).toLocaleString()}
-                </p>
-              </div>
-              <Target className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
+          <DashboardStatCard label="Realization Rate" value={`${Math.round(stats.realizationPercentage || 0)}%`} icon={TrendingUp} iconClassName="text-blue-500" />
+          <DashboardStatCard label="Realized Benefits" value={`${stats.realized || 0} / ${stats.total || 0}`} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+          <DashboardStatCard label="Estimated Value" value={`$${(stats.totalEstimatedValue || 0).toLocaleString()}`} icon={DollarSign} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
+          <DashboardStatCard label="Realized Value" value={`$${(stats.totalRealizedValue || 0).toLocaleString()}`} icon={Target} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
         </div>
       )}
 

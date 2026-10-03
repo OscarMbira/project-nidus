@@ -1,6 +1,6 @@
 /**
  * BusinessCaseForm
- * Multi-section create/edit form for the Business Case document (9 sections).
+ * Multi-section create/edit form for the Business Case document.
  * Sections are shown as tabs for clarity.
  */
 
@@ -13,8 +13,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
-import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
   { id: 'reasons', label: 'Reasons' },
@@ -22,6 +22,7 @@ const SECTIONS = [
   { id: 'timescale', label: 'Timescale' },
   { id: 'costs', label: 'Costs & Investment' },
   { id: 'risks', label: 'Major Risks' },
+  { id: 'disbenefits', label: 'Dis-benefits' },
 ]
 
 const RECOMMENDED_OPTIONS = [
@@ -58,6 +59,8 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
     value: data[key] ?? '',
     onChange: (e) => onChange({ [key]: e.target.value }),
   })
+
+  const setListField = (key, value) => onChange({ [key]: value })
 
   const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
   const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
@@ -128,18 +131,30 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
 
       {/* Section: Reasons */}
       {activeSection === 'reasons' && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
             <label className={labelClass}>Reasons for the Project</label>
-            <textarea rows={4} {...field('reasons_for_project')}
-              placeholder="Why is this project needed? What business need, problem, or opportunity is being addressed?"
-              className={inputClass} />
+            <MultiLineListInput
+              viewModeId="bc-reasons-for-project"
+              id="bc_reasons_for_project"
+              value={data.reasons_for_project || ''}
+              onChange={(next) => setListField('reasons_for_project', next)}
+              placeholder="Add a reason…"
+              ariaLabelPrefix="reason"
+              itemColumnLabel="Reason"
+            />
           </div>
           <div>
             <label className={labelClass}>Problem Statement</label>
-            <textarea rows={3} {...field('problem_statement')}
-              placeholder="Describe the specific problem or opportunity in concrete terms."
-              className={inputClass} />
+            <MultiLineListInput
+              viewModeId="bc-problem-statement"
+              id="bc_problem_statement"
+              value={data.problem_statement || ''}
+              onChange={(next) => setListField('problem_statement', next)}
+              placeholder="Add a problem or opportunity point…"
+              ariaLabelPrefix="problem point"
+              itemColumnLabel="Problem point"
+            />
           </div>
         </div>
       )}
@@ -158,9 +173,15 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
           </div>
           <div>
             <label className={labelClass}>Option Justification</label>
-            <textarea rows={4} {...field('option_justification')}
-              placeholder="Why was this option selected over the alternatives? Summarise the key reasons."
-              className={inputClass} />
+            <MultiLineListInput
+              viewModeId="bc-option-justification"
+              id="bc_option_justification"
+              value={data.option_justification || ''}
+              onChange={(next) => setListField('option_justification', next)}
+              placeholder="Add a justification point…"
+              ariaLabelPrefix="justification"
+              itemColumnLabel="Justification"
+            />
           </div>
         </div>
       )}
@@ -186,9 +207,15 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
           </div>
           <div>
             <label className={labelClass}>Key Milestones</label>
-            <textarea rows={4} {...field('key_milestones')}
-              placeholder="List key milestones with target dates (one per line)."
-              className={inputClass} />
+            <MultiLineListInput
+              viewModeId="bc-key-milestones"
+              id="bc_key_milestones"
+              value={data.key_milestones || ''}
+              onChange={(next) => setListField('key_milestones', next)}
+              placeholder="Add a milestone with target date…"
+              ariaLabelPrefix="milestone"
+              itemColumnLabel="Milestone"
+            />
           </div>
         </div>
       )}
@@ -207,9 +234,15 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
         <div className="space-y-4">
           <div>
             <label className={labelClass}>Major Risks Summary</label>
-            <textarea rows={5} {...field('major_risks')}
-              placeholder="Summarise the key risks identified for this project. Include risk description, likelihood, and impact."
-              className={inputClass} />
+            <MultiLineListInput
+              viewModeId="bc-major-risks"
+              id="bc_major_risks"
+              value={data.major_risks || ''}
+              onChange={(next) => setListField('major_risks', next)}
+              placeholder="Add a risk (description, likelihood, impact)…"
+              ariaLabelPrefix="risk"
+              itemColumnLabel="Risk"
+            />
           </div>
           <div>
             <label className={labelClass}>Overall Risk Rating</label>
@@ -217,6 +250,44 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
               {RISK_RATINGS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
           </div>
+        </div>
+      )}
+
+      {/* Section: Dis-benefits (optional — organisation may opt out) */}
+      {activeSection === 'disbenefits' && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <input
+              id="bc_dis_benefits_included"
+              type="checkbox"
+              checked={data.dis_benefits_included !== false}
+              onChange={(e) => onChange({ dis_benefits_included: e.target.checked })}
+              className="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-gray-600"
+            />
+            <label htmlFor="bc_dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Capture dis-benefits for this business case
+            </label>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Uncheck if your organisation does not track negative consequences for this case.
+          </p>
+          {data.dis_benefits_included !== false && (
+            <div>
+              <label className={labelClass}>Dis-benefits / Negative Consequences</label>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                Add one dis-benefit per line.
+              </p>
+              <MultiLineListInput
+                viewModeId="bc-dis-benefits-description"
+                id="bc_dis_benefits_description"
+                value={data.dis_benefits_description || ''}
+                onChange={(next) => setListField('dis_benefits_description', next)}
+                placeholder="e.g. Temporary productivity dip during cutover"
+                ariaLabelPrefix="dis-benefit"
+                itemColumnLabel="Dis-benefit"
+              />
+            </div>
+          )}
         </div>
       )}
 

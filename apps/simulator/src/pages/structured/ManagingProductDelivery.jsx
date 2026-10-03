@@ -5,6 +5,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, CheckSquare, Link as LinkIcon, ExternalLink, BarChart3 } from 'lucide-react'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 import ProductForm from '../../components/structured/ProductForm'
 import QualityCriteria from '../../components/structured/QualityCriteria'
 import { getProductDeliverables, createProductDescriptionFromDeliverable } from '../../services/productDeliverableService'
@@ -111,7 +112,7 @@ export default function ManagingProductDelivery() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}`)}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
       >
         ← Back to Project
@@ -149,51 +150,11 @@ export default function ManagingProductDelivery() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Products</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <Package className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.inProgress}</p>
-            </div>
-            <Clock className="h-8 w-8 text-yellow-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Completed</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.completed}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Accepted</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.accepted}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-600" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Handed Over</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.handedOver}</p>
-            </div>
-            <FileText className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Products" value={stats.total} icon={Package} iconClassName="text-blue-500" />
+        <DashboardStatCard label="In Progress" value={stats.inProgress} icon={Clock} iconClassName="text-yellow-500" />
+        <DashboardStatCard label="Completed" value={stats.completed} icon={CheckCircle} iconClassName="text-green-500" />
+        <DashboardStatCard label="Accepted" value={stats.accepted} icon={CheckCircle} iconClassName="text-green-600" />
+        <DashboardStatCard label="Handed Over" value={stats.handedOver} icon={FileText} iconClassName="text-purple-500" />
       </div>
 
       {/* Tabs */}

@@ -9,7 +9,7 @@ import {
   getDocumentTypes,
   getProjectDocuments,
   createProjectDocument,
-  updateDocumentStatus,
+  updateProjectDocument,
   submitDocumentForApproval,
   approveDocument,
   rejectDocument,
@@ -17,39 +17,31 @@ import {
   getProgrammeCompliance
 } from '../documentGovernanceService';
 
-// Mock Supabase client
-const mockPlatformDb = {
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        single: vi.fn(),
-        maybeSingle: vi.fn(),
-        order: vi.fn()
-      })),
-      order: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          single: vi.fn()
-        }))
-      }))
-    })),
-    insert: vi.fn(() => ({
-      select: vi.fn(() => ({
-        single: vi.fn()
-      }))
-    })),
-    update: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn()
-        }))
-      }))
-    })),
-    rpc: vi.fn()
-  })),
-  auth: {
-    getUser: vi.fn()
-  }
-};
+// One shared chainable query builder. Every query (awaited directly, or ended with
+// .single()/.maybeSingle()) consumes the next result queued by the test.
+const mockPlatformDb = vi.hoisted(() => {
+  const queue = [];
+  const nextResult = () => (queue.length ? queue.shift() : { data: null, error: null });
+  const chain = {};
+  const chainable = [
+    'select', 'insert', 'update', 'upsert', 'delete',
+    'eq', 'neq', 'in', 'is', 'gt', 'gte', 'lt', 'lte',
+    'order', 'limit', 'range', 'or', 'not', 'filter', 'match'
+  ];
+  chainable.forEach((method) => {
+    chain[method] = vi.fn(() => chain);
+  });
+  chain.single = vi.fn(() => Promise.resolve(nextResult()));
+  chain.maybeSingle = vi.fn(() => Promise.resolve(nextResult()));
+  chain.then = (resolve, reject) => Promise.resolve(nextResult()).then(resolve, reject);
+
+  return {
+    queue,
+    from: vi.fn(() => chain),
+    rpc: vi.fn(),
+    auth: { getUser: vi.fn() }
+  };
+});
 
 vi.mock('../supabaseClient', () => ({
   platformDb: mockPlatformDb
@@ -59,9 +51,12 @@ vi.mock('../documentStorageService', () => ({
   uploadProjectDocument: vi.fn()
 }));
 
+const queueResult = (result) => mockPlatformDb.queue.push(result);
+
 describe('Document Governance Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPlatformDb.queue.length = 0;
   });
 
   describe('getDocumentStages', () => {
@@ -70,11 +65,7 @@ describe('Document Governance Service', () => {
         { id: '1', stage_code: 'pre_project', stage_name: 'Pre-Project', stage_order: 1 },
         { id: '2', stage_code: 'initiation', stage_name: 'Initiation', stage_order: 2 }
       ];
-
-      mockPlatformDb.from().select().eq().order.mockResolvedValue({ 
-        data: mockStages, 
-        error: null 
-      });
+      queueResult({ data: mockStages, error: null });
 
       const result = await getDocumentStages();
 
@@ -83,10 +74,7 @@ describe('Document Governance Service', () => {
     });
 
     it('should handle errors', async () => {
-      mockPlatformDb.from().select().eq().order.mockResolvedValue({ 
-        data: null, 
-        error: { message: 'Database error' } 
-      });
+      queueResult({ data: null, error: { message: 'Database error' } });
 
       await expect(getDocumentStages()).rejects.toThrow();
     });
@@ -98,11 +86,7 @@ describe('Document Governance Service', () => {
         { id: '1', name: 'PID', stage_code: 'initiation', is_mandatory: true },
         { id: '2', name: 'Business Case', stage_code: 'pre_project', is_mandatory: true }
       ];
-
-      mockPlatformDb.from().select().eq().eq().order.mockResolvedValue({ 
-        data: mockTypes, 
-        error: null 
-      });
+      queueResult({ data: mockTypes, error: null });
 
       const result = await getDocumentTypes();
 
@@ -113,30 +97,24 @@ describe('Document Governance Service', () => {
       const mockTypes = [
         { id: '1', name: 'PID', stage_code: 'initiation', is_mandatory: true }
       ];
-
-      mockPlatformDb.from().select().eq().eq().eq().order.mockResolvedValue({ 
-        data: mockTypes, 
-        error: null 
-      });
+      queueResult({ data: mockTypes, error: null });
 
       const result = await getDocumentTypes('initiation');
 
       expect(result).toEqual(mockTypes);
+      expect(mockPlatformDb.from().eq).toHaveBeenCalledWith('stage_code', 'initiation');
     });
 
     it('should filter mandatory documents only', async () => {
       const mockTypes = [
         { id: '1', name: 'PID', stage_code: 'initiation', is_mandatory: true }
       ];
-
-      mockPlatformDb.from().select().eq().eq().eq().order.mockResolvedValue({ 
-        data: mockTypes, 
-        error: null 
-      });
+      queueResult({ data: mockTypes, error: null });
 
       const result = await getDocumentTypes(null, true);
 
       expect(result).toEqual(mockTypes);
+      expect(mockPlatformDb.from().eq).toHaveBeenCalledWith('is_mandatory', true);
     });
   });
 
@@ -146,11 +124,7 @@ describe('Document Governance Service', () => {
         { id: 'doc-1', project_id: 'proj-1', status: 'draft' },
         { id: 'doc-2', project_id: 'proj-1', status: 'approved' }
       ];
-
-      mockPlatformDb.from().select().eq().eq().order.mockResolvedValue({ 
-        data: mockDocuments, 
-        error: null 
-      });
+      queueResult({ data: mockDocuments, error: null });
 
       const result = await getProjectDocuments('proj-1');
 
@@ -167,11 +141,7 @@ describe('Document Governance Service', () => {
         document_type_id: 'type-1',
         status: 'not_started'
       };
-
-      mockPlatformDb.from().insert().select().single.mockResolvedValue({ 
-        data: mockDocument, 
-        error: null 
-      });
+      queueResult({ data: mockDocument, error: null });
       mockPlatformDb.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
 
       const documentData = {
@@ -187,21 +157,17 @@ describe('Document Governance Service', () => {
     });
   });
 
-  describe('updateDocumentStatus', () => {
-    it('should update document status', async () => {
+  describe('updateProjectDocument', () => {
+    it('should update project document', async () => {
       const mockUpdated = {
         id: 'doc-1',
         status: 'submitted',
         submission_date: '2026-01-08'
       };
-
-      mockPlatformDb.from().update().eq().select().single.mockResolvedValue({ 
-        data: mockUpdated, 
-        error: null 
-      });
+      queueResult({ data: mockUpdated, error: null });
       mockPlatformDb.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
 
-      const result = await updateDocumentStatus('doc-1', 'submitted');
+      const result = await updateProjectDocument('doc-1', { status: 'submitted' });
 
       expect(result).toEqual(mockUpdated);
     });
@@ -214,11 +180,7 @@ describe('Document Governance Service', () => {
         status: 'submitted',
         submission_date: '2026-01-08'
       };
-
-      mockPlatformDb.from().update().eq().select().single.mockResolvedValue({ 
-        data: mockSubmitted, 
-        error: null 
-      });
+      queueResult({ data: mockSubmitted, error: null });
       mockPlatformDb.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
 
       const result = await submitDocumentForApproval('doc-1', 'approver-1');
@@ -234,11 +196,7 @@ describe('Document Governance Service', () => {
         status: 'approved',
         approval_date: '2026-01-08'
       };
-
-      mockPlatformDb.from().update().eq().select().single.mockResolvedValue({ 
-        data: mockApproved, 
-        error: null 
-      });
+      queueResult({ data: mockApproved, error: null });
       mockPlatformDb.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
 
       const result = await approveDocument('doc-1', 'approver-1', 'Looks good');
@@ -255,11 +213,7 @@ describe('Document Governance Service', () => {
         rejection_date: '2026-01-08',
         rejection_reason: 'Needs revision'
       };
-
-      mockPlatformDb.from().update().eq().select().single.mockResolvedValue({ 
-        data: mockRejected, 
-        error: null 
-      });
+      queueResult({ data: mockRejected, error: null });
       mockPlatformDb.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } } });
 
       const result = await rejectDocument('doc-1', 'approver-1', 'Needs revision');
@@ -275,11 +229,7 @@ describe('Document Governance Service', () => {
         unapproved_mandatory_count: 1,
         is_compliant: false
       };
-
-      mockPlatformDb.rpc.mockResolvedValue({ 
-        data: mockCompliance, 
-        error: null 
-      });
+      mockPlatformDb.rpc.mockResolvedValue({ data: mockCompliance, error: null });
 
       const result = await checkProjectCompliance('proj-1', 'initiation');
 
@@ -299,11 +249,7 @@ describe('Document Governance Service', () => {
         compliant_projects: 3,
         non_compliant_projects: 2
       };
-
-      mockPlatformDb.rpc.mockResolvedValue({ 
-        data: mockCompliance, 
-        error: null 
-      });
+      mockPlatformDb.rpc.mockResolvedValue({ data: mockCompliance, error: null });
 
       const result = await getProgrammeCompliance('prog-1');
 

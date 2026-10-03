@@ -9,10 +9,12 @@ import { getFundingSources } from '../services/fundingSourceService'
 import { getBudgetCategories } from '../services/budgetCategoryService'
 import { getByProjectId, saveForProject } from '../services/projectBudgetCategoryService'
 import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
+import { getStakeholders, saveStakeholder } from '../services/stakeholderService'
+import { listMilestones, createMilestone } from '../services/milestoneService'
+import { getOrgIndustryOptions } from '../services/organisationIndustryService.js'
 import {
   getEmptyWizardFormData,
   mapDbProjectToWizardForm,
-  normalizeEmbeddedList,
   wizardFormToProjectUpdatePayload,
   omitOptionalProjectWizardColumns,
   isSchemaCacheColumnError,
@@ -34,7 +36,6 @@ import RecordLifecycleFieldLock, { RecordLifecycleLockBanner, isRecordLifecycleL
 const REQUEST_MS = {
   appProfile: 30000,
   projectUpdate: 45000,
-  methodology: 30000,
   budgetSave: 95000,
   portfolioOp: 30000,
   /** Hard cap for the whole save pipeline (auth → DB → assignments) */
@@ -74,7 +75,7 @@ export default function ProjectsEdit() {
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
-  const [methodologies, setMethodologies] = useState([])
+  const [orgIndustries, setOrgIndustries] = useState([])
   const [fundingSources, setFundingSources] = useState([])
   const [budgetCategoriesLookup, setBudgetCategoriesLookup] = useState([])
   const [lifecycleTemplates, setLifecycleTemplates] = useState([])
@@ -90,6 +91,10 @@ export default function ProjectsEdit() {
     portfolioId: null,
     programmeId: null,
   })
+  const [stakeholderRows, setStakeholderRows] = useState([])
+  const [milestoneRows, setMilestoneRows] = useState([])
+  const [addingStakeholder, setAddingStakeholder] = useState(false)
+  const [addingMilestone, setAddingMilestone] = useState(false)
 
   const urlProjectSegment = useMemo(() => {
     const code = formData.project_code?.trim()
@@ -151,41 +156,92 @@ export default function ProjectsEdit() {
     prevFinancialTabRef.current = onFinancial
   }, [activeTab, loadFinancialLookups])
 
+  const loadStakeholders = useCallback(() => {
+    if (!projectId) return
+    getStakeholders({ project_id: projectId })
+      .then((rows) => {
+        if (Array.isArray(rows)) setStakeholderRows(rows.map((r) => ({ ...r, removable: false })))
+      })
+      .catch((err) => console.error('Failed to load stakeholders:', err))
+  }, [projectId])
+
+  const loadMilestones = useCallback(() => {
+    if (!projectId) return
+    listMilestones(projectId)
+      .then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setMilestoneRows(res.data.map((r) => ({ ...r, removable: false })))
+        }
+      })
+      .catch((err) => console.error('Failed to load milestones:', err))
+  }, [projectId])
+
+  const prevStakeholdersTabRef = useRef(false)
+  useEffect(() => {
+    const onStakeholders = activeTab === 'stakeholders'
+    if (onStakeholders && !prevStakeholdersTabRef.current) loadStakeholders()
+    prevStakeholdersTabRef.current = onStakeholders
+  }, [activeTab, loadStakeholders])
+
+  const prevMilestonesTabRef = useRef(false)
+  useEffect(() => {
+    const onMilestones = activeTab === 'milestones'
+    if (onMilestones && !prevMilestonesTabRef.current) loadMilestones()
+    prevMilestonesTabRef.current = onMilestones
+  }, [activeTab, loadMilestones])
+
+  const handleAddStakeholder = useCallback(async (data) => {
+    setAddingStakeholder(true)
+    try {
+      const row = await saveStakeholder({ project_id: projectId, ...data })
+      setStakeholderRows((prev) => [...prev, { ...row, removable: false }])
+    } catch (err) {
+      console.error('Failed to save stakeholder:', err)
+      toast.error('Failed to save stakeholder')
+    } finally {
+      setAddingStakeholder(false)
+    }
+  }, [projectId, toast])
+
+  const handleAddMilestone = useCallback(async (data) => {
+    setAddingMilestone(true)
+    try {
+      const res = await createMilestone({ projectId, milestoneName: data.milestone_name, targetDate: data.target_date })
+      if (res.success) {
+        setMilestoneRows((prev) => [...prev, { ...res.data, removable: false }])
+      } else {
+        toast.error(res.error || 'Failed to save milestone')
+      }
+    } catch (err) {
+      console.error('Failed to save milestone:', err)
+      toast.error('Failed to save milestone')
+    } finally {
+      setAddingMilestone(false)
+    }
+  }, [projectId, toast])
+
   const fetchProject = async () => {
     try {
       setLoading(true)
       const { data, error } = await platformDb
         .from('projects')
-        .select(`
-          *,
-          project_methodologies (
-            id,
-            methodology_id,
-            is_deleted
-          )
-        `)
+        .select('*')
         .eq('id', projectId)
         .eq('is_deleted', false)
         .single()
 
       if (error) throw error
 
-      const normalized =
-        data != null
-          ? { ...data, project_methodologies: normalizeEmbeddedList(data.project_methodologies) }
-          : data
+      const normalized = data
       setProject(normalized)
 
       if (normalized) {
-        const pmList = normalized.project_methodologies
-        const activePm = pmList.find((m) => m.is_deleted === false) || pmList[0]
-        const methodologyId = activePm?.methodology_id || ''
         const legacyBudget = normalized.budget_amount ?? normalized.budget
 
         const catRes = await getByProjectId(projectId)
         const rows = catRes?.success && Array.isArray(catRes.data) ? catRes.data : []
 
-        const mapped = mapDbProjectToWizardForm(normalized, methodologyId, rows, legacyBudget)
+        const mapped = mapDbProjectToWizardForm(normalized, '', rows, legacyBudget)
         setFormData(mapped)
 
         const [portRes, progRes] = await Promise.all([
@@ -216,7 +272,7 @@ export default function ProjectsEdit() {
 
   const fetchLookupData = async () => {
     try {
-      const [typesRes, statusesRes, methodsRes] = await Promise.all([
+      const [typesRes, statusesRes] = await Promise.all([
         platformDb
           .from('project_types')
           .select('*')
@@ -229,25 +285,24 @@ export default function ProjectsEdit() {
           .eq('is_active', true)
           .eq('is_deleted', false)
           .order('status_name', { ascending: true }),
-        platformDb
-          .from('methodologies')
-          .select('*')
-          .eq('is_active', true)
-          .eq('is_deleted', false)
-          .order('methodology_name', { ascending: true }),
       ])
 
       if (typesRes.error) throw typesRes.error
       if (statusesRes.error) throw statusesRes.error
-      if (methodsRes.error) throw methodsRes.error
 
       setProjectTypes(typesRes.data || [])
       setProjectStatuses(statusesRes.data || [])
-      setMethodologies(methodsRes.data || [])
     } catch (error) {
       console.error('Error fetching lookup data:', error)
     }
   }
+
+  useEffect(() => {
+    if (!project?.account_id) return
+    getOrgIndustryOptions(project.account_id)
+      .then((res) => { if (res.success) setOrgIndustries(res.data) })
+      .catch((err) => console.error('Failed to load organisation industries:', err))
+  }, [project?.account_id])
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target
@@ -302,9 +357,6 @@ export default function ProjectsEdit() {
     if (!data.project_status_id) {
       newErrors.project_status_id = 'Please select a project status'
     }
-    if (methodologies.length > 0 && !data.methodology_id) {
-      newErrors.methodology_id = 'Please select a methodology'
-    }
 
     if (data.start_date && data.end_date) {
       if (new Date(data.start_date) > new Date(data.end_date)) {
@@ -315,7 +367,7 @@ export default function ProjectsEdit() {
     setErrors(newErrors)
     const messages = Object.values(newErrors).filter(Boolean)
     return { ok: messages.length === 0, messages }
-  }, [methodologies.length])
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -394,54 +446,6 @@ export default function ProjectsEdit() {
       }
 
       if (projectErr) throw projectErr
-
-      if (methodologies.length > 0 && fd.methodology_id) {
-        const { data: pmRows, error: pmSelectErr } = await withTimeout(
-          platformDb
-            .from('project_methodologies')
-            .select('id, methodology_id, is_deleted')
-            .eq('project_id', projectId)
-            .limit(1),
-          REQUEST_MS.methodology,
-          'Loading methodology settings timed out.',
-        )
-
-        if (pmSelectErr) throw pmSelectErr
-
-        const pmRow = pmRows?.[0]
-        const methodologyUnchanged =
-          pmRow && pmRow.methodology_id === fd.methodology_id && pmRow.is_deleted === false
-
-        if (!methodologyUnchanged) {
-          if (pmRow?.id) {
-            const { error: pmUpErr } = await withTimeout(
-              platformDb
-                .from('project_methodologies')
-                .update({
-                  methodology_id: fd.methodology_id,
-                  is_deleted: false,
-                  deleted_at: null,
-                })
-                .eq('id', pmRow.id),
-              REQUEST_MS.methodology,
-              'Updating methodology timed out.',
-            )
-
-            if (pmUpErr) throw pmUpErr
-          } else {
-            const { error: pmInsErr } = await withTimeout(
-              platformDb.from('project_methodologies').insert({
-                project_id: projectId,
-                methodology_id: fd.methodology_id,
-              }),
-              REQUEST_MS.methodology,
-              'Saving methodology timed out.',
-            )
-
-            if (pmInsErr) throw pmInsErr
-          }
-        }
-      }
 
       const cats = fd.budget_categories || []
       const toSave = cats
@@ -567,6 +571,14 @@ export default function ProjectsEdit() {
     }))
   }, [projectStatuses])
 
+  const industryOptions = useMemo(() => {
+    if (!orgIndustries.length) return []
+    return orgIndustries.map((ind) => ({
+      value: ind.id,
+      label: ind.is_primary ? `${ind.name} (Primary)` : ind.name,
+    }))
+  }, [orgIndustries])
+
   const tabCompletionData = useMemo(
     () => ({
       project_name: formData.project_name,
@@ -676,7 +688,7 @@ export default function ProjectsEdit() {
           <p className="mb-4 text-gray-500 dark:text-gray-400">Project not found</p>
           <button
             type="button"
-            onClick={() => navigate('/platform/projects')}
+            onClick={() => navigate(-1)}
             className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700"
           >
             Back to Projects
@@ -719,6 +731,7 @@ export default function ProjectsEdit() {
           handleChange={handleChange}
           projectTypeOptions={projectTypeOptions}
           statusOptions={statusOptions}
+          industryOptions={industryOptions}
           handleProjectTypeChange={handleProjectTypeChange}
           handleProjectStatusChange={handleProjectStatusChange}
           handleAuthorityNameChange={handleAuthorityNameChange}
@@ -738,7 +751,12 @@ export default function ProjectsEdit() {
             setSelectedProgrammeId(id)
             setSelectedProgramme(p)
           }}
-          methodologies={methodologies}
+          stakeholderRows={stakeholderRows}
+          onAddStakeholder={handleAddStakeholder}
+          addingStakeholder={addingStakeholder}
+          milestoneRows={milestoneRows}
+          onAddMilestone={handleAddMilestone}
+          addingMilestone={addingMilestone}
         />
 
         {errors.submit && (

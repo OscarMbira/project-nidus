@@ -10,8 +10,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Rocket, AlertTriangle } from 'lucide-react';
+import { supabase } from '@nidus/supabase';
 import { createOrganisation, provisionOrganisationTenant } from '../../../services/organisationService';
 import { updateUserProfessionalRole } from '../../../services/professionalRoleService';
+import { getUserSystemRoles } from '../../../services/roleService';
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal';
 import WizardStepLayout from './WizardStepLayout';
 
@@ -58,12 +60,32 @@ export default function WorkspaceSetupStep() {
         console.warn('WorkspaceSetupStep: professional role save failed (non-blocking):', roleResult.error);
       }
 
+      // v982 Phase 1 (task F): Platform's equivalent lands a declined-PMO Account Owner
+      // in the Account & Subscription zone. Simulator has no such route mounted today
+      // (confirmed by investigation — `platform/subscription` and `admin/send-role-invites`
+      // are dead imports here, not live routes) — documented gap, not force-fit. Instead,
+      // stay on the existing Getting Started landing and pass a flag so it can render the
+      // same "Invite a PMO Administrator" messaging inline. Checked against the role the
+      // user actually holds post-provisioning, not the toggle state.
+      let showInvitePmoCta = false;
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          const systemRoles = await getUserSystemRoles(authUser.id);
+          const hasPmoAdmin = systemRoles.success
+            && systemRoles.data.some((r) => r.roles?.role_name === 'pmo_admin');
+          showInvitePmoCta = !hasPmoAdmin;
+        }
+      } catch (landingErr) {
+        console.warn('WorkspaceSetupStep: could not resolve PMO Admin status for landing CTA (non-blocking):', landingErr?.message);
+      }
+
       setStatus('idle');
       showSuccess({
         recordId: organisation.account_code || organisation.account_name,
         operation: 'created',
         message: 'Your workspace is ready.',
-        onOk: () => navigate('/platform/getting-started', { replace: true }),
+        onOk: () => navigate('/platform/getting-started', { replace: true, state: { showInvitePmoCta } }),
       });
     } catch (error) {
       console.error('WorkspaceSetupStep: setup failed:', error);

@@ -53,7 +53,7 @@ const USER_STATUS = {
 
 function InvitationPageWrap({ children, contentClassName }) {
   return (
-    <AuthPublicLayout contentClassName={contentClassName} disablePlatformSimulatorButtons>
+    <AuthPublicLayout contentClassName={contentClassName} disablePlatformSimulatorButtons hidePlatformButton>
       {children}
     </AuthPublicLayout>
   )

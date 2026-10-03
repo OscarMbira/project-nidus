@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { simDb } from '../../services/supabase/supabaseClient'
 
 export default function SimulationDebrief() {
   const { runId } = useParams()
+  const navigate = useNavigate()
   const [run, setRun] = useState(null)
 
   useEffect(() => {
@@ -26,9 +27,9 @@ export default function SimulationDebrief() {
         <div>Final health snapshot:</div>
         <pre className="text-xs bg-gray-900 p-3 rounded overflow-x-auto">{JSON.stringify(run.project_health, null, 2)}</pre>
       </div>
-      <Link to="/simulator/runs" className="text-blue-400">
+      <button type="button" onClick={() => navigate(-1)} className="text-blue-400">
         ← Back to history
-      </Link>
+      </button>
     </div>
   )
 }

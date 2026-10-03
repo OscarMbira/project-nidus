@@ -69,7 +69,7 @@ export default function PracticeProgrammeDetail() {
             {error || 'Practice programme not found'}
           </p>
           <button
-            onClick={() => navigate('/simulator/practice-programme')}
+            onClick={() => navigate(-1)}
             className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
           >
             Back to Practice Programmes
@@ -84,7 +84,7 @@ export default function PracticeProgrammeDetail() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/simulator/practice-programme')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />

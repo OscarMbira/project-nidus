@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Edit2, Trash2, ArrowLeft } from 'lucide-react'
 import { getPracticeProjectById, deletePracticeProject } from '../../services/sim/practiceProjectService'
+import { listPracticeProjectIndustries } from '../../services/sim/simProjectIndustryService'
 import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
 import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer'
@@ -56,6 +57,7 @@ export default function PracticeProjectDetail() {
   const [activeTab, setActiveTab] = useState('overview')
   const [ldeAccountId, setLdeAccountId] = useState(null)
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const [projectIndustries, setProjectIndustries] = useState([]) // v1106: read-only display
 
   useEffect(() => {
     if (activeTab !== 'audit' || !project) return
@@ -85,6 +87,9 @@ export default function PracticeProjectDetail() {
       const result = await getPracticeProjectById(id)
       if (result.success) {
         setProject(result.data)
+        listPracticeProjectIndustries(id).then((res) => {
+          if (res.success) setProjectIndustries(res.data)
+        })
       } else {
         navigate('/simulator/practice-projects')
       }
@@ -120,7 +125,7 @@ export default function PracticeProjectDetail() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <button
-          onClick={() => navigate('/simulator/practice-projects')}
+          onClick={() => navigate(-1)}
           className="mb-4 inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -222,6 +227,26 @@ export default function PracticeProjectDetail() {
                 <div>
                   <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Budget</h4>
                   <p className="text-gray-900 dark:text-white">{project.budget_currency} {project.budget_amount || 0}</p>
+                </div>
+                <div className="col-span-2">
+                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Industries</h4>
+                  {projectIndustries.length === 0 ? (
+                    <p className="text-gray-900 dark:text-white">—</p>
+                  ) : (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {projectIndustries.map((pi) => (
+                        <span
+                          key={pi.id}
+                          className="inline-flex items-center gap-1 rounded-full border border-gray-300 dark:border-gray-600 px-2 py-0.5 text-xs text-gray-700 dark:text-gray-300"
+                        >
+                          {pi.industry?.name}
+                          {pi.is_primary && (
+                            <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">Primary</span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               <CustomFieldRenderer

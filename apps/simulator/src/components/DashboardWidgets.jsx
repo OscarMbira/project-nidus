@@ -1,32 +1,24 @@
 // Reusable dashboard widgets
 
-export function StatCard({ title, value, subtitle, icon, color = 'blue' }) {
-  const colorClasses = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    yellow: 'bg-yellow-500',
-    red: 'bg-red-500',
-    purple: 'bg-purple-500',
-    indigo: 'bg-indigo-500',
-  }
+import DashboardStatCard from './ui/DashboardStatCard'
 
+const STAT_CARD_BORDER_CLASSES = {
+  blue: 'border-blue-200 dark:border-blue-800',
+  green: 'border-green-200 dark:border-green-800',
+  yellow: 'border-yellow-200 dark:border-yellow-800',
+  red: 'border-red-200 dark:border-red-800',
+  purple: 'border-purple-200 dark:border-purple-800',
+  indigo: 'border-indigo-200 dark:border-indigo-800',
+}
+
+export function StatCard({ title, value, subtitle, color = 'blue' }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{value}</p>
-          {subtitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{subtitle}</p>
-          )}
-        </div>
-        {icon && (
-          <div className={`${colorClasses[color]} rounded-lg p-3`}>
-            <span className="text-white text-2xl">{icon}</span>
-          </div>
-        )}
-      </div>
-    </div>
+    <DashboardStatCard
+      label={title}
+      value={value}
+      description={subtitle}
+      borderClassName={STAT_CARD_BORDER_CLASSES[color]}
+    />
   )
 }
 

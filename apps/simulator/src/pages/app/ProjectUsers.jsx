@@ -44,11 +44,10 @@ import {
   UserPlus,
   Upload,
   Mail,
-  Edit,
-  Trash2,
   Loader,
   RefreshCw,
 } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import PermissionGate from '../../components/auth/PermissionGate'
 import { isPmoAdmin } from '../../services/organisationRoleService'
@@ -821,39 +820,15 @@ export default function ProjectUsers() {
                             </div>
                             {isPmoAdminUser ? (
                               <div className="flex gap-2 mt-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setEditMember(member)}
-                                  className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
-                                >
-                                  <Edit className="w-4 h-4" /> Edit role
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => onRemoveMember(member)}
-                                  className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
-                                >
-                                  <Trash2 className="w-4 h-4" /> Remove
-                                </button>
+                                <RowActionButton variant="edit" label="Edit role" onClick={() => setEditMember(member)} />
+                                <RowActionButton variant="delete" label="Remove member" onClick={() => onRemoveMember(member)} />
                               </div>
                             ) : (
                               <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
                                 <div className="flex gap-2 mt-2">
-                                  <button
-                                    type="button"
-                                    onClick={() => setEditMember(member)}
-                                    className="text-sm text-blue-600 dark:text-blue-400 inline-flex items-center gap-1"
-                                  >
-                                    <Edit className="w-4 h-4" /> Edit role
-                                  </button>
+                                  <RowActionButton variant="edit" label="Edit role" onClick={() => setEditMember(member)} />
                                   <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
-                                    <button
-                                      type="button"
-                                      onClick={() => onRemoveMember(member)}
-                                      className="text-sm text-red-600 dark:text-red-400 inline-flex items-center gap-1"
-                                    >
-                                      <Trash2 className="w-4 h-4" /> Remove
-                                    </button>
+                                    <RowActionButton variant="delete" label="Remove member" onClick={() => onRemoveMember(member)} />
                                   </PermissionGate>
                                 </div>
                               </PermissionGate>
@@ -924,44 +899,18 @@ export default function ProjectUsers() {
                                 </td>
                                 <td className="px-4 py-3 text-right">
                                   {isPmoAdminUser ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
-                                        onClick={() => setEditMember(member)}
-                                        aria-label="Edit role"
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
-                                        onClick={() => onRemoveMember(member)}
-                                        aria-label="Remove member"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </>
+                                    <div className="inline-flex items-center gap-1">
+                                      <RowActionButton variant="edit" label="Edit role" onClick={() => setEditMember(member)} />
+                                      <RowActionButton variant="delete" label="Remove member" onClick={() => onRemoveMember(member)} />
+                                    </div>
                                   ) : (
                                     <PermissionGate permission="user.change_role" projectId={effectiveProjectId}>
-                                      <button
-                                        type="button"
-                                        className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white inline-flex"
-                                        onClick={() => setEditMember(member)}
-                                        aria-label="Edit role"
-                                      >
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
-                                        <button
-                                          type="button"
-                                          className="p-2 text-red-600 dark:text-red-400 hover:text-red-700 inline-flex"
-                                          onClick={() => onRemoveMember(member)}
-                                          aria-label="Remove member"
-                                        >
-                                          <Trash2 className="h-4 w-4" />
-                                        </button>
-                                      </PermissionGate>
+                                      <div className="inline-flex items-center gap-1">
+                                        <RowActionButton variant="edit" label="Edit role" onClick={() => setEditMember(member)} />
+                                        <PermissionGate permission="user.remove" projectId={effectiveProjectId}>
+                                          <RowActionButton variant="delete" label="Remove member" onClick={() => onRemoveMember(member)} />
+                                        </PermissionGate>
+                                      </div>
                                     </PermissionGate>
                                   )}
                                 </td>

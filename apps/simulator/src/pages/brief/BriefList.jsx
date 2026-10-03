@@ -1,7 +1,7 @@
 /**
- * Brief List Page
- * List all briefs (PMO Admin).
- * In PMO context, "Create Brief" opens a project selector (no projectId in URL).
+ * Brief / Charter list page
+ * PMO: list across projects. PM (/pm/*): current project only.
+ * Labels follow URL: project-brief → Brief, project-charter → Charter (same data).
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -14,8 +14,14 @@ import BriefStatusBadge from '../../components/brief/BriefStatusBadge'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import {
+  resolveBriefCharterMode,
+  briefCharterLabels,
+  briefCharterDocPath,
+} from '@nidus/shared/utils/briefCharterTerminology.js'
 
-const BRIEF_COLUMNS = [
+const LIST_COLUMNS = [
   { key: 'brief_reference', label: 'Reference' },
   { key: 'project_name', label: 'Project' },
   { key: 'document_status', label: 'Status' },
@@ -23,10 +29,14 @@ const BRIEF_COLUMNS = [
   { key: 'created_date', label: 'Created' }
 ]
 
-export default function BriefList({ embedded = false }) {
+export default function BriefList({ embedded = false, documentMode }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const isPMOContext = location.pathname.startsWith('/pmo')
+  const mode = documentMode || resolveBriefCharterMode(location.pathname)
+  const labels = briefCharterLabels(mode)
+  const isPMOContext = location.pathname.startsWith('/pmo') || location.pathname.includes('/pmo/')
+  const isPMContext = location.pathname.startsWith('/pm/') || location.pathname.includes('/pm/')
+  const { projectId: currentProjectId, loading: projectIdLoading } = usePlatformProjectId()
   const [briefs, setBriefs] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -35,18 +45,26 @@ export default function BriefList({ embedded = false }) {
   const [loadingProjects, setLoadingProjects] = useState(false)
 
   useEffect(() => {
+    if (isPMContext && (projectIdLoading || !currentProjectId)) {
+      setBriefs([])
+      setLoading(projectIdLoading)
+      return
+    }
     loadBriefs()
-  }, [filter])
+  }, [filter, isPMContext, currentProjectId, projectIdLoading])
 
   const loadBriefs = async () => {
     try {
       setLoading(true)
       const filters = filter !== 'all' ? { status: filter } : {}
+      if (isPMContext && currentProjectId) {
+        filters.project_id = currentProjectId
+      }
       const data = await getAllBriefs(filters)
       setBriefs(data)
     } catch (error) {
       console.error('Error loading briefs:', error)
-      alert('Error loading briefs: ' + error.message)
+      alert(`Error loading ${labels.plural.toLowerCase()}: ` + error.message)
     } finally {
       setLoading(false)
     }
@@ -60,10 +78,10 @@ export default function BriefList({ embedded = false }) {
       const { data: userRecord } = await platformDb.from('users').select('id').eq('auth_user_id', user.id).single()
       if (!userRecord) return
       let organizationId = null
-      const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).single()
+      const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).maybeSingle()
       if (account) organizationId = account.id
       else {
-        const { data: project } = await platformDb.from('projects').select('account_id').eq('owner_user_id', userRecord.id).eq('is_deleted', false).limit(1).single()
+        const { data: project } = await platformDb.from('projects').select('account_id').eq('owner_user_id', userRecord.id).eq('is_deleted', false).limit(1).maybeSingle()
         if (project?.account_id) organizationId = project.account_id
       }
       if (!organizationId) { setProjectsForBrief([]); return }
@@ -71,32 +89,33 @@ export default function BriefList({ embedded = false }) {
       if (result?.data) setProjectsForBrief(result.data)
       else setProjectsForBrief([])
     } catch (e) {
-      console.error('Error loading projects for brief:', e)
+      console.error('Error loading projects:', e)
       setProjectsForBrief([])
     } finally {
       setLoadingProjects(false)
     }
   }, [])
 
-  const getStatusCounts = () => {
-    const counts = {
-      all: briefs.length,
-      draft: briefs.filter(b => b.document_status === 'draft').length,
-      under_review: briefs.filter(b => b.document_status === 'under_review').length,
-      approved: briefs.filter(b => b.document_status === 'approved').length,
-      rejected: briefs.filter(b => b.document_status === 'rejected').length
-    }
-    return counts
-  }
+  const getStatusCounts = () => ({
+    all: briefs.length,
+    draft: briefs.filter(b => b.document_status === 'draft').length,
+    under_review: briefs.filter(b => b.document_status === 'under_review').length,
+    approved: briefs.filter(b => b.document_status === 'approved').length,
+    rejected: briefs.filter(b => b.document_status === 'rejected').length
+  })
 
   const statusCounts = getStatusCounts()
+  const goCreate = (projectKey) => {
+    if (!projectKey) return
+    navigate(briefCharterDocPath(projectKey, 'create', mode))
+  }
 
   if (loading) {
     return (
       <div className={embedded ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'}>
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading briefs...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{labels.loading}</p>
         </div>
       </div>
     )
@@ -107,18 +126,18 @@ export default function BriefList({ embedded = false }) {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         {!embedded && (
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Project Briefs</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{labels.titlePlural}</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage all project briefs
+            Manage all {labels.plural.toLowerCase()}
           </p>
         </div>
         )}
         <div className={`flex items-center gap-2 ${embedded ? 'ml-auto w-full justify-end' : ''}`}>
           {briefs.length > 0 && (
             <ExportListMenu
-              columns={BRIEF_COLUMNS}
+              columns={LIST_COLUMNS}
               data={briefs.map(b => ({ ...b, project_name: b.project?.project_name || '' }))}
-              baseFilename="Briefs"
+              baseFilename={labels.exportBase}
             />
           )}
           {isPMOContext && (
@@ -126,18 +145,27 @@ export default function BriefList({ embedded = false }) {
               onClick={() => { setShowProjectSelector(true); loadProjectsForSelector() }}
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
             >
-              <Plus className="w-4 h-4 mr-2" /> Create Brief
+              <Plus className="w-4 h-4 mr-2" /> {labels.create}
+            </button>
+          )}
+          {isPMContext && (
+            <button
+              type="button"
+              disabled={!currentProjectId || projectIdLoading}
+              onClick={() => goCreate(currentProjectId)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-4 h-4 mr-2" /> {labels.create}
             </button>
           )}
         </div>
       </div>
 
-      {/* Project selector modal for Create Brief (PMO context) */}
       {showProjectSelector && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowProjectSelector(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Select project to create brief</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{labels.selectToCreate}</h2>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
               {loadingProjects ? (
@@ -150,7 +178,7 @@ export default function BriefList({ embedded = false }) {
                     <li key={p.id}>
                       <button
                         type="button"
-                        onClick={() => { navigate(`/platform/projects/${p.id}/brief/create`); setShowProjectSelector(false) }}
+                        onClick={() => { goCreate(p.project_code || p.id); setShowProjectSelector(false) }}
                         className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
                       >
                         {p.project_name || p.project_code || p.id}
@@ -167,7 +195,6 @@ export default function BriefList({ embedded = false }) {
         </div>
       )}
 
-      {/* Filters */}
       <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center gap-4">
           <Filter className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -189,11 +216,26 @@ export default function BriefList({ embedded = false }) {
         </div>
       </div>
 
-      {/* Briefs List */}
-      {briefs.length === 0 ? (
+      {isPMContext && !projectIdLoading && !currentProjectId ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">No briefs found</p>
+          <p className="text-gray-600 dark:text-gray-400">{labels.selectProject}</p>
+        </div>
+      ) : briefs.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {isPMContext ? labels.emptyProject : labels.emptyAll}
+          </p>
+          {isPMContext && currentProjectId && (
+            <button
+              type="button"
+              onClick={() => goCreate(currentProjectId)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              <Plus className="w-4 h-4 mr-2" /> {labels.create}
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -252,14 +294,14 @@ export default function BriefList({ embedded = false }) {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
                       <button
-                        onClick={() => navigate(`/platform/projects/${brief.project_id}/brief/view`)}
+                        onClick={() => navigate(briefCharterDocPath(brief.project?.project_code || brief.project_id, 'view', mode))}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       {(brief.document_status === 'draft' || brief.document_status === 'rejected') && (
                         <button
-                          onClick={() => navigate(`/platform/projects/${brief.project_id}/brief/edit`)}
+                          onClick={() => navigate(briefCharterDocPath(brief.project?.project_code || brief.project_id, 'edit', mode))}
                           className="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
                         >
                           <Edit className="w-4 h-4" />

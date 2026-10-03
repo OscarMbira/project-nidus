@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertTriangle, CheckCircle, Target, BarChart3, PieChart } from 'lucide-react';
+import DashboardStatCard from '../ui/DashboardStatCard';
 import { getQualityManagementStats } from '../../services/qualityManagementService';
 
 export default function QualityMetricsDashboard({ projectId = null }) {
@@ -59,66 +60,20 @@ export default function QualityMetricsDashboard({ projectId = null }) {
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Average Quality Score</p>
-              <p className={`text-3xl font-bold ${
-                stats.averageQualityScore >= 90 ? 'text-green-600 dark:text-green-400' :
-                stats.averageQualityScore >= 70 ? 'text-yellow-600 dark:text-yellow-400' :
-                'text-red-600 dark:text-red-400'
-              }`}>
-                {Math.round(stats.averageQualityScore || 0)}
-              </p>
-            </div>
-            <Target className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Pass Rate</p>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                {Math.round(passRate)}%
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.passedItems} / {stats.totalRegisterItems} passed
-              </p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Quality Reviews</p>
-              <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                {stats.totalReviews || 0}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.completedReviews || 0} completed
-              </p>
-            </div>
-            <BarChart3 className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Open Defects</p>
-              <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-                {stats.openDefects || 0}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {stats.criticalDefects || 0} critical
-              </p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
+        <DashboardStatCard
+          label="Average Quality Score"
+          value={Math.round(stats.averageQualityScore || 0)}
+          icon={Target}
+          iconClassName="text-blue-500"
+          accentClassName={
+            stats.averageQualityScore >= 90 ? 'text-green-600 dark:text-green-400' :
+            stats.averageQualityScore >= 70 ? 'text-yellow-600 dark:text-yellow-400' :
+            'text-red-600 dark:text-red-400'
+          }
+        />
+        <DashboardStatCard label="Pass Rate" value={`${Math.round(passRate)}%`} description={`${stats.passedItems} / ${stats.totalRegisterItems} passed`} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Quality Reviews" value={stats.totalReviews || 0} description={`${stats.completedReviews || 0} completed`} icon={BarChart3} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" borderClassName="border-blue-200 dark:border-blue-800" />
+        <DashboardStatCard label="Open Defects" value={stats.openDefects || 0} description={`${stats.criticalDefects || 0} critical`} icon={AlertTriangle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
       </div>
 
       {/* Quality Status Breakdown */}

@@ -1,4 +1,5 @@
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState, useCallback } from 'react'
 import { useAppRoutePrefix } from '@nidus/shared/hooks/useAppRoutePrefix'
 import { platformDb, simDb } from '@nidus/supabase'
@@ -9,6 +10,7 @@ import { useCommsApi } from './useCommsApi'
 
 export default function ChannelView() {
   const { channelId } = useParams()
+  const navigate = useNavigate()
   const basePath = `${useAppRoutePrefix()}/comms`
   const { message, isSim } = useCommsApi()
   const [messages, setMessages] = useState([])
@@ -77,9 +79,14 @@ export default function ChannelView() {
   return (
     <div className="max-w-4xl mx-auto flex flex-col min-h-[70vh] rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Channel</h1>
-          <p className="text-xs text-gray-500 font-mono">{channelId}</p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} aria-label="Back" title="Back" className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Channel</h1>
+            <p className="text-xs text-gray-500 font-mono">{channelId}</p>
+          </div>
         </div>
         <Link to={`${basePath}/meetings/new`} className="text-sm text-cyan-600 dark:text-cyan-400 min-h-[44px] inline-flex items-center">
           Schedule call

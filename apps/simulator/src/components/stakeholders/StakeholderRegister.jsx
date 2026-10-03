@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
-import { User, Users, Building, Mail, Phone, MapPin } from 'lucide-react';
-import { deleteStakeholder } from '../../services/stakeholderService';
+import { Users, Building, Mail, Phone, MapPin } from 'lucide-react';
+import { platformDb } from '../../services/supabaseClient';
+import StakeholderAvatar from '../ui/StakeholderAvatar';
+import { deleteStakeholder, excludeStakeholderFromProject } from '../../services/stakeholderService';
 import { getCompletenessPercent } from '@nidus/shared/utils/stakeholderCompleteness';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
@@ -16,6 +18,7 @@ export default function StakeholderRegister({
   onRefresh,
   onDeleteSuccess,
   viewMode = 'grid',
+  projectId = '',
 }) {
   const [deleting, setDeleting] = useState(null);
 
@@ -40,13 +43,23 @@ export default function StakeholderRegister({
   );
 
   const handleDelete = async (stakeholder) => {
-    if (!window.confirm(`Are you sure you want to delete stakeholder "${stakeholder.stakeholder_name}"?`)) {
+    const organisationWide = !stakeholder.project_id;
+    const message = organisationWide
+      ? `Remove "${stakeholder.stakeholder_name}" from this project? They stay on the organisation's other projects.`
+      : `Are you sure you want to delete stakeholder "${stakeholder.stakeholder_name}"?`;
+    if (!window.confirm(message)) return;
+    if (organisationWide && !projectId) {
+      alert('Open a project before removing this stakeholder from it.');
       return;
     }
 
     try {
       setDeleting(stakeholder.id);
-      await deleteStakeholder(stakeholder.id);
+      if (organisationWide) {
+        await excludeStakeholderFromProject(stakeholder.id, projectId);
+      } else {
+        await deleteStakeholder(stakeholder.id);
+      }
       onDeleteSuccess?.(stakeholder);
       onRefresh?.();
     } catch (error) {
@@ -154,6 +167,7 @@ export default function StakeholderRegister({
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-start gap-2 min-w-0 flex-1">
                   <RowNumberBadge number={getDisplayRowNumber(index)} className="shrink-0" />
+                  <StakeholderAvatar db={platformDb} stakeholder={stakeholder} sizeClassName="h-10 w-10" />
                   <div className="min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{stakeholder.stakeholder_name}</h3>
                     <p className="text-xs font-mono text-gray-700 dark:text-gray-200 mt-0.5">
@@ -169,6 +183,11 @@ export default function StakeholderRegister({
                 <span className={`px-2 py-1 text-xs font-medium rounded capitalize ${getStatusColor(stakeholder.stakeholder_status)}`}>
                   {stakeholder.stakeholder_status || 'active'}
                 </span>
+                {!stakeholder.project_id && (
+                  <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-100">
+                    All projects
+                  </span>
+                )}
                 {(stakeholder.power_level != null || stakeholder.interest_level != null) && (
                   <span className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                     Influence {stakeholder.power_level ?? '—'} / Interest {stakeholder.interest_level ?? '—'}
@@ -188,7 +207,7 @@ export default function StakeholderRegister({
               )}
               <RowActionButton
                 variant="delete"
-                label="Delete stakeholder"
+                label={stakeholder.project_id ? 'Delete stakeholder' : 'Remove from this project'}
                 onClick={() => handleDelete(stakeholder)}
                 disabled={deleting === stakeholder.id}
               />
@@ -268,9 +287,7 @@ export default function StakeholderRegister({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                      <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
+                    <StakeholderAvatar db={platformDb} stakeholder={stakeholder} sizeClassName="h-10 w-10" />
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -341,7 +358,7 @@ export default function StakeholderRegister({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-white">
-                    {stakeholder.project_role || stakeholder.stakeholder_role || 'N/A'}
+                    {(stakeholder.project_role || stakeholder.stakeholder_role || 'N/A').split(/\r?\n/).map((line) => line.trim()).filter(Boolean).join(', ')}
                   </div>
                   {stakeholder.organization_level && (
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
@@ -362,6 +379,13 @@ export default function StakeholderRegister({
                   <span className={`px-2 py-1 text-xs font-medium rounded capitalize ${getStatusColor(stakeholder.stakeholder_status)}`}>
                     {stakeholder.stakeholder_status || 'active'}
                   </span>
+                  {!stakeholder.project_id && (
+                    <div className="mt-1">
+                      <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-100">
+                        All projects
+                      </span>
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white dark:bg-gray-800 shadow-[-4px_0_8px_rgba(0,0,0,0.06)] dark:shadow-[-4px_0_8px_rgba(0,0,0,0.2)] z-10 hover:bg-gray-50 dark:hover:bg-gray-700" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-1.5 flex-wrap">
@@ -373,7 +397,7 @@ export default function StakeholderRegister({
                     )}
                     <RowActionButton
                       variant="delete"
-                      label="Delete stakeholder"
+                      label={stakeholder.project_id ? 'Delete stakeholder' : 'Remove from this project'}
                       onClick={() => handleDelete(stakeholder)}
                       disabled={deleting === stakeholder.id}
                     />

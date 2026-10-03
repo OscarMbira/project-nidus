@@ -9,11 +9,12 @@
  */
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { EntityHoldQueue } from '@nidus/ui/EntityHoldQueue';
 
 export function QualityOnHold() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -21,12 +22,13 @@ export function QualityOnHold() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link
-                to="/app/quality"
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
                 className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
-              </Link>
+              </button>
               <div>
                 <h1 className="text-2xl font-bold text-white">Quality Activities On Hold</h1>
                 <p className="text-gray-400 mt-1">

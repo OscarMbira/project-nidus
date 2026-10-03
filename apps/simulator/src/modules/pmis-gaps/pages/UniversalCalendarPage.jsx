@@ -20,7 +20,7 @@ export default function UniversalCalendarPage({ sim = false }) {
         if (!sim) {
           const { data, error: taskErr } = await platformDb
             .from('tasks')
-            .select('id, task_name, due_date, task_status')
+            .select('id, task_name, due_date, status_id, task_statuses(status_name)')
             .eq('is_deleted', false)
             .not('due_date', 'is', null)
             .order('due_date')
@@ -43,7 +43,7 @@ export default function UniversalCalendarPage({ sim = false }) {
       title: t.task_name,
       date: t.due_date?.slice?.(0, 10) || t.due_date,
       type: 'task',
-      status: t.task_status,
+      status: t.task_statuses?.status_name,
     }))
     const fromOverrides = events.map((e) => ({
       id: e.id,

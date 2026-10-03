@@ -4,13 +4,13 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { FileText, CheckCircle, Clock, AlertCircle, Plus, Users, Target, Package, Settings, ArrowLeft } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import { getPIDByProject, getOrCreatePID, updatePID } from '../../services/projectInitiationDocumentService'
+import { getPIDByProject } from '../../services/projectInitiationDocumentService'
 import { getObjectives } from '../../services/pidObjectivesService'
 import { supabase } from '../../services/supabaseClient'
 import ObjectivesSection from '../../components/pid/ObjectivesSection'
@@ -22,7 +22,6 @@ import ReportingArrangementsSection from '../../components/pid/ReportingArrangem
 import PIDExportMenu from '../../components/pid/PIDExportMenu'
 import PIDForm from '../../components/pid/PIDForm'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -39,21 +38,91 @@ const PID_EXPORT_SECTIONS = [
 ]
 
 export default function PIDView() {
-  const { projectId, routeKey } = usePlatformProjectId()
+  const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
   const navigate = useNavigate()
   const [project, setProject] = useState(null)
   const [pid, setPid] = useState(null)
   const [objectives, setObjectives] = useState([])
+  const [interfaces, setInterfaces] = useState([])
+  const [dependencies, setDependencies] = useState([])
+  const [teamMembers, setTeamMembers] = useState([])
+  const [tolerances, setTolerances] = useState([])
+  const [reportingArrangements, setReportingArrangements] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
   const [editing, setEditing] = useState(false)
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
-    if (projectId) {
-      fetchData()
+    if (projectLoading) return
+    if (!projectId) {
+      setLoading(false)
+      return
     }
-  }, [projectId])
+
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      try {
+        const [projectRes, pidData] = await Promise.all([
+          supabase
+            .from('projects')
+            .select('id, project_name, project_code')
+            .eq('id', projectId)
+            .eq('is_deleted', false)
+            .maybeSingle(),
+          getPIDByProject(projectId),
+        ])
+        if (cancelled) return
+        if (projectRes.error) throw projectRes.error
+        setProject(projectRes.data)
+        setPid(pidData)
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error fetching data:', error)
+          alert('Error: ' + (error.message || String(error)))
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [projectId, projectLoading])
+
+  useEffect(() => {
+    if (!pid?.id) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [
+          objectivesResult,
+          interfacesResult,
+          dependenciesResult,
+          teamResult,
+          tolerancesResult,
+          reportingResult,
+        ] = await Promise.all([
+          getObjectives(pid.id),
+          import('../../services/pidInterfacesService').then((m) => m.getInterfaces(pid.id)),
+          import('../../services/pidDependenciesService').then((m) => m.getDependencies(pid.id)),
+          import('../../services/pidTeamStructureService').then((m) => m.getTeamStructure(pid.id)),
+          import('../../services/pidTolerancesService').then((m) => m.getTolerances(pid.id)),
+          import('../../services/pidReportingArrangementsService').then((m) => m.getReportingArrangements(pid.id)),
+        ])
+        if (cancelled) return
+        if (objectivesResult.success) setObjectives(objectivesResult.data || [])
+        if (interfacesResult.success) setInterfaces(interfacesResult.data || [])
+        if (dependenciesResult.success) setDependencies(dependenciesResult.data || [])
+        if (teamResult.success) setTeamMembers(teamResult.data || [])
+        if (tolerancesResult.success) setTolerances(tolerancesResult.data || [])
+        if (reportingResult.success) setReportingArrangements(reportingResult.data || [])
+      } catch (err) {
+        console.error('Error loading PID related rows for export:', err)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [pid?.id])
 
   useEffect(() => {
     if (activeTab !== 'audit' || !pid) return
@@ -68,78 +137,12 @@ export default function PIDView() {
     return () => { cancelled = true }
   }, [activeTab, pid])
 
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-
-      // Fetch project
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('id, project_name, project_code')
-        .eq('id', projectId)
-        .eq('is_deleted', false)
-        .single()
-
-      if (projectError) throw projectError
-      setProject(projectData)
-
-      // Get or create PID
-      const pidData = await getOrCreatePID(projectId)
-      setPid(pidData)
-
-      // Fetch related data if PID exists
-      if (pidData && pidData.id) {
-        const [
-          objectivesResult,
-          interfacesResult,
-          dependenciesResult,
-          teamResult,
-          tolerancesResult,
-          reportingResult
-        ] = await Promise.all([
-          getObjectives(pidData.id),
-          import('../../services/pidInterfacesService').then(m => m.getInterfaces(pidData.id)),
-          import('../../services/pidDependenciesService').then(m => m.getDependencies(pidData.id)),
-          import('../../services/pidTeamStructureService').then(m => m.getTeamStructure(pidData.id)),
-          import('../../services/pidTolerancesService').then(m => m.getTolerances(pidData.id)),
-          import('../../services/pidReportingArrangementsService').then(m => m.getReportingArrangements(pidData.id))
-        ])
-
-        if (objectivesResult.success) setObjectives(objectivesResult.data || [])
-        if (interfacesResult.success) setInterfaces(interfacesResult.data || [])
-        if (dependenciesResult.success) setDependencies(dependenciesResult.data || [])
-        if (teamResult.success) setTeamMembers(teamResult.data || [])
-        if (tolerancesResult.success) setTolerances(tolerancesResult.data || [])
-        if (reportingResult.success) setReportingArrangements(reportingResult.data || [])
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error)
-      alert('Error: ' + error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSave = async (updates) => {
-    try {
-      if (!pid) return
-
-      const updated = await updatePID(pid.id, updates)
-      setPid(updated)
-      setEditing(false)
-      await fetchData()
-    } catch (error) {
-      console.error('Error saving PID:', error)
-      alert('Error saving: ' + error.message)
-    }
-  }
-
-  if (loading) {
+  if (projectLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-16">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-400">Loading Project Initiation Document...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-3" />
+          <p className="text-gray-700 dark:text-gray-200">Loading Project Initiation Document…</p>
         </div>
       </div>
     )
@@ -161,7 +164,7 @@ export default function PIDView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}`)}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -182,13 +185,9 @@ export default function PIDView() {
           <div className="flex flex-wrap items-center gap-3">
             {pid && (
               <ExportRecordButtons
-                onExportPPT={() => exportRecordToPPT(PID_EXPORT_SECTIONS, { ...pid, title: pid.pid_title }, `PID_${pid.pid_reference || pid.id}`)}
-                onExportWord={() => exportRecordToWord(PID_EXPORT_SECTIONS, pid, `PID_${pid.pid_reference || pid.id}`)}
-                onExportExcel={() => exportRecordToExcel(PID_EXPORT_SECTIONS, pid, `PID_${pid.pid_reference || pid.id}`)}
-                onExportCSV={() => exportRecordToCSV(PID_EXPORT_SECTIONS, pid, `PID_${pid.pid_reference || pid.id}`)}
-                onExportXML={() => exportRecordToXML(PID_EXPORT_SECTIONS, pid, `PID_${pid.pid_reference || pid.id}`)}
-                onExportJSON={() => exportRecordToJSON(PID_EXPORT_SECTIONS, pid, `PID_${pid.pid_reference || pid.id}`)}
-                onExportPrint={() => exportRecordToPrint(PID_EXPORT_SECTIONS, pid, `PID_${pid.pid_reference || pid.id}`)}
+                sections={PID_EXPORT_SECTIONS}
+                record={{ ...pid, title: pid.pid_title }}
+                baseFilename={`PID_${pid.pid_reference || pid.id}`}
               />
             )}
             {pid && (
@@ -222,7 +221,6 @@ export default function PIDView() {
           onSave={async (savedPid) => {
             setPid(savedPid)
             setEditing(false)
-            await fetchData()
           }}
           onCancel={() => {
             setEditing(false)
@@ -350,21 +348,27 @@ export default function PIDView() {
             {activeTab === 'objectives' && pid && (
               <ObjectivesSection
                 pidId={pid.id}
-                mode={pid.status === 'draft' ? 'edit' : 'view'}
+                objectives={objectives}
+                onObjectivesChange={setObjectives}
+                readOnly={pid.status !== 'draft'}
               />
             )}
 
             {activeTab === 'interfaces' && pid && (
               <InterfacesSection
                 pidId={pid.id}
-                mode={pid.status === 'draft' ? 'edit' : 'view'}
+                interfaces={interfaces}
+                onInterfacesChange={setInterfaces}
+                readOnly={pid.status !== 'draft'}
               />
             )}
 
             {activeTab === 'dependencies' && pid && (
               <DependenciesSection
                 pidId={pid.id}
-                mode={pid.status === 'draft' ? 'edit' : 'view'}
+                dependencies={dependencies}
+                onDependenciesChange={setDependencies}
+                readOnly={pid.status !== 'draft'}
               />
             )}
 
@@ -463,15 +467,19 @@ export default function PIDView() {
             {activeTab === 'team' && pid && (
               <TeamStructureSection
                 pidId={pid.id}
-                mode={pid.status === 'draft' ? 'edit' : 'view'}
                 projectId={projectId}
+                teamMembers={teamMembers}
+                onTeamChange={setTeamMembers}
+                readOnly={pid.status !== 'draft'}
               />
             )}
 
             {activeTab === 'tolerances' && pid && (
               <TolerancesSection
                 pidId={pid.id}
-                mode={pid.status === 'draft' ? 'edit' : 'view'}
+                tolerances={tolerances}
+                onTolerancesChange={setTolerances}
+                readOnly={pid.status !== 'draft'}
               />
             )}
 

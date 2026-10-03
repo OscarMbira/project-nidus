@@ -8,80 +8,51 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link2, Plus, Search, Network, AlertTriangle, CheckCircle } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
-import { getInterProjectDependencies, getDependencyDashboardStats } from '../../services/dependencyService';
+import { getInterProjectDependencies, getDependencyDashboardStats, deleteInterProjectDependency } from '../../services/dependencyService';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { RowActionButton } from '@nidus/ui'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+
+function dependencyRecordKey(dep) {
+  const code = String(dep?.dependency_code || '').trim()
+  return code || dep?.id || ''
+}
+
+function dependencyPartyLabel(project, externalDependency) {
+  if (project?.project_name) return project.project_name
+  const external = String(externalDependency || '').trim()
+  return external || '—'
+}
 
 export default function Dependencies() {
   const navigate = useNavigate();
+  const { showSuccess, modal } = useSuccessModal();
   const [loading, setLoading] = useState(true);
-  const [organizationId, setOrganizationId] = useState(null);
   const [dependencies, setDependencies] = useState([]);
   const [stats, setStats] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loadError, setLoadError] = useState(null);
 
   useEffect(() => {
-    loadOrganization();
-  }, []);
-
-  useEffect(() => {
-    if (organizationId) {
-      loadDependencies();
-    }
-  }, [organizationId, searchTerm]);
-
-  const loadOrganization = async () => {
-    try {
+    let cancelled = false;
+    (async () => {
       const { data: { user } } = await platformDb.auth.getUser();
       if (!user) {
         navigate('/auth/login');
         return;
       }
-
-      // Get user's account
-      const { data: userRecord } = await platformDb
-        .from('users')
-        .select('id')
-        .eq('auth_user_id', user.id)
-        .single();
-
-      if (userRecord) {
-        // Get account
-        const { data: account } = await platformDb
-          .from('accounts')
-          .select('id')
-          .eq('owner_user_id', userRecord.id)
-          .single();
-
-        if (account) {
-          setOrganizationId(account.id);
-        } else {
-          // Try through projects
-          const { data: project } = await platformDb
-            .from('projects')
-            .select('account_id')
-            .eq('owner_user_id', userRecord.id)
-            .eq('is_deleted', false)
-            .limit(1)
-            .single();
-
-          if (project?.account_id) {
-            setOrganizationId(project.account_id);
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading organization:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!cancelled) loadDependencies();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchTerm, navigate]);
 
   const loadDependencies = async () => {
-    if (!organizationId) return;
-
     try {
       setLoading(true);
+      setLoadError(null);
       const filters = { search: searchTerm };
       const [depsData, statsData] = await Promise.all([
         getInterProjectDependencies(filters),
@@ -92,18 +63,45 @@ export default function Dependencies() {
     } catch (error) {
       console.error('Error loading dependencies:', error);
       setDependencies([]);
+      setStats(null);
+      setLoadError(error?.message || 'Failed to load dependencies');
     } finally {
       setLoading(false);
     }
   };
 
+  const openDependency = (dep, suffix = '') => {
+    const key = dependencyRecordKey(dep)
+    if (!key) return
+    navigate(`/platform/dependencies/${encodeURIComponent(key)}${suffix}`)
+  }
+
+  const handleDelete = async (dep) => {
+    const label = dep.dependency_name || dependencyRecordKey(dep) || 'this dependency'
+    if (!window.confirm(`Delete "${label}"?`)) return
+    try {
+      await deleteInterProjectDependency(dep.id)
+      showSuccess({
+        recordId: dependencyRecordKey(dep),
+        operation: 'deleted',
+        message: `Deleted dependency ${label}.`,
+        okLabel: 'Back to Dependency Register',
+      })
+      loadDependencies()
+    } catch (error) {
+      console.error('Error deleting dependency:', error)
+      window.alert(error?.message || 'Failed to delete dependency')
+    }
+  }
+
   const filteredDependencies = dependencies.filter(dep =>
     dep.dependency_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    dep.external_dependency?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     dep.source_project?.project_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     dep.target_project?.project_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading && !organizationId) {
+  if (loading && dependencies.length === 0 && !loadError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -143,28 +141,28 @@ export default function Dependencies() {
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Network className="h-6 w-6 text-purple-400" />
-                <span className="text-2xl font-bold text-gray-100">{stats.total_dependencies || 0}</span>
+                <span className="text-2xl font-bold text-gray-100">{stats.total || 0}</span>
               </div>
               <p className="text-sm text-gray-400">Total Dependencies</p>
             </div>
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <AlertTriangle className="h-6 w-6 text-red-400" />
-                <span className="text-2xl font-bold text-gray-100">{stats.critical_dependencies || 0}</span>
+                <span className="text-2xl font-bold text-gray-100">{stats.critical || 0}</span>
               </div>
               <p className="text-sm text-gray-400">Critical Dependencies</p>
             </div>
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <CheckCircle className="h-6 w-6 text-green-400" />
-                <span className="text-2xl font-bold text-gray-100">{stats.resolved_dependencies || 0}</span>
+                <span className="text-2xl font-bold text-gray-100">{stats.resolved || 0}</span>
               </div>
               <p className="text-sm text-gray-400">Resolved</p>
             </div>
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <Link2 className="h-6 w-6 text-yellow-400" />
-                <span className="text-2xl font-bold text-gray-100">{stats.active_dependencies || 0}</span>
+                <span className="text-2xl font-bold text-gray-100">{stats.active || 0}</span>
               </div>
               <p className="text-sm text-gray-400">Active</p>
             </div>
@@ -191,6 +189,11 @@ export default function Dependencies() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-400 mx-auto mb-4"></div>
             <p className="text-gray-400">Loading dependencies...</p>
           </div>
+        ) : loadError ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Could not load dependencies</h3>
+            <p className="text-gray-700 dark:text-gray-200">{loadError}</p>
+          </div>
         ) : filteredDependencies.length === 0 ? (
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-12 text-center">
             <Link2 className="h-16 w-16 text-gray-600 mx-auto mb-4" />
@@ -209,39 +212,48 @@ export default function Dependencies() {
           </div>
         ) : (
           <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full table-fixed">
+                <colgroup>
+                  <col className="w-10" />
+                  <col className="w-[22%]" />
+                  <col className="w-[28%]" />
+                  <col className="w-28" />
+                  <col className="w-24" />
+                  <col className="w-24" />
+                  <col className="w-28" />
+                </colgroup>
                 <thead className="bg-gray-700/50">
                   <tr>
-                <TableRowNumberHeader className="!normal-case" />
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Source Project</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Target Project</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Criticality</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Description</th>
+                <TableRowNumberHeader className="!normal-case !px-2" />
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-300 uppercase">Source Project</th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-300 uppercase">Target Project</th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-300 uppercase">Type</th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-300 uppercase">Status</th>
+                    <th className="px-2 py-2 text-left text-xs font-medium text-gray-300 uppercase">Criticality</th>
+                    <th className="px-2 py-2 text-right text-xs font-medium text-gray-300 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
                   {filteredDependencies.map((dep, index) => (
                     <tr
                       key={dep.id}
-                      onClick={() => navigate(`/platform/dependencies/${dep.id}`)}
+                      onClick={() => openDependency(dep)}
                       className="hover:bg-gray-700/30 cursor-pointer"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                        {dep.source_project?.project_name || 'Unknown'}
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} className="!px-2" />
+                      <td className="px-2 py-2 text-sm text-gray-100 break-words">
+                        {dependencyPartyLabel(dep.source_project, dep.external_dependency)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-100">
-                        {dep.target_project?.project_name || 'Unknown'}
+                      <td className="px-2 py-2 text-sm text-gray-100 break-words">
+                        {dependencyPartyLabel(dep.target_project, dep.external_dependency)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 text-xs bg-purple-900/30 text-purple-300 rounded">
+                      <td className="px-2 py-2">
+                        <span className="inline-block px-1.5 py-0.5 text-xs bg-purple-900/30 text-purple-300 rounded break-words">
                           {dep.dependency_type || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded ${
+                      <td className="px-2 py-2">
+                        <span className={`inline-block px-1.5 py-0.5 text-xs rounded break-words ${
                           dep.dependency_status === 'resolved' ? 'bg-green-900/30 text-green-300' :
                           dep.dependency_status === 'at-risk' ? 'bg-red-900/30 text-red-300' :
                           'bg-yellow-900/30 text-yellow-300'
@@ -249,8 +261,8 @@ export default function Dependencies() {
                           {dep.dependency_status || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded ${
+                      <td className="px-2 py-2">
+                        <span className={`inline-block px-1.5 py-0.5 text-xs rounded break-words ${
                           dep.dependency_criticality === 'critical' ? 'bg-red-900/30 text-red-300' :
                           dep.dependency_criticality === 'high' ? 'bg-orange-900/30 text-orange-300' :
                           'bg-gray-700 text-gray-300'
@@ -258,17 +270,21 @@ export default function Dependencies() {
                           {dep.dependency_criticality || 'Normal'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-400">
-                        {dep.dependency_description || '-'}
+                      <td className="px-1 py-2 whitespace-nowrap text-right" onClick={(event) => event.stopPropagation()}>
+                        <div className="inline-flex items-center justify-end gap-0.5">
+                          <RowActionButton variant="view" label="View dependency" onClick={() => openDependency(dep)} />
+                          <RowActionButton variant="edit" label="Edit dependency" onClick={() => openDependency(dep, '/edit')} />
+                          <RowActionButton variant="delete" label="Delete dependency" onClick={() => handleDelete(dep)} />
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
           </div>
         )}
       </div>
+      {modal}
     </div>
   );
 }

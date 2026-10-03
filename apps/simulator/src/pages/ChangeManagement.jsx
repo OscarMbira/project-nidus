@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { simDb } from '@nidus/supabase';
 import {
   LayoutDashboard,
   List,
-  ArrowLeft,
   Settings
 } from 'lucide-react';
 import {
@@ -20,10 +18,10 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode';
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
 import { CHANGE_REQUEST_CATEGORY } from '../features/local-data-extensions/components/InheritedChangeRequestFields';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
-import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam';
 
 export default function ChangeManagement() {
-  const { projectId, routeKey } = usePlatformProjectId();
+  const [searchParams] = useSearchParams();
+  const projectId = searchParams.get('projectId');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [project, setProject] = useState(null);
@@ -37,7 +35,7 @@ export default function ChangeManagement() {
 
   const [editingRequest, setEditingRequest] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-management-requests', 'grid');
+  const [changeRequestViewMode, setChangeRequestViewMode] = useViewMode('change-management-requests', 'list');
 
   useEffect(() => {
     if (projectId) {
@@ -76,10 +74,6 @@ export default function ChangeManagement() {
     }
   };
 
-  const handleBack = () => {
-    navigate(platformProjectPath(routeKey || projectId));
-  };
-
   const handleRequestSuccess = () => {
     loadChangeData();
     setShowRequestForm(false);
@@ -98,8 +92,7 @@ export default function ChangeManagement() {
   };
 
   const handleSelectRequest = (request) => {
-    setSelectedRequest(request);
-    setShowAssessmentForm(true);
+    navigate(`/simulator/practice-change-requests/${request.id}?projectId=${projectId}`);
   };
 
   const tabs = [
@@ -114,6 +107,22 @@ export default function ChangeManagement() {
         return <ChangeManagementDashboard projectId={projectId} />;
 
       case 'requests':
+        if (showRequestForm) {
+          return (
+            <ChangeRequestForm
+              variant="page"
+              backLabel="Change Requests"
+              projectId={projectId}
+              request={editingRequest}
+              accountId={accountId}
+              onClose={() => {
+                setShowRequestForm(false);
+                setEditingRequest(null);
+              }}
+              onSuccess={handleRequestSuccess}
+            />
+          );
+        }
         return (
           <ChangeRequestList
             requests={requests}
@@ -175,12 +184,6 @@ export default function ChangeManagement() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleBack}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Change Management
@@ -223,19 +226,6 @@ export default function ChangeManagement() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderTabContent()}
       </div>
-
-      {showRequestForm && (
-        <ChangeRequestForm
-          projectId={projectId}
-          request={editingRequest}
-          accountId={accountId}
-          onClose={() => {
-            setShowRequestForm(false);
-            setEditingRequest(null);
-          }}
-          onSuccess={handleRequestSuccess}
-        />
-      )}
 
       {showAssessmentForm && selectedRequest && (
         <ChangeAssessmentForm

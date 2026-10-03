@@ -15,38 +15,46 @@ import {
   createRMSFromTemplate
 } from '../rmsTemplateService';
 
-// Mock platformDb
-const mockPlatformDb = {
-  auth: {
-    getUser: vi.fn()
-  },
-  from: vi.fn(() => ({
-    select: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        single: vi.fn(),
-        maybeSingle: vi.fn(),
-        order: vi.fn()
-      }))
-    })),
-    insert: vi.fn(() => ({
-      select: vi.fn(() => ({
-        single: vi.fn()
-      }))
-    })),
-    update: vi.fn(() => ({
-      eq: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn()
-        }))
-      }))
-    }))
-  })),
-  rpc: vi.fn()
-};
+// Every query builder records nothing itself: each query consumes the next result queued by the
+// test, in the order the service issues them (terminal .single(), or awaiting the builder).
+const mockPlatformDb = vi.hoisted(() => {
+  const queue = [];
+  const nextResult = () => {
+    const item = queue.length ? queue.shift() : { data: null, error: null };
+    if (item && item.__reject) return Promise.reject(item.__reject);
+    return Promise.resolve(item);
+  };
+  const makeBuilder = () => {
+    const builder = {};
+    const chainable = [
+      'select', 'insert', 'update', 'delete', 'upsert',
+      'eq', 'neq', 'in', 'is', 'gt', 'gte', 'lt', 'lte',
+      'order', 'limit', 'range', 'or', 'not', 'filter', 'match'
+    ];
+    chainable.forEach((method) => {
+      builder[method] = vi.fn(() => builder);
+    });
+    builder.single = vi.fn(() => nextResult());
+    builder.maybeSingle = vi.fn(() => nextResult());
+    builder.then = (resolve, reject) => nextResult().then(resolve, reject);
+    return builder;
+  };
+  return {
+    queue,
+    from: vi.fn(() => makeBuilder()),
+    rpc: vi.fn(),
+    auth: {
+      getUser: vi.fn()
+    }
+  };
+});
 
 vi.mock('../supabase/supabaseClient', () => ({
   platformDb: mockPlatformDb
 }));
+
+const queueResult = (result) => mockPlatformDb.queue.push(result);
+const queueReject = (error) => mockPlatformDb.queue.push({ __reject: error });
 
 describe('RMS Template Service', () => {
   const mockUser = { id: 'user-123' };
@@ -61,6 +69,7 @@ describe('RMS Template Service', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPlatformDb.queue.length = 0;
     mockPlatformDb.auth.getUser.mockResolvedValue({
       data: { user: mockUser }
     });
@@ -69,17 +78,7 @@ describe('RMS Template Service', () => {
   describe('getTemplates', () => {
     it('should fetch templates for account', async () => {
       const mockTemplates = [mockTemplate];
-      const orderChain = {
-        order: vi.fn().mockResolvedValue({ data: mockTemplates, error: null })
-      };
-
-      mockPlatformDb.from().select.mockReturnValue({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            order: vi.fn(() => orderChain)
-          }))
-        }))
-      });
+      queueResult({ data: mockTemplates, error: null });
 
       const result = await getTemplates('account-123');
 
@@ -90,17 +89,7 @@ describe('RMS Template Service', () => {
 
   describe('getDefaultTemplate', () => {
     it('should fetch default template', async () => {
-      mockPlatformDb.from().select.mockReturnValue({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn().mockResolvedValue({ data: mockTemplate, error: null })
-              }))
-            }))
-          }))
-        }))
-      });
+      queueResult({ data: mockTemplate, error: null });
 
       const result = await getDefaultTemplate('account-123');
 
@@ -109,17 +98,7 @@ describe('RMS Template Service', () => {
     });
 
     it('should return null if no default template', async () => {
-      mockPlatformDb.from().select.mockReturnValue({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              eq: vi.fn(() => ({
-                single: vi.fn().mockRejectedValue({ code: 'PGRST116' })
-              }))
-            }))
-          }))
-        }))
-      });
+      queueResult({ data: null, error: { code: 'PGRST116' } });
 
       const result = await getDefaultTemplate('account-123');
 
@@ -130,21 +109,8 @@ describe('RMS Template Service', () => {
 
   describe('createTemplate', () => {
     it('should create template successfully', async () => {
-      const insertChain = {
-        select: vi.fn(() => ({
-          single: vi.fn().mockResolvedValue({ data: mockTemplate, error: null })
-        }))
-      };
-
-      mockPlatformDb.from().select.mockReturnValue({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: mockUserData, error: null })
-          }))
-        }))
-      });
-
-      mockPlatformDb.from().insert.mockReturnValue(insertChain);
+      queueResult({ data: mockUserData, error: null });
+      queueResult({ data: mockTemplate, error: null });
 
       const result = await createTemplate('account-123', {
         template_name: 'Test Template'
@@ -157,28 +123,8 @@ describe('RMS Template Service', () => {
 
   describe('updateTemplate', () => {
     it('should update template successfully', async () => {
-      const updateChain = {
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({ 
-                data: { ...mockTemplate, template_name: 'Updated Name' }, 
-                error: null 
-              })
-            }))
-          }))
-        }))
-      };
-
-      mockPlatformDb.from().select.mockReturnValue({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: mockUserData, error: null })
-          }))
-        }))
-      });
-
-      mockPlatformDb.from().update.mockReturnValue(updateChain);
+      queueResult({ data: mockUserData, error: null });
+      queueResult({ data: { ...mockTemplate, template_name: 'Updated Name' }, error: null });
 
       const result = await updateTemplate('template-123', {
         template_name: 'Updated Name'
@@ -191,15 +137,8 @@ describe('RMS Template Service', () => {
 
   describe('deleteTemplate', () => {
     it('should delete template successfully', async () => {
-      mockPlatformDb.from().select.mockReturnValue({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: mockUserData, error: null })
-          }))
-        }))
-      });
-
-      mockPlatformDb.from().update.mockResolvedValue({ error: null });
+      queueResult({ data: mockUserData, error: null });
+      queueResult({ error: null });
 
       const result = await deleteTemplate('template-123');
 
@@ -209,34 +148,9 @@ describe('RMS Template Service', () => {
 
   describe('setAsDefault', () => {
     it('should set template as default', async () => {
-      mockPlatformDb.from().select.mockReturnValueOnce({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ 
-              data: { account_id: 'account-123' }, 
-              error: null 
-            })
-          }))
-        }))
-      }).mockReturnValueOnce({
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            single: vi.fn().mockResolvedValue({ data: mockUserData, error: null })
-          }))
-        }))
-      });
-
-      const updateChain = {
-        eq: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({ data: mockTemplate, error: null })
-            }))
-          }))
-        }))
-      };
-
-      mockPlatformDb.from().update.mockReturnValue(updateChain);
+      queueResult({ data: { account_id: 'account-123' }, error: null });
+      queueResult({ data: mockUserData, error: null });
+      queueResult({ data: mockTemplate, error: null });
 
       const result = await setAsDefault('template-123');
 

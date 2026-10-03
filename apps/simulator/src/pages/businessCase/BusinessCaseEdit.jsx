@@ -12,8 +12,7 @@ import {
   canEditBusinessCase,
   updateBusinessCase,
 } from '../../services/businessCaseService'
-import { platformDb, simDb } from '@nidus/supabase'
-import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import { platformDb } from '@nidus/supabase'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import BusinessCaseForm from '../../components/businessCase/BusinessCaseForm'
 import BusinessCaseStatusBadge from '../../components/businessCase/BusinessCaseStatusBadge'
@@ -26,6 +25,12 @@ import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.j
 import InheritedBusinessCaseFields, {
   BUSINESS_CASE_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedBusinessCaseFields'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import {
+  BUSINESS_CASE_EXPORT_SECTIONS,
+  buildBusinessCaseExportRecord,
+  businessCaseExportFilename,
+} from '@nidus/shared/utils/businessCaseExportSections'
 
 export default function BusinessCaseEdit() {
   const { id } = useParams()
@@ -71,6 +76,10 @@ export default function BusinessCaseEdit() {
         end_date: bc.end_date || '',
         timescale_description: bc.timescale_description || '',
         key_milestones: bc.key_milestones || '',
+        budget_currency: bc.budget_currency || 'USD',
+        budget_type: bc.budget_type || '',
+        budget_approval_status: bc.budget_approval_status || '',
+        budget_categories: Array.isArray(bc.budget_categories) ? bc.budget_categories : [],
         estimated_development_cost: bc.estimated_development_cost ?? '',
         estimated_ongoing_cost: bc.estimated_ongoing_cost ?? '',
         funding_source: bc.funding_source || '',
@@ -82,6 +91,11 @@ export default function BusinessCaseEdit() {
         investment_appraisal_notes: bc.investment_appraisal_notes || '',
         major_risks: bc.major_risks || '',
         overall_risk_rating: bc.overall_risk_rating || '',
+        dis_benefits_included: bc.dis_benefits_included !== false,
+        dis_benefits_description: bc.dis_benefits_description || '',
+        case_reference: bc.case_reference || '',
+        document_status: bc.document_status || '',
+        id: bc.id,
       })
     } catch (err) {
       console.error('Error loading business case:', err)
@@ -95,14 +109,12 @@ export default function BusinessCaseEdit() {
 
   useEffect(() => {
     const projectId = businessCase?.project_id
-    let cancelled = false
-    getCurrentUserAccountId().then((id) => {
-      if (!cancelled && id) setAccountId(id)
-    })
     if (!projectId) {
+      setAccountId(null)
       setProjectName('')
-      return () => { cancelled = true }
+      return
     }
+    let cancelled = false
     platformDb
       .from('projects')
       .select('account_id, project_name')
@@ -110,7 +122,7 @@ export default function BusinessCaseEdit() {
       .maybeSingle()
       .then(({ data }) => {
         if (!cancelled) {
-          if (data?.account_id) setAccountId(data.account_id)
+          setAccountId(data?.account_id || null)
           setProjectName(data?.project_name || '')
         }
       })
@@ -139,6 +151,15 @@ export default function BusinessCaseEdit() {
     try {
       const payload = {
         ...form,
+        budget_categories: Array.isArray(form.budget_categories)
+          ? form.budget_categories.map((row) => ({
+              category_name: row.category_name || '',
+              amount: row.amount !== '' && row.amount != null ? Number(row.amount) : null,
+              funding_source_id: row.funding_source_id || null,
+            }))
+          : [],
+        budget_type: form.budget_type || null,
+        budget_approval_status: form.budget_approval_status || null,
         estimated_development_cost: form.estimated_development_cost !== '' ? parseFloat(form.estimated_development_cost) : null,
         estimated_ongoing_cost: form.estimated_ongoing_cost !== '' ? parseFloat(form.estimated_ongoing_cost) : null,
         npv: form.npv !== '' ? parseFloat(form.npv) : null,
@@ -146,6 +167,10 @@ export default function BusinessCaseEdit() {
         payback_period_months: form.payback_period_months !== '' ? parseInt(form.payback_period_months, 10) : null,
         discount_rate: form.discount_rate !== '' ? parseFloat(form.discount_rate) : null,
       }
+      // Do not send display-only identity fields in the update body
+      delete payload.id
+      delete payload.case_reference
+      delete payload.document_status
 
       await updateBusinessCase(id, payload)
       toast.success('Business case saved')
@@ -181,14 +206,23 @@ export default function BusinessCaseEdit() {
         >
           <ArrowLeft className="w-4 h-4" /> Back to View
         </button>
-        <div className="flex items-start gap-3">
-          <FileText className="w-7 h-7 text-blue-600 mt-0.5" />
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Business Case</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-sm font-mono text-gray-500 dark:text-gray-400">{businessCase.case_reference}</span>
-              <BusinessCaseStatusBadge status={businessCase.document_status} />
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <FileText className="w-7 h-7 text-blue-600 mt-0.5" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Business Case</h1>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-sm font-mono text-gray-500 dark:text-gray-400">{businessCase.case_reference}</span>
+                <BusinessCaseStatusBadge status={businessCase.document_status} />
+              </div>
             </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:pt-1">
+            <ExportRecordButtons
+              sections={BUSINESS_CASE_EXPORT_SECTIONS}
+              record={buildBusinessCaseExportRecord({ ...businessCase, ...form })}
+              baseFilename={businessCaseExportFilename(businessCase)}
+            />
           </div>
         </div>
       </div>
@@ -225,10 +259,9 @@ export default function BusinessCaseEdit() {
             <BusinessCaseForm data={form} onChange={handleChange} errors={errors} />
             {accountId && projectId && id && (
               <InheritedBusinessCaseFields
-                db={simDb}
+                db={platformDb}
                 accountId={accountId}
                 projectId={projectId}
-                practiceProjectId={projectId}
                 businessCaseId={id}
                 mode="edit"
               />
@@ -273,7 +306,7 @@ export default function BusinessCaseEdit() {
             </p>
             {accountId && projectId ? (
               <TierFieldCustomisationPanel
-                db={simDb}
+                db={platformDb}
                 accountId={accountId}
                 tier="project"
                 entityType="project"
@@ -291,7 +324,7 @@ export default function BusinessCaseEdit() {
 
         {/* Save / Cancel — inside the card, only on the main form tab */}
         {activeTab === 'main' && (
-          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap justify-end items-center gap-3">
             <button
               type="button"
               onClick={() => navigate(`${basePath}/${id}/view`)}

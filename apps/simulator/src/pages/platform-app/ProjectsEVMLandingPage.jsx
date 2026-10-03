@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { listEvmSnapshots } from '../../services/evmService'
@@ -8,6 +8,7 @@ import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 /** PMO org-wide project EVM listing (latest snapshot per project). */
 export default function ProjectsEVMLandingPage() {
+  const navigate = useNavigate()
   const [rollup, setRollup] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -38,9 +39,9 @@ export default function ProjectsEVMLandingPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-4">
         <div className="flex items-center gap-3">
-          <Link to="/platform/projects" className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 rounded-lg border border-gray-200 dark:border-gray-700">
             <ArrowLeft className="h-5 w-5" />
-          </Link>
+          </button>
           <h1 className="text-xl font-bold">Project EVM</h1>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400">

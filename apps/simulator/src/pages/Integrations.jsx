@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Plus, Plug, CheckCircle, XCircle, RefreshCw, Settings, Trash2, Play, Pause } from 'lucide-react'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function Integrations() {
@@ -146,7 +147,7 @@ export default function Integrations() {
             </p>
           </div>
           <button
-            onClick={() => navigate('/integrations/create')}
+            onClick={() => navigate('/simulator/integrations/create')}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
@@ -157,42 +158,10 @@ export default function Integrations() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Integrations</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <Plug className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Connected</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.connected}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Syncing</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.syncing}</p>
-            </div>
-            <RefreshCw className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Integrations" value={stats.total} icon={Plug} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Active" value={stats.active} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Connected" value={stats.connected} icon={CheckCircle} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" borderClassName="border-blue-200 dark:border-blue-800" />
+        <DashboardStatCard label="Syncing" value={stats.syncing} icon={RefreshCw} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
       </div>
 
       {/* Integration Types */}
@@ -202,7 +171,7 @@ export default function Integrations() {
           return (
             <button
               key={type}
-              onClick={() => navigate(`/integrations/create?type=${type}`)}
+              onClick={() => navigate(`/simulator/integrations/create?type=${type}`)}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow text-left"
             >
               <div className="flex items-center gap-3 mb-2">
@@ -250,7 +219,7 @@ export default function Integrations() {
             <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">No Integrations</p>
             <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">Add your first integration</p>
             <button
-              onClick={() => navigate('/integrations/create')}
+              onClick={() => navigate('/simulator/integrations/create')}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 mx-auto"
             >
               <Plus className="h-4 w-4" />
@@ -339,14 +308,14 @@ export default function Integrations() {
                       </button>
                     )}
                     <button
-                      onClick={() => navigate(`/integrations/${integration.id}/sync`)}
+                      onClick={() => navigate(`/simulator/integrations/${integration.id}/sync`)}
                       className="px-3 py-2 bg-purple-200 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm rounded-lg hover:bg-purple-300 dark:hover:bg-purple-900/50"
                       title="View Sync"
                     >
                       <RefreshCw className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => navigate(`/integrations/${integration.id}/edit`)}
+                      onClick={() => navigate(`/simulator/integrations/${integration.id}/edit`)}
                       className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
                       title="Edit"
                     >

@@ -7,24 +7,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch, DollarSign } from 'lucide-react'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 import { getPracticeProgrammesForDashboard } from '../../services/sim/practicePortfolioService'
-
-function MetricCard({ title, value, subtitle, icon: Icon, iconBg, iconColor }) {
-  return (
-    <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 hover:border-blue-500/50 transition-colors">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`p-2 rounded-lg ${iconBg}`}>
-          <Icon className={`h-5 w-5 ${iconColor}`} />
-        </div>
-      </div>
-      <p className="text-sm font-medium text-gray-400 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-gray-100">{value}</p>
-      {subtitle != null && subtitle !== '' && (
-        <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
-      )}
-    </div>
-  )
-}
 
 export default function PracticeProgrammeDashboardOverview() {
   const navigate = useNavigate()
@@ -113,54 +97,12 @@ export default function PracticeProgrammeDashboardOverview() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
-          <MetricCard
-            title="Total Programmes"
-            value={metrics.totalProgrammes}
-            subtitle={`${metrics.activeProjects} active projects across programmes`}
-            icon={Layers}
-            iconBg="bg-blue-900/40"
-            iconColor="text-blue-500"
-          />
-          <MetricCard
-            title="Total Projects"
-            value={metrics.totalProjects}
-            subtitle={`${metrics.activeProjects} active`}
-            icon={Target}
-            iconBg="bg-blue-900/40"
-            iconColor="text-blue-400"
-          />
-          <MetricCard
-            title="Avg. Progress"
-            value={`${Math.round(metrics.avgProgressPct)}%`}
-            subtitle="Across all programmes"
-            icon={TrendingUp}
-            iconBg="bg-green-900/40"
-            iconColor="text-green-400"
-          />
-          <MetricCard
-            title="Benefits Realized"
-            value="0%"
-            subtitle="No benefits in simulator"
-            icon={CheckCircle}
-            iconBg="bg-emerald-900/40"
-            iconColor="text-emerald-400"
-          />
-          <MetricCard
-            title="Avg. Health Score"
-            value={`${Math.round(metrics.avgHealthPct)}%`}
-            subtitle="Programme health"
-            icon={Activity}
-            iconBg="bg-amber-900/40"
-            iconColor="text-amber-400"
-          />
-          <MetricCard
-            title="Budget (Allocated)"
-            value={metrics.totalBudget > 0 ? `${Number(metrics.totalSpent).toLocaleString()} / ${Number(metrics.totalBudget).toLocaleString()}` : '0'}
-            subtitle={metrics.totalBudget > 0 ? 'Allocated vs total budget' : 'No budget data'}
-            icon={DollarSign}
-            iconBg="bg-gray-700"
-            iconColor="text-gray-300"
-          />
+          <DashboardStatCard label="Total Programmes" value={metrics.totalProgrammes} description={`${metrics.activeProjects} active projects across programmes`} icon={Layers} iconClassName="text-blue-500" />
+          <DashboardStatCard label="Total Projects" value={metrics.totalProjects} description={`${metrics.activeProjects} active`} icon={Target} iconClassName="text-blue-400" />
+          <DashboardStatCard label="Avg. Progress" value={`${Math.round(metrics.avgProgressPct)}%`} description="Across all programmes" icon={TrendingUp} iconClassName="text-green-400" />
+          <DashboardStatCard label="Benefits Realized" value="0%" description="No benefits in simulator" icon={CheckCircle} iconClassName="text-emerald-400" />
+          <DashboardStatCard label="Avg. Health Score" value={`${Math.round(metrics.avgHealthPct)}%`} description="Programme health" icon={Activity} iconClassName="text-amber-400" />
+          <DashboardStatCard label="Budget (Allocated)" value={metrics.totalBudget > 0 ? `${Number(metrics.totalSpent).toLocaleString()} / ${Number(metrics.totalBudget).toLocaleString()}` : '0'} description={metrics.totalBudget > 0 ? 'Allocated vs total budget' : 'No budget data'} icon={DollarSign} iconClassName="text-gray-300" />
         </div>
 
         {rollups.length === 0 ? (

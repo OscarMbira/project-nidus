@@ -14,7 +14,7 @@ import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { DashboardRegisterTabBar } from '@nidus/ui'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import { platformDb } from '@nidus/supabase'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
 
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_reference', label: 'Record ID' },
@@ -24,14 +24,18 @@ const EXPORT_COLUMNS = [
   { key: 'email', label: 'Email' },
   { key: 'stakeholder_status', label: 'Status' },
 ]
-const PROJECTS_LIMIT = 200
 const SEARCH_DEBOUNCE_MS = 350
 
 export default function StakeholderRegisterPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projects: assignedProjects, currentProjectId, currentProject, setCurrentProject, loading: projectCtxLoading } = useCurrentProject()
   const [stakeholders, setStakeholders] = useState([])
-  const [projects, setProjects] = useState([])
+  const projects = assignedProjects.map((p) => ({
+    id: p.projectId,
+    project_name: p.projectName,
+    project_code: p.projectCode,
+  }))
   const [projectId, setProjectId] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -49,38 +53,6 @@ export default function StakeholderRegisterPage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
-  const loadProjects = useCallback(async () => {
-    try {
-      const { data } = await platformDb
-        .from('projects')
-        .select('id, project_name, project_code')
-        .eq('is_deleted', false)
-        .order('project_name', { ascending: true })
-        .limit(PROJECTS_LIMIT)
-      setProjects(data || [])
-    } catch (e) {
-      console.error(e)
-    }
-  }, [])
-
-  const loadFirst50Stakeholders = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
-    try {
-      const data = await getStakeholders({
-        limit: 50,
-        ...(debouncedSearch ? { search: debouncedSearch } : {}),
-      })
-      setStakeholders(data || [])
-    } catch (e) {
-      console.error(e)
-      setLoadError(e?.message || 'Failed to load stakeholders')
-      setStakeholders([])
-    } finally {
-      setLoading(false)
-    }
-  }, [debouncedSearch])
-
   const loadStakeholders = useCallback(async () => {
     if (!projectId) return
     setLoading(true)
@@ -88,6 +60,7 @@ export default function StakeholderRegisterPage() {
     try {
       const data = await getStakeholders({
         project_id: projectId,
+        limit: 500,
         ...(debouncedSearch ? { search: debouncedSearch } : {}),
       })
       setStakeholders(data || [])
@@ -101,29 +74,32 @@ export default function StakeholderRegisterPage() {
   }, [projectId, debouncedSearch])
 
   useEffect(() => {
+    if (projectCtxLoading) return
+    if (!currentProjectId) return
+    setProjectId((prev) => (prev === currentProjectId ? prev : currentProjectId))
+  }, [currentProjectId, projectCtxLoading])
+
+  useEffect(() => {
     if (location.state?.toast) {
       setToast(location.state.toast)
       if (projectId) loadStakeholders()
-      else loadFirst50Stakeholders()
       navigate(location.pathname, { replace: true, state: {} })
     }
-  }, [location.state?.toast, projectId, loadStakeholders, loadFirst50Stakeholders, navigate])
+  }, [location.state?.toast, projectId, loadStakeholders, navigate])
 
-  // Load projects once after first paint (keeps shell fast)
+  // Load stakeholders for the current project only
   useEffect(() => {
-    const raf = requestAnimationFrame(() => { loadProjects() })
-    return () => cancelAnimationFrame(raf)
-  }, [loadProjects])
-
-  // Load stakeholders after first paint; re-run when project or search changes
-  useEffect(() => {
+    if (projectCtxLoading || !projectId) {
+      if (!projectCtxLoading && !projectId && !currentProjectId) {
+        setStakeholders([])
+        setLoading(false)
+      }
+      return
+    }
     setLoading(true)
-    const raf = requestAnimationFrame(() => {
-      if (projectId) loadStakeholders()
-      else loadFirst50Stakeholders()
-    })
+    const raf = requestAnimationFrame(() => { loadStakeholders() })
     return () => cancelAnimationFrame(raf)
-  }, [projectId, debouncedSearch, loadStakeholders, loadFirst50Stakeholders])
+  }, [projectId, debouncedSearch, projectCtxLoading, currentProjectId, loadStakeholders])
 
   // Preload form chunk so /register/new opens fast
   useEffect(() => {
@@ -164,6 +140,18 @@ export default function StakeholderRegisterPage() {
       influencers,
     }
   }, [stakeholders])
+
+  const projectOptions = useMemo(() => {
+    const rows = [...projects]
+    if (currentProject && !rows.some((p) => p.id === currentProject.projectId)) {
+      rows.unshift({
+        id: currentProject.projectId,
+        project_name: currentProject.projectName,
+        project_code: currentProject.projectCode,
+      })
+    }
+    return rows
+  }, [projects, currentProject])
 
   return (
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
@@ -257,11 +245,15 @@ export default function StakeholderRegisterPage() {
           <select
             id="stakeholder-register-project"
             value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value
+              setProjectId(next)
+              if (next) setCurrentProject(next)
+            }}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[44px]"
           >
-            <option value="">Select project</option>
-            {projects.map(p => (
+            {!projectId && <option value="">Select project</option>}
+            {projectOptions.map(p => (
               <option key={p.id} value={p.id}>{p.project_name} {p.project_code ? `(${p.project_code})` : ''}</option>
             ))}
           </select>
@@ -296,11 +288,9 @@ export default function StakeholderRegisterPage() {
         {loading && (
           <div className="flex justify-center py-8"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600" aria-hidden /></div>
         )}
-        {!loading && !projectId && stakeholders.length > 0 && (
+        {!loading && !projectId && (
           <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">
-            {debouncedSearch
-              ? `Showing up to 50 stakeholders matching “${debouncedSearch}” (ordered by name). Select a project to narrow by project.`
-              : 'Showing first 50 stakeholders (ordered by name). Select a project above to filter by project. Use Search register to filter by name, reference, or organization.'}
+            Select the current project to see its stakeholders.
           </p>
         )}
         {!loading && projectId && debouncedSearch && (
@@ -313,9 +303,10 @@ export default function StakeholderRegisterPage() {
             stakeholders={stakeholders}
             loadError={loadError}
             viewMode={viewMode}
+            projectId={projectId}
             onEdit={(s) => navigate(`/platform/stakeholders/register/edit/${s.id}`, { state: { projectId: projectId || s.project_id } })}
             onView={(s) => navigate(`/platform/stakeholders/register/view/${s.id}`)}
-            onRefresh={projectId ? loadStakeholders : loadFirst50Stakeholders}
+            onRefresh={loadStakeholders}
             onDeleteSuccess={(s) => setToast({ type: 'success', message: `Stakeholder "${s.stakeholder_name}" (${s.stakeholder_reference || s.id}) deleted successfully.` })}
           />
         )}
@@ -329,7 +320,7 @@ export default function StakeholderRegisterPage() {
           onClose={() => setShowImportModal(false)}
           onImportComplete={() => {
             setShowImportModal(false)
-            projectId ? loadStakeholders() : loadFirst50Stakeholders()
+            if (projectId) loadStakeholders()
           }}
         />
       )}

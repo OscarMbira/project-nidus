@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { getTemplateById, buildSnapshotFromTemplate } from '../../services/industryTemplateService'
+import { getTemplateById, buildSnapshotFromTemplate, provisionTemplateGovernanceForProject } from '../../services/industryTemplateService'
 import { getIndustryPlanService } from '../../services/resolvers/industryPlanServiceResolver'
+import { platformDb } from '@nidus/supabase'
 
 const STEPS = ['Title', 'Phases', 'Activities', 'Deliverables', 'Risks', 'Milestones', 'Roles', 'Review']
 
@@ -75,8 +76,26 @@ export default function IndustryPlanCopyWizard({ isSim = false }) {
         else await platformPlan.updateProjectPlan(planId, payload)
       } else if (isSim) {
         await simPlan.createPracticePlan(projectId, templateId, payload)
+        // Auto-provisioning of governed stage gates (v982 Phase 2) is Platform-only this phase —
+        // sim.stage_gate_reviews is run_id-scoped, not project_id-scoped, a materially different
+        // data model (documented gap, see SQL/v983's header note).
       } else {
         await platformPlan.createProjectPlan(projectId, templateId, payload)
+        // v982 Phase 2: creating a fresh (non-draft) industry plan from a template auto-
+        // provisions that template's declared governance (required stage gates) onto the
+        // project, per the account's classification-aware governance profile. Best-effort —
+        // a governance-provisioning failure must never block the plan itself from saving.
+        if (!onHold && !planId) {
+          try {
+            const { data: { user } = {} } = await platformDb.auth.getUser()
+            const { data: userRow } = user
+              ? await platformDb.from('users').select('id').eq('auth_user_id', user.id).maybeSingle()
+              : { data: null }
+            await provisionTemplateGovernanceForProject(projectId, templateId, userRow?.id || null)
+          } catch (govErr) {
+            console.error('provisionTemplateGovernanceForProject:', govErr)
+          }
+        }
       }
       toast.success(onHold ? 'Saved on hold' : 'Industry plan saved')
       navigate(viewPath)

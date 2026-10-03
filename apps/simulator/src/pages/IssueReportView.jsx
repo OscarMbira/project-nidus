@@ -94,7 +94,7 @@ export default function IssueReportView() {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Issue Report not found</p>
           <button
-            onClick={() => navigate(`/projects/${projectId}/issues/${issueId}`)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
             Back to Issue
@@ -107,7 +107,7 @@ export default function IssueReportView() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/projects/${projectId}/issues/${issueId}`)}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />

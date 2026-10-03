@@ -5,6 +5,7 @@
 
 import { platformDb } from '@nidus/supabase'
 import { resolveAccountIdFromOrganisationInvitation } from '../services/billingAccessService'
+import { clearSidebarCache } from './menuCacheUtils'
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -164,6 +165,26 @@ export async function resolveAccountIdForAuthUser(authUserId, internalUserId = n
     }
     if (!userRowId) return null
 
+    // v982 Phase 4: an explicit active-workspace selection (set via the workspace switcher, see
+    // setActiveWorkspace() below) takes priority over the owner/invite/project waterfall that
+    // follows. For a user who has never switched (the common, single-org case — the overwhelming
+    // majority of existing users pre-v995), this column is NULL and the function falls straight
+    // through to the exact same waterfall as before v995 — zero behaviour change for that case.
+    // Deliberately NOT re-validated against get_user_accounts() on every call here (that RPC is
+    // the "heavy" one this file's own header comment warns about) — menu/account resolution is
+    // not itself a security boundary (every downstream query is still RLS-scoped), so a stale
+    // selection degrades to an empty state at worst, and is self-healed the next time the
+    // workspace switcher loads the user's real accessible list (getAccessibleWorkspaces()).
+    const { data: userRow } = await platformDb
+      .from('users')
+      .select('last_active_account_id')
+      .eq('id', userRowId)
+      .maybeSingle()
+    if (userRow?.last_active_account_id) {
+      writeCachedAccountId(authUserId, userRow.last_active_account_id)
+      return userRow.last_active_account_id
+    }
+
     const { data: ownedAccount } = await platformDb
       .from('accounts')
       .select('id')
@@ -225,5 +246,89 @@ export async function getCurrentUserAccountId() {
   } catch (e) {
     console.error('[accountResolution] getCurrentUserAccountId', e)
     return null
+  }
+}
+
+// ============================================================================
+// v982 Phase 4 — Workspace Switching
+// ============================================================================
+// Extends this file directly (rather than a new workspaceService.js) since it already owns the
+// exact account-resolution logic a workspace switcher needs to read and override — matches the
+// plan's own recommended alternative (task B).
+
+/**
+ * Every workspace (account) the current auth user can access, via get_user_accounts() — already
+ * returns account_name/is_owner/project_count/etc. per row, enough for a switcher UI without any
+ * function changes. Used by the workspace switcher to populate its list AND to self-heal a stale
+ * last_active_account_id (an account the user no longer has access to never appears here).
+ * @returns {Promise<{success: boolean, data: array, error: string|null}>}
+ */
+export async function getAccessibleWorkspaces() {
+  try {
+    const {
+      data: { session },
+    } = await platformDb.auth.getSession()
+    const user = session?.user
+    if (!user) return { success: true, data: [], error: null }
+
+    const { data, error } = await platformDb.rpc('get_user_accounts', { p_auth_user_id: user.id })
+    if (error) throw error
+    return { success: true, data: Array.isArray(data) ? data : [], error: null }
+  } catch (e) {
+    console.error('[accountResolution] getAccessibleWorkspaces', e)
+    return { success: false, data: [], error: e.message || 'Failed to load accessible workspaces' }
+  }
+}
+
+/**
+ * Switches the current auth user's active workspace: persists the selection
+ * (users.last_active_account_id, syncs across devices/sessions per decision 1), overwrites the
+ * in-session account-id cache to the new value immediately, and — the single most important part
+ * of this function — wipes every sidebar cache entry for this user (clearSidebarCache, all layout
+ * scopes) so nothing from the previous workspace can be served stale. This does NOT itself
+ * trigger a re-render; the caller (the workspace switcher UI) is expected to force a full page
+ * navigation/reload immediately after a successful switch (see WorkspaceSwitcher.jsx) — a full
+ * reload is the only way to guarantee every component that assumed a single resolved account
+ * (menu, entitlements, industry packs, page-level state) recomputes from scratch with zero risk
+ * of a stale-while-revalidate window, matching this phase's own stale-cache rigor requirement.
+ * @param {string} accountId - the accounts.id to switch to (must be one of
+ *   getAccessibleWorkspaces()'s own results — the caller is expected to only ever pass a value
+ *   that came from that list, same discipline as any other picker in this codebase; RLS is still
+ *   the real enforcement boundary if that discipline is ever bypassed).
+ * @returns {Promise<{success: boolean, error: string|null}>}
+ */
+export async function setActiveWorkspace(accountId) {
+  try {
+    if (!isValidAccountId(accountId)) return { success: false, error: 'Invalid workspace id' }
+
+    const {
+      data: { session },
+    } = await platformDb.auth.getSession()
+    const user = session?.user
+    if (!user) return { success: false, error: 'Not authenticated' }
+
+    const userRowId = await getCurrentUserInternalUserId()
+    if (!userRowId) return { success: false, error: 'Could not resolve your user record' }
+
+    const { error } = await platformDb
+      .from('users')
+      .update({ last_active_account_id: accountId })
+      .eq('id', userRowId)
+    if (error) throw error
+
+    // Overwrite (not clear) the session cache — the switch should take effect immediately for
+    // any code that runs before the caller's own full-page reload completes.
+    writeCachedAccountId(user.id, accountId)
+    // Wipe every sidebar cache entry for this user, every layout scope — the sidebar cache key is
+    // NOT partitioned by account_id (only by auth user id + layout scope, see
+    // menuCacheUtils.js), so a stale-but-still-"fresh" (<10 min) entry from the OLD workspace
+    // would otherwise keep being served under the SAME key after the switch. This is the exact
+    // failure mode this phase's ground rules named explicitly.
+    clearSidebarCache(user.id)
+
+    return { success: true, error: null }
+  } catch (e) {
+    console.error('[accountResolution] setActiveWorkspace', e)
+    return { success: false, error: e.message || 'Failed to switch workspace' }
   }
 }

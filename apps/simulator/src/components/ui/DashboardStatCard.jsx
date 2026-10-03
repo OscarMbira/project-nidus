@@ -8,6 +8,7 @@
  * @param {{
  *   label: string,
  *   value: React.ReactNode,
+ *   description?: React.ReactNode,
  *   icon?: React.ComponentType,
  *   accentClassName?: string,
  *   iconClassName?: string,
@@ -19,6 +20,7 @@
 export default function DashboardStatCard({
   label,
   value,
+  description,
   icon: Icon,
   accentClassName = 'text-gray-900 dark:text-white',
   iconClassName = 'text-gray-400 dark:text-gray-500',
@@ -29,14 +31,17 @@ export default function DashboardStatCard({
   const content = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
         {Icon && <Icon className={`h-5 w-5 shrink-0 ${iconClassName}`} />}
       </div>
       <p className={`text-2xl font-bold ${accentClassName}`}>{value}</p>
+      {description && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+      )}
     </>
   );
 
-  const baseClassName = `bg-white dark:bg-gray-800 rounded-lg border ${borderClassName} p-4 text-left w-full ${className}`.trim();
+  const baseClassName = `bg-white dark:bg-gray-800 rounded-lg border ${borderClassName} shadow-sm p-4 text-left w-full ${className}`.trim();
 
   if (!onClick) {
     return <div className={baseClassName}>{content}</div>;

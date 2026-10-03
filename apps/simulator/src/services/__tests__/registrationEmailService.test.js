@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const mockSendEmail = vi.hoisted(() => vi.fn())
+const mockSendEmailViaSupabase = vi.hoisted(() => vi.fn())
 const mockRpc = vi.hoisted(() => vi.fn())
 const mockGetUser = vi.hoisted(() => vi.fn())
 const mockMaybeSingle = vi.hoisted(() => vi.fn())
 
 vi.mock('../emailIntegrationService', () => ({
   sendEmail: (...args) => mockSendEmail(...args),
+  sendEmailViaSupabase: (...args) => mockSendEmailViaSupabase(...args),
 }))
 
 vi.mock('../brandingService', () => ({
@@ -27,6 +29,7 @@ import {
   ACCOUNT_EMAIL_VERIFICATION_ENABLED,
   sendWelcomeEmail,
   sendAccountVerificationEmail,
+  buildAccountVerificationLink,
   requestEmailVerificationToken,
   verifyEmailToken,
   getMyVerificationStatus,
@@ -57,20 +60,22 @@ describe('registrationEmailService — v929 account email verification (soft-gat
   })
 
   describe('sendWelcomeEmail', () => {
-    it('sends via the reliable send-email path, not Supabase SMTP', async () => {
-      mockSendEmail.mockResolvedValue({ success: true })
+    it('sends via sendEmailViaSupabase, not the RLS-gated sendEmail wrapper', async () => {
+      mockSendEmailViaSupabase.mockResolvedValue({ success: true })
       const result = await sendWelcomeEmail('user@example.com', 'Jane')
       expect(result.success).toBe(true)
-      expect(mockSendEmail).toHaveBeenCalledWith(
+      expect(mockSendEmailViaSupabase).toHaveBeenCalledWith(
         'user@example.com',
         'Welcome to Project Nidus',
         expect.stringContaining('Jane'),
-        'welcome',
+        null,
+        { templateId: 'welcome' },
       )
+      expect(mockSendEmail).not.toHaveBeenCalled()
     })
 
     it('never throws — returns a failure result instead', async () => {
-      mockSendEmail.mockRejectedValue(new Error('network down'))
+      mockSendEmailViaSupabase.mockRejectedValue(new Error('network down'))
       const result = await sendWelcomeEmail('user@example.com', 'Jane')
       expect(result.success).toBe(false)
       expect(result.error).toMatch(/network down/)
@@ -109,11 +114,24 @@ describe('registrationEmailService — v929 account email verification (soft-gat
   })
 
   describe('sendAccountVerificationEmail', () => {
-    it('builds a verify-email link containing the token', async () => {
-      mockSendEmail.mockResolvedValue({ success: true })
+    it('uses a text link, not a visible raw URL', async () => {
+      mockSendEmailViaSupabase.mockResolvedValue({ success: true })
       await sendAccountVerificationEmail('user@example.com', 'Jane', 'tok-999')
-      const [, , html] = mockSendEmail.mock.calls[0]
-      expect(html).toContain('/auth/verify-email?token=tok-999')
+      const [, , html] = mockSendEmailViaSupabase.mock.calls[0]
+      expect(html).toContain('href="')
+      expect(html).toContain('/v/tok-999')
+      expect(html).toContain('Click to verify your email')
+      expect(html).toContain('long-press')
+      expect(html).not.toContain('/auth/verify-email?token=')
+      expect(html).not.toMatch(/>https?:\/\/[^<]+\/v\/tok-999</)
+    })
+  })
+
+  describe('buildAccountVerificationLink', () => {
+    it('returns a path-style verification URL', () => {
+      expect(buildAccountVerificationLink('abc123', 'https://app.example.com')).toBe(
+        'https://app.example.com/v/abc123'
+      )
     })
   })
 })

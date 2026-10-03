@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { listIndustryTemplates } from '../../services/industryTemplateService'
 
 export default function IndustryTemplateOnHold() {
+  const navigate = useNavigate()
   const [rows, setRows] = useState([])
 
   useEffect(() => {
@@ -11,9 +12,9 @@ export default function IndustryTemplateOnHold() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <Link to="/pmo/industry-templates" className="text-sm text-blue-600">
+      <button type="button" onClick={() => navigate(-1)} className="text-sm text-blue-600">
         ← All templates
-      </Link>
+      </button>
       <h1 className="text-2xl font-bold mt-2">Template drafts & on hold</h1>
       <ul className="mt-6 space-y-2">
         {rows.map((r) => (

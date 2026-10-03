@@ -13,7 +13,8 @@ import { useNavigate } from 'react-router-dom'
 // surface introduces admin/organisation-industries as its own top-level admin/* route,
 // same tier as admin/manage-roles and admin/manage-menu-bundles) — browser back is the
 // simplest correct choice until a dedicated hub exists.
-import { ArrowLeft, Factory, Loader, Save } from 'lucide-react'
+import { ArrowLeft, Factory, Loader, Save, ShieldCheck } from 'lucide-react'
+import { supabase } from '@nidus/supabase'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -24,6 +25,8 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { getManageRolesAccess, getIndustryCategories, getIndustrySegments } from '../../services/organisationCustomRoleService'
 import { provisionOrganisationTenant, getOrganisationById } from '../../services/organisationService'
 import { getOrgIndustries, getOrgCapabilities, toggleOrganisationCapability } from '../../services/organisationIndustryService'
+import { assignSystemRole, getUserSystemRoles } from '../../services/roleService'
+import { clearSidebarCache } from '../../utils/menuCacheUtils'
 
 export default function OrganisationIndustrySettings() {
   const navigate = useNavigate()
@@ -49,14 +52,34 @@ export default function OrganisationIndustrySettings() {
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(true)
   const [togglingId, setTogglingId] = useState(null)
 
+  // v982 Phase 1 (task F): "Become PMO Admin" self-grant — visible only to the Account
+  // Owner when they don't already hold pmo_admin.
+  const [isAccountOwner, setIsAccountOwner] = useState(false)
+  const [hasPmoAdmin, setHasPmoAdmin] = useState(true)
+  const [becomingPmoAdmin, setBecomingPmoAdmin] = useState(false)
+
   const loadAll = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     const accessPromise = getManageRolesAccess()
     const industryCategoriesPromise = getIndustryCategories()
+    // Independent of the manage-roles gate above (rule 66 — fire in parallel, not
+    // sequentially): resolves the current auth user once, reused for both checks.
+    const authUserPromise = supabase.auth.getUser()
 
-    const [access, categoriesRes] = await Promise.all([accessPromise, industryCategoriesPromise])
+    const [access, categoriesRes, { data: { user: authUser } = {} }] = await Promise.all([
+      accessPromise,
+      industryCategoriesPromise,
+      authUserPromise,
+    ])
+
+    if (authUser) {
+      const systemRoles = await getUserSystemRoles(authUser.id)
+      const roleNames = systemRoles.success ? systemRoles.data.map((r) => r.roles?.role_name) : []
+      setIsAccountOwner(roleNames.includes('account_owner'))
+      setHasPmoAdmin(roleNames.includes('pmo_admin'))
+    }
 
     if (!access.success || !access.accountId) {
       setError(access.error || 'Could not resolve your organisation')
@@ -177,6 +200,33 @@ export default function OrganisationIndustrySettings() {
     setTogglingId(null)
   }
 
+  // v982 Phase 1 (task F): self-grant PMO Admin — no invitation round-trip required
+  // (decision 2). Clears the sidebar cache and reloads so the newly-granted menu appears
+  // immediately, without the user needing to remember to hard-refresh themselves.
+  const handleBecomePmoAdmin = async () => {
+    setBecomingPmoAdmin(true)
+    setError(null)
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) throw new Error('Not authenticated')
+
+      const result = await assignSystemRole(authUser.id, 'pmo_admin')
+      if (!result.success) throw new Error(result.error || 'Failed to grant PMO Admin access')
+
+      clearSidebarCache(authUser.id)
+      showSuccess({
+        recordId: account?.account_code || account?.account_name,
+        operation: 'updated',
+        message: 'You now have PMO Admin access.',
+        onOk: () => window.location.reload(),
+      })
+    } catch (err) {
+      setError(err.message || 'Failed to grant PMO Admin access')
+    } finally {
+      setBecomingPmoAdmin(false)
+    }
+  }
+
   const capabilitiesByPack = useMemo(() => {
     const groups = new Map()
     capabilities.forEach((item) => {
@@ -208,8 +258,19 @@ export default function OrganisationIndustrySettings() {
       </div>
 
       {!canManage && (
-        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
-          You can view this organisation's industry configuration but do not have permission to change it.
+        <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex flex-wrap items-center justify-between gap-3">
+          <span>You can view this organisation's industry configuration but do not have permission to change it.</span>
+          {isAccountOwner && !hasPmoAdmin && (
+            <button
+              type="button"
+              onClick={handleBecomePmoAdmin}
+              disabled={becomingPmoAdmin}
+              className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 flex-shrink-0"
+            >
+              {becomingPmoAdmin ? <Loader className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+              Become PMO Admin
+            </button>
+          )}
         </div>
       )}
 

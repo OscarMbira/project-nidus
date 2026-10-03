@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { X, Save, PauseCircle } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Save, PauseCircle } from 'lucide-react'
 import { SEAM_LEVELS, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { saveDraft } from '../../services/draftQueueService'
 import { platformDb } from '@nidus/supabase'
@@ -8,15 +8,27 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
-import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import SelectField from '@nidus/ui/SelectField'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 
-import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+function formSnapshot(data) {
+  return JSON.stringify({
+    stakeholder_id: data.stakeholder_id || '',
+    assessment_date: data.assessment_date || '',
+    current_level: data.current_level || '',
+    desired_level: data.desired_level || '',
+    notes: data.notes || '',
+  })
+}
+
 export default function StakeholderAssessmentMatrixForm({
   record,
   projectId,
   stakeholders = [],
   onSave,
   onCancel,
+  readOnly = false,
   entityType = 'stakeholder_assessment_matrix',
   formRoute = '/platform/stakeholders/assessment-matrix',
 }) {
@@ -33,6 +45,13 @@ export default function StakeholderAssessmentMatrixForm({
   const [error, setError] = useState(null)
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const [baseline, setBaseline] = useState(() => formSnapshot({
+    stakeholder_id: '',
+    assessment_date: new Date().toISOString().split('T')[0],
+    current_level: 'neutral',
+    desired_level: 'supportive',
+    notes: '',
+  }))
 
   useEffect(() => {
     if (formTab !== 'audit' || !record) return
@@ -57,10 +76,28 @@ export default function StakeholderAssessmentMatrixForm({
         desired_level: record.desired_level || 'supportive',
         notes: record.notes || '',
       })
+      setBaseline(formSnapshot({
+        stakeholder_id: record.stakeholder_id || '',
+        assessment_date: record.assessment_date || new Date().toISOString().split('T')[0],
+        current_level: record.current_level || 'neutral',
+        desired_level: record.desired_level || 'supportive',
+        notes: record.notes || '',
+      }))
     } else if (projectId) {
       setFormData((prev) => ({ ...prev, project_id: projectId }))
     }
   }, [record, projectId])
+
+  const isDirty = useMemo(
+    () => !readOnly && formSnapshot(formData) !== baseline,
+    [formData, baseline, readOnly],
+  )
+  const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'Discard changes to this assessment?')
+  const stakeholderOptions = stakeholders.map((person) => ({
+    value: person.id,
+    label: `${person.stakeholder_name || 'Stakeholder'}${person.stakeholder_reference ? ` (${person.stakeholder_reference})` : ''}`,
+  }))
+  const title = readOnly ? 'View assessment' : (record?.id ? 'Edit assessment' : 'Add assessment')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -117,18 +154,12 @@ export default function StakeholderAssessmentMatrixForm({
   }
 
   const fieldClass =
-    'w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-800 text-gray-100 focus:ring-2 focus:ring-blue-500'
+    'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div className="w-full max-w-lg rounded-xl border border-gray-700 bg-gray-900 shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-700 px-4 py-3">
-          <h2 className="text-lg font-semibold text-white">
-            {record?.id ? 'Edit Assessment' : 'Add Assessment'}
-          </h2>
-          <button type="button" onClick={onCancel} className="p-1 text-gray-400 hover:text-white rounded">
-            <X className="h-5 w-5" />
-          </button>
+    <div className="mx-auto w-full max-w-3xl rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="border-b border-gray-200 px-4 py-4 dark:border-gray-700">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1>
         </div>
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
@@ -157,33 +188,24 @@ export default function StakeholderAssessmentMatrixForm({
           )}
 
           {formTab === 'details' && (
-          <>
+          <fieldset disabled={readOnly} className="space-y-4 disabled:opacity-80">
           {error && (
-            <p className="text-sm text-red-400 bg-red-950/50 border border-red-800 rounded-lg px-3 py-2">
+            <p className="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
               {error}
             </p>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Stakeholder *</label>
-            <select
-              name="stakeholder_id"
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Stakeholder *</label>
+            <SelectField
               value={formData.stakeholder_id}
-              onChange={handleChange}
-              disabled={!!record?.id}
-              required
-              className={fieldClass}
-            >
-              <option value="">Select stakeholder</option>
-              {stakeholders.map((s, index) => (
-                <option key={s.id} value={s.id}>
-                  {s.stakeholder_name}
-                  {s.stakeholder_reference ? ` (${s.stakeholder_reference})` : ''}
-                </option>
-              ))}
-            </select>
+              onChange={(value) => setFormData((prev) => ({ ...prev, stakeholder_id: value }))}
+              options={stakeholderOptions}
+              placeholder="Select stakeholder"
+              disabled={readOnly || !!record?.id}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Assessment date *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Assessment date *</label>
             <input
               type="date"
               name="assessment_date"
@@ -195,7 +217,7 @@ export default function StakeholderAssessmentMatrixForm({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Current level (C) *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Current level (C) *</label>
               <select
                 name="current_level"
                 value={formData.current_level}
@@ -210,7 +232,7 @@ export default function StakeholderAssessmentMatrixForm({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">Desired level (D) *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Desired level (D) *</label>
               <select
                 name="desired_level"
                 value={formData.desired_level}
@@ -226,7 +248,7 @@ export default function StakeholderAssessmentMatrixForm({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Notes</label>
             <textarea
               name="notes"
               value={formData.notes}
@@ -235,36 +257,39 @@ export default function StakeholderAssessmentMatrixForm({
               className={fieldClass}
             />
           </div>
-          </>
+          </fieldset>
           )}
-          <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-gray-700">
+          <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
-              onClick={onCancel}
-              className="px-4 py-2 text-gray-300 hover:bg-gray-800 rounded-lg"
+              onClick={() => confirmDiscard(() => onCancel?.())}
+              className="px-4 py-2 text-gray-800 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
-              Cancel
+              {readOnly ? 'Back' : 'Cancel'}
             </button>
-            <button
-              type="button"
-              onClick={handleHold}
-              disabled={holding || saving}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-amber-600/50 text-amber-200 rounded-lg hover:bg-amber-950/40 disabled:opacity-50"
-            >
-              <PauseCircle className="h-4 w-4" />
-              Save as Draft
-            </button>
-            <button
-              type="submit"
-              disabled={saving || holding}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
-            >
-              <Save className="h-4 w-4" />
-              {saving ? 'Saving…' : record?.id ? 'Update' : 'Create'}
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={handleHold}
+                disabled={holding || saving}
+                className="inline-flex items-center gap-2 px-4 py-2 border border-amber-600 text-amber-800 dark:text-amber-200 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-950/40 disabled:opacity-50"
+              >
+                <PauseCircle className="h-4 w-4" />
+                Save as Draft
+              </button>
+            )}
+            {!readOnly && (
+              <button
+                type="submit"
+                disabled={saving || holding}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                {saving ? 'Saving…' : record?.id ? 'Update' : 'Create'}
+              </button>
+            )}
           </div>
         </form>
-      </div>
     </div>
   )
 }

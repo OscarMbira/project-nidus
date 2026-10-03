@@ -4,6 +4,7 @@
  */
 
 import { simDb } from '../supabase/supabaseClient'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import { buildGapSummary } from '../../utils/stakeholderSEAMUtils'
 
 async function getCurrentUserId() {
@@ -16,13 +17,56 @@ async function getCurrentUserId() {
 
 export async function getPracticeStakeholders(projectId, filters = {}) {
   try {
+    const userId = await getCurrentUserId()
     let query = simDb.from('practice_stakeholder_register').select('*').eq('practice_project_id', projectId).eq('is_deleted', false)
     if (filters.stakeholder_type) query = query.eq('stakeholder_type', filters.stakeholder_type)
     if (filters.stakeholder_status) query = query.eq('stakeholder_status', filters.stakeholder_status)
     if (filters.search) query = query.or(`stakeholder_name.ilike.%${filters.search}%,stakeholder_organization.ilike.%${filters.search}%`)
-    const { data, error } = await query.order('created_at', { ascending: false })
+    const { data, error } = await query.order('stakeholder_name', { ascending: true })
     if (error) throw error
-    return { success: true, data: data || [] }
+
+    let organisationRows = []
+    const { data: excluded } = await simDb
+      .from('practice_stakeholder_project_exclusions')
+      .select('practice_stakeholder_id')
+      .eq('practice_project_id', projectId)
+    const excludedIds = new Set((excluded || []).map((row) => row.practice_stakeholder_id))
+    let orgQuery = simDb
+      .from('practice_stakeholder_register')
+      .select('*')
+      .is('practice_project_id', null)
+      .eq('is_deleted', false)
+      .eq('user_id', userId)
+    if (filters.stakeholder_type) orgQuery = orgQuery.eq('stakeholder_type', filters.stakeholder_type)
+    if (filters.stakeholder_status) orgQuery = orgQuery.eq('stakeholder_status', filters.stakeholder_status)
+    if (filters.search) orgQuery = orgQuery.or(`stakeholder_name.ilike.%${filters.search}%,stakeholder_organization.ilike.%${filters.search}%`)
+    const { data: orgData, error: orgError } = await orgQuery
+    if (!orgError) {
+      organisationRows = (orgData || []).filter((row) => !excludedIds.has(row.id))
+    }
+
+    const seen = new Set((data || []).map((row) => row.id))
+    const merged = [...(data || [])]
+    for (const row of organisationRows) {
+      if (!seen.has(row.id)) merged.push(row)
+    }
+    merged.sort((a, b) => String(a.stakeholder_name || '').localeCompare(String(b.stakeholder_name || ''), undefined, { sensitivity: 'base' }))
+    return { success: true, data: merged }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function excludePracticeStakeholderFromProject(stakeholderId, projectId) {
+  try {
+    const userId = await getCurrentUserId()
+    const { error } = await simDb.from('practice_stakeholder_project_exclusions').insert({
+      practice_stakeholder_id: stakeholderId,
+      practice_project_id: projectId,
+      excluded_by: userId,
+    })
+    if (error) throw error
+    return { success: true }
   } catch (error) {
     return { success: false, error: error.message }
   }
@@ -55,6 +99,11 @@ export async function deletePracticeStakeholder(stakeholderId) {
     const userId = await getCurrentUserId()
     const { data, error } = await simDb.from('practice_stakeholder_register').update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: userId }).eq('id', stakeholderId).eq('user_id', userId).select().single()
     if (error) throw error
+    if (data?.photo_path) {
+      const { deleteStoredStakeholderPhoto } = await import('@nidus/shared/services/stakeholderPhotoService')
+      await deleteStoredStakeholderPhoto(simDb, data.photo_path)
+      await simDb.from('practice_stakeholder_register').update({ photo_path: null }).eq('id', stakeholderId)
+    }
     return { success: true, data }
   } catch (error) {
     return { success: false, error: error.message }
@@ -64,7 +113,7 @@ export async function deletePracticeStakeholder(stakeholderId) {
 // ========== Practice Stakeholder Analysis ==========
 export async function getPracticeStakeholderAnalysis(filters = {}) {
   try {
-    let query = simDb.from('practice_stakeholder_analysis').select('*, practice_stakeholder:practice_stakeholder_id(id, stakeholder_name, stakeholder_reference)').eq('is_deleted', false)
+    let query = simDb.from('practice_stakeholder_analysis').select('*, practice_stakeholder:practice_stakeholder_id(id, stakeholder_name, stakeholder_reference, photo_path)').eq('is_deleted', false)
     if (filters.practice_project_id) query = query.eq('practice_project_id', filters.practice_project_id)
     if (filters.practice_stakeholder_id) query = query.eq('practice_stakeholder_id', filters.practice_stakeholder_id)
     const { data, error } = await query.order('analysis_date', { ascending: false })
@@ -224,7 +273,7 @@ export async function getPracticeEngagementActions(filters = {}) {
   try {
     let query = simDb.from('practice_engagement_actions').select(`
       *,
-      practice_stakeholder:practice_stakeholder_id (id, stakeholder_name, stakeholder_reference)
+      practice_stakeholder:practice_stakeholder_id (id, stakeholder_name, stakeholder_reference, photo_path)
     `).eq('is_deleted', false)
     if (filters.practice_project_id) query = query.eq('practice_project_id', filters.practice_project_id)
     if (filters.practice_stakeholder_id) query = query.eq('practice_stakeholder_id', filters.practice_stakeholder_id)
@@ -283,13 +332,36 @@ export async function getPracticeStakeholderAssessmentMatrix(filters = {}) {
   try {
     let query = simDb
       .from('practice_stakeholder_assessment_matrix')
-      .select('*, practice_stakeholder:practice_stakeholder_id(id, stakeholder_name, stakeholder_reference)')
+      .select('*, practice_stakeholder:practice_stakeholder_id(id, stakeholder_name, stakeholder_reference, photo_path)')
       .eq('is_deleted', false)
     if (filters.practice_project_id) query = query.eq('practice_project_id', filters.practice_project_id)
     if (filters.practice_stakeholder_id) query = query.eq('practice_stakeholder_id', filters.practice_stakeholder_id)
     const { data, error } = await query.order('assessment_date', { ascending: false })
     if (error) throw error
     return { success: true, data: data || [] }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+const PRACTICE_ASSESSMENT_COLUMNS = 'id, stakeholder_name, stakeholder_reference, photo_path, user_id, account_id'
+
+/** Load one practice assessment by id or stakeholder reference. */
+export async function getPracticeStakeholderAssessmentByRouteKey(key) {
+  const wanted = String(key || '').trim()
+  if (!wanted) return { success: false, error: 'Assessment was not found.' }
+  try {
+    const byId = isLikelyDatabaseUuid(wanted)
+    let query = simDb
+      .from('practice_stakeholder_assessment_matrix')
+      .select(`*, practice_stakeholder:practice_stakeholder_id${byId ? '' : '!inner'}(${PRACTICE_ASSESSMENT_COLUMNS})`)
+      .eq('is_deleted', false)
+    query = byId
+      ? query.eq('id', wanted)
+      : query.ilike('practice_stakeholder.stakeholder_reference', wanted)
+    const { data, error } = await query.maybeSingle()
+    if (error) throw error
+    return { success: true, data }
   } catch (error) {
     return { success: false, error: error.message }
   }
@@ -405,6 +477,7 @@ export default {
   savePracticeEngagementAction,
   deletePracticeEngagementAction,
   getPracticeStakeholderAssessmentMatrix,
+  getPracticeStakeholderAssessmentByRouteKey,
   savePracticeStakeholderAssessmentMatrix,
   deletePracticeStakeholderAssessmentMatrix,
   getPracticeStakeholderStats,

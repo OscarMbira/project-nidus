@@ -43,10 +43,7 @@ export async function addReportingArrangement(pidId, arrangementData) {
     const { data, error } = await supabase
       .from('pid_reporting_arrangements')
       .insert(insertData)
-      .select(`
-        *,
-        report_owner_user:report_owner(id, full_name, email)
-      `)
+      .select('*')
       .single()
 
     if (error) throw error
@@ -81,10 +78,7 @@ export async function updateReportingArrangement(arrangementId, updates) {
       .from('pid_reporting_arrangements')
       .update(updateData)
       .eq('id', arrangementId)
-      .select(`
-        *,
-        report_owner_user:report_owner(id, full_name, email)
-      `)
+      .select('*')
       .single()
 
     if (error) throw error
@@ -130,10 +124,7 @@ export async function getReportingArrangements(pidId) {
   try {
     const { data, error } = await supabase
       .from('pid_reporting_arrangements')
-      .select(`
-        *,
-        report_owner_user:report_owner(id, full_name, email)
-      `)
+      .select('*')
       .eq('pid_id', pidId)
       .eq('is_deleted', false)
       .order('display_order', { ascending: true })

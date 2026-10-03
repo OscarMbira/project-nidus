@@ -4,14 +4,19 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Edit, Printer } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { ArrowLeft, Printer } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { getBriefByProject } from '../../services/projectBriefService'
 import BriefHeader from '../../components/brief/BriefHeader'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import {
+  resolveBriefCharterMode,
+  briefCharterLabels,
+  briefCharterDocPath,
+} from '@nidus/shared/utils/briefCharterTerminology.js'
 
 const BRIEF_EXPORT_SECTIONS = [
   { title: 'Basic Information', fields: [
@@ -29,7 +34,8 @@ const BRIEF_EXPORT_SECTIONS = [
   ]},
   { title: 'Business Case', fields: [
     { key: 'outline_business_case_summary', label: 'Outline Business Case Summary' },
-    { key: 'business_option_selected', label: 'Business Option Selected' }
+    { key: 'business_option_selected', label: 'Business Option Selected' },
+    { key: 'dis_benefits_description', label: 'Dis-benefits' }
   ]}
 ]
 import ProjectBriefForm from '../../components/brief/ProjectBriefForm'
@@ -43,6 +49,10 @@ import MandateComparisonView from '../../components/brief/MandateComparisonView'
 export default function ProjectBriefView() {
   const { projectId, routeKey, loading: projectLoading, error: projectError } = usePlatformProjectId()
   const navigate = useNavigate()
+  const location = useLocation()
+  const mode = resolveBriefCharterMode(location.pathname)
+  const labels = briefCharterLabels(mode)
+  const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode)
   const [brief, setBrief] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -62,14 +72,14 @@ export default function ProjectBriefView() {
       setError(null)
       const data = await getBriefByProject(projectId)
       if (!data) {
-        setError('No project brief found for this project.')
+        setError(labels.viewMissing)
         setBrief(null)
         return
       }
       setBrief(data)
     } catch (err) {
       console.error('Error loading brief:', err)
-      setError(err.message)
+      setError(err.message || labels.viewMissing)
     } finally {
       setLoading(false)
     }
@@ -84,7 +94,7 @@ export default function ProjectBriefView() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading brief...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{labels.loading}</p>
         </div>
       </div>
     )
@@ -106,7 +116,7 @@ export default function ProjectBriefView() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">Brief not found</p>
+          <p className="text-gray-600 dark:text-gray-400">{labels.notFound}</p>
         </div>
       </div>
     )
@@ -127,22 +137,16 @@ export default function ProjectBriefView() {
         </button>
         <div className="flex flex-wrap gap-2 items-center">
           <ExportRecordButtons
-            onExportPPT={() => exportRecordToPPT(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
-            onExportWord={() => exportRecordToWord(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
-            onExportExcel={() => exportRecordToExcel(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
-            onExportCSV={() => exportRecordToCSV(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
-            onExportXML={() => exportRecordToXML(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
-            onExportJSON={() => exportRecordToJSON(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
-            onExportPrint={() => exportRecordToPrint(BRIEF_EXPORT_SECTIONS, brief, `Brief_${brief.brief_reference || brief.id}`)}
+            sections={BRIEF_EXPORT_SECTIONS}
+            record={brief}
+            baseFilename={`${labels.singular}_${brief.brief_reference || brief.id}`}
           />
           {canEdit && (
-            <button
-              onClick={() => navigate(platformProjectPath(routeKey || brief.project_id, 'brief', 'edit'))}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </button>
+            <RowActionButton
+              variant="edit"
+              label={labels.editLabel}
+              onClick={() => navigate(docPath('edit'))}
+            />
           )}
           <button
             onClick={handlePrint}
@@ -155,7 +159,7 @@ export default function ProjectBriefView() {
       </div>
 
       {/* Brief Header */}
-      <BriefHeader brief={brief} project={brief.project} mandate={brief.mandate} />
+      <BriefHeader brief={brief} project={brief.project} mandate={brief.mandate} documentTitle={labels.title} />
 
       {/* Brief Form (Read-only) */}
       <ProjectBriefForm

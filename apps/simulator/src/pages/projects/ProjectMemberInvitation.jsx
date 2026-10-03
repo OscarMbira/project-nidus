@@ -193,7 +193,7 @@ export default function ProjectMemberInvitation() {
               <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-xl font-bold mb-2">Access Denied</h2>
               <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
-              <Button onClick={() => navigate(`/projects/${projectId}`)}>Back to Project</Button>
+              <Button onClick={() => navigate(-1)}>Back to Project</Button>
             </div>
           </Card>
         </div>
@@ -208,7 +208,7 @@ export default function ProjectMemberInvitation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <button
-            onClick={() => navigate(`/projects/${projectId}`)}
+            onClick={() => navigate(-1)}
             className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
           >
             ← Back to Project

@@ -2,35 +2,63 @@ import { useState, useCallback, useMemo, memo, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createMandate } from '../../services/projectMandateService'
-import ObjectivesList from '../../components/mandate/ObjectivesList'
-import ScopeList from '../../components/mandate/ScopeList'
-import AuthorityList from '../../components/mandate/AuthorityList'
-import InterfacesList from '../../components/mandate/InterfacesList'
-import QualityExpectationsList from '../../components/mandate/QualityExpectationsList'
-import AssociatedDocumentsList from '../../components/mandate/AssociatedDocumentsList'
-import StakeholdersListSimple from '../../components/mandate/StakeholdersListSimple'
-import ConstraintSelector from '../../components/constraints/ConstraintSelector'
-import { bulkCreateConstraints } from '../../services/mandateConstraintService'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import { HoldButton } from '@nidus/ui/HoldButton'
 import { AutoSaveIndicator } from '@nidus/ui/AutoSaveIndicator'
 import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 
-// Pre-load service to avoid dynamic import delay
-// Validation rules - moved outside component
-const VALIDATION_RULES = {
-  mandate_title: { required: true, minLength: 1 },
-  purpose: { required: true, minLength: 20 },
-  background: { required: true, minLength: 100 },
-  project_objectives: { required: true, minCount: 1 }, // Changed to count for array
-  outline_business_case: { required: true, minLength: 100 },
+const MANDATE_EXPORT_SECTIONS = [
+  { title: 'Basic Information', fields: [
+    { key: 'mandate_reference', label: 'Reference' },
+    { key: 'mandate_title', label: 'Title' },
+    { key: 'document_status', label: 'Status' },
+  ]},
+  { title: 'Scope', fields: [{ key: 'scope', label: 'Scope' }] },
+  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Objectives' }] },
+  { title: 'Constraints', fields: [{ key: 'constraints', label: 'Constraints' }] },
+  { title: 'Proposed Roles', fields: [
+    { key: 'proposed_executive_name', label: 'Proposed Executive' },
+    { key: 'proposed_pm_name', label: 'Proposed PM' },
+  ]},
+]
+
+/** Convert JSON-array / legacy text columns ↔ newline-joined MultiLineListInput value. */
+function toMultiline(value) {
+  if (!value) return ''
+  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean).join('\n')
+  const raw = String(value).trim()
+  if (!raw) return ''
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean).join('\n')
+  } catch {
+    /* plain text */
+  }
+  return raw
+}
+
+function fromMultiline(value) {
+  const lines = String(value || '')
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean)
+  return lines.length ? JSON.stringify(lines) : JSON.stringify([])
+}
+
+function hasListItems(value) {
+  return toMultiline(value)
+    .split(/\r?\n/)
+    .some((line) => line.trim())
 }
 
 function ProjectMandateCreate() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projectId: currentProjectId } = usePlatformProjectId()
 
-  // Detect context from current route - PMO routes start with /pmo
   const isPMOContext = location.pathname.startsWith('/pmo')
   const basePath = isPMOContext ? '/pmo/mandates' : '/platform/mandates'
   const listPath = isPMOContext ? '/pmo/governance/mandate' : '/platform/mandates/list'
@@ -39,118 +67,97 @@ function ProjectMandateCreate() {
   const [errors, setErrors] = useState({})
   const [activeTab, setActiveTab] = useState('details')
 
-  // Draft queue hook for put on hold functionality
   const {
-    isDraft,
     draftId,
     saveStatus,
     draftCount,
     canCreateDraft,
-    saveDraft: saveToDraftQueue,
-    autoSave
+    autoSave,
   } = useDraftQueue('project_mandate')
-  
+
   const [formData, setFormData] = useState({
     mandate_title: '',
-    mandate_reference: '', // Optional: Mandate identification reference (auto-generated if not provided)
-    project_code: '', // Optional: Project code if known at mandate creation
-    project_name: '', // Optional: Project name if known at mandate creation
+    mandate_reference: '',
+    project_code: '',
+    project_name: '',
+    project_id: null,
+    // Brief mandate content (guide: Scope / Responsibilities / Objectives / Key constraints)
+    scope: JSON.stringify([]),
+    proposed_executive_name: '',
+    proposed_pm_name: '',
+    project_objectives: JSON.stringify([]),
+    constraints: JSON.stringify([]),
+    // Legacy NOT NULL columns — kept blank; expanded later in Brief / PID
     purpose: '',
-    authority_responsible: JSON.stringify([]), // Initialize as empty JSON array
+    authority_responsible: JSON.stringify([]),
     background: '',
+    scope_exclusions: JSON.stringify([]),
+    interfaces: JSON.stringify([]),
+    quality_expectations: JSON.stringify([]),
+    outline_business_case: '',
     is_standalone: true,
     programme_id: null,
-    project_objectives: JSON.stringify([]), // Initialize as empty JSON array
-    scope: JSON.stringify([]), // Initialize as empty JSON array
-    scope_exclusions: JSON.stringify([]), // Initialize as empty JSON array
-    constraints: JSON.stringify([]), // Initialize as empty JSON array
-    interfaces: JSON.stringify([]), // Initialize as empty JSON array
-    quality_expectations: JSON.stringify([]), // Initialize as empty JSON array
-    outline_business_case: '',
-    proposed_executive_id: null,
-    proposed_executive_name: '',
-    proposed_pm_id: null,
-    proposed_pm_name: '',
-    associated_documents: JSON.stringify([]), // Initialize as empty JSON array - Section 10
-    stakeholders: JSON.stringify([]), // Initialize as empty JSON array - Section 12
     document_status: 'draft',
   })
-  
-  // Structured constraints (for new ConstraintSelector)
-  const [structuredConstraints, setStructuredConstraints] = useState([])
 
-  // Auto-save form data periodically
+  useEffect(() => {
+    if (currentProjectId) {
+      setFormData((prev) => ({ ...prev, project_id: currentProjectId }))
+    }
+  }, [currentProjectId])
+
   useEffect(() => {
     if (formData.mandate_title) {
       const timer = setTimeout(() => {
         autoSave(formData, formData.mandate_title)
-      }, 60000) // 60 seconds
+      }, 60000)
       return () => clearTimeout(timer)
     }
   }, [formData, autoSave])
 
-  // Memoized handlers to prevent re-renders
   const handleChange = useCallback((e) => {
     const { name, value, type, checked } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || null : value)
+      [name]: type === 'checkbox' ? checked : value,
     }))
-    // Clear error for this field immediately on change
     if (errors[name]) {
-      setErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[name]
-        return newErrors
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        return next
       })
     }
   }, [errors])
 
-  // Optimized validation with memoization
+  const setListField = useCallback((name, multilineValue) => {
+    setFormData((prev) => ({ ...prev, [name]: fromMultiline(multilineValue) }))
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        return next
+      })
+    }
+  }, [errors])
+
   const validateForm = useCallback(() => {
     const newErrors = {}
-    
-    // Fast validation using pre-defined rules
-    for (const [field, rule] of Object.entries(VALIDATION_RULES)) {
-      if (field === 'project_objectives') {
-        // Special handling for objectives array
-        let objectives = []
-        try {
-          const parsed = JSON.parse(formData[field] || '[]')
-          objectives = Array.isArray(parsed) ? parsed : []
-        } catch {
-          objectives = formData[field]?.trim() ? [formData[field]] : []
-        }
-        
-        if (rule.required && objectives.length === 0) {
-          newErrors[field] = 'At least one project objective is required'
-        } else if (rule.minCount && objectives.length < rule.minCount) {
-          newErrors[field] = `At least ${rule.minCount} project objective${rule.minCount > 1 ? 's' : ''} required`
-        }
-      } else {
-        const value = formData[field]?.trim() || ''
-        if (rule.required && !value) {
-          newErrors[field] = `${field.replace('_', ' ')} is required`
-        } else if (value && rule.minLength && value.length < rule.minLength) {
-          newErrors[field] = `${field.replace('_', ' ')} must be at least ${rule.minLength} characters`
-        }
-      }
+    if (!formData.mandate_title?.trim()) {
+      newErrors.mandate_title = 'Mandate title is required'
     }
-    
-    // Special validation for Section 11: Proposed Roles
-    // At least one of Executive or PM should be specified (recommended for approval)
-    const hasExecutive = formData.proposed_executive_id || formData.proposed_executive_name?.trim()
-    const hasPM = formData.proposed_pm_id || formData.proposed_pm_name?.trim()
-    if (!hasExecutive && !hasPM) {
-      // Warning only, not blocking for draft
-      // This will be enforced at submission/approval stage
+    if (!hasListItems(formData.scope)) {
+      newErrors.scope = 'Add at least one scope point'
     }
-    
-    // Special validation for Section 7: Interfaces (required if not standalone)
-    if (formData.is_standalone === false && !formData.interfaces?.trim()) {
-      newErrors.interfaces = 'Interfaces are required for programme-linked projects'
+    if (!formData.proposed_executive_name?.trim() && !formData.proposed_pm_name?.trim()) {
+      newErrors.proposed_executive_name = 'Name the Executive and/or Project Manager'
     }
-    
+    if (!hasListItems(formData.project_objectives)) {
+      newErrors.project_objectives = 'Add at least one objective'
+    }
+    if (!hasListItems(formData.constraints)) {
+      newErrors.constraints = 'Add at least one key constraint'
+    }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }, [formData])
@@ -161,34 +168,21 @@ function ProjectMandateCreate() {
 
     try {
       setSaving(true)
-      // Service is pre-loaded, no dynamic import delay
-      const mandate = await createMandate(formData)
-      
-      // Save structured constraints if any
-      if (structuredConstraints.length > 0) {
-        try {
-          const constraintsToSave = structuredConstraints.map(c => ({
-            constraint_category_id: c.constraint_category_id || c.constraint_category?.id,
-            operand: c.operand,
-            value_numeric: c.value_numeric,
-            value_min: c.value_min,
-            value_max: c.value_max,
-            value_text: c.value_text,
-            value_date: c.value_date,
-            unit: c.unit,
-            notes: c.notes
-          }))
-          
-          await bulkCreateConstraints(mandate.id, constraintsToSave)
-        } catch (constraintError) {
-          console.warn('Error saving constraints:', constraintError)
-          // Don't fail mandate creation if constraints fail
-        }
+      // Satisfy legacy NOT NULL columns with brief-friendly placeholders derived from the four fields
+      const payload = {
+        ...formData,
+        purpose: formData.purpose?.trim()
+          || `Mandate for: ${formData.mandate_title.trim()}`,
+        background: formData.background?.trim()
+          || toMultiline(formData.scope) || formData.mandate_title.trim(),
+        outline_business_case: formData.outline_business_case?.trim()
+          || toMultiline(formData.project_objectives) || formData.mandate_title.trim(),
+        project_id: formData.project_id || currentProjectId || null,
       }
-      
-      navigate(`${basePath}/${mandate.id}/view`, {
+      const mandate = await createMandate(payload)
+      navigate(`${basePath}/${mandate.mandate_reference || mandate.id}/view`, {
         replace: true,
-        state: { message: 'Mandate created successfully!' }
+        state: { message: 'Mandate created successfully!' },
       })
     } catch (error) {
       console.error('Error creating mandate:', error)
@@ -196,34 +190,23 @@ function ProjectMandateCreate() {
     } finally {
       setSaving(false)
     }
-  }, [formData, structuredConstraints, validateForm, navigate])
+  }, [formData, currentProjectId, validateForm, navigate, basePath])
 
   const handleCancel = useCallback(() => {
     navigate(listPath, { replace: true })
   }, [navigate, listPath])
 
-  // Memoized error class computation
-  const getErrorClass = useCallback((fieldName) => {
-    return errors[fieldName] 
-      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
-      : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500'
-  }, [errors])
-
-  // Memoized common input classes
-  const inputClasses = useMemo(() => 
-    'w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors',
-    []
-  )
-
-  const textareaClasses = useMemo(() => 
-    'w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors resize-y',
-    []
+  const inputClasses = useMemo(
+    () =>
+      'w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:ring-blue-500 focus:border-blue-500 transition-colors',
+    [],
   )
 
   return (
     <div className="space-y-6">
       <div>
         <button
+          type="button"
           onClick={handleCancel}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center transition-colors"
           aria-label="Back to mandates list"
@@ -231,13 +214,25 @@ function ProjectMandateCreate() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Mandates
         </button>
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Project Mandate</h1>
-          <AutoSaveIndicator status={saveStatus} />
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Create Project Mandate</h1>
+              <AutoSaveIndicator status={saveStatus} />
+            </div>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              A brief pre-project mandate — capture only the key information needed to start.
+              Formal approval is optional (verbal or statement instruction is allowed).
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:pt-1">
+            <ExportRecordMenu
+              sections={MANDATE_EXPORT_SECTIONS}
+              record={formData}
+              baseFilename={`Mandate_${formData.mandate_reference || formData.mandate_title || 'Draft'}`}
+            />
+          </div>
         </div>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Create a new project mandate to initiate a project. This is a pre-project document.
-        </p>
       </div>
 
       {errors.submit && (
@@ -249,323 +244,222 @@ function ProjectMandateCreate() {
       <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Mandate sections" />
 
       {activeTab === 'audit' && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this mandate is saved.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Audit details appear after this mandate is saved.
+        </p>
       )}
 
       {activeTab === 'details' && (
-      <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-        {/* Basic Information - Full Width */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <label htmlFor="mandate_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Mandate Code
-              </label>
-              <input
-                id="mandate_reference"
-                type="text"
-                name="mandate_reference"
-                value={formData.mandate_reference}
-                onChange={handleChange}
-                className={`${inputClasses} ${getErrorClass('mandate_reference')}`}
-                placeholder="e.g., MAN-2026-001"
-                maxLength={50}
-              />
-              {errors.mandate_reference && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.mandate_reference}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Optional: Auto-generated if not provided
-              </p>
-            </div>
-            
-            <div>
-              <label htmlFor="mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Mandate Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="mandate_title"
-                type="text"
-                name="mandate_title"
-                value={formData.mandate_title}
-                onChange={handleChange}
-                className={`${inputClasses} ${getErrorClass('mandate_title')}`}
-                required
-                autoFocus
-              />
-              {errors.mandate_title && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.mandate_title}</p>
-              )}
-            </div>
-            
-            <div>
-              <label htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Project Code
-              </label>
-              <input
-                id="project_code"
-                type="text"
-                name="project_code"
-                value={formData.project_code}
-                onChange={handleChange}
-                className={`${inputClasses} ${getErrorClass('project_code')}`}
-                placeholder="Enter project code if known..."
-              />
-              {errors.project_code && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_code}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Optional: May not be available at mandate creation
-              </p>
-            </div>
-            
-            <div>
-              <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Project Name
-              </label>
-              <input
-                id="project_name"
-                type="text"
-                name="project_name"
-                value={formData.project_name}
-                onChange={handleChange}
-                className={`${inputClasses} ${getErrorClass('project_name')}`}
-                placeholder="Enter project name if known..."
-              />
-              {errors.project_name && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_name}</p>
-              )}
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Optional: May not be available at mandate creation
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* 2-Column Layout for Main Form Sections - Chronological Order (1-12) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Sections 1, 2, 3, 4, 5, 6 */}
-          <div className="space-y-6">
-            {/* Section 1: Purpose */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</h2>
-              <textarea
-                name="purpose"
-                value={formData.purpose}
-                onChange={handleChange}
-                rows={4}
-                className={`${textareaClasses} ${getErrorClass('purpose')}`}
-                placeholder="Document purpose and intent..."
-                required
-              />
-              {errors.purpose && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.purpose}</p>
-              )}
-            </div>
-
-            {/* Section 2: Authority */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">2. Authority</h2>
-              <AuthorityList
-                authorities={formData.authority_responsible}
-                onChange={handleChange}
-                errors={errors}
-                placeholder="Enter an authority (e.g., 'Board of Directors', 'CEO', 'Finance Department')..."
-              />
-            </div>
-
-            {/* Section 3: Background */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</h2>
-              <textarea
-                name="background"
-                value={formData.background}
-                onChange={handleChange}
-                rows={4}
-                className={`${textareaClasses} ${getErrorClass('background')}`}
-                placeholder="Context and need for project..."
-                required
-              />
-              {errors.background && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.background}</p>
-              )}
-            </div>
-
-            {/* Section 4: Project Objectives */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</h2>
-              <ObjectivesList
-                objectives={formData.project_objectives}
-                onChange={handleChange}
-                errors={errors}
-                placeholder="Enter a measurable objective (e.g., 'Reduce processing time by 50% by Q2 2026')..."
-              />
-            </div>
-
-            {/* Section 5: Scope */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">5. Scope</h2>
-              <ScopeList
-                scopeItems={formData.scope}
-                scopeExclusions={formData.scope_exclusions}
-                onChange={handleChange}
-                errors={errors}
-              />
-            </div>
-
-            {/* Section 6: Constraints */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">6. Constraints</h2>
-              <ConstraintSelector
-                mandateId={null} // null for create mode
-                constraints={structuredConstraints}
-                onChange={setStructuredConstraints}
-                readOnly={false}
-                errors={errors}
-                isSimulator={false}
-              />
-            </div>
-          </div>
-
-          {/* Right Column - Sections 7, 8, 9, 10, 11, 12 */}
-          <div className="space-y-6">
-            {/* Section 7: Interfaces */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">7. Interfaces</h2>
-              <InterfacesList
-                interfaces={formData.interfaces}
-                onChange={handleChange}
-                errors={errors}
-                placeholder="Enter an interface (e.g., 'Integration with CRM system', 'Dependency on HR project')..."
-              />
-              {formData.is_standalone === false && (
-                <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-                  Interfaces are required for programme-linked projects
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div>
+                <label htmlFor="mandate_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mandate Code
+                </label>
+                <input
+                  id="mandate_reference"
+                  type="text"
+                  name="mandate_reference"
+                  value={formData.mandate_reference}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="e.g., MAN-2026-001"
+                  maxLength={50}
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Optional: Auto-generated if not provided
                 </p>
+              </div>
+              <div>
+                <label htmlFor="mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Mandate Title <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="mandate_title"
+                  type="text"
+                  name="mandate_title"
+                  value={formData.mandate_title}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="Short descriptive title"
+                  required
+                  autoFocus
+                />
+                {errors.mandate_title && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.mandate_title}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Project Code
+                </label>
+                <input
+                  id="project_code"
+                  type="text"
+                  name="project_code"
+                  value={formData.project_code}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="Enter project code if known..."
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Optional: May not be available at mandate creation
+                </p>
+              </div>
+              <div>
+                <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Project Name
+                </label>
+                <input
+                  id="project_name"
+                  type="text"
+                  name="project_name"
+                  value={formData.project_name}
+                  onChange={handleChange}
+                  className={inputClasses}
+                  placeholder="Enter project name if known..."
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Optional: May not be available at mandate creation
+                </p>
+              </div>
+            </div>
+            <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+              Capture these key bits of information for the mandate:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Scope */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Scope</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Outline of what the project is about and what it will deliver. One point per line.
+              </p>
+              <MultiLineListInput
+                viewModeId="mandate-brief-scope"
+                id="mandate_scope"
+                value={toMultiline(formData.scope)}
+                onChange={(v) => setListField('scope', v)}
+                placeholder="e.g. Replace legacy core banking with Temenos T24 for retail deposits"
+                ariaLabelPrefix="scope point"
+                itemColumnLabel="Scope point"
+              />
+              {errors.scope && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.scope}</p>
               )}
             </div>
 
-            {/* Section 8: Quality Expectations */}
+            {/* Responsibilities */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">8. Quality Expectations</h2>
-              <QualityExpectationsList
-                expectations={formData.quality_expectations}
-                onChange={handleChange}
-                errors={errors}
-                placeholder="Enter a quality expectation (e.g., 'ISO 9001 compliance', '99.9% uptime', 'Zero security breaches')..."
-              />
-            </div>
-
-            {/* Section 9: Outline Business Case */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</h2>
-              <textarea
-                name="outline_business_case"
-                value={formData.outline_business_case}
-                onChange={handleChange}
-                rows={4}
-                className={`${textareaClasses} ${getErrorClass('outline_business_case')}`}
-                placeholder="High-level business justification..."
-                required
-              />
-              {errors.outline_business_case && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.outline_business_case}</p>
-              )}
-            </div>
-
-            {/* Section 10: Associated Documents */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">10. Associated Documents</h2>
-              <AssociatedDocumentsList
-                documents={formData.associated_documents}
-                onChange={handleChange}
-                errors={errors}
-              />
-            </div>
-
-            {/* Section 11: Proposed Roles */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">11. Proposed Roles</h2>
+              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Responsibilities</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Who is in overall charge (Executive), and who the Project Manager is if already decided.
+              </p>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Proposed Executive
+                  <label htmlFor="proposed_executive_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Executive
                   </label>
                   <input
+                    id="proposed_executive_name"
                     type="text"
                     name="proposed_executive_name"
                     value={formData.proposed_executive_name}
                     onChange={handleChange}
-                    className={`${inputClasses} ${getErrorClass('proposed_executive_name')}`}
-                    placeholder="Name of proposed Executive (or select from users if available)"
+                    className={inputClasses}
+                    placeholder="Name of the Executive"
                   />
-                  {errors.proposed_executive_name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.proposed_executive_name}</p>
-                  )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Proposed Project Manager
+                  <label htmlFor="proposed_pm_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Project Manager
                   </label>
                   <input
+                    id="proposed_pm_name"
                     type="text"
                     name="proposed_pm_name"
                     value={formData.proposed_pm_name}
                     onChange={handleChange}
-                    className={`${inputClasses} ${getErrorClass('proposed_pm_name')}`}
-                    placeholder="Name of proposed Project Manager (or select from users if available)"
+                    className={inputClasses}
+                    placeholder="Name of the Project Manager (if known)"
                   />
-                  {errors.proposed_pm_name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.proposed_pm_name}</p>
-                  )}
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  At least one role (Executive or PM) should be specified for project creation
-                </p>
+                {errors.proposed_executive_name && (
+                  <p className="text-sm text-red-600 dark:text-red-400">{errors.proposed_executive_name}</p>
+                )}
               </div>
             </div>
 
-            {/* Section 12: Customers/Users/Stakeholders */}
+            {/* Objectives */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">12. Customers/Users/Stakeholders</h2>
-              <StakeholdersListSimple
-                stakeholders={formData.stakeholders}
-                onChange={handleChange}
-                errors={errors}
+              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Objectives</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                What the project is expected to achieve (savings, faster service, and so on). One per line.
+              </p>
+              <MultiLineListInput
+                viewModeId="mandate-brief-objectives"
+                id="mandate_objectives"
+                value={toMultiline(formData.project_objectives)}
+                onChange={(v) => setListField('project_objectives', v)}
+                placeholder="e.g. Cut account-opening time from 5 days to same-day"
+                ariaLabelPrefix="objective"
+                itemColumnLabel="Objective"
               />
+              {errors.project_objectives && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.project_objectives}</p>
+              )}
+            </div>
+
+            {/* Key constraints */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Key constraints</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Limits such as an absolute delivery date, maximum budget, or required integrations. One per line.
+              </p>
+              <MultiLineListInput
+                viewModeId="mandate-brief-constraints"
+                id="mandate_constraints"
+                value={toMultiline(formData.constraints)}
+                onChange={(v) => setListField('constraints', v)}
+                placeholder="e.g. Must go live before end of fiscal year"
+                ariaLabelPrefix="constraint"
+                itemColumnLabel="Constraint"
+              />
+              {errors.constraints && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.constraints}</p>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end space-x-4">
-          <HoldButton
-            entityType="project_mandate"
-            formData={formData}
-            onHoldComplete={() => navigate(listPath)}
-            disabled={!canCreateDraft && !draftId}
-            draftCount={draftCount}
-          />
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-            disabled={saving}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save Draft'}
-          </button>
-        </div>
-      </form>
+          <div className="flex flex-wrap justify-end items-center gap-3">
+            <HoldButton
+              entityType="project_mandate"
+              formData={formData}
+              onHoldComplete={() => navigate(listPath)}
+              disabled={!canCreateDraft && !draftId}
+              draftCount={draftCount}
+            />
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              disabled={saving}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center transition-colors"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   )

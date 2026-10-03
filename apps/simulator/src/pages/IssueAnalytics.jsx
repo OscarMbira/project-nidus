@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { BarChart3, PieChart, TrendingUp, Clock, AlertTriangle } from 'lucide-react'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import { getIssueSummary, getIssuesByType, getIssuesByPriority, getIssuesBySeverity, getIssueTrends, getIssueAging, getResolutionMetrics, getActionEffectiveness } from '../services/issueAnalyticsService'
 
 export default function IssueAnalytics() {
@@ -87,42 +88,10 @@ export default function IssueAnalytics() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Issues</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.total_issues || 0}</p>
-              </div>
-              <BarChart3 className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Open Issues</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{summary.open_issues || 0}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Critical Issues</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{summary.critical_issues || 0}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Overdue Actions</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{summary.overdue_actions || 0}</p>
-              </div>
-              <Clock className="h-8 w-8 text-orange-500" />
-            </div>
-          </div>
+          <DashboardStatCard label="Total Issues" value={summary.total_issues || 0} icon={BarChart3} iconClassName="text-blue-500" />
+          <DashboardStatCard label="Open Issues" value={summary.open_issues || 0} icon={AlertTriangle} iconClassName="text-yellow-500" />
+          <DashboardStatCard label="Critical Issues" value={summary.critical_issues || 0} icon={AlertTriangle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
+          <DashboardStatCard label="Overdue Actions" value={summary.overdue_actions || 0} icon={Clock} accentClassName="text-orange-600 dark:text-orange-400" iconClassName="text-orange-500" borderClassName="border-orange-200 dark:border-orange-800" />
         </div>
       )}
 

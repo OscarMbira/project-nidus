@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, Plus, Search, TrendingUp, CheckCircle, DollarSign, AlertTriangle } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getBenefits, getBenefitsDashboardStats } from '../services/benefitsService';
 import BenefitsRegister from '../components/benefits/BenefitsRegister';
 import BenefitForm from '../components/benefits/BenefitForm';
@@ -109,65 +110,41 @@ export default function Benefits() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Benefits</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total || 0}</p>
-              </div>
-              <Target className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Realized</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.realized || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {Math.round(stats.realizationPercentage || 0)}% realized
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.inProgress || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.partiallyRealized || 0} partially
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Estimated Value</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  ${(stats.totalEstimatedValue || 0).toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-purple-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Realized Value</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  ${(stats.totalRealizedValue || 0).toLocaleString()}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
+          <DashboardStatCard label="Total Benefits" value={stats.total || 0} icon={Target} iconClassName="text-blue-500" />
+          <DashboardStatCard
+            label="Realized"
+            value={stats.realized || 0}
+            description={`${Math.round(stats.realizationPercentage || 0)}% realized`}
+            icon={CheckCircle}
+            accentClassName="text-green-600 dark:text-green-400"
+            iconClassName="text-green-500"
+            borderClassName="border-green-200 dark:border-green-800"
+          />
+          <DashboardStatCard
+            label="In Progress"
+            value={stats.inProgress || 0}
+            description={`${stats.partiallyRealized || 0} partially`}
+            icon={TrendingUp}
+            accentClassName="text-yellow-600 dark:text-yellow-400"
+            iconClassName="text-yellow-500"
+            borderClassName="border-yellow-200 dark:border-yellow-800"
+          />
+          <DashboardStatCard
+            label="Estimated Value"
+            value={`$${(stats.totalEstimatedValue || 0).toLocaleString()}`}
+            icon={DollarSign}
+            accentClassName="text-purple-600 dark:text-purple-400"
+            iconClassName="text-purple-500"
+            borderClassName="border-purple-200 dark:border-purple-800"
+          />
+          <DashboardStatCard
+            label="Realized Value"
+            value={`$${(stats.totalRealizedValue || 0).toLocaleString()}`}
+            icon={CheckCircle}
+            accentClassName="text-green-600 dark:text-green-400"
+            iconClassName="text-green-500"
+            borderClassName="border-green-200 dark:border-green-800"
+          />
         </div>
       )}
 

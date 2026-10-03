@@ -224,7 +224,7 @@ export default function StageGates() {
       {/* Header */}
       <div className="mb-6">
         <button
-          onClick={() => navigate('/projects/' + projectId)}
+          onClick={() => navigate(-1)}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
         >
           ← Back to Project

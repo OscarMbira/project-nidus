@@ -55,7 +55,7 @@ export default function StakeholderProfilePage() {
       <div className="p-6">
         <button
           type="button"
-          onClick={() => navigate('/platform/stakeholders/register')}
+          onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
         >
           <ArrowLeft className="h-5 w-5" /> Back to register
@@ -71,7 +71,7 @@ export default function StakeholderProfilePage() {
     <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <button
         type="button"
-        onClick={() => navigate('/platform/stakeholders/register')}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6"
       >
         <ArrowLeft className="h-5 w-5" /> Back to register

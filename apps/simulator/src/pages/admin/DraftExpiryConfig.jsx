@@ -9,7 +9,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Save,
@@ -30,6 +30,7 @@ import { getEntityLabel, ENTITY_CATEGORIES } from '@nidus/config/draftQueueConfi
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 
 export function DraftExpiryConfig() {
+  const navigate = useNavigate();
   const [configs, setConfigs] = useState([]);
   const [projectTypes, setProjectTypes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -185,12 +186,13 @@ export function DraftExpiryConfig() {
         <div className="mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link
-                to="/platform/pmo-admin"
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
                 className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
-              </Link>
+              </button>
               <div>
                 <h1 className="text-2xl font-bold text-white">Draft Expiry Settings</h1>
                 <p className="text-gray-400 mt-1">

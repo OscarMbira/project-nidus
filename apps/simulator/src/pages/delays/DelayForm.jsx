@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
-import SmartAmountInput from '@nidus/ui/SmartAmountInput'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import DelayOwnerHistory from '../../components/delays/DelayOwnerHistory'
 import { DELAY_CATEGORIES, DELAY_SEVERITIES, DELAY_STATUSES } from '@nidus/shared/constants/delayConstants'
 import { platformDb } from '@nidus/supabase'
@@ -11,6 +11,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { hydrateDelayForm, isCostAmount, isDelayRecordId, isWholeDayCount, LINK_FIELDS, normalizeDelayPayload } from './delayImpactLists'
 
 const STEPS = ['Basic', 'Impact', 'Resolution', 'Links']
 
@@ -29,7 +30,7 @@ export default function DelayForm({
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [doneRef, setDoneRef] = useState(null)
-  const [form, setForm] = useState(() => initial || {})
+  const [form, setForm] = useState(() => hydrateDelayForm(initial))
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
@@ -37,7 +38,7 @@ export default function DelayForm({
     if (open) {
       setStep(0)
       setDoneRef(null)
-      setForm(initial || {})
+      setForm(hydrateDelayForm(initial))
       setFormTab('details')
     }
   }, [open, initial])
@@ -72,10 +73,15 @@ export default function DelayForm({
       toast.error('Project is required')
       return
     }
+    const normalized = normalizeDelayPayload(form)
+    if (normalized.error) {
+      toast.error(normalized.error)
+      return
+    }
     setSaving(true)
     try {
       const payload = {
-        ...form,
+        ...normalized.payload,
         created_by: form.id ? form.created_by : userId,
         is_draft: finalStatus === 'draft',
         draft_expires_at: finalStatus === 'draft' ? form.draft_expires_at : null,
@@ -99,7 +105,7 @@ export default function DelayForm({
   const panel = (
       <div
         className={`w-full overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm ${
-          variant === 'page' ? 'max-w-4xl' : 'max-w-lg max-h-[90vh] shadow-xl'
+          variant === 'page' ? 'max-w-4xl' : 'max-w-2xl max-h-[90vh] shadow-xl'
         }`}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -243,35 +249,44 @@ export default function DelayForm({
 
           {step === 1 && (
             <>
-              <label className="block text-sm">
-                Schedule impact (days)
-                <input
-                  type="number"
-                  className={fieldClass}
-                  value={form.impact_schedule_days ?? ''}
-                  disabled={!write}
-                  onChange={(e) => set('impact_schedule_days', e.target.value ? Number(e.target.value) : null)}
-                />
-              </label>
               <div className="text-sm">
-                Cost impact
-                <SmartAmountInput
-                  value={form.impact_cost != null ? Number(form.impact_cost) : null}
-                  onChange={(n) => set('impact_cost', n)}
+                Schedule impact (days)
+                <MultiLineListInput
+                  viewModeId="delay-impact-schedule"
+                  value={form.impact_schedule_entries || ''}
+                  onChange={(value) => set('impact_schedule_entries', value)}
+                  itemColumnLabel="Days"
+                  placeholder="Whole number of days"
+                  ariaLabelPrefix="schedule impact"
                   disabled={!write}
-                  inputClassName={fieldClass}
+                  validateItem={(raw) => (isWholeDayCount(raw) ? null : 'Enter a whole number of days')}
                 />
               </div>
-              <label className="block text-sm">
-                Scope impact
-                <textarea
-                  className={fieldClass}
-                  rows={2}
-                  value={form.impact_scope || ''}
+              <div className="text-sm">
+                Cost impact
+                <MultiLineListInput
+                  viewModeId="delay-impact-cost"
+                  value={form.impact_cost_entries || ''}
+                  onChange={(value) => set('impact_cost_entries', value)}
+                  itemColumnLabel="Amount"
+                  placeholder="Amount, e.g. 10k"
+                  ariaLabelPrefix="cost impact"
                   disabled={!write}
-                  onChange={(e) => set('impact_scope', e.target.value)}
+                  validateItem={(raw) => (isCostAmount(raw) ? null : 'Enter an amount, or 10k / 3m')}
                 />
-              </label>
+              </div>
+              <div className="text-sm">
+                Scope impact
+                <MultiLineListInput
+                  viewModeId="delay-impact-scope"
+                  value={form.impact_scope || ''}
+                  onChange={(value) => set('impact_scope', value)}
+                  itemColumnLabel="Scope impact"
+                  placeholder="One scope impact"
+                  ariaLabelPrefix="scope impact"
+                  disabled={!write}
+                />
+              </div>
               <label className="block text-sm">
                 Original baseline date
                 <input
@@ -353,19 +368,21 @@ export default function DelayForm({
                 </p>
               ) : (
                 <>
-                  {['linked_issue_id', 'linked_risk_id', 'linked_defect_id', 'linked_work_package_id', 'linked_change_request_id'].map(
-                    (k) => (
-                      <label key={k} className="block text-sm">
-                        {k.replace(/_/g, ' ')}
-                        <input
-                          className={`${fieldClass} font-mono text-xs`}
-                          value={form[k] || ''}
-                          disabled={!write}
-                          onChange={(e) => set(k, e.target.value || null)}
-                        />
-                      </label>
-                    )
-                  )}
+                  {LINK_FIELDS.map((link) => (
+                    <div key={link.many} className="text-sm">
+                      {link.label}
+                      <MultiLineListInput
+                        viewModeId={link.viewModeId}
+                        value={form[`${link.many}_text`] || ''}
+                        onChange={(value) => set(`${link.many}_text`, value)}
+                        itemColumnLabel={link.itemColumnLabel}
+                        placeholder="Record id"
+                        ariaLabelPrefix={link.label}
+                        disabled={!write}
+                        validateItem={(raw) => (isDelayRecordId(raw) ? null : 'Enter a record id')}
+                      />
+                    </div>
+                  ))}
                 </>
               )}
             </>

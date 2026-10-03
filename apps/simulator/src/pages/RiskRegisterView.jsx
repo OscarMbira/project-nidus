@@ -21,7 +21,9 @@ import { RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui';
 const RISK_ACTIVE_STATUSES = ['identified', 'assessing', 'responding', 'monitoring', 'occurred'];
 const RISK_EMPTY_FILTERS = { search: '', risk_category: '', risk_type: '', status: '', risk_level: '', proximity: '' };
 import { getRiskRegisterByProject, updateRiskRegister } from '../services/riskRegisterService';
-import { getRisksByProject, createRisk, updateRisk, deleteRisk, closeRisk, getRiskSummary, getTopRisks } from '../services/riskService';
+import { getRisksByProject, createRisk, updateRisk, deleteRisk, closeRisk } from '../services/riskService';
+import { getOverdueResponses } from '../services/riskResponseService';
+import { summariseProjectRisks, topOpenRisks } from '../utils/riskRegisterStats';
 import { escalateRiskToIssue } from '../services/riskService';
 import RisksList from '../components/risks/RisksList';
 import RisksFilters from '../components/risks/RisksFilters';
@@ -59,8 +61,8 @@ export default function RiskRegisterView() {
   
   const [register, setRegister] = useState(null);
   const [risks, setRisks] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [topRisks, setTopRisks] = useState([]);
+  const [dashboardRisks, setDashboardRisks] = useState([]);
+  const [overdueResponseCount, setOverdueResponseCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showEnhancedForm, setShowEnhancedForm] = useState(false);
@@ -147,6 +149,8 @@ export default function RiskRegisterView() {
     () => risks.map((r) => ({ ...r, ...(riskCfMatrix[r.id] || {}) })),
     [risks, riskCfMatrix]
   );
+  const dashboardStats = useMemo(() => summariseProjectRisks(dashboardRisks), [dashboardRisks]);
+  const dashboardTopRisks = useMemo(() => topOpenRisks(dashboardRisks, 5), [dashboardRisks]);
 
   const fetchData = async () => {
     try {
@@ -162,22 +166,19 @@ export default function RiskRegisterView() {
         }
       }
 
-      const [summaryResult, topRisksResult] = await Promise.all([
-        getRiskSummary(projectId),
-        getTopRisks(projectId, 5)
+      const [listResult, overdueResult] = await Promise.all([
+        getRisksByProject(projectId),
+        getOverdueResponses(projectId),
       ]);
 
       if (registerResult.success) {
         setRegister(registerResult.data);
       }
 
-      if (summaryResult.success) {
-        setSummary(summaryResult.data);
+      if (listResult.success) {
+        setDashboardRisks(listResult.data || []);
       }
-
-      if (topRisksResult.success) {
-        setTopRisks(topRisksResult.data || []);
-      }
+      setOverdueResponseCount(overdueResult.success ? (overdueResult.data || []).length : 0);
     } catch (error) {
       console.error('Error fetching risk register data:', error);
     } finally {
@@ -436,38 +437,36 @@ export default function RiskRegisterView() {
       {/* Risk Dashboard — summary, alerts, top risks */}
       {viewMode === 'dashboard' && (
         <div className="space-y-6">
-          {summary && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <DashboardStatCard
                 label="Total Risks"
-                value={summary.total_risks || 0}
+                value={dashboardStats.total}
                 onClick={() => { setFilters(RISK_EMPTY_FILTERS); setViewMode('register'); }}
               />
               <DashboardStatCard
                 label="Active"
-                value={summary.active_risks || 0}
+                value={dashboardStats.active}
                 accentClassName="text-blue-600 dark:text-blue-400"
                 onClick={() => { setFilters({ ...RISK_EMPTY_FILTERS, status_in: RISK_ACTIVE_STATUSES }); setViewMode('register'); }}
               />
               <DashboardStatCard
                 label="High/Very High"
-                value={summary.high_risks || 0}
+                value={dashboardStats.high}
                 accentClassName="text-red-600 dark:text-red-400"
                 onClick={() => { setFilters({ ...RISK_EMPTY_FILTERS, risk_level_in: ['high', 'very_high'] }); setViewMode('register'); }}
               />
               <DashboardStatCard
                 label="Overdue Responses"
-                value={summary.overdue_responses || 0}
+                value={overdueResponseCount}
                 accentClassName="text-orange-600 dark:text-orange-400"
                 onClick={() => { setFilters({ ...RISK_EMPTY_FILTERS, overdue_responses_only: true }); setViewMode('register'); }}
               />
             </div>
-          )}
-          <RiskAlerts projectId={projectId} />
+          <RiskAlerts projectId={projectId} risks={dashboardRisks} overdueCount={overdueResponseCount} />
           <RegisterOpenItemsWidget
             title="Top Risks"
             icon={AlertTriangle}
-            rows={topRisks}
+            rows={dashboardTopRisks}
             columns={[
               { key: 'risk_identifier', label: 'Reference', className: 'font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap' },
               { key: 'title', label: 'Title', className: 'font-medium text-gray-900 dark:text-white' },

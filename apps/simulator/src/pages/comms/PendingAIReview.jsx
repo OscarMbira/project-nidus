@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useAppRoutePrefix } from '@nidus/shared/hooks/useAppRoutePrefix'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -15,6 +16,7 @@ const COLS = [
 ]
 
 export default function PendingAIReview() {
+  const navigate = useNavigate()
   const basePath = `${useAppRoutePrefix()}/comms`
   const isSim = useIsSimulator()
   const [issues, setIssues] = useState([])
@@ -40,6 +42,10 @@ export default function PendingAIReview() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <div className="flex flex-wrap justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Pending AI reviews</h1>
         <ExportListMenu columns={[...COLS, { key: 'kind', label: 'Kind' }]} data={exportRows} baseFilename="AI_Extractions" disabled={!exportRows.length} />

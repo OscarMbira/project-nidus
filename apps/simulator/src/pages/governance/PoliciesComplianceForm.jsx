@@ -61,9 +61,9 @@ export default function PoliciesComplianceForm() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-6 max-w-2xl">
-      <button onClick={()=>navigate('/platform/governance/policies')} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5"><ArrowLeft size={15}/>Back</button>
+      <button onClick={()=>navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5"><ArrowLeft size={15}/>Back</button>
       <div className="flex items-center gap-3 mb-6"><FileCheck size={22} className="text-blue-400"/><h1 className="text-2xl font-bold">{isEdit?'Edit':'New'} Policy</h1></div>
-      {saved && <div className="mb-5 rounded-lg bg-green-900/50 border border-green-700 px-4 py-3 text-green-300 text-sm">Policy <strong>{saved.id}</strong> {saved.operation.toLowerCase()} successfully.<button onClick={()=>navigate('/platform/governance/policies')} className="ml-3 underline">Back to list</button></div>}
+      {saved && <div className="mb-5 rounded-lg bg-green-900/50 border border-green-700 px-4 py-3 text-green-300 text-sm">Policy <strong>{saved.id}</strong> {saved.operation.toLowerCase()} successfully.<button onClick={()=>navigate(-1)} className="ml-3 underline">Back to list</button></div>}
       <div className="mb-4"><DetailAuditTabList activeTab={formTab} onChange={setFormTab} /></div>
       {formTab === 'audit' ? (
         <div className="rounded-lg border border-gray-700 bg-gray-800 p-6">
@@ -104,7 +104,7 @@ export default function PoliciesComplianceForm() {
         <div><label className={lbl}>Notes</label><textarea className={`${inp} h-20 resize-none`} value={form.notes} onChange={set('notes')}/></div>
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium"><Save size={15}/>{saving?'Saving…':isEdit?'Update':'Create'}</button>
-          <button type="button" onClick={()=>navigate('/platform/governance/policies')} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm">Cancel</button>
+          <button type="button" onClick={()=>navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm">Cancel</button>
         </div>
       </form>
       )}

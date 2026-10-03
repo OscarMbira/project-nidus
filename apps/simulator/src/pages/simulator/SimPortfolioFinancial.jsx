@@ -6,13 +6,14 @@ import {
   saveSimPortfolioBudget,
   deleteSimPortfolioBudget,
 } from '../../services/simPortfolioService'
+import { platformDb } from '@nidus/supabase'
 import ExportListMenu from '../../components/ui/ExportListMenu'
+import SelectField from '../../components/ui/SelectField'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
 
 const BUDGET_TYPES    = ['Capital', 'Operational', 'Programme', 'Contingency', 'Reserve']
 const BUDGET_STATUSES = ['draft', 'approved', 'active', 'closed', 'cancelled']
-const CURRENCIES      = ['USD', 'EUR', 'GBP', 'ZAR', 'AED', 'AUD', 'CAD']
 
 function statusBadge(s) {
   const map = { approved:'bg-green-700 text-green-100', active:'bg-blue-700 text-blue-100', draft:'bg-yellow-700 text-yellow-100', closed:'bg-gray-600 text-gray-200', cancelled:'bg-red-700 text-red-100' }
@@ -51,6 +52,7 @@ export default function SimPortfolioFinancial() {
   const [filterPortfolio, setFilterPortfolio] = useState('')
   const [filterType, setFilterType]           = useState('')
   const [filterStatus, setFilterStatus]       = useState('')
+  const [currencies, setCurrencies] = useState([])
 
   const [showModal, setShowModal] = useState(false)
   const [editRow, setEditRow]     = useState(null)
@@ -75,6 +77,20 @@ export default function SimPortfolioFinancial() {
   }, [filterPortfolio, filterType, filterStatus])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const { data } = await platformDb
+        .from('currencies')
+        .select('code, name')
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .order('name', { ascending: true })
+      if (!cancelled) setCurrencies(data || [])
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const filtered = rows.filter(r => {
     if (!search) return true
@@ -264,10 +280,14 @@ export default function SimPortfolioFinancial() {
                 </div>
                 <div>
                   <label className="block text-gray-400 text-sm mb-1">Currency</label>
-                  <select value={form.budget_currency} onChange={e => setForm(f => ({ ...f, budget_currency: e.target.value }))}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none">
-                    {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <SelectField
+                    options={currencies.map(c => ({ value: c.code, label: `${c.code} — ${c.name}` }))}
+                    value={form.budget_currency}
+                    onChange={(value) => setForm(f => ({ ...f, budget_currency: value }))}
+                    placeholder="Select a currency..."
+                    searchPlaceholder="Search currencies..."
+                    forceSearchable
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3">

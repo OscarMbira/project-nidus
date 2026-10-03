@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { FileEdit, Edit2, Trash2, Plus, Calendar, User, ArrowRight, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { FileEdit, Plus, Calendar, User, ArrowRight, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { deleteChangeRequest } from '../../services/changeManagementService';
 import SortToolbar from '../ui/SortToolbar';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
@@ -7,6 +7,7 @@ import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
 import RowNumberBadge from '../ui/RowNumberBadge';
 import ViewToggle from '../ui/ViewToggle';
+import RowActionButton from '../ui/RowActionButton';
 
 export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, onSelect, viewMode = 'grid', onViewModeChange }) {
   const [deleting, setDeleting] = useState(null);
@@ -254,18 +255,16 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
                       className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <button type="button" onClick={() => onEdit(request)} className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded mr-1" aria-label="Edit">
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(request.id)}
-                        disabled={deleting === request.id}
-                        className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
-                        aria-label="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <RowActionButton variant="view" label="View change request" onClick={() => onSelect && onSelect(request)} />
+                        <RowActionButton variant="edit" label="Edit change request" onClick={() => onEdit(request)} />
+                        <RowActionButton
+                          variant="delete"
+                          label="Delete change request"
+                          onClick={() => handleDelete(request.id)}
+                          disabled={deleting === request.id}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -341,32 +340,15 @@ export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, 
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 ml-4">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(request);
-                    }}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg"
-                    title="Edit request"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(request.id);
-                    }}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                <div className="flex items-center gap-1 ml-4" onClick={(e) => e.stopPropagation()}>
+                  <RowActionButton variant="view" label="View request" onClick={() => onSelect && onSelect(request)} />
+                  <RowActionButton variant="edit" label="Edit request" onClick={() => onEdit(request)} />
+                  <RowActionButton
+                    variant="delete"
+                    label="Delete request"
+                    onClick={() => handleDelete(request.id)}
                     disabled={deleting === request.id}
-                    title="Delete request"
-                  >
-                    {deleting === request.id ? (
-                      <div className="animate-spin h-4 w-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
-                    ) : (
-                      <Trash2 className="h-4 w-4" />
-                    )}
-                  </button>
+                  />
                 </div>
               </div>
             </div>

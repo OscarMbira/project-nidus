@@ -49,6 +49,76 @@ export async function getSimMyTeams() {
   }
 }
 
+const SIM_PM_ROLE_KEYS = new Set(['project_manager', 'pm_project_manager', 'project manager'])
+
+const SIM_TEAM_LIST_SELECT = `
+  id,
+  team_name,
+  team_description,
+  team_type,
+  practice_project_id,
+  team_lead_user_id,
+  team_status,
+  practice_projects:practice_project_id ( id, project_name, project_code )
+`
+
+/**
+ * Practice teams the signed-in user leads, plus every team on practice projects
+ * they own or manage as Project Manager.
+ */
+export async function getSimTeamsVisibleToUser() {
+  try {
+    const { data: authData } = await simDb.auth.getUser()
+    const uid = authData?.user?.id
+    if (!uid) return { success: false, data: [], managesProjects: false, error: 'Not authenticated' }
+
+    const [ownedRes, memberRes, ledRes] = await Promise.all([
+      simDb.from('practice_projects').select('id').eq('user_id', uid).eq('is_deleted', false),
+      simDb
+        .from('practice_project_memberships')
+        .select('practice_project_id, role_name')
+        .eq('user_id', uid)
+        .eq('is_active', true),
+      getSimMyTeams(),
+    ])
+    if (ownedRes.error) throw ownedRes.error
+    if (memberRes.error) throw memberRes.error
+    if (!ledRes.success) return { ...ledRes, managesProjects: false }
+
+    const projectIds = new Set((ownedRes.data || []).map((row) => row.id).filter(Boolean))
+    for (const row of memberRes.data || []) {
+      if (SIM_PM_ROLE_KEYS.has(String(row.role_name || '').trim().toLowerCase())) {
+        projectIds.add(row.practice_project_id)
+      }
+    }
+
+    let projectTeams = []
+    if (projectIds.size) {
+      const { data, error } = await simDb
+        .from('practice_teams')
+        .select(SIM_TEAM_LIST_SELECT)
+        .in('practice_project_id', [...projectIds])
+        .eq('is_deleted', false)
+        .eq('team_status', 'active')
+        .order('team_name', { ascending: true })
+      if (error) throw error
+      projectTeams = data || []
+    }
+
+    const byId = new Map()
+    for (const team of [...projectTeams, ...(ledRes.data || [])]) {
+      if (team?.id) byId.set(team.id, team)
+    }
+    const data = [...byId.values()].sort((a, b) =>
+      String(a.team_name || '').localeCompare(String(b.team_name || ''), undefined, { sensitivity: 'base' })
+    )
+    return { success: true, data, managesProjects: projectIds.size > 0 }
+  } catch (error) {
+    console.error('getSimTeamsVisibleToUser:', error)
+    return { success: false, data: [], managesProjects: false, error: error.message }
+  }
+}
+
 export async function getSimTeamMembers(practiceTeamId) {
   try {
     const { data, error } = await simDb
@@ -269,6 +339,105 @@ export async function deleteSimTeamFunctionalRole(practiceTeamId, roleId) {
   } catch (error) {
     console.error('deleteSimTeamFunctionalRole:', error)
     return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Practice-project scoped functional roles catalog (v1084).
+ */
+export async function listPracticeProjectFunctionalRoles(practiceProjectId) {
+  try {
+    if (!practiceProjectId) {
+      return { success: false, data: [], error: 'Practice project id is required' }
+    }
+    const { data, error } = await simDb
+      .from('practice_project_functional_roles')
+      .select(
+        'id, practice_project_id, role_label, required_skills, sort_order, is_active, created_at, updated_at',
+      )
+      .eq('practice_project_id', practiceProjectId)
+      .eq('is_active', true)
+      .order('role_label', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error) {
+    console.error('listPracticeProjectFunctionalRoles:', error)
+    return { success: false, data: [], error: error.message }
+  }
+}
+
+/**
+ * Replace active practice-project role catalog rows.
+ * @param {string} practiceProjectId
+ * @param {Array<{role:string, skills?:string}>} rows
+ */
+export async function replacePracticeProjectFunctionalRoles(practiceProjectId, rows = []) {
+  try {
+    if (!practiceProjectId) {
+      return { success: false, error: 'Practice project id is required' }
+    }
+
+    const cleaned = (Array.isArray(rows) ? rows : [])
+      .map((r) => ({
+        role: String(r?.role || '').trim(),
+        skills: String(r?.skills || '').trim() || null,
+      }))
+      .filter((r) => r.role)
+
+    const { data: existingAll, error: exErr } = await simDb
+      .from('practice_project_functional_roles')
+      .select('id, practice_project_id, role_label, required_skills, sort_order, is_active')
+      .eq('practice_project_id', practiceProjectId)
+    if (exErr) throw exErr
+    const existing = existingAll || []
+    const keep = new Set(cleaned.map((r) => r.role.toLowerCase()))
+
+    for (const row of existing) {
+      if (!keep.has(String(row.role_label || '').toLowerCase())) {
+        if (row.is_active === false) continue
+        const { error } = await simDb
+          .from('practice_project_functional_roles')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', row.id)
+        if (error) throw error
+      }
+    }
+
+    let sort = 10
+    for (const row of cleaned) {
+      const match = existing.find(
+        (e) => String(e.role_label || '').toLowerCase() === row.role.toLowerCase(),
+      )
+      if (match) {
+        const { error } = await simDb
+          .from('practice_project_functional_roles')
+          .update({
+            role_label: row.role,
+            required_skills: row.skills,
+            sort_order: sort,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', match.id)
+        if (error) throw error
+      } else {
+        const { error } = await simDb.from('practice_project_functional_roles').insert({
+          practice_project_id: practiceProjectId,
+          role_label: row.role,
+          required_skills: row.skills,
+          sort_order: sort,
+          is_active: true,
+        })
+        if (error) throw error
+      }
+      sort += 10
+    }
+
+    return listPracticeProjectFunctionalRoles(practiceProjectId)
+  } catch (error) {
+    console.error('replacePracticeProjectFunctionalRoles:', error)
+    return { success: false, data: [], error: error.message }
   }
 }
 

@@ -75,8 +75,11 @@ export async function simSaveScopeStatement(practiceProjectId, payload) {
     out_of_scope: payload.out_of_scope?.length ? payload.out_of_scope : [],
     key_deliverables: payload.key_deliverables?.length ? payload.key_deliverables : [],
     acceptance_criteria: payload.acceptance_criteria?.length ? payload.acceptance_criteria : [],
-    constraints: payload.constraints?.length ? payload.constraints : [],
-    assumptions: payload.assumptions?.length ? payload.assumptions : [],
+    // v1100: assumptions/constraints are no longer read or written here — the Scope Statement's
+    // Assumptions/Constraints tabs now live-query the real Assumptions/Constraints Registers
+    // instead (assumptionService.js / constraintService.js). Deliberately omitted from `row` so
+    // the pre-existing scope_statements.assumptions/.constraints columns are left untouched on
+    // every save, not wiped to [] — the migration in SQL/v1107 already copied any data out.
     exclusions: payload.exclusions?.length ? payload.exclusions : [],
     revision_history: payload.revision_history || [],
     status: payload.status || 'draft',

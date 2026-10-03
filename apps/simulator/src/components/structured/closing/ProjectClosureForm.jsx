@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
 import { X, FileText, CheckCircle, Calendar, TrendingUp, Target, Users } from 'lucide-react';
-import { createProjectClosure, updateProjectClosure } from '../../../services/closingProjectService';
+import { createProjectClosure, updateProjectClosure, archiveProjectClosure } from '../../../services/closingProjectService';
 import { platformDb } from '@nidus/supabase';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
@@ -15,6 +15,26 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState('basic');
   const [auditUserLabels, setAuditUserLabels] = useState({});
+  const [archiving, setArchiving] = useState(false);
+  const [archivedAt, setArchivedAt] = useState(closure?.archived_at || null);
+
+  const handleArchive = async () => {
+    if (!closure?.id || archivedAt) return;
+    if (!window.confirm('Archive this project closure? This does not delete any data.')) return;
+    setArchiving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+      const updated = await archiveProjectClosure(closure.id, user.id);
+      setArchivedAt(updated?.archived_at || new Date().toISOString());
+      onSuccess();
+    } catch (error) {
+      console.error('Error archiving project closure:', error);
+      alert('Error archiving project closure: ' + error.message);
+    } finally {
+      setArchiving(false);
+    }
+  };
 
   useEffect(() => {
     if (activeSection !== 'audit' || !closure) return;
@@ -42,6 +62,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
     financial_closure_summary: closure?.financial_closure_summary || '',
     resource_release_status: closure?.resource_release_status || 'not-started',
     stakeholder_acceptance: closure?.stakeholder_acceptance || 'pending',
+    benefits_transition_status: closure?.benefits_transition_status || 'not_started',
     checklist_completion_percentage: closure?.checklist_completion_percentage || 0,
     final_approval_date: closure?.final_approval_date || '',
     project_board_id: closure?.project_board_id || '',
@@ -107,6 +128,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         financial_closure_summary: formData.financial_closure_summary,
         resource_release_status: formData.resource_release_status,
         stakeholder_acceptance: formData.stakeholder_acceptance,
+        benefits_transition_status: formData.benefits_transition_status,
         checklist_completion_percentage: formData.checklist_completion_percentage,
         final_approval_date: formData.final_approval_date || null,
         project_board_id: formData.project_board_id || null,
@@ -325,6 +347,24 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               />
             </div>
 
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Benefits Transition Status
+              </label>
+              <select
+                value={formData.benefits_transition_status}
+                onChange={(e) => setFormData({ ...formData, benefits_transition_status: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="not_started">Not Started</option>
+                <option value="in_progress">In Progress</option>
+                <option value="complete">Complete</option>
+              </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Tracks handover of benefits realization ownership from the project to BAU/operations.
+              </p>
+            </div>
+
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">
                 Financial Closure Checklist
@@ -487,6 +527,33 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 <li>Stakeholder sign-off obtained</li>
               </ul>
             </div>
+
+            {closure && (
+              <div className="bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-200 mb-2">
+                  Archive
+                </h4>
+                {archivedAt ? (
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Archived on {new Date(archivedAt).toLocaleString()}.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                      Once closure is complete, archive this record for reference. Data is preserved — archiving does not delete anything.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleArchive}
+                      disabled={archiving}
+                      className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {archiving ? 'Archiving...' : 'Archive Project Closure'}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         );
 
@@ -540,6 +607,8 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 </AuditCard>
                 <AuditCard title="Classification" description="Where this closure record sits.">
                   <AuditField label="Closure phase" value={humanizeAuditToken(formData.closure_phase || closure.closure_phase)} />
+                  <AuditField label="Benefits transition status" value={humanizeAuditToken(formData.benefits_transition_status || closure.benefits_transition_status)} />
+                  <AuditField label="Archived" value={archivedAt ? new Date(archivedAt).toLocaleString() : 'Not archived'} />
                 </AuditCard>
                 <AuditCard title="Record history" description="When this closure record was created and last changed.">
                   <AuditField label="Created by" value={closure.created_by ? auditUserLabels[closure.created_by] || null : null} />

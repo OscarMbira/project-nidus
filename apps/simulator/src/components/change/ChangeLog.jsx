@@ -650,7 +650,7 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
       else if (col === 'cr_status') { va = a.change_request?.status || ''; vb = b.change_request?.status || '' }
       else if (col === 'role')      { va = a.performed_by_role || ''; vb = b.performed_by_role || '' }
       else if (col === 'user')      { va = a.performed_by_user?.full_name || ''; vb = b.performed_by_user?.full_name || '' }
-      else if (col === 'project')   { va = a.change_request?.project?.project_name || ''; vb = b.change_request?.project?.project_name || '' }
+      else if (col === 'project')   { va = a.change_request?.project?.project_code || ''; vb = b.change_request?.project?.project_code || '' }
       else if (col === 'cr')        { va = a.change_request?.change_reference || ''; vb = b.change_request?.change_reference || '' }
       else return 0
       return va < vb ? -mul : va > vb ? mul : 0
@@ -924,11 +924,7 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                   <th className={`${thCls} ${stickyThBase} ${stickyActionCls}`} onClick={() => cycleSort('action')}>Action <SortIcon col="action" sort={sort} /></th>
                   <th className={thCls} onClick={() => cycleSort('log_type')}>Log Type <SortIcon col="log_type" sort={sort} /></th>
                   <th className={thCls} onClick={() => cycleSort('cr')}>CR / Category / Priority / Status <SortIcon col="cr" sort={sort} /></th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Comments</th>
-                  <th className={thCls} onClick={() => cycleSort('user')}>Performed By <SortIcon col="user" sort={sort} /></th>
                   <th className={thCls} onClick={() => cycleSort('role')}>Role <SortIcon col="role" sort={sort} /></th>
-                  {!propProjectId && <th className={thCls} onClick={() => cycleSort('project')}>Project <SortIcon col="project" sort={sort} /></th>}
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status Change</th>
                   <th className={`px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${stickyRightActionsTh}`}>
                     Actions
@@ -972,26 +968,9 @@ export default function ChangeLog({ projectId: propProjectId = null, changeReque
                         <SoftBadge value={entry.change_request?.status} />
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[220px]">
-                      <span className="line-clamp-2" title={entry.description || ''}>{entry.description || '—'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[180px]">
-                      <span className="line-clamp-2" title={entry.comments || ''}>{entry.comments || '—'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <User className="h-3 w-3 text-gray-400" />
-                        {entry.performed_by_user?.full_name || entry.performed_by_user?.email || 'Unknown'}
-                      </div>
-                    </td>
                     <td className="px-4 py-3 text-xs text-gray-600 dark:text-gray-400 capitalize whitespace-nowrap">
                       {formatRole(entry.performed_by_role)}
                     </td>
-                    {!propProjectId && (
-                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                        {entry.change_request?.project?.project_name || '—'}
-                      </td>
-                    )}
                     <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {entry.old_value && entry.new_value ? (
                         <span>

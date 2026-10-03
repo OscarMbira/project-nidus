@@ -88,7 +88,7 @@ export default function Portfolio() {
         }
         const { data: userRecord } = await platformDb.from('users').select('id').eq('auth_user_id', user.id).single();
         if (!userRecord) return null;
-        const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).single();
+        const { data: account } = await platformDb.from('accounts').select('id').eq('owner_user_id', userRecord.id).maybeSingle();
         if (account) return account.id;
         const { data: project } = await platformDb.from('projects').select('account_id').eq('owner_user_id', userRecord.id).eq('is_deleted', false).limit(1).maybeSingle();
         return project?.account_id ?? null;

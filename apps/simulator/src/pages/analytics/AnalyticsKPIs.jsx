@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Target, Plus, Filter, BarChart3 } from 'lucide-react';
+import DashboardStatCard from '../../components/ui/DashboardStatCard';
 import { getKPIDefinitions, getKPIStats } from '../../services/kpiService';
 import KPITracker from '../../components/analytics/KPITracker';
 import { supabase } from '../../services/supabaseClient';
@@ -75,30 +76,12 @@ export default function AnalyticsKPIs() {
       {/* Stats Overview */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total KPIs</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalKPIs || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Active KPIs</div>
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.activeKPIs || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">System KPIs</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.systemKPIs || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">On Target</div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.onTarget || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Below Target</div>
-            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.belowTarget || 0}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Critical</div>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical || 0}</div>
-          </div>
+          <DashboardStatCard label="Total KPIs" value={stats.totalKPIs || 0} />
+          <DashboardStatCard label="Active KPIs" value={stats.activeKPIs || 0} accentClassName="text-blue-600 dark:text-blue-400" />
+          <DashboardStatCard label="System KPIs" value={stats.systemKPIs || 0} />
+          <DashboardStatCard label="On Target" value={stats.onTarget || 0} accentClassName="text-green-600 dark:text-green-400" borderClassName="border-green-200 dark:border-green-800" />
+          <DashboardStatCard label="Below Target" value={stats.belowTarget || 0} accentClassName="text-yellow-600 dark:text-yellow-400" borderClassName="border-yellow-200 dark:border-yellow-800" />
+          <DashboardStatCard label="Critical" value={stats.critical || 0} accentClassName="text-red-600 dark:text-red-400" borderClassName="border-red-200 dark:border-red-800" />
         </div>
       )}
 

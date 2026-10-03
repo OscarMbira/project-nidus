@@ -7,6 +7,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { simDb } from '../../services/supabase/supabaseClient'
 import { createPracticeProject } from '../../services/sim/practiceProjectService'
+import { replacePracticeProjectIndustries } from '../../services/sim/simProjectIndustryService'
+import { getOrgIndustryOptions } from '../../services/organisationIndustryService'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
@@ -28,6 +31,10 @@ export default function PracticeProjectCreate() {
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
   const [formTab, setFormTab] = useState('details')
+  // v1106 — multi-industry: tick several, one marked primary (mirrors Platform's project wizard).
+  const [industryOptions, setIndustryOptions] = useState([])
+  const [selectedIndustryIds, setSelectedIndustryIds] = useState([])
+  const [primaryIndustryId, setPrimaryIndustryId] = useState(null)
 
   useEffect(() => {
     loadOptions()
@@ -41,9 +48,26 @@ export default function PracticeProjectCreate() {
       ])
       if (typesResult.data) setProjectTypes(typesResult.data)
       if (statusesResult.data) setProjectStatuses(statusesResult.data)
+
+      const accountId = await getCurrentUserAccountId()
+      if (accountId) {
+        const industriesRes = await getOrgIndustryOptions(accountId)
+        if (industriesRes.success) setIndustryOptions(industriesRes.data)
+      }
     } catch (error) {
       console.error('Error loading options:', error)
     }
+  }
+
+  const toggleIndustry = (industryCategoryId) => {
+    setSelectedIndustryIds((prev) => {
+      if (prev.includes(industryCategoryId)) {
+        const next = prev.filter((id) => id !== industryCategoryId)
+        if (primaryIndustryId === industryCategoryId) setPrimaryIndustryId(next[0] || null)
+        return next
+      }
+      return [...prev, industryCategoryId]
+    })
   }
 
   const handleSubmit = async (e) => {
@@ -52,6 +76,24 @@ export default function PracticeProjectCreate() {
       setLoading(true)
       const result = await createPracticeProject(formData)
       if (result.success) {
+        if (selectedIndustryIds.length > 0) {
+          try {
+            const { data: { user } } = await simDb.auth.getUser()
+            const { data: userRow } = await simDb
+              .from('users')
+              .select('id')
+              .eq('auth_user_id', user?.id)
+              .maybeSingle()
+            const picks = selectedIndustryIds.map((id) => ({
+              industryCategoryId: id,
+              isPrimary: id === primaryIndustryId,
+            }))
+            const industriesRes = await replacePracticeProjectIndustries(result.data.id, picks, userRow?.id || null)
+            if (!industriesRes.success) console.error('Failed to save practice project industries:', industriesRes.error)
+          } catch (err) {
+            console.error('Failed to save practice project industries:', err)
+          }
+        }
         navigate(`/simulator/practice-projects/${result.data.id}`)
       } else {
         alert('Error creating project: ' + result.error)
@@ -148,6 +190,46 @@ export default function PracticeProjectCreate() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industries</label>
+            {industryOptions.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">No industries configured for this organisation.</p>
+            ) : (
+              <div className="space-y-1.5 rounded-lg border border-gray-300 dark:border-gray-600 p-3">
+                {industryOptions.map((opt) => {
+                  const checked = selectedIndustryIds.includes(opt.value)
+                  const isPrimary = checked && primaryIndustryId === opt.value
+                  return (
+                    <div key={opt.value} className="flex items-center justify-between gap-3">
+                      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleIndustry(opt.value)}
+                          className="h-4 w-4 rounded border-gray-300 dark:border-gray-500 text-blue-600"
+                        />
+                        {opt.label}
+                      </label>
+                      {checked && (
+                        isPrimary ? (
+                          <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">Primary</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryIndustryId(opt.value)}
+                            className="text-xs text-sky-600 dark:text-sky-400 hover:underline"
+                          >
+                            Set as primary
+                          </button>
+                        )
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </div>
 

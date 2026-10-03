@@ -13,6 +13,7 @@ import { checkOrganisationStatusByAuthId, getPostLoginRoute } from '../../servic
 import SearchableSelect from '@nidus/ui/SearchableSelect';
 import { isPlatformBillingEnabled } from '@nidus/config/platformBillingFeatures.js';
 import WizardStepLayout from './registrationWizard/WizardStepLayout';
+import { REGISTRATION_INTENT_STORAGE_KEY } from './RegistrationEntryChoice';
 
 // Move static data outside component to prevent recreation on every render
 const ORGANISATION_TYPES = [
@@ -31,6 +32,20 @@ const OrganisationSetup = () => {
   const [countries, setCountries] = useState([]);
   const [countriesLoading, setCountriesLoading] = useState(true);
   const [userEmail, setUserEmail] = useState('');
+
+  // v982 Phase 1 (task E): the registration entry-choice screen's intent — 'individual' |
+  // 'organisation'. location.state first (set by PlatformRegister.jsx on redirect here),
+  // sessionStorage fallback covers a mid-wizard refresh or a redirect that dropped state
+  // (e.g. the invited-member guard above, or a wizard step's own !orgFormData redirect).
+  const [intent] = useState(() => {
+    if (location.state?.intent) return location.state.intent;
+    try {
+      return sessionStorage.getItem(REGISTRATION_INTENT_STORAGE_KEY) || null;
+    } catch {
+      return null;
+    }
+  });
+
   const [formData, setFormData] = useState({
     ...(location.state?.orgFormData || {}),
     name: location.state?.orgFormData?.name || '',
@@ -44,7 +59,10 @@ const OrganisationSetup = () => {
     email: location.state?.orgFormData?.email || '',
     billingEmail: location.state?.orgFormData?.billingEmail || '',
     fullAddress: location.state?.orgFormData?.fullAddress || '',
-    registrationReference: location.state?.orgFormData?.registrationReference || ''
+    registrationReference: location.state?.orgFormData?.registrationReference || '',
+    // Default on — preserves pre-v982 unconditional-grant behaviour unless the user
+    // actively opts out via the toggle below (decision 3/6 in the v982 plan).
+    wantsPmoAdmin: location.state?.orgFormData?.wantsPmoAdmin ?? true
   });
 
   // Validation states for unique name checks
@@ -247,8 +265,14 @@ const OrganisationSetup = () => {
       return;
     }
 
-    navigate('/onboarding/industry-selection', { state: { orgFormData: formData } });
-  }, [formData, navigate, nameValidation.available, companyNameValidation.available]);
+    navigate('/onboarding/industry-selection', {
+      state: {
+        orgFormData: formData,
+        industrySelection: location.state?.industrySelection,
+        professionalRoleId: location.state?.professionalRoleId,
+      },
+    });
+  }, [formData, navigate, location.state, nameValidation.available, companyNameValidation.available]);
 
   const handleChange = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -265,6 +289,13 @@ const OrganisationSetup = () => {
   const showCompanyName = useMemo(() => {
     return formData.type === 'business' || formData.type === 'company';
   }, [formData.type]);
+
+  // v982 Phase 1 (task E): only ask the PMO Admin question when we're confident this is
+  // an organisation-intent registration for a business/company — 'individual'/'freelancer'
+  // always auto-grant (decision 3, no one else exists to hold it), and any registration
+  // that skipped the entry-choice screen (intent unknown) keeps the pre-v982 default of
+  // no toggle shown / unconditional grant, so nothing regresses for those callers.
+  const showPmoAdminToggle = intent === 'organisation' && showCompanyName;
 
   return (
     <WizardStepLayout
@@ -533,6 +564,28 @@ const OrganisationSetup = () => {
             </div>
           </div>
         </div>
+
+        {showPmoAdminToggle && (
+          <div className="flex items-start gap-3 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40">
+            <input
+              id="wantsPmoAdmin"
+              type="checkbox"
+              checked={formData.wantsPmoAdmin}
+              onChange={(e) => handleChange('wantsPmoAdmin', e.target.checked)}
+              className="mt-1 w-4 h-4"
+            />
+            <label htmlFor="wantsPmoAdmin" className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
+              <span className="font-medium text-gray-900 dark:text-white">
+                Also give me PMO Admin access to configure this organisation
+              </span>
+              <p className="mt-1 text-gray-500 dark:text-gray-400">
+                PMO Admin lets you configure industries, roles, and menu access for your organisation. If
+                you'd rather have someone else own configuration, leave this off — you can invite a PMO
+                Administrator afterwards, or grant yourself PMO Admin later from Organisation Settings.
+              </p>
+            </label>
+          </div>
+        )}
 
         <button
           type="submit"

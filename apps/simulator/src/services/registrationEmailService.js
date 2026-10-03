@@ -4,7 +4,7 @@
  */
 
 import { platformDb } from './supabase/supabaseClient';
-import { sendEmail } from './emailIntegrationService';
+import { sendEmail, sendEmailViaSupabase } from './emailIntegrationService';
 import { getBranding, buildBrandedEmailHeader, buildBrandedEmailFooter } from './brandingService';
 
 /**
@@ -32,10 +32,15 @@ export async function sendWelcomeEmail(userEmail, firstName) {
   try {
     const subject = 'Welcome to Project Nidus'
     const body = generateWelcomeEmail(firstName)
-    const result = await sendEmail(userEmail, subject, body, 'welcome')
+    // sendEmailViaSupabase (not sendEmail) — a just-registered user has no admin role
+    // yet, so they don't have RLS access to email_configurations/email_logs, which
+    // sendEmail() reads/writes client-side before it ever calls the edge function.
+    // sendEmailViaSupabase calls the edge function directly; it resolves the active
+    // config server-side with the service role, so no client RLS access is needed.
+    const result = await sendEmailViaSupabase(userEmail, subject, body, null, { templateId: 'welcome' })
     return {
       success: result.success || false,
-      error: result.success ? null : (result.message || 'Failed to send email'),
+      error: result.success ? null : (result.error || 'Failed to send email'),
     }
   } catch (error) {
     console.error('Error sending welcome email:', error)
@@ -109,6 +114,18 @@ export async function verifyEmailToken(token) {
 }
 
 /**
+ * Short verification link for emails (v998). Prefer /v/{token} over the legacy
+ * /auth/verify-email?token= form — shorter path, no query string, less spam-like.
+ * @param {string} verificationToken
+ * @param {string} [origin=window.location.origin]
+ * @returns {string}
+ */
+export function buildAccountVerificationLink(verificationToken, origin = typeof window !== 'undefined' ? window.location.origin : '') {
+  const base = (origin || '').replace(/\/$/, '')
+  return `${base}/v/${encodeURIComponent(verificationToken || '')}`
+}
+
+/**
  * Send the real account-verification email (token-based, SQL/v929). Only
  * meaningful once ACCOUNT_EMAIL_VERIFICATION_ENABLED is true and the caller
  * has already obtained a token via the request_email_verification() RPC.
@@ -119,13 +136,14 @@ export async function verifyEmailToken(token) {
  */
 export async function sendAccountVerificationEmail(userEmail, firstName, verificationToken) {
   try {
-    const verificationLink = `${window.location.origin}/auth/verify-email?token=${verificationToken}`
+    const verificationLink = buildAccountVerificationLink(verificationToken)
     const subject = 'Verify your Project Nidus account'
     const body = generateAccountVerificationEmail(firstName, verificationLink)
-    const result = await sendEmail(userEmail, subject, body, 'account-verification')
+    // sendEmailViaSupabase, not sendEmail — same reason as sendWelcomeEmail above.
+    const result = await sendEmailViaSupabase(userEmail, subject, body, null, { templateId: 'account-verification' })
     return {
       success: result.success || false,
-      error: result.success ? null : (result.message || 'Failed to send email'),
+      error: result.success ? null : (result.error || 'Failed to send email'),
     }
   } catch (error) {
     console.error('Error sending account verification email:', error)
@@ -364,7 +382,7 @@ function generateWelcomeEmail(firstName, branding = null) {
 
 /**
  * Generate account verification email HTML (v929 — inactive until
- * ACCOUNT_EMAIL_VERIFICATION_ENABLED is true)
+ * ACCOUNT_EMAIL_VERIFICATION_ENABLED is true; link shape shortened in v998)
  */
 function generateAccountVerificationEmail(firstName, verificationLink, branding = null) {
   const btnColor = branding?.primary_color || '#667eea'
@@ -384,13 +402,23 @@ function generateAccountVerificationEmail(firstName, verificationLink, branding 
         <p>Please verify your email address to finish setting up your Project Nidus account:</p>
 
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationLink}" target="_blank" rel="noopener noreferrer" style="background: ${btnColor}; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+          <a href="${verificationLink}" target="_blank" rel="noopener noreferrer" style="background: ${btnColor}; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">
             Verify Email
           </a>
         </div>
 
-        <p>Or copy and paste this link into your browser:</p>
-        <p style="word-break: break-all; color: ${btnColor};">${verificationLink}</p>
+        <p style="text-align: center; margin: 0 0 8px 0; font-size: 14px; color: #555;">
+          If the button doesn't work, tap the link below. On a phone, long-press it to copy.
+        </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 24px 0;">
+          <tr>
+            <td align="center" style="padding: 0;">
+              <a href="${verificationLink}" target="_blank" rel="noopener noreferrer" style="display: block; width: 100%; max-width: 100%; box-sizing: border-box; padding: 16px 12px; font-size: 16px; line-height: 1.5; font-weight: bold; color: ${btnColor}; text-decoration: underline; text-align: center;">
+                Click to verify your email
+              </a>
+            </td>
+          </tr>
+        </table>
 
         <p><strong>This link will expire in 24 hours.</strong></p>
 
@@ -598,6 +626,7 @@ function generatePaymentSuccessEmail(projectName, subscriptionDetails, dashboard
 export default {
   sendWelcomeEmail,
   sendAccountVerificationEmail,
+  buildAccountVerificationLink,
   requestEmailVerificationToken,
   verifyEmailToken,
   getMyVerificationStatus,

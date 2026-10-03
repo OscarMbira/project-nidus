@@ -71,7 +71,7 @@ export default function OrganizationAdmin() {
           .from('accounts')
           .select('id')
           .eq('owner_user_id', userRecord.id)
-          .single();
+          .maybeSingle();
 
         if (accountData) {
           setOrganizationId(accountData.id);
@@ -82,7 +82,7 @@ export default function OrganizationAdmin() {
             .eq('owner_user_id', userRecord.id)
             .eq('is_deleted', false)
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (project?.account_id) {
             setOrganizationId(project.account_id);
@@ -372,7 +372,7 @@ export default function OrganizationAdmin() {
             </div>
 
             <button
-              onClick={() => navigate('/platform/dashboard')}
+              onClick={() => navigate(-1)}
               className="text-gray-400 hover:text-gray-300 text-sm"
             >
               ← Back to Dashboard
@@ -394,7 +394,7 @@ export default function OrganizationAdmin() {
                 This feature is being enhanced with full functionality. Basic management is available through individual project settings.
               </p>
               <button
-                onClick={() => navigate('/platform/dashboard')}
+                onClick={() => navigate(-1)}
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
               >
                 Back to Dashboard

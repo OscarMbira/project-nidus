@@ -69,7 +69,8 @@ const MIME_TYPES = {
  */
 export function getFileExtension(filename) {
   if (!filename) return ''
-  return filename.split('.').pop()?.toLowerCase() || ''
+  const dot = filename.lastIndexOf('.')
+  return dot === -1 ? '' : filename.slice(dot + 1).toLowerCase()
 }
 
 /**

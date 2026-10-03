@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BarChart3 } from 'lucide-react'
+import DashboardStatCard from '../../components/ui/DashboardStatCard'
 import { getPracticeStakeholderStats } from '../../services/sim/practiceStakeholderService'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
@@ -82,22 +83,10 @@ export default function PracticeStakeholderMonitoring() {
 
       {loading ? <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" /></div> : !selectedProjectId ? <div className="bg-white dark:bg-gray-800 rounded-lg border p-12 text-center text-gray-500">Select a project.</div> : !stats ? <div className="bg-white dark:bg-gray-800 rounded-lg border p-12 text-center text-gray-500">No stats.</div> : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total stakeholders</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalStakeholders}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Active</div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{stats.activeStakeholders}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Analysed</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalAnalysis}</div>
-          </div>
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">Engagement plans</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.totalEngagement}</div>
-          </div>
+          <DashboardStatCard label="Total stakeholders" value={stats.totalStakeholders} />
+          <DashboardStatCard label="Active" value={stats.activeStakeholders} accentClassName="text-green-600 dark:text-green-400" />
+          <DashboardStatCard label="Analysed" value={stats.totalAnalysis} />
+          <DashboardStatCard label="Engagement plans" value={stats.totalEngagement} />
           {stats.byAttitude && (
             <div className="col-span-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-3">By attitude</h3>

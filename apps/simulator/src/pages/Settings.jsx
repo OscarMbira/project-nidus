@@ -363,8 +363,8 @@ export default function Settings() {
                   </button>
                 </div>
               </div>
-              <ProfilePictureSection db={platformDb} accountId={accountId} initials={getInitialsFromName(profileData.full_name)} />
-              <ProfileSignatureSection db={platformDb} accountId={accountId} />
+              <ProfilePictureSection db={platformDb} accountId={accountId} initials={getInitialsFromName(profileData.full_name)} authUserId={user?.id} />
+              <ProfileSignatureSection db={platformDb} accountId={accountId} authUserId={user?.id} />
             </div>
           )}
 

@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams, useLocation } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
 import { normalizeSupabaseAuthError } from '@nidus/shared/utils/authErrorMessage'
 import { Mail, Lock, User, AlertCircle, Loader, UserPlus, Briefcase, CheckCircle2 } from 'lucide-react'
@@ -18,9 +18,11 @@ import {
 } from '../../services/registrationEmailService'
 import MainHeader from '../../components/homepage/MainHeader'
 import PlatformFooter from '../../components/homepage/PlatformFooter'
+import { REGISTRATION_INTENT_STORAGE_KEY } from '../onboarding/RegistrationEntryChoice'
 
 export default function PlatformRegister() {
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -134,6 +136,23 @@ export default function PlatformRegister() {
             // Continue anyway - can be registered later
           }
 
+          // public.users row creation is otherwise deferred to PlatformAccountSetup.jsx —
+          // ensure it exists now (idempotent, same RPC that page itself calls) so the
+          // RLS-gated calls below (email logging, request_email_verification) can resolve
+          // auth.uid() to a real users.id instead of failing with "Not authenticated".
+          try {
+            await supabase.rpc('get_or_create_user', {
+              p_auth_user_id: data.user.id,
+              p_email: email,
+              p_full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+              p_first_name: firstName.trim(),
+              p_last_name: lastName.trim(),
+              p_is_verified: false,
+            })
+          } catch (userRowErr) {
+            console.warn('get_or_create_user pre-check failed (non-fatal, PlatformAccountSetup.jsx retries it):', userRowErr)
+          }
+
           // Best-effort — never blocks registration if the email hiccups.
           // Sent via the reliable send-email/Resend-API path (same one invitations
           // use), not Supabase's own SMTP integration.
@@ -156,7 +175,22 @@ export default function PlatformRegister() {
             }
           }
 
-          navigate('/onboarding/platform-account-setup', { replace: true })
+          // v918 follow-up: route straight into the Phase 5 wizard (Industry -> Professional
+          // Role -> Email Verification -> Review -> Workspace Setup) instead of the older
+          // PlatformAccountSetup.jsx page, which predates industry/role/provisioning and only
+          // reached the new wizard as a fallback deep inside its own "Complete" handler.
+          // v982: forward the entry-choice screen's intent (state first, sessionStorage
+          // fallback covers a refresh mid-form) so OrganisationSetup.jsx can gate the PMO
+          // Admin toggle without re-asking the question.
+          let regIntent = location.state?.intent || null
+          if (!regIntent) {
+            try {
+              regIntent = sessionStorage.getItem(REGISTRATION_INTENT_STORAGE_KEY) || null
+            } catch (err) {
+              // sessionStorage unavailable — proceed without a remembered intent
+            }
+          }
+          navigate('/onboarding/organisation-setup', { replace: true, state: { intent: regIntent } })
         }
       }
     } catch (error) {

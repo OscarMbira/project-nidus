@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FolderKanban, Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
+import DashboardStatCard from '../ui/DashboardStatCard';
 import { getStrategicObjectives, getProjectObjectiveMappings, getAlignmentScores } from '../../services/strategicService';
 import { platformDb } from '@nidus/supabase';
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
@@ -179,66 +180,20 @@ export default function StrategicPortfolioView({ portfolioId = null }) {
 
           {/* Strategic Alignment Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Average Alignment</p>
-                  <p className={`text-3xl font-bold ${
-                    averageAlignment >= 80 ? 'text-green-600 dark:text-green-400' :
-                    averageAlignment >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
-                    'text-red-600 dark:text-red-400'
-                  }`}>
-                    {Math.round(averageAlignment)}
-                  </p>
-                </div>
-                <Target className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Strategic Objectives</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {objectives.length}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {objectives.filter(o => o.objective_status === 'active').length} active
-                  </p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Mapped Projects</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {mappedProjects} / {projects.length}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {Math.round((mappedProjects / projects.length) * 100) || 0}% mapped
-                  </p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-purple-500" />
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">High Alignment</p>
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                    {projectsWithHighAlignment}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Projects ≥80% aligned
-                  </p>
-                </div>
-                <BarChart3 className="h-8 w-8 text-green-500" />
-              </div>
-            </div>
+            <DashboardStatCard
+              label="Average Alignment"
+              value={Math.round(averageAlignment)}
+              icon={Target}
+              iconClassName="text-blue-500"
+              accentClassName={
+                averageAlignment >= 80 ? 'text-green-600 dark:text-green-400' :
+                averageAlignment >= 60 ? 'text-yellow-600 dark:text-yellow-400' :
+                'text-red-600 dark:text-red-400'
+              }
+            />
+            <DashboardStatCard label="Strategic Objectives" value={objectives.length} description={`${objectives.filter(o => o.objective_status === 'active').length} active`} icon={CheckCircle} iconClassName="text-green-500" />
+            <DashboardStatCard label="Mapped Projects" value={`${mappedProjects} / ${projects.length}`} description={`${Math.round((mappedProjects / projects.length) * 100) || 0}% mapped`} icon={TrendingUp} iconClassName="text-purple-500" />
+            <DashboardStatCard label="High Alignment" value={projectsWithHighAlignment} description="Projects ≥80% aligned" icon={BarChart3} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" />
           </div>
 
           {/* Objectives by Category */}

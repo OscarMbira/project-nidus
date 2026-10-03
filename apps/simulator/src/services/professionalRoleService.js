@@ -54,7 +54,43 @@ export async function updateUserProfessionalRole(userId, professionalRoleId) {
   }
 }
 
+/**
+ * The current user's own professional role code (e.g. 'pmo_professional',
+ * 'portfolio_manager') — used to tailor the post-registration Getting Started CTA
+ * (v918 follow-up: PMO/Programme/Portfolio-facing users aren't funneled toward
+ * "create a project" — they can create a Portfolio/Programme/Project later via the
+ * existing PMO functionality, or nothing at all yet).
+ * @returns {Promise<{success: boolean, roleCode: string|null, error: string|null}>}
+ */
+export async function getMyProfessionalRoleCode() {
+  try {
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return { success: true, roleCode: null, error: null }
+
+    const { data: userRow, error: userError } = await supabase
+      .from('users')
+      .select('professional_role_id')
+      .eq('auth_user_id', authUser.id)
+      .maybeSingle()
+    if (userError) throw userError
+    if (!userRow?.professional_role_id) return { success: true, roleCode: null, error: null }
+
+    const { data: roleRow, error: roleError } = await supabase
+      .from('professional_roles')
+      .select('role_code')
+      .eq('id', userRow.professional_role_id)
+      .maybeSingle()
+    if (roleError) throw roleError
+
+    return { success: true, roleCode: roleRow?.role_code || null, error: null }
+  } catch (error) {
+    console.error('getMyProfessionalRoleCode:', error)
+    return { success: false, roleCode: null, error: error.message || 'Failed to load professional role' }
+  }
+}
+
 export default {
   getProfessionalRoles,
   updateUserProfessionalRole,
+  getMyProfessionalRoleCode,
 }

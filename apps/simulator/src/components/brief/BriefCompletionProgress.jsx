@@ -8,12 +8,15 @@ import { validateCompleteness } from '../../services/briefValidationService'
 
 export default function BriefCompletionProgress({ briefId }) {
   const [progress, setProgress] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(Boolean(briefId))
 
   useEffect(() => {
-    if (briefId) {
-      loadProgress()
+    if (!briefId) {
+      setProgress(null)
+      setLoading(false)
+      return
     }
+    loadProgress()
   }, [briefId])
 
   const loadProgress = async () => {
@@ -23,18 +26,24 @@ export default function BriefCompletionProgress({ briefId }) {
       setProgress(data)
     } catch (error) {
       console.error('Error loading progress:', error)
+      setProgress(null)
     } finally {
       setLoading(false)
     }
   }
 
-  if (loading || !progress) {
+  // No saved brief yet (create flow) — nothing to measure
+  if (!briefId) return null
+
+  if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div className="text-center text-gray-500 dark:text-gray-400">Loading progress...</div>
       </div>
     )
   }
+
+  if (!progress) return null
 
   const sections = [
     { key: 'project_definition', label: 'Project Definition' },

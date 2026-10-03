@@ -53,7 +53,7 @@ export default function PracticeLessonDetail() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button onClick={() => navigate(`/simulator/practice-lessons-log?projectId=${projectId}`)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+      <button onClick={() => navigate(-1)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </button>
       <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
@@ -86,7 +86,7 @@ export default function PracticeLessonDetail() {
           <textarea required value={formData.lesson_description} onChange={(e) => setFormData({ ...formData, lesson_description: e.target.value })} rows={6} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => navigate(`/simulator/practice-lessons-log?projectId=${projectId}`)} className="px-4 py-2 border rounded-lg">Cancel</button>
+          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Saving...' : 'Save Lesson'}</button>
         </div>
       </form>

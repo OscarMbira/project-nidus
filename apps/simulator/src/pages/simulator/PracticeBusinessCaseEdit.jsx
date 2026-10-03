@@ -165,7 +165,7 @@ export default function PracticeBusinessCaseEdit() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate(`/simulator/practice-business-cases/${id}`)}
+        onClick={() => navigate(-1)}
         className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
       >
         <ChevronLeft className="h-4 w-4 mr-1" /> Back to view
@@ -379,7 +379,7 @@ export default function PracticeBusinessCaseEdit() {
             )}
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => navigate(`/simulator/practice-business-cases/${id}`)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+            <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
               Cancel
             </button>
             <button type="button" onClick={handleSave} disabled={loading} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">

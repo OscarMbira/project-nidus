@@ -85,6 +85,7 @@ export default function IndustrySelectionStep() {
           primaryIndustryId: primaryId,
           segmentIdsByIndustry: segmentIdByIndustry,
         },
+        professionalRoleId: location.state?.professionalRoleId,
       },
     });
   };

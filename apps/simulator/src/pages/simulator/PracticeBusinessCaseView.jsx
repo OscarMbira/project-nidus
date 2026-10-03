@@ -114,7 +114,7 @@ export default function PracticeBusinessCaseView() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-8 text-center">
         <p className="text-red-600 dark:text-red-400">{error || 'Business case not found'}</p>
-        <button onClick={() => navigate('/simulator/practice-business-cases')} className="mt-4 text-blue-600 hover:underline text-sm">
+        <button onClick={() => navigate(-1)} className="mt-4 text-blue-600 hover:underline text-sm">
           Back to list
         </button>
       </div>
@@ -127,7 +127,7 @@ export default function PracticeBusinessCaseView() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
       {/* Back */}
       <button
-        onClick={() => navigate('/simulator/practice-business-cases')}
+        onClick={() => navigate(-1)}
         className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
       >
         <ArrowLeft className="h-4 w-4 mr-1" /> Back to list

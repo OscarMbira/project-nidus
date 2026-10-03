@@ -41,7 +41,7 @@ export default function PracticeConfigMSCreate() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button onClick={() => navigate(`/simulator/practice-config-ms?projectId=${projectId}`)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+      <button onClick={() => navigate(-1)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </button>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Create Practice Config MS</h1>
@@ -57,7 +57,7 @@ export default function PracticeConfigMSCreate() {
           <textarea value={formData.purpose} onChange={(e) => setFormData({ ...formData, purpose: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => navigate(`/simulator/practice-config-ms?projectId=${projectId}`)} className="px-4 py-2 border rounded-lg">Cancel</button>
+          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Creating...' : 'Create Config MS'}</button>
         </div>
       </form>

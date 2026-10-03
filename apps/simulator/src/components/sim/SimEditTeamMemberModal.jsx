@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Loader } from 'lucide-react'
-import { getSimTeamFunctionalRoles, updateSimTeamMember } from '../../services/sim/simTeamService'
+import { listPracticeProjectFunctionalRoles, updateSimTeamMember } from '../../services/sim/simTeamService'
 import { useToast } from '../../hooks/useToast'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
@@ -8,7 +8,14 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 
-export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId, member, onSuccess }) {
+export default function SimEditTeamMemberModal({
+  isOpen,
+  onClose,
+  practiceTeamId,
+  practiceProjectId,
+  member,
+  onSuccess,
+}) {
   const { showToast } = useToast()
   const [roles, setRoles] = useState([])
   const [roleMode, setRoleMode] = useState('preset')
@@ -28,7 +35,9 @@ export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId
     if (mr) setRoleMode('preset')
     ;(async () => {
       setLoading(true)
-      const r = await getSimTeamFunctionalRoles(practiceTeamId)
+      const r = practiceProjectId
+        ? await listPracticeProjectFunctionalRoles(practiceProjectId)
+        : { success: true, data: [] }
       if (r.success) {
         const list = r.data || []
         setRoles(list)
@@ -37,7 +46,7 @@ export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId
       }
       setLoading(false)
     })()
-  }, [isOpen, practiceTeamId, member])
+  }, [isOpen, practiceTeamId, practiceProjectId, member])
 
   if (!isOpen || !member) return null
 

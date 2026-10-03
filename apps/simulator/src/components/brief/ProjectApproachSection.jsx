@@ -3,9 +3,15 @@
  * Section 6: Solution approach
  */
 
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+
 export default function ProjectApproachSection({ formData, onChange, errors = {}, readOnly = false }) {
   const handleChange = (e) => {
     onChange(e)
+  }
+
+  const setListField = (name, value) => {
+    onChange({ target: { name, value } })
   }
 
   return (
@@ -147,21 +153,25 @@ export default function ProjectApproachSection({ formData, onChange, errors = {}
 
       {/* Approach Justification */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Approach Justification
         </label>
+        <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+          Why this approach was selected. Add one justification point per line.
+        </p>
         {readOnly ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData.approach_justification || 'Not specified'}
           </p>
         ) : (
-          <textarea
-            name="approach_justification"
+          <MultiLineListInput
+            viewModeId="brief-approach-justification"
+            id="brief_approach_justification"
             value={formData.approach_justification || ''}
-            onChange={handleChange}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            placeholder="Why this approach was selected. Justify the choice..."
+            onChange={(v) => setListField('approach_justification', v)}
+            placeholder="e.g. Reuses existing Temenos skills in the delivery team"
+            ariaLabelPrefix="justification point"
+            itemColumnLabel="Justification"
           />
         )}
       </div>

@@ -174,7 +174,7 @@ export default function MethodologySelection() {
                 There are no active methodologies configured in the system. Please contact your administrator.
               </p>
               <Button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate(-1)}
                 variant="outline"
               >
                 Back to Dashboard

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   createTemplate,
@@ -251,9 +251,9 @@ export default function IndustryTemplateForm() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <Link to="/pmo/industry-templates" className="text-sm text-blue-600 dark:text-blue-400">
+      <button type="button" onClick={() => navigate(-1)} className="text-sm text-blue-600 dark:text-blue-400">
         ← Back to list
-      </Link>
+      </button>
       <h1 className="text-2xl font-bold mt-2 text-gray-900 dark:text-gray-100">
         {isEdit ? 'Edit' : 'New'} Industry Template
       </h1>

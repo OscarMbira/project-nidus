@@ -17,6 +17,7 @@ const AuthorisationActions = lazy(() => import('../components/project/Authorisat
 
 import { addProjectToPortfolio } from '../services/portfolioService'
 import { addProjectToProgramme } from '../services/programmeService'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 // Mandate linking and loading (used when arriving from an approved mandate)
 import { linkMandateToProject, getMandatePrefill } from '../services/projectMandateService'
@@ -24,6 +25,9 @@ import { getFundingSources } from '../services/fundingSourceService'
 import { getBudgetCategories } from '../services/budgetCategoryService'
 import { getLifecycleTemplates } from '../services/lifecycleTemplateService'
 import { saveForProject } from '../services/projectBudgetCategoryService'
+import { saveStakeholder } from '../services/stakeholderService'
+import { createMilestone } from '../services/milestoneService'
+import { getOrgIndustryOptions } from '../services/organisationIndustryService.js'
 
 // Removed skeleton loader for faster initial render
 
@@ -86,6 +90,27 @@ const PROJECT_CREATE_EXPORT_SECTIONS = [
   ]}
 ]
 
+// Tab ids in display order — must match ProjectFormTabs.jsx's `tabs` array exactly, since
+// handleSubmit() below walks this order to find the FIRST tab containing a validation error.
+const TAB_ORDER = [
+  'details', 'governance', 'justificationObjectives', 'justificationBenefits', 'delivery',
+  'tolerances', 'financial', 'risks', 'resources', 'documents', 'portfolio', 'programme',
+]
+
+// Maps each validateForm() error key to the tab it belongs to, so a validation failure on a
+// field that isn't on the currently-open tab (e.g. Tolerances while viewing Programme) can jump
+// the user there instead of silently doing nothing.
+const FIELD_TO_TAB = {
+  project_name: 'details',
+  project_type_id: 'details',
+  project_status_id: 'details',
+  end_date: 'details',
+  executive_name: 'governance',
+  funding_authority_name: 'governance',
+  approving_authority_name: 'governance',
+  tolerances: 'tolerances',
+}
+
 export default function ProjectsCreate() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -105,6 +130,10 @@ export default function ProjectsCreate() {
   const formDataRef = useRef(null)
   // When mandate is loaded from URL param, store id for linking after project create
   const mandateIdForLinkingRef = useRef(null)
+  // public.users.id for the signed-in auth user (resolved once by the mount effect below) —
+  // owner_user_id/created_by/created_by_user_id all FK to users(id), NOT auth.users(id), so
+  // handleSubmit must never pass the raw auth user id into those columns directly.
+  const internalUserIdRef = useRef(null)
 
   const [formData, setFormData] = useState({
     // Phase 1: Basic project fields
@@ -174,11 +203,16 @@ export default function ProjectsCreate() {
     business_case_status: '',
     rfp_reference: '',
     funding_approval_status: '',
-    document_repository_url: ''
+    document_repository_url: '',
+
+    industry_category_id: '',
+    success_criteria: '',
+    project_classification: ''
   })
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
+  const [orgIndustries, setOrgIndustries] = useState([])
   const [fundingSources, setFundingSources] = useState([])
   const [budgetCategories, setBudgetCategories] = useState([])
   const [lifecycleTemplates, setLifecycleTemplates] = useState([])
@@ -296,6 +330,21 @@ export default function ProjectsCreate() {
   const [selectedPortfolio, setSelectedPortfolio] = useState(null)
   const [selectedProgrammeId, setSelectedProgrammeId] = useState(null)
   const [selectedProgramme, setSelectedProgramme] = useState(null)
+  const [stakeholderDrafts, setStakeholderDrafts] = useState([])
+  const [milestoneDrafts, setMilestoneDrafts] = useState([])
+
+  const handleAddStakeholderDraft = useCallback(async (data) => {
+    setStakeholderDrafts((prev) => [...prev, { ...data, removable: true }])
+  }, [])
+  const handleRemoveStakeholderDraft = useCallback((index) => {
+    setStakeholderDrafts((prev) => prev.filter((_, i) => i !== index))
+  }, [])
+  const handleAddMilestoneDraft = useCallback(async (data) => {
+    setMilestoneDrafts((prev) => [...prev, { ...data, removable: true }])
+  }, [])
+  const handleRemoveMilestoneDraft = useCallback((index) => {
+    setMilestoneDrafts((prev) => prev.filter((_, i) => i !== index))
+  }, [])
 
   // Draft Queue Integration
   const {
@@ -335,6 +384,7 @@ export default function ProjectsCreate() {
           navigate('/onboarding/organisation-setup', { replace: true })
           return
         }
+        internalUserIdRef.current = internalUserId
 
         // ── Phase 2: org check + PMO admin check — both parallel ─────────────
         // Old code: sequential isPmoAdmin(users→user_roles) then serial getOrganisationUsers
@@ -367,6 +417,10 @@ export default function ProjectsCreate() {
         }
 
         setIsPmoAdmin(isAdmin)
+
+        getOrgIndustryOptions(orgResult.data.id)
+          .then((res) => { if (isMounted && res.success) setOrgIndustries(res.data) })
+          .catch((err) => console.error('Failed to load organisation industries:', err))
 
         if (typesResult.error && statusesResult.error) {
           setErrors({ submit: 'Failed to load required dropdown data.' })
@@ -526,13 +580,31 @@ export default function ProjectsCreate() {
     }
 
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    return newErrors
   }, [])
 
   const handleSubmit = useCallback(async (e, isDraft = false) => {
     e.preventDefault()
 
-    if (!validateForm()) {
+    const validationErrors = validateForm()
+    if (Object.keys(validationErrors).length > 0) {
+      // Jump to the first step tab whose field failed validation — without this, a step other
+      // than the one currently open (e.g. Tolerances) can silently fail while its error message
+      // is invisible on whatever tab the user is actually looking at, making Create Project
+      // appear to do nothing.
+      const firstErrorTab = TAB_ORDER.find((tabId) =>
+        Object.keys(validationErrors).some((key) => FIELD_TO_TAB[key] === tabId)
+      )
+      if (firstErrorTab && firstErrorTab !== activeTab) {
+        setActiveTab(firstErrorTab)
+      }
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+      setErrors({
+        ...validationErrors,
+        submit: 'Please complete the required fields highlighted below before creating the project.',
+      })
       return
     }
 
@@ -545,6 +617,36 @@ export default function ProjectsCreate() {
         throw new Error('User not authenticated')
       }
 
+      // owner_user_id/created_by/created_by_user_id all FK to public.users(id), NOT
+      // auth.users(id) — passing the raw auth user id (user.id) directly, as this used to do,
+      // fails with "insert or update on table 'projects' violates foreign key constraint
+      // 'projects_created_by_user_id_fkey'" (Key is not present in table "users"). Reuse the
+      // internal id the mount effect already resolved; fall back to a fresh lookup only if
+      // that ref somehow isn't populated yet (e.g. handleSubmit fired before the mount effect
+      // finished — shouldn't normally happen since the form isn't usable until it has).
+      let internalUserId = internalUserIdRef.current
+      if (!internalUserId) {
+        const { data: userRow, error: userLookupError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', user.id)
+          .single()
+        if (userLookupError || !userRow) {
+          throw new Error('Could not resolve your user profile. Please refresh and try again.')
+        }
+        internalUserId = userRow.id
+        internalUserIdRef.current = internalUserId
+      }
+
+      // account_id was missing from the insert payload entirely — every existing projects row
+      // has it populated, and RLS's WITH CHECK treats a NULL account_id as never satisfied
+      // (NULL IN (...) is NULL, not TRUE), which is exactly the "violates row-level security
+      // policy" error this was producing.
+      const accountId = await getCurrentUserAccountId()
+      if (!accountId) {
+        throw new Error('Could not resolve your organisation account. Please refresh and try again.')
+      }
+
       // Generate project code if not provided
       const projectCode = formData.project_code || `PRJ-${Date.now().toString().slice(-6)}`
 
@@ -554,6 +656,7 @@ export default function ProjectsCreate() {
       // Prepare project data
       const projectData = {
           // Basic project fields
+          account_id: accountId,
           project_name: formData.project_name,
           project_description: formData.project_description || null,
           project_code: projectCode,
@@ -561,12 +664,12 @@ export default function ProjectsCreate() {
           status_id: formData.project_status_id,
           planned_start_date: formData.start_date || null,
           planned_end_date: formData.end_date || null,
-          owner_user_id: user.id,
-          created_by: user.id,
+          owner_user_id: internalUserId,
+          created_by: internalUserId,
 
           // Phase 1: Intake lifecycle
           intake_status: formData.intake_status || 'draft',
-          created_by_user_id: user.id,
+          created_by_user_id: internalUserId,
 
           // Phase 2: Governance & Authority (Section A)
           executive_user_id: formData.executive_user_id || null,
@@ -622,7 +725,14 @@ export default function ProjectsCreate() {
           business_case_status: formData.business_case_status || null,
           rfp_reference: formData.rfp_reference || null,
           funding_approval_status: formData.funding_approval_status || null,
-          document_repository_url: formData.document_repository_url || null
+          document_repository_url: formData.document_repository_url || null,
+
+          // v1010: Industry / Sector — bound in the wizard UI but was never saved on create
+          industry_category_id: formData.industry_category_id || null,
+
+          // Project Details — Success Criteria / Classification
+          success_criteria: formData.success_criteria || null,
+          project_classification: formData.project_classification || null
       }
 
       // Execute insert or update based on whether project exists
@@ -634,7 +744,7 @@ export default function ProjectsCreate() {
           .from('projects')
           .update({
             ...projectData,
-            updated_by: user.id
+            updated_by: internalUserId
           })
           .eq('id', createdProjectId)
           .select()
@@ -677,6 +787,34 @@ export default function ProjectsCreate() {
           await saveForProject(project.id, toSave)
         } catch (err) {
           console.error('Failed to save budget categories:', err)
+        }
+      }
+
+      // Save stakeholders and milestones captured during setup (audit information —
+      // captured before roles are assigned; see MultiLineListInput/QuickCapture sections)
+      for (const draft of stakeholderDrafts) {
+        try {
+          await saveStakeholder({
+            project_id: project.id,
+            stakeholder_name: draft.stakeholder_name,
+            stakeholder_title: draft.stakeholder_title,
+            stakeholder_organization: draft.stakeholder_organization,
+            email: draft.email,
+          })
+        } catch (err) {
+          console.error('Failed to save stakeholder:', err)
+        }
+      }
+      for (const draft of milestoneDrafts) {
+        try {
+          const res = await createMilestone({
+            projectId: project.id,
+            milestoneName: draft.milestone_name,
+            targetDate: draft.target_date,
+          })
+          if (!res.success) console.error('Failed to save milestone:', res.error)
+        } catch (err) {
+          console.error('Failed to save milestone:', err)
         }
       }
 
@@ -922,6 +1060,14 @@ export default function ProjectsCreate() {
     }))
   }, [projectStatuses])
 
+  const industryOptions = useMemo(() => {
+    if (!orgIndustries.length) return []
+    return orgIndustries.map((ind) => ({
+      value: ind.id,
+      label: ind.is_primary ? `${ind.name} (Primary)` : ind.name,
+    }))
+  }, [orgIndustries])
+
   // Memoized subset passed to ProjectFormTabs so tab-bar only re-renders when
   // its own indicator fields change (not on every budget/date/code keystroke).
   const tabCompletionData = useMemo(() => ({
@@ -1059,6 +1205,7 @@ export default function ProjectsCreate() {
           handleChange={handleChange}
           projectTypeOptions={projectTypeOptions}
           statusOptions={statusOptions}
+          industryOptions={industryOptions}
           handleProjectTypeChange={handleProjectTypeChange}
           handleProjectStatusChange={handleProjectStatusChange}
           handleAuthorityNameChange={handleAuthorityNameChange}
@@ -1072,6 +1219,12 @@ export default function ProjectsCreate() {
           selectedProgrammeId={selectedProgrammeId}
           selectedProgramme={selectedProgramme}
           onProgrammeChange={(id, p) => { setSelectedProgrammeId(id); setSelectedProgramme(p) }}
+          stakeholderRows={stakeholderDrafts}
+          onAddStakeholder={handleAddStakeholderDraft}
+          onRemoveStakeholder={handleRemoveStakeholderDraft}
+          milestoneRows={milestoneDrafts}
+          onAddMilestone={handleAddMilestoneDraft}
+          onRemoveMilestone={handleRemoveMilestoneDraft}
         />
 
         {/* Error Message */}

@@ -66,4 +66,53 @@ export async function removePracticeTeamMember(teamId, userId) {
   }
 }
 
-export default { getPracticeTeams, getPracticeTeamMembers, createPracticeTeam, addPracticeTeamMember, removePracticeTeamMember }
+/** v1082 — mandatory change reason stash for practice-team history triggers */
+export async function setPracticeTeamChangeReason(reason = '') {
+  try {
+    const { error } = await simDb.rpc('set_team_change_reason', {
+      p_reason: String(reason || '').trim(),
+    })
+    if (error) throw error
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function clearPracticeTeamChangeReason() {
+  try {
+    const { error } = await simDb.rpc('clear_team_change_reason')
+    if (error) throw error
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getPracticeTeamChangeHistory(teamId) {
+  try {
+    if (!teamId) return { success: false, data: [], error: 'Team id is required' }
+    const { data, error } = await simDb
+      .from('team_change_history')
+      .select(
+        'id, team_id, project_id, entity_type, team_member_id, user_id, event_type, changes, change_reason, changed_by, changed_at, source_event',
+      )
+      .eq('team_id', teamId)
+      .order('changed_at', { ascending: false })
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error) {
+    return { success: false, data: [], error: error.message }
+  }
+}
+
+export default {
+  getPracticeTeams,
+  getPracticeTeamMembers,
+  createPracticeTeam,
+  addPracticeTeamMember,
+  removePracticeTeamMember,
+  setPracticeTeamChangeReason,
+  clearPracticeTeamChangeReason,
+  getPracticeTeamChangeHistory,
+}

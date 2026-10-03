@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { format } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
-import { Save, X, AlertTriangle, AlertCircle, Plus } from 'lucide-react'
+import { Save, X, AlertTriangle, AlertCircle } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
+import SelectField from '@nidus/ui/SelectField'
 import TaskComments from '../components/TaskComments'
 import TaskAttachments from '../components/TaskAttachments'
 import TaskDependencies from '../components/TaskDependencies'
@@ -11,8 +12,11 @@ import IssueForm from '../components/IssueForm'
 import RiskForm from '../components/RiskForm'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import { parseSkillsLines } from '@nidus/shared/utils/roleSkillsUtils.js'
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
+import { fillOwnerRolesFromInvitations } from '@nidus/shared/utils/taskOwnerInvitationRoles'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
-import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const TASK_VIEW_SECTIONS = [
   { title: 'Task', fields: [
     { key: 'task_name', label: 'Name' },
@@ -24,17 +28,44 @@ const TASK_VIEW_SECTIONS = [
 export default function TasksDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { showSuccess, modal } = useSuccessModal()
   const [task, setTask] = useState(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [projects, setProjects] = useState([])
   const [taskStatuses, setTaskStatuses] = useState([])
   const [users, setUsers] = useState([])
+  const [functionalRoles, setFunctionalRoles] = useState([])
   const [formData, setFormData] = useState({})
   const [errors, setErrors] = useState({})
   const [showIssueForm, setShowIssueForm] = useState(false)
   const [showRiskForm, setShowRiskForm] = useState(false)
+
+  const selectedRoleSkills = useMemo(() => {
+    const role = functionalRoles.find((r) => r.id === formData.functional_role_id)
+      || task?.functional_role
+    return parseSkillsLines(role?.required_skills)
+  }, [functionalRoles, formData.functional_role_id, task])
+
+  const roleOptions = useMemo(
+    () => [
+      { value: '', label: 'No role' },
+      ...functionalRoles.map((r) => ({ value: r.id, label: r.role_label })),
+    ],
+    [functionalRoles],
+  )
+
+  const ownerOptions = useMemo(
+    () => [
+      { value: '', label: 'Unassigned' },
+      ...users.map((u) => ({
+        value: u.id,
+        label: u.full_name || u.email || u.id,
+        description: u.projectRole || '—',
+      })),
+    ],
+    [users],
+  )
 
   useEffect(() => {
     fetchTask()
@@ -42,6 +73,20 @@ export default function TasksDetail() {
       fetchLookupData()
     }
   }, [id, editing])
+
+  const buildFormFromTask = (data) => ({
+    task_name: data.task_name || '',
+    task_description: data.task_description || '',
+    project_id: data.project_id || '',
+    status_id: data.status_id || '',
+    priority: data.priority || 'medium',
+    assigned_to_user_id: data.assigned_to_user_id || '',
+    functional_role_id: data.functional_role_id || '',
+    due_date: data.due_date ? format(new Date(data.due_date), 'yyyy-MM-dd') : '',
+    estimated_hours: data.estimated_hours || '',
+    estimated_duration_days: data.estimated_duration_days || '',
+    percentage_complete: data.percentage_complete || 0,
+  })
 
   const fetchTask = async () => {
     try {
@@ -53,6 +98,7 @@ export default function TasksDetail() {
           projects:project_id (id, project_name, project_code),
           task_statuses:status_id (*),
           assigned_user:assigned_to_user_id (id, full_name, email),
+          functional_role:functional_role_id (id, role_label, required_skills),
           created_by_user:created_by (id, full_name, email)
         `)
         .eq('id', id)
@@ -61,21 +107,9 @@ export default function TasksDetail() {
 
       if (error) throw error
       setTask(data)
-      
-      // Initialize form data when task is loaded
+
       if (data) {
-        setFormData({
-          task_name: data.task_name || '',
-          task_description: data.task_description || '',
-          project_id: data.project_id || '',
-          status_id: data.status_id || '',
-          priority: data.priority || 'medium',
-          assigned_to_user_id: data.assigned_to_user_id || '',
-          due_date: data.due_date ? format(new Date(data.due_date), 'yyyy-MM-dd') : '',
-          estimated_hours: data.estimated_hours || '',
-          estimated_duration_days: data.estimated_duration_days || '',
-          percentage_complete: data.percentage_complete || 0
-        })
+        setFormData(buildFormFromTask(data))
       }
     } catch (error) {
       console.error('Error fetching task:', error)
@@ -86,38 +120,79 @@ export default function TasksDetail() {
 
   const fetchLookupData = async () => {
     try {
-      // Fetch projects
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('id, project_name, project_code')
-        .eq('is_deleted', false)
-        .order('project_name', { ascending: true })
+      const projectId = formData.project_id || task?.project_id
 
-      if (projectsError) throw projectsError
-
-      // Fetch task statuses
-      const { data: statusesData, error: statusesError } = await supabase
+      const statusPromise = supabase
         .from('task_statuses')
         .select('*')
         .eq('is_active', true)
         .eq('is_deleted', false)
         .order('status_order', { ascending: true })
 
-      if (statusesError) throw statusesError
-
-      // Fetch users
-      const { data: usersData, error: usersError } = await supabase
+      const usersPromise = supabase
         .from('users')
         .select('id, full_name, email')
         .eq('is_active', true)
         .eq('is_deleted', false)
         .order('full_name', { ascending: true })
 
-      if (usersError) throw usersError
+      const rolesPromise = projectId
+        ? supabase
+            .from('project_functional_roles')
+            .select('id, role_label, required_skills, sort_order')
+            .eq('project_id', projectId)
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true })
+            .order('role_label', { ascending: true })
+        : Promise.resolve({ data: [], error: null })
 
-      setProjects(projectsData || [])
+      const membershipsPromise = projectId
+        ? supabase
+            .from('project_memberships')
+            .select(`
+              user_id,
+              role:project_roles ( role_display_name, role_name )
+            `)
+            .eq('project_id', projectId)
+            .eq('is_active', true)
+            .or('invitation_status.eq.accepted,invitation_status.is.null')
+        : Promise.resolve({ data: [], error: null })
+
+      const [
+        { data: statusesData, error: statusesError },
+        { data: usersData, error: usersError },
+        rolesResult,
+        membershipsResult,
+      ] = await Promise.all([statusPromise, usersPromise, rolesPromise, membershipsPromise])
+
+      if (statusesError) throw statusesError
+      if (usersError) throw usersError
+      if (rolesResult.error) throw rolesResult.error
+      if (membershipsResult.error) throw membershipsResult.error
+
+      const roleByUserId = new Map()
+      for (const row of membershipsResult.data || []) {
+        if (!row?.user_id) continue
+        const label = row.role?.role_display_name || row.role?.role_name || ''
+        if (label && !roleByUserId.has(row.user_id)) {
+          roleByUserId.set(row.user_id, label)
+        }
+      }
+
+      const rolesWithInvitations = await fillOwnerRolesFromInvitations(supabase, {
+        projectId: projectId || null,
+        users: usersData || [],
+        roleByUserId,
+      })
+
       setTaskStatuses(statusesData || [])
-      setUsers(usersData || [])
+      setUsers(
+        (usersData || []).map((u) => ({
+          ...u,
+          projectRole: rolesWithInvitations.get(u.id) || '',
+        })),
+      )
+      setFunctionalRoles(rolesResult.data || [])
     } catch (error) {
       console.error('Error fetching lookup data:', error)
     }
@@ -131,27 +206,14 @@ export default function TasksDetail() {
   const handleCancel = () => {
     setEditing(false)
     setErrors({})
-    // Reset form data to original task data
     if (task) {
-      setFormData({
-        task_name: task.task_name || '',
-        task_description: task.task_description || '',
-        project_id: task.project_id || '',
-        status_id: task.status_id || '',
-        priority: task.priority || 'medium',
-        assigned_to_user_id: task.assigned_to_user_id || '',
-        due_date: task.due_date ? format(new Date(task.due_date), 'yyyy-MM-dd') : '',
-        estimated_hours: task.estimated_hours || '',
-        estimated_duration_days: task.estimated_duration_days || '',
-        percentage_complete: task.percentage_complete || 0
-      })
+      setFormData(buildFormFromTask(task))
     }
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -163,7 +225,7 @@ export default function TasksDetail() {
       newErrors.task_name = 'Task name is required'
     }
     if (!formData.project_id) {
-      newErrors.project_id = 'Please select a project'
+      newErrors.project_id = 'No project on this task'
     }
     if (!formData.status_id) {
       newErrors.status_id = 'Please select a status'
@@ -179,8 +241,8 @@ export default function TasksDetail() {
 
     try {
       setSaving(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
+      const actorId = await getCurrentUserInternalUserId()
+      if (!actorId) throw new Error('Your user profile could not be resolved')
 
       const updateData = {
         task_name: formData.task_name,
@@ -189,11 +251,12 @@ export default function TasksDetail() {
         status_id: formData.status_id,
         priority: formData.priority,
         assigned_to_user_id: formData.assigned_to_user_id || null,
+        functional_role_id: formData.functional_role_id || null,
         due_date: formData.due_date || null,
         estimated_hours: formData.estimated_hours ? parseFloat(formData.estimated_hours) : null,
         estimated_duration_days: formData.estimated_duration_days ? parseInt(formData.estimated_duration_days) : null,
         percentage_complete: formData.percentage_complete ? parseInt(formData.percentage_complete) : 0,
-        updated_by: user.id
+        updated_by: actorId
       }
 
       const { error } = await supabase
@@ -203,9 +266,7 @@ export default function TasksDetail() {
 
       if (error) throw error
 
-      // Update task assignment if changed
       if (formData.assigned_to_user_id !== task.assigned_to_user_id) {
-        // Remove old assignment
         if (task.assigned_to_user_id) {
           await supabase
             .from('task_assignments')
@@ -214,7 +275,6 @@ export default function TasksDetail() {
             .eq('user_id', task.assigned_to_user_id)
         }
 
-        // Add new assignment
         if (formData.assigned_to_user_id) {
           await supabase
             .from('task_assignments')
@@ -222,15 +282,20 @@ export default function TasksDetail() {
               task_id: id,
               user_id: formData.assigned_to_user_id,
               assignment_type: 'assignee',
-              assigned_by_user_id: user.id,
-              created_by: user.id
+              assigned_by_user_id: actorId,
+              created_by: actorId
             })
         }
       }
 
       setEditing(false)
       setErrors({})
-      await fetchTask() // Refresh task data
+      await fetchTask()
+      showSuccess({
+        recordId: formData.task_name || id,
+        operation: 'updated',
+        message: 'Task updated successfully.',
+      })
     } catch (error) {
       console.error('Error updating task:', error)
       setErrors({ submit: error.message || 'Failed to update task' })
@@ -266,7 +331,7 @@ export default function TasksDetail() {
         <div className="text-center">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Task not found</p>
           <button
-            onClick={() => navigate('/tasks')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
             Back to Tasks
@@ -280,7 +345,7 @@ export default function TasksDetail() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
         <button
-          onClick={() => navigate('/tasks')}
+          onClick={() => navigate(-1)}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
         >
           ← Back to Tasks
@@ -414,7 +479,7 @@ export default function TasksDetail() {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Assigned To</h3>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Task owner</h3>
               {task.assigned_user ? (
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -430,6 +495,28 @@ export default function TasksDetail() {
                 <p className="text-gray-900 dark:text-white">Unassigned</p>
               )}
             </div>
+
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Role</h3>
+              <p className="text-gray-900 dark:text-white">
+                {task.functional_role?.role_label || 'No role'}
+              </p>
+            </div>
+
+            {task.functional_role && (
+              <div className="md:col-span-2">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Skills</h3>
+                {parseSkillsLines(task.functional_role.required_skills).length > 0 ? (
+                  <ul className="text-gray-900 dark:text-white list-disc list-inside space-y-0.5">
+                    {parseSkillsLines(task.functional_role.required_skills).map((skill) => (
+                      <li key={skill}>{skill}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-900 dark:text-white">No required skills defined for this role.</p>
+                )}
+              </div>
+            )}
 
             {task.due_date && (
               <div>
@@ -492,31 +579,17 @@ export default function TasksDetail() {
           </div>
         )}
 
-        {!editing ? (
+        {editing ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Project <span className="text-red-500">*</span>
+                Project
               </label>
-              <select
-                name="project_id"
-                value={formData.project_id}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
-                  errors.project_id ? 'border-red-500' : 'border-gray-300'
-                }`}
-                required
-              >
-                <option value="">Select a project</option>
-                {projects.map((project, index) => (
-                  <option key={project.id} value={project.id}>
-                    {project.project_name} {project.project_code && `(${project.project_code})`}
-                  </option>
-                ))}
-              </select>
-              {errors.project_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.project_id}</p>
-              )}
+              <p className="rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/40 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
+                {task.projects
+                  ? `${task.projects.project_name}${task.projects.project_code ? ` (${task.projects.project_code})` : ''}`
+                  : '—'}
+              </p>
             </div>
 
             <div>
@@ -563,22 +636,53 @@ export default function TasksDetail() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Assigned To
+                Task owner
               </label>
-              <select
+              <SelectField
+                id="assigned_to_user_id"
                 name="assigned_to_user_id"
-                value={formData.assigned_to_user_id}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              >
-                <option value="">Unassigned</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </select>
+                options={ownerOptions}
+                value={formData.assigned_to_user_id || ''}
+                onChange={(value) => setFormData((prev) => ({ ...prev, assigned_to_user_id: value || '' }))}
+                placeholder="Unassigned"
+                searchPlaceholder="Search people"
+                forceSearchable
+                descriptionColumnLabel="Role"
+                aria-label="Task owner"
+              />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Role
+              </label>
+              <SelectField
+                id="functional_role_id"
+                name="functional_role_id"
+                options={roleOptions}
+                value={formData.functional_role_id || ''}
+                onChange={(value) => setFormData((prev) => ({ ...prev, functional_role_id: value || '' }))}
+                placeholder="No role"
+                forceSearchable={functionalRoles.length >= 12}
+              />
+            </div>
+
+            {formData.functional_role_id ? (
+              <div className="md:col-span-2">
+                <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skills</p>
+                {selectedRoleSkills.length > 0 ? (
+                  <ul className="rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/40 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 list-disc list-inside space-y-1">
+                    {selectedRoleSkills.map((skill) => (
+                      <li key={skill}>{skill}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-700 dark:text-gray-200">
+                    No required skills defined for this role.
+                  </p>
+                )}
+              </div>
+            ) : null}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -715,6 +819,7 @@ export default function TasksDetail() {
           onCancel={() => setShowRiskForm(false)}
         />
       )}
+      {modal}
     </div>
   )
 }

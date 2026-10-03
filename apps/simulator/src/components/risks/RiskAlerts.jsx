@@ -3,125 +3,79 @@
  * Display alerts for high risks, overdue responses, proximity warnings
  */
 
-import { useState, useEffect } from 'react'
-import { AlertTriangle, Clock, TrendingUp, X } from 'lucide-react'
-import { getRisksByProject } from '../../services/riskService'
-import { getPendingResponses, getOverdueResponses } from '../../services/riskResponseService'
+import { useMemo } from 'react'
+import { AlertTriangle, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { isActiveRisk, summariseProjectRisks } from '../../utils/riskRegisterStats'
 
-export default function RiskAlerts({ projectId }) {
-  const [alerts, setAlerts] = useState([])
-  const [loading, setLoading] = useState(false)
+export default function RiskAlerts({ projectId, risks = [], overdueCount = 0 }) {
   const navigate = useNavigate()
+  const alerts = useMemo(() => {
+    const stats = summariseProjectRisks(risks)
+    const alertsList = []
+    const openRisks = () => navigate(`/app/projects/${projectId}/risks`)
 
-  useEffect(() => {
-    if (projectId) {
-      loadAlerts()
-    }
-  }, [projectId])
-
-  const loadAlerts = async () => {
-    setLoading(true)
-    try {
-      const alertsList = []
-
-      // Get high/very high risks
-      const risksResult = await getRisksByProject(projectId, {
-        risk_level: 'high'
+    if (stats.high > 0) {
+      alertsList.push({
+        id: 'high-risks',
+        type: 'warning',
+        title: `${stats.high} High/Very High Risk${stats.high > 1 ? 's' : ''}`,
+        message: `${stats.high} risk${stats.high > 1 ? 's have' : ' has'} a high or very high risk score and may require immediate attention.`,
+        action: 'View Risks',
+        onClick: openRisks,
+        icon: AlertTriangle,
       })
-      if (risksResult.success && risksResult.data) {
-        const highRisks = risksResult.data.filter(r => {
-          const score = r.pre_risk_score || r.risk_level || ''
-          return score.includes('high') || score.includes('critical')
-        })
-        
-        if (highRisks.length > 0) {
-          alertsList.push({
-            id: 'high-risks',
-            type: 'warning',
-            title: `${highRisks.length} High/Very High Risk${highRisks.length > 1 ? 's' : ''}`,
-            message: `${highRisks.length} risk${highRisks.length > 1 ? 's have' : ' has'} a high or very high risk score and may require immediate attention.`,
-            action: 'View Risks',
-            onClick: () => navigate(`/app/projects/${projectId}/risks`),
-            icon: AlertTriangle,
-            risks: highRisks
-          })
-        }
-      }
-
-      // Get risks without response plans
-      const risksWithoutResponses = risksResult.data?.filter(r => {
-        const score = r.pre_risk_score || r.risk_level || ''
-        const hasHighScore = score.includes('high') || score.includes('critical')
-        const isActive = !['closed', 'expired', 'occurred'].includes(r.status_enum || r.status || '')
-        return hasHighScore && isActive
-      }) || []
-
-      if (risksWithoutResponses.length > 0) {
-        alertsList.push({
-          id: 'no-responses',
-          type: 'error',
-          title: `${risksWithoutResponses.length} High Risk${risksWithoutResponses.length > 1 ? 's' : ''} Without Response Plan`,
-          message: `${risksWithoutResponses.length} high risk${risksWithoutResponses.length > 1 ? 's lack' : ' lacks'} a response plan.`,
-          action: 'Add Responses',
-          onClick: () => navigate(`/app/projects/${projectId}/risks`),
-          icon: AlertTriangle,
-          risks: risksWithoutResponses
-        })
-      }
-
-      // Get overdue response actions
-      const overdueResult = await getOverdueResponses(projectId)
-      if (overdueResult.success && overdueResult.data && overdueResult.data.length > 0) {
-        alertsList.push({
-          id: 'overdue-responses',
-          type: 'error',
-          title: `${overdueResult.data.length} Overdue Response Action${overdueResult.data.length > 1 ? 's' : ''}`,
-          message: `${overdueResult.data.length} response action${overdueResult.data.length > 1 ? 's are' : ' is'} past their target date.`,
-          action: 'View Responses',
-          onClick: () => navigate(`/app/projects/${projectId}/risks`),
-          icon: Clock,
-          responses: overdueResult.data
-        })
-      }
-
-      // Get risks approaching proximity date (within 7 days)
-      const risksResult2 = await getRisksByProject(projectId)
-      if (risksResult2.success && risksResult2.data) {
-        const today = new Date()
-        const sevenDaysFromNow = new Date(today)
-        sevenDaysFromNow.setDate(today.getDate() + 7)
-        
-        const imminentRisks = risksResult2.data.filter(r => {
-          if (!r.proximity_date) return false
-          const proximityDate = new Date(r.proximity_date)
-          const isActive = !['closed', 'expired', 'occurred'].includes(r.status_enum || r.status || '')
-          return isActive && proximityDate >= today && proximityDate <= sevenDaysFromNow
-        })
-
-        if (imminentRisks.length > 0) {
-          alertsList.push({
-            id: 'imminent-risks',
-            type: 'warning',
-            title: `${imminentRisks.length} Risk${imminentRisks.length > 1 ? 's' : ''} Approaching Proximity Date`,
-            message: `${imminentRisks.length} risk${imminentRisks.length > 1 ? 's are' : ' is'} approaching its proximity date within the next 7 days.`,
-            action: 'Review Risks',
-            onClick: () => navigate(`/app/projects/${projectId}/risks`),
-            icon: Clock,
-            risks: imminentRisks
-          })
-        }
-      }
-
-      setAlerts(alertsList)
-    } catch (error) {
-      console.error('Error loading alerts:', error)
-    } finally {
-      setLoading(false)
     }
-  }
 
-  if (loading || alerts.length === 0) {
+    const missingPlan = stats.withoutResponsePlan.length
+    if (missingPlan > 0) {
+      alertsList.push({
+        id: 'no-responses',
+        type: 'error',
+        title: `${missingPlan} High Risk${missingPlan > 1 ? 's' : ''} Without Response Plan`,
+        message: `${missingPlan} high risk${missingPlan > 1 ? 's lack' : ' lacks'} a response plan.`,
+        action: 'Add Responses',
+        onClick: openRisks,
+        icon: AlertTriangle,
+      })
+    }
+
+    if (overdueCount > 0) {
+      alertsList.push({
+        id: 'overdue-responses',
+        type: 'error',
+        title: `${overdueCount} Overdue Response Action${overdueCount > 1 ? 's' : ''}`,
+        message: `${overdueCount} response action${overdueCount > 1 ? 's are' : ' is'} past their target date.`,
+        action: 'View Responses',
+        onClick: openRisks,
+        icon: Clock,
+      })
+    }
+
+    const today = new Date()
+    const sevenDaysFromNow = new Date(today)
+    sevenDaysFromNow.setDate(today.getDate() + 7)
+    const imminentCount = (Array.isArray(risks) ? risks : []).filter((risk) => {
+      if (!risk?.proximity_date || !isActiveRisk(risk)) return false
+      const proximityDate = new Date(risk.proximity_date)
+      return proximityDate >= today && proximityDate <= sevenDaysFromNow
+    }).length
+    if (imminentCount > 0) {
+      alertsList.push({
+        id: 'imminent-risks',
+        type: 'warning',
+        title: `${imminentCount} Risk${imminentCount > 1 ? 's' : ''} Approaching Proximity Date`,
+        message: `${imminentCount} risk${imminentCount > 1 ? 's are' : ' is'} approaching its proximity date within the next 7 days.`,
+        action: 'Review Risks',
+        onClick: openRisks,
+        icon: Clock,
+      })
+    }
+
+    return alertsList
+  }, [risks, overdueCount, projectId, navigate])
+
+  if (alerts.length === 0) {
     return null
   }
 

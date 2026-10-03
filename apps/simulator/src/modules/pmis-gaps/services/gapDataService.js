@@ -21,11 +21,20 @@ export async function getGapRecord(table, id, opts = {}) {
   return data
 }
 
+/**
+ * @param {string} table
+ * @param {object} payload
+ * @param {{ sim?: boolean, setCreatedBy?: boolean }} [opts] — v963: NOT every gap
+ *   table has a `created_by` column, so this only sets it when the caller opts in
+ *   via `setCreatedBy: true` for tables that actually have the column.
+ */
 export async function createGapRecord(table, payload, opts = {}) {
   const db = opts.sim ? simDb : platformDb
-  const { data: { user } } = await db.auth.getUser()
   const row = { ...payload }
-  if (user?.id && !row.created_by) row.created_by = user.id
+  if (opts.setCreatedBy && !row.created_by) {
+    const { data: { user } } = await db.auth.getUser()
+    if (user?.id) row.created_by = user.id
+  }
   const { data, error } = await db.from(table).insert(row).select().single()
   if (error) throw error
   return data
@@ -33,9 +42,10 @@ export async function createGapRecord(table, payload, opts = {}) {
 
 export async function updateGapRecord(table, id, payload, opts = {}) {
   const db = opts.sim ? simDb : platformDb
-  const { data: { user } } = await db.auth.getUser()
+  // v963: none of the v643-v645/v963l/v963m PMIS gap tables have an `updated_by`
+  // column (only `created_by`) — unconditionally setting it here 400'd every
+  // update on every gap table. Callers that DO have one can pass updated_by explicitly.
   const row = { ...payload, updated_at: new Date().toISOString() }
-  if (user?.id) row.updated_by = user.id
   const { data, error } = await db.from(table).update(row).eq('id', id).select().single()
   if (error) throw error
   return data

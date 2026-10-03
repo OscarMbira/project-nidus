@@ -13,6 +13,12 @@ export async function getPBSTree(practiceProjectId) {
   return nest(data || [])
 }
 
+export async function getPBSNode(id) {
+  const { data, error } = await simDb.from('plan_pbs_nodes').select('*').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data
+}
+
 export async function createPBSNode(payload) {
   const { data, error } = await simDb.from('plan_pbs_nodes').insert(payload).select().single()
   if (error) throw error

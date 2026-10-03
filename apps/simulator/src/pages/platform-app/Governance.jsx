@@ -51,7 +51,7 @@ export default function Governance() {
           .from('accounts')
           .select('id')
           .eq('owner_user_id', userRecord.id)
-          .single();
+          .maybeSingle();
 
         if (account) {
           setOrganizationId(account.id);
@@ -63,7 +63,7 @@ export default function Governance() {
             .eq('owner_user_id', userRecord.id)
             .eq('is_deleted', false)
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (project?.account_id) {
             setOrganizationId(project.account_id);
@@ -284,7 +284,7 @@ export default function Governance() {
                 This feature is coming soon. We're working on implementing comprehensive governance functionality.
               </p>
               <button
-                onClick={() => navigate('/platform/dashboard')}
+                onClick={() => navigate(-1)}
                 className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
               >
                 Back to Dashboard

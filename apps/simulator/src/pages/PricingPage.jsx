@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import PricingSection from '../components/homepage/PricingSection';
 import MainHeader from '../components/homepage/MainHeader';
 import Footer from '../components/homepage/Footer';

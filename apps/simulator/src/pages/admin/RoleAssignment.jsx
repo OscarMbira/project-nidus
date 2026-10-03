@@ -32,7 +32,6 @@ import {
 import { getUserSystemRoles } from '../../services/roleService';
 import Button from '@nidus/ui/Button';
 import Card from '@nidus/ui/Card';
-import PlatformHeader from '../../components/homepage/PlatformHeader';
 
 export default function RoleAssignment() {
   const navigate = useNavigate();
@@ -266,7 +265,6 @@ export default function RoleAssignment() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <PlatformHeader />
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Loader className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
@@ -280,7 +278,6 @@ export default function RoleAssignment() {
   if (!hasPmoAdminAccess) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <PlatformHeader />
         <div className="flex items-center justify-center min-h-[60vh]">
           <Card className="max-w-md">
             <div className="text-center">
@@ -297,8 +294,6 @@ export default function RoleAssignment() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <PlatformHeader />
-      
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">

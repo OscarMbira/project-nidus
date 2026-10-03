@@ -1,12 +1,20 @@
 /**
  * Outline Business Case Section
- * Section 4: From mandate, expanded
+ * Section 4: From mandate, expanded — includes optional dis-benefits capture.
  */
+
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function OutlineBusinessCaseSection({ formData, onChange, errors = {}, readOnly = false }) {
   const handleChange = (e) => {
     onChange(e)
   }
+
+  const setField = (name, value) => {
+    onChange({ target: { name, value } })
+  }
+
+  const disBenefitsIncluded = formData.dis_benefits_included !== false
 
   return (
     <div className="space-y-6">
@@ -70,6 +78,52 @@ export default function OutlineBusinessCaseSection({ formData, onChange, errors 
             <option value="do_minimal">Do Minimal</option>
             <option value="do_something">Do Something</option>
           </select>
+        )}
+      </div>
+
+      {/* Optional dis-benefits */}
+      <div className="space-y-3 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div className="flex items-center gap-3">
+          <input
+            id="brief_dis_benefits_included"
+            type="checkbox"
+            name="dis_benefits_included"
+            checked={disBenefitsIncluded}
+            disabled={readOnly}
+            onChange={(e) => onChange({ target: { name: 'dis_benefits_included', type: 'checkbox', checked: e.target.checked } })}
+            className="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-gray-600 disabled:opacity-60"
+          />
+          <label htmlFor="brief_dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Capture dis-benefits for this outline business case
+          </label>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Uncheck if your organisation does not track negative consequences here.
+        </p>
+        {disBenefitsIncluded && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Dis-benefits / Negative Consequences
+            </label>
+            {readOnly ? (
+              <p className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100">
+                {formData.dis_benefits_description || '—'}
+              </p>
+            ) : (
+              <>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Add one dis-benefit per line.</p>
+                <MultiLineListInput
+                  viewModeId="brief-outline-dis-benefits"
+                  id="brief_dis_benefits_description"
+                  value={formData.dis_benefits_description || ''}
+                  onChange={(next) => setField('dis_benefits_description', next)}
+                  placeholder="e.g. Temporary service disruption during migration"
+                  ariaLabelPrefix="dis-benefit"
+                  itemColumnLabel="Dis-benefit"
+                />
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>

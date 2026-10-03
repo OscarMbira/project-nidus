@@ -7,31 +7,35 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Target, List, Plus, Trash2 } from 'lucide-react'
 import { getStakeholders, getStakeholderAnalysis, saveStakeholderAnalysis, deleteStakeholderAnalysis } from '../../services/stakeholderService'
 import PowerInterestMatrix from '../../components/stakeholders/PowerInterestMatrix'
-import StakeholderAnalysisForm from '../../components/stakeholders/StakeholderAnalysisForm'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { RowActionButton } from '@nidus/ui'
-import { platformDb } from '@nidus/supabase'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { useCurrentProject } from '../../context/CurrentProjectContext'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { platformDb } from '../../services/supabaseClient'
+import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
 
 export default function StakeholderAnalysisPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { projects: assignedProjects, currentProjectId, loading: projectCtxLoading } = useCurrentProject()
   const [projectId, setProjectId] = useState(() => (location.state && location.state.projectId) || '')
-  const [projects, setProjects] = useState([])
+  const projects = assignedProjects.map((p) => ({
+    id: p.projectId,
+    project_name: p.projectName,
+    project_code: p.projectCode,
+  }))
   const [stakeholders, setStakeholders] = useState([])
   const [analysis, setAnalysis] = useState([])
-  const [loading, setLoading] = useState(true)
   const [view, setView] = useState('matrix')
-  const [showForm, setShowForm] = useState(false)
-  const [editingAnalysis, setEditingAnalysis] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [pendingStakeholderId, setPendingStakeholderId] = useState(() => (location.state && location.state.stakeholderId) || null)
   const [analysisLoaded, setAnalysisLoaded] = useState(false)
 
   useEffect(() => {
-    loadProjects()
-  }, [])
+    if (projectCtxLoading || projectId || !currentProjectId) return
+    setProjectId(currentProjectId)
+  }, [projectCtxLoading, currentProjectId, projectId])
 
   useEffect(() => {
     if (projectId) {
@@ -52,25 +56,15 @@ export default function StakeholderAnalysisPage() {
     }
   }, [])
 
-  // After analysis has loaded, open form for pending stakeholder (from matrix "Edit Analysis")
   useEffect(() => {
     if (!pendingStakeholderId || !analysisLoaded || !projectId) return
     const record = analysis.find(a => a.stakeholder_id === pendingStakeholderId)
-    setEditingAnalysis(record || { stakeholder_id: pendingStakeholderId })
-    setShowForm(true)
-    setPendingStakeholderId(null)
-  }, [pendingStakeholderId, analysisLoaded, projectId, analysis])
-
-  const loadProjects = async () => {
-    try {
-      const { data } = await platformDb.from('projects').select('id, project_name, project_code').eq('is_deleted', false).order('project_name', { ascending: true })
-      setProjects(data || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
+    if (record?.id) {
+      navigate(`/platform/stakeholders/analysis/edit/${record.id}`, { replace: true, state: { projectId } })
+    } else {
+      navigate('/platform/stakeholders/analysis/new', { replace: true, state: { projectId, stakeholderId: pendingStakeholderId } })
     }
-  }
+  }, [pendingStakeholderId, analysisLoaded, projectId, analysis, navigate])
 
   const loadStakeholders = async () => {
     if (!projectId) return
@@ -94,15 +88,12 @@ export default function StakeholderAnalysisPage() {
     }
   }
 
-  const handleSaveAnalysis = async (formData) => {
-    try {
-      await saveStakeholderAnalysis(formData, editingAnalysis?.id)
-      setShowForm(false)
-      setEditingAnalysis(null)
-      loadAnalysis()
-    } catch (e) {
-      alert(e.message)
+  const openAnalysisForm = (record, stakeholderId) => {
+    if (record?.id) {
+      navigate(`/platform/stakeholders/analysis/edit/${record.id}`, { state: { projectId } })
+      return
     }
+    navigate('/platform/stakeholders/analysis/new', { state: { projectId, stakeholderId: stakeholderId || '' } })
   }
 
   const handleDelete = async (record) => {
@@ -130,7 +121,7 @@ export default function StakeholderAnalysisPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 flex flex-wrap items-center gap-4">
-        <button onClick={() => navigate('/platform/stakeholders/register')} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+        <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
         </button>
         <div className="flex-1">
@@ -156,7 +147,7 @@ export default function StakeholderAnalysisPage() {
             baseFilename="Stakeholder-Analysis"
             disabled={!analysis.length}
           />
-          <button onClick={() => { setEditingAnalysis(null); setShowForm(true) }} disabled={!projectId} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium disabled:opacity-50"><Plus className="h-5 w-5" /> Add Analysis</button>
+          <button onClick={() => openAnalysisForm(null)} disabled={!projectId} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium disabled:opacity-50"><Plus className="h-5 w-5" /> Add Analysis</button>
         </div>
       </div>
 
@@ -178,8 +169,7 @@ export default function StakeholderAnalysisPage() {
           onStakeholderClick={(id) => navigate(`/platform/stakeholders/register/view/${id}`)}
           onEditAnalysis={({ stakeholderId: sid }) => {
             const record = analysis.find(a => a.stakeholder_id === sid)
-            setEditingAnalysis(record || { stakeholder_id: sid })
-            setShowForm(true)
+            openAnalysisForm(record, sid)
           }}
           onReposition={async (item, { power_level, interest_level, matrix_quadrant }) => {
             try {
@@ -223,7 +213,12 @@ export default function StakeholderAnalysisPage() {
               {analysis.map((a, index) => (
                 <tr key={a.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                   <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{a.stakeholder?.stakeholder_name || '—'}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                    <span className="inline-flex items-center gap-2">
+                      <StakeholderAvatar db={platformDb} stakeholder={a.stakeholder} sizeClassName="h-7 w-7" />
+                      {a.stakeholder?.stakeholder_name || '—'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-sm">{a.power_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm">{a.interest_level ?? '—'}</td>
                   <td className="px-6 py-4 text-sm capitalize">{a.matrix_quadrant?.replace('-', ' ') || '—'}</td>
@@ -232,7 +227,7 @@ export default function StakeholderAnalysisPage() {
                     <RowActionButton
                       variant="edit"
                       label="Edit analysis"
-                      onClick={() => { setEditingAnalysis(a); setShowForm(true) }}
+                      onClick={() => openAnalysisForm(a)}
                     />
                     <RowActionButton
                       variant="delete"
@@ -249,16 +244,6 @@ export default function StakeholderAnalysisPage() {
         </div>
       )}
 
-      {showForm && (
-        <StakeholderAnalysisForm
-          analysis={editingAnalysis}
-          stakeholderId={editingAnalysis?.stakeholder_id}
-          projectId={projectId}
-          stakeholders={stakeholders}
-          onSave={handleSaveAnalysis}
-          onCancel={() => { setShowForm(false); setEditingAnalysis(null) }}
-        />
-      )}
     </div>
   )
 }
