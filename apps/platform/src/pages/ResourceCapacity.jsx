@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
-import { ArrowLeft, Calendar, TrendingUp, AlertTriangle, Users, BarChart3, PieChart, Download, FileText, Target, Link2, Plus } from 'lucide-react'
+import { ArrowLeft, Calendar, TrendingUp, AlertTriangle, Users, BarChart3, PieChart, Download, FileText, Target, Link2, Plus, Search } from 'lucide-react'
+import ViewToggle from '../components/ui/ViewToggle'
+import { useViewMode } from '../hooks/useViewMode'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import {
   exportCapacityToCSV,
@@ -14,6 +16,7 @@ import {
 import { getResourceCapacityPlans, getCrossProjectAllocations } from '../services/crossResourceService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 
 export default function ResourceCapacity() {
   const navigate = useNavigate()
@@ -32,6 +35,8 @@ export default function ResourceCapacity() {
     programme_id: '',
     show_cross_project: true,
   })
+  const [capacityPlanViewMode, setCapacityPlanViewMode] = useViewMode('resource-capacity-plans', 'list')
+  const [capacityPlanSearch, setCapacityPlanSearch] = useState('')
 
   useEffect(() => {
     fetchResources()
@@ -249,7 +254,7 @@ export default function ResourceCapacity() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate('/resources')}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -263,7 +268,7 @@ export default function ResourceCapacity() {
           </h1>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/resources/cross-project')}
+              onClick={() => navigate('/platform/resources/cross-project')}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm"
             >
               <Link2 className="h-4 w-4" />
@@ -374,83 +379,133 @@ export default function ResourceCapacity() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Capacity</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaryStats.totalCapacity.toFixed(1)}h
-              </p>
-            </div>
-            <BarChart3 className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Allocated</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaryStats.totalAllocated.toFixed(1)}h
-              </p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Overall Utilization</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {overallUtilization.toFixed(1)}%
-              </p>
-            </div>
-            <PieChart className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Over-Allocated</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                {summaryStats.overAllocatedCount}
-              </p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
+        <DashboardStatCard
+          label="Total Capacity"
+          value={`${summaryStats.totalCapacity.toFixed(1)}h`}
+          icon={BarChart3}
+          iconClassName="text-blue-500"
+        />
+        <DashboardStatCard
+          label="Total Allocated"
+          value={`${summaryStats.totalAllocated.toFixed(1)}h`}
+          icon={TrendingUp}
+          iconClassName="text-orange-500"
+        />
+        <DashboardStatCard
+          label="Overall Utilization"
+          value={`${overallUtilization.toFixed(1)}%`}
+          icon={PieChart}
+          iconClassName="text-green-500"
+        />
+        <DashboardStatCard
+          label="Over-Allocated"
+          value={summaryStats.overAllocatedCount}
+          icon={AlertTriangle}
+          accentClassName="text-red-600 dark:text-red-400"
+          iconClassName="text-red-500"
+          borderClassName="border-red-200 dark:border-red-800"
+        />
         {filters.show_cross_project && crossProjectAllocations.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Cross-Project Allocations</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {crossProjectAllocations.length}
-                </p>
-              </div>
-              <Link2 className="h-8 w-8 text-purple-500" />
-            </div>
-          </div>
+          <DashboardStatCard
+            label="Cross-Project Allocations"
+            value={crossProjectAllocations.length}
+            icon={Link2}
+            accentClassName="text-purple-600 dark:text-purple-400"
+            iconClassName="text-purple-500"
+            borderClassName="border-purple-200 dark:border-purple-800"
+          />
         )}
       </div>
 
       {/* Cross-Project Capacity Plans */}
-      {filters.show_cross_project && capacityPlans.length > 0 && (
+      {filters.show_cross_project && capacityPlans.length > 0 && (() => {
+        const filteredCapacityPlans = capacityPlans.filter((plan) =>
+          !capacityPlanSearch || (plan.resource?.resource_name || '').toLowerCase().includes(capacityPlanSearch.toLowerCase())
+        )
+        const visibleCapacityPlans = filteredCapacityPlans.slice(0, 6)
+        return (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <Target className="h-5 w-5" />
               Capacity Plans
             </h3>
-            <button
-              onClick={() => navigate('/resources/cross-project')}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Create Plan
-            </button>
+            <div className="flex items-center gap-2">
+              <ViewToggle value={capacityPlanViewMode} onChange={setCapacityPlanViewMode} ariaLabel="Capacity plans layout" />
+              <button
+                onClick={() => navigate('/platform/resources/cross-project')}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                Create Plan
+              </button>
+            </div>
           </div>
+
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={capacityPlanSearch}
+              onChange={(e) => setCapacityPlanSearch(e.target.value)}
+              placeholder="Search capacity plans by resource..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            />
+          </div>
+
+          {capacityPlanViewMode === 'list' ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <TableRowNumberHeader className="!normal-case" />
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Resource</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Capacity</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Allocated</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Utilization</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {visibleCapacityPlans.map((plan, index) => (
+                    <tr key={plan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        <div className="flex items-center gap-2">
+                          {plan.resource?.resource_name || 'Unknown Resource'}
+                          {plan.is_over_capacity && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                        {plan.planned_capacity_hours?.toFixed(1) || 0}h
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                        {plan.planned_allocation_hours?.toFixed(1) || 0}h
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2 min-w-[140px]">
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full ${
+                                plan.capacity_utilization_percentage > 100
+                                  ? 'bg-red-600'
+                                  : plan.capacity_utilization_percentage >= 80
+                                  ? 'bg-orange-600'
+                                  : 'bg-green-600'
+                              }`}
+                              style={{ width: `${Math.min(100, plan.capacity_utilization_percentage || 0)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">{Math.round(plan.capacity_utilization_percentage || 0)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {capacityPlans.slice(0, 6).map((plan, index) => (
+            {visibleCapacityPlans.map((plan, index) => (
               <div
                 key={plan.id}
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
@@ -489,18 +544,21 @@ export default function ResourceCapacity() {
               </div>
             ))}
           </div>
-          {capacityPlans.length > 6 && (
+          )}
+
+          {filteredCapacityPlans.length > 6 && (
             <div className="mt-4 text-center">
               <button
-                onClick={() => navigate('/resources/cross-project')}
+                onClick={() => navigate('/platform/resources/cross-project')}
                 className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
-                View all {capacityPlans.length} capacity plans
+                View all {filteredCapacityPlans.length} capacity plans
               </button>
             </div>
           )}
         </div>
-      )}
+        )
+      })()}
 
       {/* Utilization Chart */}
       {sortedForChart.length > 0 && (

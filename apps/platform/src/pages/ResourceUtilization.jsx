@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Calendar, Users, Activity, Search, Download } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getCrossProjectUtilization, getResourceUtilizationSummary } from '../services/crossResourceService';
 import ResourceUtilizationList from '../components/resources/ResourceUtilizationList';
 
@@ -69,7 +70,7 @@ export default function ResourceUtilization() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/resources/cross-project')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -87,57 +88,11 @@ export default function ResourceUtilization() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Periods</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <Calendar className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Optimal</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.optimal}</p>
-            </div>
-            <Activity className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Over-Utilized</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.overUtilized}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Under-Utilized</p>
-              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.underUtilized}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Avg Utilization</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {Math.round(stats.averageUtilization)}%
-              </p>
-            </div>
-            <Users className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Periods" value={stats.total} icon={Calendar} iconClassName="text-blue-500" />
+        <DashboardStatCard label="Optimal" value={stats.optimal} icon={Activity} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Over-Utilized" value={stats.overUtilized} icon={TrendingUp} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
+        <DashboardStatCard label="Under-Utilized" value={stats.underUtilized} icon={TrendingUp} accentClassName="text-yellow-600 dark:text-yellow-400" iconClassName="text-yellow-500" borderClassName="border-yellow-200 dark:border-yellow-800" />
+        <DashboardStatCard label="Avg Utilization" value={`${Math.round(stats.averageUtilization)}%`} icon={Users} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
       </div>
 
       {/* Period Selection */}

@@ -160,7 +160,7 @@ export default function ResourceList({ resources, onEdit, onRefresh }) {
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-2">
                     <button
-                      onClick={() => navigate(`/resources/${resource.id}`)}
+                      onClick={() => navigate(`/platform/resources/${resource.id}`)}
                       className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                       title="View Details"
                     >

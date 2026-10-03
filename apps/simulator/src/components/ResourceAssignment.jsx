@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, Calendar, User, Clock } from 'lucide-react'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import SelectField from './ui/SelectField'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ResourceAssignment({ assignment, resourceId, onSave, onCancel }) {
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [formData, setFormData] = useState({
     assignment_type: 'task',
     assignment_target_id: '',
@@ -22,6 +25,7 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
   const [userStories, setUserStories] = useState([])
   const [kanbanCards, setKanbanCards] = useState([])
   const [projects, setProjects] = useState([])
+  const [assignmentRoles, setAssignmentRoles] = useState([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -76,6 +80,15 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
         .eq('is_deleted', false)
         .order('project_name', { ascending: true })
       if (projectsData) setProjects(projectsData)
+
+      // Fetch assignment roles
+      const { data: rolesData } = await supabase
+        .from('assignment_roles')
+        .select('code, name')
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .order('sort_order', { ascending: true })
+      if (rolesData) setAssignmentRoles(rolesData)
 
       // Fetch kanban cards (need boards first)
       const { data: boardsData } = await supabase
@@ -155,17 +168,31 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
           .eq('id', assignment.id)
 
         if (error) throw error
+
+        showSuccess({
+          recordId: assignment.id,
+          operation: 'updated',
+          message: 'Assignment was updated successfully.',
+          onOk: onSave,
+        })
       } else {
         // Create
         submitData.created_by = user.id
-        const { error } = await supabase
+        const { data: created, error } = await supabase
           .from('resource_assignments')
           .insert(submitData)
+          .select()
+          .single()
 
         if (error) throw error
-      }
 
-      onSave()
+        showSuccess({
+          recordId: created?.id,
+          operation: 'created',
+          message: 'Assignment was created successfully.',
+          onOk: () => onSave(created),
+        })
+      }
     } catch (error) {
       console.error('Error saving assignment:', error)
       alert('Error saving assignment: ' + error.message)
@@ -175,21 +202,15 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {assignment ? 'Edit Assignment' : 'Create Assignment'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {successModal}
+      <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {assignment ? 'Edit Assignment' : 'Create Assignment'}
+        </h2>
+      </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -335,13 +356,13 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Role
               </label>
-              <input
-                type="text"
-                name="role_in_assignment"
+              <SelectField
+                options={assignmentRoles.map((r) => ({ value: r.name, label: r.name }))}
                 value={formData.role_in_assignment}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="e.g., Lead, Contributor, Reviewer"
+                onChange={(value) => setFormData((prev) => ({ ...prev, role_in_assignment: value }))}
+                placeholder="Select a role..."
+                searchPlaceholder="Search roles..."
+                forceSearchable
               />
             </div>
           </div>
@@ -391,7 +412,6 @@ export default function ResourceAssignment({ assignment, resourceId, onSave, onC
             </button>
           </div>
         </form>
-      </div>
     </div>
   )
 }

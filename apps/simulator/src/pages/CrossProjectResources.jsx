@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, AlertTriangle, TrendingUp, Calendar, Target, Link2, Search } from 'lucide-react';
+import { ArrowLeft, Users, AlertTriangle, TrendingUp, Calendar, Target, Link2, Search } from 'lucide-react';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 import { getCrossProjectResourceDashboardStats, getCrossProjectAllocations } from '../services/crossResourceService';
 import CrossProjectAllocationList from '../components/resources/CrossProjectAllocationList';
 import CrossProjectAllocationForm from '../components/resources/CrossProjectAllocationForm';
@@ -70,18 +71,28 @@ export default function CrossProjectResources() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <button
+        onClick={() => navigate(-1)}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Cross-Project Resource Management
           </h1>
-          <button
-            onClick={handleCreateAllocation}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            <Users className="h-5 w-5" />
-            Allocate Resource
-          </button>
+          {!showAllocationForm && (
+            <button
+              onClick={handleCreateAllocation}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              <Users className="h-5 w-5" />
+              Allocate Resource
+            </button>
+          )}
         </div>
         <p className="text-gray-600 dark:text-gray-400">
           Manage resource allocations across multiple projects, portfolios, and programmes
@@ -89,79 +100,60 @@ export default function CrossProjectResources() {
       </div>
 
       {/* Stats Cards */}
-      {stats && (
+      {!showAllocationForm && stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Allocations</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.allocations?.total || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.allocations?.active || 0} active
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Over Capacity</p>
-                <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.capacityPlans?.overCapacity || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.capacityPlans?.total || 0} total plans
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Demand Gaps</p>
-                <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.forecasts?.withGaps || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.forecasts?.total || 0} forecasts
-                </p>
-              </div>
-              <Target className="h-8 w-8 text-orange-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Optimal Utilization</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.utilization?.optimal || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.utilization?.overUtilized || 0} over, {stats.utilization?.underUtilized || 0} under
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Unresolved Conflicts</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.conflicts?.unresolved || 0}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {stats.conflicts?.critical || 0} critical
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-            </div>
-          </div>
+          <DashboardStatCard
+            label="Total Allocations"
+            value={stats.allocations?.total || 0}
+            description={`${stats.allocations?.active || 0} active`}
+            icon={Users}
+            iconClassName="text-blue-500"
+          />
+          <DashboardStatCard
+            label="Over Capacity"
+            value={stats.capacityPlans?.overCapacity || 0}
+            description={`${stats.capacityPlans?.total || 0} total plans`}
+            icon={AlertTriangle}
+            accentClassName="text-yellow-600 dark:text-yellow-400"
+            iconClassName="text-yellow-500"
+            borderClassName="border-yellow-200 dark:border-yellow-800"
+          />
+          <DashboardStatCard
+            label="Demand Gaps"
+            value={stats.forecasts?.withGaps || 0}
+            description={`${stats.forecasts?.total || 0} forecasts`}
+            icon={Target}
+            accentClassName="text-orange-600 dark:text-orange-400"
+            iconClassName="text-orange-500"
+            borderClassName="border-orange-200 dark:border-orange-800"
+          />
+          <DashboardStatCard
+            label="Optimal Utilization"
+            value={stats.utilization?.optimal || 0}
+            description={`${stats.utilization?.overUtilized || 0} over, ${stats.utilization?.underUtilized || 0} under`}
+            icon={TrendingUp}
+            accentClassName="text-green-600 dark:text-green-400"
+            iconClassName="text-green-500"
+            borderClassName="border-green-200 dark:border-green-800"
+          />
+          <DashboardStatCard
+            label="Unresolved Conflicts"
+            value={stats.conflicts?.unresolved || 0}
+            description={`${stats.conflicts?.critical || 0} critical`}
+            icon={AlertTriangle}
+            accentClassName="text-red-600 dark:text-red-400"
+            iconClassName="text-red-500"
+            borderClassName="border-red-200 dark:border-red-800"
+          />
         </div>
       )}
 
+      {!showAllocationForm && (
+      <>
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <button
-          onClick={() => navigate('/resources/capacity')}
+          onClick={() => navigate('/simulator/resources/capacity')}
           className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow text-left"
         >
           <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -172,7 +164,7 @@ export default function CrossProjectResources() {
         </button>
 
         <button
-          onClick={() => navigate('/resources/conflicts')}
+          onClick={() => navigate('/simulator/resources/conflicts')}
           className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow text-left"
         >
           <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
@@ -183,7 +175,7 @@ export default function CrossProjectResources() {
         </button>
 
         <button
-          onClick={() => navigate('/resources/forecast')}
+          onClick={() => navigate('/simulator/resources/plan')}
           className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow text-left"
         >
           <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -194,7 +186,7 @@ export default function CrossProjectResources() {
         </button>
 
         <button
-          onClick={() => navigate('/resources/utilization')}
+          onClick={() => navigate('/simulator/resources/utilization')}
           className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow text-left"
         >
           <Link2 className="h-6 w-6 text-green-600 dark:text-green-400" />
@@ -232,23 +224,26 @@ export default function CrossProjectResources() {
           </select>
         </div>
       </div>
+      </>
+      )}
 
-      {/* Allocations List */}
-      <CrossProjectAllocationList
-        allocations={allocations}
-        onEdit={handleEditAllocation}
-        onRefresh={fetchDashboardData}
-      />
-
-      {/* Allocation Form Modal */}
-      {showAllocationForm && (
+      {/* Allocations List / Allocation Form — non-modal, in-page panel (rule 65) */}
+      {showAllocationForm ? (
         <CrossProjectAllocationForm
+          variant="page"
+          backLabel="Cross-Project Resources"
           allocation={selectedAllocation}
           onSave={handleAllocationSaved}
           onCancel={() => {
             setShowAllocationForm(false);
             setSelectedAllocation(null);
           }}
+        />
+      ) : (
+        <CrossProjectAllocationList
+          allocations={allocations}
+          onEdit={handleEditAllocation}
+          onRefresh={fetchDashboardData}
         />
       )}
     </div>

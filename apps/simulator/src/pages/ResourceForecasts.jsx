@@ -4,6 +4,7 @@ import { ArrowLeft, TrendingUp, AlertTriangle, Calendar, Target, Plus, Search } 
 import { getResourceForecasts, saveResourceForecast, deleteResourceForecast } from '../services/crossResourceService';
 import ResourceForecastList from '../components/resources/ResourceForecastList';
 import ResourceForecastForm from '../components/resources/ResourceForecastForm';
+import DashboardStatCard from '../components/ui/DashboardStatCard';
 
 export default function ResourceForecasts() {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export default function ResourceForecasts() {
   const [loading, setLoading] = useState(true);
   const [showForecastForm, setShowForecastForm] = useState(false);
   const [selectedForecast, setSelectedForecast] = useState(null);
+  const [viewOnlyForecast, setViewOnlyForecast] = useState(false);
   const [filters, setFilters] = useState({
     portfolio_id: '',
     programme_id: '',
@@ -38,17 +40,26 @@ export default function ResourceForecasts() {
 
   const handleCreateForecast = () => {
     setSelectedForecast(null);
+    setViewOnlyForecast(false);
+    setShowForecastForm(true);
+  };
+
+  const handleViewForecast = (forecast) => {
+    setSelectedForecast(forecast);
+    setViewOnlyForecast(true);
     setShowForecastForm(true);
   };
 
   const handleEditForecast = (forecast) => {
     setSelectedForecast(forecast);
+    setViewOnlyForecast(false);
     setShowForecastForm(true);
   };
 
   const handleForecastSaved = () => {
     setShowForecastForm(false);
     setSelectedForecast(null);
+    setViewOnlyForecast(false);
     fetchForecasts();
   };
 
@@ -77,7 +88,7 @@ export default function ResourceForecasts() {
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={() => navigate('/resources/cross-project')}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -101,42 +112,33 @@ export default function ResourceForecasts() {
       </div>
 
       {/* Stats Cards */}
+      {!showForecastForm && (
+      <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Forecasts</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">With Demand Gaps</p>
-              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.withGaps}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Requiring attention
-              </p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-orange-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">No Gaps</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.total - stats.withGaps}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Balanced supply/demand
-              </p>
-            </div>
-            <Target className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
+        <DashboardStatCard
+          label="Total Forecasts"
+          value={stats.total}
+          icon={TrendingUp}
+          iconClassName="text-blue-500"
+        />
+        <DashboardStatCard
+          label="With Demand Gaps"
+          value={stats.withGaps}
+          description="Requiring attention"
+          icon={AlertTriangle}
+          accentClassName="text-orange-600 dark:text-orange-400"
+          iconClassName="text-orange-500"
+          borderClassName="border-orange-200 dark:border-orange-800"
+        />
+        <DashboardStatCard
+          label="No Gaps"
+          value={stats.total - stats.withGaps}
+          description="Balanced supply/demand"
+          icon={Target}
+          accentClassName="text-green-600 dark:text-green-400"
+          iconClassName="text-green-500"
+          borderClassName="border-green-200 dark:border-green-800"
+        />
       </div>
 
       {/* Filters */}
@@ -176,23 +178,29 @@ export default function ResourceForecasts() {
           </select>
         </div>
       </div>
+      </>
+      )}
 
-      {/* Forecasts List */}
-      <ResourceForecastList
-        forecasts={forecasts}
-        onEdit={handleEditForecast}
-        onRefresh={fetchForecasts}
-      />
-
-      {/* Forecast Form Modal */}
-      {showForecastForm && (
+      {/* Forecasts List / Form — non-modal, in-page panel (rule 65) */}
+      {showForecastForm ? (
         <ResourceForecastForm
+          variant="page"
+          backLabel="Resource Forecasts"
           forecast={selectedForecast}
+          readOnly={viewOnlyForecast}
           onSave={handleForecastSaved}
           onCancel={() => {
             setShowForecastForm(false);
             setSelectedForecast(null);
+            setViewOnlyForecast(false);
           }}
+        />
+      ) : (
+        <ResourceForecastList
+          forecasts={forecasts}
+          onView={handleViewForecast}
+          onEdit={handleEditForecast}
+          onRefresh={fetchForecasts}
         />
       )}
     </div>

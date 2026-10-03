@@ -3,9 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Edit2, Calendar, User, Clock, TrendingUp, AlertTriangle, Plus, Users, Award } from 'lucide-react'
 import { format } from 'date-fns'
-import ResourceForm from '../components/ResourceForm'
-import ResourceAssignment from '../components/ResourceAssignment'
-import ResourceCalendar from '../components/ResourceCalendar'
 import ResourceSkills from '../components/ResourceSkills'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
@@ -17,6 +14,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+
+const RESOURCE_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const RESOURCE_VIEW_SECTIONS = [
   { title: 'Resource', fields: [
@@ -32,19 +31,19 @@ export default function ResourceDetail() {
   const [resource, setResource] = useState(null)
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showResourceForm, setShowResourceForm] = useState(false)
-  const [showAssignmentForm, setShowAssignmentForm] = useState(false)
-  const [selectedAssignment, setSelectedAssignment] = useState(null)
-  const [showCalendar, setShowCalendar] = useState(false)
   const [showSkills, setShowSkills] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
-    if (id) {
-      fetchResource()
-      fetchAssignments()
+    if (!id || !RESOURCE_ID_PATTERN.test(id)) {
+      setResource(null)
+      setAssignments([])
+      setLoading(false)
+      return
     }
+    fetchResource()
+    fetchAssignments()
   }, [id])
 
   useEffect(() => {
@@ -73,7 +72,7 @@ export default function ResourceDetail() {
       setResource(data)
     } catch (error) {
       console.error('Error fetching resource:', error)
-      alert('Error loading resource: ' + error.message)
+      setResource(null)
     } finally {
       setLoading(false)
     }
@@ -96,19 +95,11 @@ export default function ResourceDetail() {
   }
 
   const handleCreateAssignment = () => {
-    setSelectedAssignment(null)
-    setShowAssignmentForm(true)
+    navigate(`/simulator/resources/${id}/assignments/create`)
   }
 
   const handleEditAssignment = (assignment) => {
-    setSelectedAssignment(assignment)
-    setShowAssignmentForm(true)
-  }
-
-  const handleAssignmentSaved = () => {
-    setShowAssignmentForm(false)
-    setSelectedAssignment(null)
-    fetchAssignments()
+    navigate(`/simulator/resources/${id}/assignments/${assignment.id}/edit`)
   }
 
   const getAssignmentTypeLabel = (type) => {
@@ -149,7 +140,7 @@ export default function ResourceDetail() {
         <div className="text-center">
           <p className="text-gray-500 dark:text-gray-400 mb-4">Resource not found</p>
           <button
-            onClick={() => navigate('/resources')}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
             Back to Resources
@@ -163,7 +154,7 @@ export default function ResourceDetail() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
         <button
-          onClick={() => navigate('/resources')}
+          onClick={() => navigate(-1)}
           className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -235,7 +226,7 @@ export default function ResourceDetail() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowCalendar(true)}
+              onClick={() => navigate('calendar')}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-colors flex items-center gap-2 hover:bg-gray-300 dark:hover:bg-gray-600"
             >
               <Calendar className="h-4 w-4" />
@@ -249,7 +240,7 @@ export default function ResourceDetail() {
               Skills
             </button>
             <button
-              onClick={() => setShowResourceForm(true)}
+              onClick={() => navigate(`/simulator/resources/${id}/edit`)}
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2"
             >
               <Edit2 className="h-4 w-4" />
@@ -396,43 +387,6 @@ export default function ResourceDetail() {
         )}
       </div>
       </>
-      )}
-
-      {/* Resource Form Modal */}
-      {showResourceForm && (
-        <ResourceForm
-          resource={resource}
-          onSave={() => {
-            setShowResourceForm(false)
-            fetchResource()
-          }}
-          onCancel={() => setShowResourceForm(false)}
-        />
-      )}
-
-      {/* Assignment Form Modal */}
-      {showAssignmentForm && (
-        <ResourceAssignment
-          assignment={selectedAssignment}
-          resourceId={resource.id}
-          onSave={handleAssignmentSaved}
-          onCancel={() => {
-            setShowAssignmentForm(false)
-            setSelectedAssignment(null)
-          }}
-        />
-      )}
-
-      {/* Calendar Modal */}
-      {showCalendar && (
-        <ResourceCalendar
-          resourceId={resource.id}
-          onClose={() => setShowCalendar(false)}
-          onSave={() => {
-            fetchResource()
-            fetchAssignments()
-          }}
-        />
       )}
 
       {/* Skills Modal */}

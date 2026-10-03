@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Users, FolderKanban, Target, Calendar, AlertTriangle } from 'lucide-react';
+import { Save, Users, FolderKanban, Target, Calendar, AlertTriangle, TrendingUp } from 'lucide-react';
 import { saveCrossProjectAllocation, checkResourceConflicts } from '../../services/crossResourceService';
+import { getMyProjects } from '../../services/projectService';
+import { getUserSystemRoles, getUserProjectRoles } from '../../services/roleService';
 import { supabase } from '../../services/supabaseClient';
+import FormSurface from '../ui/FormSurface';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
@@ -9,9 +12,15 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function CrossProjectAllocationForm({ allocation, onSave, onCancel }) {
+// project_roles.role_level hierarchy (v91): team_manager=8, project_manager=9,
+// programme_manager=10, project_sponsor=11, project_board_member=12. Programme tier
+// and above (or any org-wide system role) may allocate beyond project scope.
+const HIGHER_TIER_MIN_ROLE_LEVEL = 10;
+
+export default function CrossProjectAllocationForm({ allocation, onSave, onCancel, variant = 'modal', backLabel = null }) {
   const [formTab, setFormTab] = useState('details');
   const [auditUserLabels, setAuditUserLabels] = useState({});
+  const [maxRoleLevel, setMaxRoleLevel] = useState(null); // null = still resolving
   const [formData, setFormData] = useState({
     resource_id: '',
     project_id: '',
@@ -58,6 +67,22 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
   }, [allocation]);
 
   useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setMaxRoleLevel(0); return; }
+      const [systemRes, projectRes] = await Promise.all([
+        getUserSystemRoles(user.id),
+        getUserProjectRoles(user.id),
+      ]);
+      const levels = [
+        ...(systemRes.data || []).map((r) => r.roles?.role_level || 0),
+        ...(projectRes.data || []).map((r) => r.project_roles?.role_level || 0),
+      ];
+      setMaxRoleLevel(levels.length ? Math.max(...levels) : 0);
+    })();
+  }, []);
+
+  useEffect(() => {
     if (formTab !== 'audit' || !allocation) return;
     (async () => {
       const labels = await resolveAuditUserLabels(supabase, [allocation.created_by, allocation.updated_by]);
@@ -84,14 +109,23 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
 
       if (resourcesData) setResources(resourcesData);
 
-      // Fetch projects
-      const { data: projectsData } = await supabase
-        .from('projects')
-        .select('id, project_name, project_code')
-        .eq('is_deleted', false)
-        .order('project_name', { ascending: true });
-
-      if (projectsData) setProjects(projectsData);
+      // Fetch projects — scoped to the current user's own projects, not org-wide
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_user_id', authUser.id)
+          .maybeSingle();
+        if (userRow?.id) {
+          const myProjects = await getMyProjects(userRow.id);
+          if (myProjects.success) {
+            setProjects([...(myProjects.data || [])].sort((a, b) =>
+              String(a.project_name || '').localeCompare(String(b.project_name || ''))
+            ));
+          }
+        }
+      }
 
       // Fetch portfolios
       const { data: portfoliosData } = await supabase
@@ -179,26 +213,30 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {allocation ? 'Edit Resource Allocation' : 'Create Resource Allocation'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+  // Conservative default (false) while role data is still resolving.
+  const canAllocateHigherTiers = maxRoleLevel !== null && maxRoleLevel >= HIGHER_TIER_MIN_ROLE_LEVEL;
+  // Keep an out-of-tier allocation's existing Portfolio/Programme visible when viewing/editing
+  // a record someone else created.
+  const showHigherTierFields = canAllocateHigherTiers || !!(allocation && (allocation.portfolio_id || allocation.programme_id));
 
+  return (
+    <FormSurface
+      variant={variant}
+      backLabel={backLabel}
+      title={allocation ? 'Edit Resource Allocation' : 'Create Resource Allocation'}
+      icon={Users}
+      onClose={onCancel}
+    >
         <div className="px-6 pt-4">
-          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          <DetailAuditTabList
+            activeTab={formTab}
+            onChange={setFormTab}
+            tabs={[
+              { value: 'details', label: 'Details' },
+              { value: 'allocation', label: 'Allocation Details' },
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
 
         {formTab === 'audit' ? (
@@ -226,6 +264,8 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
           </div>
         ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {formTab === 'details' && (
+          <>
           {/* Resource Selection */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -257,7 +297,7 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Allocation Context (Select at least one)
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 gap-4 ${showHigherTierFields ? 'md:grid-cols-3' : 'md:max-w-xs'}`}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                   <FolderKanban className="h-4 w-4" />
@@ -276,8 +316,14 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                     </option>
                   ))}
                 </select>
+                {!canAllocateHigherTiers && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Your role is scoped to project-level allocations.
+                  </p>
+                )}
               </div>
 
+              {showHigherTierFields && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                   <Target className="h-4 w-4" />
@@ -287,7 +333,8 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                   name="portfolio_id"
                   value={formData.portfolio_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={!canAllocateHigherTiers}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
                 >
                   <option value="">None</option>
                   {portfolios.map(portfolio => (
@@ -297,7 +344,9 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                   ))}
                 </select>
               </div>
+              )}
 
+              {showHigherTierFields && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
@@ -307,7 +356,8 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                   name="programme_id"
                   value={formData.programme_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={!canAllocateHigherTiers}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
                 >
                   <option value="">None</option>
                   {programmes.map(programme => (
@@ -317,6 +367,7 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                   ))}
                 </select>
               </div>
+              )}
             </div>
           </div>
 
@@ -356,6 +407,25 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
             </div>
           </div>
 
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Notes
+            </label>
+            <textarea
+              name="allocation_notes"
+              value={formData.allocation_notes}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Additional notes about this allocation..."
+            />
+          </div>
+          </>
+          )}
+
+          {formTab === 'allocation' && (
+          <>
           {/* Allocation Details */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -462,20 +532,6 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
                 </label>
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Notes
-              </label>
-              <textarea
-                name="allocation_notes"
-                value={formData.allocation_notes}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Additional notes about this allocation..."
-              />
-            </div>
           </div>
 
           {/* Conflict Check */}
@@ -518,6 +574,8 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
               </div>
             </div>
           )}
+          </>
+          )}
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -539,8 +597,6 @@ export default function CrossProjectAllocationForm({ allocation, onSave, onCance
           </div>
         </form>
         )}
-      </div>
-    </div>
+    </FormSurface>
   );
 }
-

@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
+import { getResourceCategories, createResourceCategory } from '../services/crossResourceService'
 import { X, Save, User, DollarSign, Calendar } from 'lucide-react'
+import SelectField from './ui/SelectField'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ResourceForm({ resource, onSave, onCancel }) {
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
   const [formData, setFormData] = useState({
@@ -31,6 +35,8 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
   })
   const [users, setUsers] = useState([])
   const [teams, setTeams] = useState([])
+  const [categories, setCategories] = useState([])
+  const [currencies, setCurrencies] = useState([])
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -55,6 +61,12 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
     }
     fetchLookupData()
   }, [resource])
+
+  useEffect(() => {
+    if (formTab === 'link' && formData.resource_type !== 'human') {
+      setFormTab('details')
+    }
+  }, [formTab, formData.resource_type])
 
   useEffect(() => {
     if (formTab !== 'audit' || !resource) return
@@ -83,8 +95,31 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
         .eq('is_deleted', false)
         .order('team_name', { ascending: true })
       if (teamsData) setTeams(teamsData)
+
+      const categoriesData = await getResourceCategories()
+      setCategories(categoriesData)
+
+      // Fetch currencies
+      const { data: currenciesData } = await supabase
+        .from('currencies')
+        .select('code, name')
+        .eq('is_active', true)
+        .eq('is_deleted', false)
+        .order('name', { ascending: true })
+      if (currenciesData) setCurrencies(currenciesData)
     } catch (error) {
       console.error('Error fetching lookup data:', error)
+    }
+  }
+
+  const handleCreateCategory = async (name) => {
+    try {
+      const created = await createResourceCategory(name)
+      setCategories((prev) => [...prev, created].sort((a, b) => a.category_name.localeCompare(b.category_name)))
+      setFormData((prev) => ({ ...prev, resource_category: created.category_name }))
+    } catch (error) {
+      console.error('Error creating resource category:', error)
+      alert('Error creating category: ' + error.message)
     }
   }
 
@@ -121,17 +156,31 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
           .eq('id', resource.id)
 
         if (error) throw error
+
+        showSuccess({
+          recordId: resource.resource_code || resource.resource_name,
+          operation: 'updated',
+          message: `Resource "${formData.resource_name}" was updated successfully.`,
+          onOk: onSave,
+        })
       } else {
         // Create
         submitData.created_by = user.id
-        const { error } = await supabase
+        const { data: created, error } = await supabase
           .from('resources')
           .insert(submitData)
+          .select()
+          .single()
 
         if (error) throw error
-      }
 
-      onSave()
+        showSuccess({
+          recordId: created?.resource_code || formData.resource_name,
+          operation: 'created',
+          message: `Resource "${formData.resource_name}" was created successfully.`,
+          onOk: () => onSave(created),
+        })
+      }
     } catch (error) {
       console.error('Error saving resource:', error)
       alert('Error saving resource: ' + error.message)
@@ -141,23 +190,27 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {resource ? 'Edit Resource' : 'Create Resource'}
-          </h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {successModal}
+      <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {resource ? 'Edit Resource' : 'Create Resource'}
+        </h2>
+      </div>
 
-        <div className="px-6 pt-4">
-          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
-        </div>
+      <div className="px-6 pt-4">
+        <DetailAuditTabList
+          activeTab={formTab}
+          onChange={setFormTab}
+          tabs={[
+            { value: 'details', label: 'Details' },
+            { value: 'capacity', label: 'Capacity' },
+            { value: 'cost', label: 'Cost' },
+            ...(formData.resource_type === 'human' ? [{ value: 'link', label: 'Link' }] : []),
+            { value: 'audit', label: 'Audit details' },
+          ]}
+        />
+      </div>
 
         {formTab === 'audit' ? (
           <div className="p-6">
@@ -184,192 +237,225 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
           </div>
         ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Resource Name *
-              </label>
-              <input
-                type="text"
-                name="resource_name"
-                value={formData.resource_name}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Resource Code
-              </label>
-              <input
-                type="text"
-                name="resource_code"
-                value={formData.resource_code}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="e.g., RES-001"
-              />
-            </div>
-          </div>
+          {formTab === 'details' && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Resource Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="resource_name"
+                    value={formData.resource_name}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Resource Code
+                  </label>
+                  <input
+                    type="text"
+                    name="resource_code"
+                    value={formData.resource_code}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    placeholder="e.g., RES-001"
+                  />
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Resource Type *
-              </label>
-              <select
-                name="resource_type"
-                value={formData.resource_type}
-                onChange={handleChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              >
-                <option value="human">Human</option>
-                <option value="equipment">Equipment</option>
-                <option value="facility">Facility</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Resource Category
-              </label>
-              <input
-                type="text"
-                name="resource_category"
-                value={formData.resource_category}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="e.g., Developer, Designer, Manager"
-              />
-            </div>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Resource Type *
+                  </label>
+                  <select
+                    name="resource_type"
+                    value={formData.resource_type}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    <option value="human">Human</option>
+                    <option value="equipment">Equipment</option>
+                    <option value="facility">Facility</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Resource Category
+                  </label>
+                  <SelectField
+                    options={categories.map((c) => ({ value: c.category_name, label: c.category_name }))}
+                    value={formData.resource_category}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, resource_category: value }))}
+                    placeholder="Select a category..."
+                    searchPlaceholder="Search categories..."
+                    forceSearchable
+                    allowCustom
+                    customValueActions={[{
+                      key: 'create',
+                      label: (term) => `+ Add "${term}" as a new category`,
+                      onSelect: handleCreateCategory,
+                    }]}
+                  />
+                </div>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
-            </label>
-            <textarea
-              name="resource_description"
-              value={formData.resource_description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            />
-          </div>
-
-          {/* Capacity Settings */}
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Capacity Settings
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Hours per Day
+                  Description
                 </label>
-                <input
-                  type="number"
-                  name="default_capacity_hours_per_day"
-                  value={formData.default_capacity_hours_per_day}
+                <textarea
+                  name="resource_description"
+                  value={formData.resource_description}
                   onChange={handleChange}
-                  min="0"
-                  max="24"
-                  step="0.5"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Days per Week
-                </label>
-                <input
-                  type="number"
-                  name="default_capacity_days_per_week"
-                  value={formData.default_capacity_days_per_week}
-                  onChange={handleChange}
-                  min="0"
-                  max="7"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={formData.is_active}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Active
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="is_available"
+                    checked={formData.is_available}
+                    onChange={handleChange}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Available
+                  </label>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Capacity Percentage (%)
-                </label>
-                <input
-                  type="number"
-                  name="default_capacity_percentage"
-                  value={formData.default_capacity_percentage}
-                  onChange={handleChange}
-                  min="0"
-                  max="100"
-                  step="1"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
+            </>
+          )}
+
+          {formTab === 'capacity' && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Capacity Settings
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Hours per Day
+                  </label>
+                  <input
+                    type="number"
+                    name="default_capacity_hours_per_day"
+                    value={formData.default_capacity_hours_per_day}
+                    onChange={handleChange}
+                    min="0"
+                    max="24"
+                    step="0.5"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Days per Week
+                  </label>
+                  <input
+                    type="number"
+                    name="default_capacity_days_per_week"
+                    value={formData.default_capacity_days_per_week}
+                    onChange={handleChange}
+                    min="0"
+                    max="7"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Capacity Percentage (%)
+                  </label>
+                  <input
+                    type="number"
+                    name="default_capacity_percentage"
+                    value={formData.default_capacity_percentage}
+                    onChange={handleChange}
+                    min="0"
+                    max="100"
+                    step="1"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Cost Information */}
-          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Cost Information (Optional)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Hourly Rate
-                </label>
-                <input
-                  type="number"
-                  name="hourly_rate"
-                  value={formData.hourly_rate}
-                  onChange={handleChange}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Daily Rate
-                </label>
-                <input
-                  type="number"
-                  name="daily_rate"
-                  value={formData.daily_rate}
-                  onChange={handleChange}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Currency
-                </label>
-                <select
-                  name="currency_code"
-                  value={formData.currency_code}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="JPY">JPY</option>
-                  <option value="CAD">CAD</option>
-                  <option value="AUD">AUD</option>
-                </select>
+          {formTab === 'cost' && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <DollarSign className="h-5 w-5" />
+                Cost Information (Optional)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Hourly Rate
+                  </label>
+                  <input
+                    type="number"
+                    name="hourly_rate"
+                    value={formData.hourly_rate}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Daily Rate
+                  </label>
+                  <input
+                    type="number"
+                    name="daily_rate"
+                    value={formData.daily_rate}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Currency
+                  </label>
+                  <SelectField
+                    options={currencies.map((c) => ({ value: c.code, label: `${c.code} — ${c.name}` }))}
+                    value={formData.currency_code}
+                    onChange={(value) => setFormData((prev) => ({ ...prev, currency_code: value }))}
+                    placeholder="Select a currency..."
+                    searchPlaceholder="Search currencies..."
+                    forceSearchable
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Linking */}
-          {formData.resource_type === 'human' && (
+          {formTab === 'link' && formData.resource_type === 'human' && (
             <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <User className="h-5 w-5" />
@@ -387,7 +473,7 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">No User Link</option>
-                    {users.map((user, index) => (
+                    {users.map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.full_name || user.email}
                       </option>
@@ -405,7 +491,7 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   >
                     <option value="">No Team Link</option>
-                    {teams.map((team, index) => (
+                    {teams.map((team) => (
                       <option key={team.id} value={team.id}>
                         {team.team_name}
                       </option>
@@ -415,34 +501,6 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
               </div>
             </div>
           )}
-
-          {/* Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="is_active"
-                checked={formData.is_active}
-                onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Active
-              </label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="is_available"
-                checked={formData.is_available}
-                onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Available
-              </label>
-            </div>
-          </div>
 
           <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
             <button
@@ -464,7 +522,6 @@ export default function ResourceForm({ resource, onSave, onCancel }) {
           </div>
         </form>
         )}
-      </div>
     </div>
   )
 }

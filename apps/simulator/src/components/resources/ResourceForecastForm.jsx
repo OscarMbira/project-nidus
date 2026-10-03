@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { X, Save, TrendingUp, Target, Calendar } from 'lucide-react';
-import { saveResourceForecast } from '../../services/crossResourceService';
+import { Save, TrendingUp, Target, Calendar } from 'lucide-react';
+import { saveResourceForecast, getResourceCategories, createResourceCategory } from '../../services/crossResourceService';
+import { getUserSystemRoles, getUserProjectRoles } from '../../services/roleService';
 import { supabase } from '../../services/supabaseClient';
+import FormSurface from '../ui/FormSurface';
+import SelectField from '../ui/SelectField';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
@@ -9,9 +12,15 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
+// project_roles.role_level hierarchy (v91): team_manager=8, project_manager=9,
+// programme_manager=10, project_sponsor=11, project_board_member=12. Programme tier
+// and above (or any org-wide system role) may forecast beyond project scope.
+const HIGHER_TIER_MIN_ROLE_LEVEL = 10;
+
+export default function ResourceForecastForm({ forecast, onSave, onCancel, variant = 'modal', backLabel = null, readOnly = false }) {
   const [formTab, setFormTab] = useState('details');
   const [auditUserLabels, setAuditUserLabels] = useState({});
+  const [maxRoleLevel, setMaxRoleLevel] = useState(null); // null = still resolving
   const [formData, setFormData] = useState({
     portfolio_id: '',
     programme_id: '',
@@ -33,6 +42,7 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
 
   const [portfolios, setPortfolios] = useState([]);
   const [programmes, setProgrammes] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -58,6 +68,22 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
     }
     fetchLookupData();
   }, [forecast]);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setMaxRoleLevel(0); return; }
+      const [systemRes, projectRes] = await Promise.all([
+        getUserSystemRoles(user.id),
+        getUserProjectRoles(user.id),
+      ]);
+      const levels = [
+        ...(systemRes.data || []).map((r) => r.roles?.role_level || 0),
+        ...(projectRes.data || []).map((r) => r.project_roles?.role_level || 0),
+      ];
+      setMaxRoleLevel(levels.length ? Math.max(...levels) : 0);
+    })();
+  }, []);
 
   useEffect(() => {
     if (formTab !== 'audit' || !forecast) return;
@@ -86,8 +112,22 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
         .order('programme_name', { ascending: true });
 
       if (programmesData) setProgrammes(programmesData);
+
+      const categoriesData = await getResourceCategories();
+      setCategories(categoriesData);
     } catch (error) {
       console.error('Error fetching lookup data:', error);
+    }
+  };
+
+  const handleCreateCategory = async (name) => {
+    try {
+      const created = await createResourceCategory(name);
+      setCategories((prev) => [...prev, created].sort((a, b) => a.category_name.localeCompare(b.category_name)));
+      setFormData((prev) => ({ ...prev, resource_category: created.category_name }));
+    } catch (error) {
+      console.error('Error creating resource category:', error);
+      alert('Error creating category: ' + error.message);
     }
   };
 
@@ -127,26 +167,43 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div className="flex items-center gap-3">
-            <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {forecast ? 'Edit Resource Forecast' : 'Create Resource Forecast'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+  // Conservative default (false) while role data is still resolving.
+  const canForecastHigherTiers = maxRoleLevel !== null && maxRoleLevel >= HIGHER_TIER_MIN_ROLE_LEVEL;
 
+  const scopeOptions = [
+    { value: 'project', label: 'Project' },
+    ...(canForecastHigherTiers ? [
+      { value: 'portfolio', label: 'Portfolio' },
+      { value: 'programme', label: 'Programme' },
+      { value: 'enterprise', label: 'Enterprise' },
+    ] : []),
+  ];
+  // Keep an out-of-tier scope visible when viewing/editing a record someone else created.
+  if (forecast?.forecast_scope && !scopeOptions.some((o) => o.value === forecast.forecast_scope)) {
+    scopeOptions.push({ value: forecast.forecast_scope, label: humanizeAuditToken(forecast.forecast_scope) });
+  }
+
+  const showHigherTierFields = canForecastHigherTiers || !!(forecast && (forecast.portfolio_id || forecast.programme_id));
+
+  return (
+    <FormSurface
+      variant={variant}
+      backLabel={backLabel}
+      title={readOnly ? 'View Resource Forecast' : forecast ? 'Edit Resource Forecast' : 'Create Resource Forecast'}
+      icon={TrendingUp}
+      onClose={onCancel}
+    >
         <div className="px-6 pt-4">
-          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          <DetailAuditTabList
+            activeTab={formTab}
+            onChange={setFormTab}
+            tabs={[
+              { value: 'details', label: 'Details' },
+              { value: 'resource', label: 'Resource & Availability' },
+              { value: 'confidence', label: 'Confidence' },
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
         </div>
 
         {formTab === 'audit' ? (
@@ -174,12 +231,15 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
           </div>
         ) : (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0 min-w-0 disabled:opacity-100">
+        {formTab === 'details' && (
+        <>
           {/* Forecast Context */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Forecast Context
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 gap-4 ${showHigherTierFields ? 'md:grid-cols-3' : 'md:max-w-xs'}`}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Scope
@@ -190,13 +250,18 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="project">Project</option>
-                  <option value="portfolio">Portfolio</option>
-                  <option value="programme">Programme</option>
-                  <option value="enterprise">Enterprise</option>
+                  {scopeOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
                 </select>
+                {!canForecastHigherTiers && (
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Your role is scoped to project-level forecasts.
+                  </p>
+                )}
               </div>
 
+              {showHigherTierFields && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Portfolio (optional)
@@ -205,7 +270,8 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
                   name="portfolio_id"
                   value={formData.portfolio_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={!canForecastHigherTiers}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
                 >
                   <option value="">None</option>
                   {portfolios.map(portfolio => (
@@ -215,7 +281,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
                   ))}
                 </select>
               </div>
+              )}
 
+              {showHigherTierFields && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Programme (optional)
@@ -224,7 +292,8 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
                   name="programme_id"
                   value={formData.programme_id}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={!canForecastHigherTiers}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-60"
                 >
                   <option value="">None</option>
                   {programmes.map(programme => (
@@ -234,6 +303,7 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
                   ))}
                 </select>
               </div>
+              )}
             </div>
           </div>
 
@@ -292,6 +362,27 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
             </div>
           </div>
 
+          {/* Notes */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Notes
+            </h3>
+            <div>
+              <textarea
+                name="forecast_notes"
+                value={formData.forecast_notes}
+                onChange={handleChange}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Additional notes about this forecast..."
+              />
+            </div>
+          </div>
+        </>
+        )}
+
+        {formTab === 'resource' && (
+        <>
           {/* Resource Type/Category */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -302,13 +393,19 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Resource Category
                 </label>
-                <input
-                  type="text"
-                  name="resource_category"
+                <SelectField
+                  options={categories.map((c) => ({ value: c.category_name, label: c.category_name }))}
                   value={formData.resource_category}
-                  onChange={handleChange}
-                  placeholder="e.g., developer, designer, manager"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData((prev) => ({ ...prev, resource_category: value }))}
+                  placeholder="Select a category..."
+                  searchPlaceholder="Search categories..."
+                  forceSearchable
+                  allowCustom
+                  customValueActions={[{
+                    key: 'create',
+                    label: (term) => `+ Add "${term}" as a new category`,
+                    onSelect: handleCreateCategory,
+                  }]}
                 />
               </div>
 
@@ -409,7 +506,11 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
               </div>
             </div>
           </div>
+        </>
+        )}
 
+        {formTab === 'confidence' && (
+        <>
           {/* Forecast Confidence */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -465,23 +566,9 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
               </div>
             </div>
           </div>
-
-          {/* Notes */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-              Notes
-            </h3>
-            <div>
-              <textarea
-                name="forecast_notes"
-                value={formData.forecast_notes}
-                onChange={handleChange}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Additional notes about this forecast..."
-              />
-            </div>
-          </div>
+        </>
+        )}
+        </fieldset>
 
           {/* Form Actions */}
           <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -490,21 +577,21 @@ export default function ResourceForecastForm({ forecast, onSave, onCancel }) {
               onClick={onCancel}
               className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              Cancel
+              {readOnly ? 'Back' : 'Cancel'}
             </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {saving ? 'Saving...' : forecast ? 'Update Forecast' : 'Create Forecast'}
-            </button>
+            {!readOnly && (
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {saving ? 'Saving...' : forecast ? 'Update Forecast' : 'Create Forecast'}
+              </button>
+            )}
           </div>
         </form>
         )}
-      </div>
-    </div>
+    </FormSurface>
   );
 }
-

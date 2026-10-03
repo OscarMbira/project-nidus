@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Edit2, Trash2, AlertTriangle, Target, TrendingUp, Calendar } from 'lucide-react';
+import { AlertTriangle, Target, TrendingUp, Calendar } from 'lucide-react';
+import { RowActionButton } from '@nidus/ui';
 import { deleteResourceForecast } from '../../services/crossResourceService';
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function ResourceForecastList({ forecasts, onEdit, onRefresh }) {
+export default function ResourceForecastList({ forecasts, onView, onEdit, onRefresh }) {
   const [deleting, setDeleting] = useState(null);
 
   const handleDelete = async (forecast) => {
@@ -135,26 +136,23 @@ export default function ResourceForecastList({ forecasts, onEdit, onRefresh }) {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => {
-                          if (onEdit) {
-                            onEdit(forecast);
-                          }
-                        }}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                        title="Edit"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(forecast)}
+                    <div className="flex items-center justify-end gap-1">
+                      <RowActionButton
+                        variant="view"
+                        label="View forecast"
+                        onClick={() => onView && onView(forecast)}
+                      />
+                      <RowActionButton
+                        variant="edit"
+                        label="Edit forecast"
+                        onClick={() => onEdit && onEdit(forecast)}
+                      />
+                      <RowActionButton
+                        variant="delete"
+                        label="Delete forecast"
                         disabled={deleting === forecast.id}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                        onClick={() => handleDelete(forecast)}
+                      />
                     </div>
                   </td>
                 </tr>

@@ -5,7 +5,7 @@ import { deleteCrossProjectAllocation } from '../../services/crossResourceServic
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-export default function CrossProjectAllocationList({ allocations, onRefresh }) {
+export default function CrossProjectAllocationList({ allocations, onEdit, onRefresh }) {
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(null);
 

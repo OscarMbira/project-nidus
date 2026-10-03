@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Filter, Search, Link2, Target, TrendingUp, FolderKanban } from 'lucide-react'
+import DashboardStatCard from '../components/ui/DashboardStatCard'
 import { format } from 'date-fns'
 import { getResourceConflicts } from '../services/crossResourceService'
 
@@ -150,7 +151,7 @@ export default function ResourceConflicts() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
-        onClick={() => navigate('/resources')}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -164,7 +165,7 @@ export default function ResourceConflicts() {
             Resource Conflicts
           </h1>
           <button
-            onClick={() => navigate('/resources/cross-project')}
+            onClick={() => navigate('/simulator/resources/cross-project')}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm"
           >
             <Link2 className="h-4 w-4" />
@@ -219,60 +220,12 @@ export default function ResourceConflicts() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Conflicts</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-gray-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Open</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.open}</p>
-            </div>
-            <XCircle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">In Progress</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.in_progress}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-green-200 dark:border-green-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Resolved</p>
-              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.resolved}</p>
-            </div>
-            <CheckCircle className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-red-200 dark:border-red-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Critical</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.critical}</p>
-            </div>
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-purple-200 dark:border-purple-800 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Cross-Project</p>
-              <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.crossProject}</p>
-            </div>
-            <Link2 className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <DashboardStatCard label="Total Conflicts" value={stats.total} icon={AlertTriangle} iconClassName="text-gray-500" />
+        <DashboardStatCard label="Open" value={stats.open} icon={XCircle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
+        <DashboardStatCard label="In Progress" value={stats.in_progress} icon={AlertTriangle} accentClassName="text-blue-600 dark:text-blue-400" iconClassName="text-blue-500" borderClassName="border-blue-200 dark:border-blue-800" />
+        <DashboardStatCard label="Resolved" value={stats.resolved} icon={CheckCircle} accentClassName="text-green-600 dark:text-green-400" iconClassName="text-green-500" borderClassName="border-green-200 dark:border-green-800" />
+        <DashboardStatCard label="Critical" value={stats.critical} icon={AlertTriangle} accentClassName="text-red-600 dark:text-red-400" iconClassName="text-red-500" borderClassName="border-red-200 dark:border-red-800" />
+        <DashboardStatCard label="Cross-Project" value={stats.crossProject} icon={Link2} accentClassName="text-purple-600 dark:text-purple-400" iconClassName="text-purple-500" borderClassName="border-purple-200 dark:border-purple-800" />
       </div>
 
       {/* Filters */}

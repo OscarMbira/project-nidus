@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient'
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 
 /**
  * Cross-Project Resource Service - API functions for Cross-Project Resource Management module
@@ -27,8 +28,7 @@ export async function getCrossProjectAllocations(filters = {}) {
       project:project_id (
         id,
         project_name,
-        project_code,
-        project_status
+        project_code
       ),
       portfolio:portfolio_id (
         id,
@@ -97,8 +97,7 @@ export async function getCrossProjectAllocation(allocationId) {
       project:project_id (
         id,
         project_name,
-        project_code,
-        project_status
+        project_code
       ),
       portfolio:portfolio_id (
         id,
@@ -765,10 +764,10 @@ export async function getResourceConflicts(filters = {}) {
   }
 
   if (filters.status) {
-    query = query.eq('conflict_status', filters.status)
+    query = query.eq('resolution_status', filters.status)
   }
 
-  const { data, error } = await query.order('detected_at', { ascending: false })
+  const { data, error } = await query.order('created_at', { ascending: false })
 
   if (error) throw error
   return data
@@ -806,7 +805,7 @@ export async function getCrossProjectResourceDashboardStats(filters = {}) {
     const underUtilized = utilization.filter(u => u.utilization_status === 'under-utilized').length
     const optimalUtilized = utilization.filter(u => u.utilization_status === 'optimal').length
 
-    const unresolvedConflicts = conflicts.filter(c => c.conflict_status !== 'resolved').length
+    const unresolvedConflicts = conflicts.filter(c => c.resolution_status !== 'resolved').length
     const criticalConflicts = conflicts.filter(c => c.conflict_severity === 'critical').length
 
     return {
@@ -840,5 +839,46 @@ export async function getCrossProjectResourceDashboardStats(filters = {}) {
     console.error('Error getting cross-project resource dashboard stats:', error)
     throw error
   }
+}
+
+// ================================================
+// RESOURCE CATEGORIES (lookup for resources/resource_forecasts.resource_category)
+// ================================================
+
+/**
+ * Get active resource categories, alphabetical.
+ */
+export async function getResourceCategories() {
+  const { data, error } = await supabase
+    .from('resource_categories')
+    .select('id, category_name, description')
+    .eq('is_active', true)
+    .eq('is_deleted', false)
+    .order('category_name', { ascending: true })
+
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Add a new resource category (e.g. from the "add new category" action in
+ * the Resource Category dropdown). Returns the created row.
+ */
+export async function createResourceCategory(categoryName) {
+  const name = (categoryName || '').trim()
+  if (!name) throw new Error('Category name is required')
+
+  // created_by/updated_by FK to public.users(id), not the raw auth uid.
+  const internalUserId = await getCurrentUserInternalUserId()
+  if (!internalUserId) throw new Error('User not authenticated')
+
+  const { data, error } = await supabase
+    .from('resource_categories')
+    .insert({ category_name: name, created_by: internalUserId, updated_by: internalUserId })
+    .select('id, category_name, description')
+    .single()
+
+  if (error) throw error
+  return data
 }
 
