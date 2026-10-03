@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import SimTestingPageShell from '../../../components/sim/SimTestingPageShell'
+import DashboardStatCard from '../../../components/ui/DashboardStatCard'
 import { getPracticeDefectStats } from '../../../services/sim/practiceDefectService'
 import DefectTrendChart from '../../../components/testing/DefectTrendChart'
 import DefectBySeverityChart from '../../../components/testing/DefectBySeverityChart'
@@ -40,18 +41,15 @@ function Body({ projectId }) {
         ← Defect register
       </Link>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-gray-800 bg-gray-900/50 p-4">
-          <p className="text-xs text-gray-500 uppercase">Total defects</p>
-          <p className="text-2xl font-bold text-white mt-1">{stats.total}</p>
-        </div>
+        <DashboardStatCard label="Total defects" value={stats.total} />
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-4">
-          <h3 className="text-sm font-semibold text-white mb-2">Opened by day</h3>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Opened by day</h3>
           <DefectTrendChart trend={stats.trend} />
         </div>
-        <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-4">
-          <h3 className="text-sm font-semibold text-white mb-2">By severity</h3>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">By severity</h3>
           <DefectBySeverityChart bySeverity={stats.bySeverity} />
         </div>
       </div>

@@ -1,5 +1,16 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+
 export default function DiagnosticSessionDetailPage() {
   const { id } = useParams()
-  return <div className="p-6 min-h-screen bg-gray-950 text-gray-100">Diagnostic {id}</div>
+  const navigate = useNavigate()
+  return (
+    <div className="p-6 min-h-screen bg-gray-950 text-gray-100">
+      <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white mb-4 flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+      Diagnostic {id}
+    </div>
+  )
 }

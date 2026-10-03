@@ -2,21 +2,37 @@ import { platformDb } from './supabase/supabaseClient'
 
 // ─── Test Suites ─────────────────────────────────────────────────────────────
 
+export async function getTestSuiteOptions(projectId) {
+  if (!projectId) return []
+  const { data, error } = await platformDb
+    .from('test_suites')
+    .select('id, name, project_id')
+    .eq('project_id', projectId)
+    .eq('is_deleted', false)
+    .order('name', { ascending: true })
+  if (error) throw error
+  return (data || []).filter((row) => row.project_id === projectId)
+}
+
 export async function getTestSuites(projectId, filters = {}) {
+  if (!projectId) return []
   let query = platformDb
     .from('test_suites')
     .select('*, created_by_user:users!test_suites_created_by_fkey(id, full_name, email)')
     .eq('project_id', projectId)
     .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
+    .order('name', { ascending: true })
 
   if (filters.status) query = query.eq('status', filters.status)
   if (filters.suite_type) query = query.eq('suite_type', filters.suite_type)
-  if (filters.search) query = query.ilike('name', `%${filters.search}%`)
+  if (filters.search) {
+    const term = String(filters.search).replace(/[%_]/g, ' ').trim()
+    if (term) query = query.ilike('name', `%${term}%`)
+  }
 
   const { data, error } = await query
   if (error) throw error
-  return data || []
+  return (data || []).filter((row) => row.project_id === projectId)
 }
 
 export async function getTestSuiteById(suiteId) {

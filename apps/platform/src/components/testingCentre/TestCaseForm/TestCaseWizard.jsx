@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import * as platform from '../../../services/testingCentreService'
@@ -214,9 +214,9 @@ export default function TestCaseWizard({ mode = 'platform', testCaseId = null, p
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-4 md:p-8 max-w-4xl mx-auto">
       <div className="mb-6">
-        <Link to={`${pathPrefix}/cases`} className="text-sm text-blue-500 hover:underline">
+        <button type="button" onClick={() => navigate(-1)} className="text-sm text-blue-500 hover:underline">
           ← Test case library
-        </Link>
+        </button>
         <h1 className="text-2xl font-semibold mt-2">{testCaseId ? 'Edit test case' : 'New test case'}</h1>
 
         <div className="mt-3">

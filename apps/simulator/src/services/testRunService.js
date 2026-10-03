@@ -17,6 +17,10 @@ export async function getTestRuns(projectId, filters = {}) {
   if (filters.status)      query = query.eq('status', filters.status)
   if (filters.environment) query = query.eq('environment', filters.environment)
   if (filters.suite_id)    query = query.eq('suite_id', filters.suite_id)
+  if (filters.search) {
+    const term = String(filters.search).replace(/[%_]/g, ' ').trim()
+    if (term) query = query.ilike('run_name', `%${term}%`)
+  }
 
   const { data, error } = await query
   if (error) throw error

@@ -10,6 +10,7 @@ import {
   bootstrapPracticeTestRunExecutions,
 } from '../../../services/sim/practiceTestRunService'
 import { getPracticeTestSuites } from '../../../services/sim/practiceTestSuiteService'
+import { getPracticeTestEnvironments } from '../../../services/sim/practiceTestEnvironmentService'
 import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
@@ -105,6 +106,7 @@ function Body({ projectId }) {
         <TestRunForm
           projectId={projectId}
           projectIdKey={PID_KEY}
+          fetchEnvironments={getPracticeTestEnvironments}
           suites={suites}
           onClose={() => setShowForm(false)}
           onSave={async (payload) => {

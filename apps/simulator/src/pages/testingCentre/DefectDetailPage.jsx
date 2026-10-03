@@ -1,5 +1,6 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { getDefectById } from '../../services/defectService'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -11,6 +12,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 
 export default function DefectDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [d, setD] = useState(null)
   const [activeTab, setActiveTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
@@ -27,6 +29,10 @@ export default function DefectDetailPage() {
   if (!d) return <div className="p-6 text-gray-100">Loading…</div>
   return (
     <div className="p-6 min-h-screen bg-gray-950 text-gray-100 max-w-3xl mx-auto">
+      <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-white mb-4 flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <h1 className="text-xl">{d.defect_ref}</h1>
 
       <div className="my-4">

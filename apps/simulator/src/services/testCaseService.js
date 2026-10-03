@@ -18,6 +18,7 @@ export function testCaseDetailPathSegment(record) {
 // ─── Test Cases ──────────────────────────────────────────────────────────────
 
 export async function getTestCases(projectId, filters = {}) {
+  if (!projectId) return []
   let query = platformDb
     .from('test_cases')
     .select(`
@@ -34,7 +35,12 @@ export async function getTestCases(projectId, filters = {}) {
   if (filters.priority)   query = query.eq('priority', filters.priority)
   if (filters.test_type)  query = query.eq('test_type', filters.test_type)
   if (filters.search) {
-    query = query.or(`title.ilike.%${filters.search}%,test_case_ref.ilike.%${filters.search}%`)
+    const term = String(filters.search).replace(/[%_,]/g, ' ').trim()
+    if (term) {
+      query = query.or(
+        `title.ilike.%${term}%,test_case_ref.ilike.%${term}%,description.ilike.%${term}%`,
+      )
+    }
   }
 
   const { data, error } = await query
@@ -42,7 +48,7 @@ export async function getTestCases(projectId, filters = {}) {
   return data || []
 }
 
-export async function getTestCaseById(caseIdOrRef) {
+export async function getTestCaseById(caseIdOrRef, { withImages = false } = {}) {
   const key = typeof caseIdOrRef === 'string' ? caseIdOrRef.trim() : String(caseIdOrRef ?? '').trim()
   if (!key) throw new Error('Missing test case identifier')
   const col = isTestCaseUuidSegment(key) ? 'id' : 'test_case_ref'
@@ -51,13 +57,14 @@ export async function getTestCaseById(caseIdOrRef) {
     .select(`
       *,
       suite:test_suites(id, name),
-      steps:test_case_steps(id, step_number, action, expected_result, test_data),
-      created_by_user:users!test_cases_created_by_fkey(id, full_name, email)
+      steps:test_case_steps(id, step_number, action, expected_result, test_data)
     `)
     .eq(col, key)
     .eq('is_deleted', false)
     .maybeSingle()
   if (error) throw error
+  if (withImages && data?.steps) data.steps = await attachStepImages(data.steps)
+  if (data?.steps) data.steps.sort((a, b) => (a.step_number || 0) - (b.step_number || 0))
   return data ?? null
 }
 
@@ -139,7 +146,121 @@ export async function upsertTestCaseSteps(caseId, steps) {
     .insert(stepsToInsert)
     .select()
   if (error) throw error
+  await saveStepImages(data || [], steps)
   return data
+}
+
+const STEP_IMAGE_BUCKET = 'test-case-attachments'
+const STEP_IMAGE_FIELDS = ['action_images', 'expected_result_images', 'test_data_images']
+
+function storedImages(images) {
+  return (Array.isArray(images) ? images : [])
+    .map((item) => ({
+      file_name: item?.file_name || 'image',
+      file_path: item?.file_path || '',
+      file_type: item?.file_type || null,
+    }))
+    .filter((item) => item.file_path)
+}
+
+export async function withStepImagePreviews(images) {
+  const list = Array.isArray(images) ? images : []
+  const paths = [...new Set(list.map((item) => item?.file_path).filter(Boolean))]
+  const signedByPath = {}
+  if (paths.length) {
+    const { data } = await platformDb.storage.from(STEP_IMAGE_BUCKET).createSignedUrls(paths, 3600)
+    for (const item of data || []) {
+      if (item?.path && item.signedUrl && !item.error) signedByPath[item.path] = item.signedUrl
+    }
+  }
+  return list.map((item) => ({
+    ...item,
+    preview_url: signedByPath[item.file_path]
+      || (typeof item?.preview_url === 'string' && /^https?:\/\//i.test(item.preview_url) ? item.preview_url : null),
+  }))
+}
+
+async function attachStepImages(steps) {
+  const list = steps || []
+  const ids = list.map((step) => step.id).filter(Boolean)
+  if (!ids.length) return list
+  const { data, error } = await platformDb
+    .from('test_case_steps')
+    .select('id, action_images, expected_result_images, test_data_images')
+    .in('id', ids)
+  if (error) return list
+  const byId = new Map((data || []).map((row) => [row.id, row]))
+  const merged = list.map((step) => {
+    const extra = byId.get(step.id)
+    if (!extra) return step
+    return {
+      ...step,
+      action_images: extra.action_images || [],
+      expected_result_images: extra.expected_result_images || [],
+      test_data_images: extra.test_data_images || [],
+    }
+  })
+  const flat = merged.flatMap((step) => STEP_IMAGE_FIELDS.flatMap((field) => step[field] || []))
+  const signed = await withStepImagePreviews(flat)
+  const previewByPath = new Map(signed.map((item) => [item.file_path, item.preview_url]))
+  return merged.map((step) => {
+    const next = { ...step }
+    for (const field of STEP_IMAGE_FIELDS) {
+      next[field] = (step[field] || []).map((item) => ({
+        ...item,
+        preview_url: previewByPath.get(item.file_path) || null,
+      }))
+    }
+    return next
+  })
+}
+
+async function saveStepImages(inserted, sourceSteps) {
+  const rows = inserted || []
+  let any = false
+  for (const row of rows) {
+    const source = sourceSteps[(row.step_number || 1) - 1] || {}
+    if (STEP_IMAGE_FIELDS.some((field) => storedImages(source[field]).length)) any = true
+  }
+  if (!any) return
+  for (const row of rows) {
+    const source = sourceSteps[(row.step_number || 1) - 1] || {}
+    const payload = {
+      action_images: storedImages(source.action_images),
+      expected_result_images: storedImages(source.expected_result_images),
+      test_data_images: storedImages(source.test_data_images),
+    }
+    const { error } = await platformDb.from('test_case_steps').update(payload).eq('id', row.id)
+    if (error) {
+      throw new Error('Images could not be saved. Run SQL/v1166_test_case_step_images.sql in Supabase, then save again.')
+    }
+  }
+}
+
+export async function uploadTestCaseStepImage({ projectId, file, fieldKey }) {
+  if (!projectId) throw new Error('Select a project before adding an image.')
+  const safeName = String(file.name || 'image.png').replace(/[^a-zA-Z0-9._-]/g, '_')
+  const folder = String(fieldKey || 'field').replace(/[^a-z0-9_-]/gi, '')
+  const path = `${projectId}/steps/${folder}/${Date.now()}_${safeName}`
+  const { error } = await platformDb.storage.from(STEP_IMAGE_BUCKET).upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || undefined,
+  })
+  if (error) {
+    throw new Error(error.message || 'Image upload failed. Run SQL/v1166_test_case_step_images.sql if the image store is missing.')
+  }
+  const [signed] = await withStepImagePreviews([{
+    file_name: file.name,
+    file_path: path,
+    file_type: file.type || null,
+  }])
+  return signed
+}
+
+export async function removeTestCaseStepImage(filePath) {
+  if (!filePath) return
+  await platformDb.storage.from(STEP_IMAGE_BUCKET).remove([filePath])
 }
 
 // ─── Batch Import ─────────────────────────────────────────────────────────────

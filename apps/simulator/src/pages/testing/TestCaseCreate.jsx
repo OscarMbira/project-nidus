@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ChevronLeft } from 'lucide-react'
 import TestingPageShell from '../../components/testing/TestingPageShell'
 import TestCaseForm from '../../components/testing/TestCaseForm'
@@ -38,13 +38,14 @@ function CreateBody({ projectId }) {
 
   return (
     <div className="space-y-4">
-      <Link
-        to={suiteFilter ? `/platform/testing/cases?suite=${encodeURIComponent(suiteFilter)}` : '/platform/testing/cases'}
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
         className="inline-flex items-center gap-1 text-sm text-emerald-400 hover:underline"
       >
         <ChevronLeft className="h-4 w-4" />
         Back to test cases
-      </Link>
+      </button>
       <TestCaseForm
         layout="inline"
         projectId={projectId}

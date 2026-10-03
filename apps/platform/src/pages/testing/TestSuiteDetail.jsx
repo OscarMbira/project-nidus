@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { testCaseDetailPathSegment } from '../../services/testCaseService'
 import TestingPageShell from '../../components/testing/TestingPageShell'
 import { getTestSuiteById } from '../../services/testSuiteService'
@@ -21,6 +21,7 @@ export default function TestSuiteDetail() {
 }
 
 function Detail({ suiteId }) {
+  const navigate = useNavigate()
   const [suite, setSuite] = useState(null)
   const [err, setErr] = useState(null)
   const [activeTab, setActiveTab] = useState('details')
@@ -54,9 +55,9 @@ function Detail({ suiteId }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between flex-wrap gap-2">
-        <Link to="/platform/testing/suites" className="text-sm text-emerald-400 hover:underline">
+        <button type="button" onClick={() => navigate(-1)} className="text-sm text-emerald-400 hover:underline">
           ← All suites
-        </Link>
+        </button>
         <Link
           to={`/platform/testing/cases?suite=${suite.id}`}
           className="text-sm text-emerald-400 hover:underline"

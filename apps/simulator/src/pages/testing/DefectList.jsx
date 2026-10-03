@@ -5,9 +5,13 @@ import TestingPageShell from '../../components/testing/TestingPageShell'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import DefectStatusBadge from '../../components/testing/DefectStatusBadge'
 import DefectSeverityBadge from '../../components/testing/DefectSeverityBadge'
-import { getDefects } from '../../services/defectService'
+import { getDefects, deleteDefect } from '../../services/defectService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { RowActionButton } from '@nidus/ui'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { resolveInternalUserId } from '@nidus/shared/utils/resolveInternalUserId'
+import { formatAuditDate, humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 const EXPORT_COLS = [
   { key: 'defect_ref', label: 'Ref' },
@@ -27,10 +31,12 @@ export default function DefectList() {
 
 function Body({ projectId }) {
   const navigate = useNavigate()
+  const { showSuccess, modal } = useSuccessModal()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
+  const [actionError, setActionError] = useState(null)
 
   const load = useCallback(async () => {
     if (!projectId) return
@@ -79,24 +85,24 @@ function Body({ projectId }) {
           placeholder="Search ref or title…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white min-w-[200px]"
+          className="min-w-[200px] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         >
           <option value="">All statuses</option>
           {['new', 'open', 'in_progress', 'resolved', 'closed', 'reopened', 'deferred', 'duplicate'].map((s) => (
             <option key={s} value={s}>
-              {s}
+              {s.replace(/_/g, ' ')}
             </option>
           ))}
         </select>
         <button
           type="button"
           onClick={() => load()}
-          className="px-3 py-2 rounded-lg border border-gray-600 text-sm text-gray-200"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
         >
           Apply
         </button>
@@ -111,8 +117,14 @@ function Body({ projectId }) {
                 <TableRowNumberHeader className="!normal-case" />
                 <th className="p-3">Ref</th>
                 <th className="p-3">Title</th>
-                <th className="p-3">Status</th>
                 <th className="p-3">Severity</th>
+                <th className="p-3">Priority</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Type</th>
+                <th className="p-3">Environment</th>
+                <th className="p-3">Assigned to</th>
+                <th className="p-3">Reported by</th>
+                <th className="p-3">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -126,11 +138,19 @@ function Body({ projectId }) {
                   </td>
                   <td className="p-3 text-white">{r.title}</td>
                   <td className="p-3">
-                    <DefectStatusBadge status={r.status} />
-                  </td>
-                  <td className="p-3">
                     <DefectSeverityBadge severity={r.severity} />
                   </td>
+                  <td className="p-3">
+                    <DefectSeverityBadge severity={r.priority} />
+                  </td>
+                  <td className="p-3">
+                    <DefectStatusBadge status={r.status} />
+                  </td>
+                  <td className="p-3 whitespace-nowrap text-gray-700 dark:text-gray-200">{humanizeAuditToken(r.defect_type) || '—'}</td>
+                  <td className="p-3 text-gray-700 dark:text-gray-200">{r.environment || '—'}</td>
+                  <td className="p-3 whitespace-nowrap text-gray-700 dark:text-gray-200">{r.assigned_to_name || '—'}</td>
+                  <td className="p-3 whitespace-nowrap text-gray-700 dark:text-gray-200">{r.reported_by_name || '—'}</td>
+                  <td className="p-3 whitespace-nowrap text-gray-700 dark:text-gray-200">{formatAuditDate(r.created_at)}</td>
                 </tr>
               ))}
             </tbody>

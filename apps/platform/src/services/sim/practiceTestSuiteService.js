@@ -3,6 +3,18 @@
  */
 import { simDb } from '../supabase/supabaseClient'
 
+export async function getPracticeTestSuiteOptions(practiceProjectId) {
+  if (!practiceProjectId) return []
+  const { data, error } = await simDb
+    .from('practice_test_suites')
+    .select('id, name, practice_project_id')
+    .eq('practice_project_id', practiceProjectId)
+    .eq('is_deleted', false)
+    .order('name', { ascending: true })
+  if (error) throw error
+  return (data || []).filter((row) => row.practice_project_id === practiceProjectId)
+}
+
 export async function getPracticeTestSuites(practiceProjectId, filters = {}) {
   let query = simDb
     .from('practice_test_suites')

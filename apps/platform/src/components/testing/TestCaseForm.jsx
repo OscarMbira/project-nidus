@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Save, ClipboardList } from 'lucide-react'
 import TestCaseStepEditor from './TestCaseStepEditor'
 import { platformDb } from '@nidus/supabase'
+import MultiLineListInput, { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
@@ -9,8 +10,19 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const PRIORITIES = ['critical','high','medium','low']
-const TEST_TYPES  = ['manual','automated','exploratory']
+const TEST_TYPES = [
+  { value: 'manual', label: 'Manual' },
+  { value: 'automated', label: 'Automated' },
+  { value: 'semi-automated', label: 'Semi-Automated' },
+  { value: 'exploratory', label: 'Exploratory' },
+]
 const STATUSES    = ['draft','active','deprecated','archived']
+
+function tagsToListValue(tags) {
+  if (Array.isArray(tags)) return tags.map((tag) => String(tag).trim()).filter(Boolean).join('\n')
+  if (typeof tags === 'string') return tags
+  return ''
+}
 
 export default function TestCaseForm({
   testCase,
@@ -72,7 +84,7 @@ export default function TestCaseForm({
         module_area: testCase.module_area || '',
         requirement_ref: testCase.requirement_ref || '',
         estimated_duration_minutes: testCase.estimated_duration_minutes || 5,
-        tags: Array.isArray(testCase.tags) ? testCase.tags.join(', ') : '',
+        tags: tagsToListValue(testCase.tags),
         steps: testCase.steps || [],
       })
     }
@@ -100,7 +112,7 @@ export default function TestCaseForm({
         ...form,
         [projectIdKey]: projectId,
         suite_id: form.suite_id || null,
-        tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        tags: parseMultiLineValue(form.tags),
         estimated_duration_minutes: parseInt(form.estimated_duration_minutes) || 5,
       }
       await onSave(payload)
@@ -109,41 +121,41 @@ export default function TestCaseForm({
     }
   }
 
-  const inputCls = hasErr => `w-full bg-gray-700 border ${hasErr ? 'border-red-500' : 'border-gray-600'}
-    rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
+  const inputCls = hasErr => `w-full bg-white dark:bg-gray-900 border ${hasErr ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}
+    rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`
 
   const inner = (
     <div
       className={
         layout === 'modal'
-          ? 'bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-700 my-4'
-          : 'bg-gray-800/90 rounded-xl shadow-lg w-full sm:w-[75%] max-w-full min-w-0 border border-gray-700 mx-auto'
+          ? 'bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-200 dark:border-gray-700 my-4'
+          : 'bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full sm:w-[75%] max-w-full min-w-0 border border-gray-200 dark:border-gray-700 mx-auto'
       }
     >
         {/* Sticky header only in modal scroll; inline + TestingPageShell both used sticky top-0 and overlapped */}
         <div
-          className={`flex items-center justify-between p-5 border-b border-gray-700 bg-gray-800 rounded-t-xl ${
+          className={`flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-xl ${
             layout === 'modal' ? 'sticky top-0 z-10' : ''
           }`}
         >
           <div className="flex items-center gap-2">
-            <ClipboardList className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-semibold text-white">
+            <ClipboardList className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {testCase ? 'Edit Test Case' : 'New Test Case'}
             </h2>
             {testCase?.test_case_ref && (
-              <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
+              <span className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 px-2 py-0.5 rounded">
                 {testCase.test_case_ref}
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+          <button type="button" onClick={onClose} className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white" aria-label="Close">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="border-b border-gray-700 px-5 shrink-0">
+          <div className="border-b border-gray-200 dark:border-gray-700 px-5 shrink-0">
             <nav className="flex gap-1" role="tablist" aria-label="Test case sections">
               <button
                 type="button"
@@ -154,8 +166,8 @@ export default function TestCaseForm({
                 onClick={() => setActiveTab('general')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   activeTab === 'general'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200'
+                    ? 'border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-300'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 General
@@ -169,13 +181,13 @@ export default function TestCaseForm({
                 onClick={() => setActiveTab('steps')}
                 className={`inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   activeTab === 'steps'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200'
+                    ? 'border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-300'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 Test steps
                 {form.steps.length > 0 && (
-                  <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full tabular-nums">
+                  <span className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 px-2 py-0.5 rounded-full tabular-nums">
                     {form.steps.length}
                   </span>
                 )}
@@ -189,8 +201,8 @@ export default function TestCaseForm({
                 onClick={() => setActiveTab('audit')}
                 className={`px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
                   activeTab === 'audit'
-                    ? 'border-blue-500 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-200'
+                    ? 'border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-300'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
               >
                 Audit details
@@ -208,7 +220,7 @@ export default function TestCaseForm({
             >
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Title <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -223,7 +235,7 @@ export default function TestCaseForm({
               {/* Suite + Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Test Suite</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Suite</label>
                   <select
                     value={form.suite_id}
                     onChange={e => setForm(f => ({ ...f, suite_id: e.target.value }))}
@@ -236,14 +248,14 @@ export default function TestCaseForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Test Type</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Test Type</label>
                   <select
                     value={form.test_type}
                     onChange={e => setForm(f => ({ ...f, test_type: e.target.value }))}
                     className={inputCls(false)}
                   >
-                    {TEST_TYPES.map(t => (
-                      <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                    {TEST_TYPES.map((t) => (
+                      <option key={t.value} value={t.value}>{t.label}</option>
                     ))}
                   </select>
                 </div>
@@ -252,7 +264,7 @@ export default function TestCaseForm({
               {/* Priority + Status */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Priority</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Priority</label>
                   <select
                     value={form.priority}
                     onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
@@ -264,7 +276,7 @@ export default function TestCaseForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Status</label>
                   <select
                     value={form.status}
                     onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
@@ -276,7 +288,7 @@ export default function TestCaseForm({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Est. Duration (min)</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Est. Duration (min)</label>
                   <input
                     type="number" min="1"
                     value={form.estimated_duration_minutes}
@@ -289,23 +301,23 @@ export default function TestCaseForm({
               {/* Description + Preconditions (one row, two columns) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</label>
                   <textarea
                     value={form.description}
                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                     rows={4}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm
+                    className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm
                       focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[6rem]"
                   />
                 </div>
                 <div className="min-w-0">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Preconditions</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Preconditions</label>
                   <textarea
                     value={form.preconditions}
                     onChange={e => setForm(f => ({ ...f, preconditions: e.target.value }))}
                     rows={4}
                     placeholder="What must be true before this test can run…"
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm
+                    className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm
                       focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[6rem]"
                   />
                 </div>
@@ -313,12 +325,12 @@ export default function TestCaseForm({
 
               {/* Expected Result */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Overall Expected Result</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Overall Expected Result</label>
                 <textarea
                   value={form.expected_result}
                   onChange={e => setForm(f => ({ ...f, expected_result: e.target.value }))}
                   rows={2}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm
+                  className="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 text-sm
                     focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
@@ -326,7 +338,7 @@ export default function TestCaseForm({
               {/* Module + Requirement */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Module / Area</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Module / Area</label>
                   <input
                     value={form.module_area}
                     onChange={e => setForm(f => ({ ...f, module_area: e.target.value }))}
@@ -335,7 +347,7 @@ export default function TestCaseForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Requirement Ref</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Requirement Ref</label>
                   <input
                     value={form.requirement_ref}
                     onChange={e => setForm(f => ({ ...f, requirement_ref: e.target.value }))}
@@ -347,12 +359,14 @@ export default function TestCaseForm({
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Tags (comma-separated)</label>
-                <input
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Tags</label>
+                <MultiLineListInput
+                  viewModeId="testing-test-case-tags"
                   value={form.tags}
-                  onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
-                  className={inputCls(false)}
-                  placeholder="e.g. login, smoke, regression"
+                  onChange={(value) => setForm((f) => ({ ...f, tags: value }))}
+                  itemColumnLabel="Tag"
+                  placeholder="Add a tag"
+                  ariaLabelPrefix="tag"
                 />
               </div>
             </div>
@@ -366,6 +380,7 @@ export default function TestCaseForm({
             >
               <TestCaseStepEditor
                 steps={form.steps}
+                projectId={projectId}
                 onChange={steps => setForm(f => ({ ...f, steps }))}
               />
             </div>
@@ -378,7 +393,7 @@ export default function TestCaseForm({
               className={activeTab !== 'audit' ? 'hidden' : ''}
             >
               {!testCase ? (
-                <p className="text-sm text-gray-400">Audit details appear after this test case is saved.</p>
+                <p className="text-sm text-gray-700 dark:text-gray-200">Audit details appear after this test case is saved.</p>
               ) : (
                 <AuditDetailsPanel description="Who created or changed this test case, and how it is classified.">
                   <AuditCard title="Identity" description="How this test case is labelled and tracked.">
@@ -402,9 +417,9 @@ export default function TestCaseForm({
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-3 px-5 pb-5 pt-2 border-t border-gray-700">
+          <div className="flex justify-end gap-3 px-5 pb-5 pt-2 border-t border-gray-200 dark:border-gray-700">
             <button type="button" onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-600 rounded-lg">
+              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-white border border-gray-300 dark:border-gray-600 rounded-lg">
               Cancel
             </button>
             <button type="submit" disabled={saving}

@@ -9,6 +9,7 @@ import {
   createPracticeTestSuite,
   deletePracticeTestSuite,
 } from '../../../services/sim/practiceTestSuiteService'
+import { getPracticeTestEnvironments } from '../../../services/sim/practiceTestEnvironmentService'
 import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
@@ -115,6 +116,8 @@ function Body({ projectId }) {
         <TestSuiteForm
           projectId={projectId}
           projectIdKey={PID_KEY}
+          fetchEnvironments={getPracticeTestEnvironments}
+          environmentsPath={`${SIM_TESTING_BASE}/environments`}
           onClose={() => setShowForm(false)}
           onSave={async (payload) => {
             await createPracticeTestSuite(payload)

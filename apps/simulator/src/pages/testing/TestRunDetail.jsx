@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import TestingPageShell from '../../components/testing/TestingPageShell'
 import TestExecutionProgressBar from '../../components/testing/TestExecutionProgressBar'
 import { getTestRunById, getExecutionsByRun } from '../../services/testRunService'
@@ -31,6 +31,7 @@ export default function TestRunDetail() {
 }
 
 function Detail({ runId }) {
+  const navigate = useNavigate()
   const [run, setRun] = useState(null)
   const [execs, setExecs] = useState([])
   const [err, setErr] = useState(null)
@@ -78,9 +79,9 @@ function Detail({ runId }) {
 
   return (
     <div className="space-y-4">
-      <Link to="/platform/testing/runs" className="text-sm text-emerald-400 hover:underline">
+      <button type="button" onClick={() => navigate(-1)} className="text-sm text-emerald-400 hover:underline">
         ← All runs
-      </Link>
+      </button>
       <div className="flex flex-wrap justify-between gap-2">
         <h2 className="text-xl font-bold text-white">{run.run_name}</h2>
         <div className="flex gap-2">

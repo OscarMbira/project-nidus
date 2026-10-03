@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom'
 import TestingPageShell from '../../components/testing/TestingPageShell'
 import TestCaseForm from '../../components/testing/TestCaseForm'
 import { getTestCaseById, updateTestCase } from '../../services/testCaseService'
-import { getTestSuites } from '../../services/testSuiteService'
+import { getTestSuiteOptions } from '../../services/testSuiteService'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { RowActionButton } from '@nidus/ui'
 import {
@@ -26,9 +26,11 @@ export default function TestCaseDetail() {
 }
 
 function Detail({ caseId, projectId }) {
+  const navigate = useNavigate()
+  const location = useLocation()
   const [tc, setTc] = useState(null)
   const [suites, setSuites] = useState([])
-  const [editing, setEditing] = useState(false)
+  const editing = location.pathname.endsWith('/edit')
   const [err, setErr] = useState(null)
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -63,26 +65,39 @@ function Detail({ caseId, projectId }) {
     load()
   }, [caseId])
 
-  useEffect(() => {
-    if (!projectId) return
-    ;(async () => {
-      const s = await getTestSuites(projectId)
-      setSuites(s)
-    })()
-  }, [projectId])
+  const viewPath = `${location.pathname.replace(/\/edit$/, '')}${location.search}`
+  const editPath = `${location.pathname.replace(/\/edit$/, '')}/edit${location.search}`
 
-  if (loading) return <p className="text-gray-500">Loading…</p>
-  if (err) return <p className="text-red-400">{err}</p>
+  useEffect(() => {
+    if (!editing || !projectId) return undefined
+    let cancelled = false
+    getTestSuiteOptions(projectId)
+      .then((rows) => { if (!cancelled) setSuites(rows || []) })
+      .catch(() => { if (!cancelled) setSuites([]) })
+    return () => { cancelled = true }
+  }, [editing, projectId])
+
+  useEffect(() => {
+    if (!editing || !caseId) return undefined
+    let cancelled = false
+    getTestCaseById(decodeURIComponent(caseId), { withImages: true })
+      .then((data) => { if (!cancelled && data) setTc(data) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [editing, caseId])
+
+  if (loading) return <p className="text-gray-700 dark:text-gray-200">Loading…</p>
+  if (err) return <p className="text-red-700 dark:text-red-300">{err}</p>
   if (notFound || !tc) {
     return (
-      <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-6 space-y-3 text-gray-300 text-sm">
-        <p className="text-white font-medium">Test case not found</p>
-        <p className="text-gray-400">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 space-y-3 text-gray-700 dark:text-gray-200 text-sm">
+        <p className="text-gray-900 dark:text-gray-100 font-medium">Test case not found</p>
+        <p>
           This link may be out of date (for example after re-running seed scripts, IDs change). Open the case from{' '}
-          <Link to="/platform/testing/cases" className="text-emerald-400 hover:underline">
+          <Link to="/platform/testing/cases" className="text-emerald-700 dark:text-emerald-400 hover:underline">
             Test cases
           </Link>{' '}
-          or use the ref in the URL (e.g. <code className="text-gray-300">TC-…</code>).
+          or use the ref in the URL (e.g. <code className="text-gray-900 dark:text-gray-100">TC-…</code>).
         </p>
       </div>
     )
@@ -104,9 +119,9 @@ function Detail({ caseId, projectId }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap justify-between gap-2">
-        <Link to="/platform/testing/cases" className="text-sm text-emerald-400 hover:underline">
+        <button type="button" onClick={() => navigate(-1)} className="text-sm text-emerald-700 dark:text-emerald-400 hover:underline">
           ← All cases
-        </Link>
+        </button>
         <div className="flex gap-2">
           {!editing && (
             <>
@@ -119,7 +134,7 @@ function Detail({ caseId, projectId }) {
                 onExportJSON={() => exportRecordToJSON(exportSections, tc, `test_case_${tc.test_case_ref || tc.id}`)}
                 onExportPrint={() => exportRecordToPrint(exportSections, tc)}
               />
-              <RowActionButton variant="edit" label="Edit test case" onClick={() => setEditing(true)} />
+              <RowActionButton variant="edit" label="Edit test case" onClick={() => navigate(editPath)} />
             </>
           )}
         </div>
@@ -130,33 +145,34 @@ function Detail({ caseId, projectId }) {
           testCase={tc}
           projectId={projectId}
           suites={suites}
-          onClose={() => setEditing(false)}
+          onClose={() => navigate(viewPath)}
           onSave={async (payload) => {
             const { steps, ...rest } = payload
             await updateTestCase(tc.id, { ...rest, steps })
-            setEditing(false)
-            load()
+            await load()
+            navigate(viewPath)
           }}
         />
       ) : (
         <>
-          <div className="rounded-xl border border-gray-800 p-4 space-y-2">
-            <p className="text-xs text-gray-500">{tc.test_case_ref}</p>
-            <h2 className="text-xl font-bold text-white">{tc.title}</h2>
-            <p className="text-sm text-gray-300 whitespace-pre-wrap">{tc.description}</p>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-2">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-200">{tc.test_case_ref}</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{tc.title}</h2>
+            <p className="text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap">{tc.description}</p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-300 mb-2">Steps</h3>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-200">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Steps</h3>
+            <div className="space-y-2 text-sm text-gray-900 dark:text-gray-100">
               {(tc.steps || []).map((s) => (
-                <li key={s.id} className="border border-gray-800 rounded-lg p-2">
-                  <span className="text-emerald-500 font-medium">{s.step_number}.</span> {s.action}
+                <div key={s.id} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg p-3">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-medium">{s.step_number}.</span>{' '}
+                  <span className="whitespace-pre-wrap">{s.action}</span>
                   {s.expected_result && (
-                    <p className="text-xs text-gray-500 mt-1">Expect: {s.expected_result}</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-100 mt-1 whitespace-pre-wrap">Expect: {s.expected_result}</p>
                   )}
-                </li>
+                </div>
               ))}
-            </ol>
+            </div>
           </div>
         </>
       )}

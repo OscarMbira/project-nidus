@@ -20,6 +20,7 @@ import {
   uploadPracticeDefectAttachment,
   deletePracticeDefectAttachment,
 } from '../../../services/sim/practiceDefectService'
+import { getPracticeTestCases } from '../../../services/sim/practiceTestCaseService'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -37,7 +38,7 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
-import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { formatAuditDate, humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DEFECT_EXPORT_SECTIONS = [
   {
@@ -84,7 +85,9 @@ function Detail({ defectId, isNew, projectId }) {
   useEffect(() => {
     if (activeTab !== 'audit' || !row) return
     (async () => {
-      const labels = await resolveAuditUserLabels(simDb, [row.created_by, row.updated_by])
+      const labels = await resolveAuditUserLabels(simDb, [
+        row.created_by, row.updated_by, row.reported_by, row.assigned_to, row.resolved_by,
+      ])
       setAuditUserLabels(labels || {})
     })()
   }, [activeTab, row])
@@ -143,7 +146,7 @@ function Detail({ defectId, isNew, projectId }) {
 
   return (
     <div className="space-y-4">
-      <Link to={`${SIM_TESTING_BASE}/defects`} className="text-sm text-emerald-400 hover:underline">
+      <Link to={`${SIM_TESTING_BASE}/defects`} className="text-sm font-medium text-emerald-700 hover:text-emerald-800 hover:underline dark:text-emerald-300 dark:hover:text-emerald-200">
         ← All defects
       </Link>
       {success && (
@@ -194,22 +197,39 @@ function Detail({ defectId, isNew, projectId }) {
 
       {activeTab === 'audit' && !isNew && row ? (
         <>
-          <AuditDetailsPanel description="Who created or changed this defect.">
-            <AuditCard title="Identity" description="How this defect is labelled.">
-              <AuditField label="Title" value={row.title} />
+          <AuditDetailsPanel description="Who reported or changed this defect, where it was found, and how it was triaged.">
+            <AuditCard title="Identity" description="How this defect is labelled, and the context it was found in.">
               <AuditField label="Reference" value={row.defect_ref} />
+              <AuditField label="Title" value={row.title} />
+              <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+              <AuditField label="Environment" value={row.environment} />
+              <AuditField label="Browser / OS" value={row.browser_os} />
+              <AuditField label="Build version" value={row.build_version} />
+              <AuditField label="Module / area" value={row.module_area} />
+              <AuditField
+                label="Test case"
+                value={row.test_cases
+                  ? [row.test_cases.test_case_ref, row.test_cases.title].filter(Boolean).join(' — ')
+                  : null}
+              />
             </AuditCard>
-            <AuditCard title="Classification" description="How this defect is triaged.">
+            <AuditCard title="Classification" description="How this defect is triaged and closed.">
               <AuditField label="Severity" value={humanizeAuditToken(row.severity)} />
               <AuditField label="Priority" value={humanizeAuditToken(row.priority)} />
-              <AuditField label="Type" value={humanizeAuditToken(row.defect_type)} />
-              <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+              <AuditField label="Defect type" value={humanizeAuditToken(row.defect_type)} />
+              <AuditField label="Resolution" value={humanizeAuditToken(row.resolution_type)} />
             </AuditCard>
-            <AuditCard title="Record history" description="When this defect was created and last changed.">
+            <AuditCard title="Record history" description="Who reported, owns, and resolved this defect.">
+              <AuditField label="Reported by" value={row.reported_by ? auditUserLabels[row.reported_by] || null : null} />
+              <AuditField label="Assigned to" value={row.assigned_to ? auditUserLabels[row.assigned_to] || null : null} />
               <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
               <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
               <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
               <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+              <AuditField label="Resolved by" value={row.resolved_by ? auditUserLabels[row.resolved_by] || null : null} />
+              <AuditTimestampPair dateLabel="Resolved at" value={row.resolved_at} />
+              <AuditField label="Due date" value={row.due_date ? formatAuditDate(row.due_date) : null} />
+              <AuditField label="Times reopened" value={row.reopen_count == null ? null : String(row.reopen_count)} />
             </AuditCard>
           </AuditDetailsPanel>
           <DefectHistoryTimeline defectId={row.id} getHistory={getPracticeDefectHistory} />
@@ -221,6 +241,20 @@ function Detail({ defectId, isNew, projectId }) {
           defect={isNew ? null : row}
           projectId={projectId}
           projectIdKey="practice_project_id"
+          loadTestCases={getPracticeTestCases}
+          uploadedByUserId={uid}
+          attachmentHandlers={{
+            getAttachments: getPracticeDefectAttachments,
+            uploadAttachment: ({ projectId: pp, defectId: did, file, is_screenshot, uploaded_by }) =>
+              uploadPracticeDefectAttachment({
+                practiceProjectId: pp,
+                defectId: did,
+                file,
+                is_screenshot,
+                uploaded_by,
+              }),
+            deleteAttachment: deletePracticeDefectAttachment,
+          }}
           onSubmit={onSave}
           disabled={false}
         />

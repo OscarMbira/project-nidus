@@ -1,6 +1,27 @@
-import { useState, useEffect } from 'react'
-import { Upload } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { ImagePlus } from 'lucide-react'
+import { RowActionButton } from '@nidus/ui'
+import ZoomableImage from '../ui/ZoomableImage'
 import { getDefectAttachments, uploadDefectAttachment, deleteDefectAttachment } from '../../services/defectService'
+
+function filesFromClipboard(event) {
+  const items = event.clipboardData?.items
+  if (!items?.length) return []
+  const files = []
+  for (const item of items) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) {
+        const ext = (file.type.split('/')[1] || 'png').replace('jpeg', 'jpg')
+        const named = file.name && file.name !== 'image.png'
+          ? file
+          : new File([file], `screenshot-${Date.now()}.${ext}`, { type: file.type })
+        files.push(named)
+      }
+    }
+  }
+  return files
+}
 
 export default function DefectAttachmentUploader({
   projectId,
@@ -12,69 +33,153 @@ export default function DefectAttachmentUploader({
 }) {
   const [items, setItems] = useState([])
   const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState(null)
+  const getAttachmentsRef = useRef(getAttachments)
+  getAttachmentsRef.current = getAttachments
+  const [localPreviews, setLocalPreviews] = useState({})
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!defectId) return
-    const data = await getDefectAttachments(defectId)
-    setItems(data)
-  }
-
-  useEffect(() => {
-    load()
+    const data = await getAttachmentsRef.current(defectId)
+    setItems(data || [])
   }, [defectId])
 
-  const onFile = async (e) => {
-    const file = e.target.files?.[0]
-    if (!file || !uploadedByUserId) return
+  useEffect(() => {
+    load().catch((err) => setError(err?.message || 'Could not load images'))
+  }, [load])
+
+  const sendFiles = async (files) => {
+    const list = [...files].filter(Boolean)
+    if (!list.length) return
+    if (!uploadedByUserId) {
+      setError('Your user profile is still loading. Try again in a moment.')
+      return
+    }
+    if (!projectId || !defectId) return
     setUploading(true)
+    setError(null)
     try {
-      await uploadAttachment({
-        projectId,
-        defectId,
-        file,
-        is_screenshot: file.type.startsWith('image/'),
-        uploaded_by: uploadedByUserId,
-      })
+      for (const file of list) {
+        const localUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+        const result = await uploadAttachment({
+          projectId,
+          defectId,
+          file,
+          is_screenshot: file.type.startsWith('image/'),
+          uploaded_by: uploadedByUserId,
+        })
+        const savedId = result?.attachment?.id
+        if (savedId && localUrl) {
+          setLocalPreviews((prev) => ({ ...prev, [savedId]: localUrl }))
+        }
+      }
       await load()
     } catch (err) {
-      console.error(err)
-      alert(err?.message || 'Upload failed')
+      setError(err?.message || 'Upload failed')
     } finally {
       setUploading(false)
-      e.target.value = ''
     }
   }
 
+  const onPaste = (event) => {
+    const files = filesFromClipboard(event)
+    if (!files.length) return
+    event.preventDefault()
+    sendFiles(files)
+  }
+
+  const onDrop = (event) => {
+    event.preventDefault()
+    sendFiles(event.dataTransfer?.files)
+  }
+
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900/40 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-white">Attachments</h3>
-        <label className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-600 text-xs text-gray-200 cursor-pointer hover:bg-gray-700">
-          <Upload className="h-4 w-4" />
-          {uploading ? 'Uploading…' : 'Upload'}
-          <input type="file" className="hidden" onChange={onFile} disabled={uploading || !uploadedByUserId} />
+    <div className="space-y-3">
+      <div>
+        <p className="text-xs font-medium text-gray-700 dark:text-gray-200">Images</p>
+        <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-300">
+          Upload a file, drop an image here, or click the box and paste with Ctrl+V.
+        </p>
+      </div>
+      <div
+        tabIndex={0}
+        onPaste={onPaste}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={onDrop}
+        className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center outline-none focus:ring-2 focus:ring-emerald-500 dark:border-gray-600 dark:bg-gray-700/40"
+      >
+        <ImagePlus className="h-6 w-6 text-gray-600 dark:text-gray-200" />
+        <span className="text-sm text-gray-800 dark:text-gray-100">
+          {uploading ? 'Uploading…' : 'Click this box, then paste a screenshot (Ctrl+V), or drop an image'}
+        </span>
+        <label className="inline-flex cursor-pointer items-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700">
+          Choose image
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            disabled={uploading}
+            onChange={(event) => {
+              sendFiles(event.target.files)
+              event.target.value = ''
+            }}
+          />
         </label>
       </div>
-      <ul className="space-y-2 text-sm">
-        {items.map((a) => (
-          <li key={a.id} className="flex justify-between gap-2 text-gray-300">
-            <a href={a.file_url} target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline truncate">
-              {a.file_name}
-            </a>
-            <button
-              type="button"
-              onClick={async () => {
-                if (!confirm('Remove attachment?')) return
-                await deleteAttachment(a.id)
-                load()
-              }}
-              className="text-red-400 text-xs shrink-0"
-            >
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {items.length > 0 && (
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {items.map((item) => {
+            const isImage = item.is_screenshot
+              || String(item.file_type || '').startsWith('image/')
+              || /\.(png|jpe?g|gif|webp)$/i.test(item.file_name || '')
+            const stored = item.preview_url || item.file_url
+            const src = localPreviews[item.id]
+              || (typeof stored === 'string' && /^(https?:|blob:|data:)/i.test(stored) ? stored : null)
+            return (
+              <li key={item.id} className="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+                {isImage && src ? (
+                  <div className="bg-gray-100 dark:bg-gray-900">
+                    <ZoomableImage
+                      src={src}
+                      alt={item.file_name}
+                      hoverScale={2.5}
+                      className="block w-full"
+                      imgClassName="h-40 w-full object-contain"
+                      hoverPreviewClassName="object-contain"
+                    />
+                  </div>
+                ) : isImage ? (
+                  <div className="flex h-40 items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-700 dark:bg-gray-900 dark:text-gray-200">
+                    Preview is not available yet. Refresh after the attachment access update is applied.
+                  </div>
+                ) : (
+                  <a href={item.file_url} target="_blank" rel="noreferrer" className="block truncate px-2 py-3 text-sm text-emerald-700 dark:text-emerald-300">
+                    {item.file_name}
+                  </a>
+                )}
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                  <span className="truncate text-xs text-gray-700 dark:text-gray-200">{item.file_name}</span>
+                  <RowActionButton
+                    variant="delete"
+                    label="Remove image"
+                    onClick={async () => {
+                      if (!window.confirm('Remove this image?')) return
+                      try {
+                        await deleteAttachment(item.id)
+                        await load()
+                      } catch (err) {
+                        setError(err?.message || 'Could not remove image')
+                      }
+                    }}
+                  />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
     </div>
   )
 }

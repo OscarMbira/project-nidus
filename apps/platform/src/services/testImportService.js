@@ -15,7 +15,7 @@ export const IMPORT_FIELD_LABELS = {
   description:        'Description',
   preconditions:      'Preconditions',
   expected_result:    'Expected Result',
-  test_type:          'Test Type (manual/automated/exploratory)',
+  test_type:          'Test Type (manual/automated/semi-automated/exploratory)',
   priority:           'Priority (critical/high/medium/low)',
   status:             'Status (draft/active)',
   module_area:        'Module / Area',
@@ -28,7 +28,7 @@ export const IMPORT_FIELD_LABELS = {
 export const REQUIRED_FIELDS = ['title']
 
 export const VALID_VALUES = {
-  test_type: ['manual', 'automated', 'exploratory'],
+  test_type: ['manual', 'automated', 'semi-automated', 'exploratory'],
   priority:  ['critical', 'high', 'medium', 'low'],
   status:    ['draft', 'active', 'deprecated', 'archived'],
 }

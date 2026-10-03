@@ -19,6 +19,7 @@ import {
   uploadPracticeDefectAttachment,
   deletePracticeDefectAttachment,
 } from '../../../services/sim/practiceDefectService'
+import { getPracticeTestCases } from '../../../services/sim/practiceTestCaseService'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -181,6 +182,20 @@ function Detail({ defectId, isNew, projectId }) {
           defect={isNew ? null : row}
           projectId={projectId}
           projectIdKey="practice_project_id"
+          loadTestCases={getPracticeTestCases}
+          uploadedByUserId={uid}
+          attachmentHandlers={{
+            getAttachments: getPracticeDefectAttachments,
+            uploadAttachment: ({ projectId: pp, defectId: did, file, is_screenshot, uploaded_by }) =>
+              uploadPracticeDefectAttachment({
+                practiceProjectId: pp,
+                defectId: did,
+                file,
+                is_screenshot,
+                uploaded_by,
+              }),
+            deleteAttachment: deletePracticeDefectAttachment,
+          }}
           onSubmit={onSave}
           disabled={false}
         />

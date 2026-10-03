@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import TestingPageShell from '../../components/testing/TestingPageShell'
 import DefectForm from '../../components/testing/DefectForm'
 import DefectCommentSection from '../../components/testing/DefectCommentSection'
@@ -29,7 +29,7 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
-import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { formatAuditDate, humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
 const DEFECT_EXPORT_SECTIONS = [
   {
@@ -61,6 +61,7 @@ export default function DefectDetail() {
 
 function Detail({ defectId, isNew, projectId }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [row, setRow] = useState(null)
   const [editing, setEditing] = useState(isNew)
   const [err, setErr] = useState(null)
@@ -76,14 +77,16 @@ function Detail({ defectId, isNew, projectId }) {
   useEffect(() => {
     if (activeTab !== 'audit' || !row) return
     ;(async () => {
-      const labels = await resolveAuditUserLabels(platformDb, [row.created_by, row.updated_by])
+      const labels = await resolveAuditUserLabels(platformDb, [
+        row.created_by, row.updated_by, row.reported_by, row.assigned_to, row.resolved_by,
+      ])
       setAuditUserLabels(labels)
     })()
   }, [activeTab, row])
 
   useEffect(() => {
-    setEditing(isNew)
-  }, [isNew, defectId])
+    setEditing(isNew || location.state?.edit === true)
+  }, [isNew, defectId, location.state])
 
   useEffect(() => {
     if (isNew || !defectId) {
@@ -135,9 +138,9 @@ function Detail({ defectId, isNew, projectId }) {
 
   return (
     <div className="space-y-4">
-      <Link to="/platform/testing/defects" className="text-sm text-emerald-400 hover:underline">
+      <button type="button" onClick={() => navigate(-1)} className="text-sm font-medium text-emerald-700 hover:text-emerald-800 hover:underline dark:text-emerald-300 dark:hover:text-emerald-200">
         ← All defects
-      </Link>
+      </button>
       {success && (
         <div
           className="rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3 text-emerald-100 text-sm"
@@ -155,22 +158,39 @@ function Detail({ defectId, isNew, projectId }) {
           {!row ? (
             <p className="text-sm text-gray-400">Audit details appear after this defect is saved.</p>
           ) : (
-            <AuditDetailsPanel description="Who reported or changed this defect, and how it is classified.">
-              <AuditCard title="Identity" description="How this defect is labelled and tracked.">
+            <AuditDetailsPanel description="Who reported or changed this defect, where it was found, and how it was triaged.">
+              <AuditCard title="Identity" description="How this defect is labelled, and the context it was found in.">
                 <AuditField label="Reference" value={row.defect_ref} />
                 <AuditField label="Title" value={row.title} />
                 <AuditField label="Status" value={humanizeAuditToken(row.status)} />
+                <AuditField label="Environment" value={row.environment} />
+                <AuditField label="Browser / OS" value={row.browser_os} />
+                <AuditField label="Build version" value={row.build_version} />
+                <AuditField label="Module / area" value={row.module_area} />
+                <AuditField
+                  label="Test case"
+                  value={row.test_cases
+                    ? [row.test_cases.test_case_ref, row.test_cases.title].filter(Boolean).join(' — ')
+                    : null}
+                />
               </AuditCard>
-              <AuditCard title="Classification" description="How this defect is categorised.">
+              <AuditCard title="Classification" description="How this defect is triaged and closed.">
                 <AuditField label="Severity" value={humanizeAuditToken(row.severity)} />
                 <AuditField label="Priority" value={humanizeAuditToken(row.priority)} />
                 <AuditField label="Defect type" value={humanizeAuditToken(row.defect_type)} />
+                <AuditField label="Resolution" value={humanizeAuditToken(row.resolution_type)} />
               </AuditCard>
-              <AuditCard title="Record history" description="When this defect was reported and last changed.">
+              <AuditCard title="Record history" description="Who reported, owns, and resolved this defect.">
+                <AuditField label="Reported by" value={row.reported_by ? auditUserLabels[row.reported_by] || null : null} />
+                <AuditField label="Assigned to" value={row.assigned_to ? auditUserLabels[row.assigned_to] || null : null} />
                 <AuditField label="Created by" value={row.created_by ? auditUserLabels[row.created_by] || null : null} />
                 <AuditTimestampPair dateLabel="Created at" value={row.created_at} />
                 <AuditField label="Updated by" value={row.updated_by ? auditUserLabels[row.updated_by] || null : null} />
                 <AuditTimestampPair dateLabel="Last updated" value={row.updated_at} />
+                <AuditField label="Resolved by" value={row.resolved_by ? auditUserLabels[row.resolved_by] || null : null} />
+                <AuditTimestampPair dateLabel="Resolved at" value={row.resolved_at} />
+                <AuditField label="Due date" value={row.due_date ? formatAuditDate(row.due_date) : null} />
+                <AuditField label="Times reopened" value={row.reopen_count == null ? null : String(row.reopen_count)} />
               </AuditCard>
             </AuditDetailsPanel>
           )}
@@ -211,7 +231,7 @@ function Detail({ defectId, isNew, projectId }) {
         </div>
       )}
       {(isNew || editing) && (
-        <DefectForm defect={isNew ? null : row} projectId={projectId} onSubmit={onSave} disabled={false} />
+        <DefectForm defect={isNew ? null : row} projectId={projectId} uploadedByUserId={uid} onSubmit={onSave} disabled={false} />
       )}
       {!isNew && row && !editing && (
         <>

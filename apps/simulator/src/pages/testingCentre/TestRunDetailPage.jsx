@@ -1,5 +1,6 @@
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import * as platform from '../../services/testingCentreService'
 import * as sim from '../../services/simTestingCentreService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -11,6 +12,7 @@ import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 
 export default function TestRunDetailPage({ mode }) {
   const { id } = useParams()
+  const navigate = useNavigate()
   const svc = mode === 'sim' ? sim : platform
   const [pack, setPack] = useState(null)
   const [activeTab, setActiveTab] = useState('details')
@@ -20,6 +22,10 @@ export default function TestRunDetailPage({ mode }) {
   if (!pack) return <div className="p-6 text-gray-100">Loading…</div>
   return (
     <div className="p-6 max-w-5xl mx-auto min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+      <button onClick={() => navigate(-1)} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2">
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <h1 className="text-xl font-mono mb-2">{pack.run?.run_code}</h1>
 
       <div className="mb-4">

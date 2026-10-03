@@ -47,7 +47,7 @@ function DashboardBody({ projectId }) {
   }, [load])
 
   if (!projectId) {
-    return <p className="text-gray-500 text-sm">Select a project to view testing metrics.</p>
+    return <p className="text-sm text-gray-700 dark:text-gray-200">Select a project to view testing metrics.</p>
   }
 
   return (
@@ -56,45 +56,45 @@ function DashboardBody({ projectId }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link
           to="/platform/testing/suites"
-          className="block rounded-xl border border-gray-800 bg-gray-900/50 p-4 hover:border-emerald-700 transition-colors"
+          className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-600 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-400"
         >
-          <p className="text-emerald-400 text-sm font-medium">Test suites</p>
-          <p className="text-xs text-gray-500 mt-2">Manage suites and grouped cases</p>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Test suites</p>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">Manage suites and grouped cases</p>
         </Link>
         <Link
           to="/platform/testing/cases"
-          className="block rounded-xl border border-gray-800 bg-gray-900/50 p-4 hover:border-emerald-700 transition-colors"
+          className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-600 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-400"
         >
-          <p className="text-emerald-400 text-sm font-medium">Test cases</p>
-          <p className="text-xs text-gray-500 mt-2">All cases and scripts</p>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Test cases</p>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">All cases and scripts</p>
         </Link>
         <Link
           to="/platform/testing/runs"
-          className="block rounded-xl border border-gray-800 bg-gray-900/50 p-4 hover:border-emerald-700 transition-colors"
+          className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-600 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-400"
         >
-          <p className="text-emerald-400 text-sm font-medium">Test runs</p>
-          <p className="text-xs text-gray-500 mt-2">Execution sessions</p>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Test runs</p>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">Execution sessions</p>
         </Link>
         <Link
           to="/platform/testing/defects"
-          className="block rounded-xl border border-gray-800 bg-gray-900/50 p-4 hover:border-emerald-700 transition-colors"
+          className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-600 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-400"
         >
-          <p className="text-emerald-400 text-sm font-medium">Defects</p>
-          <p className="text-xs text-gray-500 mt-2">Issues and resolutions</p>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Defects</p>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">Issues and resolutions</p>
         </Link>
         <Link
           to="/platform/testing/import"
-          className="block rounded-xl border border-gray-800 bg-gray-900/50 p-4 hover:border-emerald-700 transition-colors"
+          className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-600 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-400"
         >
-          <p className="text-emerald-400 text-sm font-medium">Bulk import</p>
-          <p className="text-xs text-gray-500 mt-2">CSV, Excel, JSON, XML</p>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Bulk import</p>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">CSV, Excel, JSON, XML</p>
         </Link>
         <Link
           to="/platform/testing/defects/dashboard"
-          className="block rounded-xl border border-gray-800 bg-gray-900/50 p-4 hover:border-emerald-700 transition-colors"
+          className="block rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-emerald-600 hover:shadow dark:border-gray-700 dark:bg-gray-800 dark:hover:border-emerald-400"
         >
-          <p className="text-emerald-400 text-sm font-medium">Defect reports</p>
-          <p className="text-xs text-gray-500 mt-2">Trends and severity</p>
+          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Defect reports</p>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">Trends and severity</p>
         </Link>
       </div>
     </div>
