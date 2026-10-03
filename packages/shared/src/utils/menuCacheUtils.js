@@ -19,7 +19,14 @@
 // even though the DB row was already correct.
 // Bumped 47 → 48: force sidebar re-fetch after Document Signatory menu_label rename (v871).
 // Bumped 48 → 49: Manage Roles (v902/v905) must appear for PMO + manager creator tiers.
-const SIDEBAR_CACHE_VERSION = 49
+// Bumped 49 → 50: v1000 promotes Dashboard out of Executive Overview (PMO root sibling).
+// Bumped 50 → 51: v1001 FIN Testing Strategy + Sanity Checks under Testing & Assurance.
+// Bumped 51 → 52: v1002 FIN Testing Strategy + Sanity Checks wire-up fix.
+// Bumped 52 → 53: v1003 FIN Dress Rehearsal Strategy under Testing & Assurance.
+// Bumped 53 → 54: v1004 FIN Dress Rehearsal Strategy hard fix (pack+role copy).
+// Bumped 54 → 55: v1024 Scope & Deliverables taxonomy group.
+// Bumped 55 → 56: v1155 Communication formats catalog under Stakeholders and PMO Configuration.
+const SIDEBAR_CACHE_VERSION = 56
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

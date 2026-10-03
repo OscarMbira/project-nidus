@@ -4,6 +4,14 @@
  */
 
 import { addCanvasImagePages } from './pdfCanvasPagination.js'
+import {
+  parseMeasurementTimingLinks,
+  formatMeasurementTimingLinksForDisplay,
+} from './measurementTimingUtils.js'
+import {
+  parseScopeItemsWithOwners,
+  formatScopeItemsWithOwnersForDisplay,
+} from './scopeItemsWithOwnersUtils.js'
 
 /**
  * Export Benefits Review Plan to PDF matching template structure
@@ -88,6 +96,61 @@ function generateBenefitsReviewPlanPDFHTML(plan, coverage, resources, reviews, d
     if (!date) return '_________';
     return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
+
+  const timingRows = parseMeasurementTimingLinks(plan.measurement_timing_rationale);
+  const scopeRows = parseScopeItemsWithOwners(plan.scope_description);
+  const scopeTableHtml = scopeRows.length
+    ? `
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 11px; margin-bottom: 10px;">
+          <thead>
+            <tr style="background-color: #f0f0f0;">
+              <th style="border: 1px solid #000; padding: 5px; text-align: left;">Scope item</th>
+              <th style="border: 1px solid #000; padding: 5px; text-align: left;">Benefit owner</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${scopeRows.map((row) => `
+              <tr>
+                <td style="border: 1px solid #000; padding: 5px;">${row.item || '—'}</td>
+                <td style="border: 1px solid #000; padding: 5px;">${row.owner_name || '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `
+    : (plan.scope_description
+      ? `<p style="text-align: justify; line-height: 1.6; margin-bottom: 10px;">${formatScopeItemsWithOwnersForDisplay(plan.scope_description).replace(/\n/g, '<br>')}</p>`
+      : '');
+
+  const timingTableHtml = timingRows.length
+    ? `
+        <div style="margin-top: 10px;">
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 11px;">
+            <thead>
+              <tr style="background-color: #f0f0f0;">
+                <th style="border: 1px solid #000; padding: 5px; text-align: left;">Measurement Point</th>
+                <th style="border: 1px solid #000; padding: 5px; text-align: left;">Measurement Timing</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${timingRows.map((row) => `
+                <tr>
+                  <td style="border: 1px solid #000; padding: 5px;">${row.point || '—'}</td>
+                  <td style="border: 1px solid #000; padding: 5px;">${row.timing || '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+    : (plan.measurement_timing_rationale
+      ? `
+        <div style="margin-top: 10px; padding: 10px; background-color: #f0f0f0;">
+          <strong>Timing Rationale:</strong><br>
+          ${formatMeasurementTimingLinksForDisplay(plan.measurement_timing_rationale).replace(/\n/g, '<br>')}
+        </div>
+      `
+      : '');
 
   let html = `
     <div style="color: black; font-family: Arial, sans-serif;">
@@ -213,16 +276,16 @@ function generateBenefitsReviewPlanPDFHTML(plan, coverage, resources, reviews, d
       ` : ''}
 
       <!-- 3. Scope -->
-      ${plan.scope_description ? `
+      ${plan.scope_description || plan.benefits_coverage_notes ? `
       <div style="margin-bottom: 30px;">
         <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px;">
           3. Scope
         </h2>
-        <p style="text-align: justify; line-height: 1.6; margin-bottom: 10px;">${plan.scope_description.replace(/\n/g, '<br>')}</p>
+        ${scopeTableHtml}
         ${plan.benefits_coverage_notes ? `
         <div style="margin-top: 10px; padding: 10px; background-color: #f0f0f0;">
           <strong>Benefits Coverage Notes:</strong><br>
-          ${plan.benefits_coverage_notes.replace(/\n/g, '<br>')}
+          ${String(plan.benefits_coverage_notes).replace(/\n/g, '<br>')}
         </div>
         ` : ''}
       </div>
@@ -239,18 +302,15 @@ function generateBenefitsReviewPlanPDFHTML(plan, coverage, resources, reviews, d
       ` : ''}
 
       <!-- 5. Benefits Measurement -->
-      ${plan.measurement_approach ? `
+      ${plan.measurement_approach || plan.measurement_timing_rationale ? `
       <div style="margin-bottom: 30px;">
         <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px;">
           5. Benefits Measurement
         </h2>
-        <p style="text-align: justify; line-height: 1.6; margin-bottom: 10px;">${plan.measurement_approach.replace(/\n/g, '<br>')}</p>
-        ${plan.measurement_timing_rationale ? `
-        <div style="margin-top: 10px; padding: 10px; background-color: #f0f0f0;">
-          <strong>Timing Rationale:</strong><br>
-          ${plan.measurement_timing_rationale.replace(/\n/g, '<br>')}
-        </div>
+        ${plan.measurement_approach ? `
+        <p style="text-align: justify; line-height: 1.6; margin-bottom: 10px;">${String(plan.measurement_approach).replace(/\n/g, '<br>')}</p>
         ` : ''}
+        ${timingTableHtml}
       </div>
       ` : ''}
 

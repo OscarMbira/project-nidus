@@ -3,14 +3,17 @@ import toast from 'react-hot-toast'
 import { ClipboardPaste, Trash2, Upload } from 'lucide-react'
 import { getUserAvatar, saveUserAvatar, removeUserAvatar, validateAvatarFile } from '@nidus/shared/services/userAvatarService'
 import { normalizeImageFile, fileFromClipboardData } from '@nidus/shared/utils/imageFileUtils'
+import { withTimeout } from '@nidus/shared/utils/asyncUtils'
 import UserAvatarBadge from './UserAvatarBadge'
+
+const UPLOAD_TIMEOUT_MS = 20000
 
 /**
  * "Profile Picture" section for the My Profile page (v894). Saves immediately on
  * upload/paste/remove — independent of the page's own "Save Changes" button —
  * matching the existing saved-signature capture pattern already used elsewhere.
  */
-export default function ProfilePictureSection({ db, accountId, initials }) {
+export default function ProfilePictureSection({ db, accountId, initials, authUserId = null }) {
   const [avatarPath, setAvatarPath] = useState(null)
   const [refreshNonce, setRefreshNonce] = useState(0)
   const [showPasteHint, setShowPasteHint] = useState(false)
@@ -19,12 +22,12 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
 
   useEffect(() => {
     let cancelled = false
-    getUserAvatar(db).then((result) => {
+    getUserAvatar(db, authUserId).then((result) => {
       if (cancelled) return
       if (result.success) setAvatarPath(result.data)
     })
     return () => { cancelled = true }
-  }, [db])
+  }, [db, authUserId])
 
   const applyFile = async (file) => {
     const normalized = normalizeImageFile(file, 'profile-picture.png')
@@ -35,7 +38,11 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
     }
     setBusy(true)
     try {
-      const result = await saveUserAvatar(db, normalized, accountId)
+      const result = await withTimeout(
+        saveUserAvatar(db, normalized, accountId, authUserId),
+        UPLOAD_TIMEOUT_MS,
+        'Saving the profile picture timed out. Check your connection and try again.',
+      )
       if (!result.success) {
         toast.error(result.message || 'Failed to save profile picture')
         return
@@ -44,6 +51,8 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
       setRefreshNonce((n) => n + 1)
       setShowPasteHint(false)
       toast.success('Profile picture updated')
+    } catch (error) {
+      toast.error(error?.message || 'Failed to save profile picture')
     } finally {
       setBusy(false)
     }
@@ -52,13 +61,19 @@ export default function ProfilePictureSection({ db, accountId, initials }) {
   const handleRemove = async () => {
     setBusy(true)
     try {
-      const result = await removeUserAvatar(db)
+      const result = await withTimeout(
+        removeUserAvatar(db, authUserId),
+        UPLOAD_TIMEOUT_MS,
+        'Removing the profile picture timed out. Check your connection and try again.',
+      )
       if (!result.success) {
         toast.error(result.message || 'Failed to remove profile picture')
         return
       }
       setAvatarPath(null)
       toast.success('Profile picture removed')
+    } catch (error) {
+      toast.error(error?.message || 'Failed to remove profile picture')
     } finally {
       setBusy(false)
     }

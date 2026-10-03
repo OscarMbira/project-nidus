@@ -10,12 +10,25 @@ describe('ZoomableImage', () => {
     expect(screen.getByRole('dialog', { name: 'Your profile picture' })).toBeInTheDocument()
   })
 
-  it('shows an enlarged preview on hover', () => {
+  it('shows an enlarged preview on hover at 1.5 times the thumbnail', () => {
     render(<ZoomableImage src="https://example.com/pic.png" alt="Your profile picture" />)
     expect(screen.queryByTestId('zoomable-hover-preview')).not.toBeInTheDocument()
-    fireEvent.mouseEnter(screen.getByRole('button', { name: /enlarge your profile picture/i }))
-    expect(screen.getByTestId('zoomable-hover-preview')).toBeInTheDocument()
-    fireEvent.mouseLeave(screen.getByRole('button', { name: /enlarge your profile picture/i }))
+    const trigger = screen.getByRole('button', { name: /enlarge your profile picture/i })
+    trigger.getBoundingClientRect = () => ({
+      x: 10,
+      y: 20,
+      left: 10,
+      top: 20,
+      right: 50,
+      bottom: 60,
+      width: 40,
+      height: 40,
+      toJSON() { return {} },
+    })
+    fireEvent.mouseEnter(trigger)
+    const preview = screen.getByTestId('zoomable-hover-preview')
+    expect(preview.querySelector('img')).toHaveStyle({ width: '60px', height: '60px' })
+    fireEvent.mouseLeave(trigger)
     expect(screen.queryByTestId('zoomable-hover-preview')).not.toBeInTheDocument()
   })
 

@@ -47,13 +47,36 @@ async function currentAuthUserId(db) {
   return data.user.id
 }
 
+/**
+ * Retry a storage upload up to 3 attempts with a short backoff before giving up — a bucket
+ * upload can fail on a transient network/edge hiccup even when the bucket, RLS policy, and
+ * file are all valid. Same pattern as processTemplateSignatoryService.js's uploadWithRetry()
+ * (the saved-signature convenience asset this avatar feature deliberately mirrors) — kept
+ * consistent rather than inventing a second retry style.
+ */
+async function uploadWithRetry(db, bucket, path, file, options) {
+  let lastError = null
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 300 * attempt))
+    const { error } = await db.storage.from(bucket).upload(path, file, options)
+    if (!error) return null
+    lastError = error
+  }
+  return lastError
+}
+
 const _userAvatarInFlight = new Map()
 
-/** Current user's avatar storage path (or null) — read from public.users.avatar_url. */
-export async function getUserAvatar(db) {
+/**
+ * Current user's avatar storage path (or null) — read from public.users.avatar_url.
+ * @param {string} [authUserIdHint] - already-resolved auth user id (e.g. from the page's own
+ *   getUser() call) to skip a redundant getSession() round-trip. Falls back to resolving it
+ *   here when omitted, so existing callers are unaffected.
+ */
+export async function getUserAvatar(db, authUserIdHint) {
   try {
     if (!db) throw new Error('Database client is required')
-    const authUserId = await currentAuthUserId(db)
+    const authUserId = authUserIdHint || await currentAuthUserId(db)
 
     // In-flight de-dupe: ProfilePictureSection's own mount effect firing twice under
     // React 18 StrictMode (dev only) was two identical queries for the same user's
@@ -82,21 +105,24 @@ export async function getUserAvatar(db) {
   }
 }
 
-/** Upload a new avatar image and store its path on the current user's row. */
-export async function saveUserAvatar(db, file, accountId) {
+/**
+ * Upload a new avatar image and store its path on the current user's row.
+ * @param {string} [authUserIdHint] - see getUserAvatar() above.
+ */
+export async function saveUserAvatar(db, file, accountId, authUserIdHint) {
   try {
     if (!db || !file) throw new Error('Database client and file are required')
     if (!accountId) throw new Error('Account id is required')
     const validationError = validateAvatarFile(file)
     if (validationError) throw new Error(validationError)
 
-    const authUserId = await currentAuthUserId(db)
+    const authUserId = authUserIdHint || await currentAuthUserId(db)
     const ext = fileExt(file)
     const storagePath = `${accountId}/${authUserId}/avatar.${ext}`
 
-    const { error: uploadError } = await db.storage
-      .from(USER_AVATARS_BUCKET)
-      .upload(storagePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
+    const uploadError = await uploadWithRetry(db, USER_AVATARS_BUCKET, storagePath, file, {
+      cacheControl: '3600', upsert: true, contentType: file.type,
+    })
     if (uploadError) throw uploadError
     invalidateSignedImage(USER_AVATARS_BUCKET, storagePath)
 
@@ -104,7 +130,7 @@ export async function saveUserAvatar(db, file, accountId) {
       .from('users')
       .update({ avatar_url: storagePath, updated_at: new Date().toISOString() })
       .eq('auth_user_id', authUserId)
-      .select('avatar_url')
+      .select('id, avatar_url')
       .maybeSingle()
     if (error) throw error
     // A 0-row UPDATE (e.g. RLS silently filtered it out) comes back as data: null with
@@ -112,18 +138,31 @@ export async function saveUserAvatar(db, file, accountId) {
     // never persisted (the image itself uploaded fine, but public.users.avatar_url never
     // pointed at it), leaving the UI showing the old/no picture forever after a reload.
     if (!data) throw new Error('Profile picture uploaded, but could not be saved to your profile. Check your permissions and try again.')
+    if (data.id) {
+      const { copyAvatarOntoLinkedStakeholders } = await import('./stakeholderPhotoService.js')
+      const copied = await copyAvatarOntoLinkedStakeholders(db, {
+        platformUserId: data.id,
+        avatarPath: data.avatar_url,
+      })
+      if (!copied.success) {
+        throw new Error(copied.message || 'Profile picture saved, but linked stakeholder pictures could not be updated.')
+      }
+    }
     return ok(data.avatar_url)
   } catch (error) {
     return fail(error)
   }
 }
 
-/** Remove the current user's avatar (storage object + clears users.avatar_url). */
-export async function removeUserAvatar(db) {
+/**
+ * Remove the current user's avatar (storage object + clears users.avatar_url).
+ * @param {string} [authUserIdHint] - see getUserAvatar() above.
+ */
+export async function removeUserAvatar(db, authUserIdHint) {
   try {
     if (!db) throw new Error('Database client is required')
-    const authUserId = await currentAuthUserId(db)
-    const current = await getUserAvatar(db)
+    const authUserId = authUserIdHint || await currentAuthUserId(db)
+    const current = await getUserAvatar(db, authUserId)
     if (!current.success) throw new Error(current.message)
 
     if (current.data) {

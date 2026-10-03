@@ -774,6 +774,28 @@ describe('reorganizePmoMenuRoots', () => {
     expect(universalNodes.some((n) => n.menu_code === 'sim_pmo_cat_exec')).toBe(true)
   })
 
+  it('keeps a Core PM taxonomy section on the PM sidebar', () => {
+    const roots = [
+      {
+        menu_code: 'plat_sec_universal',
+        menu_label: 'Universal',
+        children: [
+          {
+            menu_code: 'plat_pm_project_setup',
+            menu_label: 'Project Setup',
+            children: [
+              { menu_code: 'plat_pm_s_project_details', menu_label: 'Project Details', route_path: '/platform/projects/details', children: [] },
+            ],
+          },
+        ],
+      },
+    ]
+    const { universalNodes } = reorganizeMenuRoots(roots, 'pm')
+    const setup = universalNodes.find((n) => n.menu_code === 'plat_pm_project_setup')
+    expect(setup?.menu_label).toBe('Project Setup')
+    expect(setup?.children?.some((c) => c.menu_code === 'plat_pm_s_project_details')).toBe(true)
+  })
+
   it('reorganizeMenuRoots uses PM universal rows (not PMO Executive Overview) for pm layout', () => {
     const roots = [
       {

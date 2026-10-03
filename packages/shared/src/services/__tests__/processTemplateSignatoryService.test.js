@@ -26,6 +26,7 @@ import {
   isDocumentFullySigned,
   signSlot,
   resolveDocumentSignaturesForExport,
+  resolveEffectiveSignatoryRequirements,
   normalizeRequirementSlots,
   areMandatorySlotsSigned,
   earlierMandatorySlotsSigned,
@@ -33,7 +34,10 @@ import {
   canLockRemainingOptionalSlots,
   lockRemainingOptionalSignatories,
   getDeclinedSignatoryCount,
+  getLedTeamsForUser,
+  getLedPracticeTeamsForUser,
   pickEffectiveSignatoryLevels,
+  SIGNATORY_SCOPE_TYPES,
   MAX_SIGNATURE_FILE_SIZE_BYTES,
 } from '../processTemplateSignatoryService'
 
@@ -100,6 +104,103 @@ describe('pickEffectiveSignatoryLevels', () => {
     ])
     expect(result.source.scopeType).toBe('organisation')
     expect(result.slots[0].role_label).toBe('Org')
+  })
+})
+
+describe('resolveEffectiveSignatoryRequirements — team scope (v1067)', () => {
+  it('includes team in the scope type list', () => {
+    expect(SIGNATORY_SCOPE_TYPES).toContain('team')
+  })
+
+  it('a team custom policy wins over organisation defaults', async () => {
+    const db = makeDb()
+    const policyChain = chainable({ data: { mode: 'custom' }, error: null }) // getSignatoryScopePolicy for the team
+    const slotsChain = chainable({ data: [{ role_label: 'Team Lead', is_mandatory: true }], error: null }) // team's custom slots
+    db.from
+      .mockReturnValueOnce(policyChain)
+      .mockReturnValueOnce(slotsChain)
+
+    const result = await resolveEffectiveSignatoryRequirements(db, {
+      accountId: 'account-1',
+      documentTable: 'project_charters',
+      teamId: 'team-1',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data.source).toEqual({ scopeType: 'team', scopeId: 'team-1', mode: 'custom' })
+    expect(result.data.slots).toEqual([{ role_label: 'Team Lead', is_mandatory: true }])
+  })
+
+  it('falls through to organisation defaults when the team has no policy (inherit)', async () => {
+    const db = makeDb()
+    const policyChain = chainable({ data: null, error: null }) // no policy row for the team -> inherit
+    const orgSlotsChain = chainable({ data: [{ role_label: 'Sponsor', is_mandatory: true }], error: null })
+    db.from
+      .mockReturnValueOnce(policyChain)
+      .mockReturnValueOnce(orgSlotsChain)
+
+    const result = await resolveEffectiveSignatoryRequirements(db, {
+      accountId: 'account-1',
+      documentTable: 'project_charters',
+      teamId: 'team-1',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data.source.scopeType).toBe('organisation')
+    expect(result.data.slots).toEqual([{ role_label: 'Sponsor', is_mandatory: true }])
+  })
+
+  it('resolves straight to organisation when no teamId/projectId is given (unchanged pre-v1067 behaviour)', async () => {
+    const db = makeDb()
+    const orgSlotsChain = chainable({ data: [{ role_label: 'PMO Admin', is_mandatory: true }], error: null })
+    db.from.mockReturnValueOnce(orgSlotsChain)
+
+    const result = await resolveEffectiveSignatoryRequirements(db, {
+      accountId: 'account-1',
+      documentTable: 'project_charters',
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data.source.scopeType).toBe('organisation')
+    expect(result.data.slots).toEqual([{ role_label: 'PMO Admin', is_mandatory: true }])
+  })
+})
+
+describe('getLedTeamsForUser', () => {
+  it('returns active teams on a project led by the given user', async () => {
+    const db = makeDb()
+    const teams = [{ id: 'team-1', team_name: 'Backend', team_type: 'delivery' }]
+    db.from.mockReturnValue(chainable({ data: teams, error: null }))
+
+    const result = await getLedTeamsForUser(db, { projectId: 'project-1', userId: 'user-1' })
+
+    expect(db.from).toHaveBeenCalledWith('teams')
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual(teams)
+  })
+
+  it('requires projectId and userId', async () => {
+    const result = await getLedTeamsForUser(makeDb(), { projectId: null, userId: 'user-1' })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('getLedPracticeTeamsForUser (Simulator)', () => {
+  it('returns active practice teams led by the given auth user', async () => {
+    const db = makeDb()
+    const teams = [{ id: 'team-1', team_name: 'QA Squad', team_type: 'delivery' }]
+    db.from.mockReturnValue(chainable({ data: teams, error: null }))
+
+    const result = await getLedPracticeTeamsForUser(db, { practiceProjectId: 'practice-1', authUserId: 'auth-1' })
+
+    expect(db.from).toHaveBeenCalledWith('practice_teams')
+    expect(result.success).toBe(true)
+    expect(result.data).toEqual(teams)
+  })
+
+  it('requires practiceProjectId and authUserId', async () => {
+    const result = await getLedPracticeTeamsForUser(makeDb(), { practiceProjectId: null, authUserId: 'auth-1' })
+    expect(result.success).toBe(false)
   })
 })
 

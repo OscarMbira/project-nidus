@@ -32,4 +32,24 @@ describe('SearchableSelect', () => {
     fireEvent.click(screen.getByRole('option', { name: 'Stakeholder Portal (SP-002)' }))
     expect(onChange).toHaveBeenCalledWith('p3')
   })
+
+  it('shows a Role description column when options include description', () => {
+    render(
+      <SearchableSelect
+        options={[
+          { value: 'u1', label: 'Agnes', description: 'Change Manager' },
+          { value: 'u2', label: 'Clive Kupa', description: '—' },
+        ]}
+        value=""
+        onChange={vi.fn()}
+        placeholder="Task owner"
+        descriptionColumnLabel="Role"
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /task owner/i }))
+    expect(screen.getByText('Role')).toBeInTheDocument()
+    expect(screen.getByText('Change Manager')).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /Agnes/i })).toBeInTheDocument()
+  })
 })

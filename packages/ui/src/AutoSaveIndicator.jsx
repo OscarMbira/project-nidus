@@ -58,29 +58,29 @@ export function AutoSaveIndicator({
   // Status configurations
   const statusConfigs = {
     idle: {
-      icon: Cloud,
-      color: 'text-gray-500',
-      bgColor: 'bg-gray-500/10',
+      icon: CloudOff,
+      color: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-amber-500/15 dark:bg-amber-500/20',
       text: 'Not saved',
       animate: false
     },
     saving: {
       icon: Loader2,
-      color: 'text-blue-400',
+      color: 'text-blue-600 dark:text-blue-400',
       bgColor: 'bg-blue-500/10',
       text: 'Saving...',
       animate: true
     },
     saved: {
       icon: Check,
-      color: 'text-green-400',
+      color: 'text-green-600 dark:text-green-400',
       bgColor: 'bg-green-500/10',
       text: lastSaved ? `Saved ${formatLastSaved(lastSaved)}` : 'Saved',
       animate: false
     },
     error: {
       icon: AlertCircle,
-      color: 'text-red-400',
+      color: 'text-red-600 dark:text-red-400',
       bgColor: 'bg-red-500/10',
       text: 'Save failed',
       animate: false
@@ -139,15 +139,15 @@ export function AutoSaveText({
   className = ''
 }) {
   const statusTexts = {
-    idle: { text: 'Draft', color: 'text-gray-500' },
-    saving: { text: 'Saving...', color: 'text-blue-400' },
+    idle: { text: 'Not saved', color: 'text-amber-600 dark:text-amber-400' },
+    saving: { text: 'Saving...', color: 'text-blue-600 dark:text-blue-400' },
     saved: {
       text: lastSaved
         ? `Saved ${formatRelativeTime(lastSaved)}`
         : 'Saved',
-      color: 'text-green-400'
+      color: 'text-green-600 dark:text-green-400'
     },
-    error: { text: 'Save failed', color: 'text-red-400' }
+    error: { text: 'Save failed', color: 'text-red-600 dark:text-red-400' }
   };
 
   const config = statusTexts[status] || statusTexts.idle;

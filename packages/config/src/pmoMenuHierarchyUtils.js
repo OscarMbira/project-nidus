@@ -711,7 +711,8 @@ const PMO_ONLY_PM_LAYOUT_DROP_CODES = new Set([
   'plat_sec_workflows_governance',
   'plat_sec_stakeholders_pmo',
   'plat_sec_knowledge_ops',
-  'plat_sec_account',
+  // plat_sec_account stays in the tree so groupMenuTreeByIndustryPack can place it
+  // under the Platform section. Dropping it here removed that section from the PM sidebar.
   // Org-wide executive page — not a PM project-scoped sidebar child (v827 / v843)
   'plat_exec_dashboard',
   'pmo-cat-exec',
@@ -1175,6 +1176,11 @@ function createCategoryShell(categoryId, sortOrder, universalDefs) {
  * @param {object[]} roots
  * @param {MenuHierarchyLayout} layout
  */
+// Industry category roots (fin_cat_*, con_cat_*, ict_cat_*, …) are real top-level DB parents of
+// their industry pack items. They are not Core PM categories, so without this they were dropped
+// from the PM/TM layout and groupMenuTreeByIndustryPack had nothing to place in each pack section.
+const INDUSTRY_CATEGORY_ROOT_RE = /^[a-z]{2,4}_cat_/
+
 export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
   const config = LAYOUT_CONFIG[layout] || LAYOUT_CONFIG.pmo
   const { universalDefs, universalIds, trackCodes } = config
@@ -1203,9 +1209,22 @@ export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
   let orphanCount = 0
   for (const orphan of orphans) {
     orphanCount += 1
+    const orphanCode = String(orphan?.menu_code || '')
+    const hasChildren = (orphan.children || []).length > 0
+    // Core PM taxonomy sections (Project Setup, Planning, RAID, …) are real DB
+    // parents. Keep that tree. Do not drop it and do not fold it into the
+    // legacy Tasks / Teams / Calendar buckets.
+    if (
+      (layout === 'pm' || layout === 'tm') &&
+      !categoryByCode.has(orphanCode) &&
+      (PLATFORM_INFRA_TOP_LEVEL_CODES.has(orphanCode) ||
+        ((/^plat_pm_/.test(orphanCode) || INDUSTRY_CATEGORY_ROOT_RE.test(orphanCode)) && hasChildren))
+    ) {
+      categoryByCode.set(orphanCode, sortChildren({ ...orphan, children: orphan.children || [] }))
+      continue
+    }
     const catId = inferCategoryId(orphan, layout)
     if (!catId) continue
-    const orphanCode = String(orphan?.menu_code || '')
     // Navigable leaf that is its own category (e.g. plat_pm_project_templates) — promote, don't nest under a shell.
     if (
       (layout === 'pm' || layout === 'tm') &&
@@ -1241,7 +1260,7 @@ export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
     const seen = new Set(universalNodes.map((n) => String(n?.menu_code || '')))
     for (const [code, node] of categoryByCode) {
       if (seen.has(code)) continue
-      if (!/^plat_pm_/.test(code)) continue
+      if (!/^plat_pm_/.test(code) && !INDUSTRY_CATEGORY_ROOT_RE.test(code) && !PLATFORM_INFRA_TOP_LEVEL_CODES.has(code)) continue
       const hasRoute = Boolean(String(node?.route_path || '').trim())
       const hasChildren = (node.children || []).length > 0
       if (!hasRoute && !hasChildren) continue
@@ -2501,4 +2520,95 @@ function applyGovernanceCategoryPresentationLabels(node = {}) {
   })
 
   return { ...node, children }
+}
+
+/**
+ * v966 Phase 1 — top-level menu_codes that are platform/SaaS infrastructure, not a Core PM
+ * discipline. These render as siblings of "Core Project Management" and any industry pack.
+ */
+const PLATFORM_INFRA_TOP_LEVEL_CODES = new Set([
+  'plat_sec_system_admin',
+  'plat_sec_account',
+  'plat_grp_template_library',
+  'plat_grp_okr',
+  'plat_grp_process_groups',
+])
+
+/**
+ * Pack-grouped sidebar: "Core Project Management", then "Platform", then one section per
+ * enabled industry pack. Runs for the Project Manager menu as well as PMO. It only
+ * regroups the tree already built for that role — it does not copy PMO items into the
+ * Project Manager menu.
+ * @param {object[]} tree
+ * @param {{ sections?: Array<{packId: string, packName: string, isPrimary?: boolean}>, menuCodeToPack?: Map<string, string> }} [packContext]
+ */
+export function groupMenuTreeByIndustryPack(tree = [], packContext = {}) {
+  const sections = packContext?.sections || []
+  const menuCodeToPack = packContext?.menuCodeToPack || new Map()
+
+  const coreWrapper = (children) => ({
+    menu_code: 'synthetic-core-pack',
+    menu_label: 'Core Project Management',
+    route_path: null,
+    children,
+  })
+
+  const platformWrapper = (children) => ({
+    menu_code: 'synthetic-platform-infra',
+    menu_label: 'Platform',
+    route_path: null,
+    children,
+  })
+
+  if (!Array.isArray(tree) || tree.length === 0) return tree
+
+  const platformNodes = []
+  const corePmTree = []
+  for (const node of tree) {
+    if (PLATFORM_INFRA_TOP_LEVEL_CODES.has(String(node?.menu_code || ''))) {
+      platformNodes.push(node)
+    } else {
+      corePmTree.push(node)
+    }
+  }
+  const platformSection = platformNodes.length > 0 ? [platformWrapper(platformNodes)] : []
+
+  if (corePmTree.length === 0) return platformSection
+  if (sections.length === 0 || menuCodeToPack.size === 0) {
+    return [coreWrapper(corePmTree), ...platformSection]
+  }
+
+  const pruneToOwner = (nodes, ownerPackId) => {
+    const kept = []
+    for (const node of nodes || []) {
+      const code = String(node?.menu_code || '')
+      const mappedOwner = menuCodeToPack.get(code)
+      const hasChildren = Array.isArray(node?.children) && node.children.length > 0
+      // A section owned by an industry pack stays with that pack, children included.
+      // Checking only childless leaves hid Banking when the pack owned the parent.
+      if (mappedOwner) {
+        if (mappedOwner === ownerPackId) kept.push({ ...node })
+        continue
+      }
+      if (!hasChildren) {
+        if (ownerPackId === 'core') kept.push({ ...node })
+        continue
+      }
+      const children = pruneToOwner(node.children, ownerPackId)
+      if (children.length > 0) kept.push({ ...node, children })
+    }
+    return kept
+  }
+
+  const industrySections = [...sections]
+    .sort((a, b) => (b?.isPrimary ? 1 : 0) - (a?.isPrimary ? 1 : 0))
+    .map((section) => ({
+      menu_code: `synthetic-industry-pack-${section.packId}`,
+      menu_label: section.packName,
+      route_path: null,
+      children: pruneToOwner(corePmTree, section.packId),
+    }))
+    .filter((section) => section.children.length > 0)
+
+  return [coreWrapper(pruneToOwner(corePmTree, 'core')), ...platformSection, ...industrySections]
 }

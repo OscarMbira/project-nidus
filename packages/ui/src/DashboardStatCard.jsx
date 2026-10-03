@@ -29,7 +29,7 @@ export default function DashboardStatCard({
   const content = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
         {Icon && <Icon className={`h-5 w-5 shrink-0 ${iconClassName}`} />}
       </div>
       <p className={`text-2xl font-bold ${accentClassName}`}>{value}</p>

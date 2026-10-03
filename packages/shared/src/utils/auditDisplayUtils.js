@@ -142,11 +142,20 @@ export async function resolveAuditUserLabels(db, ids = []) {
 
   const map = {}
   try {
-    const [{ data: byId }, { data: byAuth }] = await Promise.all([
+    const [byIdRes, byAuthRes] = await Promise.all([
       db.from('users').select('id, auth_user_id, full_name, email').in('id', unique),
       db.from('users').select('id, auth_user_id, full_name, email').in('auth_user_id', unique),
     ])
-    for (const row of [...(byId || []), ...(byAuth || [])]) {
+    // 403 / permission-denied on public.users is common under tight RLS — fail soft.
+    const denied =
+      byIdRes?.error?.code === '42501' ||
+      byAuthRes?.error?.code === '42501' ||
+      /permission denied|not authorized|403/i.test(
+        `${byIdRes?.error?.message || ''} ${byAuthRes?.error?.message || ''}`,
+      )
+    if (denied) return map
+
+    for (const row of [...(byIdRes?.data || []), ...(byAuthRes?.data || [])]) {
       const label = row.full_name || row.email || row.id
       if (row.id) map[row.id] = label
       if (row.auth_user_id) map[row.auth_user_id] = label

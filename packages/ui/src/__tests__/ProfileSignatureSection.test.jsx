@@ -71,7 +71,7 @@ describe('ProfileSignatureSection', () => {
     const input = document.querySelector('input[type="file"]')
     fireEvent.change(input, { target: { files: [makeFile()] } })
 
-    await waitFor(() => expect(saveSignatureImage).toHaveBeenCalledWith({}, expect.any(File), 'account-1'))
+    await waitFor(() => expect(saveSignatureImage).toHaveBeenCalledWith({}, expect.any(File), 'account-1', null))
   })
 
   it('calls deleteSavedSignature on Remove', async () => {
@@ -86,6 +86,6 @@ describe('ProfileSignatureSection', () => {
     const removeButton = await screen.findByText('Remove')
     fireEvent.click(removeButton)
 
-    await waitFor(() => expect(deleteSavedSignature).toHaveBeenCalledWith({}))
+    await waitFor(() => expect(deleteSavedSignature).toHaveBeenCalledWith({}, null))
   })
 })

@@ -161,6 +161,17 @@ describe('exported field-mapping helpers (v853 — reused by preview components)
     )
   })
 
+  it('splitMultiItemFieldText keeps thousand-separated amounts as a single scalar (not bullets)', () => {
+    // Regression: Business Case costs preview showed "420" / "000" as separate bullets.
+    expect(splitMultiItemFieldText('420,000')).toBeNull()
+    expect(splitMultiItemFieldText('85,000')).toBeNull()
+    expect(splitMultiItemFieldText('$1,234.56')).toBeNull()
+    expect(splitMultiItemFieldText('USD 85,000')).toBeNull()
+    expect(splitMultiItemFieldText('1,234,567.89 ZAR')).toBeNull()
+    expect(parseFieldValue('420,000')).toEqual({ isList: false, text: '420,000' })
+    expect(parseFieldValue('85,000')).toEqual({ isList: false, text: '85,000' })
+  })
+
   it('splitMultiItemFieldText formats arrow hierarchy chains one level per line', () => {
     expect(
       splitMultiItemFieldText('Category → Type → Role / Asset → Named resource'),

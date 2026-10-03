@@ -52,7 +52,7 @@ describe('ProfilePictureSection', () => {
     const input = document.querySelector('input[type="file"]')
     fireEvent.change(input, { target: { files: [makeFile()] } })
 
-    await waitFor(() => expect(saveUserAvatar).toHaveBeenCalledWith({}, expect.any(File), 'account-1'))
+    await waitFor(() => expect(saveUserAvatar).toHaveBeenCalledWith({}, expect.any(File), 'account-1', null))
   })
 
   it('rejects an oversized file before calling saveUserAvatar', async () => {
@@ -73,6 +73,6 @@ describe('ProfilePictureSection', () => {
     const removeButton = await screen.findByText('Remove')
     fireEvent.click(removeButton)
 
-    await waitFor(() => expect(removeUserAvatar).toHaveBeenCalledWith({}))
+    await waitFor(() => expect(removeUserAvatar).toHaveBeenCalledWith({}, null))
   })
 })

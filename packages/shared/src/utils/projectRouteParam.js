@@ -90,7 +90,21 @@ export function platformIssuePath(projectKeyDecoded, issueKeyDecoded) {
 export async function resolveProjectIdFromRouteSegment(segment) {
   const key = String(segment || '').trim();
   if (!key) return null;
-  if (looksLikeProjectUuid(key)) return key;
+  // A UUID is only a project id when that project row exists. Record ids
+  // (assumptions, risks, …) are also UUIDs and must not be treated as projects.
+  if (looksLikeProjectUuid(key)) {
+    const { data, error } = await platformDb
+      .from('projects')
+      .select('id')
+      .eq('id', key)
+      .eq('is_deleted', false)
+      .maybeSingle();
+    if (error && error.code !== 'PGRST116') {
+      console.warn('resolveProjectIdFromRouteSegment:', error.message);
+      return key;
+    }
+    return data?.id || null;
+  }
 
   const tryRow = async (builder) => {
     const { data, error } = await builder.maybeSingle();

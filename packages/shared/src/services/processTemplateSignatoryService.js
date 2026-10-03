@@ -109,11 +109,94 @@ async function currentAuthUserId(db) {
   return data.user.id
 }
 
+/**
+ * Retry a storage upload up to 3 attempts with a short backoff before giving up — a bucket
+ * upload can fail on a transient network/edge hiccup even when the bucket, RLS policy, and
+ * file are all valid (observed: a signature paste-upload failing once with no code-level
+ * cause found). Same backoff shape as resolveAuthUser()'s session-retry loop in useMenu.js,
+ * kept consistent rather than inventing a different retry style.
+ */
+async function uploadWithRetry(db, bucket, path, file, options) {
+  let lastError = null
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 300 * attempt))
+    const { error } = await db.storage.from(bucket).upload(path, file, options)
+    if (!error) return null
+    lastError = error
+  }
+  return lastError
+}
+
 // ─────────────────────────────────────────────────────────────
-// Requirements (scoped configuration — v880)
+// Requirements (scoped configuration — v880; team scope added v1067)
 // ─────────────────────────────────────────────────────────────
 
-export const SIGNATORY_SCOPE_TYPES = ['organisation', 'portfolio', 'programme', 'project']
+export const SIGNATORY_SCOPE_TYPES = ['organisation', 'portfolio', 'programme', 'project', 'team']
+
+/**
+ * Active, non-deleted teams on a project led by a given user (v1067). A person can lead
+ * more than one team on the same project — callers render one team-scope editor per row.
+ */
+export async function getLedTeamsForUser(db, { projectId, userId }) {
+  try {
+    if (!db || !projectId || !userId) throw new Error('Database client, project id, and user id are required')
+    const { data, error } = await db
+      .from('teams')
+      .select('id, team_name, team_type')
+      .eq('project_id', projectId)
+      .eq('team_lead_user_id', userId)
+      .eq('is_deleted', false)
+      .eq('is_active', true)
+      .order('team_name', { ascending: true })
+    if (error) throw error
+    return ok(data || [])
+  } catch (error) {
+    return fail(error)
+  }
+}
+
+/** Active roster for one team (v1067) — display context only, not used by resolution. */
+export async function getTeamMembersForTeam(db, { teamId }) {
+  try {
+    if (!db || !teamId) throw new Error('Database client and team id are required')
+    const { data, error } = await db
+      .from('team_members')
+      .select('id, user_id, member_role, allocation_percentage, user:user_id (id, email, full_name)')
+      .eq('team_id', teamId)
+      .eq('is_deleted', false)
+      .eq('is_active', true)
+    if (error) throw error
+    return ok(data || [])
+  } catch (error) {
+    return fail(error)
+  }
+}
+
+/**
+ * Simulator equivalent of getLedTeamsForUser (v1067). sim.practice_teams has different
+ * columns from public.teams (practice_project_id, not project_id) and
+ * team_lead_user_id there references auth.users(id) directly rather than public.users(id)
+ * — so the caller passes the raw auth user id, not the internal users.id.
+ */
+export async function getLedPracticeTeamsForUser(db, { practiceProjectId, authUserId }) {
+  try {
+    if (!db || !practiceProjectId || !authUserId) {
+      throw new Error('Database client, practice project id, and auth user id are required')
+    }
+    const { data, error } = await db
+      .from('practice_teams')
+      .select('id, team_name, team_type')
+      .eq('practice_project_id', practiceProjectId)
+      .eq('team_lead_user_id', authUserId)
+      .eq('is_deleted', false)
+      .eq('team_status', 'active')
+      .order('team_name', { ascending: true })
+    if (error) throw error
+    return ok(data || [])
+  } catch (error) {
+    return fail(error)
+  }
+}
 
 /**
  * Pure resolver: walk levels (narrow → wide). First policy wins.
@@ -341,9 +424,11 @@ async function loadProjectAncestorIds(db, projectId) {
 }
 
 /**
- * Resolve effective slots for a document type (v880).
+ * Resolve effective slots for a document type (v880; team scope added v1067).
  * Prefer projectId (full chain). For config "copy parent" from programme/portfolio
- * scopes, pass programmeId / portfolioId without a project.
+ * scopes, pass programmeId / portfolioId without a project. Pass teamId when the
+ * document is known to belong to a specific team (teams.id) — it is checked before
+ * project, exactly one level narrower.
  */
 export async function resolveEffectiveSignatoryRequirements(db, {
   accountId,
@@ -351,6 +436,7 @@ export async function resolveEffectiveSignatoryRequirements(db, {
   projectId = null,
   programmeId: programmeIdArg = null,
   portfolioId: portfolioIdArg = null,
+  teamId = null,
 }) {
   try {
     if (!db || !accountId || !documentTable) throw new Error('Database client, account id, and document table are required')
@@ -359,6 +445,9 @@ export async function resolveEffectiveSignatoryRequirements(db, {
     let programmeId = programmeIdArg || null
     const chainSpecs = []
 
+    if (teamId) {
+      chainSpecs.push({ scopeType: 'team', scopeId: teamId })
+    }
     if (projectId) {
       const ancestors = await loadProjectAncestorIds(db, projectId)
       portfolioId = ancestors.portfolioId || portfolioId
@@ -1141,10 +1230,15 @@ export async function isDocumentFullySigned(db, templateNodeId) {
 
 const _savedSignatureInFlight = new Map()
 
-export async function getSavedSignature(db) {
+/**
+ * @param {string} [authUserIdHint] - already-resolved auth user id (e.g. from the page's own
+ *   getUser() call) to skip a redundant getSession() round-trip. Falls back to resolving it
+ *   here when omitted, so existing callers are unaffected.
+ */
+export async function getSavedSignature(db, authUserIdHint) {
   try {
     if (!db) throw new Error('Database client is required')
-    const authUserId = await currentAuthUserId(db)
+    const authUserId = authUserIdHint || await currentAuthUserId(db)
 
     // In-flight de-dupe: ProfileSignatureSection's own mount effect firing twice
     // under React 18 StrictMode (dev only) was two identical queries for the same
@@ -1173,19 +1267,22 @@ export async function getSavedSignature(db) {
   }
 }
 
-export async function saveSignatureImage(db, file, accountId) {
+/**
+ * @param {string} [authUserIdHint] - see getSavedSignature() above.
+ */
+export async function saveSignatureImage(db, file, accountId, authUserIdHint) {
   try {
     if (!db || !file) throw new Error('Database client and file are required')
     const validationError = validateSignatureFile(file)
     if (validationError) throw new Error(validationError)
 
-    const authUserId = await currentAuthUserId(db)
+    const authUserId = authUserIdHint || await currentAuthUserId(db)
     const ext = fileExt(file)
     const storagePath = `${authUserId}/signature.${ext}`
 
-    const { error: uploadError } = await db.storage
-      .from(USER_SIGNATURES_BUCKET)
-      .upload(storagePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
+    const uploadError = await uploadWithRetry(db, USER_SIGNATURES_BUCKET, storagePath, file, {
+      cacheControl: '3600', upsert: true, contentType: file.type,
+    })
     if (uploadError) throw uploadError
     invalidateSignedImage(USER_SIGNATURES_BUCKET, storagePath)
 
@@ -1211,11 +1308,14 @@ export async function saveSignatureImage(db, file, accountId) {
 }
 
 /** Remove the current user's saved signature (storage object + user_signature_images row). */
-export async function deleteSavedSignature(db) {
+/**
+ * @param {string} [authUserIdHint] - see getSavedSignature() above.
+ */
+export async function deleteSavedSignature(db, authUserIdHint) {
   try {
     if (!db) throw new Error('Database client is required')
-    const authUserId = await currentAuthUserId(db)
-    const existing = await getSavedSignature(db)
+    const authUserId = authUserIdHint || await currentAuthUserId(db)
+    const existing = await getSavedSignature(db, authUserId)
     if (!existing.success) throw new Error(existing.message)
     if (!existing.data) return ok(null)
 
