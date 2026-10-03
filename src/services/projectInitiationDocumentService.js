@@ -6,6 +6,14 @@
 import { supabase } from './supabaseClient'
 
 /**
+ * Safe PostgREST select for PID rows.
+ * Only embed project_id — other link columns often lack FKs in live DBs,
+ * which makes PostgREST return 400 on relationship embeds.
+ */
+const PID_SELECT = '*'
+
+
+/**
  * Create a new Project Initiation Document
  * @param {string} projectId - Project ID
  * @param {Object} pidData - PID data
@@ -37,20 +45,7 @@ export async function createPID(projectId, pidData) {
     const { data, error } = await supabase
       .from('project_initiation_documents')
       .insert(insertData)
-      .select(`
-        *,
-        project:project_id(id, project_name, project_code),
-        business_case:business_case_id(id, business_case_reference),
-        project_brief:project_brief_id(id, brief_reference),
-        project_mandate:project_mandate_id(id, mandate_reference),
-        project_product_description:project_product_description_id(id, ppd_reference),
-        executive:executive_user_id(id, full_name, email),
-        senior_user:senior_user_user_id(id, full_name, email),
-        senior_supplier:senior_supplier_user_id(id, full_name, email),
-        project_manager:project_manager_user_id(id, full_name, email),
-        author:author_id(id, full_name, email),
-        owner:owner_id(id, full_name, email)
-      `)
+      .select(PID_SELECT)
       .single()
 
     if (error) throw error
@@ -73,7 +68,7 @@ export async function createPIDFromBusinessCase(businessCaseId, userId) {
     // Get Business Case
     const { data: businessCase, error: bcError } = await supabase
       .from('business_cases')
-      .select('*, project:project_id(id, project_name)')
+      .select('*')
       .eq('id', businessCaseId)
       .eq('is_deleted', false)
       .single()
@@ -85,7 +80,7 @@ export async function createPIDFromBusinessCase(businessCaseId, userId) {
     const pidData = {
       business_case_id: businessCaseId,
       project_id: businessCase.project_id,
-      pid_title: `${businessCase.project?.project_name || 'Project'} - Project Initiation Document`,
+      pid_title: 'Project Initiation Document',
       pid_description: 'Project Initiation Document created from Business Case',
       project_definition: businessCase.project_definition || '',
       project_justification: businessCase.justification || '',
@@ -109,27 +104,7 @@ export async function getPIDById(pidId) {
   try {
     const { data, error } = await supabase
       .from('project_initiation_documents')
-      .select(`
-        *,
-        project:project_id(id, project_name, project_code),
-        business_case:business_case_id(id, business_case_reference, business_case_title),
-        project_brief:project_brief_id(id, brief_reference, brief_title),
-        project_mandate:project_mandate_id(id, mandate_reference, mandate_title),
-        project_product_description:project_product_description_id(id, ppd_reference, product_title),
-        quality_management_strategy:quality_management_strategy_id(id, qms_reference, qms_title),
-        risk_management_strategy:risk_management_strategy_id(id, rms_reference, rms_title),
-        configuration_management_strategy:configuration_management_strategy_id(id, cms_reference, cms_title),
-        communication_management_strategy:communication_management_strategy_id(id, cms_reference, cms_title),
-        executive:executive_user_id(id, full_name, email),
-        senior_user:senior_user_user_id(id, full_name, email),
-        senior_supplier:senior_supplier_user_id(id, full_name, email),
-        project_manager:project_manager_user_id(id, full_name, email),
-        project_assurance:project_assurance_user_id(id, full_name, email),
-        change_authority:change_authority_user_id(id, full_name, email),
-        author:author_id(id, full_name, email),
-        owner:owner_id(id, full_name, email),
-        approved_by_user:approved_by(id, full_name, email)
-      `)
+      .select(PID_SELECT)
       .eq('id', pidId)
       .eq('is_deleted', false)
       .single()
@@ -151,10 +126,7 @@ export async function getPIDByProject(projectId) {
   try {
     const { data, error } = await supabase
       .from('project_initiation_documents')
-      .select(`
-        *,
-        project:project_id(id, project_name, project_code)
-      `)
+      .select(PID_SELECT)
       .eq('project_id', projectId)
       .eq('is_deleted', false)
       .maybeSingle()
@@ -175,18 +147,36 @@ export async function getPIDByProject(projectId) {
 export async function getOrCreatePID(projectId) {
   try {
     let pid = await getPIDByProject(projectId)
-    
+
     if (!pid) {
-      // Create a new PID
-      pid = await createPID(projectId, {
-        pid_title: 'Project Initiation Document',
-        pid_description: '',
-        project_definition: '',
-        project_scope: '',
-        status: 'draft'
-      })
+      const { data: deletedPid } = await supabase
+        .from('project_initiation_documents')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('is_deleted', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (deletedPid?.id) {
+        pid = await updatePID(deletedPid.id, {
+          is_deleted: false,
+          deleted_at: null,
+          deleted_by: null,
+          status: 'draft',
+          pid_title: 'Project Initiation Document',
+        })
+      } else {
+        pid = await createPID(projectId, {
+          pid_title: 'Project Initiation Document',
+          pid_description: '',
+          project_definition: '',
+          project_scope: '',
+          status: 'draft',
+        })
+      }
     }
-    
+
     return pid
   } catch (error) {
     console.error('Error getting or creating PID:', error)
@@ -225,10 +215,7 @@ export async function updatePID(pidId, updates) {
       .from('project_initiation_documents')
       .update(updateData)
       .eq('id', pidId)
-      .select(`
-        *,
-        project:project_id(id, project_name, project_code)
-      `)
+      .select(PID_SELECT)
       .single()
 
     if (error) throw error
@@ -330,10 +317,7 @@ export async function getRevisionHistory(pidId) {
   try {
     const { data, error } = await supabase
       .from('pid_revision_history')
-      .select(`
-        *,
-        revised_by_user:revised_by(id, full_name, email)
-      `)
+      .select('*')
       .eq('pid_id', pidId)
       .order('revision_date', { ascending: false })
 

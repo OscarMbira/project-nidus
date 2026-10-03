@@ -161,7 +161,7 @@ function ProjectFormTabs({ activeTab, setActiveTab, formData }) {
   }
 
   return (
-    <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+    <div className="mb-6 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
       <p
         id="project-form-steps-heading"
         className="px-1 pt-3 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"

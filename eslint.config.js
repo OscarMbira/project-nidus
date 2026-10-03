@@ -2,28 +2,19 @@ import js from '@eslint/js'
 import reactHooks from 'eslint-plugin-react-hooks'
 
 const platformFiles = [
-  'src/pages/platform-app/**/*.jsx',
-  'src/pages/platform-app/**/*.js',
-  'src/pages/app/**/*.jsx',
-  'src/pages/app/**/*.js',
-  'src/components/app/**/*.jsx',
-  'src/components/app/**/*.js',
+  'apps/platform/src/**/*.jsx',
+  'apps/platform/src/**/*.js',
 ]
 
 const simulatorFiles = [
-  'src/pages/simulator/**/*.jsx',
-  'src/pages/simulator/**/*.js',
-  'src/pages/sim/**/*.jsx',
-  'src/pages/sim/**/*.js',
-  'src/components/sim/**/*.jsx',
-  'src/components/sim/**/*.js',
-  'src/services/sim/**/*.js',
+  'apps/simulator/src/**/*.jsx',
+  'apps/simulator/src/**/*.js',
 ]
 
 export default [
   js.configs.recommended,
   {
-    files: ['src/**/*.{js,jsx}'],
+    files: ['apps/*/src/**/*.{js,jsx}', 'packages/*/src/**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -82,7 +73,7 @@ export default [
       'no-restricted-imports': ['error', {
         patterns: [
           {
-            group: ['**/pages/simulator/**', '**/pages/sim/**', '**/components/sim/**', '**/services/sim/**'],
+            group: ['**/apps/simulator/**', '../simulator/**', '../../simulator/**'],
             message: 'Platform code must not import Simulator-only modules.',
           },
         ],
@@ -95,7 +86,7 @@ export default [
       'no-restricted-imports': ['error', {
         patterns: [
           {
-            group: ['**/pages/platform-app/**', '**/pages/app/**', '**/components/app/**'],
+            group: ['**/apps/platform/**', '../platform/**', '../../platform/**'],
             message: 'Simulator code must not import Platform-only modules.',
           },
         ],
@@ -103,6 +94,13 @@ export default [
     },
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'src/App.jsx.backup-v729'],
+    ignores: [
+      'dist/**',
+      '**/dist/**',
+      'node_modules/**',
+      '**/node_modules/**',
+      'src/App.jsx.backup-v729',
+      '**/App.jsx.backup-v729',
+    ],
   },
 ]

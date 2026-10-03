@@ -260,6 +260,7 @@ Strategic areas:
 
 - risks
 - assumptions
+- constraints
 - issues
 - dependencies
 - decisions

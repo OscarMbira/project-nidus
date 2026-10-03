@@ -6,6 +6,39 @@
 import { platformDb } from './supabase/supabaseClient';
 
 /**
+ * Attach team_lead profiles without PostgREST FK embeds (teams has multiple FKs to users).
+ * @param {Array<Object>} teams
+ * @returns {Promise<Array<Object>>}
+ */
+async function withTeamLeads(teams) {
+  const list = Array.isArray(teams) ? teams : [];
+  if (list.length === 0) return list;
+
+  const leadIds = [
+    ...new Set(list.map((t) => t.team_lead_user_id).filter(Boolean)),
+  ];
+  if (leadIds.length === 0) {
+    return list.map((t) => ({ ...t, team_lead: null }));
+  }
+
+  const { data: leads, error } = await platformDb
+    .from('users')
+    .select('id, full_name, email')
+    .in('id', leadIds);
+
+  if (error) {
+    console.warn('withTeamLeads: could not load lead profiles', error.message);
+    return list.map((t) => ({ ...t, team_lead: null }));
+  }
+
+  const byId = new Map((leads || []).map((u) => [u.id, u]));
+  return list.map((t) => ({
+    ...t,
+    team_lead: t.team_lead_user_id ? byId.get(t.team_lead_user_id) || null : null,
+  }));
+}
+
+/**
  * Get all teams for an organization (through projects)
  * @param {string} organizationId - Account ID
  * @returns {Promise<Object>} Teams data
@@ -44,17 +77,18 @@ export async function getAllTeams(organizationId) {
         projects(
           id,
           project_name,
+          project_code,
           account_id
         )
       `)
       .in('project_id', projectIds)
       .eq('is_deleted', false)
-      .eq('is_active', true)
+      .or('is_active.eq.true,is_active.is.null')
       .order('team_name', { ascending: true });
 
     if (error) throw error;
 
-    return { success: true, data: teams || [] };
+    return { success: true, data: await withTeamLeads(teams || []) };
   } catch (error) {
     console.error('Error getting teams:', error);
     return { success: false, error: error.message };
@@ -62,44 +96,96 @@ export async function getAllTeams(organizationId) {
 }
 
 /**
- * Get team detail with members
- * @param {string} teamId - Team ID
+ * Get teams for a single project (current project context).
+ * @param {string} projectId - projects.id UUID
+ */
+export async function getTeamsForProject(projectId) {
+  try {
+    if (!projectId) return { success: true, data: [] };
+
+    const { data: teams, error } = await platformDb
+      .from('teams')
+      .select(`
+        id,
+        team_code,
+        team_name,
+        team_description,
+        team_type,
+        team_lead_user_id,
+        max_team_size,
+        is_active,
+        created_at,
+        project_id,
+        projects(
+          id,
+          project_name,
+          project_code,
+          account_id
+        )
+      `)
+      .eq('project_id', projectId)
+      .eq('is_deleted', false)
+      .or('is_active.eq.true,is_active.is.null')
+      .order('team_name', { ascending: true });
+
+    if (error) throw error;
+    return { success: true, data: await withTeamLeads(teams || []) };
+  } catch (error) {
+    console.error('Error getting project teams:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+/**
+ * Get team detail with members (resolve by UUID or team_code).
+ * @param {string} teamIdOrCode - teams.id UUID or team_code (e.g. TEAM-0010)
  * @returns {Promise<Object>} Team detail
  */
-export async function getTeamDetail(teamId) {
+export async function getTeamDetail(teamIdOrCode) {
   try {
-    // Get team
-    const { data: team, error: teamError } = await platformDb
+    if (!teamIdOrCode) return { success: false, error: 'Team id is required' };
+
+    const key = String(teamIdOrCode).trim();
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
+
+    let query = platformDb
       .from('teams')
       .select(`
         *,
         projects(
           id,
           project_name,
+          project_code,
           account_id
         )
       `)
-      .eq('id', teamId)
-      .eq('is_deleted', false)
-      .single();
+      .eq('is_deleted', false);
+
+    query = isUuid ? query.eq('id', key) : query.eq('team_code', key);
+
+    const { data: team, error: teamError } = await query.maybeSingle();
 
     if (teamError) throw teamError;
+    if (!team) return { success: false, error: 'Team not found' };
 
-    // Get team members
-    const { data: members, error: membersError } = await platformDb
-      .from('team_members')
-      .select(`
-        *,
-        users(
-          id,
-          full_name,
-          email,
-          avatar_url
-        )
-      `)
-      .eq('team_id', teamId)
-      .eq('is_deleted', false)
-      .eq('is_active', true);
+    const [{ data: members, error: membersError }, rolesRes] = await Promise.all([
+      platformDb
+        .from('team_members')
+        .select(`
+          *,
+          users:users!user_id(
+            id,
+            full_name,
+            email,
+            avatar_url
+          )
+        `)
+        .eq('team_id', team.id)
+        .eq('is_deleted', false)
+        .eq('is_active', true),
+      getTeamFunctionalRoles(team.id),
+    ]);
 
     if (membersError) throw membersError;
 
@@ -107,8 +193,9 @@ export async function getTeamDetail(teamId) {
       success: true,
       data: {
         ...team,
-        members: members || []
-      }
+        members: members || [],
+        functional_roles: rolesRes.success ? rolesRes.data || [] : [],
+      },
     };
   } catch (error) {
     console.error('Error getting team detail:', error);
@@ -128,11 +215,14 @@ export async function createTeam(teamData) {
       .insert({
         project_id: teamData.project_id,
         team_name: teamData.team_name,
-        team_description: teamData.team_description,
-        team_type: teamData.team_type,
-        team_lead_user_id: teamData.team_lead_user_id,
-        max_team_size: teamData.max_team_size,
-        is_active: true
+        team_description: teamData.team_description ?? null,
+        team_type: teamData.team_type ?? null,
+        team_lead_user_id: teamData.team_lead_user_id || null,
+        max_team_size: teamData.max_team_size ?? null,
+        required_skills: teamData.required_skills || null,
+        team_code: '',
+        is_active: true,
+        created_by: teamData.created_by || null,
       })
       .select()
       .single();
@@ -144,6 +234,62 @@ export async function createTeam(teamData) {
     console.error('Error creating team:', error);
     return { success: false, error: error.message };
   }
+}
+
+/**
+ * Create a team, seed functional roles (with required skills), and optionally add members.
+ * @param {Object} teamData
+ * @param {Array<{user_id:string, member_role?:string, allocation_percentage?:number, required_skills?:string}>} [members]
+ * @param {{ roleSkillRows?: Array<{role:string, skills:string}> }} [options]
+ */
+export async function createTeamWithMembers(teamData, members = [], options = {}) {
+  const created = await createTeam(teamData);
+  if (!created.success) return created;
+
+  const teamId = created.data?.id;
+  const errors = [];
+
+  const roleSkillRows = Array.isArray(options.roleSkillRows) ? options.roleSkillRows : [];
+  for (const row of roleSkillRows) {
+    const label = String(row?.role || '').trim();
+    if (!label) continue;
+    const skills = String(row?.skills || '').trim() || null;
+    const roleRes = await addTeamFunctionalRole(teamId, label, skills);
+    if (!roleRes.success) errors.push(roleRes.error || `Failed to add role: ${label}`);
+  }
+
+  // Also accept legacy roleLabels without skills
+  for (const label of options.roleLabels || []) {
+    const trimmed = String(label || '').trim();
+    if (!trimmed) continue;
+    if (roleSkillRows.some((r) => String(r?.role || '').trim().toLowerCase() === trimmed.toLowerCase())) {
+      continue;
+    }
+    const roleRes = await addTeamFunctionalRole(teamId, trimmed, null);
+    if (!roleRes.success) errors.push(roleRes.error || `Failed to add role: ${trimmed}`);
+  }
+
+  for (const m of members || []) {
+    if (!m?.user_id) continue;
+    const res = await addMember(teamId, m.user_id, {
+      member_role: m.member_role || null,
+      allocation_percentage: m.allocation_percentage ?? 100,
+      required_skills: m.required_skills || null,
+      allocation_start_date: m.allocation_start_date || null,
+      allocation_end_date: m.allocation_end_date || null,
+      member_comments: m.member_comments || null,
+    });
+    if (!res.success) errors.push(res.error || 'Failed to add member');
+  }
+
+  if (errors.length) {
+    return {
+      success: true,
+      data: created.data,
+      warning: `Team created, but some items failed: ${errors.join('; ')}`,
+    };
+  }
+  return { success: true, data: created.data };
 }
 
 /**
@@ -218,6 +364,10 @@ export async function addMember(teamId, userId, memberData = {}) {
         user_id: userId,
         member_role: memberData.member_role || null,
         allocation_percentage: memberData.allocation_percentage || 100,
+        required_skills: memberData.required_skills || null,
+        allocation_start_date: memberData.allocation_start_date || null,
+        allocation_end_date: memberData.allocation_end_date || null,
+        member_comments: memberData.member_comments || null,
         is_active: true
       })
       .select()
@@ -434,7 +584,7 @@ export async function getTeamMembers(teamId) {
         joined_at,
         left_at,
         is_active,
-        users ( id, full_name, email, avatar_url )
+        users:users!user_id ( id, full_name, email, avatar_url )
       `
       )
       .eq('team_id', teamId)
@@ -452,8 +602,9 @@ export async function getTeamMembers(teamId) {
 
 /**
  * Project members not already on this team (for add-member picker).
+ * When teamId is omitted, returns all active project members.
  */
-export async function getAssignableProjectMembers(projectId, teamId) {
+export async function getAssignableProjectMembers(projectId, teamId = null) {
   try {
     const { data: memberships, error: mErr } = await platformDb
       .from('project_memberships')
@@ -470,16 +621,19 @@ export async function getAssignableProjectMembers(projectId, teamId) {
 
     if (mErr) throw mErr;
 
-    const { data: existing, error: eErr } = await platformDb
-      .from('team_members')
-      .select('user_id')
-      .eq('team_id', teamId)
-      .eq('is_active', true)
-      .eq('is_deleted', false);
+    let taken = new Set();
+    if (teamId) {
+      const { data: existing, error: eErr } = await platformDb
+        .from('team_members')
+        .select('user_id')
+        .eq('team_id', teamId)
+        .eq('is_active', true)
+        .eq('is_deleted', false);
 
-    if (eErr) throw eErr;
+      if (eErr) throw eErr;
+      taken = new Set((existing || []).map((r) => r.user_id));
+    }
 
-    const taken = new Set((existing || []).map((r) => r.user_id));
     const rows = (memberships || []).filter((m) => m.user_id && !taken.has(m.user_id));
     return { success: true, data: rows };
   } catch (error) {
@@ -488,22 +642,34 @@ export async function getAssignableProjectMembers(projectId, teamId) {
   }
 }
 
-export async function addTeamMember(teamId, userId, memberRole, allocationPct) {
+export async function addTeamMember(teamId, userId, memberRole, allocationPct, requiredSkills = null) {
   return addMember(teamId, userId, {
     member_role: memberRole ?? null,
     allocation_percentage: allocationPct ?? 100,
+    required_skills: requiredSkills || null,
   });
 }
 
-export async function updateTeamMember(teamMemberId, memberRole, allocationPct) {
+export async function updateTeamMember(teamMemberId, memberRole, allocationPct, extra = {}) {
   try {
+    const patch = {
+      member_role: memberRole,
+      allocation_percentage: allocationPct,
+      updated_at: new Date().toISOString(),
+    };
+    if (Object.prototype.hasOwnProperty.call(extra, 'allocation_start_date')) {
+      patch.allocation_start_date = extra.allocation_start_date || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'allocation_end_date')) {
+      patch.allocation_end_date = extra.allocation_end_date || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(extra, 'member_comments')) {
+      patch.member_comments = extra.member_comments || null;
+    }
+
     const { data, error } = await platformDb
       .from('team_members')
-      .update({
-        member_role: memberRole,
-        allocation_percentage: allocationPct,
-        updated_at: new Date().toISOString(),
-      })
+      .update(patch)
       .eq('id', teamMemberId)
       .select()
       .single();
@@ -540,7 +706,7 @@ export async function getTeamFunctionalRoles(teamId) {
   try {
     const { data, error } = await platformDb
       .from('team_functional_roles')
-      .select('id, team_id, role_label, sort_order, is_active')
+      .select('id, team_id, role_label, required_skills, sort_order, is_active')
       .eq('team_id', teamId)
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
@@ -553,19 +719,120 @@ export async function getTeamFunctionalRoles(teamId) {
   }
 }
 
-export async function addTeamFunctionalRole(teamId, roleLabel) {
+
+/**
+ * Project-scoped functional roles catalog (v1084).
+ * @param {string} projectId
+ */
+export async function listProjectFunctionalRoles(projectId) {
+  try {
+    if (!projectId) return { success: false, data: [], error: 'Project id is required' };
+    const { data, error } = await platformDb
+      .from('project_functional_roles')
+      .select('id, project_id, role_label, required_skills, sort_order, is_active, created_at, updated_at')
+      .eq('project_id', projectId)
+      .eq('is_active', true)
+      .order('role_label', { ascending: true });
+
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('listProjectFunctionalRoles:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+/**
+ * Replace the active project role catalog with the given rows (role + skills).
+ * Soft-deactivates removed labels; upserts current ones.
+ * @param {string} projectId
+ * @param {Array<{role:string, skills?:string}>} rows
+ */
+export async function replaceProjectFunctionalRoles(projectId, rows = []) {
+  try {
+    if (!projectId) return { success: false, error: 'Project id is required' };
+
+    const cleaned = (Array.isArray(rows) ? rows : [])
+      .map((r) => ({
+        role: String(r?.role || '').trim(),
+        skills: String(r?.skills || '').trim() || null,
+      }))
+      .filter((r) => r.role);
+
+    const { data: existingAll, error: exErr } = await platformDb
+      .from('project_functional_roles')
+      .select('id, project_id, role_label, required_skills, sort_order, is_active')
+      .eq('project_id', projectId);
+    if (exErr) throw exErr;
+    const existing = existingAll || [];
+    const keep = new Set(cleaned.map((r) => r.role.toLowerCase()));
+
+    for (const row of existing) {
+      if (!keep.has(String(row.role_label || '').toLowerCase())) {
+        if (row.is_active === false) continue;
+        const { error } = await platformDb
+          .from('project_functional_roles')
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq('id', row.id);
+        if (error) throw error;
+      }
+    }
+
+    let sort = 10;
+    for (const row of cleaned) {
+      const match = existing.find(
+        (e) => String(e.role_label || '').toLowerCase() === row.role.toLowerCase(),
+      );
+      if (match) {
+        const { error } = await platformDb
+          .from('project_functional_roles')
+          .update({
+            role_label: row.role,
+            required_skills: row.skills,
+            sort_order: sort,
+            is_active: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', match.id);
+        if (error) throw error;
+      } else {
+        const { error } = await platformDb.from('project_functional_roles').insert({
+          project_id: projectId,
+          role_label: row.role,
+          required_skills: row.skills,
+          sort_order: sort,
+          is_active: true,
+        });
+        if (error) throw error;
+      }
+      sort += 10;
+    }
+
+    return listProjectFunctionalRoles(projectId);
+  } catch (error) {
+    console.error('replaceProjectFunctionalRoles:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+export async function addTeamFunctionalRole(teamId, roleLabel, requiredSkills = null) {
   try {
     const label = (roleLabel || '').trim();
     if (!label) return { success: false, error: 'Role label is required' };
+    const skills = (requiredSkills || '').trim() || null;
 
     const { data, error } = await platformDb
       .from('team_functional_roles')
-      .insert({
-        team_id: teamId,
-        role_label: label,
-        sort_order: 999,
-        is_active: true,
-      })
+      .upsert(
+        {
+          team_id: teamId,
+          role_label: label,
+          required_skills: skills,
+          sort_order: 999,
+          is_active: true,
+        },
+        { onConflict: 'team_id,role_label' },
+      )
       .select()
       .single();
 
@@ -577,14 +844,19 @@ export async function addTeamFunctionalRole(teamId, roleLabel) {
   }
 }
 
-export async function updateTeamFunctionalRole(roleId, roleLabel) {
+export async function updateTeamFunctionalRole(roleId, roleLabel, requiredSkills = undefined) {
   try {
     const label = (roleLabel || '').trim();
     if (!label) return { success: false, error: 'Role label is required' };
 
+    const patch = { role_label: label, updated_at: new Date().toISOString() };
+    if (requiredSkills !== undefined) {
+      patch.required_skills = (requiredSkills || '').trim() || null;
+    }
+
     const { data, error } = await platformDb
       .from('team_functional_roles')
-      .update({ role_label: label, updated_at: new Date().toISOString() })
+      .update(patch)
       .eq('id', roleId)
       .select()
       .single();
@@ -671,7 +943,7 @@ export async function getAllTeamsWithMembers() {
         member_role,
         allocation_percentage,
         joined_at,
-        users ( id, full_name, email )
+        users:users!user_id ( id, full_name, email )
       `
       )
       .in('team_id', teamIds)
@@ -739,5 +1011,194 @@ export async function getUserTotalTeamAllocation(userId, excludeTeamMemberId = n
   } catch (error) {
     console.error('getUserTotalTeamAllocation:', error);
     return { success: false, total: 0, error: error.message };
+  }
+}
+
+function slugifyTeamTypeCode(label) {
+  return String(label || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80) || 'custom';
+}
+
+/**
+ * Active team types for the Team type dropdown (shared catalog).
+ */
+export async function listTeamTypes() {
+  try {
+    const { data, error } = await platformDb
+      .from('team_types')
+      .select('id, type_code, type_label, sort_order, is_system')
+      .eq('is_active', true)
+      .eq('is_deleted', false)
+      .order('sort_order', { ascending: true })
+      .order('type_label', { ascending: true });
+
+    if (error) throw error;
+    return { success: true, data: data || [] };
+  } catch (error) {
+    console.error('listTeamTypes:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+/**
+ * Ensure a team type exists (create if missing). Returns the catalog row.
+ * @param {string} labelOrCode - User-entered label or existing code
+ * @param {string|null} createdByUserId - internal users.id
+ */
+export async function ensureTeamType(labelOrCode, createdByUserId = null) {
+  try {
+    const raw = String(labelOrCode || '').trim();
+    if (!raw) return { success: false, error: 'Team type is required' };
+
+    const code = slugifyTeamTypeCode(raw);
+
+    const byCode = await platformDb
+      .from('team_types')
+      .select('id, type_code, type_label, sort_order, is_system')
+      .eq('is_deleted', false)
+      .eq('type_code', code)
+      .maybeSingle();
+    if (byCode.error) throw byCode.error;
+    if (byCode.data) return { success: true, data: byCode.data, created: false };
+
+    const byLabel = await platformDb
+      .from('team_types')
+      .select('id, type_code, type_label, sort_order, is_system')
+      .eq('is_deleted', false)
+      .ilike('type_label', raw)
+      .maybeSingle();
+    if (byLabel.error) throw byLabel.error;
+    if (byLabel.data) return { success: true, data: byLabel.data, created: false };
+
+    const { data: inserted, error: insertErr } = await platformDb
+      .from('team_types')
+      .insert({
+        type_code: code,
+        type_label: raw,
+        sort_order: 200,
+        is_active: true,
+        is_system: false,
+        created_by: createdByUserId || null,
+      })
+      .select('id, type_code, type_label, sort_order, is_system')
+      .single();
+
+    if (insertErr) {
+      if (insertErr.code === '23505') {
+        const again = await platformDb
+          .from('team_types')
+          .select('id, type_code, type_label, sort_order, is_system')
+          .eq('is_deleted', false)
+          .eq('type_code', code)
+          .maybeSingle();
+        if (again.data) return { success: true, data: again.data, created: false };
+      }
+      throw insertErr;
+    }
+
+    return { success: true, data: inserted, created: true };
+  } catch (error) {
+    console.error('ensureTeamType:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Set optional change reason for the current DB transaction (v1082 history triggers).
+ * @param {string} [reason]
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function setTeamChangeReason(reason = '') {
+  try {
+    const { error } = await platformDb.rpc('set_team_change_reason', {
+      p_reason: String(reason || '').trim(),
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('setTeamChangeReason:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function clearTeamChangeReason() {
+  try {
+    const { error } = await platformDb.rpc('clear_team_change_reason');
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('clearTeamChangeReason:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Load append-only change history for a team (newest first).
+ * @param {string} teamId UUID
+ * @returns {Promise<{ success: boolean, data: Array, error?: string }>}
+ */
+export async function getTeamChangeHistory(teamId) {
+  try {
+    if (!teamId) return { success: false, data: [], error: 'Team id is required' };
+
+    const { data, error } = await platformDb
+      .from('team_change_history')
+      .select(
+        `
+        id,
+        team_id,
+        project_id,
+        entity_type,
+        team_member_id,
+        user_id,
+        event_type,
+        changes,
+        change_reason,
+        changed_by,
+        changed_at,
+        source_event
+      `,
+      )
+      .eq('team_id', teamId)
+      .order('changed_at', { ascending: false });
+
+    if (error) throw error;
+
+    const rows = data || [];
+    const userIds = [
+      ...new Set(
+        rows
+          .flatMap((r) => [r.changed_by, r.user_id])
+          .filter(Boolean),
+      ),
+    ];
+    let byId = new Map();
+    if (userIds.length) {
+      const { data: users, error: uErr } = await platformDb
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      if (uErr) {
+        console.warn('getTeamChangeHistory: user lookup failed', uErr.message);
+      } else {
+        byId = new Map((users || []).map((u) => [u.id, u]));
+      }
+    }
+
+    return {
+      success: true,
+      data: rows.map((r) => ({
+        ...r,
+        changed_by_user: r.changed_by ? byId.get(r.changed_by) || null : null,
+        member_user: r.user_id ? byId.get(r.user_id) || null : null,
+      })),
+    };
+  } catch (error) {
+    console.error('getTeamChangeHistory:', error);
+    return { success: false, data: [], error: error.message };
   }
 }
