@@ -5,20 +5,34 @@
 -- ============================================================================
 
 -- Portfolio Manager template (plan §RBAC)
+-- NOTE (2026-08-24): originally an ON CONFLICT (role_name) WHERE is_template = TRUE AND
+-- project_id IS NULL upsert. That target no longer matches any live index — v902
+-- (organisation custom roles) dropped and replaced uq_project_roles_template with a wider
+-- column list (role_name, COALESCE(account_id, ...)), still under the same WHERE predicate,
+-- causing ERROR 42P10 (no matching unique/exclusion constraint) when this file is run today.
+-- Rewritten as an update-then-insert-if-missing pair instead of ON CONFLICT, so it no longer
+-- depends on knowing the exact current index shape (same resilient pattern used throughout
+-- this session's v966 initiative).
+UPDATE project_roles SET
+  role_display_name = 'Portfolio Manager',
+  role_description = 'Portfolio-level oversight and project coordination',
+  role_level = 10,
+  permissions = '["project.view", "project.edit", "project.manage_users", "reports.view", "portfolio.manage", "scope.manage", "schedule.manage"]'::jsonb,
+  updated_at = NOW()
+WHERE role_name = 'portfolio_manager' AND is_template = TRUE AND project_id IS NULL;
+
 INSERT INTO project_roles (
   role_name, role_display_name, role_description,
   is_system_default, is_template, role_level, permissions, is_active
-) VALUES
-  ('portfolio_manager', 'Portfolio Manager', 'Portfolio-level oversight and project coordination',
-   TRUE, TRUE, 10,
-   '["project.view", "project.edit", "project.manage_users", "reports.view", "portfolio.manage", "scope.manage", "schedule.manage"]'::jsonb,
-   TRUE)
-ON CONFLICT (role_name) WHERE is_template = TRUE AND project_id IS NULL DO UPDATE SET
-  role_display_name = EXCLUDED.role_display_name,
-  role_description = EXCLUDED.role_description,
-  role_level = EXCLUDED.role_level,
-  permissions = EXCLUDED.permissions,
-  updated_at = NOW();
+)
+SELECT
+  'portfolio_manager', 'Portfolio Manager', 'Portfolio-level oversight and project coordination',
+  TRUE, TRUE, 10,
+  '["project.view", "project.edit", "project.manage_users", "reports.view", "portfolio.manage", "scope.manage", "schedule.manage"]'::jsonb,
+  TRUE
+WHERE NOT EXISTS (
+  SELECT 1 FROM project_roles WHERE role_name = 'portfolio_manager' AND is_template = TRUE AND project_id IS NULL
+);
 
 CREATE TABLE IF NOT EXISTS scope_management_plans (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

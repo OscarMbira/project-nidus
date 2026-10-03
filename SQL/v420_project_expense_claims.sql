@@ -76,7 +76,7 @@ CREATE POLICY policy_expense_thresholds_select ON public.expense_approval_thresh
     COALESCE(is_deleted, FALSE) = FALSE
     AND (
       public.is_pmo_admin_user()
-      OR account_id IN (SELECT id FROM public.accounts a INNER JOIN public.users u ON u.id = a.owner_user_id WHERE u.auth_user_id = auth.uid())
+      OR account_id IN (SELECT a.id FROM public.accounts a INNER JOIN public.users u ON u.id = a.owner_user_id WHERE u.auth_user_id = auth.uid())
     )
   );
 
