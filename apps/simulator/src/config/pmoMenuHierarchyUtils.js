@@ -1290,11 +1290,16 @@ export function getTrackAnchorForLayout(layout = 'pmo') {
   return (LAYOUT_CONFIG[layout] || LAYOUT_CONFIG.pmo).trackAnchor
 }
 
-/** Override DB sort_order with v671 category order. */
+/**
+ * Fill missing DB sort_order with the v671 category order — never override a real DB value
+ * (same "missing-only" contract as applyCategoryPresentationLabels above; CLAUDE.md rule 25.1
+ * only allows a frontend fallback when the DB value is actually absent).
+ */
 export function applyCategorySortOrders(nodes = [], layout = 'pmo') {
   const config = LAYOUT_CONFIG[layout] || LAYOUT_CONFIG.pmo
   const { categoryOrder, trackOrder } = buildOrderMaps(config.universalDefs, config.trackCodes)
   return (nodes || []).map((node) => {
+    if (node?.sort_order !== null && node?.sort_order !== undefined) return node
     const code = String(node?.menu_code || '')
     const order = categoryOrder.get(code) ?? trackOrder.get(code)
     return order != null ? { ...node, sort_order: order } : node
@@ -1821,34 +1826,51 @@ function harvestExecSubsectionsForPortfolioDelivery(universalNodes = [], layout 
 }
 
 /**
- * v671 §5.1.1 / v719: Executive Overview → Dashboard only.
+ * v1000: Dissolve Executive Overview — promote Dashboard (and any leftover children)
+ * to the PMO Workspace root; drop the empty category wrapper.
  */
-export function nestExecutiveOverviewSections(universalNodes = [], layout = 'pmo') {
+export function dissolveExecutiveOverviewCategory(universalNodes = [], layout = 'pmo') {
   if (layout !== 'pmo' && layout !== 'sim_pmo') return universalNodes
 
   const execCode = layout === 'sim_pmo' ? 'sim_pmo_cat_exec' : 'pmo-cat-exec'
+  const promoted = []
+  const kept = []
 
-  return universalNodes.map((node) => {
-    if (node.menu_code !== execCode) return node
+  for (const node of universalNodes || []) {
+    if (String(node?.menu_code || '') !== execCode) {
+      kept.push(node)
+      continue
+    }
 
     const buckets = Object.fromEntries(EXEC_OVERVIEW_CHILD_ORDER.map((k) => [k, []]))
     for (const child of node.children || []) {
       buckets[classifyExecutiveOverviewChild(child, layout)].push(child)
     }
 
-    const ordered = []
     for (const child of pickV671DashboardLeaves(buckets.dashboard, layout)) {
-      ordered.push({ ...child, sort_order: EXEC_OVERVIEW_SORT_ORDER.dashboard })
+      promoted.push({
+        ...child,
+        sort_order: Math.min(Number(child?.sort_order) || 99, 5),
+      })
     }
 
     for (const child of sortNodes(buckets.other)) {
       if (isExecutiveOverviewDashboardLeaf(child, layout)) continue
       if (classifyExecutiveOverviewChild(child, layout) !== 'other') continue
-      ordered.push({ ...child, sort_order: EXEC_OVERVIEW_SORT_ORDER.other })
+      promoted.push(child)
     }
+  }
 
-    return { ...node, children: finalizeExecutiveOverviewOrder(ordered, layout) }
-  })
+  if (!promoted.length) return kept
+  return sortNodes([...promoted, ...kept])
+}
+
+/**
+ * v671 §5.1.1 / v719: Executive Overview → Dashboard only.
+ * @deprecated v1000 — prefer dissolveExecutiveOverviewCategory (Dashboard at root).
+ */
+export function nestExecutiveOverviewSections(universalNodes = [], layout = 'pmo') {
+  return dissolveExecutiveOverviewCategory(universalNodes, layout)
 }
 
 /** v851/v852 Forms|Templates domainGroup leaves — not PMO "Forms & Documents". */
@@ -2455,7 +2477,7 @@ export function applyPmoSectionNesting(universalNodes = [], layout = 'pmo') {
   const { universalNodes: sanitized, relocate: misnested } = sanitizeMisnestedUniversalChildren(nodes, layout)
   nodes = sanitized
 
-  let nested = nestExecutiveOverviewSections(nodes, layout)
+  let nested = dissolveExecutiveOverviewCategory(nodes, layout)
   const delivery = nestProjectDeliverySections(nested, layout)
   nested = nestV671UniversalCategories(delivery.universalNodes, layout)
 
@@ -2500,4 +2522,64 @@ function applyGovernanceCategoryPresentationLabels(node = {}) {
   })
 
   return { ...node, children }
+}
+
+/**
+ * v930 — Pack-Grouped Sidebar Menu: buckets the already-built, already-filtered menu tree
+ * (the output of applyRoleSidebarRevamp's existing pipeline) into top-level pack sections —
+ * one "Core Project Management" wrapper for everything not owned by a selected industry pack
+ * (including any menu item never classified into industry_pack_menu_items at all, matching
+ * v924's fail-open philosophy, and the methodology-track headers which are already siblings in
+ * `tree` by this point), plus one section per enabled industry pack, primary first. This is a
+ * pure regrouping — it never changes which items are present, only how their top-level
+ * container is labelled. See projectprd/v930_pack_grouped_sidebar_menu_PRD.md.
+ * @param {object[]} tree
+ * @param {{ sections?: Array<{packId: string, packName: string}>, menuCodeToPack?: Map<string, string> }} [packContext]
+ */
+export function groupMenuTreeByIndustryPack(tree = [], packContext = {}) {
+  const sections = packContext?.sections || []
+  const menuCodeToPack = packContext?.menuCodeToPack || new Map()
+
+  const coreWrapper = (children) => ({
+    menu_code: 'synthetic-core-pack',
+    menu_label: 'Core Project Management',
+    route_path: null,
+    children,
+  })
+
+  if (!Array.isArray(tree) || tree.length === 0) return tree
+  if (sections.length === 0 || menuCodeToPack.size === 0) return [coreWrapper(tree)]
+
+  // Clone `nodes`, keeping only leaves owned by `ownerPackId` ('core' = not in menuCodeToPack)
+  // and pruning any branch left with no matching descendant.
+  const pruneToOwner = (nodes, ownerPackId) => {
+    const kept = []
+    for (const node of nodes || []) {
+      const hasChildren = Array.isArray(node?.children) && node.children.length > 0
+      if (!hasChildren) {
+        const owner = menuCodeToPack.get(String(node?.menu_code || '')) || 'core'
+        if (owner === ownerPackId) kept.push({ ...node })
+        continue
+      }
+      const children = pruneToOwner(node.children, ownerPackId)
+      if (children.length > 0) kept.push({ ...node, children })
+    }
+    return kept
+  }
+
+  // Defensive: sort primary-first here rather than trusting caller order, so this function's
+  // output ordering doesn't silently depend on getMenuItemIndustryPackMap's own sort contract.
+  const industrySections = [...sections]
+    .sort((a, b) => (b?.isPrimary ? 1 : 0) - (a?.isPrimary ? 1 : 0))
+    .map((section) => ({
+      menu_code: `synthetic-industry-pack-${section.packId}`,
+      // Sidebar label is industry_packs.pack_name from the DB (SQL/v999 drops any
+      // trailing " Pack"). Pass through unchanged — do not hardcode a suffix or strip.
+      menu_label: section.packName,
+      route_path: null,
+      children: pruneToOwner(tree, section.packId),
+    }))
+    .filter((section) => section.children.length > 0)
+
+  return [coreWrapper(pruneToOwner(tree, 'core')), ...industrySections]
 }

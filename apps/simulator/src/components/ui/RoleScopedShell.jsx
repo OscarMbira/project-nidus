@@ -7,6 +7,8 @@
  * app-specific import (headers, sidebars, and widgets differ per app/family — see
  * Documentation/Role_Scoped_Routing_Guide.md for the exact slot each existing Layout uses).
  */
+import { mainContentSidebarOffsetClass, useSidebarCollapsed } from '@nidus/shared/hooks/useSidebarCollapsed'
+
 export default function RoleScopedShell({
   header,
   sidebar,
@@ -17,6 +19,7 @@ export default function RoleScopedShell({
   contentClassName = 'px-4 sm:px-6 pb-4 sm:pb-6 pt-0 sm:pt-2',
   children,
 }) {
+  const { collapsed } = useSidebarCollapsed()
   const shell = (
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {header}
@@ -25,7 +28,7 @@ export default function RoleScopedShell({
         <main
           id="main-content"
           tabIndex="-1"
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden lg:ml-80 pt-14 sm:pt-16 w-full"
+          className={`flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden ${mainContentSidebarOffsetClass(collapsed)} transition-[margin] duration-300 ease-in-out pt-2 sm:pt-3`}
         >
           {aboveContent}
           <div className={contentClassName}>

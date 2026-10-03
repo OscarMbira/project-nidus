@@ -7,11 +7,20 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { platformDb } from '../services/supabaseClient'
 import { fetchMenuFromDBShared, applySimulatorMenuTransform } from './useMenu'
 import { filterSimulatorLearnerMenu } from '@nidus/config/methodologyMenuUtils'
+import { groupMenuTreeByIndustryPack } from '@nidus/config/pmoMenuHierarchyUtils'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import { getMenuItemIndustryPackMap } from '../services/organisationIndustryService.js'
 import {
   isSidebarCacheFresh,
   purgeAllSidebarMenuCaches,
   readSidebarCache,
 } from '@nidus/shared/utils/menuCacheUtils'
+
+// v930 — pack-grouped sidebar menu: last-resolved industry-pack context per auth user, self-
+// contained to this hook (not shared with useMenu.js's own copy — this file is deliberately
+// independent, see its header comment). Lets the synchronous cache-check fast path below apply
+// pack-grouping best-effort without awaiting a DB round trip.
+const _simPackContextByAuthUserId = new Map()
 
 /**
  * @param {'pmo'|'pm'} scope
@@ -54,7 +63,13 @@ export function useSimMenu(scope = 'pmo', enabled = true) {
       if (!forceRefresh) {
         const cached = readSidebarCache(user.id, scope)
         if (cached?.rawHierarchy) {
-          const transformed = applyTransform(cached.rawHierarchy, cached.layoutHint)
+          let transformed = applyTransform(cached.rawHierarchy, cached.layoutHint)
+          // v930 — best-effort synchronous pack-grouping from the last-resolved context for
+          // this user; this fast path is deliberately synchronous, no DB round trip.
+          const cachedPackContext = _simPackContextByAuthUserId.get(user.id)
+          if (transformed?.length && cachedPackContext) {
+            transformed = groupMenuTreeByIndustryPack(transformed, { ...cachedPackContext, layout: scope })
+          }
           setMenuItems(transformed)
           setLoading(false)
 
@@ -84,7 +99,26 @@ export function useSimMenu(scope = 'pmo', enabled = true) {
         return
       }
 
-      const transformed = applyTransform(rawHierarchy || rawItems || [], layoutHint)
+      let transformed = applyTransform(rawHierarchy || rawItems || [], layoutHint)
+
+      // v930 — pack-grouped sidebar menu: wrap the finished tree into "Core Project
+      // Management" + one section per enabled industry pack. getCurrentUserAccountId() is
+      // sessionStorage-cached (rule 66), so this is cheap after the first resolution.
+      if (transformed?.length) {
+        try {
+          const accountId = await getCurrentUserAccountId()
+          if (accountId) {
+            const packResult = await getMenuItemIndustryPackMap(accountId)
+            if (packResult.success) {
+              transformed = groupMenuTreeByIndustryPack(transformed, { ...packResult.data, layout: scope })
+              _simPackContextByAuthUserId.set(user.id, packResult.data)
+            }
+          }
+        } catch (packErr) {
+          console.warn('useSimMenu: pack-grouped sidebar context failed, showing ungrouped tree:', packErr?.message || packErr)
+        }
+      }
+
       setMenuItems(transformed)
 
       setLoading(false)

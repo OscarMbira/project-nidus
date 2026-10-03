@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useMenu } from '@nidus/shared/hooks/useMenu'
 import { useSimMenu } from '@nidus/shared/hooks/useSimMenu'
 import { performLogout, getLogoutRedirectPath } from '../services/authLogoutService'
+import { getAccessibleWorkspaces, getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import ZoneTabs, { resolveActiveZone, zoneLandingRoute } from './ZoneTabs'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -82,9 +84,10 @@ import {
 } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { useBranding } from '@nidus/shared/context/BrandingContext'
-import { resolveMenuRoutePath, resolveMenuRoutePathForLayout, menuPathIsActive } from '@nidus/shared/utils/sidebarRouteUtils'
+import { resolveMenuRoutePathForLayout, menuPathIsActive, getSidebarMenuNodeKey, persistLastActiveMenuKey, readLastActiveMenuKey, resolvePreferredActiveMenuKey, findTopLevelKeyForActiveMenu, menuNodeContainsKey } from '@nidus/shared/utils/sidebarRouteUtils'
 import { persistMenuLayoutScope } from '@nidus/shared/utils/menuLayoutUtils'
 import { resolveSidebarThemeTokens } from '@nidus/shared/utils/sidebarThemeUtils'
+import { sidebarPanelTransformClass, useSidebarCollapsed } from '@nidus/shared/hooks/useSidebarCollapsed'
 import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import { useOpenPlanningFindingsCount } from '@nidus/shared/hooks/useOpenPlanningFindingsCount'
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
@@ -174,31 +177,15 @@ const iconMap = {
 }
 
 function getMenuNodeKey(menuItem) {
-  return menuItem?.id ?? menuItem?.menu_code ?? String(menuItem?.menu_label ?? '')
+  return getSidebarMenuNodeKey(menuItem)
 }
 
-function menuNodeContainsActive(node, location) {
-  if (!node) return false
-  if (node.route_path) {
-    const r = resolveMenuRoutePath(node.route_path, location.pathname)
-    if (menuPathIsActive(location.pathname, r, location.search)) return true
-  }
-  return (node.children || []).some((child) => menuNodeContainsActive(child, location))
+function menuNodeContainsActive(node, preferredActiveKey) {
+  return menuNodeContainsKey(node, preferredActiveKey)
 }
 
-function findAutoExpandTopLevelKey(items = [], location) {
-  for (const item of items) {
-    if (item.is_methodology_header) {
-      if ((item.children || []).some((child) => menuNodeContainsActive(child, location))) {
-        return getMenuNodeKey(item)
-      }
-      continue
-    }
-    if (item.children?.length && menuNodeContainsActive(item, location)) {
-      return getMenuNodeKey(item)
-    }
-  }
-  return null
+function findAutoExpandTopLevelKey(items = [], preferredActiveKey) {
+  return findTopLevelKeyForActiveMenu(items, preferredActiveKey)
 }
 
 function SidebarMenuItem({
@@ -209,6 +196,7 @@ function SidebarMenuItem({
   planningOpenFindingsCount = null,
   sidebarTokens = null,
   menuLayout = null,
+  preferredActiveKey = null,
 }) {
   const location = useLocation()
   const { branding } = useBranding()
@@ -218,14 +206,14 @@ function SidebarMenuItem({
 
   if (isMethodologySection) {
     const nodeKey = getMenuNodeKey(menuItem)
-    const isChildActive = hasChildren && menuItem.children.some((child) => menuNodeContainsActive(child, location))
+    const isChildActive = hasChildren && menuItem.children.some((child) => menuNodeContainsActive(child, preferredActiveKey))
     const usesAccordion = hasChildren && onToggleExpand != null
     const [isExpandedLocal, setIsExpandedLocal] = useState(() => isChildActive)
 
     useEffect(() => {
       if (usesAccordion) return
-      if (isChildActive) setIsExpandedLocal(true)
-    }, [location.pathname, location.search, usesAccordion, isChildActive])
+      setIsExpandedLocal(isChildActive)
+    }, [location.pathname, location.search, usesAccordion, isChildActive, preferredActiveKey])
 
     const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
     const trackIconMap = { structured: Shield, standards_based: Settings2, agile: Zap }
@@ -290,6 +278,7 @@ function SidebarMenuItem({
                 planningOpenFindingsCount={planningOpenFindingsCount}
                 sidebarTokens={tokens}
                 menuLayout={menuLayout}
+                preferredActiveKey={preferredActiveKey}
               />
             ))}
           </SidebarNavTier>
@@ -299,30 +288,19 @@ function SidebarMenuItem({
   }
 
   const resolvedPath = resolveMenuRoutePathForLayout(menuItem.route_path, location.pathname, menuLayout)
-  const isNodeOrDescendantActive = (node) => {
-    if (!node) return false
-    if (node.route_path) {
-      const r = resolveMenuRoutePathForLayout(node.route_path, location.pathname, menuLayout)
-      if (menuPathIsActive(location.pathname, r, location.search)) return true
-    }
-    return (node.children || []).some(isNodeOrDescendantActive)
-  }
-  const isChildActive = hasChildren && menuItem.children.some(isNodeOrDescendantActive)
+  const isChildActive = hasChildren && menuItem.children.some((child) => menuNodeContainsActive(child, preferredActiveKey))
   const nodeKey = getMenuNodeKey(menuItem)
   const isTopLevel = level === 0
   const usesAccordion = isTopLevel && hasChildren && onToggleExpand != null
-  // Treat a menu item as active ONLY when its route_path matches exactly.
-  // This prevents all siblings in a section from appearing active at once.
-  const isActive = !!menuItem.route_path && menuPathIsActive(location.pathname, resolvedPath, location.search)
-  // Nested navigable parents (e.g. Template Library under Portfolio & Delivery) must
-  // open when the parent itself is selected — not only when a Forms/Templates child is.
+  const pathWouldMatch = !!menuItem.route_path && menuPathIsActive(location.pathname, resolvedPath, location.search)
+  const isActive = pathWouldMatch && preferredActiveKey != null && nodeKey === preferredActiveKey
   const shouldExpandLocal = isChildActive || (hasChildren && isActive)
   const [isExpandedLocal, setIsExpandedLocal] = useState(() => shouldExpandLocal)
 
   useEffect(() => {
     if (usesAccordion) return
-    if (shouldExpandLocal) setIsExpandedLocal(true)
-  }, [location.pathname, location.search, usesAccordion, shouldExpandLocal])
+    setIsExpandedLocal(shouldExpandLocal)
+  }, [location.pathname, location.search, usesAccordion, shouldExpandLocal, preferredActiveKey])
 
   const expanded = usesAccordion ? expandedMenuId === nodeKey : isExpandedLocal
 
@@ -367,6 +345,9 @@ function SidebarMenuItem({
       e.preventDefault()
       toggleExpand()
       return
+    }
+    if (hasOwnRoute) {
+      persistLastActiveMenuKey(menuItem)
     }
     if (menuLayout === 'pm') {
       persistMenuLayoutScope('pm')
@@ -486,6 +467,7 @@ function SidebarMenuItem({
               planningOpenFindingsCount={planningOpenFindingsCount}
               sidebarTokens={tokens}
               menuLayout={menuLayout}
+              preferredActiveKey={preferredActiveKey}
             />
           ))}
         </SidebarNavTier>
@@ -495,6 +477,7 @@ function SidebarMenuItem({
 }
 
 export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
+  const { collapsed } = useSidebarCollapsed()
   const platformMenu = useMenu()
   const simMenu = useSimMenu(simulatorScope || 'pmo', !!simulatorScope)
   const { menuItems, loading, error, refetch, layoutHint } = simulatorScope ? simMenu : platformMenu
@@ -509,10 +492,37 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
   )
   const location = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
+  const [organisationName, setOrganisationName] = useState('')
   const [expandedMenuId, setExpandedMenuId] = useState(null)
   const lastAutoExpandPathRef = useRef('')
   const planningOpenFindingsCount = useOpenPlanningFindingsCount(!simulatorScope && !location.pathname.startsWith('/simulator'))
   const isSimulatorContext = !!simulatorScope || (location.pathname || '').startsWith('/simulator')
+  // v982 Phase 7 — Main Application Zones: purely derived, no new state (see ZoneTabs.jsx header).
+  const activeZone = resolveActiveZone(location.pathname, layoutHint?.layout)
+  const handleZoneSelect = (zoneId) => navigate(zoneLandingRoute(zoneId, isSimulatorContext))
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const [wsRes, accountId] = await Promise.all([
+          getAccessibleWorkspaces(),
+          getCurrentUserAccountId(),
+        ])
+        if (cancelled) return
+        const list = Array.isArray(wsRes?.data) ? wsRes.data : []
+        const current =
+          list.find((w) => w.account_id === accountId) ||
+          list[0] ||
+          null
+        const name = String(current?.account_name || current?.account_code || '').trim()
+        setOrganisationName(name)
+      } catch {
+        if (!cancelled) setOrganisationName('')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const routeMatchesContext = (routePath) => {
     const route = (routePath || '').trim()
@@ -548,6 +558,16 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
     [menuItems, isSimulatorContext]
   )
 
+  const preferredActiveKey = useMemo(
+    () =>
+      resolvePreferredActiveMenuKey(prunedMenuItems, location, {
+        layout: layoutHint?.layout,
+        expandedSectionKey: expandedMenuId,
+        lastActiveKey: readLastActiveMenuKey(),
+      }),
+    [prunedMenuItems, location.pathname, location.search, layoutHint?.layout, expandedMenuId]
+  )
+
   const handleToggleExpand = (id) => {
     setExpandedMenuId((prev) => (prev === id ? null : id))
   }
@@ -557,9 +577,9 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
     const pathKey = `${location.pathname}${location.search}`
     if (lastAutoExpandPathRef.current === pathKey) return
     lastAutoExpandPathRef.current = pathKey
-    const activeKey = findAutoExpandTopLevelKey(prunedMenuItems, location)
+    const activeKey = findAutoExpandTopLevelKey(prunedMenuItems, preferredActiveKey)
     if (activeKey) setExpandedMenuId(activeKey)
-  }, [location.pathname, location.search, prunedMenuItems, loading])
+  }, [location.pathname, location.search, prunedMenuItems, loading, preferredActiveKey])
 
   const handleLogout = async () => {
     if (loggingOut) return
@@ -602,9 +622,9 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
         className={`
           fixed top-14 sm:top-16 left-0 h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] w-64 sm:w-72 shadow-lg z-40
           transform transition-transform duration-300 ease-in-out
-          lg:translate-x-0 lg:h-[calc(100vh-4rem)] lg:w-80
+          lg:h-[calc(100vh-4rem)] lg:w-80
           ${sidebarTokens.asideClass}
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${sidebarPanelTransformClass(collapsed, isOpen)}
         `}
         style={sidebarTokens.asideStyle}
         aria-label="Sidebar navigation"
@@ -622,7 +642,12 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
           </div>
 
           {/* Menu Items */}
-          <nav className="flex-1 overflow-y-auto py-4 px-3">
+          {/* overflow-x-hidden: avoid a permanent bottom horizontal scrollbar when the
+              vertical bar appears (Windows classic scrollbars shrink width → 1px overflow). */}
+          <nav className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden py-4 px-3">
+            {activeZone && (
+              <ZoneTabs activeZone={activeZone} onSelect={handleZoneSelect} />
+            )}
             {showMethodologySwitcher && !loading && (
               <MethodologySwitcher onChange={() => refetch?.()} />
             )}
@@ -662,6 +687,7 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
                       planningOpenFindingsCount={planningOpenFindingsCount}
                       sidebarTokens={sidebarTokens}
                       menuLayout={layoutHint?.layout}
+                      preferredActiveKey={preferredActiveKey}
                     />
                   ))}
               </div>
@@ -672,8 +698,19 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
             ) : null}
           </nav>
 
-          {/* Footer - Logout */}
-          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4">
+          {/* Footer — organisation context + logout */}
+          <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 p-4 space-y-2">
+            {organisationName ? (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-gray-600 dark:text-gray-300"
+                title={organisationName}
+              >
+                <Building2 className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+                <span className="truncate font-medium" aria-label={`Organisation: ${organisationName}`}>
+                  {organisationName}
+                </span>
+              </div>
+            ) : null}
             <button
               type="button"
               onClick={handleLogout}

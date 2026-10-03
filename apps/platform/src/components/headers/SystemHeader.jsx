@@ -7,7 +7,8 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, Smartphone, Globe, ShieldCheck } from 'lucide-react'
+import { Bell, Search, User, LogOut, Settings, ChevronDown, X, Menu, PanelLeftClose, PanelLeftOpen, Smartphone, Globe, ShieldCheck } from 'lucide-react'
+import { useSidebarCollapsed } from '@nidus/shared/hooks/useSidebarCollapsed'
 import { supabase } from '../../services/supabaseClient'
 import { getAuthenticatedUser } from '@nidus/shared/utils/authSession'
 import { performLogout, getLogoutRedirectPath } from '../../services/authLogoutService'
@@ -24,6 +25,7 @@ import { getUserLanguage, updateUserLanguage } from '@nidus/shared/utils/userLan
 import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import GlobalSearchModal, { useGlobalSearchShortcut } from '../../modules/pmis-gaps/components/GlobalSearchModal'
 import { PROFILE_UPDATED_EVENT } from '../../services/userProfileService'
+import WorkspaceSwitcher from './WorkspaceSwitcher'
 
 function initialsFromFullName(name, email) {
   const trimmed = String(name || '').trim()
@@ -34,6 +36,11 @@ function initialsFromFullName(name, email) {
   }
   if (email) return String(email).substring(0, 2).toUpperCase()
   return 'U'
+}
+
+/** Normalise whitespace only — never shorten or strip titles from the profile full name. */
+function normalizePersonFullName(rawName) {
+  return String(rawName || '').trim().replace(/\s+/g, ' ')
 }
 
 export default function SystemHeader({
@@ -51,9 +58,11 @@ export default function SystemHeader({
   /** If set, shows "App install" in the user menu (PWA settings). */
   pwaSettingsPath = null,
   navLinks = [], // Array of navigation links: [{ label: 'Dashboard', path: '/dashboard' }, ...]
-  onSidebarToggle = null, // Optional sidebar toggle function for mobile
+  onSidebarToggle = null, // Mobile drawer. Desktop hide/show uses useSidebarCollapsed.
+  projectSelector = null, // Optional current-project control, shown on md+ between nav and search.
 }) {
   const navigate = useNavigate()
+  const { collapsed, toggleCollapsed } = useSidebarCollapsed()
   const location = useLocation()
   const { branding } = useBranding()
   const { languageCode, changeLanguage } = useLanguageContext()
@@ -84,6 +93,9 @@ export default function SystemHeader({
   const primaryRoleLabel = systemRoles[0]?.roles?.role_display_name
     || (projectRoles.length > 1 ? 'Multiple roles' : projectRoles[0]?.project_roles?.role_display_name)
     || 'Member'
+
+  // Header chip + dropdown show the profile Full Name exactly (whitespace normalised only).
+  const personFullName = normalizePersonFullName(displayName)
 
   useEffect(() => {
     initLanguage()
@@ -247,7 +259,7 @@ export default function SystemHeader({
 
   return (
     <header
-      className={`sticky top-0 z-50 ${headerBgClass} border-b ${borderColor} shadow-sm`}
+      className={`dark sticky top-0 z-50 ${headerBgClass} border-b ${borderColor} shadow-sm`}
       style={headerStyle}
     >
       <div className="px-3 sm:px-4 md:px-6 lg:px-8">
@@ -276,17 +288,27 @@ export default function SystemHeader({
           </div>
         )}
         
-        <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Left: Brand - Gradient text with Platform label */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Sidebar Toggle - Mobile only, if provided */}
+        <div className="flex items-center h-14 sm:h-16 gap-2 min-w-0">
+          {/* Left: Brand + top nav (packed left so the name chip has room) */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 min-w-0">
             {onSidebarToggle && (
               <button
-                onClick={onSidebarToggle}
-                className={`lg:hidden p-1.5 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
-                aria-label="Toggle sidebar"
+                type="button"
+                onClick={() => {
+                  if (window.matchMedia('(min-width: 1024px)').matches) toggleCollapsed()
+                  else onSidebarToggle()
+                }}
+                className={`p-1.5 text-gray-900 dark:text-white ${hoverBgClass} rounded-lg transition-colors`}
+                aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+                title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+                aria-pressed={collapsed}
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 lg:hidden" />
+                {collapsed ? (
+                  <PanelLeftOpen className="hidden lg:block w-5 h-5" />
+                ) : (
+                  <PanelLeftClose className="hidden lg:block w-5 h-5" />
+                )}
               </button>
             )}
             {/* Mobile Menu Toggle - Only show if navLinks exist and no sidebar toggle */}
@@ -302,7 +324,7 @@ export default function SystemHeader({
             )}
             <Link
               to={dashboardPath}
-              className="flex items-center gap-2 hover:opacity-90 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-90 transition-opacity flex-shrink-0"
             >
               {/* Brand logo or fallback gradient text */}
               {branding?.primary_logo_url ? (
@@ -333,33 +355,17 @@ export default function SystemHeader({
                 </div>
               )}
             </Link>
-          </div>
 
-          {/* Center: Search Bar and Navigation Links - Desktop */}
-          <div className="hidden lg:flex items-center gap-4 mx-4 flex-1">
-            {/* Search Bar — opens global command palette (GAP-02) */}
-            <div className="relative flex-1 max-w-md">
-              <button
-                type="button"
-                onClick={() => setGlobalSearchOpen(true)}
-                className="w-full flex items-center gap-2 pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:border-blue-500 transition-all text-left"
-                aria-label="Open global search (Ctrl+K)"
-              >
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                Search... <span className="ml-auto hidden xl:inline text-xs opacity-60">Ctrl+K</span>
-              </button>
-            </div>
-
-            {/* Navigation Links */}
+            {/* Navigation Links — sit with the brand (left), not eating the name chip */}
             {navLinks && navLinks.length > 0 && (
-              <nav className="flex items-center gap-1">
+              <nav className="hidden xl:flex items-center gap-0.5 flex-shrink-0 ml-1">
                 {navLinks.map((link, index) => {
                   const isActive = isActiveLink(link.path)
                   return (
                     <Link
                       key={index}
                       to={link.path}
-                      className={`px-3 xl:px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative ${
+                      className={`px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative whitespace-nowrap ${
                         isActive
                           ? 'text-blue-700 dark:text-white bg-blue-50 dark:bg-white/25 backdrop-blur-sm shadow-sm dark:shadow-md font-semibold border border-blue-100 dark:border-transparent'
                           : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10'
@@ -376,8 +382,27 @@ export default function SystemHeader({
             )}
           </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          {projectSelector && (
+            <div className="hidden md:flex items-center flex-1 min-w-0 max-w-md mx-2">{projectSelector}</div>
+          )}
+
+          {/* Flexible spacer + compact search — yields all leftover space */}
+          <div className="hidden lg:flex items-center flex-1 min-w-0 justify-end pr-2">
+            <div className="relative w-full max-w-[10rem] xl:max-w-[12rem]">
+              <button
+                type="button"
+                onClick={() => setGlobalSearchOpen(true)}
+                className="w-full flex items-center gap-2 pl-9 pr-2 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:border-blue-500 transition-all text-left"
+                aria-label="Open global search (Ctrl+K)"
+              >
+                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <span className="truncate">Search...</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Right: Actions + user — never compressed */}
+          <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
             {/* Search Toggle - Mobile/Tablet */}
             <button
               onClick={() => {
@@ -466,7 +491,7 @@ export default function SystemHeader({
                   setUserMenuOpen(false)
                   setLanguageMenuOpen(false)
                 }}
-                className={`hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm font-medium ${subtextColor} ${hoverBgClass} rounded-lg transition-colors max-w-[14rem]`}
+                className={`hidden lg:flex items-center gap-1.5 px-2 py-1.5 text-xs sm:text-sm font-medium ${subtextColor} ${hoverBgClass} rounded-lg transition-colors max-w-[9rem] xl:max-w-[11rem]`}
                 aria-label={`My role: ${primaryRoleLabel}`}
                 aria-expanded={rolesMenuOpen}
                 title={primaryRoleLabel}
@@ -509,20 +534,35 @@ export default function SystemHeader({
               )}
             </div>
 
+            {/* Workspace Switcher (v982 Phase 4) — renders nothing for a single-workspace user */}
+            <WorkspaceSwitcher
+              subtextColor={subtextColor}
+              hoverBgClass={hoverBgClass}
+              borderColor={borderColor}
+              headerBgClass={headerBgClass}
+              textColor={textColor}
+            />
+
             {/* User Profile Menu */}
-            <div className="relative user-menu-container">
+            <div className="relative user-menu-container flex items-center gap-1.5 sm:gap-2">
+              <UserAvatarBadge db={supabase} avatarPath={avatarPath} initials={userInitials} />
               <button
                 onClick={() => {
                   setUserMenuOpen(!userMenuOpen)
                   setMobileNavOpen(false)
                   setRolesMenuOpen(false)
                 }}
-                className={`flex items-center gap-1 sm:gap-2 p-1 sm:p-1.5 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
-                aria-label="User menu"
+                className={`flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors flex-shrink-0`}
+                aria-label={personFullName ? `User menu for ${personFullName}` : 'User menu'}
                 aria-expanded={userMenuOpen}
+                title={personFullName || undefined}
               >
-                <UserAvatarBadge db={supabase} avatarPath={avatarPath} initials={userInitials} />
-                <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform hidden sm:block ${userMenuOpen ? 'rotate-180' : ''}`} />
+                {personFullName ? (
+                  <span className={`hidden sm:inline text-xs sm:text-sm font-medium ${textColor} whitespace-nowrap flex-shrink-0`}>
+                    {personFullName}
+                  </span>
+                ) : null}
+                <ChevronDown className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform flex-shrink-0 ${userMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {userMenuOpen && (
@@ -530,8 +570,8 @@ export default function SystemHeader({
                   {/* User Info */}
                   {user && (
                     <div className={`px-4 py-3 border-b ${borderColor}`}>
-                      <p className={`text-sm font-medium ${textColor}`}>
-                        {displayName || 'User'}
+                      <p className={`text-sm font-medium ${textColor} break-words`}>
+                        {personFullName || displayName || 'User'}
                       </p>
                       <p className={`text-xs ${subtextColor} truncate`}>
                         {user.email}

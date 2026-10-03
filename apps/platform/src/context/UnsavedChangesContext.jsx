@@ -52,9 +52,32 @@ export function UnsavedChangesProvider({ children }) {
     setConfirmOpen(true)
   }, [])
 
+  // The dirty-state history trap adds an entry at the same URL, so a plain navigate(-1) or
+  // history.back() from the page only lands back on that entry and nothing visibly happens.
+  // Pop the trap first, then run the pending action once the browser has finished popping it.
+  const runAfterTrapPop = useCallback((fn) => {
+    const onPop = () => {
+      window.removeEventListener('popstate', onPop)
+      window.setTimeout(() => {
+        fn?.()
+        window.setTimeout(() => {
+          bypassRef.current = false
+        }, 50)
+      }, 0)
+    }
+    window.addEventListener('popstate', onPop)
+    window.history.back()
+  }, [])
+
   const runPendingAction = useCallback(() => {
     const action = pendingActionRef.current
     pendingActionRef.current = null
+    if (action && (action.type === 'callback' || action.type === 'back') && historyTrapRef.current) {
+      historyTrapRef.current = false
+      bypassRef.current = true
+      runAfterTrapPop(action.type === 'back' ? () => window.history.back() : action.fn)
+      return
+    }
     bypassRef.current = true
     try {
       if (!action) return

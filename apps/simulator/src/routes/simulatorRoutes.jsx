@@ -178,6 +178,8 @@ import {
   StakeholderAnalysisPage,
   StakeholderEngagementPage,
   CommunicationPlanPage,
+  CommunicationInformationOptionsPage,
+  CommunicationInformationOptionFormPage,
   StakeholderMonitoringPage,
   StakeholderAssessmentMatrixPage,
   StakeholdersAssessmentMatrixOnHold,
@@ -196,6 +198,8 @@ import {
   DefectDashboardPage,
   SimTestDashboard,
   SimTestSuites,
+  SimTestEnvironments,
+  SimTestEnvironmentFormPage,
   SimTestSuiteDetail,
   SimTestCases,
   SimTestCaseCreate,
@@ -210,10 +214,28 @@ import {
   BrandingSettings,
   BrandingHistory,
   PMOAdmin,
+  PmoConfigurationHome,
+  ProjectClassifications,
+  RiskCategoryCatalog,
+  RiskCategoryDetail,
+  OrganisationRegionalFormatSettingsPage,
+  ProjectRegionalFormatSettingsPage,
+  OrganisationAuthorities,
+  OrganisationApprovalChains,
+  RolesAndResponsibilities,
+  CapabilityProfilePicker,
+  MyWorkHome,
   ProjectTypes,
   ProjectStatuses,
   FundingSources,
   BudgetCategories,
+  AssignmentRoles,
+  TimesheetReviewReasons,
+  TimesheetWorkCategories,
+  TimesheetOvertimeTypes,
+  TimesheetSettings,
+  ProjectTimesheetSettings,
+  TimesheetOverviewReport,
   ManagerAssignments,
   AppointmentDashboard,
   MyAppointments,
@@ -251,6 +273,9 @@ import {
   CertificateAdmin,
   ScenarioAdmin,
   SimUserManagement,
+  SimDataManagementAdmin,
+  SimDataBreachRecordForm,
+  SimPrivacyCenter,
   ProjectCostManagement,
   ProjectBudgetBaseline,
   ProjectEVMPage,
@@ -324,6 +349,7 @@ import {
   PlanningIntelligenceDashboard,
   ScenarioList,
   PBSBuilder,
+  PBSNodeForm,
   PlanHealthDashboard,
   AIPlanGenerator,
   ExecutivePlanView,
@@ -592,6 +618,12 @@ import {
   FormTemplateAdmin,
   FormTemplateBuilder,
   ProjectMemberInvitation,
+  LocalRegisterListPage,
+  LocalRegisterForm,
+  LocalRegisterDetailPage,
+  RegisterDefinitionBuilder,
+  LocalRegistersIndexPage,
+  ManageLocalRegistersPage,
   Settings,
   PWASettings,
   PWAInstallPrompt,
@@ -666,6 +698,8 @@ import {
   PracticeDailyLog,
   PracticeDailyLogEntry,
   PracticeRiskRegister,
+  PracticeChangeManagement,
+  PracticeChangeRequestDetail,
   PracticeRiskDetail,
   PracticeRMSList,
   PracticeRMSCreate,
@@ -744,12 +778,16 @@ import {
   PracticeStakeholderMonitoring,
   PracticeStakeholderSEAM,
   PracticeStakeholderAssessmentMatrixPage,
+  PracticeStakeholderAssessmentMatrixFormPage,
   PracticeStakeholdersAssessmentMatrixOnHold,
   PracticeEngagementActionsPage,
   PracticeSaliencePage,
   PracticeStakeholdersOnHold,
   PracticeStakeholderCreatePage,
   PracticeTeams,
+  PracticeTeamCreate,
+  PracticeProjectFunctionalRolesPage,
+  PracticeProjectFunctionalRoleFromLibrary,
   SimMyTeam,
   PracticeGovernance,
   SimPortfolioCategories,
@@ -804,6 +842,7 @@ import {
   SimulatorPMInitiationProjectBrief,
   SimulatorPMInitiationPID,
   SimulatorPMInitiationBenefitsReviewPlan,
+  SimulatorPMInitiationDocumentSignatory,
   SimulatorPMDeliveryWorkPackages,
   SimulatorPMDeliveryProductDescription,
   SimulatorPMDeliveryProjectProductDescription,
@@ -841,12 +880,87 @@ import {
   RiskRegisterView,
   DocumentationAdminList,
   DocumentationAdminEditor,
+  IntegrationsHomePage,
+  IntegrationConfigPage,
+  AssumptionsListPage,
+  AssumptionDetailPage,
+  AssumptionForm,
+  ConstraintsListPage,
+  ConstraintDetailPage,
+  ConstraintForm,
+  MilestonesListPage,
+  MilestoneDetailPage,
+  MilestoneForm,
+  GovernanceActionsRegisterPage,
+  CostActualsListPage,
+  CostActualDetailPage,
+  CostActualForm,
+  UnifiedApprovalsRegisterPage,
+  SimProjectCalendarSettingsPage,
+  SimProjectCalendarExceptionsListPage,
+  SimProjectCalendarExceptionDetailPage,
 } from './routeCommon'
 
 
 export function SimulatorRouteElements() {
   return (
     <>
+                {/* v963 Phase 21 — Integrations.jsx/IntegrationConfig.jsx/IntegrationSync.jsx
+                    existed as files but were never routed anywhere (their own internal
+                    navigate() calls were also hardcoded to bare /integrations instead of
+                    /simulator/integrations — fixed alongside this route wiring). */}
+                <Route path="simulator/integrations" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <IntegrationsHomePage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/integrations/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <IntegrationConfigPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/integrations/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <IntegrationConfigPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/integrations/:id/sync" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <IntegrationSync />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 {/* Simulator Dashboard and App Routes */}
                 <Route path="simulator/dashboard" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -1221,6 +1335,100 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <ChangeLogPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* Local Register Engine (v931/v938) — generic list/create/view/edit for any
+                    system-defined or member-created local register, scoped to the practice
+                    hierarchy (sim.practice_portfolios/practice_programmes/practice_projects). */}
+                <Route path="simulator/local-registers" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegistersIndexPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/local-registers/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <RegisterDefinitionBuilder />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/local-registers/:registerId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegisterListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/local-registers/:registerId/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegisterForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/local-registers/:registerId/:recordId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegisterDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/local-registers/:registerId/:recordId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegisterForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/admin/local-registers" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ManageLocalRegistersPage />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -1755,6 +1963,10 @@ export function SimulatorRouteElements() {
                 <Route path="simulator/admin/certificates" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><CertificateAdmin /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/admin/scenarios" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><ScenarioAdmin /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/admin/users" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><SimUserManagement /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/admin/data-management" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><SimDataManagementAdmin /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/admin/data-management/breaches/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><SimDataBreachRecordForm /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/admin/data-management/breaches/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><SimDataBreachRecordForm /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/settings/privacy" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><SimPrivacyCenter /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 {/* v733: Documentation Manager (simulator) */}
                 <Route path="simulator/admin/documentation" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><DocumentationAdminList /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/admin/documentation/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><DocumentationAdminEditor /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
@@ -2101,6 +2313,45 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/practice-projects/:projectId/scope/pbs" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PBSBuilder />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/scope/pbs/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PBSNodeForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/scope/pbs/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PBSNodeForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/practice-projects/:projectId/schedule/management-plan" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -2173,6 +2424,72 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <SimGanttChartPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* Project Calendar (v963 Phase 4) */}
+                <Route path="simulator/practice-projects/:projectId/schedule/calendar" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimProjectCalendarSettingsPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimProjectCalendarExceptionsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimProjectCalendarExceptionDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions/:exceptionId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimProjectCalendarExceptionDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions/:exceptionId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimProjectCalendarExceptionDetailPage forceEdit />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -3081,6 +3398,34 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
       
+                {/* Practice Change Requests Routes */}
+                <Route path="simulator/practice-change-requests" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeChangeManagement />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-change-requests/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeChangeRequestDetail />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
                 {/* Practice Risk Register Routes */}
                 <Route path="simulator/practice-risk-register" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -3109,6 +3454,311 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
       
+                {/* Assumptions Register (v963 Phase 3) — bare route shows an inline project
+                    picker (AssumptionsListPage handles both cases), :projectId route is the
+                    normal case linked from a practice project's own pages. */}
+                <Route path="simulator/practice-projects/assumptions" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AssumptionsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/assumptions" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AssumptionsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/assumptions/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AssumptionForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/assumptions/:assumptionId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AssumptionDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/assumptions/:assumptionId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AssumptionForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
+                {/* Constraints Register (v1100) — same bare/:projectId picker shape as Assumptions. */}
+                <Route path="simulator/practice-projects/constraints" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ConstraintsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/constraints" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ConstraintsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/constraints/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ConstraintForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/constraints/:constraintId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ConstraintDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/constraints/:constraintId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ConstraintForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
+                {/* Milestone Register (v966 Phase 11) — bare route shows an inline project
+                    picker (MilestonesListPage handles both cases), :projectId route is the
+                    normal case linked from a practice project's own pages. */}
+                <Route path="simulator/practice-projects/milestones" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MilestonesListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/milestones" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MilestonesListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/milestones/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MilestoneForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/milestones/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MilestoneDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/milestones/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MilestoneForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
+                {/* Governance Action Register (v966 Phase 12) — read-only rollup, no create
+                    route (see governanceActionService.js). Mirrors the Unified Approvals
+                    register's route shape (simulator/pmo/approvals/register). */}
+                <Route path="simulator/pmo/governance-actions/register" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <GovernanceActionsRegisterPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
+                {/* Cost Actuals ledger (v963 Phase 6) */}
+                <Route path="simulator/practice-projects/cost-actuals" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CostActualsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/cost-actuals" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CostActualsListPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/cost-actuals/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CostActualForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/cost-actuals/:costActualId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CostActualDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/:projectId/cost-actuals/:costActualId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CostActualForm />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
+                {/* Unified Approvals register (v963 Phase 5) — read-only rollup, no create
+                    route (see unifiedApprovalsService.js). */}
+                <Route path="simulator/pmo/approvals/register" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <UnifiedApprovalsRegisterPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
                 {/* Practice RMS Routes */}
                 <Route path="simulator/practice-rms" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -4169,6 +4819,58 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/practice-testing/environments/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimTestEnvironmentFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-testing/environments/:environmentKey/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimTestEnvironmentFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-testing/environments/:environmentKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimTestEnvironmentFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-testing/environments" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimTestEnvironments />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/practice-testing/suites/:suiteId" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -4377,6 +5079,58 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/stakeholders/communication-options/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CommunicationInformationOptionFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/stakeholders/communication-options/:kind/:code/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CommunicationInformationOptionFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/stakeholders/communication-options/:kind/:code" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CommunicationInformationOptionFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/stakeholders/communication-options" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <CommunicationInformationOptionsPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/practice-stakeholders/communications" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -4406,6 +5160,45 @@ export function SimulatorRouteElements() {
                 <Route path="simulator/practice-stakeholders/seam" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <Navigate to="/simulator/practice-stakeholders/assessment-matrix" replace />
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-stakeholders/assessment-matrix/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeStakeholderAssessmentMatrixFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-stakeholders/assessment-matrix/view/:recordKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeStakeholderAssessmentMatrixFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-stakeholders/assessment-matrix/edit/:recordKey" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeStakeholderAssessmentMatrixFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
                   </Suspense>
                 } />
                 <Route path="simulator/practice-stakeholders/assessment-matrix" element={
@@ -4486,6 +5279,19 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/practice-teams/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeTeamCreate />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/practice-teams/my-team" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -4493,6 +5299,32 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <SimMyTeam />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-project-roles/from-library" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeProjectFunctionalRoleFromLibrary />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-project-roles" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticeProjectFunctionalRolesPage />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4560,6 +5392,20 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <SimulatorPMOLayout>
                             <SimulatorPMODashboard />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* v982 Phase 7 — Main Application Zones: "My Work" zone landing */}
+                <Route path="simulator/my-work" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <MyWorkHome />
                           </SimulatorPMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -4928,6 +5774,328 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                {/* v982 Phase 2 — PMO Configuration Zone (Simulator parity) */}
+                <Route path="simulator/pmo/configuration" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <PmoConfigurationHome />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* Reference Data — previously imported but never routed (gap found/fixed alongside Assignment Roles) */}
+                <Route path="simulator/pmo/project-types" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <ProjectTypes />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/project-statuses" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <ProjectStatuses />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/funding-sources" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <FundingSources />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/budget-categories" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <BudgetCategories />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/portfolio-categories" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <PortfolioCategories />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/assignment-roles" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <AssignmentRoles />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/timesheet-review-reasons" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <TimesheetReviewReasons />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/timesheet-work-categories" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <TimesheetWorkCategories />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/timesheet-overtime-types" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <TimesheetOvertimeTypes />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/timesheet-settings" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <TimesheetSettings />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/reports/timesheet-overview" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <TimesheetOverviewReport />
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/regional-format-settings" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrganisationRegionalFormatSettingsPage />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/project-setup/regional-format-settings" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <ProjectRegionalFormatSettingsPage />
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/project-setup/timesheet-settings" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <ProjectTimesheetSettings />
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/risk-categories" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RiskCategoryCatalog />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/risk-categories/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RiskCategoryDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/risk-categories/:code/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RiskCategoryDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/risk-categories/:code/subcategories/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RiskCategoryDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/risk-categories/:code/subcategories/:subCode/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RiskCategoryDetail />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/project-classifications" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <ProjectClassifications />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/authorities" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrganisationAuthorities />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/approval-chains" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <OrganisationApprovalChains />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/roles-responsibilities" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <RolesAndResponsibilities />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* v982 Phase 6 — Capability Profiles */}
+                <Route path="simulator/pmo/capability-profile" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMOLayout>
+                            <CapabilityProfilePicker />
+                          </SimulatorPMOLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/pmo/itto/templates" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -5189,6 +6357,32 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <SimulatorPMLayout>
                             <PBSBuilder />
+                          </SimulatorPMLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pm/planning/pbs/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMLayout>
+                            <PBSNodeForm />
+                          </SimulatorPMLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pm/planning/pbs/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMLayout>
+                            <PBSNodeForm />
                           </SimulatorPMLayout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -5725,6 +6919,19 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/pm/initiation/project-charter" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMLayout>
+                            <SimulatorPMInitiationProjectBrief />
+                          </SimulatorPMLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/pm/initiation/pid" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -5751,7 +6958,20 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
-      
+                <Route path="simulator/pm/initiation/document-signatory" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <SimulatorPMLayout>
+                            <SimulatorPMInitiationDocumentSignatory />
+                          </SimulatorPMLayout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+
                 {/* Simulator PM Delivery Routes */}
                 <Route path="simulator/pm/delivery/work-packages" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -6093,6 +7313,12 @@ export function SimulatorRouteElements() {
                   </Suspense>
                 } />
                 {V734RoleRouteElements()}
+                {/* v963 Phase 22 fix: PmisGapRouteElements/RecordLifecycleRouteElements were
+                    imported but never invoked here — every pmis-gaps route (OKR, Automations,
+                    Calendar, and all v963 features) was unreachable in the live Simulator app
+                    despite existing, being correctly built, and being linked from the sidebar. */}
+                {PmisGapRouteElements()}
+                {RecordLifecycleRouteElements()}
     </>
   )
 }

@@ -5,13 +5,13 @@
 
 import BriefStatusBadge from './BriefStatusBadge'
 
-export default function BriefHeader({ brief, project, mandate }) {
+export default function BriefHeader({ brief, project, mandate, documentTitle = 'Project Brief' }) {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
       <div className="flex justify-between items-start mb-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Project Brief: {brief?.brief_reference || 'Draft'}
+            {documentTitle}: {brief?.brief_reference || 'Draft'}
           </h1>
           {project && (
             <p className="text-lg text-gray-600 dark:text-gray-400">

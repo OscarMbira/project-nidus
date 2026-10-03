@@ -7,7 +7,7 @@
 
 import SystemHeader from './SystemHeader'
 
-export default function PlatformAppHeader({ onSidebarToggle = null }) {
+export default function PlatformAppHeader({ onSidebarToggle = null, projectSelector = null }) {
   // Professional navigation links for Platform
   const platformNavLinks = [
     { label: 'Dashboard', path: '/platform/dashboard' },
@@ -32,6 +32,7 @@ export default function PlatformAppHeader({ onSidebarToggle = null }) {
       pwaSettingsPath="/platform/pwa-settings"
       navLinks={platformNavLinks}
       onSidebarToggle={onSidebarToggle}
+      projectSelector={projectSelector}
     />
   )
 }

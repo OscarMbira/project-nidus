@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import RoleMenuCustomiser from '../../components/admin/RoleMenuCustomiser'
 import {
@@ -8,6 +8,7 @@ import {
 } from '../../services/menuManagementService'
 
 export default function PMORoleMenuManagement() {
+  const navigate = useNavigate()
   const [cap, setCap] = useState(null)
   const [denied, setDenied] = useState(false)
 
@@ -35,13 +36,14 @@ export default function PMORoleMenuManagement() {
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           PMO Admin or System Admin access is required.
         </p>
-        <Link
-          to="/platform/dashboard"
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
           className="mt-6 inline-flex items-center gap-2 text-indigo-600 hover:underline dark:text-indigo-400"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to dashboard
-        </Link>
+        </button>
       </div>
     )
   }

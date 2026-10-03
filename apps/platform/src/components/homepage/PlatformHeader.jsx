@@ -11,7 +11,7 @@ import ThemeToggle from '../ThemeToggle';
 import Button from '../ui/Button';
 import { supabase } from '../../services/supabaseClient';
 
-const PlatformHeader = () => {
+const PlatformHeader = ({ hideAuthButtons = false }) => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -144,33 +144,37 @@ const PlatformHeader = () => {
             Request Demo
           </Link>
           <ThemeToggle />
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            className="whitespace-nowrap bg-transparent shadow-lg transition-colors"
-            style={{ borderColor: '#A8DADC', color: '#A8DADC' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(168, 218, 220, 0.1)';
-              e.currentTarget.style.borderColor = '#FFFFFF';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = '#A8DADC';
-            }}
-          >
-            <Link to="/platform/login">Login</Link>
-          </Button>
-          <Button
-            size="sm"
-            asChild
-            className="whitespace-nowrap text-white shadow-lg transition-colors"
-            style={{ background: '#E63946' }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#d62839'}
-            onMouseLeave={(e) => e.currentTarget.style.background = '#E63946'}
-          >
-            <Link to="/platform/register">Sign Up</Link>
-          </Button>
+          {!hideAuthButtons && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="whitespace-nowrap bg-transparent shadow-lg transition-colors"
+                style={{ borderColor: '#A8DADC', color: '#A8DADC' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(168, 218, 220, 0.1)';
+                  e.currentTarget.style.borderColor = '#FFFFFF';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.borderColor = '#A8DADC';
+                }}
+              >
+                <Link to="/platform/login">Login</Link>
+              </Button>
+              <Button
+                size="sm"
+                asChild
+                className="whitespace-nowrap text-white shadow-lg transition-colors"
+                style={{ background: '#E63946' }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#d62839'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#E63946'}
+              >
+                <Link to="/platform/register">Sign Up</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

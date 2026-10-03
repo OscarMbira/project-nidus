@@ -164,6 +164,13 @@ const PM_SHARED_PLATFORM_PREFIXES = [
   '/platform/releases',
   '/platform/forms',
   '/platform/authorisation',
+  // v966i's plat_pm_benefits Core PM taxonomy category (RAID/Testing/etc.'s sibling) links here
+  // — was missing from this list AND wrongly present in PMO_ONLY_PLATFORM_PREFIXES below, so a
+  // Project Manager clicking their own "Benefits" sidebar item got force-switched onto the PMO
+  // sidebar (isPmoOnlyPlatformPath short-circuits resolveMenuLayoutScope to 'pmo' before role-
+  // based resolution ever runs) — found live 2026-09-11, same bug class as the session-opening
+  // Business Case stale-route incident.
+  '/platform/benefits',
   '/app/project-users',
   '/app/project-members',
 ]
@@ -172,7 +179,11 @@ const PMO_ONLY_PLATFORM_PREFIXES = [
   '/pmo/',
   '/platform/portfolio',
   '/platform/programme',
-  '/platform/benefits',
+  // '/platform/benefits' intentionally NOT here — see the comment on PM_SHARED_PLATFORM_PREFIXES
+  // above. Benefits is shared: a Project Manager reaches it via their own Core PM taxonomy item
+  // and must keep the PM sidebar; a PMO user reaches the same URL family for portfolio/programme
+  // rollups and correctly gets 'pmo' via role-based resolution instead (resolveMenuLayoutScope's
+  // primaryFromRoles check, which now actually runs for this path since it's no longer here).
   '/platform/pmo-admin',
   '/platform/subscription',
   '/platform/organisation',
@@ -212,18 +223,27 @@ export function resolveMenuLayoutScope(layoutScopeProp, pathname = '', roleNames
     return 'pm'
   }
 
-  if (isPmoOnlyPlatformPath(pathname)) {
-    persistMenuLayoutScope('pmo')
-    return 'pmo'
-  }
-
-  // Prefer explicit arg; otherwise reuse whatever useMenu already cached so Layout can pick
-  // the correct shell before (or without) being passed role names.
+  // Resolve role truth (DB-backed: user_roles/roles, via cacheUserMenuRoles) BEFORE consulting
+  // the hardcoded PMO_ONLY_PLATFORM_PREFIXES list below — a static path list must never silently
+  // outrank what the user's actual role says. Found live 2026-09-11: /platform/benefits was
+  // hardcoded PMO-only, so a Project Manager clicking their own Core PM "Benefits" sidebar item
+  // got force-switched onto the PMO shell despite their role clearly being 'pm'. Prefer explicit
+  // arg; otherwise reuse whatever useMenu already cached so Layout can pick the correct shell
+  // before (or without) being passed role names.
   const cachedNames = _cachedUserMenuRoles.roleNames
   const names = Array.isArray(roleNames)
     ? roleNames
     : (Array.isArray(cachedNames) && cachedNames.length ? cachedNames : [])
   const primaryFromRoles = names.length ? resolvePrimaryLayoutScopeFromRoles(names) : null
+
+  // The hardcoded list still applies for genuinely PMO-exclusive admin/infrastructure routes
+  // (subscription, pmo-admin, organisation settings, etc. — pages with no menu_items/role-driven
+  // counterpart at all) and for role-ambiguous visits, but a confirmed 'pm' role always wins.
+  if (isPmoOnlyPlatformPath(pathname) && primaryFromRoles !== 'pm') {
+    persistMenuLayoutScope('pmo')
+    return 'pmo'
+  }
+
   if (primaryFromRoles === 'pm') {
     persistMenuLayoutScope('pm')
     return 'pm'

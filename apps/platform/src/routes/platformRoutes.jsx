@@ -2,7 +2,7 @@
 import { Route, Navigate, Routes, Outlet } from 'react-router-dom'
 import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
-import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
+import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
 import { PmoFederated } from './PmoFederatedOutlet.jsx'
@@ -43,6 +43,8 @@ import {
   RequirementDetailPage,
   TraceabilityMatrixPage,
   WBSBuilderPage,
+  DeliverableRegisterListPage,
+  DeliverableRegisterFormPage,
   ScheduleManagementPlanPage,
   ActivityListPage,
   ActivityDetailPage,
@@ -77,6 +79,7 @@ import {
   SubmitFeedback,
   PMODashboard,
   PMDashboard,
+  ProjectManagerHome,
   PMOLayout,
   PMLayout,
   PMOGovernanceMandateTemplate,
@@ -114,6 +117,7 @@ import {
   PMInitiationProjectBrief,
   PMInitiationPID,
   PMInitiationBenefitsReviewPlan,
+  PMInitiationDocumentSignatory,
   PMDeliveryWorkPackages,
   PMDeliveryProductDescription,
   PMDeliveryProjectProductDescription,
@@ -133,6 +137,12 @@ import {
   PMClosureEndProjectReport,
   Dashboard,
   Teams,
+  TeamCreate,
+  TeamDetail,
+  TeamAllocationHistory,
+  ProjectFunctionalRolesPage,
+  ProjectFunctionalRoleCreate,
+  ProjectFunctionalRoleFromLibrary,
   MyTeam,
   Governance,
   Portfolio,
@@ -173,24 +183,36 @@ import {
   StakeholderFormPage,
   StakeholderProfilePage,
   StakeholderAnalysisPage,
+  StakeholderAnalysisFormPage,
   StakeholderEngagementPage,
+  EngagementPlanFormPage,
   CommunicationPlanPage,
+  CommunicationPlanFormPage,
+  CommunicationPlanAudiencePage,
+  CommunicationInformationOptionsPage,
+  CommunicationInformationOptionFormPage,
   StakeholderMonitoringPage,
   StakeholderAssessmentMatrixPage,
+  StakeholderAssessmentMatrixFormPage,
   StakeholdersAssessmentMatrixOnHold,
   TestDashboard,
   TestSuites,
   TestSuiteDetail,
+  TestSuiteFormPage,
+  TestEnvironments,
+  TestEnvironmentFormPage,
   TestCases,
   TestCaseCreate,
   TestCaseDetail,
   TestCaseBulkUpload,
   TestRuns,
+  TestRunEditor,
   TestRunDetail,
   TestRunExecute,
   DefectListPage,
   DefectDetailPage,
   DefectDashboardPage,
+  TestEvidencePage,
   SimTestDashboard,
   SimTestSuites,
   SimTestSuiteDetail,
@@ -208,8 +230,33 @@ import {
   BrandingHistory,
   PMOAdmin,
   PmoAdminUserManagement,
+  DataManagementAdmin,
+  DataBreachRecordForm,
+  PrivacyCenter,
+  PortfolioMembersPage,
+  ProgrammeMembersPage,
+  MyWorkHome,
+  PortfolioManagerHome,
+  ProgrammeManagerHome,
+  PmoConfigurationHome,
+  ProjectClassifications,
+  RiskCategoryCatalog,
+  RiskCategoryDetail,
+  OrganisationRegionalFormatSettingsPage,
+  ProjectRegionalFormatSettingsPage,
+  OrganisationAuthorities,
+  OrganisationApprovalChains,
+  RolesAndResponsibilities,
+  CapabilityProfilePicker,
   ProjectTypes,
   ProjectStatuses,
+  AssignmentRoles,
+  TimesheetReviewReasons,
+  TimesheetWorkCategories,
+  TimesheetOvertimeTypes,
+  TimesheetSettings,
+  ProjectTimesheetSettings,
+  TimesheetOverviewReport,
   FundingSources,
   BudgetCategories,
   ManagerAssignments,
@@ -252,6 +299,25 @@ import {
   ScenarioAdmin,
   SimUserManagement,
   ProjectCostManagement,
+  ProjectBudgetPage,
+  ProjectDetailsPage,
+  ProjectCharterList,
+  ProjectCharterForm,
+  ProjectCharterView,
+  ProjectOrgStructurePage,
+  ProjectContactsPage,
+  ProjectContactsBulkUploadPage,
+  GovernanceStructurePage,
+  SteeringCommitteePage,
+  ProjectBoardPage,
+  GovernanceMembersBulkUploadPage,
+  GovernanceMeetingCalendarPage,
+  CriticalPathPage,
+  LookAheadPlanPage,
+  ScheduleVariancePage,
+  PlanningDependenciesPage,
+  PlanningCalendarsPage,
+  PlanningBaselinesPage,
   ProjectBudgetBaseline,
   ProjectEVMPage,
   ProjectsEVMLandingPage,
@@ -326,6 +392,7 @@ import {
   PlanningIntelligenceDashboard,
   ScenarioList,
   PBSBuilder,
+  PBSNodeForm,
   PlanHealthDashboard,
   AIPlanGenerator,
   ExecutivePlanView,
@@ -374,6 +441,7 @@ import {
   ProjectTemplatesEntry,
   OrganisationalTemplatesEntry,
   ProjectDocumentsEntry,
+  DocumentVersionHistoryPage,
   DocumentOversightPortfolioPage,
   DocumentOversightProgrammePage,
   DocumentOversightPmoPage,
@@ -471,6 +539,8 @@ import {
   EndProjectReportView,
   EndProjectReportWizard,
   EPRComparisonView,
+  ProjectArchiveListPage,
+  ProjectArchiveItemForm,
   StageBoundaries,
   EndStageReportView,
   EndStageReportCreate,
@@ -485,6 +555,7 @@ import {
   HighlightReportEdit,
   AcceptanceTestingPage,
   QMSView,
+  NonConformanceRegisterPage,
   QMSList,
   QMSTemplates,
   RMSView,
@@ -528,20 +599,37 @@ import {
   KanbanBoard,
   MetricsDashboard,
   Resources,
+  ResourceCalendarOverviewPage,
+  ResourceCalendarPage,
+  ResourceCalendarEntryPage,
   ResourceCapacity,
+  CrossProjectResources,
+  ResourceUtilization,
+  ResourceForecasts,
   ResourceDetail,
+  ResourceEdit,
+  ResourceAssignmentEdit,
   ResourceConflicts,
   ReportBuilder,
   AnalyticsDashboard,
+  ProjectStatusReportPage,
+  ExecutiveReportPage,
+  ScheduleReportPage,
+  CostReportPage,
+  WorkPlanVarianceReport,
   Benefits,
   BenefitsRegisterPage,
   BenefitsRealizationPage,
   BenefitMeasurementsPage,
+  BenefitRealizationReports,
+  BenefitRealizationReportForm,
   BenefitCreatePage,
   BenefitDetailPage,
   BenefitsReviewPlan,
   Dependencies,
   DependencyCreatePage,
+  DependencyRecordPage,
+  ExternalDependencyCataloguePage,
   DependencyMap,
   DependencyImpacts,
   BenefitsRealization,
@@ -581,6 +669,8 @@ import {
   EmailSettings,
   EmailSenderProfiles,
   ChangeLogPage,
+  ChangeManagementPage,
+  ChangeRequestDetailPage,
   WorkAuthorisationListPage,
   WorkAuthorisationDraftsPage,
   WorkAuthorisationCreatePage,
@@ -603,6 +693,12 @@ import {
   FormTemplateAdmin,
   FormTemplateBuilder,
   ProjectMemberInvitation,
+  LocalRegisterListPage,
+  LocalRegisterForm,
+  LocalRegisterDetailPage,
+  RegisterDefinitionBuilder,
+  LocalRegistersIndexPage,
+  ManageLocalRegistersPage,
   Settings,
   PWASettings,
   PWAInstallPrompt,
@@ -755,12 +851,16 @@ import {
   PracticeStakeholderMonitoring,
   PracticeStakeholderSEAM,
   PracticeStakeholderAssessmentMatrixPage,
+  PracticeStakeholderAssessmentMatrixFormPage,
   PracticeStakeholdersAssessmentMatrixOnHold,
   PracticeEngagementActionsPage,
   PracticeSaliencePage,
   PracticeStakeholdersOnHold,
   PracticeStakeholderCreatePage,
   PracticeTeams,
+  PracticeTeamCreate,
+  PracticeProjectFunctionalRolesPage,
+  PracticeProjectFunctionalRoleFromLibrary,
   SimMyTeam,
   PracticeGovernance,
   SimPortfolioCategories,
@@ -850,13 +950,90 @@ import {
   LessonsReportEdit,
   LessonsReportView,
   LessonsReportsList,
-  RiskRegisterView
+  RiskRegisterView,
+  IntegrationsHomePage,
+  IntegrationConfigPage,
+  IntegrationSyncPage,
+  ProjectCalendarSettingsPage,
+  ProjectCalendarExceptionsListPage,
+  ProjectCalendarExceptionDetailPage,
+  AssumptionsListPage,
+  AssumptionDetailPage,
+  AssumptionForm,
+  ConstraintsListPage,
+  ConstraintDetailPage,
+  ConstraintForm,
+  MilestonesListPage,
+  MilestoneDetailPage,
+  MilestoneForm,
+  GovernanceActionsRegisterPage,
+  CostActualsListPage,
+  CostActualDetailPage,
+  CostActualForm,
+  UnifiedApprovalsRegisterPage
 } from './routeCommon'
 
 
 export function PlatformRouteElements() {
   return (
     <>
+                {/* v963 Phase 21 — Integrations.jsx/IntegrationConfig.jsx/IntegrationSync.jsx
+                    existed as files but were never routed anywhere. They call navigate('/integrations'...)
+                    with absolute paths internally, so these must be true root-level routes, not
+                    nested under platform/* — sibling to it in this same fragment, matching the
+                    literal /integrations/* URL space. */}
+                <Route path="integrations" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <Layout>
+                            <IntegrationsHomePage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="integrations/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <Layout>
+                            <IntegrationConfigPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="integrations/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <Layout>
+                            <IntegrationConfigPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="integrations/:id/sync" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute>
+                          <Layout>
+                            <IntegrationSyncPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 {/* Platform App routes with providers - lazy loaded */}
                 <Route path="platform/*" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -869,6 +1046,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <PlatformDashboard />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v982 Phase 7 — Main Application Zones: "My Work" zone landing */}
+                              <Route path="my-work" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyWorkHome />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1176,6 +1361,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="documents/history" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DocumentVersionHistoryPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               {/* v897 — Document Oversight: read-only cross-project register for
                                   Portfolio/Programme/PMO roles, scoped to their own branch. */}
                               <Route path="portfolio/document-oversight" element={
@@ -1345,24 +1537,38 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="teams" element={
+                              <Route path="project-roles/create" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <Teams />
+                                    <ProjectFunctionalRoleCreate />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="teams/:id" element={
+                              <Route path="project-roles/from-library" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <Teams />
+                                    <ProjectFunctionalRoleFromLibrary />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-roles" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectFunctionalRolesPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
                               <Route path="teams/create" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <Teams />
+                                    <TeamCreate />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="my-team" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyTeam />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1370,6 +1576,34 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <MyTeam />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/:id/allocation-history" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TeamAllocationHistory />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TeamDetail mode="edit" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TeamDetail mode="view" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="teams" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <Teams />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1443,6 +1677,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="portfolio/:portfolioId/members" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PortfolioMembersPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="portfolio/dashboard" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -1510,6 +1751,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProgrammeDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="programme/:programmeId/members" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProgrammeMembersPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1723,10 +1971,45 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="stakeholders/analysis/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <StakeholderAnalysisFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/analysis/edit/:analysisId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <StakeholderAnalysisFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="stakeholders/analysis" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <StakeholderAnalysisPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/assessment-matrix/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <StakeholderAssessmentMatrixFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/assessment-matrix/view/:recordKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <StakeholderAssessmentMatrixFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/assessment-matrix/edit/:recordKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <StakeholderAssessmentMatrixFormPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1744,10 +2027,87 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="stakeholders/engagement/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <EngagementPlanFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/engagement/view/:engagementId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <EngagementPlanFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/engagement/edit/:engagementId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <EngagementPlanFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="stakeholders/engagement" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <StakeholderEngagementPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communication-options/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationInformationOptionFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communication-options/:kind/:code/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationInformationOptionFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communication-options/:kind/:code" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationInformationOptionFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communication-options" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationInformationOptionsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communications/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationPlanFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communications/:planId/stakeholders" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationPlanAudiencePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communications/view/:planId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationPlanFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="stakeholders/communications/edit/:planId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CommunicationPlanFormPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1779,6 +2139,20 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="testing/suites/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestSuiteFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/suites/:suiteId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestSuiteFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="testing/suites/:suiteId" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -1800,6 +2174,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="testing/cases/:caseId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestCaseDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="testing/cases/:caseId" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -1818,6 +2199,20 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <TestRuns />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/runs/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestRunEditor />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/runs/:runId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestRunEditor />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1853,6 +2248,41 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <DefectListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/environments/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestEnvironmentFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/environments/:environmentKey/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestEnvironmentFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/environments/:environmentKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestEnvironmentFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/environments" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestEnvironments />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="testing/evidence" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TestEvidencePage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1892,10 +2322,45 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="pmo-admin/settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PMOAdmin />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/data-management" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DataManagementAdmin />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/data-management/breaches/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DataBreachRecordForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/data-management/breaches/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DataBreachRecordForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="pmo-admin/users" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <PmoAdminUserManagement />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/local-registers" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ManageLocalRegistersPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -1917,6 +2382,41 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectStatuses />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/assignment-roles" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <AssignmentRoles />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/timesheet-review-reasons" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TimesheetReviewReasons />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/timesheet-work-categories" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TimesheetWorkCategories />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/timesheet-overtime-types" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TimesheetOvertimeTypes />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/timesheet-settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TimesheetSettings />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -2011,6 +2511,99 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* v982 Phase 2 — PMO Configuration Zone */}
+                              <Route path="pmo-admin/configuration" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PmoConfigurationHome />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/regional-format-settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationRegionalFormatSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="organisation/regional-format-settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationRegionalFormatSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/project-classifications" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectClassifications />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/risk-categories" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RiskCategoryCatalog />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/risk-categories/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RiskCategoryDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/risk-categories/:code/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RiskCategoryDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/risk-categories/:code/subcategories/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RiskCategoryDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/risk-categories/:code/subcategories/:subCode/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RiskCategoryDetail />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/authorities" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationAuthorities />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/approval-chains" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <OrganisationApprovalChains />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="pmo-admin/roles-responsibilities" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RolesAndResponsibilities />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v982 Phase 6 — Capability Profiles */}
+                              <Route path="pmo-admin/capability-profile" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CapabilityProfilePicker />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="reports" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2096,10 +2689,255 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* Local Register Engine (v931) — generic list/create/view/edit for
+                                  any system-defined or member-created local register. */}
+                              <Route path="local-registers" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegistersIndexPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="local-registers/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <RegisterDefinitionBuilder />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="local-registers/:registerId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegisterListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="local-registers/:registerId/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegisterForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="local-registers/:registerId/:recordId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegisterDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="local-registers/:registerId/:recordId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegisterForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:projectId/costs" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectCostManagement />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/budget" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectBudgetPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Flat, id-less route for sidebar access from /pm/* pages (no project
+                                  path segment there) — resolveMenuRoutePath() can't substitute
+                                  :projectId when the CURRENT page's own URL has no id in its path
+                                  (e.g. /pm/dashboard), so the menu_item points here instead;
+                                  ProjectBudgetPage resolves the project via usePlatformProjectId()'s
+                                  CurrentProjectContext fallback either way. */}
+                              <Route path="budget" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectBudgetPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1020: Project Setup taxonomy expansion — flat routes, same
+                                  usePlatformProjectId() resolution pattern as ProjectBudgetPage above. */}
+                              <Route path="project-details" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectDetailsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-setup/regional-format-settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectRegionalFormatSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-setup/timesheet-settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectTimesheetSettings />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1024: Scope & Deliverables — flat routes + usePlatformProjectId */}
+                              <Route path="scope/statement" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ScopeStatementPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="scope/wbs" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <WBSBuilderPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="scope/pbs" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PBSBuilder />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="scope/pbs/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PBSNodeForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="scope/pbs/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PBSNodeForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="deliverable-register" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DeliverableRegisterListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="deliverable-register/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DeliverableRegisterFormPage mode="create" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="deliverable-register/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DeliverableRegisterFormPage mode="view" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="deliverable-register/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DeliverableRegisterFormPage mode="edit" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-charter" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCharterList />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-charter/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCharterForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-charter/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCharterView />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-charter/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCharterForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-team/team-structure" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectOrgStructurePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-team/org-structure" element={
+                                <Navigate to="/platform/project-team/team-structure" replace />
+                              } />
+                              <Route path="project-contacts/bulk-upload" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectContactsBulkUploadPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="project-contacts" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectContactsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="governance-structure" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GovernanceStructurePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="governance/steering-committee" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <SteeringCommitteePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="governance/steering-committee/bulk-upload" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GovernanceMembersBulkUploadPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="governance/project-board" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectBoardPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="governance/project-board/bulk-upload" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GovernanceMembersBulkUploadPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="governance/meeting-calendar" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GovernanceMeetingCalendarPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -2118,6 +2956,15 @@ export function PlatformRouteElements() {
                                 </Suspense>
                               } />
                               <Route path="projects/:projectId/evm" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectEVMPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1035: flat sibling for sidebar access from /pm/* — ProjectEVMPage
+                                  now resolves projectId via usePlatformProjectId() */}
+                              <Route path="evm" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectEVMPage />
@@ -2486,6 +3333,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="settings/privacy" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PrivacyCenter />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="pwa-settings" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2624,6 +3478,27 @@ export function PlatformRouteElements() {
                                 </Suspense>
                               } />
                               <Route path="projects/:projectId/brief/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectBriefEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/charter/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectBriefCreate />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/charter/view" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectBriefView />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/charter/edit" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectBriefEdit />
@@ -3348,6 +4223,108 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* v1025: flat, id-less siblings for sidebar access from /pm/* (Planning
+                                  group) — same pattern as ProjectBudgetPage; these 3 page components
+                                  already resolve projectId via usePlatformProjectId(). */}
+                              <Route path="schedule/activities" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ActivityListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="schedule/dependencies" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ActivitySequencingPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="schedule/gantt" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GanttChartPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="schedule/critical-path" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CriticalPathPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="schedule/look-ahead" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LookAheadPlanPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="schedule/variance" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ScheduleVariancePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="planning/dependencies" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PlanningDependenciesPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="planning/calendars" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PlanningCalendarsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="planning/baselines" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <PlanningBaselinesPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Project Calendar (v963 Phase 4) */}
+                              <Route path="projects/:projectId/schedule/calendar" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCalendarSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/schedule/calendar/exceptions" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCalendarExceptionsListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/schedule/calendar/exceptions/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCalendarExceptionDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/schedule/calendar/exceptions/:exceptionId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCalendarExceptionDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/schedule/calendar/exceptions/:exceptionId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectCalendarExceptionDetailPage forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               {/* End Project Report Routes */}
                               <Route path="projects/:projectId/closure" element={
                                 <Suspense fallback={<LoadingFallback />}>
@@ -3384,6 +4361,34 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="closure/archive" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectArchiveListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="closure/archive/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectArchiveItemForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="closure/archive/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectArchiveItemForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="closure/archive/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectArchiveItemForm forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="ppd/acceptance" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3395,6 +4400,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <QMSView />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1036: Non-Conformance Register — real table/service, zero prior UI */}
+                              <Route path="quality/non-conformance" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <NonConformanceRegisterPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3430,6 +4443,140 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <RAIDLog />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Assumptions Register (v963 Phase 3) */}
+                              <Route path="assumptions" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <AssumptionsListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="assumptions/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <AssumptionForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="assumptions/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <AssumptionDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="assumptions/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <AssumptionForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Constraints Register (v1100) */}
+                              <Route path="constraints" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConstraintsListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="constraints/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConstraintForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="constraints/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConstraintDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="constraints/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConstraintForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Milestone Register (v966 Phase 11) */}
+                              <Route path="milestones" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MilestonesListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="milestones/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MilestoneForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="milestones/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MilestoneDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="milestones/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MilestoneForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Governance Action Register (v966 Phase 12) — read-only rollup,
+                                  no create route (see governanceActionService.js). */}
+                              <Route path="governance-actions" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <GovernanceActionsRegisterPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Cost Actuals ledger (v963 Phase 6) */}
+                              <Route path="cost-actuals" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CostActualsListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="cost-actuals/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CostActualForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="cost-actuals/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CostActualDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="cost-actuals/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CostActualForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Unified Approvals register (v963 Phase 5) — read-only rollup,
+                                  no create route (see unifiedApprovalsService.js). */}
+                              <Route path="pmo/approvals/register" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <UnifiedApprovalsRegisterPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3496,7 +4643,7 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="resources" element={
+                              <Route path="resources/directory" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <Resources />
@@ -3507,6 +4654,84 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ResourceCapacity />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/calendar" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceCalendarOverviewPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1034: Resource Plan (Demand/Supply/Skills/Forecast) — real page, never routed */}
+                              <Route path="resources/plan" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceForecasts />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/cross-project" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CrossProjectResources />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/utilization" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceUtilization />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/:id/assignments/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceAssignmentEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/:id/assignments/:assignmentId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceAssignmentEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/:id/calendar" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceCalendarPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/:id/calendar/entry/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceCalendarEntryPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="resources/:id/calendar/entry/:entryId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ResourceCalendarEntryPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3531,10 +4756,53 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="reports/timesheet-overview" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TimesheetOverviewReport />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="reports/builder" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ReportBuilder />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1055: Reports taxonomy expansion — 4 new dedicated report pages */}
+                              <Route path="reports/status" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectStatusReportPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="reports/executive" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ExecutiveReportPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="reports/schedule" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ScheduleReportPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="reports/cost" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <CostReportPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="reports/work-plan-variance" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <WorkPlanVarianceReport />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3594,6 +4862,34 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="benefits/realization-reports" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BenefitRealizationReports />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="benefits/realization-reports/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BenefitRealizationReportForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="benefits/realization-reports/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BenefitRealizationReportForm />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="benefits/realization-reports/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BenefitRealizationReportForm forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:projectId/benefits/review-plan" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3601,6 +4897,14 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="dependency-parties" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ExternalDependencyCataloguePage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="external-dependencies" element={<Navigate to="/platform/dependency-parties" replace />} />
                               <Route path="dependencies" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3633,6 +4937,20 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <DependencyImpacts />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="dependencies/:dependencyKey/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DependencyRecordPage mode="edit" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="dependencies/:dependencyKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <DependencyRecordPage mode="view" />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3805,6 +5123,22 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* v1032: Change Control taxonomy expansion — hub (Requests/Assessment)
+                                  + per-request detail (Assessment/Decisions/Implementation tabs) */}
+                              <Route path="change-requests" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ChangeManagementPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="change-requests/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ChangeRequestDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="work-authorisations" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3879,45 +5213,48 @@ export function PlatformRouteElements() {
                               <Route path="admin/documentation/edit/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><DocumentationAdminEditor /></ProtectedRoute></Suspense>} />
       
                               {/* v675: Executive Dashboard */}
-                              <Route path="platform/executive/dashboard" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><ExecutiveDashboard /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="executive/dashboard" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><ExecutiveDashboard /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Subscription */}
-                              <Route path="platform/subscription" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/subscription/upgrade" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/subscription/billing-history" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/subscription/payment-methods" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="subscription" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                              <Route path="subscription/upgrade" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                              <Route path="subscription/billing-history" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                              <Route path="subscription/payment-methods" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Organisation Profile */}
-                              <Route path="platform/organisation/profile" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><OrganisationProfile /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="organisation/profile" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><OrganisationProfile /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Stage Gate Reviews */}
-                              <Route path="platform/stage-gates" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateList /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/stage-gates/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateForm /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/stage-gates/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateView /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/stage-gates/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateForm /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="stage-gates" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateList /></ProtectedRoute></Suspense>} />
+                              <Route path="stage-gates/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateForm /></ProtectedRoute></Suspense>} />
+                              <Route path="stage-gates/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateView /></ProtectedRoute></Suspense>} />
+                              <Route path="stage-gates/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><StageGateForm /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Governance Framework */}
-                              <Route path="platform/governance/framework" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkList /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/governance/framework/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkForm /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/governance/framework/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkForm /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="governance/framework" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkList /></ProtectedRoute></Suspense>} />
+                              <Route path="governance/framework/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkForm /></ProtectedRoute></Suspense>} />
+                              <Route path="governance/framework/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceFrameworkForm /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Policies & Compliance */}
-                              <Route path="platform/governance/policies" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceList /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/governance/policies/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceForm /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/governance/policies/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceView /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/governance/policies/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceForm /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="governance/policies" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceList /></ProtectedRoute></Suspense>} />
+                              <Route path="governance/policies/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceForm /></ProtectedRoute></Suspense>} />
+                              <Route path="governance/policies/:id" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceView /></ProtectedRoute></Suspense>} />
+                              <Route path="governance/policies/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><PoliciesComplianceForm /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Intelligence & Governance Rules */}
                               <Route path="pmo/planning/intelligence-rules" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><IntelligenceRulesPage /></ProtectedRoute></Suspense>} />
                               <Route path="pmo/planning/governance-rules" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><GovernanceRulesConfigPage /></ProtectedRoute></Suspense>} />
-      
+
                               {/* v675: Custom Metrics */}
-                              <Route path="platform/analytics/custom-metrics" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><CustomMetricsPage /></ProtectedRoute></Suspense>} />
-      
+                              <Route path="analytics/custom-metrics" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><CustomMetricsPage /></ProtectedRoute></Suspense>} />
+
                               {/* v675: Workstream Plans */}
-                              <Route path="platform/workstream-plans" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanList /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/workstream-plans/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanForm /></ProtectedRoute></Suspense>} />
-                              <Route path="platform/workstream-plans/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanForm /></ProtectedRoute></Suspense>} />
+                              <Route path="workstream-plans" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanList /></ProtectedRoute></Suspense>} />
+                              <Route path="workstream-plans/create" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanForm /></ProtectedRoute></Suspense>} />
+                              <Route path="workstream-plans/:id/edit" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><WorkstreamPlanForm /></ProtectedRoute></Suspense>} />
+
+                              {/* GAP-12 Vendors / Vendor Performance — sidebar URLs are /platform/pm/procurement/* */}
+                              {PmisGapPlatformNestedRouteElements()}
       
                             </Routes>
                           </Layout>
@@ -4023,7 +5360,11 @@ export function PlatformRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute>
-                          <PMOLayout><Outlet /></PMOLayout>
+                          <PMOLayout>
+                            <Suspense fallback={<LoadingFallback />}>
+                              <Outlet />
+                            </Suspense>
+                          </PMOLayout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -4057,6 +5398,11 @@ export function PlatformRouteElements() {
                   <Route path="pmo/initiation/business-case/:id/edit" element={<BusinessCaseEdit />} />
                   <Route path="pmo/initiation/project-brief" element={<PMOInitiationProjectBrief />} />
                   <Route path="pmo/initiation/benefits-review-plan" element={<PMOInitiationBenefitsReviewPlan />} />
+                  {/* Project-scoped Brief/Benefits Create/View/Edit — maintains PMO sidebar context (see pm/projects/* above) */}
+                  <Route path="pmo/projects/:projectId/brief/create" element={<ProjectBriefCreate />} />
+                  <Route path="pmo/projects/:projectId/brief/view" element={<ProjectBriefView />} />
+                  <Route path="pmo/projects/:projectId/brief/edit" element={<ProjectBriefEdit />} />
+                  <Route path="pmo/projects/:projectId/benefits/review-plan" element={<BenefitsReviewPlan />} />
                   <Route path="pmo/oversight/risk-register" element={<PMOOversightRiskRegister />} />
                   <Route path="pmo/oversight/issue-register" element={<PMOOversightIssueRegister />} />
                   <Route path="pmo/registers/changes" element={<PMOOversightChangeRegister />} />
@@ -4089,19 +5435,27 @@ export function PlatformRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute>
-                          <PMLayout><Outlet /></PMLayout>
+                          <PMLayout>
+                            <Suspense fallback={<LoadingFallback />}>
+                              <Outlet />
+                            </Suspense>
+                          </PMLayout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
                   </Suspense>
                 }>
-                  <Route path="pm/dashboard" element={<PMDashboard />} />
+                  {/* v982 Phase 5: framework-composed Project Manager Home — route unchanged */}
+                  <Route path="pm/dashboard" element={<ProjectManagerHome />} />
                   <Route path="pm/team-members" element={<ProjectUsers />} />
                   <Route path="pm/invitation-tracker" element={<PMInvitationTracker />} />
                   <Route path="pm/invitation-tracker/view" element={<InvitationDetailPage />} />
                   <Route path="pm/profile" element={<Settings />} />
                   <Route path="platform/portfolio-manager/assignments" element={<PortfolioManagerAssignments />} />
                   <Route path="platform/programme-manager/assignments" element={<ProgrammeManagerAssignments />} />
+                  {/* v982 Phase 5 follow-up — Portfolio/Programme Manager Home */}
+                  <Route path="platform/portfolio-manager/home" element={<PortfolioManagerHome />} />
+                  <Route path="platform/programme-manager/home" element={<ProgrammeManagerHome />} />
                   <Route path="pm/industry-templates" element={<IndustryTemplateBrowser />} />
                   <Route path="pm/projects/:projectId/industry-plan" element={<ProjectIndustryPlanView />} />
                   <Route path="pm/projects/:projectId/industry-plan/new" element={<IndustryPlanCopyWizard />} />
@@ -4127,8 +5481,27 @@ export function PlatformRouteElements() {
                   <Route path="pm/initiation/business-case/:id/view" element={<BusinessCaseViewPage />} />
                   <Route path="pm/initiation/business-case/:id/edit" element={<BusinessCaseEdit />} />
                   <Route path="pm/initiation/project-brief" element={<PMInitiationProjectBrief />} />
+                  <Route path="pm/initiation/project-charter" element={<PMInitiationProjectBrief />} />
                   <Route path="pm/initiation/pid" element={<PMInitiationPID />} />
                   <Route path="pm/initiation/benefits-review-plan" element={<PMInitiationBenefitsReviewPlan />} />
+                  <Route path="pm/initiation/document-signatory" element={<PMInitiationDocumentSignatory />} />
+                  {/*
+                    Project-scoped Create/View/Edit for Brief, Charter, Benefits Review Plan and
+                    Mandate — mounted under PMLayout so these actions (reached from the sidebar
+                    lists above) stay inside the PM sidebar instead of dropping into the generic
+                    /platform/projects/* shell (a different, collapsed Sidebar). Mirrors the
+                    pmo/mandates/* "maintains PMO sidebar context" routes below.
+                  */}
+                  <Route path="pm/projects/:projectId/brief/create" element={<ProjectBriefCreate />} />
+                  <Route path="pm/projects/:projectId/brief/view" element={<ProjectBriefView />} />
+                  <Route path="pm/projects/:projectId/brief/edit" element={<ProjectBriefEdit />} />
+                  <Route path="pm/projects/:projectId/charter/create" element={<ProjectBriefCreate />} />
+                  <Route path="pm/projects/:projectId/charter/view" element={<ProjectBriefView />} />
+                  <Route path="pm/projects/:projectId/charter/edit" element={<ProjectBriefEdit />} />
+                  <Route path="pm/projects/:projectId/benefits/review-plan" element={<BenefitsReviewPlan />} />
+                  <Route path="pm/mandates/create" element={<ProjectMandateCreate />} />
+                  <Route path="pm/mandates/:mandateId/view" element={<ProjectMandateView />} />
+                  <Route path="pm/mandates/:mandateId/edit" element={<ProjectMandateEdit />} />
                   <Route path="pm/delivery/work-packages" element={<PMDeliveryWorkPackages />} />
                   <Route path="pm/delivery/product-description" element={<PMDeliveryProductDescription />} />
                   <Route path="pm/delivery/project-product-description" element={<PMDeliveryProjectProductDescription />} />
@@ -4151,7 +5524,7 @@ export function PlatformRouteElements() {
                 <Route element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider><ToastProvider>
-                      <ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>
+                      <ProtectedRoute><Layout><Suspense fallback={<LoadingFallback />}><Outlet /></Suspense></Layout></ProtectedRoute>
                     </ToastProvider></ThemeProvider>
                   </Suspense>
                 }>
@@ -4181,7 +5554,11 @@ export function PlatformRouteElements() {
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider><ToastProvider>
                       <ProtectedRoute requiredPlatform="simulator">
-                        <SimulatorTMLayout><Outlet /></SimulatorTMLayout>
+                        <SimulatorTMLayout>
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Outlet />
+                          </Suspense>
+                        </SimulatorTMLayout>
                       </ProtectedRoute>
                     </ToastProvider></ThemeProvider>
                   </Suspense>
@@ -4202,6 +5579,157 @@ export function PlatformRouteElements() {
                   <Route path="simulator/tm/communications/chat" element={<TeamChatPage />} />
                   <Route path="simulator/tm/communications/video-calls" element={<VideoCallsPage />} />
                   <Route path="simulator/tm/communications/voice-calls" element={<SimVoiceCallsPage />} />
+                </Route>
+
+                <Route element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider><ToastProvider>
+                      <ProtectedRoute requiredPlatform="simulator">
+                        <Layout>
+                          <Suspense fallback={<LoadingFallback />}>
+                            <Outlet />
+                          </Suspense>
+                        </Layout>
+                      </ProtectedRoute>
+                    </ToastProvider></ThemeProvider>
+                  </Suspense>
+                }>
+                  <Route path="simulator/practice-teams" element={<PracticeTeams />} />
+                  <Route path="simulator/practice-teams/create" element={<PracticeTeamCreate />} />
+                  <Route path="simulator/practice-teams/my-team" element={<SimMyTeam />} />
+                  <Route path="simulator/practice-project-roles" element={<PracticeProjectFunctionalRolesPage />} />
+                  <Route path="simulator/practice-project-roles/from-library" element={<PracticeProjectFunctionalRoleFromLibrary />} />
+                  {/* Practice-mode (Simulator) pages routed inside the Platform app — v1150 route registration pass */}
+                  <Route path="simulator/practice-projects" element={<PracticeProjects />} />
+                  <Route path="simulator/practice-projects/create" element={<PracticeProjectCreate />} />
+                  <Route path="simulator/practice-projects/:id" element={<PracticeProjectDetail />} />
+                  <Route path="simulator/practice-tasks" element={<PracticeTasks />} />
+                  <Route path="simulator/practice-tasks/:id" element={<PracticeTaskDetail />} />
+                  <Route path="simulator/practice-briefs" element={<PracticeBriefList />} />
+                  <Route path="simulator/practice-briefs/create" element={<PracticeBriefCreate />} />
+                  <Route path="simulator/practice-briefs/:id" element={<PracticeBriefView />} />
+                  <Route path="simulator/practice-briefs/:id/edit" element={<PracticeBriefEdit />} />
+                  <Route path="simulator/practice-business-cases" element={<PracticeBusinessCaseList />} />
+                  <Route path="simulator/practice-business-cases/create" element={<PracticeBusinessCaseCreate />} />
+                  <Route path="simulator/practice-business-cases/:id" element={<PracticeBusinessCaseView />} />
+                  <Route path="simulator/practice-business-cases/:id/edit" element={<PracticeBusinessCaseEdit />} />
+                  <Route path="simulator/practice-benefits-review-plans" element={<PracticeBenefitsReviewPlanList />} />
+                  <Route path="simulator/practice-benefits-review-plans/create" element={<PracticeBenefitsReviewPlan />} />
+                  <Route path="simulator/practice-benefits-review-plans/:id" element={<PracticeBenefitsReviewPlanViewPage />} />
+                  <Route path="simulator/practice-benefits-review-plans/:id/edit" element={<PracticeBenefitsReviewPlanEditPage />} />
+                  <Route path="simulator/practice-pids" element={<PracticePIDList />} />
+                  <Route path="simulator/practice-pids/create" element={<PracticePIDCreate />} />
+                  <Route path="simulator/practice-pids/:id" element={<PracticePIDView />} />
+                  <Route path="simulator/benefits/create" element={<PracticeBenefitsRedirectPage />} />
+                  <Route path="simulator/benefits/:id/edit" element={<PracticeBenefitsRedirectPage />} />
+                  <Route path="simulator/benefits/:id" element={<PracticeBenefitsRedirectPage />} />
+                  <Route path="simulator/benefits/register" element={<PracticeBenefitsRegister />} />
+                  <Route path="simulator/benefits/measurements" element={<PracticeBenefitsMeasurements />} />
+                  <Route path="simulator/benefits/realization" element={<PracticeBenefitsRealization />} />
+                  <Route path="simulator/benefits" element={<PracticeBenefitsAll />} />
+                  <Route path="simulator/practice-benefits" element={<PracticeBenefitsReviewPlan />} />
+                  <Route path="simulator/practice-work-packages" element={<PracticeWorkPackageList />} />
+                  <Route path="simulator/practice-work-packages/create" element={<PracticeWorkPackageCreate />} />
+                  <Route path="simulator/practice-work-packages/:id" element={<PracticeWorkPackageView />} />
+                  <Route path="simulator/practice-work-packages/:id/edit" element={<PracticeWorkPackageEdit />} />
+                  <Route path="simulator/practice-product-descriptions" element={<PracticeProductDescriptionList />} />
+                  <Route path="simulator/practice-product-descriptions/create" element={<PracticeProductDescriptionCreate />} />
+                  <Route path="simulator/practice-product-descriptions/:id" element={<PracticeProductDescriptionView />} />
+                  <Route path="simulator/practice-ppds" element={<PracticePPDList />} />
+                  <Route path="simulator/practice-ppds/:id" element={<PracticePPDView />} />
+                  <Route path="simulator/practice-psas" element={<PracticePSAList />} />
+                  <Route path="simulator/practice-psas/:id" element={<PracticePSAView />} />
+                  <Route path="simulator/practice-plans" element={<PracticePlanList />} />
+                  <Route path="simulator/practice-plans/create" element={<PracticePlanCreate />} />
+                  <Route path="simulator/practice-plans/:id" element={<PracticePlanView />} />
+                  <Route path="simulator/practice-plans/:id/edit" element={<PracticePlanEdit />} />
+                  <Route path="simulator/practice-daily-log" element={<PracticeDailyLog />} />
+                  <Route path="simulator/practice-daily-log/:id" element={<PracticeDailyLogEntry />} />
+                  <Route path="simulator/practice-risk-register" element={<PracticeRiskRegister />} />
+                  <Route path="simulator/practice-risk-register/:id" element={<PracticeRiskDetail />} />
+                  <Route path="simulator/practice-rms" element={<PracticeRMSList />} />
+                  <Route path="simulator/practice-rms/create" element={<PracticeRMSCreate />} />
+                  <Route path="simulator/practice-rms/:id" element={<PracticeRMSView />} />
+                  <Route path="simulator/practice-issue-register" element={<PracticeIssueRegister />} />
+                  <Route path="simulator/practice-issue-register/:id" element={<PracticeIssueDetail />} />
+                  <Route path="simulator/practice-issue-reports" element={<PracticeIssueReportList />} />
+                  <Route path="simulator/practice-issue-reports/create" element={<PracticeIssueReportCreate />} />
+                  <Route path="simulator/practice-issue-reports/:id" element={<PracticeIssueReportView />} />
+                  <Route path="simulator/practice-quality-register" element={<PracticeQualityRegister />} />
+                  <Route path="simulator/practice-quality-activity/:id" element={<PracticeQualityActivityView />} />
+                  <Route path="simulator/practice-quality-reviews" element={<PracticeQualityReviews />} />
+                  <Route path="simulator/practice-quality-inspections" element={<PracticeQualityInspections />} />
+                  <Route path="simulator/practice-quality-reports" element={<PracticeQualityReports />} />
+                  <Route path="simulator/practice-qms" element={<PracticeQMSList />} />
+                  <Route path="simulator/practice-qms/create" element={<PracticeQMSCreate />} />
+                  <Route path="simulator/practice-qms/:id" element={<PracticeQMSView />} />
+                  <Route path="simulator/practice-lessons-log" element={<PracticeLessonsLog />} />
+                  <Route path="simulator/practice-lessons-log/:id" element={<PracticeLessonDetail />} />
+                  <Route path="simulator/practice-config-items" element={<PracticeConfigItemList />} />
+                  <Route path="simulator/practice-config-items/create" element={<PracticeConfigItemCreate />} />
+                  <Route path="simulator/practice-config-items/:id" element={<PracticeConfigItemView />} />
+                  <Route path="simulator/practice-cms" element={<PracticeCMSList />} />
+                  <Route path="simulator/practice-cms/create" element={<PracticeCMSCreate />} />
+                  <Route path="simulator/practice-cms/:id" element={<PracticeCMSView />} />
+                  <Route path="simulator/practice-cms/:id/edit" element={<PracticeCMSEdit />} />
+                  <Route path="simulator/practice-config-ms" element={<PracticeConfigMSList />} />
+                  <Route path="simulator/practice-config-ms/create" element={<PracticeConfigMSCreate />} />
+                  <Route path="simulator/practice-config-ms/:id" element={<PracticeConfigMSView />} />
+                  <Route path="simulator/practice-config-ms/:id/edit" element={<PracticeConfigMSEdit />} />
+                  <Route path="simulator/practice-checkpoint-reports" element={<PracticeCheckpointReportList />} />
+                  <Route path="simulator/practice-checkpoint-reports/create" element={<PracticeCheckpointReportCreate />} />
+                  <Route path="simulator/practice-checkpoint-reports/:id" element={<PracticeCheckpointReportView />} />
+                  <Route path="simulator/practice-highlight-reports" element={<PracticeHighlightReportList />} />
+                  <Route path="simulator/practice-highlight-reports/create" element={<PracticeHighlightReportCreate />} />
+                  <Route path="simulator/practice-highlight-reports/:id" element={<PracticeHighlightReportView />} />
+                  <Route path="simulator/practice-exception-reports" element={<PracticeExceptionReportList />} />
+                  <Route path="simulator/practice-exception-reports/create" element={<PracticeExceptionReportCreate />} />
+                  <Route path="simulator/practice-exception-reports/:id" element={<PracticeExceptionReportView />} />
+                  <Route path="simulator/practice-end-stage-reports" element={<PracticeEndStageReportList />} />
+                  <Route path="simulator/practice-end-stage-reports/create" element={<PracticeEndStageReportCreate />} />
+                  <Route path="simulator/practice-end-stage-reports/:id" element={<PracticeEndStageReportView />} />
+                  <Route path="simulator/practice-end-project-reports" element={<PracticeEndProjectReportList />} />
+                  <Route path="simulator/practice-end-project-reports/create" element={<PracticeEndProjectReportCreate />} />
+                  <Route path="simulator/practice-end-project-reports/:id" element={<PracticeEndProjectReportView />} />
+                  <Route path="simulator/practice-lessons-reports" element={<PracticeLessonsReportList />} />
+                  <Route path="simulator/practice-lessons-reports/create" element={<PracticeLessonsReportCreate />} />
+                  <Route path="simulator/practice-lessons-reports/:id" element={<PracticeLessonsReportView />} />
+                  <Route path="simulator/practice-starting-up" element={<PracticeStartingUp />} />
+                  <Route path="simulator/practice-initiating" element={<PracticeInitiating />} />
+                  <Route path="simulator/practice-controlling-stage" element={<PracticeControllingStage />} />
+                  <Route path="simulator/practice-managing-delivery" element={<PracticeManagingDelivery />} />
+                  <Route path="simulator/practice-stage-boundaries" element={<PracticeStageBoundaries />} />
+                  <Route path="simulator/practice-closing-project" element={<PracticeClosingProject />} />
+                  <Route path="simulator/practice-portfolio" element={<PracticePortfolio />} />
+                  <Route path="simulator/practice-portfolio/create" element={<PracticePortfolioCreate />} />
+                  <Route path="simulator/practice-programme/dashboard" element={<PracticeProgrammeDashboardOverview />} />
+                  <Route path="simulator/practice-programme/projects" element={<PracticeProgrammeProjectsPage />} />
+                  <Route path="simulator/practice-programme/dependencies" element={<PracticeProgrammeDependenciesPage />} />
+                  <Route path="simulator/practice-programme/benefits" element={<PracticeProgrammeBenefitsPage />} />
+                  <Route path="simulator/practice-programme/timeline" element={<PracticeProgrammeTimelinePage />} />
+                  <Route path="simulator/practice-programme" element={<PracticeProgramme />} />
+                  <Route path="simulator/practice-programme/create" element={<PracticeProgrammeCreate />} />
+                  <Route path="simulator/practice-programme/:programmeId" element={<PracticeProgrammeDetail />} />
+                  <Route path="simulator/practice-dependencies" element={<PracticeDependencies />} />
+                  <Route path="simulator/practice-dependencies/inter-project" element={<PracticeDependencies />} />
+                  <Route path="simulator/practice-dependencies/map" element={<PracticeDependencies />} />
+                  <Route path="simulator/practice-dependencies/impact" element={<PracticeDependencies />} />
+                  <Route path="simulator/practice-stakeholders/register" element={<PracticeStakeholderRegisterPage />} />
+                  <Route path="simulator/practice-stakeholders/create" element={<PracticeStakeholderCreatePage />} />
+                  <Route path="simulator/practice-stakeholders/analysis" element={<PracticeStakeholderAnalysis />} />
+                  <Route path="simulator/practice-stakeholders/engagement" element={<PracticeEngagementPlanning />} />
+                  <Route path="simulator/practice-stakeholders/communications" element={<PracticeCommunicationPlans />} />
+                  <Route path="simulator/practice-stakeholders/monitoring" element={<PracticeStakeholderMonitoring />} />
+                  <Route path="simulator/practice-stakeholders/assessment-matrix/new" element={<PracticeStakeholderAssessmentMatrixFormPage />} />
+                  <Route path="simulator/practice-stakeholders/assessment-matrix/view/:recordKey" element={<PracticeStakeholderAssessmentMatrixFormPage />} />
+                  <Route path="simulator/practice-stakeholders/assessment-matrix/edit/:recordKey" element={<PracticeStakeholderAssessmentMatrixFormPage />} />
+                  <Route path="simulator/practice-stakeholders/assessment-matrix" element={<PracticeStakeholderAssessmentMatrixPage />} />
+                  <Route path="simulator/practice-stakeholders/assessment-matrix/on-hold" element={<PracticeStakeholdersAssessmentMatrixOnHold />} />
+                  <Route path="simulator/practice-stakeholders/engagement-actions" element={<PracticeEngagementActionsPage />} />
+                  <Route path="simulator/practice-stakeholders/salience" element={<PracticeSaliencePage />} />
+                  <Route path="simulator/practice-stakeholders/on-hold" element={<PracticeStakeholdersOnHold />} />
+                  <Route path="simulator/practice-stakeholders" element={<Navigate to="/simulator/practice-stakeholders/register" replace />} />
+                  <Route path="simulator/practice-governance" element={<PracticeGovernance />} />
                 </Route>
 
     </>

@@ -37,6 +37,10 @@ export const LIFECYCLE_TABLE_REGISTRY = [
   { tableName: 'lessons_reports', label: 'Lessons Reports', category: 'B', liveTable: 'lessons_reports' },
   { tableName: 'project_initiation_documents', label: 'Project Initiation Documents', category: 'B', liveTable: 'project_initiation_documents' },
   { tableName: 'product_descriptions', label: 'Product Descriptions', category: 'B', liveTable: 'product_descriptions' },
+  // v931/v935 — Local Register Engine. One shared table for every register (system-defined and
+  // member-created alike); only registers with local_registers.requires_approval = true actually
+  // transition out of record_status = 'live'. See SQL/v935_local_register_records_lifecycle_columns.sql.
+  { tableName: 'local_register_records', label: 'Local Registers', category: 'B', liveTable: 'local_register_records' },
 ]
 
 export const LIFECYCLE_STATUSES = ['live', 'unauthorised', 'history', 'archived']

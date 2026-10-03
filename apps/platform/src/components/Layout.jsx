@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, Link, useLocation } from 'react-router-dom'
-import { Menu } from 'lucide-react'
+import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { mainContentSidebarOffsetClass, useSidebarCollapsed } from '@nidus/shared/hooks/useSidebarCollapsed'
 import MobileNavigation from './MobileNavigation'
 import Sidebar from './Sidebar'
 import PlatformAppHeader from './headers/PlatformAppHeader'
@@ -16,6 +17,7 @@ import { shouldUsePmLayoutShell } from '@nidus/shared/utils/menuLayoutUtils'
 
 const Layout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { collapsed, toggleCollapsed } = useSidebarCollapsed()
   const location = useLocation()
 
   // Don't show sidebar on auth pages
@@ -86,13 +88,22 @@ const Layout = ({ children }) => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center py-4">
                 <div className="flex items-center gap-4">
-                  {/* Sidebar Toggle - Mobile only */}
                   <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="lg:hidden p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
-                    aria-label="Toggle sidebar"
+                    type="button"
+                    onClick={() => {
+                      if (window.matchMedia('(min-width: 1024px)').matches) toggleCollapsed()
+                      else setSidebarOpen((open) => !open)
+                    }}
+                    className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                    aria-label={collapsed ? 'Show sidebar' : 'Hide sidebar'}
+                    title={collapsed ? 'Show sidebar' : 'Hide sidebar'}
                   >
-                    <Menu className="h-5 w-5" />
+                    <Menu className="h-5 w-5 lg:hidden" />
+                    {collapsed ? (
+                      <PanelLeftOpen className="hidden lg:block h-5 w-5" />
+                    ) : (
+                      <PanelLeftClose className="hidden lg:block h-5 w-5" />
+                    )}
                   </button>
                   <Link to="/" className="text-2xl font-bold text-gray-900 dark:text-white">
                     Project Nidus
@@ -118,7 +129,7 @@ const Layout = ({ children }) => {
         <main
           id="main-content"
           tabIndex="-1"
-          className={`flex-1 pb-16 md:pb-0 ${!isAuthPage ? 'lg:ml-80' : ''} w-full overflow-y-auto overflow-x-hidden h-full`}
+          className={`flex-1 min-w-0 pb-16 md:pb-0 ${!isAuthPage ? mainContentSidebarOffsetClass(collapsed) : ''} transition-[margin] duration-300 ease-in-out overflow-y-auto overflow-x-hidden h-full`}
         >
           <div className="w-full max-w-full">
             {children || <Outlet />}

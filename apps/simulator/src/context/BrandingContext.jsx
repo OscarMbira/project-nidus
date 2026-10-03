@@ -37,9 +37,12 @@ const FONT_URLS = {
 
 // ─────────────────────────────────────────────────────────────
 // Inject CSS custom properties into :root AND inject a
-// <style> tag that maps brand values to every Tailwind blue/
-// indigo class used across the app — so ALL components pick
-// up the brand without requiring any per-component changes.
+// <style> tag that maps brand values to Tailwind blue/indigo
+// backgrounds, borders, and focus rings used across the app —
+// so buttons, tabs, and CTAs pick up the brand without requiring
+// any per-component changes. Text colours are deliberately left
+// alone (CLAUDE.md rule 72) so table/list informational content
+// (reference codes, IDs, statuses) stays theme-standard.
 // ─────────────────────────────────────────────────────────────
 function applyBrandingToDOM(branding) {
   const root = document.documentElement
@@ -101,13 +104,13 @@ function applyBrandingToDOM(branding) {
 
 /**
  * Inject (or replace) a <style id="nidus-brand-overrides"> tag
- * that overrides Tailwind blue/indigo classes with brand values.
+ * that overrides Tailwind blue/indigo background/border/focus-ring
+ * classes with brand values (never text colour — rule 72).
  * Using !important ensures it wins over compiled Tailwind styles.
  */
 function injectBrandOverrides(branding) {
   const btn     = branding.button_color        || branding.primary_color || '#3B82F6'
   const primary = branding.primary_color       || '#3B82F6'
-  const link    = branding.link_color          || '#60A5FA'
   const secondary = branding.secondary_color   || '#1E40AF'
 
   // Produce a slightly darker shade for hover states (10% opacity overlay)
@@ -144,21 +147,12 @@ function injectBrandOverrides(branding) {
 .hover\\:bg-indigo-700:hover { background-color: ${btn} !important; filter: brightness(0.92); }
 
 /* ---------- Text colours ---------- */
-.text-blue-600,
-.text-blue-700,
-.text-blue-300 { color: ${primary} !important; }
-.text-blue-500 { color: ${primary} !important; }
-.text-blue-400 { color: ${link} !important; }
-.text-indigo-600 { color: ${primary} !important; }
-.text-purple-400,
-.text-purple-300,
-.text-purple-200,
-.text-purple-100 { color: ${primary} !important; }
-.text-purple-600,
-.text-purple-700,
-.text-purple-800 { color: ${primary} !important; }
-.text-violet-400,
-.text-violet-600 { color: ${primary} !important; }
+/* Deliberately NOT overridden (CLAUDE.md rule 72): informational text in
+   tables/lists (reference codes, IDs, statuses, data values) uses these same
+   Tailwind blue/indigo/purple/violet classes across the app and must render
+   in standard per-theme colours regardless of organisation branding. Brand
+   identity is expressed via backgrounds, borders, and focus rings below, not
+   by repainting text. */
 
 /* ---------- Border colours ---------- */
 .border-blue-500,
@@ -205,8 +199,6 @@ function injectBrandOverrides(branding) {
 /* ---------- Secondary colour ---------- */
 .bg-blue-800,
 .bg-blue-900 { background-color: ${secondary} !important; }
-.text-blue-800,
-.text-blue-900 { color: ${secondary} !important; }
 
 /* ---------- React Calendar active tile ---------- */
 .react-calendar__tile--active { background: ${btn} !important; }

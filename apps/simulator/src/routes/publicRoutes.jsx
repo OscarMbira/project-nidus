@@ -516,7 +516,14 @@ import {
   MetricsDashboard,
   Resources,
   ResourceCapacity,
+  CrossProjectResources,
+  ResourceUtilization,
+  ResourceForecasts,
   ResourceDetail,
+  ResourceCalendarPage,
+  ResourceCalendarEntryPage,
+  ResourceEdit,
+  ResourceAssignmentEdit,
   ResourceConflicts,
   ReportBuilder,
   AnalyticsDashboard,
@@ -940,10 +947,87 @@ export function PublicRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="/simulator/resources/cross-project" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <CrossProjectResources />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/utilization" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceUtilization />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/plan" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceForecasts />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="/simulator/resources/conflicts" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <ResourceConflicts />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceEdit />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceEdit />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id/assignments/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceAssignmentEdit />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id/assignments/:assignmentId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceAssignmentEdit />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id/calendar" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceCalendarPage />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id/calendar/entry/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceCalendarEntryPage />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id/calendar/entry/:entryId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceCalendarEntryPage />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="/simulator/resources/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ResourceDetail />
                     </ThemeProvider>
                   </Suspense>
                 } />

@@ -536,6 +536,7 @@ import {
   PlatformLogin,
   SimulatorLogin,
   Register,
+  RegistrationEntryChoice,
   PlatformRegister,
   SimulatorRegister,
   EmailConfirmation,
@@ -867,7 +868,20 @@ export function AuthRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                {/* v982 Phase 1: entry-choice screen sits in front of the actual signup
+                    form. Every existing "Sign up"/"Start Free" CTA already links to
+                    platform/register or simulator/register directly (confirmed by a
+                    codebase-wide link audit) — reached here, not at the generic
+                    /register app-picker above, so intercepting here reaches real
+                    traffic without repointing those links. */}
                 <Route path="platform/register" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <RegistrationEntryChoice target="platform" />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="platform/register/signup" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <PlatformRegister />
@@ -877,11 +891,26 @@ export function AuthRouteElements() {
                 <Route path="simulator/register" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
+                      <RegistrationEntryChoice target="simulator" />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/register/signup" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
                       <SimulatorRegister />
                     </ThemeProvider>
                   </Suspense>
                 } />
                 <Route path="auth/verify-email" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <VerifyEmail />
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* Short clean URL for account verification emails: /v/{token} */}
+                <Route path="v/:token" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <VerifyEmail />
