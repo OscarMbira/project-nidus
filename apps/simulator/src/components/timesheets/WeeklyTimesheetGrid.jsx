@@ -14,6 +14,7 @@ import { getTasksByProject } from '../../services/taskService'
 import { getCurrentUserAccountId } from '../../utils/accountResolution'
 import SelectField from '@nidus/ui/SelectField'
 import OvertimeGrid from './OvertimeGrid'
+import ReviewDecisionBadge from './ReviewDecisionBadge'
 import WorkPlanGrid from './WorkPlanGrid'
 import { getProjectBillingType } from '../../services/projectWorkPlanService'
 
@@ -670,7 +671,11 @@ export default function WeeklyTimesheetGrid({ projectId, userId, entries, onChan
                       />
                     </td>
                     <td className="px-3 py-2">
-                      <StatusBadge status={entry?.status} />
+                      {entry && (entry.status === 'approved' || entry.status === 'rejected') ? (
+                        <ReviewDecisionBadge key={`${entry.id}-${entry.status}`} entryId={entry.id} status={entry.status} />
+                      ) : (
+                        <StatusBadge status={entry?.status} />
+                      )}
                     </td>
                   </tr>
                 )
