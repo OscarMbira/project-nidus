@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '../services/supabaseClient'
+import { getCurrentUserInternalUserId } from '../utils/accountResolution'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
@@ -89,6 +90,8 @@ export default function ResourceCalendarEntryPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
+      const internalUserId = await getCurrentUserInternalUserId()
+      if (!internalUserId) throw new Error('User record not found')
 
       const submitData = {
         resource_id: resourceId,
@@ -101,14 +104,14 @@ export default function ResourceCalendarEntryPage() {
         is_recurring: formData.is_recurring,
         recurrence_pattern: formData.recurrence_pattern || null,
         recurrence_end_date: formData.recurrence_end_date || null,
-        updated_by: user.id,
+        updated_by: internalUserId,
       }
 
       if (isEdit) {
         const { error } = await supabase.from('resource_calendar').update(submitData).eq('id', entryId)
         if (error) throw error
       } else {
-        submitData.created_by = user.id
+        submitData.created_by = internalUserId
         const { error } = await supabase.from('resource_calendar').insert(submitData)
         if (error) throw error
       }

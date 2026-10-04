@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, Repeat } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
+import { getCurrentUserInternalUserId } from '../utils/accountResolution'
 import { RowActionButton } from '@nidus/ui'
 
 function formatReasons(value) {
@@ -65,9 +66,11 @@ export default function ResourceCalendarPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
+      const internalUserId = await getCurrentUserInternalUserId()
+      if (!internalUserId) throw new Error('User record not found')
       const { error } = await supabase
         .from('resource_calendar')
-        .update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: user.id })
+        .update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: internalUserId })
         .eq('id', entry.id)
       if (error) throw error
       reloadEntries()
