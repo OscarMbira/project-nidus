@@ -193,6 +193,12 @@ export default function SystemHeader({
     }
   }
 
+  useEffect(() => {
+    const onChanged = () => fetchUnreadCount()
+    window.addEventListener('nidus-notifications-changed', onChanged)
+    return () => window.removeEventListener('nidus-notifications-changed', onChanged)
+  }, [])
+
   const initLanguage = async () => {
     try {
       const mode = isSimulator ? 'sim' : 'platform'
@@ -424,7 +430,7 @@ export default function SystemHeader({
             {/* Notifications */}
             <div className="relative">
               <button
-                onClick={() => navigate('/notifications')}
+                onClick={() => navigate('/platform/notifications')}
                 className={`relative p-1.5 sm:p-2 ${subtextColor} ${hoverBgClass} rounded-lg transition-colors`}
                 title="Notifications"
                 aria-label="Notifications"

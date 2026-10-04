@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getCurrentUserInternalUserId } from '../utils/accountResolution'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Bell, Check, CheckCheck, Settings, Filter, Search, X } from 'lucide-react'
@@ -27,12 +28,13 @@ export default function Notifications() {
   const fetchNotifications = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      const internalUserId = await getCurrentUserInternalUserId()
       if (!user) return
 
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', internalUserId)
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(100)
@@ -74,6 +76,7 @@ export default function Notifications() {
   const handleMarkAsRead = async (notificationId, markAll = false) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      const internalUserId = await getCurrentUserInternalUserId()
       if (!user) return
 
       if (markAll) {
@@ -83,25 +86,28 @@ export default function Notifications() {
             is_read: true,
             read_at: new Date().toISOString(),
           })
-          .eq('user_id', user.id)
+          .eq('user_id', internalUserId)
           .eq('is_read', false)
           .eq('is_deleted', false)
 
         if (error) throw error
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('notifications')
           .update({
             is_read: true,
             read_at: new Date().toISOString(),
           })
           .eq('id', notificationId)
-          .eq('user_id', user.id)
+          .eq('user_id', internalUserId)
+          .select('id')
 
         if (error) throw error
+        if (!data?.length) throw new Error('This notification could not be marked as read')
       }
 
       fetchNotifications()
+      window.dispatchEvent(new Event('nidus-notifications-changed'))
     } catch (error) {
       console.error('Error marking notification as read:', error)
       alert('Error updating notification: ' + error.message)
@@ -111,6 +117,7 @@ export default function Notifications() {
   const handleDelete = async (notificationId) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
+      const internalUserId = await getCurrentUserInternalUserId()
       if (!user) return
 
       const { error } = await supabase
@@ -120,7 +127,7 @@ export default function Notifications() {
           deleted_at: new Date().toISOString(),
         })
         .eq('id', notificationId)
-        .eq('user_id', user.id)
+        .eq('user_id', internalUserId)
 
       if (error) throw error
       fetchNotifications()
