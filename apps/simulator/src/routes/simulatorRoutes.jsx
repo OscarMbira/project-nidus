@@ -546,6 +546,7 @@ import {
   Resources,
   ResourceCapacity,
   ResourceDetail,
+  Notifications,
   ResourceConflicts,
   ReportBuilder,
   AnalyticsDashboard,
@@ -1010,6 +1011,15 @@ export function SimulatorRouteElements() {
                             <TeamSeatClaimPage />
                           </Layout>
                         </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/notifications" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <Notifications />
                       </ToastProvider>
                     </ThemeProvider>
                   </Suspense>

@@ -400,6 +400,7 @@ export const TemplateMasterVersionHistory = lazy(() => import('../pages/template
 export const TemplateCategories = lazy(() => import('../pages/templates/TemplateCategories'))
 export const TemplateBulkUpload = lazy(() => import('../pages/templates/TemplateBulkUpload'))
 export const TemplateUpdateNotifications = lazy(() => import('../pages/templates/TemplateUpdateNotifications'))
+export const Notifications = lazy(() => import('../pages/Notifications'))
 export const ProjectTemplateCopyList = lazy(() => import('../pages/templates/ProjectTemplateCopyList'))
 export const ProjectTemplateCopyCreate = lazy(() => import('../pages/templates/ProjectTemplateCopyCreate'))
 export const ProjectTemplateCopyEdit = lazy(() => import('../pages/templates/ProjectTemplateCopyEdit'))

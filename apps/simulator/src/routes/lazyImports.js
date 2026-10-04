@@ -427,6 +427,7 @@ export const SimTemplateMasterVersionHistory = lazy(() => import('../pages/simul
 export const SimTemplateCategories = lazy(() => import('../pages/simulator/templates/SimTemplateCategories'))
 export const SimTemplateBulkUpload = lazy(() => import('../pages/simulator/templates/SimTemplateBulkUpload'))
 export const SimTemplateUpdateNotifications = lazy(() => import('../pages/simulator/templates/SimTemplateUpdateNotifications'))
+export const Notifications = lazy(() => import('../pages/Notifications'))
 export const SimProjectTemplateCopyList = lazy(() => import('../pages/simulator/templates/SimProjectTemplateCopyList'))
 export const SimProjectTemplateCopyCreate = lazy(() => import('../pages/simulator/templates/SimProjectTemplateCopyCreate'))
 export const SimProjectTemplateCopyEdit = lazy(() => import('../pages/simulator/templates/SimProjectTemplateCopyEdit'))

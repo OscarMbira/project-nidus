@@ -602,6 +602,7 @@ import {
   ResourceCalendarOverviewPage,
   ResourceCalendarPage,
   ResourceCalendarEntryPage,
+  Notifications,
   ResourceCapacity,
   CrossProjectResources,
   ResourceUtilization,
@@ -5532,6 +5533,7 @@ export function PlatformRouteElements() {
                   <Route path="platform/plans/team-workstreams" element={<MicroPlanList scope="team" />} />
                   <Route path="platform/plans/new" element={<MicroPlanForm />} />
                   <Route path="platform/plans/:id/edit" element={<MicroPlanForm />} />
+                  <Route path="platform/notifications" element={<Notifications />} />
                   <Route path="platform/team-charter" element={<TeamCharterPage />} />
                   <Route path="platform/projects/:projectId/team-charter" element={<TeamCharterPage />} />
                   <Route path="platform/team-charter/edit" element={<TeamCharterEditPage />} />
