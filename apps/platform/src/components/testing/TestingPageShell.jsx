@@ -41,7 +41,7 @@ export default function TestingPageShell({ title, subtitle, children }) {
   return (
     <div className="w-full text-gray-900 dark:text-gray-100">
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="px-4 py-4">
           <div className="flex items-start gap-3">
             <button
               type="button"
@@ -62,7 +62,7 @@ export default function TestingPageShell({ title, subtitle, children }) {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 py-6">{children({ projectId, projectLabel: selected })}</div>
+      <div className="px-4 py-6">{children({ projectId, projectLabel: selected })}</div>
     </div>
   )
 }

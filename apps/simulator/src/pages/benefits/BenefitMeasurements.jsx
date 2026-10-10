@@ -1,23 +1,29 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js';
 import { ArrowLeft, TrendingUp, Plus, Edit2, Trash2, Calendar } from 'lucide-react';
-import { getBenefits, getBenefitMeasurements, saveBenefitMeasurement, deleteBenefitMeasurement } from '../../services/benefitsService';
+import { getBenefits, getBenefitMeasurements, deleteBenefitMeasurement } from '../../services/benefitsService';
 import SortToolbar from '@nidus/ui/SortToolbar';
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
 import { useViewMode } from '@nidus/shared/hooks/useViewMode';
 import ViewToggle from '@nidus/ui/ViewToggle';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import SelectField from '../../components/ui/SelectField'
+
+const MEASUREMENTS_BASE = '/simulator/benefits/measurements'
 
 export default function BenefitMeasurements() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { projectId, loading: projectLoading } = usePlatformProjectId();
+  const hasProjectQuery = Boolean(searchParams.get('projectId'));
   const [measurementViewMode, setMeasurementViewMode] = useViewMode('benefit-measurements', 'grid');
   const [benefits, setBenefits] = useState([]);
   const [selectedBenefitId, setSelectedBenefitId] = useState('');
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [selectedMeasurement, setSelectedMeasurement] = useState(null);
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'measurement_date', direction: 'desc' },
     storageKey: 'nidus-benefit-measurements-sort',
@@ -35,21 +41,10 @@ export default function BenefitMeasurements() {
     [measurements, sortedData, measureAccessors]
   );
 
-  const [formData, setFormData] = useState({
-    benefit_id: '',
-    measure_id: null,
-    measurement_date: new Date().toISOString().split('T')[0],
-    measurement_value: '',
-    measurement_unit: '',
-    measurement_period: 'monthly',
-    measurement_type: 'actual',
-    data_quality: 'good',
-    notes: '',
-  });
-
   useEffect(() => {
+    if (hasProjectQuery && projectLoading) return;
     fetchBenefits();
-  }, []);
+  }, [projectId, projectLoading, hasProjectQuery]);
 
   useEffect(() => {
     if (selectedBenefitId) {
@@ -61,10 +56,13 @@ export default function BenefitMeasurements() {
 
   const fetchBenefits = async () => {
     try {
-      const data = await getBenefits({ benefit_status: 'in_progress,planned,partially_realized' });
-      setBenefits(data || []);
-      if (data && data.length > 0 && !selectedBenefitId) {
-        setSelectedBenefitId(data[0].id);
+      const data = await getBenefits(projectId ? { project_id: projectId } : {});
+      const rows = [...(data || [])].sort((a, b) =>
+        String(a.benefit_name || '').localeCompare(String(b.benefit_name || ''), undefined, { sensitivity: 'base' })
+      );
+      setBenefits(rows);
+      if (rows.length > 0) {
+        setSelectedBenefitId((current) => current || rows[0].id);
       }
     } catch (error) {
       console.error('Error fetching benefits:', error);
@@ -88,37 +86,22 @@ export default function BenefitMeasurements() {
     }
   };
 
+  const openMeasurementForm = (measurementId) => {
+    const params = new URLSearchParams();
+    const projectKey = searchParams.get('projectId');
+    if (projectKey) params.set('projectId', projectKey);
+    if (selectedBenefitId) params.set('benefitId', selectedBenefitId);
+    const query = params.toString();
+    const suffix = measurementId ? `/${measurementId}/edit` : '/create';
+    navigate(`${MEASUREMENTS_BASE}${suffix}${query ? `?${query}` : ''}`);
+  };
+
   const handleCreateMeasurement = () => {
-    const selectedBenefit = benefits.find(b => b.id === selectedBenefitId);
-    setFormData({
-      benefit_id: selectedBenefitId,
-      measure_id: null,
-      measurement_date: new Date().toISOString().split('T')[0],
-      measurement_value: '',
-      measurement_unit: selectedBenefit?.measurement_unit || '',
-      measurement_period: 'monthly',
-      measurement_type: 'actual',
-      data_quality: 'good',
-      notes: '',
-    });
-    setSelectedMeasurement(null);
-    setShowForm(true);
+    openMeasurementForm();
   };
 
   const handleEditMeasurement = (measurement) => {
-    setSelectedMeasurement(measurement);
-    setFormData({
-      benefit_id: measurement.benefit_id,
-      measure_id: measurement.measure_id || null,
-      measurement_date: measurement.measurement_date || new Date().toISOString().split('T')[0],
-      measurement_value: measurement.measurement_value || '',
-      measurement_unit: measurement.measurement_unit || '',
-      measurement_period: measurement.measurement_period || 'monthly',
-      measurement_type: measurement.measurement_type || 'actual',
-      data_quality: measurement.data_quality || 'good',
-      notes: measurement.notes || '',
-    });
-    setShowForm(true);
+    openMeasurementForm(measurement.id);
   };
 
   const handleDeleteMeasurement = async (measurement) => {
@@ -132,19 +115,6 @@ export default function BenefitMeasurements() {
     } catch (error) {
       console.error('Error deleting measurement:', error);
       alert('Error deleting measurement: ' + error.message);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await saveBenefitMeasurement(selectedBenefitId, formData, selectedMeasurement?.id);
-      setShowForm(false);
-      setSelectedMeasurement(null);
-      fetchMeasurements();
-    } catch (error) {
-      console.error('Error saving measurement:', error);
-      alert('Error saving measurement: ' + error.message);
     }
   };
 
@@ -186,24 +156,24 @@ export default function BenefitMeasurements() {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Select Benefit
         </label>
-        <select
+        <SelectField
+          id="benefit-measurement-benefit"
+          aria-label="Select Benefit"
           value={selectedBenefitId}
-          onChange={(e) => setSelectedBenefitId(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="">Select a benefit...</option>
-          {benefits.map(benefit => (
-            <option key={benefit.id} value={benefit.id}>
-              {benefit.benefit_name} {benefit.benefit_code ? `(${benefit.benefit_code})` : ''}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => setSelectedBenefitId(value || '')}
+          placeholder="Select a benefit..."
+          searchPlaceholder="Search benefits..."
+          options={benefits.map((benefit) => ({
+            value: benefit.id,
+            label: `${benefit.benefit_name}${benefit.benefit_code ? ` (${benefit.benefit_code})` : ''}`,
+          }))}
+        />
         {selectedBenefit && (
           <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {selectedBenefit.benefit_name}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <div className="text-xs text-gray-700 dark:text-gray-200 mt-1">
               Target: {selectedBenefit.target_value} {selectedBenefit.measurement_unit || ''}
             </div>
           </div>
@@ -275,7 +245,7 @@ export default function BenefitMeasurements() {
                           <td className="px-6 py-3 font-medium text-gray-900 dark:text-white">
                             {measurement.measurement_value} {measurement.measurement_unit || ''}
                           </td>
-                          <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">{measurement.notes || '—'}</td>
+                          <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">{measurement.notes || 'â€”'}</td>
                           <td className="px-6 py-3 text-right">
                             <button type="button" onClick={() => handleEditMeasurement(measurement)} className="p-2 text-blue-600 mr-1" aria-label="Edit">
                               <Edit2 className="h-4 w-4" />
@@ -357,129 +327,6 @@ export default function BenefitMeasurements() {
         </div>
       )}
 
-      {/* Measurement Form Modal */}
-      {showForm && selectedBenefitId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {selectedMeasurement ? 'Edit Measurement' : 'Add Measurement'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setSelectedMeasurement(null);
-                }}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Measurement Date *
-                </label>
-                <input
-                  type="date"
-                  name="measurement_date"
-                  value={formData.measurement_date}
-                  onChange={(e) => setFormData({ ...formData, measurement_date: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Measurement Value *
-                </label>
-                <input
-                  type="number"
-                  name="measurement_value"
-                  value={formData.measurement_value}
-                  onChange={(e) => setFormData({ ...formData, measurement_value: e.target.value })}
-                  required
-                  step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Measurement Type
-                  </label>
-                  <select
-                    name="measurement_type"
-                    value={formData.measurement_type}
-                    onChange={(e) => setFormData({ ...formData, measurement_type: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="actual">Actual</option>
-                    <option value="forecast">Forecast</option>
-                    <option value="planned">Planned</option>
-                    <option value="baseline">Baseline</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Data Quality
-                  </label>
-                  <select
-                    name="data_quality"
-                    value={formData.data_quality}
-                    onChange={(e) => setFormData({ ...formData, data_quality: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="excellent">Excellent</option>
-                    <option value="good">Good</option>
-                    <option value="fair">Fair</option>
-                    <option value="poor">Poor</option>
-                    <option value="unknown">Unknown</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Notes
-                </label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Additional notes about this measurement..."
-                />
-              </div>
-
-              <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setSelectedMeasurement(null);
-                  }}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {selectedMeasurement ? 'Update Measurement' : 'Add Measurement'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

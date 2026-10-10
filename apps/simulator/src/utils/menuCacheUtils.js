@@ -70,7 +70,8 @@
 // 70->71 (2026-10-04): keep DB taxonomy sections on the practice Project Manager sidebar.
 // 71->72 (2026-10-04): restore Platform and industry-pack sections on the practice sidebar.
 // 72->73 (2026-10-04): practice Project Manager sidebar has no methodology track sections.
-const SIDEBAR_CACHE_VERSION = 73
+// 73->74 (2026-10-04): v1199 removes the Test Management wrapper under Testing.
+const SIDEBAR_CACHE_VERSION = 74
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

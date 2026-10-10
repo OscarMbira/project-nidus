@@ -184,6 +184,16 @@ export async function listEnvironments() {
   }
 }
 
+export async function hasTestingCentrePermission(code = 'testing_centre.view') {
+  try {
+    const { data, error } = await platformDb.rpc('app_user_has_testing_centre_permission', { p_code: code })
+    if (error) throw error
+    return data === true
+  } catch {
+    return false
+  }
+}
+
 export async function getTestingDashboardMetrics() {
   try {
     const { data, error } = await platformDb.rpc('get_testing_centre_dashboard_metrics')
@@ -229,6 +239,27 @@ export async function auditTestingAction(action, entityType, entityId, beforeDat
 }
 
 // --- Test runs (v494) ---
+export async function createTestRun({ suiteId, environmentId = null }) {
+  try {
+    const triggeredBy = await resolveInternalUserId()
+    const { data, error } = await platformDb
+      .from('tc_test_runs')
+      .insert({
+        suite_id: suiteId,
+        environment_id: environmentId,
+        trigger_type: 'manual',
+        run_status: 'pending',
+        triggered_by: triggeredBy,
+      })
+      .select('id, run_code')
+      .single()
+    if (error) throw error
+    return { success: true, data }
+  } catch (e) {
+    return rowError(e)
+  }
+}
+
 export async function listTestRuns() {
   try {
     const { data, error } = await platformDb

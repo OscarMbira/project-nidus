@@ -16,6 +16,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import ViewToggle from '@nidus/ui/ViewToggle'
+import TestEvidenceSettingCard from '../../components/testing/TestEvidenceSettingCard'
+import { useProjectRole } from '../../hooks/useProjectRole'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { resolveProjectRouteKeyFromId } from '@nidus/shared/utils/projectRouteParam.js'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution.js'
@@ -39,6 +41,7 @@ import RegionalFormatFields, { REGIONAL_FORMAT_EXPORT_SECTIONS } from '../../com
 
 export default function ProjectRegionalFormatSettingsPage() {
   const { projectId, routeKey, loading: projectIdLoading, error: projectIdError } = usePlatformProjectId()
+  const { canEdit: canEditProject } = useProjectRole(projectId)
   const { showSuccess, modal } = useSuccessModal()
   const [viewMode, setViewMode] = useViewMode('regional-format-project', 'list')
   const [activeTab, setActiveTab] = useState('details')
@@ -301,6 +304,8 @@ export default function ProjectRegionalFormatSettingsPage() {
         </div>
 
         {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+        <TestEvidenceSettingCard scope="project" targetId={projectId} canManage={canEditProject} />
 
         <div className="border-b border-gray-200 dark:border-gray-700">
           <DetailAuditTabList

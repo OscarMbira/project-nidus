@@ -217,6 +217,18 @@ export async function markPaid(claimId) {
   return data
 }
 
+/** All non-deleted claims for a project (any submitter/status) — for reporting/summary views. */
+export async function listExpenseClaimsForProject(projectId) {
+  const { data, error } = await platformDb
+    .from('project_expense_claims')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
 export async function getApprovalHistory(claimId) {
   const { data, error } = await platformDb
     .from('expense_approval_steps')

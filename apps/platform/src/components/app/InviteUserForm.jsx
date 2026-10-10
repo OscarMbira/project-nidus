@@ -579,6 +579,8 @@ export default function InviteUserForm({
     : 0
   const isNearLimit = usagePercentage >= 80
   const isAtLimit = usagePercentage >= 100
+  const showTeamTermsTab = Boolean(selectedRole && isTeamMemberAppointmentRole(selectedRole.role_name) && pmoMode === MODE_INVITE)
+  const activeTab = formTab === 'team-terms' && !showTeamTermsTab ? 'details' : formTab
 
   return (
     <section
@@ -660,14 +662,28 @@ export default function InviteUserForm({
       </div>
 
       <div className="mb-4">
-        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setFormTab}
+          extraTab={showTeamTermsTab ? { value: 'team-terms', label: 'Team assignment terms' } : null}
+        />
       </div>
 
-      {formTab === 'audit' && (
+      {activeTab === 'team-terms' && showTeamTermsTab && (
+        <TeamMemberAppointmentForm
+          value={teamAppointmentTerms}
+          onChange={setTeamAppointmentTerms}
+          eligibleUsers={reportingCandidates}
+          storageKey={`nidus-team-appt-invite-${projectId}`}
+          defaultReportingToUserId={inviterInternalUserId}
+        />
+      )}
+
+      {activeTab === 'audit' && (
         <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this invitation is sent.</p>
       )}
 
-      {formTab === 'details' && (
+      {activeTab === 'details' && (
       <>
       {seatInfo && pmoMode === MODE_INVITE && (
         <div
@@ -808,16 +824,6 @@ export default function InviteUserForm({
             />
           </div>
         </div>
-
-        {selectedRole && isTeamMemberAppointmentRole(selectedRole.role_name) && pmoMode === MODE_INVITE ? (
-          <TeamMemberAppointmentForm
-            value={teamAppointmentTerms}
-            onChange={setTeamAppointmentTerms}
-            eligibleUsers={reportingCandidates}
-            storageKey={`nidus-team-appt-invite-${projectId}`}
-            defaultReportingToUserId={inviterInternalUserId}
-          />
-        ) : null}
 
         {selectedRole && isManagerAppointmentRole(selectedRole.role_name) && pmoMode === MODE_INVITE ? (
           <ManagerAppointmentForm

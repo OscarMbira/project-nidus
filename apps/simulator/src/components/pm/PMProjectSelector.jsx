@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Briefcase, ChevronDown } from 'lucide-react'
 import { useCurrentProject } from '../../context/CurrentProjectContext'
 
@@ -13,7 +13,16 @@ export default function PMProjectSelector({ compact = false }) {
   const [filter, setFilter] = useState('')
   const [open, setOpen] = useState(false)
   const location = useLocation()
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const isPersonalProfile = /\/(platform|pm|simulator(?:\/pm)?)\/profile\/?$/.test(location.pathname)
+  const urlProjectKey = searchParams.get('projectId') || location.pathname.match(/\/projects\/([^/]+)/)?.[1] || null
+
+  useEffect(() => {
+    if (!urlProjectKey || loading) return
+    const match = projects.find((p) => p.projectId === urlProjectKey || p.projectCode === urlProjectKey)
+    if (match && match.projectId !== currentProjectId) setCurrentProject(match.projectId)
+  }, [urlProjectKey, projects, currentProjectId, loading, setCurrentProject])
 
   // Profile is account-level, not project-scoped — hide the current-project selector.
   if (isPersonalProfile) return null
@@ -55,6 +64,18 @@ export default function PMProjectSelector({ compact = false }) {
 
   const handleSelect = (projectId) => {
     setCurrentProject(projectId)
+    const chosen = projects.find((p) => p.projectId === projectId)
+    const code = chosen?.projectCode || projectId
+    const projectInPath = location.pathname.match(/^(.*\/projects\/)([^/]+)(\/.*)?$/)
+    if (projectInPath || searchParams.has('projectId')) {
+      const rest = projectInPath?.[3] || ''
+      const isRecordPage = rest.split('/').filter(Boolean).length > 1
+      const base = projectInPath ? `${projectInPath[1]}${code}${isRecordPage ? '' : rest}` : location.pathname
+      const next = new URLSearchParams(searchParams)
+      next.set('projectId', code)
+      const qs = next.toString()
+      navigate(qs ? `${base}?${qs}` : base, { replace: true })
+    }
     setFilter('')
     setOpen(false)
   }

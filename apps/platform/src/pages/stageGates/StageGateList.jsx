@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Flag, Eye, Edit2, Trash2 } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js';
 
 const STATUS_COLORS = {
   draft: 'bg-gray-600 text-gray-100',
@@ -21,20 +22,24 @@ export default function StageGateList() {
   const [loading, setLoading]   = useState(true);
   const [deleting, setDeleting] = useState(null);
   const navigate = useNavigate();
+  const { projectId, loading: projectLoading } = usePlatformProjectId();
 
   const load = useCallback(async () => {
+    if (projectLoading) return;
     setLoading(true);
     try {
-      const { data } = await platformDb
+      let query = platformDb
         .from('stage_gate_reviews')
         .select('id, gate_name, project_id, stage, status, decision_date, created_at')
         .eq('is_deleted', false)
         .order('created_at', { ascending: false });
+      if (projectId) query = query.eq('project_id', projectId);
+      const { data } = await query;
       setRecords(data ?? []);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [projectId, projectLoading]);
 
   useEffect(() => { load(); }, [load]);
 

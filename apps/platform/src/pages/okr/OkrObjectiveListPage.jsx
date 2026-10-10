@@ -23,7 +23,7 @@ const HEALTH_CLASS = {
 }
 
 function basePath(sim) {
-  return sim ? '/simulator/pm/okr/objectives' : '/pm/okr/objectives'
+  return sim ? '/simulator/pm/okr/objectives' : '/platform/pm/okr/objectives'
 }
 
 export default function OkrObjectiveListPage({ sim = false }) {

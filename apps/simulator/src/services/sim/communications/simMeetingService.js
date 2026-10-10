@@ -54,3 +54,8 @@ export async function updateMeeting(meetingId, patch) {
     .single()
   return { data, error }
 }
+
+export async function deleteMeeting(meetingId) {
+  const { error } = await simDb.from('comm_meetings').delete().eq('id', meetingId)
+  return { error }
+}

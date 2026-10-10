@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { RowActionButton } from '@nidus/ui';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
@@ -20,17 +21,14 @@ import {
   fetchEndProjectReport,
   fetchLessonsLearned,
   fetchFollowOnActions,
-  fetchProjectHandover
+  fetchProjectHandover,
+  deleteProjectHandover
 } from '../../services/closingProjectService';
 import ProjectClosureDashboard from '../../components/structured/closing/ProjectClosureDashboard';
-import ProjectClosureForm from '../../components/structured/closing/ProjectClosureForm';
 import EndProjectReportForm from '../../components/structured/closing/EndProjectReportForm';
-import EndProjectReportFormEnhanced from '../../components/structured/closing/EndProjectReportFormEnhanced';
 import LessonsLearnedForm from '../../components/structured/closing/LessonsLearnedForm';
 import LessonsLearnedList from '../../components/structured/closing/LessonsLearnedList';
-import FollowOnActionsForm from '../../components/structured/closing/FollowOnActionsForm';
 import FollowOnActionsList from '../../components/structured/closing/FollowOnActionsList';
-import HandoverChecklist from '../../components/structured/closing/HandoverChecklist';
 
 export default function ClosingProject() {
   const { projectId, routeKey } = usePlatformProjectId();
@@ -46,18 +44,16 @@ export default function ClosingProject() {
   const [lessons, setLessons] = useState([]);
   const [actions, setActions] = useState([]);
   const [handover, setHandover] = useState(null);
+  const [deletingHandover, setDeletingHandover] = useState(false);
+  const [handoverError, setHandoverError] = useState('');
+  const { showSuccess, modal: successModal } = useSuccessModal();
 
   // Modal states
-  const [showClosureForm, setShowClosureForm] = useState(false);
-  const [closureFormSection, setClosureFormSection] = useState('basic');
   const [showEndReportForm, setShowEndReportForm] = useState(false);
   const [showLessonForm, setShowLessonForm] = useState(false);
-  const [showActionForm, setShowActionForm] = useState(false);
-  const [showHandoverChecklist, setShowHandoverChecklist] = useState(false);
 
   // Edit states
   const [editingLesson, setEditingLesson] = useState(null);
-  const [editingAction, setEditingAction] = useState(null);
 
   useEffect(() => {
     if (projectId) {
@@ -66,31 +62,27 @@ export default function ClosingProject() {
     }
   }, [projectId]);
 
-  // Deep links for the sidebar's Project Closure leaves (taxonomy §3) that are facets of THIS
-  // page rather than separate pages — Closure Checklist / Outstanding Items / Handover /
-  // Benefits Transition / Closure Report / Final Acceptance each get their own findable sidebar
-  // entry via ?tab=&section= on this same route (same "?tab= deep link" pattern already used
-  // elsewhere in this codebase for PMO dashboard tabs).
+  // Deep links for the sidebar's Project Closure leaves (taxonomy §3).
+  // Checklist / outstanding / handover / report stay as tabs on this page.
+  // Final Acceptance (?section=approval) and Benefits Transition (?section=benefits)
+  // open the closure form page.
   useEffect(() => {
     const tab = searchParams.get('tab');
     const section = searchParams.get('section');
     if (tab) setActiveTab(tab);
-    if (section === 'approval') {
-      setActiveTab('closure');
-      setClosureFormSection('approval');
-      setShowClosureForm(true);
-    } else if (section === 'benefits') {
-      setActiveTab('closure');
-      setClosureFormSection('benefits');
-      setShowClosureForm(true);
+    if ((section === 'approval' || section === 'benefits') && routeKey) {
+      navigate(
+        `${platformProjectPath(routeKey, 'closure', 'form')}?section=${encodeURIComponent(section)}`,
+        { replace: true }
+      );
     }
-  }, [searchParams]);
+  }, [searchParams, routeKey, navigate]);
 
   const loadProjectData = async () => {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, project_name, project_code, project_status')
+        .select('id, project_name, project_code')
         .eq('id', projectId)
         .maybeSingle();
 
@@ -128,9 +120,8 @@ export default function ClosingProject() {
     navigate(`/projects/${projectId}`);
   };
 
-  const handleClosureSuccess = () => {
-    loadClosingData();
-    setShowClosureForm(false);
+  const openClosureForm = () => {
+    navigate(platformProjectPath(routeKey || project?.project_code || projectId, 'closure', 'form'));
   };
 
   const handleEndReportSuccess = () => {
@@ -144,15 +135,32 @@ export default function ClosingProject() {
     setEditingLesson(null);
   };
 
-  const handleActionSuccess = () => {
-    loadClosingData();
-    setShowActionForm(false);
-    setEditingAction(null);
+  const openHandover = (mode = 'view') => {
+    const segments = ['closure', 'handover'];
+    if (mode === 'edit') segments.push('edit');
+    navigate(platformProjectPath(routeKey || project?.project_code || projectId, ...segments));
   };
 
-  const handleHandoverSuccess = () => {
-    loadClosingData();
-    setShowHandoverChecklist(false);
+  const handleDeleteHandover = async () => {
+    if (!handover?.id || deletingHandover) return;
+    if (!window.confirm('Delete this project handover?')) return;
+    try {
+      setDeletingHandover(true);
+      setHandoverError('');
+      await deleteProjectHandover(handover.id);
+      const recordId = handover.handover_reference || handover.handover_title || 'Handover';
+      setHandover(null);
+      showSuccess({
+        recordId,
+        operation: 'deleted',
+        onOk: () => loadClosingData(),
+      });
+    } catch (error) {
+      console.error('Error deleting handover:', error);
+      setHandoverError(error.message || 'Could not delete the handover');
+    } finally {
+      setDeletingHandover(false);
+    }
   };
 
   const handleEditLesson = (lesson) => {
@@ -160,9 +168,11 @@ export default function ClosingProject() {
     setShowLessonForm(true);
   };
 
-  const handleEditAction = (action) => {
-    setEditingAction(action);
-    setShowActionForm(true);
+  const openAction = (action, mode = 'view') => {
+    const key = action?.action_reference || action?.id || 'create';
+    const segments = ['closure', 'actions', key];
+    if (action && mode === 'edit') segments.push('edit');
+    navigate(platformProjectPath(routeKey || project?.project_code || projectId, ...segments));
   };
 
   const tabs = [
@@ -201,7 +211,7 @@ export default function ClosingProject() {
                       </span>
                     </div>
                   </div>
-                  <RowActionButton variant="edit" label="Edit closure" onClick={() => setShowClosureForm(true)} />
+                  <RowActionButton variant="edit" label="Edit closure" onClick={openClosureForm} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -252,7 +262,7 @@ export default function ClosingProject() {
                   Start the project closure process to formally close this project
                 </p>
                 <button
-                  onClick={() => setShowClosureForm(true)}
+                  onClick={openClosureForm}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
                 >
                   <Plus className="h-5 w-5" />
@@ -373,12 +383,10 @@ export default function ClosingProject() {
         return (
           <FollowOnActionsList
             actions={actions}
-            onEdit={handleEditAction}
+            onView={(action) => openAction(action, 'view')}
+            onEdit={(action) => openAction(action, 'edit')}
             onRefresh={loadClosingData}
-            onAdd={() => {
-              setEditingAction(null);
-              setShowActionForm(true);
-            }}
+            onAdd={() => openAction(null)}
           />
         );
 
@@ -405,7 +413,11 @@ export default function ClosingProject() {
                       </span>
                     </div>
                   </div>
-                  <RowActionButton variant="edit" label="Edit handover" onClick={() => setShowHandoverChecklist(true)} />
+                  <div className="flex items-center gap-2">
+                    <RowActionButton variant="view" label="View handover" onClick={() => openHandover('view')} />
+                    <RowActionButton variant="edit" label="Edit handover" onClick={() => openHandover('edit')} />
+                    <RowActionButton variant="delete" label="Delete handover" onClick={handleDeleteHandover} disabled={deletingHandover} />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -446,9 +458,11 @@ export default function ClosingProject() {
                     <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Support Arrangements
                     </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {handover.support_arrangements}
-                    </p>
+                    <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                      {String(handover.support_arrangements).split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line, index) => (
+                        <li key={`${index}-${line}`}>{line}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
               </div>
@@ -462,7 +476,7 @@ export default function ClosingProject() {
                   Create a handover checklist to transition to operations
                 </p>
                 <button
-                  onClick={() => setShowHandoverChecklist(true)}
+                  onClick={() => openHandover('edit')}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium inline-flex items-center gap-2"
                 >
                   <Plus className="h-5 w-5" />
@@ -490,7 +504,7 @@ export default function ClosingProject() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -516,7 +530,7 @@ export default function ClosingProject() {
 
       {/* Tab Navigation */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6">
           <nav className="flex space-x-8 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -540,21 +554,11 @@ export default function ClosingProject() {
       </div>
 
       {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-8">
         {renderTabContent()}
       </div>
 
       {/* Modals */}
-      {showClosureForm && (
-        <ProjectClosureForm
-          projectId={projectId}
-          closure={closure}
-          initialSection={closureFormSection}
-          onClose={() => setShowClosureForm(false)}
-          onSuccess={handleClosureSuccess}
-        />
-      )}
-
       {showEndReportForm && (
         <EndProjectReportForm
           projectId={projectId}
@@ -576,25 +580,6 @@ export default function ClosingProject() {
         />
       )}
 
-      {showActionForm && (
-        <FollowOnActionsForm
-          projectId={projectId}
-          action={editingAction}
-          onClose={() => {
-            setShowActionForm(false);
-            setEditingAction(null);
-          }}
-          onSuccess={handleActionSuccess}
-        />
-      )}
-
-      {showHandoverChecklist && (
-        <HandoverChecklist
-          projectId={projectId}
-          onClose={() => setShowHandoverChecklist(false)}
-          onSuccess={handleHandoverSuccess}
-        />
-      )}
     </div>
   );
 }

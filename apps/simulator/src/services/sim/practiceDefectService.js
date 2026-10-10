@@ -145,8 +145,11 @@ export async function uploadPracticeDefectAttachment({
     .select()
     .single()
   if (error) throw error
-  const [withPreview] = await withPreviewUrls([data])
-  return { attachment: withPreview, signedUrl: withPreview.preview_url }
+
+  // No signed-URL round trip here (rule 66): the uploader already shows the
+  // file instantly from a local object URL, and the full list is re-signed
+  // the next time it's actually loaded. Signing it again here was thrown away.
+  return { attachment: data }
 }
 
 export async function deletePracticeDefectAttachment(attachmentId) {

@@ -18,6 +18,7 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '../../../utils/exportUtils'
+import RecordPreviewModal from '@nidus/ui/RecordPreviewModal'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 
 const PID_KEY = 'practice_project_id'
@@ -35,6 +36,7 @@ function Detail({ caseId, projectId }) {
   const [tc, setTc] = useState(null)
   const [suites, setSuites] = useState([])
   const [editing, setEditing] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const [err, setErr] = useState(null)
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -125,7 +127,15 @@ function Detail({ caseId, projectId }) {
                 onExportJSON={() => exportRecordToJSON(exportSections, tc, `test_case_${tc.test_case_ref || tc.id}`)}
                 onExportPrint={() => exportRecordToPrint(exportSections, tc)}
               />
+              <RowActionButton variant="view" label="View test case" onClick={() => setPreviewOpen(true)} />
               <RowActionButton variant="edit" label="Edit test case" onClick={() => setEditing(true)} />
+              <RecordPreviewModal
+                isOpen={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+                sections={exportSections}
+                record={tc}
+                baseFilename={`test_case_${tc.test_case_ref || tc.id}`}
+              />
             </>
           )}
         </div>

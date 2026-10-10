@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { getMyExpenses, parseApprovalChain } from '../expenseClaimService'
+import { getMyExpenses, parseApprovalChain, listExpenseClaimsForProject } from '../expenseClaimService'
 
 const authGetUser = vi.fn()
 const fromMock = vi.fn()
@@ -51,5 +51,21 @@ describe('expenseClaimService.parseApprovalChain', () => {
     expect(parseApprovalChain([{ level: 1 }])).toEqual([{ level: 1 }])
     expect(parseApprovalChain('[{"level":1}]')).toEqual([{ level: 1 }])
     expect(parseApprovalChain(null)).toEqual([])
+  })
+})
+
+describe('expenseClaimService.listExpenseClaimsForProject', () => {
+  it('returns all non-deleted claims for a project, newest first', async () => {
+    const chain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      order: vi.fn().mockResolvedValue({ data: [{ id: 'c1' }], error: null }),
+    }
+    fromMock.mockImplementation((table) => (table === 'project_expense_claims' ? chain : {}))
+
+    const result = await listExpenseClaimsForProject('p-1')
+    expect(fromMock).toHaveBeenCalledWith('project_expense_claims')
+    expect(chain.eq).toHaveBeenCalledWith('project_id', 'p-1')
+    expect(result).toEqual([{ id: 'c1' }])
   })
 })

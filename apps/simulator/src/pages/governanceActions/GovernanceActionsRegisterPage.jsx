@@ -11,13 +11,17 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, LayoutGrid, List as ListIcon, ListTodo } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { simDb } from '@nidus/supabase'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getGovernanceActions, GOVERNANCE_ACTION_TYPES, GOVERNANCE_ACTION_STATUSES, getActionTypeLabel } from '../../services/governanceActionService'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 
 const PAGE_SIZE = 20
 
@@ -37,6 +41,8 @@ function StatusBadge({ status }) {
 
 export default function GovernanceActionsRegisterPage() {
   const navigate = useNavigate()
+  const { projectId, loading: projectLoading } = usePlatformProjectId()
+  const { showSuccess, modal: successModal } = useSuccessModal()
 
   const [loading, setLoading] = useState(true)
   const [rows, setRows] = useState([])
@@ -55,14 +61,22 @@ export default function GovernanceActionsRegisterPage() {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const data = await getGovernanceActions({ actionType: typeFilter || undefined, status: statusFilter || undefined })
-      if (!cancelled) {
-        setRows(data)
-        setLoading(false)
+      if (projectLoading) return
+      try {
+        const data = await getGovernanceActions({
+          actionType: typeFilter || undefined,
+          status: statusFilter || undefined,
+          projectId: projectId || undefined,
+        })
+        if (!cancelled) setRows(data)
+      } catch {
+        if (!cancelled) setRows([])
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     })()
     return () => { cancelled = true }
-  }, [typeFilter, statusFilter])
+  }, [typeFilter, statusFilter, projectId, projectLoading])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -91,9 +105,31 @@ export default function GovernanceActionsRegisterPage() {
   ]
   const exportRows = sorted
 
-  const goToRecord = (row) => {
+  const openRecord = (row) => {
     if (row.view_path) navigate(row.view_path)
   }
+
+  const deleteRecord = async (row) => {
+    const label = row.record_label || 'this action'
+    if (!window.confirm(`Delete "${label}"?`)) return
+    try {
+      const table = row.action_type === 'issue' ? 'practice_issue_actions' : 'practice_lesson_entries'
+      const { error } = await simDb.from(table).delete().eq('id', row.action_id)
+      if (error) throw error
+      setRows((prev) => prev.filter((item) => item.action_id !== row.action_id))
+      showSuccess({ recordId: label, operation: 'deleted', message: 'Action deleted.' })
+    } catch (err) {
+      toast.error(err?.message || 'Could not delete this action')
+    }
+  }
+
+  const rowActions = (row) => (
+    <div className="inline-flex items-center gap-1 justify-end">
+      <RowActionButton variant="view" label="View action" onClick={() => openRecord(row)} />
+      <RowActionButton variant="edit" label="Edit action" onClick={() => openRecord(row)} />
+      <RowActionButton variant="delete" label="Delete action" onClick={() => deleteRecord(row)} />
+    </div>
+  )
 
   if (loading) {
     return <div className="p-8 text-gray-500 dark:text-gray-400">Loading actions…</div>
@@ -158,7 +194,7 @@ export default function GovernanceActionsRegisterPage() {
 
       {pageRows.length === 0 ? (
         <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          No actions match these filters.
+          {(search.trim() || typeFilter || statusFilter) ? 'No actions match these filters.' : 'No actions for this project yet.'}
         </div>
       ) : viewMode === 'list' ? (
         <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -196,7 +232,7 @@ export default function GovernanceActionsRegisterPage() {
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{r.assigned_to_name || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{r.due_date || '—'}</td>
                   <td className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800">
-                    <RowActionButton variant="view" label="View action" onClick={() => goToRecord(r)} />
+                    {rowActions(r)}
                   </td>
                 </tr>
               ))}
@@ -215,12 +251,13 @@ export default function GovernanceActionsRegisterPage() {
               <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{r.record_label}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Assigned to: {r.assigned_to_name || '—'}</p>
               <div className="flex items-center gap-3 pt-2">
-                <RowActionButton variant="view" label="View action" onClick={() => goToRecord(r)} />
+                {rowActions(r)}
               </div>
             </div>
           ))}
         </div>
       )}
+      {successModal}
     </div>
   )
 }

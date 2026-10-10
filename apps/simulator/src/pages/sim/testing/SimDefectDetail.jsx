@@ -192,10 +192,31 @@ function Detail({ defectId, isNew, projectId }) {
         </div>
       )}
       {!isNew && row && (
-        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          extraTab={{ value: 'images', label: 'Images' }}
+        />
       )}
 
-      {activeTab === 'audit' && !isNew && row ? (
+      {activeTab === 'images' && !isNew && row ? (
+        <DefectAttachmentUploader
+          projectId={row.practice_project_id}
+          defectId={row.id}
+          uploadedByUserId={uid}
+          getAttachments={getPracticeDefectAttachments}
+          uploadAttachment={({ projectId: pp, defectId: did, file, is_screenshot, uploaded_by }) =>
+            uploadPracticeDefectAttachment({
+              practiceProjectId: pp,
+              defectId: did,
+              file,
+              is_screenshot,
+              uploaded_by,
+            })
+          }
+          deleteAttachment={deletePracticeDefectAttachment}
+        />
+      ) : activeTab === 'audit' && !isNew && row ? (
         <>
           <AuditDetailsPanel description="Who reported or changed this defect, where it was found, and how it was triaged.">
             <AuditCard title="Identity" description="How this defect is labelled, and the context it was found in.">
@@ -269,22 +290,6 @@ function Detail({ defectId, isNew, projectId }) {
             currentUserId={uid}
             getComments={getPracticeDefectComments}
             addComment={addPracticeDefectComment}
-          />
-          <DefectAttachmentUploader
-            projectId={row.practice_project_id}
-            defectId={row.id}
-            uploadedByUserId={uid}
-            getAttachments={getPracticeDefectAttachments}
-            uploadAttachment={({ projectId: pp, defectId: did, file, is_screenshot, uploaded_by }) =>
-              uploadPracticeDefectAttachment({
-                practiceProjectId: pp,
-                defectId: did,
-                file,
-                is_screenshot,
-                uploaded_by,
-              })
-            }
-            deleteAttachment={deletePracticeDefectAttachment}
           />
         </>
       )}

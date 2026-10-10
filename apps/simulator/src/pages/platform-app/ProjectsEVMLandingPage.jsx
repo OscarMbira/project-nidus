@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
-import { listEvmSnapshots } from '../../services/evmService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -22,12 +21,23 @@ export default function ProjectsEVMLandingPage() {
           .eq('is_deleted', false)
           .order('project_code')
           .limit(200)
-        const rows = []
-        for (const p of projs || []) {
-          const snaps = await listEvmSnapshots(p.id)
-          const last = snaps[snaps.length - 1]
-          if (last) rows.push({ project: p, last })
+        const projectIds = (projs || []).map((p) => p.id)
+        if (projectIds.length === 0) {
+          setRollup([])
+          return
         }
+        const { data: snaps } = await platformDb
+          .from('project_evm_snapshots')
+          .select('*')
+          .in('project_id', projectIds)
+          .order('period_date', { ascending: true })
+        const latestByProject = new Map()
+        for (const snap of snaps || []) {
+          latestByProject.set(snap.project_id, snap)
+        }
+        const rows = (projs || [])
+          .map((p) => ({ project: p, last: latestByProject.get(p.id) }))
+          .filter((r) => r.last)
         setRollup(rows)
       } finally {
         setLoading(false)

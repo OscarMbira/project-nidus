@@ -106,11 +106,25 @@ export async function getConfigurationItemsByStrategy(cfgMsId) {
 }
 
 /**
- * Create Configuration Item (using database function)
- * @param {string} projectId - Project ID
- * @param {string} itemName - Item name
- * @returns {Promise<Object>} Created Configuration Item
+ * Fields written on create/update. Nested join objects from a loaded row are left out.
  */
+export function configurationItemWritePayload(itemData = {}) {
+  const productIds = String(itemData.product_id_list || itemData.product_id || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  return {
+    item_name: itemData.item_name,
+    item_description: itemData.item_description || null,
+    item_type_id: itemData.item_type_id || null,
+    item_type_code: itemData.item_type_code || null,
+    product_id: null,
+    product_id_list: productIds.join('\n') || null,
+    storage_location: String(itemData.storage_location || '').trim() || null,
+    repository_url: String(itemData.repository_url || '').trim() || null,
+  }
+}
+
 export async function createConfigurationItem(projectId, itemName) {
   try {
     const { data: { user } } = await supabase.auth.getUser();

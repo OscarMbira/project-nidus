@@ -19,6 +19,7 @@ import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './Tab
  *   rowKey: (row: any) => string,
  *   searchFields?: string[],
  *   onRowClick?: (row: any) => void,
+ *   renderRowActions?: (row: any) => React.ReactNode,
  *   onViewAll?: () => void,
  *   viewAllLabel?: string,
  *   emptyMessage?: string,
@@ -35,6 +36,7 @@ export default function RegisterOpenItemsWidget({
   rowKey,
   searchFields = [],
   onRowClick,
+  renderRowActions,
   onViewAll,
   viewAllLabel,
   emptyMessage = 'No items to show',
@@ -131,6 +133,11 @@ export default function RegisterOpenItemsWidget({
                     {col.label}
                   </TableHeaderCell>
                 ))}
+                {renderRowActions && (
+                  <th className="px-3 py-3 text-right text-xs font-medium text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                    Actions
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -149,6 +156,16 @@ export default function RegisterOpenItemsWidget({
                       {col.render ? col.render(row) : row[col.key] ?? '—'}
                     </td>
                   ))}
+                  {renderRowActions && (
+                    <td
+                      className="px-3 py-3 text-right whitespace-nowrap"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <div className="inline-flex items-center justify-end gap-1">
+                        {renderRowActions(row)}
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

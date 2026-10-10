@@ -1,13 +1,72 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
-import { X, Users, Calendar, CheckCircle, FileText, AlertCircle, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Calendar, Plus, Trash2 } from 'lucide-react';
 import { createProjectHandover, updateProjectHandover, fetchProjectHandover } from '../../../services/closingProjectService';
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext';
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal';
+import { platformDb } from '@nidus/supabase';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import SelectField from '@nidus/ui/SelectField';
+import MultiLineListInput from '@nidus/ui/MultiLineListInput';
+import ExportRecordMenu from '@nidus/ui/ExportRecordMenu';
+import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+
+const HANDOVER_EXPORT_SECTIONS = [
+  {
+    title: 'Details',
+    fields: [
+      { key: 'handover_from', label: 'Handover from' },
+      { key: 'handover_to', label: 'Handover to' },
+      { key: 'handover_date', label: 'Handover date' },
+      { key: 'handover_type', label: 'Handover type' },
+      { key: 'handover_status', label: 'Handover status' },
+      { key: 'handover_notes', label: 'Handover notes' },
+      { key: 'acceptance_signature_date', label: 'Acceptance signature date' },
+    ],
+  },
+  {
+    title: 'Completion status',
+    fields: [
+      { key: 'completion', label: 'Handover completion' },
+      { key: 'documentation_complete', label: 'Documentation complete' },
+      { key: 'training_complete', label: 'Training complete' },
+      { key: 'knowledge_transfer_complete', label: 'Knowledge transfer complete' },
+      { key: 'completion_items', label: 'Additional completion items' },
+    ],
+  },
+  {
+    title: 'Handover checklist',
+    fields: [{ key: 'checklist', label: 'Checklist' }],
+  },
+  {
+    title: 'Support arrangements',
+    fields: [{ key: 'support_arrangements', label: 'Support arrangements' }],
+  },
+  {
+    title: 'Operational acceptance',
+    fields: [{ key: 'operational_acceptance', label: 'Operational acceptance' }],
+  },
+];
+
+function yesNo(value) {
+  return value ? 'Yes' : 'No';
+}
 
 export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [users, setUsers] = useState([]);
   const [handover, setHandover] = useState(null);
+  const [formTab, setFormTab] = useState('details');
+  const [sectionError, setSectionError] = useState('');
+  const [auditUserLabels, setAuditUserLabels] = useState({});
+  const [baseline, setBaseline] = useState('');
+  const [pendingLeave, setPendingLeave] = useState(false);
+  const { showSuccess, modal: successModal } = useSuccessModal();
   const [checklistItems, setChecklistItems] = useState([
     { item: 'Project documentation handed over', completed: false },
     { item: 'Operational procedures documented', completed: false },
@@ -32,6 +91,28 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
     handover_notes: '',
     acceptance_signature_date: ''
   });
+  const [completionItems, setCompletionItems] = useState([]);
+
+  const snapshot = JSON.stringify({ formData, checklistItems, completionItems });
+  const isDirty = baseline !== '' && snapshot !== baseline && !pendingLeave;
+  const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved handover changes.');
+  const userOptions = users.map((user) => ({
+    value: user.id,
+    label: user.full_name || user.email,
+  }));
+
+  useEffect(() => {
+    if (pendingLeave) onClose?.();
+  }, [pendingLeave, onClose]);
+
+  useEffect(() => {
+    if (formTab !== 'audit' || !handover) return undefined;
+    let cancelled = false;
+    resolveAuditUserLabels(platformDb, [handover.created_by, handover.updated_by]).then((labels) => {
+      if (!cancelled) setAuditUserLabels(labels || {});
+    });
+    return () => { cancelled = true; };
+  }, [formTab, handover]);
 
   useEffect(() => {
     loadHandoverData();
@@ -42,9 +123,11 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
     try {
       setLoadingData(true);
       const data = await fetchProjectHandover(projectId);
+      let nextForm = formData;
+      let nextItems = checklistItems;
+      let nextCompletion = completionItems;
       if (data) {
-        setHandover(data);
-        setFormData({
+        nextForm = {
           handover_from: data.handover_from || '',
           handover_to: data.handover_to || '',
           handover_date: data.handover_date || new Date().toISOString().split('T')[0],
@@ -57,11 +140,15 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
           operational_acceptance: data.operational_acceptance || '',
           handover_notes: data.handover_notes || '',
           acceptance_signature_date: data.acceptance_signature_date || ''
-        });
-        if (data.checklist_items && Array.isArray(data.checklist_items)) {
-          setChecklistItems(data.checklist_items);
-        }
+        };
+        nextItems = Array.isArray(data.checklist_items) ? data.checklist_items : checklistItems;
+        nextCompletion = Array.isArray(data.completion_status_items) ? data.completion_status_items : [];
+        setHandover(data);
+        setFormData(nextForm);
+        setChecklistItems(nextItems);
+        setCompletionItems(nextCompletion);
       }
+      setBaseline(JSON.stringify({ formData: nextForm, checklistItems: nextItems, completionItems: nextCompletion }));
     } catch (error) {
       console.error('Error loading handover data:', error);
     } finally {
@@ -99,6 +186,26 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
     setChecklistItems(updatedItems);
   };
 
+  const handleAddCompletionItem = () => {
+    setCompletionItems([...completionItems, { item: '', completed: false }]);
+  };
+
+  const handleCompletionToggle = (index) => {
+    const updated = [...completionItems];
+    updated[index] = { ...updated[index], completed: !updated[index].completed };
+    setCompletionItems(updated);
+  };
+
+  const handleCompletionItemChange = (index, value) => {
+    const updated = [...completionItems];
+    updated[index] = { ...updated[index], item: value };
+    setCompletionItems(updated);
+  };
+
+  const handleRemoveCompletionItem = (index) => {
+    setCompletionItems(completionItems.filter((_, i) => i !== index));
+  };
+
   const handleChecklistItemChange = (index, value) => {
     const updatedItems = [...checklistItems];
     updatedItems[index].item = value;
@@ -113,6 +220,20 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const supportItems = String(formData.support_arrangements || '').trim();
+    const acceptanceItems = String(formData.operational_acceptance || '').trim();
+    if (!supportItems) {
+      setFormTab('support');
+      setSectionError('Add at least one support arrangement.');
+      return;
+    }
+    if (!acceptanceItems) {
+      setFormTab('acceptance');
+      setSectionError('Add at least one operational acceptance item.');
+      return;
+    }
+    setSectionError('');
 
     try {
       setLoading(true);
@@ -130,6 +251,7 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
         documentation_complete: formData.documentation_complete,
         training_complete: formData.training_complete,
         knowledge_transfer_complete: formData.knowledge_transfer_complete,
+        completion_status_items: completionItems,
         support_arrangements: formData.support_arrangements,
         operational_acceptance: formData.operational_acceptance,
         handover_notes: formData.handover_notes,
@@ -137,16 +259,24 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
         acceptance_signature_date: formData.acceptance_signature_date || null
       };
 
+      let saved;
       if (handover) {
         handoverData.updated_by = user.id;
-        await updateProjectHandover(handover.id, handoverData);
+        saved = await updateProjectHandover(handover.id, handoverData);
       } else {
         handoverData.created_by = user.id;
-        await createProjectHandover(handoverData);
+        saved = await createProjectHandover(handoverData);
       }
 
-      onSuccess();
-      onClose();
+      setBaseline(JSON.stringify({ formData, checklistItems, completionItems }));
+      showSuccess({
+        recordId: saved?.handover_reference || saved?.handover_title || 'Handover',
+        operation: handover ? 'updated' : 'created',
+        onOk: () => {
+          onSuccess?.();
+          setPendingLeave(true);
+        },
+      });
     } catch (error) {
       console.error('Error saving project handover:', error);
       alert('Error saving project handover: ' + error.message);
@@ -155,23 +285,68 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
     }
   };
 
+  const handleCancel = () => confirmDiscard(() => setPendingLeave(true));
+
   if (loadingData) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-700 dark:text-gray-300 mt-4">Loading handover data...</p>
-        </div>
+      <div>
+      <button
+        type="button"
+        onClick={handleCancel}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="text-gray-700 dark:text-gray-200 mt-4 text-center">Loading handover data...</p>
+      </div>
       </div>
     );
   }
 
   const completionPercentage = calculateCompletionPercentage();
+  const userLabel = (id) => {
+    const match = users.find((user) => user.id === id);
+    return match?.full_name || match?.email || '';
+  };
+  const exportRecord = {
+    handover_from: userLabel(formData.handover_from),
+    handover_to: userLabel(formData.handover_to),
+    handover_date: formData.handover_date,
+    handover_type: humanizeAuditToken(formData.handover_type),
+    handover_status: humanizeAuditToken(formData.handover_status),
+    handover_notes: formData.handover_notes,
+    acceptance_signature_date: formData.acceptance_signature_date,
+    completion: `${completionPercentage}%`,
+    documentation_complete: yesNo(formData.documentation_complete),
+    training_complete: yesNo(formData.training_complete),
+    knowledge_transfer_complete: yesNo(formData.knowledge_transfer_complete),
+    completion_items: completionItems
+      .map((item) => `${item.item || ''}${item.completed ? ' (done)' : ''}`.trim())
+      .filter(Boolean)
+      .join('\n'),
+    checklist: checklistItems
+      .map((item) => `${item.item || ''}${item.completed ? ' (done)' : ''}`.trim())
+      .filter(Boolean)
+      .join('\n'),
+    support_arrangements: formData.support_arrangements,
+    operational_acceptance: formData.operational_acceptance,
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+    <div>
+      <button
+        type="button"
+        onClick={handleCancel}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Project Handover Checklist
@@ -180,15 +355,57 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
               Manage project handover to operational teams
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <ExportRecordMenu
+            sections={HANDOVER_EXPORT_SECTIONS}
+            record={exportRecord}
+            baseFilename={handover?.handover_reference || handover?.handover_title || 'Project-Handover'}
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <DetailAuditTabList
+            activeTab={formTab}
+            onChange={(tab) => {
+              setSectionError('');
+              setFormTab(tab);
+            }}
+            ariaLabel="Handover sections"
+            tabs={[
+              { value: 'details', label: 'Details' },
+              { value: 'completion', label: 'Completion status' },
+              { value: 'checklist', label: 'Handover checklist' },
+              { value: 'support', label: 'Support arrangements' },
+              { value: 'acceptance', label: 'Operational acceptance' },
+              { value: 'audit', label: 'Audit details' },
+            ]}
+          />
+
+          {formTab === 'audit' && (
+            !handover?.id ? (
+              <p className="text-sm text-gray-700 dark:text-gray-200">Audit details appear after this handover is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this handover, and how it is classified.">
+                <AuditCard title="Identity" description="How this handover is labelled.">
+                  <AuditField label="Title" value={handover.handover_title} />
+                  <AuditField label="Reference" value={handover.handover_reference} />
+                  <AuditField label="Status" value={humanizeAuditToken(formData.handover_status)} />
+                </AuditCard>
+                <AuditCard title="Classification" description="What kind of handover this is.">
+                  <AuditField label="Type" value={humanizeAuditToken(formData.handover_type)} />
+                  <AuditField label="Date" value={formData.handover_date} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this handover was created and last changed.">
+                  <AuditField label="Created by" value={handover.created_by ? auditUserLabels[handover.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={handover.created_at} />
+                  <AuditField label="Updated by" value={handover.updated_by ? auditUserLabels[handover.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={handover.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            )
+          )}
+
+          {formTab === 'details' && (
+          <>
           {/* Progress Bar */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
@@ -214,19 +431,15 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                 <Users className="h-4 w-4" />
                 Handover From *
               </label>
-              <select
+              <SelectField
+                forceSearchable
+                options={userOptions}
                 value={formData.handover_from}
-                onChange={(e) => setFormData({ ...formData, handover_from: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                onChange={(value) => setFormData({ ...formData, handover_from: value })}
+                placeholder="Select user..."
                 required
-              >
-                <option value="">Select user...</option>
-                {users.map((user, index) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </select>
+                aria-label="Handover from"
+              />
             </div>
 
             <div>
@@ -234,19 +447,15 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
                 <Users className="h-4 w-4" />
                 Handover To *
               </label>
-              <select
+              <SelectField
+                forceSearchable
+                options={userOptions}
                 value={formData.handover_to}
-                onChange={(e) => setFormData({ ...formData, handover_to: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                onChange={(value) => setFormData({ ...formData, handover_to: value })}
+                placeholder="Select user..."
                 required
-              >
-                <option value="">Select user...</option>
-                {users.map((user, index) => (
-                  <option key={user.id} value={user.id}>
-                    {user.full_name || user.email}
-                  </option>
-                ))}
-              </select>
+                aria-label="Handover to"
+              />
             </div>
           </div>
 
@@ -298,120 +507,6 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Completion Flags */}
-          <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-              Completion Status
-            </h3>
-            <div className="space-y-3">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.documentation_complete}
-                  onChange={(e) => setFormData({ ...formData, documentation_complete: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Documentation Complete
-                </span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.training_complete}
-                  onChange={(e) => setFormData({ ...formData, training_complete: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Training Complete
-                </span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.knowledge_transfer_complete}
-                  onChange={(e) => setFormData({ ...formData, knowledge_transfer_complete: e.target.checked })}
-                  className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Knowledge Transfer Complete
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Handover Checklist */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                Handover Checklist
-              </h3>
-              <button
-                type="button"
-                onClick={handleAddChecklistItem}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium inline-flex items-center gap-1"
-              >
-                <Plus className="h-3 w-3" />
-                Add Item
-              </button>
-            </div>
-            <div className="space-y-2">
-              {checklistItems.map((item, index) => (
-                <div key={index} className="flex items-center gap-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                  <input
-                    type="checkbox"
-                    checked={item.completed}
-                    onChange={() => handleChecklistToggle(index)}
-                    className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
-                  />
-                  <input
-                    type="text"
-                    value={item.item}
-                    onChange={(e) => handleChecklistItemChange(index, e.target.value)}
-                    className="flex-1 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm"
-                    placeholder="Checklist item..."
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveChecklistItem(index)}
-                    className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Support & Acceptance */}
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-              Support Arrangements *
-            </label>
-            <textarea
-              value={formData.support_arrangements}
-              onChange={(e) => setFormData({ ...formData, support_arrangements: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Describe ongoing support arrangements..."
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-              Operational Acceptance *
-            </label>
-            <textarea
-              value={formData.operational_acceptance}
-              onChange={(e) => setFormData({ ...formData, operational_acceptance: e.target.value })}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              placeholder="Document operational team acceptance..."
-              required
-            />
-          </div>
-
           <div>
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Handover Notes
@@ -437,11 +532,169 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
+          </>
+          )}
+
+          {formTab === 'completion' && (
+            <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Completion Status
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAddCompletionItem}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium inline-flex items-center gap-1"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Item
+                </button>
+              </div>
+              <div className="space-y-3">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.documentation_complete}
+                    onChange={(e) => setFormData({ ...formData, documentation_complete: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Documentation Complete
+                  </span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.training_complete}
+                    onChange={(e) => setFormData({ ...formData, training_complete: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    Training Complete
+                  </span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.knowledge_transfer_complete}
+                    onChange={(e) => setFormData({ ...formData, knowledge_transfer_complete: e.target.checked })}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Knowledge Transfer Complete
+                </span>
+              </label>
+              {completionItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(item.completed)}
+                    onChange={() => handleCompletionToggle(index)}
+                    className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    value={item.item}
+                    onChange={(e) => handleCompletionItemChange(index, e.target.value)}
+                    className="flex-1 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm"
+                    placeholder="Completion item..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveCompletionItem(index)}
+                    className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    aria-label="Remove completion item"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              </div>
+            </div>
+          )}
+
+          {formTab === 'checklist' && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Handover Checklist
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleAddChecklistItem}
+                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium inline-flex items-center gap-1"
+                >
+                  <Plus className="h-3 w-3" />
+                  Add Item
+                </button>
+              </div>
+              <div className="space-y-2">
+                {checklistItems.map((item, index) => (
+                  <div key={index} className="flex items-center gap-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                    <input
+                      type="checkbox"
+                      checked={item.completed}
+                      onChange={() => handleChecklistToggle(index)}
+                      className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                    />
+                    <input
+                      type="text"
+                      value={item.item}
+                      onChange={(e) => handleChecklistItemChange(index, e.target.value)}
+                      className="flex-1 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white text-sm"
+                      placeholder="Checklist item..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveChecklistItem(index)}
+                      className="p-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {formTab === 'support' && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Support Arrangements *
+              </label>
+              <MultiLineListInput
+                viewModeId="handover-support-arrangements"
+                value={formData.support_arrangements}
+                onChange={(value) => setFormData({ ...formData, support_arrangements: value })}
+                placeholder="Add a support arrangement"
+                itemColumnLabel="Arrangement"
+                ariaLabelPrefix="Support arrangement"
+              />
+              {sectionError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{sectionError}</p>}
+            </div>
+          )}
+
+          {formTab === 'acceptance' && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                Operational Acceptance *
+              </label>
+              <MultiLineListInput
+                viewModeId="handover-operational-acceptance"
+                value={formData.operational_acceptance}
+                onChange={(value) => setFormData({ ...formData, operational_acceptance: value })}
+                placeholder="Add an acceptance item"
+                itemColumnLabel="Acceptance"
+                ariaLabelPrefix="Operational acceptance"
+              />
+              {sectionError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{sectionError}</p>}
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleCancel}
               className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 font-medium"
               disabled={loading}
             >
@@ -456,7 +709,8 @@ export default function HandoverChecklist({ projectId, onClose, onSuccess }) {
             </button>
           </div>
         </form>
-      </div>
+        {successModal}
+    </div>
     </div>
   );
 }

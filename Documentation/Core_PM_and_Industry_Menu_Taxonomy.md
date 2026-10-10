@@ -327,6 +327,8 @@ PROJECT MANAGEMENT
 │       ├── Corrective Action
 │       ├── Preventive Action
 │       └── Closure
+│   ├── Configuration Item Register
+│   └── Configuration Item Types (v1218)
 │
 ├── Testing
 │   ├── Test Planning
@@ -391,6 +393,7 @@ PROJECT MANAGEMENT
 ├── Procurement
 │   ├── Procurement Plan
 │   ├── Vendors
+│   ├── Vendor Categories (v1208)
 │   ├── Contracts
 │   ├── Purchase Requests
 │   ├── Deliverables

@@ -50,8 +50,8 @@ export default function TestSuiteForm({
   const [dirty, setDirty] = useState(false)
   const { confirmDiscard } = useUnsavedChangesGuard(dirty)
 
-  const close = async () => {
-    if (await confirmDiscard()) onClose()
+  const close = () => {
+    confirmDiscard(onClose)
   }
 
   const setField = (key, value) => {

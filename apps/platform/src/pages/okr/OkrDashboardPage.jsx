@@ -21,7 +21,7 @@ const HEALTH_CLASS = {
 function paths(sim) {
   return sim
     ? { objectives: '/simulator/pm/okr/objectives', cycles: '/simulator/pm/okr/cycles' }
-    : { objectives: '/pm/okr/objectives', cycles: '/pm/okr/cycles' }
+    : { objectives: '/platform/pm/okr/objectives', cycles: '/platform/pm/okr/cycles' }
 }
 
 export default function OkrDashboardPage({ sim = false }) {

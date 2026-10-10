@@ -75,7 +75,7 @@ export async function getVersionById(versionId) {
         *,
         configuration_item:configuration_item_id(id, configuration_item_identifier, item_name),
         status:status_id(id, status_name, status_code),
-        change_request:change_request_id(id, change_request_number),
+        change_request:change_request_id(id, change_reference),
         baseline:baseline_id(id, baseline_identifier, baseline_name),
         created_by_user:version_created_by(id, full_name, email)
       `)
@@ -102,7 +102,7 @@ export async function getVersionsByItem(itemId) {
       .select(`
         *,
         status:status_id(id, status_name, status_code),
-        change_request:change_request_id(id, change_request_number),
+        change_request:change_request_id(id, change_reference),
         baseline:baseline_id(id, baseline_identifier),
         created_by_user:version_created_by(id, full_name, email)
       `)
@@ -130,7 +130,7 @@ export async function getCurrentVersion(itemId) {
       .select(`
         *,
         status:status_id(id, status_name, status_code),
-        change_request:change_request_id(id, change_request_number),
+        change_request:change_request_id(id, change_reference),
         baseline:baseline_id(id, baseline_identifier),
         created_by_user:version_created_by(id, full_name, email)
       `)

@@ -33,6 +33,8 @@ export default defineConfig({
       'src/utils/__tests__/formTemplateFieldOverrides.test.js',
       'src/utils/__tests__/formTemplateSaveSummary.test.js',
       'src/utils/__tests__/auditDisplayUtils.test.js',
+      'src/utils/__tests__/testEvidenceRequirement.test.js',
+      'src/utils/__tests__/benefitProgress.test.js',
       'src/utils/__tests__/formValidation.test.js',
       'src/utils/__tests__/localeFormat.test.js',
       'src/utils/__tests__/measurementTimingUtils.test.js',

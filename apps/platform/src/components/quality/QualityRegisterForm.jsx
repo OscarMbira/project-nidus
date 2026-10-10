@@ -13,6 +13,18 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+import MultiLineListInput from '@nidus/ui/MultiLineListInput';
+
+const QUALITY_FORM_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'quality-method', label: 'Quality Method' },
+  { value: 'quality-responsibilities', label: 'Quality Responsibilities' },
+  { value: 'quality-criteria', label: 'Quality Criteria' },
+  { value: 'acceptance-criteria', label: 'Acceptance Criteria' },
+  { value: 'schedule', label: 'Schedule & Sign-off' },
+  { value: 'notes', label: 'Notes' },
+  { value: 'audit', label: 'Audit details' },
+];
 
 export default function QualityRegisterForm({
   item,
@@ -149,6 +161,10 @@ export default function QualityRegisterForm({
     }));
   };
 
+  const handleListChange = (name) => (value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -183,7 +199,7 @@ export default function QualityRegisterForm({
       onClose={onCancel}
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} tabs={QUALITY_FORM_TABS} />
 
           {formTab === 'audit' && (
             !item?.id ? (
@@ -312,12 +328,14 @@ export default function QualityRegisterForm({
               </div>
             </div>
           </div>
+          </>
+          )}
 
-          {/* Quality Information */}
+          {formTab === 'quality-method' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Quality Information
+              Quality Method
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -357,51 +375,63 @@ export default function QualityRegisterForm({
                   ))}
                 </select>
               </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Quality Responsibilities
-                </label>
-                <textarea
-                  name="quality_responsibilities"
-                  value={formData.quality_responsibilities}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Describe quality responsibilities..."
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Quality Criteria
-                </label>
-                <textarea
-                  name="quality_criteria"
-                  value={formData.quality_criteria}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Define quality criteria..."
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Acceptance Criteria
-                </label>
-                <textarea
-                  name="acceptance_criteria"
-                  value={formData.acceptance_criteria}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Define acceptance criteria..."
-                />
-              </div>
             </div>
           </div>
+          )}
 
+          {formTab === 'quality-responsibilities' && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Quality Responsibilities
+            </h3>
+            <MultiLineListInput
+              viewModeId="quality-register-responsibilities"
+              id="quality_responsibilities"
+              value={formData.quality_responsibilities}
+              onChange={handleListChange('quality_responsibilities')}
+              placeholder="e.g. Product owner confirms content is accurate…"
+              ariaLabelPrefix="responsibility"
+              itemColumnLabel="Responsibility"
+            />
+          </div>
+          )}
+
+          {formTab === 'quality-criteria' && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Quality Criteria
+            </h3>
+            <MultiLineListInput
+              viewModeId="quality-register-criteria"
+              id="quality_criteria"
+              value={formData.quality_criteria}
+              onChange={handleListChange('quality_criteria')}
+              placeholder="e.g. Every requirement is uniquely identified and testable…"
+              ariaLabelPrefix="criterion"
+              itemColumnLabel="Criterion"
+            />
+          </div>
+          )}
+
+          {formTab === 'acceptance-criteria' && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Acceptance Criteria
+            </h3>
+            <MultiLineListInput
+              viewModeId="quality-register-acceptance-criteria"
+              id="acceptance_criteria"
+              value={formData.acceptance_criteria}
+              onChange={handleListChange('acceptance_criteria')}
+              placeholder="e.g. Reviewed and accepted by the business owner…"
+              ariaLabelPrefix="acceptance criterion"
+              itemColumnLabel="Acceptance criterion"
+            />
+          </div>
+          )}
+
+          {formTab === 'schedule' && (
+          <>
           {/* Schedule & Sign-off */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
@@ -472,7 +502,11 @@ export default function QualityRegisterForm({
               )}
             </div>
           </div>
+          </>
+          )}
 
+          {formTab === 'notes' && (
+          <>
           {/* Notes */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -489,8 +523,10 @@ export default function QualityRegisterForm({
               />
             </div>
           </div>
+          </>
+          )}
 
-          {item?.id && accountId && (projectId || formData.project_id || item?.project_id) && (
+          {formTab === 'acceptance-criteria' && item?.id && accountId && (projectId || formData.project_id || item?.project_id) && (
             <InheritedQualityFields
               db={platformDb}
               accountId={accountId}
@@ -501,8 +537,6 @@ export default function QualityRegisterForm({
               mode="edit"
               title="Quality register additional fields"
             />
-          )}
-          </>
           )}
 
           {/* Form Actions */}

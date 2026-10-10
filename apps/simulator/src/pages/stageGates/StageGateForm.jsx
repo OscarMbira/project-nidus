@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Flag, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
+import SelectField from '@nidus/ui/SelectField';
+import { useCurrentProject } from '../../context/CurrentProjectContext';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
@@ -14,9 +16,9 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
-const input  = 'w-full rounded-lg border border-gray-600 bg-gray-700 text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-const label  = 'block text-sm font-medium text-gray-300 mb-1';
-const card   = 'rounded-lg border border-gray-700 bg-gray-800 p-6 shadow-sm';
+const input  = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const label  = 'block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1';
+const card   = 'rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm';
 
 const STAGES   = ['Pre-Project','Initiation','Planning','Execution','Monitoring & Control','Closing'];
 const STATUSES = ['draft','pending','approved','rejected'];
@@ -27,9 +29,9 @@ export default function StageGateForm() {
   const { id } = useParams();
   const isEdit  = Boolean(id);
   const navigate = useNavigate();
+  const { projects: assignedProjects, currentProjectId, loading: projectsLoading } = useCurrentProject();
   const [form, setForm]     = useState(EMPTY);
   const [record, setRecord] = useState(null);
-  const [projects, setProjects] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved]   = useState(null);
   const [loading, setLoading] = useState(isEdit);
@@ -38,9 +40,6 @@ export default function StageGateForm() {
 
   useEffect(() => {
     async function load() {
-      const { data: projs } = await platformDb.from('projects').select('id, project_name').eq('is_deleted', false).order('project_name');
-      setProjects(projs ?? []);
-
       if (isEdit) {
         const { data } = await platformDb.from('stage_gate_reviews').select('*').eq('id', id).maybeSingle();
         if (data) {
@@ -63,7 +62,34 @@ export default function StageGateForm() {
     return () => { cancelled = true; };
   }, [formTab, record]);
 
+  const projects = [...assignedProjects]
+    .map((p) => ({
+      id: p.projectId,
+      project_name: p.projectName || '',
+      project_code: p.projectCode || '',
+    }))
+    .sort((a, b) => a.project_name.localeCompare(b.project_name, undefined, { sensitivity: 'base' }));
+
+  useEffect(() => {
+    if (isEdit || projectsLoading) return;
+    setForm((prev) => {
+      if (prev.project_id) return prev;
+      if (projects.length === 1) return { ...prev, project_id: projects[0].id };
+      if (currentProjectId && projects.some((p) => p.id === currentProjectId)) {
+        return { ...prev, project_id: currentProjectId };
+      }
+      return prev;
+    });
+  }, [isEdit, projectsLoading, currentProjectId, assignedProjects]);
+
   const set = (f) => (e) => setForm((prev) => ({ ...prev, [f]: e.target.value }));
+
+  const projectOptions = projects.map((p) => {
+    const code = String(p.project_code || '').trim();
+    const name = String(p.project_name || '').trim();
+    const labelText = code && name && !name.startsWith(code) ? `${code} — ${name}` : (name || code);
+    return { value: p.id, label: labelText };
+  });
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -84,14 +110,14 @@ export default function StageGateForm() {
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 flex items-center justify-center min-h-[40vh]">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-6 max-w-2xl">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-gray-200 text-sm mb-5">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 max-w-2xl text-gray-900 dark:text-gray-100">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm mb-5">
         <ArrowLeft size={15} /> Back to Stage Gates
       </button>
       <div className="flex items-center gap-3 mb-6">
@@ -111,7 +137,7 @@ export default function StageGateForm() {
 
         {formTab === 'audit' && (
           !record?.id ? (
-            <p className="text-sm text-gray-400">Audit details appear after this stage gate review is saved.</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Audit details appear after this stage gate review is saved.</p>
           ) : (
             <AuditDetailsPanel description="Who created or changed this stage gate review, and how it is classified.">
               <AuditCard title="Identity" description="How this stage gate review is labelled and tracked.">
@@ -120,7 +146,7 @@ export default function StageGateForm() {
                 <AuditField label="Status" value={humanizeAuditToken(record.status)} />
               </AuditCard>
               <AuditCard title="Classification" description="Where this stage gate review sits.">
-                <AuditField label="Project" value={projects.find((p) => p.id === (form.project_id || record.project_id))?.project_name} />
+                <AuditField label="Project" value={projectOptions.find((p) => p.value === (form.project_id || record.project_id))?.label} />
               </AuditCard>
               <AuditCard title="Record history" description="When this stage gate review was created and last changed.">
                 <AuditField label="Created by" value={record.created_by ? auditUserLabels[record.created_by] || null : null} />
@@ -140,10 +166,15 @@ export default function StageGateForm() {
           </div>
           <div>
             <label className={label}>Project</label>
-            <select className={input} value={form.project_id} onChange={set('project_id')}>
-              <option value="">— Select project —</option>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.project_name}</option>)}
-            </select>
+            <SelectField
+              id="stage-gate-project"
+              aria-label="Project"
+              options={projectOptions}
+              value={form.project_id}
+              onChange={(value) => setForm((prev) => ({ ...prev, project_id: value }))}
+              placeholder="— Select project —"
+              loading={projectsLoading}
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -179,7 +210,7 @@ export default function StageGateForm() {
           <button type="submit" disabled={saving} className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg text-sm font-medium transition-colors">
             <Save size={15} /> {saving ? 'Saving…' : isEdit ? 'Update' : 'Create'}
           </button>
-          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-600 text-gray-300 hover:text-white text-sm transition-colors">
+          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white text-sm transition-colors">
             Cancel
           </button>
         </div>

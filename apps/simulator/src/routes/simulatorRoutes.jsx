@@ -227,6 +227,7 @@ import {
   MyWorkHome,
   ProjectTypes,
   ProjectStatuses,
+  ExpenseCategories,
   FundingSources,
   BudgetCategories,
   AssignmentRoles,
@@ -297,6 +298,7 @@ import {
   SimProgrammeFinancialDashboard,
   SimProjectProfitability,
   SimMyExpenses,
+  SimExpenseClaimDetail,
   SimExpenseApproval,
   SimExpenseApprovalThresholds,
   SimFinancialReportingHub,
@@ -554,6 +556,7 @@ import {
   BenefitsRegisterPage,
   BenefitsRealizationPage,
   BenefitMeasurementsPage,
+  BenefitMeasurementFormPage,
   BenefitCreatePage,
   BenefitDetailPage,
   BenefitsReviewPlan,
@@ -804,9 +807,7 @@ import {
   SimProgrammeManagerAssignments,
   SimManagerAssignmentSettings,
   SimulatorPMDashboard,
-  SimulatorPMOLayout,
   SimulatorPMOInvitationTracker,
-  SimulatorPMLayout,
   SimulatorTMLayout,
   SimulatorTMDashboard,
   SimVoiceCallsPage,
@@ -1855,6 +1856,19 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <MeetingSummaryView />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/comms/meetings/:meetingId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MeetingSchedule />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -3128,6 +3142,32 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <PracticeBenefitsMeasurements />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/benefits/measurements/create" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <BenefitMeasurementFormPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/benefits/measurements/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <BenefitMeasurementFormPage />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -5380,6 +5420,19 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/expenses/my/:id" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimExpenseClaimDetail />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/expenses/approvals" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -5400,9 +5453,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMODashboard />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5414,9 +5467,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <MyWorkHome />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5427,9 +5480,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOInvitationTracker />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5440,9 +5493,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <InvitationDetailPage />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5464,9 +5517,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <FormTemplateBuilder mode="sim" />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5477,9 +5530,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <FormTemplateAdmin mode="sim" />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5490,9 +5543,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <FormTemplateBuilder mode="sim" />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5503,9 +5556,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <FormTemplateBuilder mode="sim" />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5516,9 +5569,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <TestingCentreRoutesSimPmo />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5529,9 +5582,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <ProcessTemplatesRoutesSimPmo />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5542,9 +5595,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimManagerAssignments />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5555,9 +5608,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RoleAssignment />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5568,9 +5621,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <ManageRoles />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5581,9 +5634,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrgRoleDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5594,9 +5647,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrgRoleDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5607,9 +5660,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrgRoleDetail forceEdit />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5620,9 +5673,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrganisationIndustrySettings />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5633,9 +5686,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <ManageMenuBundles />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5646,9 +5699,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <MenuBundleDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5659,9 +5712,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <MenuBundleDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5672,9 +5725,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <MenuBundleDetail forceEdit />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5685,9 +5738,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SystemRoleCatalog />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5698,9 +5751,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SystemRoleEditPage />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5711,9 +5764,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimAppointmentDashboard />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5724,9 +5777,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimMyAppointments />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5737,9 +5790,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimTeamAppointmentDashboard />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5750,9 +5803,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimMyTeamAppointments />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5763,9 +5816,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimManagerAssignmentSettings />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5776,9 +5829,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimExpenseApprovalThresholds />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5790,9 +5843,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <PmoConfigurationHome />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5804,9 +5857,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <ProjectTypes />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5817,9 +5870,22 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <ProjectStatuses />
-                          </SimulatorPMOLayout>
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/pmo/expense-categories" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout scope="pmo">
+                            <ExpenseCategories />
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5830,9 +5896,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <FundingSources />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5843,9 +5909,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <BudgetCategories />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5856,9 +5922,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <PortfolioCategories />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5869,9 +5935,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <AssignmentRoles />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5882,9 +5948,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <TimesheetReviewReasons />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5895,9 +5961,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <TimesheetWorkCategories />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5908,9 +5974,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <TimesheetOvertimeTypes />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5921,9 +5987,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <TimesheetSettings />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5945,9 +6011,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrganisationRegionalFormatSettingsPage />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5980,9 +6046,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RiskCategoryCatalog />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5993,9 +6059,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RiskCategoryDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6006,9 +6072,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RiskCategoryDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6019,9 +6085,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RiskCategoryDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6032,9 +6098,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RiskCategoryDetail />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6045,9 +6111,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <ProjectClassifications />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6058,9 +6124,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrganisationAuthorities />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6071,9 +6137,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <OrganisationApprovalChains />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6084,9 +6150,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <RolesAndResponsibilities />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6098,9 +6164,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <CapabilityProfilePicker />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6111,9 +6177,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimITTOTemplateList />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6124,9 +6190,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimITTODraftsQueue />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6137,9 +6203,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimDelayRegister />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6150,9 +6216,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimDelayTemplates />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6165,9 +6231,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMDashboard />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6178,9 +6244,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInvitationTracker />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6191,9 +6257,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <InvitationDetailPage />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6204,9 +6270,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimPortfolioManagerAssignments />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6217,9 +6283,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimProgrammeManagerAssignments />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6230,9 +6296,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <TestingCentreRoutesSimPm />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6243,27 +6309,27 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <ProcessTemplatesRoutesSimPm />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
                   </Suspense>
                 } />
-                <Route path="simulator/pm/projects/:projectId/forms" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormsGallery mode="sim" basePath="/simulator/pm/projects" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
-                <Route path="simulator/pm/projects/:projectId/field-templates" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><ProjectFieldTemplates /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
-                <Route path="simulator/pm/projects/:projectId/forms/:templateCode/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormNew mode="sim" basePath="/simulator/pm/projects" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
-                <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/edit" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormEdit mode="sim" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
-                <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/view" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><SimulatorPMLayout><FormView mode="sim" /></SimulatorPMLayout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/pm/projects/:projectId/forms" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout scope="pm"><FormsGallery mode="sim" basePath="/simulator/pm/projects" /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/pm/projects/:projectId/field-templates" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout scope="pm"><ProjectFieldTemplates /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/pm/projects/:projectId/forms/:templateCode/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout scope="pm"><FormNew mode="sim" basePath="/simulator/pm/projects" /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/edit" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout scope="pm"><FormEdit mode="sim" /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                <Route path="simulator/pm/projects/:projectId/forms/:formInstanceId/view" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout scope="pm"><FormView mode="sim" /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/pm/itto/templates" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimITTOTemplateList />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6274,9 +6340,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimProjectITTOList />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6287,9 +6353,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimITTODraftsQueue />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6300,9 +6366,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimDelayRegister />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6313,9 +6379,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimDelayRegister />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6326,9 +6392,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <PlanningHub />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6339,9 +6405,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <PlanningIntelligenceDashboard />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6352,9 +6418,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <ScenarioList />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6365,9 +6431,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <PBSBuilder />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6378,9 +6444,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <PBSNodeForm />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6391,9 +6457,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <PBSNodeForm />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6404,9 +6470,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <PlanHealthDashboard />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6417,9 +6483,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <AIPlanGenerator />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6430,9 +6496,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <ExecutivePlanView />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6443,9 +6509,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <RecoveryPlanningView />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6456,9 +6522,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <ConfidenceForecastView />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6469,9 +6535,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <GovernanceGateChecklist />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6482,9 +6548,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <MicroPlanList />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6495,9 +6561,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <MicroPlanDraftQueue />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6508,9 +6574,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <MicroPlanDetail />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6523,9 +6589,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOGovernanceMandateTemplate />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6536,9 +6602,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOGovernanceCMS />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6549,9 +6615,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOGovernanceConfigMS />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6562,9 +6628,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOGovernanceQMS />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6575,9 +6641,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOGovernanceRMS />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6590,9 +6656,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOInitiationBusinessCase />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6603,9 +6669,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOInitiationProjectBrief />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6616,9 +6682,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOInitiationBenefitsReviewPlan />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6631,9 +6697,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOOversightRiskRegister />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6644,9 +6710,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOOversightIssueRegister />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6657,9 +6723,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOOversightIssueRegister />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6670,9 +6736,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOOversightQualityRegister />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6683,9 +6749,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOOversightLessonsLog />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6698,9 +6764,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOReportingHighlight />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6711,9 +6777,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOReportingException />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6724,9 +6790,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOReportingEndStage />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6737,9 +6803,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOReportingEndProject />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6752,9 +6818,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMOProcurementRFP />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6765,9 +6831,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMORFPCreate />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6778,9 +6844,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMORFPView />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6791,9 +6857,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMORFPEdit />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6804,9 +6870,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMORFPBulkImport />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6826,9 +6892,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMOLayout>
+                          <Layout scope="pmo">
                             <SimulatorPMORFPOnHold />
-                          </SimulatorPMOLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6841,9 +6907,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMGovernanceMandateTemplate />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6854,9 +6920,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMGovernanceCMS />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6867,9 +6933,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMGovernanceConfigMS />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6880,9 +6946,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMGovernanceQMS />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6893,9 +6959,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMGovernanceRMS />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6908,9 +6974,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInitiationBusinessCase />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6921,9 +6987,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInitiationProjectBrief />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6934,9 +7000,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInitiationProjectBrief />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6947,9 +7013,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInitiationPID />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6960,9 +7026,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInitiationBenefitsReviewPlan />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6973,9 +7039,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMInitiationDocumentSignatory />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -6988,9 +7054,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMDeliveryWorkPackages />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7001,9 +7067,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMDeliveryProductDescription />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7014,9 +7080,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMDeliveryProjectProductDescription />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7027,9 +7093,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMDeliveryProductStatusAccount />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7040,9 +7106,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMDeliveryDailyLog />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7055,9 +7121,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMControlsRiskRegister />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7068,9 +7134,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMControlsIssueRegister />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7081,9 +7147,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMControlsQualityRegister />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7094,9 +7160,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMControlsConfigItems />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7107,9 +7173,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMControlsLessonsLog />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7120,9 +7186,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <WorkAuthorisationDraftsPage />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7133,9 +7199,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <WorkAuthorisationCreatePage />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7146,9 +7212,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <WorkAuthorisationCreatePage />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7159,9 +7225,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <WorkAuthorisationDetailPage />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7172,9 +7238,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMControlsWorkAuthorisation />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7187,9 +7253,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMReportingCheckpoint />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7200,9 +7266,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMReportingHighlight />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7213,9 +7279,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMReportingIssueReports />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7226,9 +7292,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMReportingException />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7239,9 +7305,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMReportingEndStage />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7254,9 +7320,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMClosureLessonsReport />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -7267,9 +7333,9 @@ export function SimulatorRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
-                          <SimulatorPMLayout>
+                          <Layout scope="pm">
                             <SimulatorPMClosureEndProjectReport />
-                          </SimulatorPMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>

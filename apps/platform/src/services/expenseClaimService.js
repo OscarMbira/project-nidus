@@ -28,30 +28,83 @@ export function parseApprovalChain(chain) {
   return []
 }
 
+/** Sum of valid (amount > 0) line items, or null when there are none. */
+function sumItems(items) {
+  const valid = (items || []).filter((it) => it && Number(it.amount) > 0)
+  if (valid.length === 0) return null
+  return valid.reduce((sum, it) => sum + Number(it.amount), 0)
+}
+
 export async function saveDraft(payload) {
   const uid = await getPublicUserId()
   if (!uid) throw new Error('Not authenticated')
+  const items = Array.isArray(payload.items) ? payload.items.filter((it) => it && Number(it.amount) > 0) : []
+  const itemsTotal = sumItems(items)
   const row = {
     project_id: payload.project_id,
     submitted_by_user_id: uid,
     expense_type: payload.expense_type || 'other',
     expense_date: payload.expense_date || new Date().toISOString().slice(0, 10),
-    amount: Number(payload.amount) || 0,
+    amount: itemsTotal !== null ? itemsTotal : Number(payload.amount) || 0,
     currency: payload.currency || 'USD',
     description: payload.description || null,
+    notes: payload.notes || null,
     receipt_url: payload.receipt_url || null,
     vendor_name: payload.vendor_name || null,
     claim_status: 'draft',
     is_reimbursable: payload.is_reimbursable !== false,
   }
+  let claim
   if (payload.id) {
     const { data, error } = await platformDb.from('project_expense_claims').update(row).eq('id', payload.id).select().single()
     if (error) throw error
-    return data
+    claim = data
+  } else {
+    const { data, error } = await platformDb.from('project_expense_claims').insert(row).select().single()
+    if (error) throw error
+    claim = data
   }
-  const { data, error } = await platformDb.from('project_expense_claims').insert(row).select().single()
+  await saveExpenseClaimItems(claim.id, items)
+  return claim
+}
+
+/** Replace all line items for a claim (delete-all + re-insert), same pattern as budget lines. */
+export async function saveExpenseClaimItems(claimId, items) {
+  await platformDb.from('project_expense_claim_items').delete().eq('expense_claim_id', claimId)
+  if (!items || items.length === 0) return []
+  const rows = items.map((it, index) => ({
+    expense_claim_id: claimId,
+    description: it.description,
+    amount: Number(it.amount),
+    category_id: it.category_id || null,
+    notes: it.notes || null,
+    display_order: index,
+  }))
+  const { data, error } = await platformDb.from('project_expense_claim_items').insert(rows).select()
   if (error) throw error
   return data
+}
+
+/** All non-deleted claims for a project (any submitter/status) — for reporting/summary views. */
+export async function listExpenseClaimsForProject(projectId) {
+  const { data, error } = await platformDb
+    .from('project_expense_claims')
+    .select('*')
+    .eq('project_id', projectId)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export async function getExpenseClaimItems(claimId) {
+  const { data, error } = await platformDb
+    .from('project_expense_claim_items')
+    .select('*, expense_categories(category_name)')
+    .eq('expense_claim_id', claimId)
+    .order('display_order', { ascending: true })
+  if (error) throw error
+  return data || []
 }
 
 export async function submitExpense(claimId) {
@@ -108,6 +161,28 @@ export async function getMyExpenses() {
     .order('created_at', { ascending: false })
   if (error) throw error
   return data || []
+}
+
+export async function getExpenseClaim(claimId) {
+  const { data, error } = await platformDb
+    .from('project_expense_claims')
+    .select('*, projects(project_code, project_name)')
+    .eq('id', claimId)
+    .eq('is_deleted', false)
+    .maybeSingle()
+  if (error) throw error
+  return data
+}
+
+/** Only a draft can be deleted — anything submitted is already in the approval trail. */
+export async function deleteDraft(claimId) {
+  const { error } = await platformDb
+    .from('project_expense_claims')
+    .update({ is_deleted: true })
+    .eq('id', claimId)
+    .eq('claim_status', 'draft')
+  if (error) throw error
+  return { success: true }
 }
 
 export async function getPendingApprovals() {

@@ -5,6 +5,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { supabase } from '../services/supabaseClient'
 import { FileText, CheckCircle, Clock, AlertCircle, Plus, Target, Award, Settings, Users, BarChart3, Calendar, Shield, TrendingUp } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
+import MultiLineListInput from '../components/ui/MultiLineListInput'
 import { getQMSByProject, getOrCreateQMS, validateCompleteness, checkConformance } from '../services/qualityManagementStrategyService'
 import { getStandards } from '../services/qmsQualityStandardsService'
 import { getMethods } from '../services/qmsQualityMethodsService'
@@ -17,8 +18,7 @@ import { getReports } from '../services/qmsQualityReportsService'
 import QMSForm from '../components/qms/QMSForm'
 import QMSExportMenu from '../components/qms/QMSExportMenu'
 import { updateQMS } from '../services/qualityManagementStrategyService'
-import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
+import ExportRecordMenu from '../components/ui/ExportRecordMenu'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
@@ -29,9 +29,22 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 const QMS_VIEW_SECTIONS = [
   { title: 'Document Information', fields: [
     { key: 'qms_reference', label: 'Reference' },
-    { key: 'strategy_title', label: 'Title' },
-    { key: 'status', label: 'Status' }
-  ]}
+    { key: 'version_number', label: 'Version' },
+    { key: 'status', label: 'Status' },
+    { key: 'approved_date', label: 'Approved date' },
+  ]},
+  { title: 'Introduction', fields: [
+    { key: 'purpose', label: 'Purpose' },
+    { key: 'objectives', label: 'Objectives' },
+    { key: 'scope', label: 'Scope' },
+    { key: 'strategy_responsibility', label: 'Strategy responsibility' },
+  ]},
+  { title: 'Quality Management Procedure', fields: [
+    { key: 'quality_planning_approach', label: 'Planning approach' },
+    { key: 'quality_control_approach', label: 'Control approach' },
+    { key: 'quality_assurance_approach', label: 'Assurance approach' },
+    { key: 'variance_from_corporate', label: 'Variance from corporate' },
+  ]},
 ]
 
 export default function QMSView() {
@@ -187,14 +200,10 @@ export default function QMSView() {
           <div className="flex items-center gap-3 flex-wrap">
             {qms && (
               <>
-                <ExportRecordButtons
-                  onExportPPT={() => exportRecordToPPT(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
-                  onExportWord={() => exportRecordToWord(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
-                  onExportExcel={() => exportRecordToExcel(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
-                  onExportCSV={() => exportRecordToCSV(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
-                  onExportXML={() => exportRecordToXML(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
-                  onExportJSON={() => exportRecordToJSON(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
-                  onExportPrint={() => exportRecordToPrint(QMS_VIEW_SECTIONS, qms, `QMS_${qms.qms_reference || qms.id}`)}
+                <ExportRecordMenu
+                  sections={QMS_VIEW_SECTIONS}
+                  record={qms}
+                  baseFilename={`QMS_${qms.qms_reference || qms.id}`}
                 />
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(qms.status)}`}>
                   {qms.status.replace('_', ' ').toUpperCase()}
@@ -409,13 +418,37 @@ export default function QMSView() {
                   {/* Objectives */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Objectives</h3>
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{qms.objectives || 'Not defined'}</p>
+                    {qms.objectives ? (
+                      <MultiLineListInput
+                        viewModeId="qms-overview-objectives"
+                        id="qms_overview_objectives"
+                        value={qms.objectives}
+                        onChange={() => {}}
+                        disabled
+                        ariaLabelPrefix="objective"
+                        itemColumnLabel="Objective"
+                      />
+                    ) : (
+                      <p className="text-gray-700 dark:text-gray-300">Not defined</p>
+                    )}
                   </div>
 
                   {/* Scope */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Scope</h3>
-                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{qms.scope || 'Not defined'}</p>
+                    {qms.scope ? (
+                      <MultiLineListInput
+                        viewModeId="qms-overview-scope"
+                        id="qms_overview_scope"
+                        value={qms.scope}
+                        onChange={() => {}}
+                        disabled
+                        ariaLabelPrefix="scope item"
+                        itemColumnLabel="Scope item"
+                      />
+                    ) : (
+                      <p className="text-gray-700 dark:text-gray-300">Not defined</p>
+                    )}
                   </div>
 
                   {/* Summary Cards */}

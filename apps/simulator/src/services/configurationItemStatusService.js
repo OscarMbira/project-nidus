@@ -60,7 +60,7 @@ export async function getStatusHistory(itemId) {
         new_status:new_status_id(id, status_name, status_code),
         changed_by:changed_by_user_id(id, full_name, email),
         approved_by:approved_by_user_id(id, full_name, email),
-        change_request:change_request_id(id, change_request_number),
+        change_request:change_request_id(id, change_reference),
         version:version_id(id, version_number)
       `)
       .eq('configuration_item_id', itemId)
@@ -150,7 +150,7 @@ async function getStatusHistoryEntryById(statusHistoryId) {
         new_status:new_status_id(id, status_name, status_code),
         changed_by:changed_by_user_id(id, full_name, email),
         approved_by:approved_by_user_id(id, full_name, email),
-        change_request:change_request_id(id, change_request_number),
+        change_request:change_request_id(id, change_reference),
         version:version_id(id, version_number)
       `)
       .eq('id', statusHistoryId)

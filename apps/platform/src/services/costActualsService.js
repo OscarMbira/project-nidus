@@ -85,6 +85,7 @@ export async function createCostActual(params) {
         transaction_type: params.transactionType,
         amount: params.amount,
         description: params.description || null,
+        notes: params.notes || null,
         transaction_date: params.transactionDate,
         category: params.category || null,
         created_by: currentUserId,
@@ -114,6 +115,7 @@ export async function updateCostActual(costActualId, updates) {
     if (updates.transactionType !== undefined) patch.transaction_type = updates.transactionType
     if (updates.amount !== undefined) patch.amount = updates.amount
     if (updates.description !== undefined) patch.description = updates.description
+    if (updates.notes !== undefined) patch.notes = updates.notes
     if (updates.transactionDate !== undefined) patch.transaction_date = updates.transactionDate
     if (updates.category !== undefined) patch.category = updates.category
 

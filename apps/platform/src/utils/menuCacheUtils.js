@@ -201,7 +201,11 @@
 // 124->125 (2026-10-04): restore Platform plus every project industry pack
 // (Banking & Financial Services was missing next to Information Technology).
 // 125->126 (2026-10-04): Core PM taxonomy has no Structured / Standards-Based / Agile sections.
-const SIDEBAR_CACHE_VERSION = 129
+// 129->130 (2026-10-04): v1199 removes the Test Management wrapper. Test Planning,
+// Test Cases, Test Execution, Defects, and Evidence sit directly under Testing.
+// 130->131 (2026-10-06): v1208 adds Vendor Categories under Procurement.
+// 131->132 (2026-10-06): v1218 adds Configuration Item Types under Quality.
+const SIDEBAR_CACHE_VERSION = 132
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

@@ -178,6 +178,7 @@ export async function saveForProject(projectId, categories, userId) {
         category_name: (c.category_name || '').trim() || 'Unnamed',
         budget_amount: Number(c.budget_amount) || 0,
         funding_source_id: c.funding_source_id || null,
+        notes: c.notes || null,
         display_order: i
       }));
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../../services/supabaseClient';
-import { X, FileText, CheckCircle, Calendar, TrendingUp, Target, Users } from 'lucide-react';
+import { FileText, CheckCircle, Calendar, TrendingUp, Target, Users } from 'lucide-react';
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext';
 import { createProjectClosure, updateProjectClosure, archiveProjectClosure } from '../../../services/closingProjectService';
 import { platformDb } from '@nidus/supabase';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
@@ -11,6 +12,167 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import SelectField from '@nidus/ui/SelectField'
+import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import { RowActionButton } from '@nidus/ui'
+
+function approverLines(closure) {
+  const list = String(closure?.approved_by_list || '').trim()
+  if (list) return list
+  return closure?.approved_by || ''
+}
+
+function namedUser(users, id) {
+  if (!id) return ''
+  const match = (users || []).find((user) => user.id === id)
+  return match?.full_name || match?.email || id
+}
+
+function namedApprovers(users, value) {
+  return String(value || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((id) => namedUser(users, id))
+    .join('\n')
+}
+
+const CLOSURE_EXPORT_SECTIONS = [
+  {
+    title: 'Basic Info',
+    fields: [
+      { key: 'closure_type', label: 'Closure Type' },
+      { key: 'closure_status', label: 'Closure Status' },
+      { key: 'closure_phase', label: 'Closure Phase' },
+      { key: 'planned_closure_date', label: 'Planned Closure Date' },
+      { key: 'actual_closure_date', label: 'Actual Closure Date' },
+      { key: 'closure_reason', label: 'Closure Reason' },
+    ],
+  },
+  {
+    title: 'Performance',
+    fields: [{ key: 'performance_summary', label: 'Performance Summary' }],
+  },
+  {
+    title: 'Benefits',
+    fields: [
+      { key: 'benefits_transition_status', label: 'Benefits Transition Status' },
+      { key: 'benefits_realization_summary', label: 'Benefits Realization Summary' },
+    ],
+  },
+  {
+    title: 'Financial closure',
+    fields: [{ key: 'financial_closure_summary', label: 'Financial Closure Summary' }],
+  },
+  {
+    title: 'Resources & Stakeholders',
+    fields: [
+      { key: 'resource_release_status', label: 'Resource Release Status' },
+      { key: 'stakeholder_acceptance', label: 'Stakeholder Acceptance' },
+      { key: 'project_board', label: 'Project Board' },
+      { key: 'checklist_completion_percentage', label: 'Checklist Completion' },
+    ],
+  },
+  {
+    title: 'Prepared by',
+    fields: [
+      { key: 'prepared_by', label: 'Prepared By' },
+      { key: 'final_approval_date', label: 'Final Approval Date' },
+    ],
+  },
+  {
+    title: 'Approval',
+    fields: [{ key: 'approved_by', label: 'Approved By' }],
+  },
+  {
+    title: 'Final acceptance',
+    fields: [
+      { key: 'deliverables_acceptance_status', label: 'Deliverables Acceptance Status' },
+      { key: 'board_approval_date', label: 'Board Approval Date' },
+      { key: 'outstanding_deliverables', label: 'Outstanding Deliverables' },
+    ],
+  },
+]
+
+function ApproverList({ users, value, onChange }) {
+  const ids = String(value || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  const [pick, setPick] = useState('')
+  const labelFor = (id) => {
+    const match = users.find((user) => user.id === id)
+    return match?.full_name || match?.email || id
+  }
+  const add = () => {
+    if (!pick || ids.includes(pick)) return
+    onChange([...ids, pick].join('\n'))
+    setPick('')
+  }
+  const remove = (id) => {
+    if (!window.confirm('Remove this approver?')) return
+    onChange(ids.filter((item) => item !== id).join('\n'))
+  }
+
+  return (
+    <div className="space-y-3">
+      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <Users className="h-4 w-4" />
+        Approved By
+      </label>
+      {ids.length > 0 && (
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg">
+          {ids.map((id, index) => (
+            <li key={id} className="flex items-center justify-between gap-3 px-3 py-2">
+              <span className="text-sm text-gray-900 dark:text-gray-100">
+                {index + 1}. {labelFor(id)}
+              </span>
+              <RowActionButton variant="delete" label="Remove approver" onClick={() => remove(id)} />
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+        <div className="flex-1">
+          <SelectField
+            forceSearchable
+            value={pick}
+            onChange={setPick}
+            placeholder="Select user..."
+            options={users
+              .filter((user) => !ids.includes(user.id))
+              .map((user) => ({ value: user.id, label: user.full_name || user.email }))}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={add}
+          disabled={!pick}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium disabled:opacity-50"
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ClosureListField({ label, required, viewModeId, value, onChange, placeholder, itemColumnLabel }) {
+  return (
+    <div>
+      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+        {label}{required ? ' *' : ''}
+      </label>
+      <MultiLineListInput
+        viewModeId={viewModeId}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        itemColumnLabel={itemColumnLabel}
+        ariaLabelPrefix={itemColumnLabel}
+      />
+    </div>
+  )
+}
+
 export default function ProjectClosureForm({ projectId, closure, onClose, onSuccess, initialSection = 'basic' }) {
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState(initialSection);
@@ -67,11 +229,22 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
     final_approval_date: closure?.final_approval_date || '',
     project_board_id: closure?.project_board_id || '',
     prepared_by: closure?.prepared_by || '',
-    approved_by: closure?.approved_by || '',
+    approved_by: approverLines(closure),
     deliverables_acceptance_status: closure?.deliverables_acceptance_status || 'pending',
     outstanding_deliverables: closure?.outstanding_deliverables || '',
     board_approval_date: closure?.board_approval_date || ''
   });
+  const [formBaseline] = useState(() => JSON.stringify(formData));
+  const [leaveAfterSave, setLeaveAfterSave] = useState(false);
+  const isDirty = JSON.stringify(formData) !== formBaseline && !leaveAfterSave;
+  const { confirmDiscard } = useUnsavedChangesGuard(
+    isDirty && !loading,
+    'You have unsaved closure changes.'
+  );
+
+  useEffect(() => {
+    if (leaveAfterSave) onClose?.();
+  }, [leaveAfterSave, onClose]);
 
   useEffect(() => {
     fetchBoards();
@@ -84,7 +257,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         .from('project_boards')
         .select('id, board_name')
         .eq('project_id', projectId)
-        .eq('is_active', true)
+        .eq('is_deleted', false)
         .order('board_name');
 
       if (error) throw error;
@@ -112,6 +285,17 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const missingSection = [
+      ['closure_reason', 'basic'],
+      ['performance_summary', 'summary'],
+      ['benefits_realization_summary', 'benefits'],
+      ['financial_closure_summary', 'financial-closure'],
+    ].find(([key]) => !String(formData[key] || '').trim());
+    if (missingSection) {
+      setActiveSection(missingSection[1]);
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -136,7 +320,8 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         final_approval_date: formData.final_approval_date || null,
         project_board_id: formData.project_board_id || null,
         prepared_by: formData.prepared_by || null,
-        approved_by: formData.approved_by || null,
+        approved_by: String(formData.approved_by || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean)[0] || null,
+        approved_by_list: String(formData.approved_by || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean).join('\n') || null,
         deliverables_acceptance_status: formData.deliverables_acceptance_status,
         outstanding_deliverables: formData.outstanding_deliverables,
         board_approval_date: formData.board_approval_date || null
@@ -150,8 +335,8 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         await createProjectClosure(closureData);
       }
 
-      onSuccess();
-      onClose();
+      onSuccess?.();
+      setLeaveAfterSave(true);
     } catch (error) {
       console.error('Error saving project closure:', error);
       alert('Error saving project closure: ' + error.message);
@@ -163,9 +348,12 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
   const sections = [
     { id: 'basic', label: 'Basic Info', icon: FileText },
     { id: 'summary', label: 'Performance', icon: TrendingUp },
-    { id: 'benefits', label: 'Benefits & Finance', icon: Target },
+    { id: 'benefits', label: 'Benefits', icon: Target },
+    { id: 'financial-closure', label: 'Financial closure', icon: Target },
     { id: 'resources', label: 'Resources & Stakeholders', icon: Users },
-    { id: 'approval', label: 'Approval & Final Acceptance', icon: CheckCircle }
+    { id: 'prepared-by', label: 'Prepared by', icon: Users },
+    { id: 'approval', label: 'Approval', icon: CheckCircle },
+    { id: 'final-acceptance', label: 'Final acceptance', icon: CheckCircle }
   ];
 
   const renderSection = () => {
@@ -273,38 +461,30 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Closure Reason *
-              </label>
-              <textarea
-                value={formData.closure_reason}
-                onChange={(e) => setFormData({ ...formData, closure_reason: e.target.value })}
-                rows={4}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Explain why the project is being closed..."
-                required
-              />
-            </div>
+            <ClosureListField
+              label="Closure Reason"
+              required
+              viewModeId="project-closure-reason"
+              value={formData.closure_reason}
+              onChange={(closure_reason) => setFormData({ ...formData, closure_reason })}
+              placeholder="Why the project is being closed"
+              itemColumnLabel="Reason"
+            />
           </div>
         );
 
       case 'summary':
         return (
           <div className="space-y-6">
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Performance Summary *
-              </label>
-              <textarea
-                value={formData.performance_summary}
-                onChange={(e) => setFormData({ ...formData, performance_summary: e.target.value })}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Summarize overall project performance, key achievements, and challenges encountered..."
-                required
-              />
-            </div>
+            <ClosureListField
+              label="Performance Summary"
+              required
+              viewModeId="project-closure-performance-summary"
+              value={formData.performance_summary}
+              onChange={(performance_summary) => setFormData({ ...formData, performance_summary })}
+              placeholder="A performance point, achievement, or challenge"
+              itemColumnLabel="Point"
+            />
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-300 mb-2">
@@ -327,34 +507,6 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
           <div className="space-y-6">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Benefits Realization Summary *
-              </label>
-              <textarea
-                value={formData.benefits_realization_summary}
-                onChange={(e) => setFormData({ ...formData, benefits_realization_summary: e.target.value })}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Describe the benefits achieved and ongoing benefits measurement plans..."
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                Financial Closure Summary *
-              </label>
-              <textarea
-                value={formData.financial_closure_summary}
-                onChange={(e) => setFormData({ ...formData, financial_closure_summary: e.target.value })}
-                rows={6}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Summarize final budget position, cost closure, and financial sign-off..."
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Benefits Transition Status
               </label>
               <select
@@ -371,6 +523,16 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </p>
             </div>
 
+            <ClosureListField
+              label="Benefits Realization Summary"
+              required
+              viewModeId="project-closure-benefits-summary"
+              value={formData.benefits_realization_summary}
+              onChange={(benefits_realization_summary) => setFormData({ ...formData, benefits_realization_summary })}
+              placeholder="A benefit achieved or still being measured"
+              itemColumnLabel="Benefit"
+            />
+
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-green-900 dark:text-green-300 mb-2">
                 Financial Closure Checklist
@@ -384,6 +546,21 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 <li>Cost center closure completed</li>
               </ul>
             </div>
+          </div>
+        );
+
+      case 'financial-closure':
+        return (
+          <div className="space-y-6">
+            <ClosureListField
+              label="Financial Closure Summary"
+              required
+              viewModeId="project-closure-financial-summary"
+              value={formData.financial_closure_summary}
+              onChange={(financial_closure_summary) => setFormData({ ...formData, financial_closure_summary })}
+              placeholder="A budget, cost, or sign-off point"
+              itemColumnLabel="Point"
+            />
           </div>
         );
 
@@ -463,49 +640,22 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
           </div>
         );
 
-      case 'approval':
+      case 'prepared-by':
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Users className="h-4 w-4" />
-                  Prepared By
-                </label>
-                <select
-                  value={formData.prepared_by}
-                  onChange={(e) => setFormData({ ...formData, prepared_by: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">Select user...</option>
-                  {users.map((user, index) => (
-                    <option key={user.id} value={user.id}>
-                      {user.full_name || user.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <Users className="h-4 w-4" />
-                  Approved By
-                </label>
-                <select
-                  value={formData.approved_by}
-                  onChange={(e) => setFormData({ ...formData, approved_by: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                >
-                  <option value="">Select user...</option>
-                  {users.map((user, index) => (
-                    <option key={user.id} value={user.id}>
-                      {user.full_name || user.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <Users className="h-4 w-4" />
+                Prepared By
+              </label>
+              <SelectField
+                forceSearchable
+                value={formData.prepared_by}
+                onChange={(prepared_by) => setFormData({ ...formData, prepared_by })}
+                placeholder="Select user..."
+                options={users.map((user) => ({ value: user.id, label: user.full_name || user.email }))}
+              />
             </div>
-
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 <Calendar className="h-4 w-4" />
@@ -518,6 +668,17 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
+          </div>
+        );
+
+      case 'approval':
+        return (
+          <div className="space-y-6">
+            <ApproverList
+              users={users}
+              value={formData.approved_by}
+              onChange={(approved_by) => setFormData({ ...formData, approved_by })}
+            />
 
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-yellow-900 dark:text-yellow-300 mb-2">
@@ -532,52 +693,6 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 <li>Financial closure approved</li>
                 <li>Stakeholder sign-off obtained</li>
               </ul>
-            </div>
-
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-                Final Acceptance (taxonomy §3)
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                    Deliverables Acceptance Status
-                  </label>
-                  <select
-                    value={formData.deliverables_acceptance_status}
-                    onChange={(e) => setFormData({ ...formData, deliverables_acceptance_status: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="partially-accepted">Partially Accepted</option>
-                    <option value="all-accepted">All Accepted</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <Calendar className="h-4 w-4" />
-                    Board Approval Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.board_approval_date}
-                    onChange={(e) => setFormData({ ...formData, board_approval_date: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-              </div>
-              <div className="mt-6">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                  Outstanding Deliverables
-                </label>
-                <textarea
-                  value={formData.outstanding_deliverables}
-                  onChange={(e) => setFormData({ ...formData, outstanding_deliverables: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="List any deliverables not yet formally accepted, and why..."
-                />
-              </div>
             </div>
 
             {closure && (
@@ -609,15 +724,85 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
           </div>
         );
 
+      case 'final-acceptance':
+        return (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Deliverables Acceptance Status
+                </label>
+                <select
+                  value={formData.deliverables_acceptance_status}
+                  onChange={(e) => setFormData({ ...formData, deliverables_acceptance_status: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="partially-accepted">Partially Accepted</option>
+                  <option value="all-accepted">All Accepted</option>
+                </select>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <Calendar className="h-4 w-4" />
+                  Board Approval Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.board_approval_date}
+                  onChange={(e) => setFormData({ ...formData, board_approval_date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+            </div>
+            <ClosureListField
+              label="Outstanding Deliverables"
+              viewModeId="project-closure-outstanding-deliverables"
+              value={formData.outstanding_deliverables}
+              onChange={(outstanding_deliverables) => setFormData({ ...formData, outstanding_deliverables })}
+              placeholder="A deliverable not yet formally accepted"
+              itemColumnLabel="Deliverable"
+            />
+          </div>
+        );
+
       default:
         return null;
     }
   };
 
+  const requestClose = () => {
+    confirmDiscard(() => onClose?.());
+  };
+
+  const boardName = boards.find((board) => board.id === formData.project_board_id)?.board_name || '';
+  const exportRecord = {
+    closure_type: humanizeAuditToken(formData.closure_type),
+    closure_status: humanizeAuditToken(formData.closure_status),
+    closure_phase: humanizeAuditToken(formData.closure_phase),
+    planned_closure_date: formData.planned_closure_date,
+    actual_closure_date: formData.actual_closure_date,
+    closure_reason: formData.closure_reason,
+    performance_summary: formData.performance_summary,
+    benefits_transition_status: humanizeAuditToken(formData.benefits_transition_status),
+    benefits_realization_summary: formData.benefits_realization_summary,
+    financial_closure_summary: formData.financial_closure_summary,
+    resource_release_status: humanizeAuditToken(formData.resource_release_status),
+    stakeholder_acceptance: humanizeAuditToken(formData.stakeholder_acceptance),
+    project_board: boardName,
+    checklist_completion_percentage: `${formData.checklist_completion_percentage ?? 0}%`,
+    prepared_by: namedUser(users, formData.prepared_by),
+    final_approval_date: formData.final_approval_date,
+    approved_by: namedApprovers(users, formData.approved_by),
+    deliverables_acceptance_status: humanizeAuditToken(formData.deliverables_acceptance_status),
+    board_approval_date: formData.board_approval_date,
+    outstanding_deliverables: formData.outstanding_deliverables,
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {closure ? 'Edit Project Closure' : 'Initiate Project Closure'}
@@ -626,13 +811,13 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               Manage project closure process and documentation
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <ExportRecordMenu
+            sections={CLOSURE_EXPORT_SECTIONS}
+            record={exportRecord}
+            baseFilename="Project_Closure"
+          />
         </div>
+      </div>
 
         {/* Section Navigation */}
         <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
@@ -680,7 +865,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
           <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
             <button
               type="button"
-              onClick={onClose}
+              onClick={requestClose}
               className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 font-medium"
               disabled={loading}
             >
@@ -695,7 +880,6 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
             </button>
           </div>
         </form>
-      </div>
     </div>
   );
 }

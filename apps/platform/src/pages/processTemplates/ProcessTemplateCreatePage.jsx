@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Pause } from 'lucide-react'
 import ProcessTemplateProjectScope, { useProcessTemplateScope } from '../../components/processTemplates/ProcessTemplateProjectScope'
@@ -16,6 +16,9 @@ import {
 } from '../../services/processTemplatesService'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import ProcurementPlanFields, { emptyProcurementPlan, normalizeProcurementPlan, PROCUREMENT_PLAN_TABS } from '../../components/processTemplates/ProcurementPlanFields'
 
 export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
   const { slug } = useParams()
@@ -28,12 +31,20 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
   const listPath = getTemplateListPath(roleKey, slug)
   const entityType = `process_template_${slug.replace(/-/g, '_')}`
 
+  const isProcurementPlan = slug === 'procurement-management-plan'
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [notes, setNotes] = useState('')
+  const [planData, setPlanData] = useState(() => emptyProcurementPlan())
   const [isMaster, setIsMaster] = useState(canCreateMasterTemplate(roleKey))
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
+  const { showSuccess, modal: successModal } = useSuccessModal()
+  const planDirty = isProcurementPlan
+    && JSON.stringify(normalizeProcurementPlan(planData)) !== JSON.stringify(emptyProcurementPlan())
+  const isDirty = !saved && Boolean(title.trim() || description.trim() || notes.trim() || planDirty || isMaster !== canCreateMasterTemplate(roleKey))
+  const { confirmBack, requestNavigation } = useUnsavedChangesGuard(isDirty, 'You have unsaved changes on this template.')
 
   const { saveDraft, saveStatus } = useDraftQueue(entityType, null, {
     projectId: projectId || undefined,
@@ -54,7 +65,9 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
       const payload = {
         title: title.trim() || 'Untitled',
         description: description.trim() || null,
-        document_data: { notes: notes.trim() || '' },
+        document_data: isProcurementPlan
+          ? { ...normalizeProcurementPlan(planData), notes: notes.trim() }
+          : { notes: notes.trim() || '' },
         is_master: creatingMaster,
         status: 'draft',
         created_by: user?.id,
@@ -63,9 +76,15 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
         if (sim) payload.practice_project_id = projectId
         else payload.project_id = projectId
       }
-      const row = await svc.create(payload)
-      toast.success(`Created ${template?.label}: ${row.reference_code || row.id}`)
-      navigate(`${listPath}/${row.id}`)
+      let row = await svc.create(payload)
+      if (!row.reference_code) row = await svc.getById(row.id)
+      setSaved(true)
+      showSuccess({
+        recordId: row.reference_code || row.title,
+        operation: 'created',
+        message: `${template?.label || 'Template'} created.`,
+        onOk: () => navigate(`${listPath}/${row.reference_code || row.id}`),
+      })
     } catch (err) {
       toast.error(err?.message || 'Create failed')
     } finally {
@@ -92,22 +111,35 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
-      <Link to={listPath} className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200">
+    <div className={`w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 mx-auto space-y-4 ${isProcurementPlan ? 'max-w-5xl' : 'max-w-3xl'}`}>
+      <button
+        type="button"
+        onClick={() => confirmBack()}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
         <ArrowLeft className="h-4 w-4" />
-        Back to list
-      </Link>
+        Back
+      </button>
       <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">New {template.label}</h1>
       <ProcessTemplateProjectScope roleKey={roleKey} sim={sim} />
 
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Template sections"
+        tabs={isProcurementPlan ? PROCUREMENT_PLAN_TABS : undefined}
+      />
 
       {activeTab === 'audit' && (
         <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this template is saved.</p>
       )}
 
-      {activeTab === 'details' && (
+      {(activeTab === 'details' || (isProcurementPlan && activeTab !== 'audit')) && (
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 p-5">
+        {activeTab !== 'details' && (
+          <ProcurementPlanFields section={activeTab} value={planData} onChange={setPlanData} />
+        )}
+        {activeTab === 'details' && (<>
         <label className="block">
           <span className="text-sm text-gray-400">Title</span>
           <input
@@ -127,12 +159,12 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
           />
         </label>
         <label className="block">
-          <span className="text-sm text-gray-400">Notes (document body)</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">{isProcurementPlan ? 'Additional notes' : 'Notes'}</span>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={5}
-            className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm"
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
           />
         </label>
         {canCreateMasterTemplate(roleKey) && (
@@ -141,6 +173,7 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
             Save as master template (PMO)
           </label>
         )}
+        </>)}
         <div className="flex flex-wrap gap-2 pt-2">
           <button
             type="submit"
@@ -157,12 +190,17 @@ export default function ProcessTemplateCreatePage({ roleKey: roleKeyProp, basePa
             <Pause className="h-4 w-4" />
             Put on hold {saveStatus === 'saving' ? '…' : ''}
           </button>
-          <Link to={listPath} className="px-4 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+          <button
+            type="button"
+            onClick={() => requestNavigation(listPath)}
+            className="px-4 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
             Cancel
-          </Link>
+          </button>
         </div>
       </form>
       )}
+      {successModal}
     </div>
   )
 }

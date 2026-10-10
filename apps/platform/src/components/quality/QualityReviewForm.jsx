@@ -12,7 +12,19 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
+
+const QUALITY_REVIEW_FORM_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'schedule', label: 'Schedule & Location' },
+  { value: 'team', label: 'Review Team' },
+  { value: 'criteria', label: 'Review Criteria' },
+  { value: 'settings', label: 'Review Settings' },
+  { value: 'checklist', label: 'Pre-Review Checklist' },
+  { value: 'notes', label: 'Notes' },
+  { value: 'audit', label: 'Audit details' },
+];
 
 export default function QualityReviewForm({
   review,
@@ -196,6 +208,10 @@ export default function QualityReviewForm({
     }));
   };
 
+  const handleListChange = (name) => (value) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -237,7 +253,7 @@ export default function QualityReviewForm({
       onClose={onCancel}
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          <DetailAuditTabList activeTab={formTab} onChange={setFormTab} tabs={QUALITY_REVIEW_FORM_TABS} />
 
           {formTab === 'audit' && (
             !review?.id ? (
@@ -371,7 +387,11 @@ export default function QualityReviewForm({
               </div>
             </div>
           </div>
+          </>
+          )}
 
+          {formTab === 'schedule' && (
+          <>
           {/* Schedule & Location */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
@@ -479,7 +499,11 @@ export default function QualityReviewForm({
               </div>
             </div>
           </div>
+          </>
+          )}
 
+          {formTab === 'team' && (
+          <>
           {/* Review Team */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
@@ -526,28 +550,44 @@ export default function QualityReviewForm({
               </div>
             </div>
           </div>
+          </>
+          )}
 
+          {formTab === 'criteria' && (
+          <>
           {/* Review Criteria */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
               <Target className="h-5 w-5" />
               Review Criteria
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Review Criteria
-                </label>
-                <textarea
-                  name="review_criteria"
-                  value={formData.review_criteria}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Define review criteria..."
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Review Criteria
+              </label>
+              <MultiLineListInput
+                viewModeId="quality-review-criteria"
+                id="review_criteria"
+                value={formData.review_criteria}
+                onChange={handleListChange('review_criteria')}
+                placeholder="Define review criteria..."
+                ariaLabelPrefix="review criterion"
+                itemColumnLabel="Criterion"
+              />
+            </div>
+          </div>
+          </>
+          )}
 
+          {formTab === 'settings' && (
+          <>
+          {/* Review Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Review Settings
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {programmes.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -647,23 +687,35 @@ export default function QualityReviewForm({
                   />
                 </div>
               )}
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Pre-Review Checklist
-                </label>
-                <textarea
-                  name="pre_review_checklist"
-                  value={formData.pre_review_checklist}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List pre-review checklist items..."
-                />
-              </div>
             </div>
           </div>
+          </>
+          )}
 
+          {formTab === 'checklist' && (
+          <>
+          {/* Pre-Review Checklist */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+              Pre-Review Checklist
+            </h3>
+            <div>
+              <MultiLineListInput
+                viewModeId="quality-review-pre-review-checklist"
+                id="pre_review_checklist"
+                value={formData.pre_review_checklist}
+                onChange={handleListChange('pre_review_checklist')}
+                placeholder="List pre-review checklist items..."
+                ariaLabelPrefix="checklist item"
+                itemColumnLabel="Checklist item"
+              />
+            </div>
+          </div>
+          </>
+          )}
+
+          {formTab === 'notes' && (
+          <>
           {/* Notes */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">

@@ -47,7 +47,7 @@ export default function ResourceCalendarEntryPage() {
   const [saving, setSaving] = useState(false)
 
   const isDirty = JSON.stringify(formData) !== savedSnapshot
-  const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved calendar entry changes.')
+  const { confirmDiscard, confirmBack } = useUnsavedChangesGuard(isDirty, 'You have unsaved calendar entry changes.')
 
   useEffect(() => {
     if (!isEdit) return
@@ -136,7 +136,7 @@ export default function ResourceCalendarEntryPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       <button
-        onClick={() => confirmDiscard(() => navigate(-1))}
+        onClick={() => confirmBack()}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -302,7 +302,7 @@ export default function ResourceCalendarEntryPage() {
           <div className="flex justify-end gap-2 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
             <button
               type="button"
-              onClick={() => confirmDiscard(() => navigate(-1))}
+              onClick={() => confirmBack()}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
             >
               Cancel

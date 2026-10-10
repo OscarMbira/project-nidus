@@ -25,6 +25,7 @@ export default function CostActualForm() {
   const [transactionDate, setTransactionDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
+  const [notes, setNotes] = useState('')
   const [initialSnapshot, setInitialSnapshot] = useState(null)
 
   useEffect(() => {
@@ -40,10 +41,11 @@ export default function CostActualForm() {
         setTransactionDate(r?.transaction_date || '')
         setCategory(r?.category || '')
         setDescription(r?.description || '')
-        setInitialSnapshot(JSON.stringify({ transactionType: r?.transaction_type, amount: r?.amount, transactionDate: r?.transaction_date, category: r?.category, description: r?.description }))
+        setNotes(r?.notes || '')
+        setInitialSnapshot(JSON.stringify({ transactionType: r?.transaction_type, amount: r?.amount, transactionDate: r?.transaction_date, category: r?.category, description: r?.description, notes: r?.notes }))
         setLoading(false)
       } else {
-        setInitialSnapshot(JSON.stringify({ transactionType: 'actual', amount: '', transactionDate, category: '', description: '' }))
+        setInitialSnapshot(JSON.stringify({ transactionType: 'actual', amount: '', transactionDate, category: '', description: '', notes: '' }))
       }
     })()
     return () => { cancelled = true }
@@ -52,8 +54,8 @@ export default function CostActualForm() {
 
   const isDirty = useMemo(() => {
     if (initialSnapshot === null) return false
-    return JSON.stringify({ transactionType, amount, transactionDate, category, description }) !== initialSnapshot
-  }, [transactionType, amount, transactionDate, category, description, initialSnapshot])
+    return JSON.stringify({ transactionType, amount, transactionDate, category, description, notes }) !== initialSnapshot
+  }, [transactionType, amount, transactionDate, category, description, notes, initialSnapshot])
 
   const { requestNavigation, confirmDiscard } = useUnsavedChangesGuard(
     isDirty,
@@ -73,6 +75,7 @@ export default function CostActualForm() {
       transactionDate,
       category: category.trim() || null,
       description: description.trim() || null,
+      notes: notes.trim() || null,
     }
     const result = isEdit
       ? await updateCostActual(costActualId, payload)
@@ -118,8 +121,8 @@ export default function CostActualForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount *</label>
-            <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputClass} />
+            <label htmlFor="cost-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount *</label>
+            <input id="cost-amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputClass} />
           </div>
         </div>
 
@@ -135,8 +138,13 @@ export default function CostActualForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
+          <label htmlFor="cost-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+          <textarea id="cost-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="cost-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <textarea id="cost-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} placeholder="Any additional context (e.g. approval details)" />
         </div>
       </div>
 

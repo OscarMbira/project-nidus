@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { CheckCircle, XCircle, Clock, AlertTriangle, Edit2, Trash2, Eye, FileText, Activity, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { deleteQualityRegisterItem, getQualityActivities } from '../../services/qualityManagementService';
 import QualityActivityExportMenu from './QualityActivityExportMenu';
 import ExportListMenu from '../ui/ExportListMenu';
@@ -63,9 +64,10 @@ export default function QualityRegister({ items = [], onEdit, onView, onRefresh,
       setDeleting(item.id);
       await deleteQualityRegisterItem(item.id);
       onRefresh();
+      toast.success(`"${item.product_name}" removed from the quality register.`);
     } catch (error) {
       console.error('Error deleting quality register item:', error);
-      alert('Error deleting item: ' + error.message);
+      toast.error('Could not delete this item: ' + error.message);
     } finally {
       setDeleting(null);
     }

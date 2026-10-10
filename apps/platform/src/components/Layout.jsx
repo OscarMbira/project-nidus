@@ -12,10 +12,13 @@ import AIChatWidget from './ai/AIChatWidget'
 import QuickCaptureFab from '../modules/pmis-gaps/components/QuickCaptureFab'
 import { BrandingProvider } from '@nidus/shared/context/BrandingContext'
 import { MenuProvider } from '@nidus/shared/hooks/useMenu'
-import PMLayout from './pm/PMLayout'
-import { shouldUsePmLayoutShell } from '@nidus/shared/utils/menuLayoutUtils'
+import { CurrentProjectProvider } from '../context/CurrentProjectContext'
+import HeaderProjectSelector from './pm/HeaderProjectSelector'
+import PMProjectSelector from './pm/PMProjectSelector'
+import { RoleScopeGate } from '@nidus/ui'
+import { isPmLayoutPath } from '@nidus/shared/utils/menuLayoutUtils'
 
-const Layout = ({ children }) => {
+const Layout = ({ children, scope: scopeProp = null }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { collapsed, toggleCollapsed } = useSidebarCollapsed()
   const location = useLocation()
@@ -27,6 +30,8 @@ const Layout = ({ children }) => {
                      location.pathname.startsWith('/onboarding')
 
   const path = location.pathname
+  const scope = scopeProp ?? (isPmLayoutPath(path) ? 'pm' : null)
+  const isPm = scope === 'pm'
 
   // Chromeless render for windows opened via DetachButton (?popout=1) — skip header/sidebar/
   // floating widgets, keep providers so page content still has branding/menu context.
@@ -43,11 +48,7 @@ const Layout = ({ children }) => {
     )
   }
 
-  // PM users on shared /platform/* delivery routes must use PMLayout (layoutScope="pm").
-  if (!isAuthPage && shouldUsePmLayoutShell(path)) {
-    return <PMLayout>{children || <Outlet />}</PMLayout>
-  }
-  const isPlatformApp =
+  const isPlatformApp = isPm ||
     path.startsWith('/platform/') ||
     // First-class Platform URLs under /app/* (registered before app/* redirect in App.jsx)
     path.startsWith('/app/project-members') ||
@@ -65,7 +66,8 @@ const Layout = ({ children }) => {
 
   return (
     <BrandingProvider>
-    <MenuProvider layoutScope={null}>
+    <CurrentProjectProvider>
+    <MenuProvider layoutScope={scope}>
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Skip to main content link */}
       <a href="#main-content" className="skip-to-content">
@@ -76,7 +78,10 @@ const Layout = ({ children }) => {
       <div className="w-full">
         {/* Context-Aware Header - NO duplicate menu items */}
         {!isAuthPage && isPlatformApp && (
-          <PlatformAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
+          <PlatformAppHeader
+            onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+            projectSelector={<HeaderProjectSelector routeIsPm={isPm} />}
+          />
         )}
         {!isAuthPage && isSimulatorApp && (
           <SimulatorAppHeader onSidebarToggle={() => setSidebarOpen(!sidebarOpen)} />
@@ -131,8 +136,15 @@ const Layout = ({ children }) => {
           tabIndex="-1"
           className={`flex-1 min-w-0 pb-16 md:pb-0 ${!isAuthPage ? mainContentSidebarOffsetClass(collapsed) : ''} transition-[margin] duration-300 ease-in-out overflow-y-auto overflow-x-hidden h-full`}
         >
+          {isPm && <div className="md:hidden"><PMProjectSelector /></div>}
           <div className="w-full max-w-full">
-            {children || <Outlet />}
+            {isPm ? (
+              <RoleScopeGate requiredScope="pm" blockedRedirectTo="/platform/dashboard" fullScreen={false}>
+                {children || <Outlet />}
+              </RoleScopeGate>
+            ) : (
+              children || <Outlet />
+            )}
           </div>
         </main>
       </div>
@@ -143,6 +155,7 @@ const Layout = ({ children }) => {
       {!isAuthPage && <QuickCaptureFab />}
     </div>
     </MenuProvider>
+    </CurrentProjectProvider>
     </BrandingProvider>
   )
 }

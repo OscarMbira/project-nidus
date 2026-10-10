@@ -8,9 +8,12 @@ import ExportListMenu from '@nidus/ui/ExportListMenu';
 import { supabase } from '../services/supabaseClient';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { useSidebarCollapsed, pageContainerMaxWidthClass } from '@nidus/shared/hooks/useSidebarCollapsed'
 
 export default function QualityReviews() {
   const navigate = useNavigate();
+  const { collapsed } = useSidebarCollapsed();
+  const containerMaxWidthClass = pageContainerMaxWidthClass(collapsed);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -111,7 +114,7 @@ export default function QualityReviews() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className={`${containerMaxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -120,7 +123,7 @@ export default function QualityReviews() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className={`${containerMaxWidthClass} mx-auto px-4 sm:px-6 lg:px-8 py-8`}>
       <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <button
@@ -241,29 +244,29 @@ export default function QualityReviews() {
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                 <TableRowNumberHeader className="!normal-case" />
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[20%] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Review
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[10%] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[16%] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Product/Deliverable
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[14%] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Planned Date
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[12%] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[10%] px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Score
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="w-[11%] px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -272,40 +275,40 @@ export default function QualityReviews() {
                 {reviews.map((review, index) => (
                   <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white truncate" title={review.review_title}>
                           {review.review_title}
                         </div>
                         {review.review_reference && (
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate" title={review.review_reference}>
                             {review.review_reference}
                           </div>
                         )}
                         {review.project && (
-                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                          <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 truncate" title={review.project.project_name}>
                             {review.project.project_name}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4">
                       <span className="text-sm text-gray-900 dark:text-white capitalize">
                         {review.review_type?.replace('-', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4">
                       {review.quality_register ? (
-                        <div className="text-sm text-gray-900 dark:text-white">
+                        <div className="text-sm text-gray-900 dark:text-white truncate" title={review.quality_register.product_name}>
                           {review.quality_register.product_name}
                         </div>
                       ) : (
                         <span className="text-xs text-gray-400">N/A</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {review.planned_date ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 whitespace-nowrap">
                           <Calendar className="h-3 w-3" />
                           {new Date(review.planned_date).toLocaleDateString()}
                         </div>
@@ -318,14 +321,14 @@ export default function QualityReviews() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4">
                       <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(review.review_status)}`}>
                         {review.review_status === 'in-progress' && <Clock className="h-3 w-3" />}
                         {review.review_status === 'completed' && <CheckCircle className="h-3 w-3" />}
                         {review.review_status?.replace('-', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 py-4">
                       {review.overall_score !== null ? (
                         <div className={`text-sm font-semibold ${
                           review.overall_score >= 90 ? 'text-green-600 dark:text-green-400' :
@@ -343,7 +346,7 @@ export default function QualityReviews() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <RowActionButton variant="edit" label="Edit review" onClick={() => handleEditReview(review)} />
                       <RowActionButton
                         variant="delete"

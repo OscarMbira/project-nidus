@@ -66,6 +66,9 @@ export default function ProjectArchiveListPage() {
     { key: 'archived_by_label', label: 'Archived by' },
   ];
 
+  const openView = (row) => navigate(`/platform/closure/archive/${row.id}`);
+  const openEdit = (row) => navigate(`/platform/closure/archive/${row.id}/edit`);
+
   const handleDelete = async (row) => {
     if (!window.confirm(`Remove "${row.title}" from the archive log?`)) return;
     await deleteProjectArchiveItem(row.id);
@@ -147,7 +150,8 @@ export default function ProjectArchiveListPage() {
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{row.archived_by_label || '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-1 justify-end">
-                        <RowActionButton variant="edit" label="Edit archive item" onClick={() => navigate(`/platform/closure/archive/${row.id}/edit`)} />
+                        <RowActionButton variant="view" label="View archive item" onClick={() => openView(row)} />
+                        <RowActionButton variant="edit" label="Edit archive item" onClick={() => openEdit(row)} />
                         <RowActionButton variant="delete" label="Remove archive item" onClick={() => handleDelete(row)} />
                       </div>
                     </td>
@@ -163,7 +167,8 @@ export default function ProjectArchiveListPage() {
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{row.title}</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">{CATEGORY_LABELS[row.category] || row.category} · {row.archived_date}</div>
                 <div className="flex items-center gap-1 pt-1">
-                  <RowActionButton variant="edit" label="Edit archive item" onClick={() => navigate(`/platform/closure/archive/${row.id}/edit`)} />
+                  <RowActionButton variant="view" label="View archive item" onClick={() => openView(row)} />
+                  <RowActionButton variant="edit" label="Edit archive item" onClick={() => openEdit(row)} />
                   <RowActionButton variant="delete" label="Remove archive item" onClick={() => handleDelete(row)} />
                 </div>
               </div>

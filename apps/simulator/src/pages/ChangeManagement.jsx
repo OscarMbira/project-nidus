@@ -50,7 +50,7 @@ export default function ChangeManagement() {
         getCurrentUserAccountId(),
         simDb
           .from('practice_projects')
-          .select('id, project_name, project_code, project_status')
+          .select('id, project_name, project_code')
           .eq('id', projectId)
           .maybeSingle(),
       ]);

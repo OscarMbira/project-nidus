@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react'
+import { useLocation } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
 import { DocumentGovernanceProvider } from '@nidus/shared/context/DocumentGovernanceContext'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
@@ -10,8 +11,10 @@ import { useInitialFilterFromQuery } from '@nidus/shared/hooks/useInitialFilterF
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
+import { resolveOversightFormVariant } from '@nidus/ui/FormSurface'
 import { getQualityRegister } from '../../services/qualityManagementService'
 import QualityRegister from '../../components/quality/QualityRegister'
+import QualityRegisterForm from '../../components/quality/QualityRegisterForm'
 
 const QUALITY_STATUS_COLOR = {
   approved: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -25,11 +28,31 @@ const QUALITY_STATUS_COLOR = {
 
 export default function PMControlsQualityRegister() {
   const { projectId } = usePlatformProjectId()
+  const location = useLocation()
+  const formVariant = resolveOversightFormVariant(location.pathname)
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useViewMode('pm-quality-register', 'list')
   const [pageTab, setPageTab] = useState('dashboard')
   const [statusGroupFilter, setStatusGroupFilter] = useState('') // '' | 'approved' | 'in-review' | 'failed'
+  const [showForm, setShowForm] = useState(false)
+  const [selectedItem, setSelectedItem] = useState(null)
+
+  const handleEditItem = (item) => {
+    setSelectedItem(item)
+    setShowForm(true)
+  }
+
+  const handleItemSaved = () => {
+    setShowForm(false)
+    setSelectedItem(null)
+    fetchItems()
+  }
+
+  const handleFormCancel = () => {
+    setShowForm(false)
+    setSelectedItem(null)
+  }
 
   const fetchItems = async () => {
     if (!projectId) {
@@ -123,7 +146,7 @@ export default function PMControlsQualityRegister() {
           )}
         </div>
 
-        {loading ? (
+        {showForm && formVariant === 'page' ? null : loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
@@ -188,11 +211,23 @@ export default function PMControlsQualityRegister() {
             )}
             <QualityRegister
               items={registerItems}
+              onView={handleEditItem}
+              onEdit={handleEditItem}
               onRefresh={fetchItems}
               projectId={projectId}
               registerViewMode={viewMode}
             />
           </div>
+        )}
+
+        {showForm && (
+          <QualityRegisterForm
+            item={selectedItem}
+            projectId={projectId}
+            onSave={handleItemSaved}
+            onCancel={handleFormCancel}
+            variant={formVariant}
+          />
         )}
       </div>
     </DocumentGovernanceProvider>

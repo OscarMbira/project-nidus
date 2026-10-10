@@ -64,13 +64,8 @@ export async function submitForAuthorisation(tableName, recordId, rootRecordId, 
   return data
 }
 
-export async function fetchPendingChanges(tableName, recordId) {
-  const { data, error } = await simDb.rpc('get_pending_changes', {
-    p_table_name: tableName,
-    p_record_id: recordId,
-  })
-  if (error) throw error
-  return data
+export async function fetchPendingChanges() {
+  return null
 }
 
 export async function processDecision(requestId, decision, notes) {
@@ -130,8 +125,9 @@ export async function getRecordLifecycleChain(recordType, rootRecordId) {
   return data || []
 }
 
-export async function getAuthorisationQueue(userId, { pmoView = false } = {}) {
-  let q = simDb.from('record_authorisation_requests').select('*').eq('status', 'pending')
+export async function getAuthorisationQueue(userId, { pmoView = false, statuses = ['pending'] } = {}) {
+  const statusList = statuses?.length ? statuses : ['pending']
+  let q = simDb.from('record_authorisation_requests').select('*').in('status', statusList)
   if (!pmoView) q = q.eq('authoriser_id', userId)
   const { data, error } = await q
   if (error) throw error

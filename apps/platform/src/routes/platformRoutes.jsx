@@ -3,7 +3,7 @@ import { Route, Navigate, Routes, Outlet } from 'react-router-dom'
 import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
-import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
+import { RecordLifecycleRouteElements, RecordLifecyclePlatformNestedRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
 import { PmoFederated } from './PmoFederatedOutlet.jsx'
 import {
@@ -81,7 +81,6 @@ import {
   PMDashboard,
   ProjectManagerHome,
   PMOLayout,
-  PMLayout,
   PMOGovernanceMandateTemplate,
   PMOGovernanceCMS,
   PMOGovernanceConfigMS,
@@ -250,6 +249,7 @@ import {
   CapabilityProfilePicker,
   ProjectTypes,
   ProjectStatuses,
+  ExpenseCategories,
   AssignmentRoles,
   TimesheetReviewReasons,
   TimesheetWorkCategories,
@@ -327,6 +327,7 @@ import {
   ProgrammeFinancialDashboard,
   ProjectProfitability,
   MyExpenses,
+  ExpenseClaimDetail,
   ExpenseApproval,
   ExpenseApprovalThresholds,
   FinancialReportingHub,
@@ -536,6 +537,9 @@ import {
   CheckpointReportView,
   CheckpointReportEdit,
   ClosingProject,
+  ProjectClosureFormPage,
+  ProjectHandoverFormPage,
+  FollowOnActionFormPage,
   EndProjectReportView,
   EndProjectReportWizard,
   EPRComparisonView,
@@ -574,6 +578,8 @@ import {
   ConfigurationItemRecordView,
   ConfigurationItemRecordCreate,
   ConfigurationItemRecordEdit,
+  ConfigurationItemTypeListPage,
+  ConfigurationItemTypeFormPage,
   Risks,
   RiskDetail,
   RAIDLog,
@@ -622,6 +628,7 @@ import {
   BenefitsRegisterPage,
   BenefitsRealizationPage,
   BenefitMeasurementsPage,
+  BenefitMeasurementFormPage,
   BenefitRealizationReports,
   BenefitRealizationReportForm,
   BenefitCreatePage,
@@ -1479,6 +1486,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <MeetingSummaryView />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="comms/meetings/:meetingId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MeetingSchedule />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -2386,6 +2400,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="pmo-admin/expense-categories" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ExpenseCategories />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="pmo-admin/assignment-roles" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2623,6 +2644,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <MyExpenses />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="expenses/my/:id" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ExpenseClaimDetail />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3586,6 +3614,34 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="projects/:projectId/configuration-item-types" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConfigurationItemTypeListPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/configuration-item-types/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConfigurationItemTypeFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/configuration-item-types/:typeKey/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConfigurationItemTypeFormPage forceEdit />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/configuration-item-types/:typeKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ConfigurationItemTypeFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="briefs/list" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -4334,6 +4390,48 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="projects/:projectId/closure/form" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectClosureFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/closure/handover/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectHandoverFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/closure/handover" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ProjectHandoverFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/closure/actions/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <FollowOnActionFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/closure/actions/:actionKey/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <FollowOnActionFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="projects/:projectId/closure/actions/:actionKey" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <FollowOnActionFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="projects/:projectId/closure/end-project-report/create" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -4351,7 +4449,7 @@ export function PlatformRouteElements() {
                               <Route path="projects/:projectId/closure/end-project-report/:reportId/edit" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <EndProjectReportWizard />
+                                    <EndProjectReportView />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -4856,6 +4954,20 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="benefits/measurements/create" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BenefitMeasurementFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="benefits/measurements/:id/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <BenefitMeasurementFormPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="benefits/realization" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -5256,6 +5368,7 @@ export function PlatformRouteElements() {
 
                               {/* GAP-12 Vendors / Vendor Performance — sidebar URLs are /platform/pm/procurement/* */}
                               {PmisGapPlatformNestedRouteElements()}
+                              {RecordLifecyclePlatformNestedRouteElements()}
       
                             </Routes>
                           </Layout>
@@ -5436,11 +5549,11 @@ export function PlatformRouteElements() {
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute>
-                          <PMLayout>
+                          <Layout scope="pm">
                             <Suspense fallback={<LoadingFallback />}>
                               <Outlet />
                             </Suspense>
-                          </PMLayout>
+                          </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
                     </ThemeProvider>
@@ -5512,6 +5625,7 @@ export function PlatformRouteElements() {
                   <Route path="pm/controls/issue-register" element={<PMControlsIssueRegister />} />
                   <Route path="pm/controls/quality-register" element={<PMControlsQualityRegister />} />
                   <Route path="pm/controls/configuration-items" element={<PMControlsConfigItems />} />
+                  <Route path="pm/controls/configuration-item-types" element={<ConfigurationItemTypeListPage />} />
                   <Route path="pm/controls/lessons-log" element={<PMControlsLessonsLog />} />
                   <Route path="pm/reporting/checkpoint-reports" element={<PMReportingCheckpoint />} />
                   <Route path="pm/reporting/highlight-reports" element={<PMReportingHighlight />} />

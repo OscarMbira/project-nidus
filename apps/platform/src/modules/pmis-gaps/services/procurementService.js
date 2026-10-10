@@ -36,7 +36,7 @@ export async function createVendor({ accountId, vendorName, vendorCode, category
     .insert({
       account_id: accountId,
       vendor_name: vendorName.trim(),
-      vendor_code: vendorCode || null,
+      vendor_code: vendorCode?.trim() ? vendorCode.trim() : '',
       category: category || null,
       contact_email: contactEmail || null,
       contact_phone: contactPhone || null,
@@ -44,7 +44,9 @@ export async function createVendor({ accountId, vendorName, vendorCode, category
     .select()
     .single()
   if (error) throw error
-  return data
+  const { data: fresh, error: readError } = await db().from('vendors').select('*').eq('id', data.id).maybeSingle()
+  if (readError || !fresh) return data
+  return fresh
 }
 
 export async function updateVendor(id, { vendorName, vendorCode, category, contactEmail, contactPhone, isActive }) {
@@ -53,7 +55,7 @@ export async function updateVendor(id, { vendorName, vendorCode, category, conta
     .from('vendors')
     .update({
       vendor_name: vendorName.trim(),
-      vendor_code: vendorCode || null,
+      ...(vendorCode?.trim() ? { vendor_code: vendorCode.trim() } : {}),
       category: category || null,
       contact_email: contactEmail || null,
       contact_phone: contactPhone || null,
@@ -65,6 +67,63 @@ export async function updateVendor(id, { vendorName, vendorCode, category, conta
     .single()
   if (error) throw error
   return data
+}
+
+export async function listVendorCategories(accountId) {
+  const { data, error } = await db()
+    .from('vendor_categories')
+    .select('*')
+    .eq('account_id', accountId)
+    .eq('is_deleted', false)
+    .order('category_name', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+const VENDOR_CATEGORY_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export async function getVendorCategory(key, accountId) {
+  let query = db().from('vendor_categories').select('*').eq('is_deleted', false)
+  if (VENDOR_CATEGORY_UUID.test(String(key || ''))) {
+    query = query.eq('id', key)
+  } else if (accountId) {
+    query = query.eq('account_id', accountId).eq('category_name', key)
+  } else {
+    return null
+  }
+  const { data, error } = await query.maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export async function saveVendorCategory({ id, accountId, categoryName, description, isActive = true }) {
+  if (!categoryName?.trim()) throw new Error('Category name is required')
+  const payload = {
+    category_name: categoryName.trim(),
+    description: description?.trim() || null,
+    is_active: isActive !== false,
+    updated_at: new Date().toISOString(),
+  }
+  if (id) {
+    const { data, error } = await db().from('vendor_categories').update(payload).eq('id', id).select().single()
+    if (error) throw error
+    return data
+  }
+  const { data, error } = await db()
+    .from('vendor_categories')
+    .insert({ ...payload, account_id: accountId })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteVendorCategory(id) {
+  const { error } = await db()
+    .from('vendor_categories')
+    .update({ is_deleted: true, updated_at: new Date().toISOString() })
+    .eq('id', id)
+  if (error) throw error
 }
 
 export async function deleteVendor(id) {

@@ -12,6 +12,14 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
+import AuditCard from '@nidus/ui/AuditCard'
+import AuditField from '@nidus/ui/AuditField'
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
+import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { platformDb } from '@nidus/supabase'
 import { getQualityDefects, saveQualityDefect, deleteQualityDefect } from '../../services/qualityManagementService'
 
 const STATUS_COLORS = {
@@ -30,6 +38,15 @@ const EMPTY_FORM = {
   status: 'open',
 }
 
+const NC_FORM_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'affected-standard', label: 'Affected standard' },
+  { value: 'root-cause', label: 'Root cause analysis' },
+  { value: 'corrective', label: 'Corrective action' },
+  { value: 'preventive', label: 'Preventive action' },
+  { value: 'audit', label: 'Audit details' },
+]
+
 export default function NonConformanceRegisterPage() {
   const { projectId } = usePlatformProjectId()
   const [rows, setRows] = useState([])
@@ -38,6 +55,9 @@ export default function NonConformanceRegisterPage() {
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [formTab, setFormTab] = useState('details')
+  const [editingRow, setEditingRow] = useState(null)
+  const [auditUserLabels, setAuditUserLabels] = useState({})
 
   const load = useCallback(async () => {
     if (!projectId) { setLoading(false); return }
@@ -54,9 +74,22 @@ export default function NonConformanceRegisterPage() {
 
   useEffect(() => { load() }, [load])
 
-  const openCreate = () => { setEditingId(null); setForm(EMPTY_FORM); setFormOpen(true) }
+  useEffect(() => {
+    if (formTab !== 'audit' || !editingRow) return
+    let cancelled = false
+    resolveAuditUserLabels(platformDb, [editingRow.created_by, editingRow.updated_by]).then((labels) => {
+      if (!cancelled) setAuditUserLabels(labels || {})
+    })
+    return () => { cancelled = true }
+  }, [formTab, editingRow])
+
+  const handleListChange = (name) => (value) => setForm((prev) => ({ ...prev, [name]: value }))
+
+  const openCreate = () => { setEditingId(null); setEditingRow(null); setFormTab('details'); setForm(EMPTY_FORM); setFormOpen(true) }
   const openEdit = (d) => {
     setEditingId(d.id)
+    setEditingRow(d)
+    setFormTab('details')
     setForm({
       defect_title: d.defect_title || '', defect_description: d.defect_description || '',
       affected_standard: d.affected_standard || '', root_cause_analysis: d.root_cause_analysis || '',
@@ -114,25 +147,71 @@ export default function NonConformanceRegisterPage() {
         </div>
 
         {formOpen && (
-          <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 grid grid-cols-1 gap-3">
-            <input placeholder="Title *" value={form.defect_title} onChange={(e) => setForm({ ...form, defect_title: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-            <textarea placeholder="Description *" rows={2} value={form.defect_description} onChange={(e) => setForm({ ...form, defect_description: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-            <input placeholder="Affected standard" value={form.affected_standard} onChange={(e) => setForm({ ...form, affected_standard: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-            <textarea placeholder="Root cause analysis" rows={2} value={form.root_cause_analysis} onChange={(e) => setForm({ ...form, root_cause_analysis: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-            <textarea placeholder="Corrective action" rows={2} value={form.corrective_action} onChange={(e) => setForm({ ...form, corrective_action: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-            <textarea placeholder="Preventive action" rows={2} value={form.preventive_action} onChange={(e) => setForm({ ...form, preventive_action: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
-              className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm capitalize">
-              {['open', 'in-progress', 'resolved', 'verified', 'closed', 'deferred', 'wont-fix'].map((s) => (
-                <option key={s} value={s}>{s.replace('-', ' ')}</option>
-              ))}
-            </select>
+          <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 space-y-4">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} tabs={NC_FORM_TABS} />
+
+            {formTab === 'details' && (
+              <div className="grid grid-cols-1 gap-3">
+                <label htmlFor="nc-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Title *</label>
+                <input id="nc-title" placeholder="Title *" value={form.defect_title} onChange={(e) => setForm({ ...form, defect_title: e.target.value })}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
+                <label htmlFor="nc-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Description *</label>
+                <textarea id="nc-description" placeholder="Description *" rows={2} value={form.defect_description} onChange={(e) => setForm({ ...form, defect_description: e.target.value })}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm" />
+                <label htmlFor="nc-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 -mb-1">Status</label>
+                <select id="nc-status" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm capitalize">
+                  {['open', 'in-progress', 'resolved', 'verified', 'closed', 'deferred', 'wont-fix'].map((st) => (
+                    <option key={st} value={st}>{st.replace('-', ' ')}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {formTab === 'affected-standard' && (
+              <MultiLineListInput viewModeId="nc-affected-standard" id="nc-affected-standard" value={form.affected_standard}
+                onChange={handleListChange('affected_standard')} placeholder="Add affected standard…"
+                ariaLabelPrefix="affected standard" itemColumnLabel="Affected standard" />
+            )}
+
+            {formTab === 'root-cause' && (
+              <MultiLineListInput viewModeId="nc-root-cause" id="nc-root-cause" value={form.root_cause_analysis}
+                onChange={handleListChange('root_cause_analysis')} placeholder="Add root cause…"
+                ariaLabelPrefix="root cause" itemColumnLabel="Root cause" />
+            )}
+
+            {formTab === 'corrective' && (
+              <MultiLineListInput viewModeId="nc-corrective-action" id="nc-corrective-action" value={form.corrective_action}
+                onChange={handleListChange('corrective_action')} placeholder="Add corrective action…"
+                ariaLabelPrefix="corrective action" itemColumnLabel="Corrective action" />
+            )}
+
+            {formTab === 'preventive' && (
+              <MultiLineListInput viewModeId="nc-preventive-action" id="nc-preventive-action" value={form.preventive_action}
+                onChange={handleListChange('preventive_action')} placeholder="Add preventive action…"
+                ariaLabelPrefix="preventive action" itemColumnLabel="Preventive action" />
+            )}
+
+            {formTab === 'audit' && (!editingRow ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this record is saved.</p>
+            ) : (
+              <AuditDetailsPanel description="Who created or changed this non-conformance, and its current status.">
+                <AuditCard title="Identity" description="How this non-conformance is labelled.">
+                  <AuditField label="Title" value={editingRow.defect_title} />
+                  <AuditField label="Status" value={editingRow.status} />
+                </AuditCard>
+                <AuditCard title="Classification" description="The standard it affects.">
+                  <AuditField label="Affected standard" value={editingRow.affected_standard} />
+                </AuditCard>
+                <AuditCard title="Record history" description="When this was created and last changed.">
+                  <AuditField label="Created by" value={editingRow.created_by ? auditUserLabels[editingRow.created_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Created at" value={editingRow.created_at} />
+                  <AuditField label="Updated by" value={editingRow.updated_by ? auditUserLabels[editingRow.updated_by] || null : null} />
+                  <AuditTimestampPair dateLabel="Last updated" value={editingRow.updated_at} />
+                </AuditCard>
+              </AuditDetailsPanel>
+            ))}
+
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setFormOpen(false)} className="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button>
               <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium disabled:opacity-50">

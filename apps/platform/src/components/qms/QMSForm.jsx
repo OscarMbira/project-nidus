@@ -9,6 +9,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComplete }) {
   const [formData, setFormData] = useState({
@@ -121,6 +122,13 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
     }))
     
     // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }))
+    }
+  }
+
+  const handleListChange = (name) => (value) => {
+    setFormData(prev => ({ ...prev, [name]: value }))
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev }
@@ -237,13 +245,14 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Objectives <span className="text-red-500">*</span>
               </label>
-              <textarea
-                name="objectives"
+              <MultiLineListInput
+                viewModeId="qms-form-objectives"
+                id="qms_objectives"
                 value={formData.objectives}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="Define the quality objectives for the project..."
+                onChange={handleListChange('objectives')}
+                placeholder="e.g. Ensure every product meets its agreed acceptance criteria…"
+                ariaLabelPrefix="objective"
+                itemColumnLabel="Objective"
               />
               {errors.objectives && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.objectives}</p>
@@ -257,13 +266,14 @@ export default function QMSForm({ qms, projectId, onSave, onCancel, onHoldComple
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Scope <span className="text-red-500">*</span>
               </label>
-              <textarea
-                name="scope"
+              <MultiLineListInput
+                viewModeId="qms-form-scope"
+                id="qms_scope"
                 value={formData.scope}
-                onChange={handleChange}
-                rows={4}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                placeholder="Define the scope of quality management..."
+                onChange={handleListChange('scope')}
+                placeholder="e.g. Covers quality planning, control and assurance for all major products…"
+                ariaLabelPrefix="scope item"
+                itemColumnLabel="Scope item"
               />
               {errors.scope && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.scope}</p>

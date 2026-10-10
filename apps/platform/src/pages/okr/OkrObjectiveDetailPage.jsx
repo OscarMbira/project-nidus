@@ -33,7 +33,7 @@ const HEALTH_CLASS = {
 }
 
 function basePath(sim) {
-  return sim ? '/simulator/pm/okr/objectives' : '/pm/okr/objectives'
+  return sim ? '/simulator/pm/okr/objectives' : '/platform/pm/okr/objectives'
 }
 
 const EMPTY_KR = { kr_title: '', kr_description: '', target_value: '', current_value: '', unit_label: '', health_status: 'on_track' }

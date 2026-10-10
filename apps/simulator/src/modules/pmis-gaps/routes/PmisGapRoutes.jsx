@@ -3,11 +3,9 @@ import { lazy, Suspense } from 'react'
 import ProtectedRoute from '../../../components/ProtectedRoute'
 import { ThemeProvider } from '@nidus/shared/context/ThemeContext'
 import { ToastProvider } from '@nidus/shared/context/ToastContext'
-import Layout from '../../../components/Layout'
+import { AppLayout as Layout } from '../../../components/AppLayout'
 import PMLayout from '../../../components/pm/PMLayout'
 import PMOLayout from '../../../components/pmo/PMOLayout'
-import SimulatorPMOLayout from '../../../components/sim/pmo/SimulatorPMOLayout'
-import SimulatorPMLayout from '../../../components/sim/pm/SimulatorPMLayout'
 import { createGapListPage } from '../pages/gapPageFactory.jsx'
 
 const Loading = () => (
@@ -45,7 +43,7 @@ function wrapPmo(el) {
 function wrapSimPm(el) {
   return (
     <Suspense fallback={<Loading />}>
-      {withProviders(<SimulatorPMLayout>{el}</SimulatorPMLayout>)}
+      {withProviders(<Layout scope="pm">{el}</Layout>)}
     </Suspense>
   )
 }
@@ -53,7 +51,7 @@ function wrapSimPm(el) {
 function wrapSimPmo(el) {
   return (
     <Suspense fallback={<Loading />}>
-      {withProviders(<SimulatorPMOLayout>{el}</SimulatorPMOLayout>)}
+      {withProviders(<Layout scope="pmo">{el}</Layout>)}
     </Suspense>
   )
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ImagePlus } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { RowActionButton } from '@nidus/ui'
 import ZoomableImage from '../ui/ZoomableImage'
 import { getDefectAttachments, uploadDefectAttachment, deleteDefectAttachment } from '../../services/defectService'
@@ -59,23 +60,42 @@ export default function DefectAttachmentUploader({
     setUploading(true)
     setError(null)
     try {
-      for (const file of list) {
-        const localUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
-        const result = await uploadAttachment({
-          projectId,
-          defectId,
-          file,
-          is_screenshot: file.type.startsWith('image/'),
-          uploaded_by: uploadedByUserId,
-        })
-        const savedId = result?.attachment?.id
-        if (savedId && localUrl) {
-          setLocalPreviews((prev) => ({ ...prev, [savedId]: localUrl }))
-        }
+      // Files are independent of each other, so upload them together instead
+      // of one at a time (rule 66) — N files no longer take N times as long.
+      const uploaded = await Promise.all(
+        list.map(async (file) => {
+          const localUrl = file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+          const result = await uploadAttachment({
+            projectId,
+            defectId,
+            file,
+            is_screenshot: file.type.startsWith('image/'),
+            uploaded_by: uploadedByUserId,
+          })
+          return { attachment: result?.attachment, localUrl }
+        }),
+      )
+
+      // Merge the new rows straight into state instead of re-fetching and
+      // re-signing the whole list (rule 66) — we already have everything we
+      // need: the inserted row, and an instant local preview for the image.
+      const newPreviews = {}
+      const newItems = []
+      for (const { attachment, localUrl } of uploaded) {
+        if (!attachment) continue
+        newItems.push(attachment)
+        if (localUrl) newPreviews[attachment.id] = localUrl
       }
-      await load()
+      if (Object.keys(newPreviews).length) {
+        setLocalPreviews((prev) => ({ ...prev, ...newPreviews }))
+      }
+      if (newItems.length) {
+        setItems((prev) => [...newItems, ...prev]) // newest first, matching getDefectAttachments' own order
+      }
+      toast.success(list.length > 1 ? `${list.length} images uploaded.` : 'Image uploaded.')
     } catch (err) {
       setError(err?.message || 'Upload failed')
+      toast.error('Could not upload this image. Please try again.')
     } finally {
       setUploading(false)
     }
@@ -168,9 +188,13 @@ export default function DefectAttachmentUploader({
                       if (!window.confirm('Remove this image?')) return
                       try {
                         await deleteAttachment(item.id)
-                        await load()
+                        // Drop it locally instead of re-fetching and re-signing
+                        // everything that's left (rule 66).
+                        setItems((prev) => prev.filter((i) => i.id !== item.id))
+                        toast.success('Image removed.')
                       } catch (err) {
                         setError(err?.message || 'Could not remove image')
+                        toast.error('Could not remove this image. Please try again.')
                       }
                     }}
                   />

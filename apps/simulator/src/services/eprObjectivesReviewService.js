@@ -137,6 +137,21 @@ export async function deleteObjectiveReview(objectiveReviewId) {
 }
 
 /**
+ * One review per objective area. Later rows for an area already listed are duplicates.
+ * @param {Array} rows
+ * @returns {Array}
+ */
+export function uniqueObjectiveReviews(rows) {
+  const seen = new Set()
+  return (rows || []).filter((row) => {
+    const area = row?.objective_area
+    if (!area || seen.has(area)) return false
+    seen.add(area)
+    return true
+  })
+}
+
+/**
  * Get Tolerance Performance
  * @param {string} reportId - Report ID
  * @returns {Promise<Array>} Objectives review data
@@ -150,7 +165,7 @@ export async function getTolerancePerformance(reportId) {
       .order('display_order', { ascending: true })
 
     if (error) throw error
-    return data || []
+    return uniqueObjectiveReviews(data)
   } catch (error) {
     console.error('Error fetching tolerance performance:', error)
     throw error

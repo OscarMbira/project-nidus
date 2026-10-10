@@ -2,23 +2,26 @@
  * Process template scope — PMO master catalogue vs PM project workspace.
  */
 import { useLocation } from 'react-router-dom'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { roleKeyFromPath, isSimRoleKey } from './processTemplatesRegistry'
 import { canCreateMasterTemplate } from '../../services/processTemplatesService'
-import PlanningProjectBar, { usePlanningProjectId } from '../planning/PlanningProjectBar'
+import PlanningProjectBar from '../planning/PlanningProjectBar'
 
 export function useProcessTemplateScope(roleKeyProp) {
   const location = useLocation()
   const roleKey = roleKeyProp || roleKeyFromPath(location.pathname)
   const sim = isSimRoleKey(roleKey)
   const masterCatalog = canCreateMasterTemplate(roleKey)
-  const projectId = usePlanningProjectId()
+  const { projectId, loading: projectLoading } = usePlatformProjectId()
 
   return {
     roleKey,
     sim,
     /** PMO / Sim PMO — organisation-wide master templates (no project). */
     masterCatalog,
-    projectId,
+    /** Resolved projects.id. ?projectId= may be a project code such as SEED334-PRJ-08. */
+    projectId: projectId || '',
+    projectLoading,
     /** PM / Sim PM — project needed only for workspace copies, not to view masters. */
     needsProjectForCopies: !masterCatalog,
   }

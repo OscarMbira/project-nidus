@@ -515,6 +515,27 @@ export async function updateProjectHandover(handoverId, updates) {
   }
 }
 
+/**
+ * Soft-delete a project handover.
+ * @param {string} handoverId
+ */
+export async function deleteProjectHandover(handoverId) {
+  try {
+    const { error } = await supabase
+      .from('project_handover')
+      .update({
+        is_deleted: true,
+        deleted_at: new Date().toISOString(),
+      })
+      .eq('id', handoverId);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error deleting project handover:', error);
+    throw error;
+  }
+}
+
 // ===========================
 // DASHBOARD & ANALYTICS
 // ===========================
@@ -619,6 +640,7 @@ export default {
   fetchProjectHandover,
   createProjectHandover,
   updateProjectHandover,
+  deleteProjectHandover,
 
   // Dashboard
   getClosureDashboardStats

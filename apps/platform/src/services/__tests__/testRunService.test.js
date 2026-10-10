@@ -40,6 +40,9 @@ describe('testRunService', () => {
     const out = await getExecutionsByRun('run-1')
     expect(out).toEqual(rows)
     expect(platformDb.from).toHaveBeenCalledWith('test_case_executions')
+    // test_case_executions and defects have two FKs between them (defect_id,
+    // and defects.execution_id) — an unhinted embed is ambiguous (PGRST201).
+    expect(chain.select.mock.calls[0][0]).toContain('defects!defect_id')
   })
 
   it('updateExecution sets executed_at for non-pending status and returns defect embed', async () => {
@@ -60,6 +63,7 @@ describe('testRunService', () => {
     expect(chain.update).toHaveBeenCalled()
     const updArg = chain.update.mock.calls[0][0]
     expect(updArg.executed_at).toBeDefined()
+    expect(chain.select.mock.calls[0][0]).toContain('defects!defect_id')
   })
 
   it('getRunStats returns limited rows', async () => {

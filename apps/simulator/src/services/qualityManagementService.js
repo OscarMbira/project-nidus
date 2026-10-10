@@ -414,7 +414,7 @@ export async function getQualityDefects(filters = {}) {
         product_name,
         product_reference
       ),
-      reported_by:reported_by_user_id (id, email, full_name),
+      reported_by:discovered_by (id, email, full_name),
       assigned_to:assigned_to_user_id (id, email, full_name)
     `)
     .eq('is_deleted', false)
@@ -435,7 +435,7 @@ export async function getQualityDefects(filters = {}) {
     query = query.eq('severity', filters.severity)
   }
 
-  const { data, error } = await query.order('reported_date', { ascending: false })
+  const { data, error } = await query.order('discovery_date', { ascending: false })
 
   if (error) throw error
   return data
@@ -459,7 +459,7 @@ export async function getQualityDefect(defectId) {
         product_name,
         product_reference
       ),
-      reported_by:reported_by_user_id (id, email, full_name),
+      reported_by:discovered_by (id, email, full_name),
       assigned_to:assigned_to_user_id (id, email, full_name)
     `)
     .eq('id', defectId)
@@ -473,13 +473,19 @@ export async function getQualityDefect(defectId) {
 /**
  * Create or update a quality defect
  */
+async function resolveInternalUserId(authUser) {
+  const { data } = await supabase.from('users').select('id').eq('auth_user_id', authUser.id).maybeSingle()
+  return data?.id || null
+}
+
 export async function saveQualityDefect(defectData, defectId = null) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('User not authenticated')
+  const actorId = await resolveInternalUserId(user)
 
   const updateData = {
     ...defectData,
-    updated_by: user.id,
+    updated_by: actorId,
   }
 
   if (defectId) {
@@ -493,9 +499,12 @@ export async function saveQualityDefect(defectData, defectId = null) {
     if (error) throw error
     return data
   } else {
-    updateData.created_by = user.id
-    if (!updateData.reported_by_user_id) {
-      updateData.reported_by_user_id = user.id
+    updateData.created_by = actorId
+    if (!updateData.discovery_date) {
+      updateData.discovery_date = new Date().toISOString().slice(0, 10)
+    }
+    if (!updateData.discovered_by) {
+      updateData.discovered_by = actorId
     }
     const { data, error } = await supabase
       .from('quality_defects')

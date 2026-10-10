@@ -49,7 +49,7 @@ function Editor({ isNew, environmentKey, projectId }) {
   const [saving, setSaving] = useState(false)
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
-  const { confirmDiscard } = useUnsavedChangesGuard(dirty)
+  const { confirmBack } = useUnsavedChangesGuard(dirty)
 
   useEffect(() => {
     if (isNew || !environmentKey || !projectId) return undefined
@@ -87,8 +87,8 @@ function Editor({ isNew, environmentKey, projectId }) {
     return query ? `${path}?${query}` : path
   }
 
-  const close = async () => {
-    if (await confirmDiscard()) navigate(-1)
+  const close = () => {
+    confirmBack()
   }
 
   const save = async (event) => {

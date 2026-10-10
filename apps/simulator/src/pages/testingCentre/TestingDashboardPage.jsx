@@ -9,10 +9,18 @@ export default function TestingDashboardPage({ pathPrefix = '/platform/testing-c
   const [m, setM] = useState(null)
   const [runM, setRunM] = useState(null)
   const [err, setErr] = useState('')
+  const [access, setAccess] = useState('checking')
 
   useEffect(() => {
     let o = true
     ;(async () => {
+      const allowed = mode === 'sim' ? true : await platform.hasTestingCentrePermission('testing_centre.view')
+      if (!o) return
+      if (!allowed) {
+        setAccess('denied')
+        return
+      }
+      setAccess('granted')
       const a = await svc.getTestingDashboardMetrics()
       const b = await (svc.getTestRunDashboardMetrics || platform.getTestRunDashboardMetrics)(null, 30)
       if (o) {
@@ -22,7 +30,7 @@ export default function TestingDashboardPage({ pathPrefix = '/platform/testing-c
       }
     })()
     return () => { o = false }
-  }, [svc])
+  }, [svc, mode])
 
   const kpi = [
     { label: 'Total cases', value: m?.total_cases ?? '—' },
@@ -50,7 +58,13 @@ export default function TestingDashboardPage({ pathPrefix = '/platform/testing-c
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 p-4 md:p-6 max-w-7xl mx-auto">
       <h1 className="text-2xl font-semibold mb-1">Testing & Diagnostics</h1>
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Dashboard</p>
-      {err && <p className="text-red-500 text-sm mb-2">{err}</p>}
+      {access === 'denied' && (
+        <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-6 text-sm text-amber-900 dark:text-amber-200">
+          You don't have access to the Testing Centre. Ask your PMO administrator for the "View Testing Centre" permission.
+        </div>
+      )}
+      {access === 'granted' && err && <p className="text-red-500 text-sm mb-2">{err}</p>}
+      {access === 'granted' && (<>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-8">
         {kpi.map((c, index) => (
           <div key={c.label} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/80 p-4">            <div className="text-xs text-gray-500 dark:text-gray-400">{c.label}</div>
@@ -90,6 +104,7 @@ export default function TestingDashboardPage({ pathPrefix = '/platform/testing-c
         <Link to={`${pathPrefix}/suites/new`} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm">New suite</Link>
         <Link to={`${pathPrefix}/runs`} className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm">View runs</Link>
       </div>
+      </>)}
     </div>
   )
 }

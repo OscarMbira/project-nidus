@@ -91,6 +91,12 @@ export default function CostActualDetailPage() {
               <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{entry.description}</p>
             </div>
           )}
+          {entry.notes && (
+            <div>
+              <p className="text-xs uppercase text-gray-400 mb-1">Notes</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{entry.notes}</p>
+            </div>
+          )}
         </div>
       ) : (
         <AuditDetailsPanel description="Who created or changed this record.">

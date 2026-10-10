@@ -11,6 +11,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { getCostActual, createCostActual, updateCostActual } from '../../services/costActualsService'
+import { getByProjectId } from '../../services/projectBudgetCategoryService'
 
 const inputClass =
   'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
@@ -29,7 +30,18 @@ export default function CostActualForm() {
   const [amount, setAmount] = useState('')
   const [transactionDate, setTransactionDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [category, setCategory] = useState('')
+  const [budgetLines, setBudgetLines] = useState([])
+
+  useEffect(() => {
+    if (!projectId) return
+    getByProjectId(projectId).then((res) => {
+      if (res.success) setBudgetLines(res.data)
+    })
+  }, [projectId])
+
+  const categoryOptions = [...new Set([...budgetLines.map((l) => l.category_name), category].filter(Boolean))]
   const [description, setDescription] = useState('')
+  const [notes, setNotes] = useState('')
   const [initialSnapshot, setInitialSnapshot] = useState(null)
 
   useEffect(() => {
@@ -45,10 +57,11 @@ export default function CostActualForm() {
         setTransactionDate(r?.transaction_date || '')
         setCategory(r?.category || '')
         setDescription(r?.description || '')
-        setInitialSnapshot(JSON.stringify({ transactionType: r?.transaction_type, amount: r?.amount, transactionDate: r?.transaction_date, category: r?.category, description: r?.description }))
+        setNotes(r?.notes || '')
+        setInitialSnapshot(JSON.stringify({ transactionType: r?.transaction_type, amount: r?.amount, transactionDate: r?.transaction_date, category: r?.category, description: r?.description, notes: r?.notes }))
         setLoading(false)
       } else {
-        setInitialSnapshot(JSON.stringify({ transactionType: 'actual', amount: '', transactionDate, category: '', description: '' }))
+        setInitialSnapshot(JSON.stringify({ transactionType: 'actual', amount: '', transactionDate, category: '', description: '', notes: '' }))
       }
     })()
     return () => { cancelled = true }
@@ -57,8 +70,8 @@ export default function CostActualForm() {
 
   const isDirty = useMemo(() => {
     if (initialSnapshot === null) return false
-    return JSON.stringify({ transactionType, amount, transactionDate, category, description }) !== initialSnapshot
-  }, [transactionType, amount, transactionDate, category, description, initialSnapshot])
+    return JSON.stringify({ transactionType, amount, transactionDate, category, description, notes }) !== initialSnapshot
+  }, [transactionType, amount, transactionDate, category, description, notes, initialSnapshot])
 
   const { requestNavigation, confirmDiscard } = useUnsavedChangesGuard(
     isDirty,
@@ -79,6 +92,7 @@ export default function CostActualForm() {
       transactionDate,
       category: category.trim() || null,
       description: description.trim() || null,
+      notes: notes.trim() || null,
     }
     const result = isEdit
       ? await updateCostActual(id, payload)
@@ -124,8 +138,9 @@ export default function CostActualForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount *</label>
+            <label htmlFor="cost-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount *</label>
             <input
+              id="cost-amount"
               type="number"
               step="0.01"
               value={amount}
@@ -141,14 +156,24 @@ export default function CostActualForm() {
             <input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-            <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="e.g. Labour, Materials, Software" className={inputClass} />
+            <label htmlFor="cost-category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+            <select id="cost-category" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+              <option value="">Select a budget line…</option>
+              {categoryOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
+          <label htmlFor="cost-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+          <textarea id="cost-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="cost-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <textarea id="cost-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputClass} placeholder="Any additional context (e.g. approval details)" />
         </div>
       </div>
 

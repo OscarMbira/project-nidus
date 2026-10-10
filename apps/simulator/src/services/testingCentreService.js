@@ -184,6 +184,16 @@ export async function listEnvironments() {
   }
 }
 
+export async function hasTestingCentrePermission(code = 'testing_centre.view') {
+  try {
+    const { data, error } = await platformDb.rpc('app_user_has_testing_centre_permission', { p_code: code })
+    if (error) throw error
+    return data === true
+  } catch {
+    return false
+  }
+}
+
 export async function getTestingDashboardMetrics() {
   try {
     const { data, error } = await platformDb.rpc('get_testing_centre_dashboard_metrics')

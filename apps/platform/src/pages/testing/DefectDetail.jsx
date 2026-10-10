@@ -151,7 +151,11 @@ function Detail({ defectId, isNew, projectId }) {
         </div>
       )}
       {!isNew && (
-        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+        <DetailAuditTabList
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          extraTab={{ value: 'images', label: 'Images' }}
+        />
       )}
 
       {activeTab === 'audit' && !isNew && (
@@ -234,10 +238,13 @@ function Detail({ defectId, isNew, projectId }) {
             {row.description}
           </div>
           <DefectCommentSection defectId={row.id} currentUserId={uid} />
-          <DefectAttachmentUploader projectId={row.project_id} defectId={row.id} uploadedByUserId={uid} />
         </>
       )}
       </>
+      )}
+
+      {activeTab === 'images' && !isNew && row && (
+        <DefectAttachmentUploader projectId={row.project_id} defectId={row.id} uploadedByUserId={uid} />
       )}
     </div>
   )

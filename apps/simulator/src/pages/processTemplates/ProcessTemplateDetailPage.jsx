@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Download, Copy } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -24,6 +24,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import ProcurementPlanFields, { PROCUREMENT_PLAN_TABS } from '../../components/processTemplates/ProcurementPlanFields'
 
 const DETAIL_COLS = [
   { key: 'reference_code', label: 'Reference' },
@@ -93,6 +94,8 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
   if (loading) return <p className="p-6 text-gray-500">Loading…</p>
   if (!row) return <p className="p-6 text-gray-500">Record not found.</p>
 
+  const isProcurementPlan = slug === 'procurement-management-plan'
+  const recordKey = row.reference_code || row.id
   const canEdit = canEditMasterTemplate(roleKey, row, userId)
   const canCopy = canCopyTemplate(roleKey) && row.is_master
   const copyProjectId = row.is_master ? scopeProjectId : (row.project_id || row.practice_project_id)
@@ -109,23 +112,27 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
-      <Link to={listPath} className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200">
+    <div className={`w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 mx-auto space-y-4 ${isProcurementPlan ? 'max-w-5xl' : 'max-w-3xl'}`}>
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
         <ArrowLeft className="h-4 w-4" />
-        Back to list
-      </Link>
+        Back
+      </button>
 
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{row.title || 'Untitled'}</h1>
-          <p className="text-sm text-gray-500 mt-1">{row.reference_code || row.id}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-200 mt-1">{recordKey}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {canEdit && (
             <RowActionButton
               variant="edit"
               label="Edit template"
-              onClick={() => navigate(`${listPath}/${id}/edit`)}
+              onClick={() => navigate(`${listPath}/${recordKey}/edit`)}
             />
           )}
           {canCopy && (
@@ -158,7 +165,12 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
         </div>
       </div>
 
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Template sections"
+        tabs={isProcurementPlan ? PROCUREMENT_PLAN_TABS : undefined}
+      />
 
       {activeTab === 'audit' && (
         <AuditDetailsPanel description="Who created or changed this template, and how it is classified.">
@@ -184,25 +196,27 @@ export default function ProcessTemplateDetailPage({ roleKey: roleKeyProp, sim: s
       <dl className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 divide-y divide-gray-200 dark:divide-gray-800">
         <div className="px-4 py-3 grid grid-cols-3 gap-2">
           <dt className="text-sm text-gray-500">Status</dt>
-          <dd className="col-span-2 text-sm text-gray-200 capitalize">{row.status}</dd>
+          <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-100 capitalize">{row.status}</dd>
         </div>
         <div className="px-4 py-3 grid grid-cols-3 gap-2">
           <dt className="text-sm text-gray-500">Type</dt>
-          <dd className="col-span-2 text-sm text-gray-200">{row.is_master ? 'Master template' : 'Workspace copy'}</dd>
+          <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-100">{row.is_master ? 'Master template' : 'Workspace copy'}</dd>
         </div>
         <div className="px-4 py-3 grid grid-cols-3 gap-2">
           <dt className="text-sm text-gray-500">Description</dt>
-          <dd className="col-span-2 text-sm text-gray-200 whitespace-pre-wrap">{row.description || '—'}</dd>
+          <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{row.description || '—'}</dd>
         </div>
         <div className="px-4 py-3 grid grid-cols-3 gap-2">
-          <dt className="text-sm text-gray-500">Document notes</dt>
-          <dd className="col-span-2 text-sm text-gray-200 whitespace-pre-wrap font-mono">{row.document_data?.notes || '—'}</dd>
-        </div>
-        <div className="px-4 py-3 grid grid-cols-3 gap-2">
-          <dt className="text-sm text-gray-500">Record ID</dt>
-          <dd className="col-span-2 text-xs text-gray-400 font-mono">{row.id}</dd>
+          <dt className="text-sm text-gray-500">{isProcurementPlan ? 'Additional notes' : 'Document notes'}</dt>
+          <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{row.document_data?.notes || '—'}</dd>
         </div>
       </dl>
+      )}
+
+      {isProcurementPlan && activeTab !== 'details' && activeTab !== 'audit' && (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+          <ProcurementPlanFields value={row.document_data} readOnly section={activeTab} />
+        </div>
       )}
 
       <TemplateCopyModal

@@ -12,7 +12,7 @@ if (typeof window !== 'undefined') {
   import('../context/ThemeContext').catch(() => {});
 }
 export const ToastProvider = lazy(() => import('../context/ToastContext').then(m => ({ default: m.ToastProvider })))
-export const Layout = lazy(() => import('../components/Layout'))
+export { AppLayout as Layout } from '../components/AppLayout'
 export const ProtectedRoute = lazy(() => import('../components/ProtectedRoute'))
 export const Home = lazy(() => import('../pages/Home'))
 export const PlatformHomepage = lazy(() => import('../pages/PlatformHomepage'))
@@ -231,6 +231,7 @@ export const CapabilityProfilePicker = lazy(() => import('../pages/pmo-admin/Cap
 // v982 Phase 7 — Main Application Zones
 export const MyWorkHome = lazy(() => import('../pages/dashboard/MyWorkHome'))
 export const ProjectTypes = lazy(() => import('../pages/platform-app/ProjectTypes'))
+export const ExpenseCategories = lazy(() => import('../pages/platform-app/ExpenseCategories'))
 export const ProjectStatuses = lazy(() => import('../pages/platform-app/ProjectStatuses'))
 export const FundingSources = lazy(() => import('../pages/platform-app/FundingSources'))
 export const BudgetCategories = lazy(() => import('../pages/platform-app/BudgetCategories'))
@@ -306,6 +307,7 @@ export const SimPortfolioEVMPage = lazy(() => import('../pages/simulator/SimPort
 export const SimProgrammeFinancialDashboard = lazy(() => import('../pages/simulator/SimProgrammeFinancialDashboard'))
 export const SimProjectProfitability = lazy(() => import('../pages/simulator/SimProjectProfitability'))
 export const SimMyExpenses = lazy(() => import('../pages/simulator/SimMyExpenses'))
+export const SimExpenseClaimDetail = lazy(() => import('../pages/simulator/SimExpenseClaimDetail'))
 export const SimExpenseApproval = lazy(() => import('../pages/simulator/SimExpenseApproval'))
 export const SimExpenseApprovalThresholds = lazy(() => import('../pages/simulator/SimExpenseApprovalThresholds'))
 export const SimFinancialReportingHub = lazy(() => import('../pages/simulator/SimFinancialReportingHub'))
@@ -532,6 +534,7 @@ export const Benefits = lazy(() => import('../pages/platform-app/Benefits'))
 export const BenefitsRegisterPage = lazy(() => import('../pages/benefits/Benefits'))
 export const BenefitsRealizationPage = lazy(() => import('../pages/benefits/BenefitsRealization'))
 export const BenefitMeasurementsPage = lazy(() => import('../pages/benefits/BenefitMeasurements'))
+export const BenefitMeasurementFormPage = lazy(() => import('../pages/benefits/BenefitMeasurementForm'))
 export const BenefitCreatePage = lazy(() => import('../pages/platform-app/BenefitCreatePage'))
 export const BenefitDetailPage = lazy(() => import('../pages/platform-app/BenefitDetailPage'))
 export const BenefitsReviewPlan = lazy(() => import('../pages/BenefitsReviewPlan'))
@@ -862,9 +865,7 @@ export const SimPortfolioManagerAssignments = lazy(() => import('../pages/sim/po
 export const SimProgrammeManagerAssignments = lazy(() => import('../pages/sim/programme-manager/SimProgrammeManagerAssignments'))
 export const SimManagerAssignmentSettings = lazy(() => import('../pages/sim/pmo/SimManagerAssignmentSettings'))
 export const SimulatorPMDashboard = lazy(() => import('../pages/simulator/pm/SimulatorPMDashboard'))
-export const SimulatorPMOLayout = lazy(() => import('../components/sim/pmo/SimulatorPMOLayout'))
 export const SimulatorPMOInvitationTracker = lazy(() => import('../pages/simulator/pmo/SimulatorPMOInvitationTracker'))
-export const SimulatorPMLayout = lazy(() => import('../components/sim/pm/SimulatorPMLayout'))
 export const SimulatorTMLayout = lazy(() => import('../components/sim/tm/SimulatorTMLayout'))
 export const SimulatorTMDashboard = lazy(() => import('../pages/simulator/tm/SimulatorTMDashboard'))
 export const SimVoiceCallsPage = lazy(() => import('../pages/simulator/tm/communications/SimVoiceCallsPage'))

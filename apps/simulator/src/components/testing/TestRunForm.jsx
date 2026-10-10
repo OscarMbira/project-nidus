@@ -45,7 +45,7 @@ export default function TestRunForm({
   const [formTab, setFormTab] = useState('details')
   const isEdit = Boolean(run?.id)
   const isDirty = JSON.stringify(form) !== JSON.stringify(baseline)
-  const { confirmDiscard } = useUnsavedChangesGuard(isDirty && !saving)
+  const { confirmDiscard, confirmBack } = useUnsavedChangesGuard(isDirty && !saving)
   const projectSuites = useMemo(
     () => (suites || [])
       .filter((suite) => suite.project_id === projectId)
@@ -80,7 +80,7 @@ export default function TestRunForm({
     setBaseline((current) => ({ ...current, environment: match.name }))
   }, [environments, form.environment])
 
-  const goBack = () => confirmDiscard(() => navigate(-1))
+  const goBack = () => confirmBack()
 
   const submit = async (e) => {
     e.preventDefault()

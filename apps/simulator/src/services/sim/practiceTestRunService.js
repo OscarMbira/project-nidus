@@ -97,7 +97,7 @@ export async function getPracticeExecutionsByRun(runId) {
         steps:practice_test_case_steps(step_number, action, expected_result, test_data)
       ),
       executed_by_user:users!practice_test_case_executions_executed_by_fkey(id, full_name, email),
-      defect:practice_defects(id, defect_ref, title, severity, status)
+      defect:practice_defects!defect_id(id, defect_ref, title, severity, status)
     `)
     .eq('run_id', runId)
     .order('created_at', { ascending: true })
@@ -116,7 +116,7 @@ export async function updatePracticeExecution(executionId, updates) {
     .select(
       `
       *,
-      defect:practice_defects(id, defect_ref, title, severity, status)
+      defect:practice_defects!defect_id(id, defect_ref, title, severity, status)
     `,
     )
     .single()

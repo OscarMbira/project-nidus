@@ -4,6 +4,7 @@ import { Target, CheckCircle, Clock, AlertTriangle, TrendingUp } from 'lucide-re
 import { deleteBenefit } from '../../services/benefitsService';
 import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { benefitGapProgressPercent } from '@nidus/shared/utils/benefitProgress'
 import { RowActionButton } from '@nidus/ui'
 
 export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
@@ -129,9 +130,7 @@ export default function BenefitsRegister({ benefits = [], onEdit, onRefresh }) {
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
               {benefits.map((benefit, index) => {
                 const StatusIcon = getStatusIcon(benefit.benefit_status);
-                const realizationPercentage = benefit.target_value && benefit.target_value > 0
-                  ? ((benefit.realized_value || benefit.current_value || 0) / benefit.target_value) * 100
-                  : 0;
+                const realizationPercentage = benefitGapProgressPercent(benefit);
 
                 return (
                   <tr key={benefit.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 group">

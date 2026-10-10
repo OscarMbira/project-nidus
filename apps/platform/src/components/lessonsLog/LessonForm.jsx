@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, Save, AlertCircle } from 'lucide-react';
-import TagInput from '../dailyLog/TagInput';
+import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import LessonScopeSelector from './LessonScopeSelector';
 import LessonCategorySelector from './LessonCategorySelector';
 import LessonPrioritySelector from './LessonPrioritySelector'
@@ -41,6 +41,45 @@ const EFFECT_TYPES = [
 ];
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'];
+
+const LESSON_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'what-happened', label: 'What happened' },
+  { value: 'effect', label: 'Effect' },
+  { value: 'root-cause', label: 'Root cause' },
+  { value: 'early-warning', label: 'Early warning signs' },
+  { value: 'recommendations', label: 'Recommendations' },
+  { value: 'audit', label: 'Audit details' },
+];
+
+function tagsToText(tags) {
+  if (Array.isArray(tags)) return tags.filter(Boolean).join('\n');
+  return typeof tags === 'string' ? tags : '';
+}
+
+function textToTags(text) {
+  return String(text || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+
+function LessonListField({ id, label, required, value, onChange, placeholder, error, itemColumnLabel = 'Item' }) {
+  return (
+    <div>
+      <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        {label} {required ? <span className="text-red-500">*</span> : null}
+      </span>
+      <MultiLineListInput
+        id={id}
+        viewModeId={`lesson-${id}`}
+        value={value || ''}
+        onChange={onChange}
+        placeholder={placeholder}
+        itemColumnLabel={itemColumnLabel}
+        ariaLabelPrefix={label}
+      />
+      {error ? <p className="mt-1 text-sm text-red-600">{error}</p> : null}
+    </div>
+  );
+}
 
 export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
   const [formData, setFormData] = useState({
@@ -160,6 +199,12 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
     })
 
     setErrors(validation.errors)
+    if (!validation.valid) {
+      if (validation.errors.event_description) setFormTab('what-happened')
+      else if (validation.errors.effect_description) setFormTab('effect')
+      else if (validation.errors.recommendations) setFormTab('recommendations')
+      else setFormTab('details')
+    }
     return validation.valid
   };
 
@@ -198,7 +243,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} tabs={LESSON_TABS} ariaLabel="Lesson sections" />
 
       {formTab === 'audit' ? (
         !lesson ? (
@@ -244,7 +289,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
       )}
 
       {/* Validation Warnings */}
-      {warnings.length > 0 && (
+      {formTab === 'details' && warnings.length > 0 && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
           <div className="flex items-start gap-2">
             <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
@@ -260,6 +305,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         </div>
       )}
 
+      {formTab === 'details' && (<>
       {/* Title */}
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -347,86 +393,66 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
           </select>
         </div>
       </div>
+      </>)}
 
-      {/* What Happened */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          What Happened (Event) <span className="text-red-500">*</span>
-        </label>
-        <textarea
+      {formTab === 'what-happened' && (
+        <LessonListField
+          id="what-happened"
+          label="What Happened (Event)"
+          required
           value={formData.what_happened}
-          onChange={(e) => setFormData({ ...formData, what_happened: e.target.value })}
-          rows={4}
-          className={`w-full px-3 py-2 border rounded-md ${errors.what_happened ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}
+          onChange={(what_happened) => setFormData({ ...formData, what_happened })}
           placeholder="Describe what happened..."
+          itemColumnLabel="Event"
+          error={errors.event_description || errors.what_happened}
         />
-        {errors.what_happened && (
-          <p className="mt-1 text-sm text-red-600">{errors.what_happened}</p>
-        )}
-      </div>
-
-      {/* Effect Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          What was the Effect? <span className="text-red-500">*</span>
-        </label>
-        <textarea
+      )}
+      {formTab === 'effect' && (
+        <LessonListField
+          id="effect"
+          label="What was the Effect?"
+          required
           value={formData.impact_description}
-          onChange={(e) => setFormData({ ...formData, impact_description: e.target.value })}
-          rows={3}
-          className={`w-full px-3 py-2 border rounded-md ${errors.impact_description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}
+          onChange={(impact_description) => setFormData({ ...formData, impact_description })}
           placeholder="Describe the impact (positive/negative, financial, schedule, quality, etc.)..."
+          itemColumnLabel="Effect"
+          error={errors.effect_description || errors.impact_description}
         />
-        {errors.impact_description && (
-          <p className="mt-1 text-sm text-red-600">{errors.impact_description}</p>
-        )}
-      </div>
-
-      {/* Root Cause */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          What Caused This? (Root Cause)
-        </label>
-        <textarea
+      )}
+      {formTab === 'root-cause' && (
+        <LessonListField
+          id="root-cause"
+          label="What Caused This? (Root Cause)"
           value={formData.why_it_happened}
-          onChange={(e) => setFormData({ ...formData, why_it_happened: e.target.value })}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+          onChange={(why_it_happened) => setFormData({ ...formData, why_it_happened })}
           placeholder="Explain the root cause or trigger..."
+          itemColumnLabel="Cause"
         />
-      </div>
-
-      {/* Early Warning Indicators */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Were There Early Warning Signs?
-        </label>
-        <textarea
+      )}
+      {formTab === 'early-warning' && (
+        <LessonListField
+          id="early-warning"
+          label="Were There Early Warning Signs?"
           value={formData.early_warning_indicators}
-          onChange={(e) => setFormData({ ...formData, early_warning_indicators: e.target.value })}
-          rows={2}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
+          onChange={(early_warning_indicators) => setFormData({ ...formData, early_warning_indicators })}
           placeholder="Describe any early warning indicators that were present..."
+          itemColumnLabel="Warning sign"
         />
-      </div>
-
-      {/* Recommendations */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Recommendations for Future <span className="text-red-500">*</span>
-        </label>
-        <textarea
+      )}
+      {formTab === 'recommendations' && (
+        <LessonListField
+          id="recommendations"
+          label="Recommendations for Future"
+          required
           value={formData.recommendations}
-          onChange={(e) => setFormData({ ...formData, recommendations: e.target.value })}
-          rows={4}
-          className={`w-full px-3 py-2 border rounded-md ${errors.recommendations ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'} dark:bg-gray-700 dark:text-white`}
+          onChange={(recommendations) => setFormData({ ...formData, recommendations })}
           placeholder="What should be done differently in the future?"
+          itemColumnLabel="Recommendation"
+          error={errors.recommendations}
         />
-        {errors.recommendations && (
-          <p className="mt-1 text-sm text-red-600">{errors.recommendations}</p>
-        )}
-      </div>
+      )}
 
+      {formTab === 'details' && (<>
       {/* Risk Linkage */}
       <div className="border-t pt-4">
         <label className="flex items-center gap-2 mb-2">
@@ -451,31 +477,23 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         )}
       </div>
 
-      {/* Product Link */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Related Product
-        </label>
-        <input
-          type="text"
-          value={formData.related_product_name}
-          onChange={(e) => setFormData({ ...formData, related_product_name: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
-          placeholder="Product name (if applicable)"
-        />
-      </div>
+      <LessonListField
+        id="related-product"
+        label="Related Product"
+        value={formData.related_product_name}
+        onChange={(related_product_name) => setFormData({ ...formData, related_product_name })}
+        placeholder="Product name (if applicable)"
+        itemColumnLabel="Product"
+      />
 
-      {/* Tags */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Tags
-        </label>
-        <TagInput
-          tags={formData.tags}
-          onChange={(tags) => setFormData({ ...formData, tags })}
-          placeholder="Add tags for searchability..."
-        />
-      </div>
+      <LessonListField
+        id="tags"
+        label="Tags"
+        value={tagsToText(formData.tags)}
+        onChange={(text) => setFormData({ ...formData, tags: textToTags(text) })}
+        placeholder="Add tags for searchability..."
+        itemColumnLabel="Tag"
+      />
 
       {/* Date */}
       <div>
@@ -489,6 +507,7 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white"
         />
       </div>
+      </>)}
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-4 border-t">

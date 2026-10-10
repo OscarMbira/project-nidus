@@ -1,7 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import ModuleLoadingFallback from '../components/ui/ModuleLoadingFallback.jsx'
-import { ThemeProvider, ToastProvider, ProtectedRoute, SimulatorPMOLayout, SimulatorPMLayout } from './lazyImports.js'
+import { ThemeProvider, ToastProvider, ProtectedRoute, Layout } from './lazyImports.js'
 
 const SimPmoModuleRoutes = lazy(() => import('./fallback/simPmoModuleRoutes.jsx'))
 const TemplateLibraryPage = lazy(() =>
@@ -45,11 +45,11 @@ export function SimPmoFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMOLayout>
+            <Layout scope="pmo">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Sim PMO…" />}>
                 <SimPmoModuleRoutes />
               </Suspense>
-            </SimulatorPMOLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
@@ -67,14 +67,14 @@ export function SimPmoTemplateLibraryFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMOLayout>
+            <Layout scope="pmo">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Template Library…" />}>
                 <Routes>
                   <Route index element={<TemplateLibraryPage />} />
                   <Route path="preview/:nodeId" element={<TemplatePreviewPage />} />
                 </Routes>
               </Suspense>
-            </SimulatorPMOLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
@@ -91,7 +91,7 @@ export function SimPmOrganisationalTemplatesFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMLayout>
+            <Layout scope="pm">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Organisational Templates…" />}>
                 <Routes>
                   <Route index element={<SimPmOrganisationalTemplatesEntry />} />
@@ -99,7 +99,7 @@ export function SimPmOrganisationalTemplatesFederated() {
                   <Route path=":projectId" element={<SimPmOrganisationalTemplatesEntry />} />
                 </Routes>
               </Suspense>
-            </SimulatorPMLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
@@ -114,7 +114,7 @@ export function SimPmProjectTemplatesFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMLayout>
+            <Layout scope="pm">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Project Templates…" />}>
                 <Routes>
                   <Route index element={<SimPmProjectTemplatesEntry />} />
@@ -122,7 +122,7 @@ export function SimPmProjectTemplatesFederated() {
                   <Route path=":projectId" element={<SimPmProjectTemplatesEntry />} />
                 </Routes>
               </Suspense>
-            </SimulatorPMLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
@@ -137,14 +137,14 @@ export function SimPmProjectDocumentsFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMLayout>
+            <Layout scope="pm">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Project Documents…" />}>
                 <Routes>
                   <Route index element={<ProjectDocumentsEntry />} />
                   <Route path=":nodeId" element={<OrganisationalTemplateDetailPage />} />
                 </Routes>
               </Suspense>
-            </SimulatorPMLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
@@ -163,7 +163,7 @@ export function SimDocumentOversightFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMOLayout>
+            <Layout scope="pmo">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Document Oversight…" />}>
                 <Routes>
                   <Route path="portfolio" element={<DocumentOversightPortfolioPage />} />
@@ -171,7 +171,7 @@ export function SimDocumentOversightFederated() {
                   <Route path="pmo" element={<DocumentOversightPmoPage />} />
                 </Routes>
               </Suspense>
-            </SimulatorPMOLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>
@@ -189,7 +189,7 @@ export function SimPmoOrganisationalTemplatesFederated() {
       <ThemeProvider>
         <ToastProvider>
           <ProtectedRoute requiredPlatform="simulator">
-            <SimulatorPMOLayout>
+            <Layout scope="pmo">
               <Suspense fallback={<ModuleLoadingFallback label="Loading Organisational Templates…" />}>
                 <Routes>
                   <Route index element={<OrganisationalTemplatesPage />} />
@@ -197,7 +197,7 @@ export function SimPmoOrganisationalTemplatesFederated() {
                   <Route path=":nodeId" element={<OrganisationalTemplateDetailPage />} />
                 </Routes>
               </Suspense>
-            </SimulatorPMOLayout>
+            </Layout>
           </ProtectedRoute>
         </ToastProvider>
       </ThemeProvider>

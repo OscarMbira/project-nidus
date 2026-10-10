@@ -8,6 +8,7 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { RowActionButton, ExportListMenu } from '@nidus/ui'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
 import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -150,9 +151,14 @@ export default function VendorListPage({ basePath = '/pm/procurement/vendors' })
                         <span className="ml-2 text-xs text-gray-400 dark:text-gray-500">(inactive)</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{row.category || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{row.contact_email || '—'}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">{row.category || '—'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
+                      <div>{row.contact_email ? row.contact_email.split(/\r?\n/).filter(Boolean).join(', ') : '—'}</div>
+                      {row.contact_phone ? (
+                        <div className="text-xs text-gray-700 dark:text-gray-200">{row.contact_phone.split(/\r?\n/).filter(Boolean).join(', ')}</div>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-200">
                       {row.rating_avg != null ? (
                         <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500" />{row.rating_avg}</span>
                       ) : '—'}
@@ -171,8 +177,9 @@ export default function VendorListPage({ basePath = '/pm/procurement/vendors' })
           </div>
         ) : (
           <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sorted.map((row) => (
+            {sorted.map((row, index) => (
               <div key={row.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-2">
+                <RowNumberBadge number={getDisplayRowNumber(index)} />
                 <div className="text-sm font-medium text-gray-900 dark:text-white">{row.vendor_name}</div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">{row.category || 'Uncategorised'}</div>
                 {row.rating_avg != null && (

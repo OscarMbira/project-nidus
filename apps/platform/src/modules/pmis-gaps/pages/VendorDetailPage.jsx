@@ -7,8 +7,10 @@ import { ArrowLeft, Save, Loader, Truck } from 'lucide-react'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { DetailAuditTabList, AuditDetailsPanel, AuditCard, AuditField, AuditTimestampPair } from '@nidus/ui'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import SelectField from '../../../components/ui/SelectField'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
-import { getVendor, createVendor, updateVendor } from '../services/procurementService'
+import { getVendor, createVendor, updateVendor, listVendorCategories, saveVendorCategory } from '../services/procurementService'
 
 export default function VendorDetailPage({ basePath = '/pm/procurement/vendors', forceEdit = false }) {
   const { id } = useParams()
@@ -22,11 +24,14 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
   const [notFound, setNotFound] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState(null)
 
   const [vendorName, setVendorName] = useState('')
   const [vendorCode, setVendorCode] = useState('')
   const [category, setCategory] = useState('')
+  const [categories, setCategories] = useState([])
+  const [accountId, setAccountId] = useState(null)
   const [contactEmail, setContactEmail] = useState('')
   const [contactPhone, setContactPhone] = useState('')
   const [isActive, setIsActive] = useState(true)
@@ -57,6 +62,62 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
     load()
   }, [load])
 
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const resolvedAccountId = await getCurrentUserAccountId()
+        if (!resolvedAccountId || cancelled) return
+        if (!cancelled) setAccountId(resolvedAccountId)
+        const rows = await listVendorCategories(resolvedAccountId)
+        if (!cancelled) setCategories(rows.filter((row) => row.is_active !== false))
+      } catch (err) {
+        if (!cancelled) setError(err?.message || 'Could not load vendor categories')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
+  const categoryOptions = useMemo(() => {
+    const names = categories.map((row) => row.category_name).filter(Boolean)
+    if (category && !names.includes(category)) names.unshift(category)
+    return names.map((name) => ({ value: name, label: name }))
+  }, [categories, category])
+
+  const handleCategoryChange = async (value) => {
+    const name = String(value || '').trim().slice(0, 80)
+    if (!name) {
+      setCategory('')
+      return
+    }
+    const existing = categories.find((row) => row.category_name?.toLowerCase() === name.toLowerCase())
+    if (existing) {
+      setCategory(existing.category_name)
+      return
+    }
+    setCategory(name)
+    if (!accountId) {
+      setError('Could not resolve your organisation.')
+      return
+    }
+    try {
+      const saved = await saveVendorCategory({ accountId, categoryName: name })
+      setCategories((prev) =>
+        [...prev, saved].sort((a, b) => String(a.category_name).localeCompare(String(b.category_name)))
+      )
+      setCategory(saved.category_name)
+    } catch (err) {
+      if (err?.code === '23505') {
+        const rows = await listVendorCategories(accountId)
+        const match = rows.find((row) => row.category_name?.toLowerCase() === name.toLowerCase())
+        setCategories(rows.filter((row) => row.is_active !== false))
+        if (match) setCategory(match.category_name)
+        return
+      }
+      setError(err?.message || 'Could not add this category')
+    }
+  }
+
   const baselineSnapshot = useMemo(
     () =>
       JSON.stringify({
@@ -70,13 +131,13 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
     [vendor]
   )
   const isDirty = useMemo(() => {
-    if (loading || readOnly) return false
+    if (loading || readOnly || saved) return false
     return JSON.stringify({ vendorName, vendorCode, category, contactEmail, contactPhone, isActive }) !== baselineSnapshot
-  }, [loading, readOnly, vendorName, vendorCode, category, contactEmail, contactPhone, isActive, baselineSnapshot])
-  const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved vendor changes.')
+  }, [loading, readOnly, saved, vendorName, vendorCode, category, contactEmail, contactPhone, isActive, baselineSnapshot])
+  const { requestNavigation } = useUnsavedChangesGuard(isDirty, 'You have unsaved vendor changes.')
 
   const goToList = () => navigate(basePath)
-  const handleBack = () => confirmDiscard(goToList)
+  const handleBack = () => requestNavigation(basePath)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -89,11 +150,18 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
     try {
       if (isCreate) {
         const accountId = await getCurrentUserAccountId()
-        await createVendor({ accountId, vendorName, vendorCode, category, contactEmail, contactPhone })
+        const created = await createVendor({ accountId, vendorName, vendorCode, category, contactEmail, contactPhone })
+        setSaved(true)
         setSaving(false)
-        showSuccess({ recordId: vendorName.trim(), operation: 'created', message: `"${vendorName.trim()}" was created successfully.`, onOk: goToList })
+        showSuccess({
+          recordId: created?.vendor_code || vendorName.trim(),
+          operation: 'created',
+          message: `"${vendorName.trim()}" was created successfully.`,
+          onOk: goToList,
+        })
       } else {
         await updateVendor(id, { vendorName, vendorCode, category, contactEmail, contactPhone, isActive })
+        setSaved(true)
         setSaving(false)
         showSuccess({ recordId: vendorName.trim(), operation: 'updated', message: `"${vendorName.trim()}" was updated successfully.`, onOk: goToList })
       }
@@ -151,12 +219,22 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
-                  <input
-                    type="text"
+                  <SelectField
+                    id="vendor-category"
+                    aria-label="Category"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="e.g. Software, Construction, Consulting"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    onChange={handleCategoryChange}
+                    options={categoryOptions}
+                    placeholder="Select a category"
+                    searchPlaceholder="Search or type a new category..."
+                    forceSearchable
+                    allowCustom={!readOnly}
+                    customValueActions={readOnly ? [] : [{
+                      key: 'add-category',
+                      label: (term) => `Add "${term}"`,
+                      onSelect: (term) => { handleCategoryChange(term) },
+                    }]}
+                    disabled={readOnly}
                   />
                 </div>
                 <div>
@@ -165,27 +243,38 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
                     type="text"
                     value={vendorCode}
                     onChange={(e) => setVendorCode(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    maxLength={60}
+                    placeholder={isCreate ? 'Leave blank to assign a code' : ''}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact email</label>
-                  <input
-                    type="email"
+                  <MultiLineListInput
+                    viewModeId="vendor-contact-emails"
+                    id="vendor-contact-emails"
                     value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    onChange={setContactEmail}
+                    itemColumnLabel="Email"
+                    placeholder="name@company.com"
+                    ariaLabelPrefix="email"
+                    disabled={readOnly}
+                    validateItem={(item) => (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item) ? null : 'Enter a valid email address')}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact phone</label>
-                  <input
-                    type="text"
+                  <MultiLineListInput
+                    viewModeId="vendor-contact-phones"
+                    id="vendor-contact-phones"
                     value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    onChange={setContactPhone}
+                    itemColumnLabel="Phone"
+                    placeholder="Phone number"
+                    ariaLabelPrefix="phone"
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -221,8 +310,8 @@ export default function VendorDetailPage({ basePath = '/pm/procurement/vendors',
                 </AuditCard>
                 <AuditCard title="Classification" description="Category and contact details.">
                   <AuditField label="Category" value={category || '—'} />
-                  <AuditField label="Contact email" value={contactEmail || '—'} />
-                  <AuditField label="Contact phone" value={contactPhone || '—'} />
+                  <AuditField label="Contact email" value={contactEmail ? contactEmail.split(/\r?\n/).filter(Boolean).join(', ') : '—'} />
+                  <AuditField label="Contact phone" value={contactPhone ? contactPhone.split(/\r?\n/).filter(Boolean).join(', ') : '—'} />
                   <AuditField label="Average rating" value={vendor?.rating_avg != null ? String(vendor.rating_avg) : 'No ratings yet'} />
                 </AuditCard>
                 <AuditCard title="Record history" description="When this vendor was created and last changed.">

@@ -51,7 +51,7 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
   const roleKey = roleKeyProp || roleKeyFromPath(location.pathname)
   const sim = simProp ?? isSimRoleKey(roleKey)
   const hubBase = basePath || getHubBasePath(roleKey)
-  const { masterCatalog, projectId } = useProcessTemplateScope(roleKey)
+  const { masterCatalog, projectId, projectLoading } = useProcessTemplateScope(roleKey)
   const viewKey = `pt-${slug}-view-v1`
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
@@ -86,7 +86,10 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
     }
   }
 
-  useEffect(() => { load() }, [projectId, slug, sim, masterCatalog])
+  useEffect(() => {
+    if (projectLoading) return
+    load()
+  }, [projectId, projectLoading, slug, sim, masterCatalog])
 
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase()
@@ -238,7 +241,7 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
         </div>
       </div>
 
-      {loading ? (
+      {loading || projectLoading ? (
         <p className="text-gray-500 text-sm">Loading…</p>
       ) : filtered.length === 0 ? (
         <p className="text-gray-500 text-sm">
@@ -249,11 +252,11 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
           {filtered.map((row, idx) => (
             <div key={row.id} className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-4">
               <RowNumberBadge number={getDisplayRowNumber(idx, filtered.length)} className="absolute top-3 right-3" />
-              <Link to={`${listBase}/${row.id}`} className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
+              <Link to={`${listBase}/${encodeURIComponent(row.reference_code || row.id)}`} className="font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400">
                 {row.title || 'Untitled'}
               </Link>
-              <p className="text-xs text-gray-500 mt-1">{row.reference_code || row.id}</p>
-              <p className="text-xs capitalize text-gray-400 mt-1">{row.status}{row.is_master ? ' · Master' : ''}</p>
+              <p className="text-xs text-gray-700 dark:text-gray-200 mt-1">{row.reference_code || row.id}</p>
+              <p className="text-xs capitalize text-gray-700 dark:text-gray-200 mt-1">{row.status}{row.is_master ? ' · Master' : ''}</p>
               <div className="flex flex-wrap gap-2 mt-3">
                 {canCopy && row.is_master && (
                   <button type="button" onClick={() => setCopyMaster(row)} className="text-xs text-blue-400 flex items-center gap-1">
@@ -261,16 +264,16 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
                   </button>
                 )}
                 {canEditMasterTemplate(roleKey, row, userId) && (
-                  <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${listBase}/${row.id}/edit`)} />
+                  <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${listBase}/${encodeURIComponent(row.reference_code || row.id)}/edit`)} />
                 )}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-700">
+        <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400">
+            <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
               <tr>
                 <TableRowNumberHeader />
                 <th className="px-3 py-2 text-left">
@@ -290,18 +293,18 @@ export default function ProcessTemplateListPage({ roleKey: roleKeyProp, basePath
               {filtered.map((row, idx) => (
                 <tr key={row.id} className="border-t border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/40">
                   <TableRowNumberCell rowIndex={idx} totalRows={filtered.length} />
-                  <td className="px-3 py-2 text-gray-300">{row.reference_code || '—'}</td>
+                  <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{row.reference_code || '—'}</td>
                   <td className="px-3 py-2">
-                    <Link to={`${listBase}/${row.id}`} className="text-blue-400 hover:underline">{row.title || 'Untitled'}</Link>
+                    <Link to={`${listBase}/${encodeURIComponent(row.reference_code || row.id)}`} className="text-blue-600 dark:text-blue-400 hover:underline">{row.title || 'Untitled'}</Link>
                   </td>
-                  <td className="px-3 py-2 capitalize text-gray-400">{row.status}</td>
-                  <td className="px-3 py-2 text-gray-400">{row.is_master ? 'Master' : 'Copy'}</td>
+                  <td className="px-3 py-2 capitalize text-gray-900 dark:text-gray-100">{row.status}</td>
+                  <td className="px-3 py-2 text-gray-900 dark:text-gray-100">{row.is_master ? 'Master' : 'Copy'}</td>
                   <td className="px-3 py-2 text-right space-x-2">
                     {canCopy && row.is_master && (
                       <button type="button" onClick={() => setCopyMaster(row)} className="text-blue-400 text-xs">Copy</button>
                     )}
                     {canEditMasterTemplate(roleKey, row, userId) && (
-                      <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${listBase}/${row.id}/edit`)} />
+                      <RowActionButton variant="edit" label="Edit template" onClick={() => navigate(`${listBase}/${encodeURIComponent(row.reference_code || row.id)}/edit`)} />
                     )}
                     <button type="button" onClick={() => handleHold(row)} className="text-amber-400 text-xs inline-flex items-center gap-0.5">
                       <Pause className="h-3 w-3" /> Hold

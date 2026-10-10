@@ -222,6 +222,13 @@ export default function DecisionLogPage() {
             rowKey={(r) => r.id}
             searchFields={['decision_title', 'decision_reference']}
             onRowClick={(row) => navigate(`/platform/governance/decisions/${row.id}`)}
+            renderRowActions={(row) => (
+              <>
+                <RowActionButton variant="view" label="View decision" onClick={() => navigate(`/platform/governance/decisions/${row.id}`)} />
+                <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/platform/governance/decisions/${row.id}/edit?projectId=${projectId}`)} />
+                <RowActionButton variant="delete" label="Delete decision" onClick={() => handleDelete(row.id)} disabled={deleting === row.id} />
+              </>
+            )}
             onViewAll={() => setPageTab('register')}
             viewAllLabel="Open full Decision Log"
             emptyMessage="No pending decisions"

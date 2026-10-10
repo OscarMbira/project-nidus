@@ -61,7 +61,7 @@ export async function getBaselineById(baselineId) {
         baseline_type:baseline_type_id(id, baseline_type, baseline_type_code),
         created_by_user:created_by_user_id(id, full_name, email),
         approved_by_user:approved_by_user_id(id, full_name, email),
-        change_request:change_request_id(id, change_request_number)
+        change_request:change_request_id(id, change_reference)
       `)
       .eq('id', baselineId)
       .eq('is_deleted', false)

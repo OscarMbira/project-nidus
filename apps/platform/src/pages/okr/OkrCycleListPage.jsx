@@ -17,7 +17,7 @@ import { listCycles } from '../../services/okrService'
 const PAGE_SIZE = 20
 
 function basePath(sim) {
-  return sim ? '/simulator/pm/okr/cycles' : '/pm/okr/cycles'
+  return sim ? '/simulator/pm/okr/cycles' : '/platform/pm/okr/cycles'
 }
 
 const STATUS_CLASS = {

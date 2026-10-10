@@ -4,6 +4,11 @@
 import { platformDb, simDb } from './supabase/supabaseClient'
 
 const STATUS_VALUES = ['draft', 'active', 'on_hold']
+const PROJECT_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function isProjectUuid(value) {
+  return PROJECT_UUID.test(String(value || ''))
+}
 
 export function createProcessTemplateService(config, { sim = false } = {}) {
   const db = sim ? simDb : platformDb
@@ -12,7 +17,10 @@ export function createProcessTemplateService(config, { sim = false } = {}) {
 
   async function listByProject(projectId, filters = {}) {
     let q = db.from(table).select('*').eq('is_deleted', false).order('created_at', { ascending: false })
-    if (projectId) q = q.eq(projectCol, projectId)
+    if (projectId) {
+      if (!isProjectUuid(projectId)) return []
+      q = q.eq(projectCol, projectId)
+    }
     if (filters.status) q = q.eq('status', filters.status)
     if (filters.is_master != null) q = q.eq('is_master', filters.is_master)
     const { data, error } = await q
@@ -34,7 +42,7 @@ export function createProcessTemplateService(config, { sim = false } = {}) {
 
   /** Non-master copies for a project workspace. */
   async function listWorkspaceByProject(projectId) {
-    if (!projectId) return []
+    if (!projectId || !isProjectUuid(projectId)) return []
     let q = db
       .from(table)
       .select('*')
@@ -52,9 +60,18 @@ export function createProcessTemplateService(config, { sim = false } = {}) {
   }
 
   async function getById(id) {
-    const { data, error } = await db.from(table).select('*').eq('id', id).single()
+    const column = isProjectUuid(id) ? 'id' : 'reference_code'
+    let query = db.from(table).select('*').eq(column, id).eq('is_deleted', false)
+    // Global template references (GTL-…) are shared by more than one row. A single-row
+    // request fails with PGRST116; take the master when several rows match.
+    if (column === 'reference_code') {
+      query = query.order('is_master', { ascending: false }).order('created_at', { ascending: true })
+    }
+    const { data, error } = await query.limit(1)
     if (error) throw error
-    return data
+    const row = Array.isArray(data) ? data[0] : null
+    if (!row) throw new Error('Record not found')
+    return row
   }
 
   async function create(payload) {

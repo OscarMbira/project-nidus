@@ -100,7 +100,7 @@ export default function StakeholderManagement() {
     try {
       const { data } = await supabase
         .from('projects')
-        .select('id, project_name, project_code, project_status')
+        .select('id, project_name, project_code')
         .eq('is_deleted', false)
         .order('project_name', { ascending: true });
 

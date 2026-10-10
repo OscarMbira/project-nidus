@@ -17,9 +17,8 @@ export default function AnalyticsProjectHealth() {
       setLoading(true);
       const { data } = await supabase
         .from('projects')
-        .select('id, project_name, project_code, project_status')
+        .select('id, project_name, project_code')
         .eq('is_deleted', false)
-        .in('project_status', ['planning', 'in-progress', 'on-hold'])
         .order('project_name', { ascending: true });
 
       if (data) setProjects(data);

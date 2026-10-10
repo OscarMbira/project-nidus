@@ -1,7 +1,21 @@
 import { useState, useEffect } from 'react'
-import { Users, Mail, CheckCircle, Eye } from 'lucide-react'
+import { Users } from 'lucide-react'
 import { supabase } from '../../../services/supabaseClient'
 import { format } from 'date-fns'
+import ReportSectionList from './ReportSectionList'
+
+function showDate(value) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return format(date, 'dd MMM yyyy')
+}
+
+const DISTRIBUTION_COLUMNS = [
+  { key: 'recipient', label: 'Recipient', value: (row) => row.recipient_name || row.recipient?.full_name || row.recipient?.email || '' },
+  { key: 'status', label: 'Status', value: (row) => String(row.distribution_status || '').replace(/_/g, ' ') },
+  { key: 'issued', label: 'Issued', value: (row) => showDate(row.date_of_issue) },
+]
 
 export default function EPRDistribution({ reportId, mode = 'view' }) {
   const [distribution, setDistribution] = useState([])
@@ -79,53 +93,17 @@ export default function EPRDistribution({ reportId, mode = 'view' }) {
     }
   }
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'acknowledged':
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'read':
-        return <Eye className="h-4 w-4 text-blue-500" />
-      default:
-        return <Mail className="h-4 w-4 text-gray-400" />
-    }
-  }
-
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Distribution List
-        </h3>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <ReportSectionList
+          viewModeId="epr-distribution"
+          title="Distribution List"
+          rows={distribution}
+          columns={DISTRIBUTION_COLUMNS}
+          emptyText="No distribution list."
+        />
       </div>
-
-      {distribution.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>No distribution list</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {distribution.map((item) => (
-            <div key={item.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    {getStatusIcon(item.distribution_status)}
-                    <h4 className="font-semibold text-gray-900 dark:text-white">{item.recipient_name}</h4>
-                    <span className="px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
-                      {item.distribution_status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Issued: {item.date_of_issue && format(new Date(item.date_of_issue), 'MMM dd, yyyy')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {mode !== 'view' && (
         <>

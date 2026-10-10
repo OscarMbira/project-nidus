@@ -20,6 +20,8 @@ import { getAppendices } from '../services/lessonsReportAppendixService'
 import LessonsReportForm from '../components/lessonsReport/LessonsReportForm'
 import LessonsReportHeader from '../components/lessonsReport/LessonsReportHeader'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import Modal from '@nidus/ui/Modal'
+import { generateLessonsReportPrintHTML } from '../utils/lessonsReportExport'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const LESSONS_REPORT_VIEW_SECTIONS = [
@@ -43,6 +45,7 @@ export default function LessonsReportView() {
   const [appendices, setAppendices] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
     if (reportId && projectId) {
@@ -203,6 +206,7 @@ export default function LessonsReportView() {
       {/* Header */}
       <LessonsReportHeader
         report={report}
+        onView={() => setPreviewOpen(true)}
         onEdit={() => navigate(platformProjectPath(routeKey, 'lessons', 'reports', report.report_reference || reportId, 'edit'))}
         onExport={handleExport}
         readOnly={!canEdit}
@@ -220,6 +224,26 @@ export default function LessonsReportView() {
         mode="view"
         onCancel={() => navigate(-1)}
       />
+
+      <Modal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        title={report.report_reference || 'Lessons Report'}
+        size="full"
+      >
+        <iframe
+          title="Lessons report preview"
+          className="w-full h-[75vh] bg-white rounded"
+          srcDoc={generateLessonsReportPrintHTML(
+            report,
+            reportLessons.map((row) => row.lesson || row),
+            recommendations,
+            approvals,
+            distribution,
+            appendices
+          )}
+        />
+      </Modal>
     </div>
   )
 }

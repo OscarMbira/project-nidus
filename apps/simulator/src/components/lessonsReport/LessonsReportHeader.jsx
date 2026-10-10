@@ -3,7 +3,7 @@
  * Displays report metadata and quick actions
  */
 
-import { FileText, Calendar, User, Download, X } from 'lucide-react'
+import { FileText, Calendar, User, Download, X, Eye } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import LessonsReportStatusBadge from './LessonsReportStatusBadge'
 
@@ -11,6 +11,7 @@ export default function LessonsReportHeader({
   report,
   onEdit,
   onExport,
+  onView,
   onCancel,
   readOnly = false
 }) {
@@ -51,6 +52,16 @@ export default function LessonsReportHeader({
           )}
         </div>
         <div className="flex gap-2">
+          {onView && (
+            <button
+              type="button"
+              onClick={onView}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              <Eye className="w-4 h-4" />
+              View
+            </button>
+          )}
           {!readOnly && (report.report_status === 'draft' || report.report_status === 'submitted') && onEdit && (
             <RowActionButton variant="edit" label="Edit lessons report" onClick={onEdit} />
           )}

@@ -11,7 +11,7 @@ import {
   SimulatorPortfolioLayout,
   SimulatorProgrammeLayout,
   SimulatorCoordinatorLayout,
-  SimulatorPMOLayout,
+  Layout,
   SimulatorPortfolioDashboard,
   SimulatorProgrammeDashboard,
   SimulatorCoordinatorDashboard,
@@ -80,7 +80,7 @@ export function V734RoleRouteElements() {
       <Route
         path="simulator/pmo/analyst/:pageKey"
         element={simRoute(
-          <SimulatorPMOLayout><SimulatorRolePracticePage roleArea="pmo" /></SimulatorPMOLayout>
+          <Layout scope="pmo"><SimulatorRolePracticePage roleArea="pmo" /></Layout>
         )}
       />
 

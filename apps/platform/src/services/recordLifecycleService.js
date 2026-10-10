@@ -122,13 +122,18 @@ export async function submitForAuthorisation(tableName, recordId, rootRecordId, 
   return data
 }
 
-export async function fetchPendingChanges(tableName, recordId) {
-  const { data, error } = await db.rpc('get_pending_changes', {
-    p_table_name: tableName,
-    p_record_id: recordId,
-  })
+export async function getAuthorisationRequest(requestId) {
+  const { data, error } = await db
+    .from('record_authorisation_requests')
+    .select('*')
+    .eq('id', requestId)
+    .maybeSingle()
   if (error) throw error
   return data
+}
+
+export async function fetchPendingChanges() {
+  return null
 }
 
 export async function processDecision(requestId, decision, notes) {
@@ -190,14 +195,41 @@ export async function getLifecycleLogs(tableName, recordId) {
   return data || []
 }
 
-export async function getAuthorisationQueue(userId, { pmoView = false } = {}) {
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''))
+}
+
+/** Auth uid and public.users.id, so a request stored as either value still matches. */
+async function resolveActorIds(userId) {
+  const ids = new Set()
+  if (!userId) return []
+  ids.add(userId)
+  if (!isUuid(userId)) return [...ids]
+  const { data } = await db
+    .from('users')
+    .select('id, auth_user_id')
+    .or(`auth_user_id.eq.${userId},id.eq.${userId}`)
+    .limit(5)
+  for (const row of data || []) {
+    if (row.id) ids.add(row.id)
+    if (row.auth_user_id) ids.add(row.auth_user_id)
+  }
+  return [...ids]
+}
+
+export async function getAuthorisationQueue(userId, { pmoView = false, statuses = ['pending'] } = {}) {
+  const actorIds = await resolveActorIds(userId)
+  const statusList = statuses?.length ? statuses : ['pending']
   let q = db
     .from('record_authorisation_requests')
-    .select('*, submitter:submitted_by(full_name), authoriser:authoriser_id(full_name)')
-    .eq('status', 'pending')
+    .select('*')
+    .in('status', statusList)
     .order('submitted_at', { ascending: false })
 
-  if (!pmoView) q = q.eq('authoriser_id', userId)
+  if (!pmoView) {
+    if (!actorIds.length) return []
+    q = q.in('authoriser_id', actorIds)
+  }
 
   const { data, error } = await q
   if (error) throw error
@@ -205,10 +237,12 @@ export async function getAuthorisationQueue(userId, { pmoView = false } = {}) {
 }
 
 export async function getSubmittedRecords(userId) {
+  const actorIds = await resolveActorIds(userId)
+  if (!actorIds.length) return []
   const { data, error } = await db
     .from('record_authorisation_requests')
     .select('*')
-    .eq('submitted_by', userId)
+    .in('submitted_by', actorIds)
     .order('submitted_at', { ascending: false })
   if (error) throw error
   return data || []

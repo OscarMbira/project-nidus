@@ -12,10 +12,10 @@ import AIChatWidget from './ai/AIChatWidget'
 import QuickCaptureFab from '../modules/pmis-gaps/components/QuickCaptureFab'
 import { BrandingProvider } from '@nidus/shared/context/BrandingContext'
 import { MenuProvider } from '@nidus/shared/hooks/useMenu'
-import PMLayout from './pm/PMLayout'
-import { shouldUsePmLayoutShell } from '@nidus/shared/utils/menuLayoutUtils'
+import PracticeDashboardSwitcher from './sim/ui/PracticeDashboardSwitcher'
+import { RoleScopeGate } from '@nidus/ui'
 
-const Layout = ({ children }) => {
+const Layout = ({ children, scope: scopeProp = null }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { collapsed, toggleCollapsed } = useSidebarCollapsed()
   const location = useLocation()
@@ -27,6 +27,8 @@ const Layout = ({ children }) => {
                      location.pathname.startsWith('/onboarding')
 
   const path = location.pathname
+  const scope = scopeProp ?? (path.startsWith('/simulator/pmo') ? 'pmo' : path.startsWith('/simulator/pm') ? 'pm' : null)
+  const isScopedPractice = scope === 'pm' || scope === 'pmo'
 
   // Chromeless render for windows opened via DetachButton (?popout=1) — skip header/sidebar/
   // floating widgets, keep providers so page content still has branding/menu context.
@@ -43,10 +45,6 @@ const Layout = ({ children }) => {
     )
   }
 
-  // PM users on shared /platform/* delivery routes must use PMLayout (layoutScope="pm").
-  if (!isAuthPage && shouldUsePmLayoutShell(path)) {
-    return <PMLayout>{children || <Outlet />}</PMLayout>
-  }
   const isPlatformApp =
     path.startsWith('/platform/') ||
     // First-class Platform URLs under /app/* (registered before app/* redirect in App.jsx)
@@ -64,7 +62,7 @@ const Layout = ({ children }) => {
 
   return (
     <BrandingProvider>
-    <MenuProvider layoutScope={null}>
+    <MenuProvider layoutScope={scope}>
     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Skip to main content link */}
       <a href="#main-content" className="skip-to-content">
@@ -121,7 +119,7 @@ const Layout = ({ children }) => {
       <div className="flex flex-1 overflow-hidden relative">
         {/* Sidebar - Only show on authenticated pages, positioned below header */}
         {!isAuthPage && (
-          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} simulatorScope={isScopedPractice ? scope : null} />
         )}
 
         {/* Main Content - Adjust margin for sidebar on desktop */}
@@ -130,8 +128,29 @@ const Layout = ({ children }) => {
           tabIndex="-1"
           className={`flex-1 min-w-0 pb-16 md:pb-0 ${!isAuthPage ? mainContentSidebarOffsetClass(collapsed) : ''} transition-[margin] duration-300 ease-in-out overflow-y-auto overflow-x-hidden h-full`}
         >
+          {isScopedPractice && (
+            <div className="px-4 sm:px-6 pb-2 pt-2 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700">
+              <Link
+                to="/simulator/dashboard"
+                className={`text-sm text-gray-600 dark:text-gray-400 ${scope === 'pmo' ? 'hover:text-indigo-600 dark:hover:text-indigo-400' : 'hover:text-blue-600 dark:hover:text-blue-400'}`}
+              >
+                Back to Simulator
+              </Link>
+              <PracticeDashboardSwitcher />
+            </div>
+          )}
           <div className="w-full max-w-full">
-            {children || <Outlet />}
+            {isScopedPractice ? (
+              <RoleScopeGate
+                requiredScope={scope}
+                blockedRedirectTo={scope === 'pmo' ? '/simulator/pmo/dashboard' : '/simulator/dashboard'}
+                fullScreen={false}
+              >
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-4">{children || <Outlet />}</div>
+              </RoleScopeGate>
+            ) : (
+              children || <Outlet />
+            )}
           </div>
         </main>
       </div>

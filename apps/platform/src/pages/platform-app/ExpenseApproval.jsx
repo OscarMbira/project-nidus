@@ -8,7 +8,9 @@ import {
   rejectStep,
   markPaid,
   getApprovalHistory,
+  getExpenseClaimItems,
 } from '../../services/expenseClaimService'
+import ExpenseItemsTable from '@nidus/ui/ExpenseItemsTable'
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 
 export default function ExpenseApproval() {
@@ -17,6 +19,8 @@ export default function ExpenseApproval() {
   const [paidQueue, setPaidQueue] = useState([])
   const [historyId, setHistoryId] = useState(null)
   const [hist, setHist] = useState([])
+  const [itemsOpenId, setItemsOpenId] = useState(null)
+  const [claimItems, setClaimItems] = useState([])
 
   const load = async () => {
     try {
@@ -39,6 +43,14 @@ export default function ExpenseApproval() {
     }
     getApprovalHistory(historyId).then(setHist).catch(() => setHist([]))
   }, [historyId])
+
+  useEffect(() => {
+    if (!itemsOpenId) {
+      setClaimItems([])
+      return
+    }
+    getExpenseClaimItems(itemsOpenId).then(setClaimItems).catch(() => setClaimItems([]))
+  }, [itemsOpenId])
 
   const exportCols = [
     { key: 'id', label: 'ID' },
@@ -92,6 +104,13 @@ export default function ExpenseApproval() {
                     >
                       History
                     </button>
+                    <button
+                      type="button"
+                      className="text-xs text-blue-400"
+                      onClick={() => setItemsOpenId(itemsOpenId === r.id ? null : r.id)}
+                    >
+                      Items
+                    </button>
                   </div>
                 </div>
                 {historyId === r.id && (
@@ -102,6 +121,9 @@ export default function ExpenseApproval() {
                       </li>
                     ))}
                   </ul>
+                )}
+                {itemsOpenId === r.id && claimItems.length > 0 && (
+                  <ExpenseItemsTable items={claimItems} onChange={() => {}} categories={[]} currency={r.currency} readOnly />
                 )}
               </div>
             ))}

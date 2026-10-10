@@ -4,14 +4,16 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { ArrowLeft } from 'lucide-react'
 import ConfigurationItemForm from '../components/ci/ConfigurationItemForm'
-import { createConfigurationItem, createConfigurationItemManual } from '../services/configurationItemRecordService'
+import { createConfigurationItem, updateConfigurationItem, configurationItemWritePayload } from '../services/configurationItemRecordService'
 import { getConfigurationMSByProject } from '../services/configurationManagementStrategyService'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import toast from 'react-hot-toast'
 
 export default function ConfigurationItemRecordCreate() {
@@ -22,6 +24,14 @@ export default function ConfigurationItemRecordCreate() {
   const [saving, setSaving] = useState(false)
   const [cfgMsId, setCfgMsId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [pendingPath, setPendingPath] = useState(null)
+  const { showSuccess, modal: successModal } = useSuccessModal()
+  const isDirty = !pendingPath && Boolean(itemData.item_name || itemData.item_description || itemData.item_type_id || itemData.product_id_list || itemData.storage_location || itemData.repository_url)
+  const { confirmDiscard } = useUnsavedChangesGuard(isDirty)
+
+  useEffect(() => {
+    if (pendingPath) navigate(pendingPath)
+  }, [pendingPath, navigate])
 
   useEffect(() => {
     if (projectId) {
@@ -64,18 +74,15 @@ export default function ConfigurationItemRecordCreate() {
 
     try {
       setSaving(true)
-      let newItem
-      
-      if (itemData.item_name && !itemData.configuration_item_identifier) {
-        // Use simple creation function
-        newItem = await createConfigurationItem(projectId, itemData.item_name)
-      } else {
-        // Use manual creation
-        newItem = await createConfigurationItemManual(projectId, cfgMsId, itemData)
-      }
-      
-      toast.success('Configuration Item created successfully')
-      navigate(platformProjectPath(routeKey, 'configuration-items', newItem.configuration_item_identifier || newItem.id))
+      const created = await createConfigurationItem(projectId, itemData.item_name)
+      const updated = await updateConfigurationItem(created.id, configurationItemWritePayload(itemData))
+      const recordId = updated.configuration_item_identifier || created.configuration_item_identifier || created.id
+      showSuccess({
+        recordId,
+        operation: 'created',
+        message: 'Configuration item was created.',
+        onOk: () => setPendingPath(platformProjectPath(routeKey, 'configuration-items', recordId)),
+      })
     } catch (error) {
       console.error('Error creating Configuration Item:', error)
       toast.error('Error creating Configuration Item: ' + error.message)
@@ -85,7 +92,8 @@ export default function ConfigurationItemRecordCreate() {
   }
 
   const handleCancel = () => {
-    navigate(platformProjectPath(routeKey, 'configuration-items'))
+    const nextPath = platformProjectPath(routeKey, 'configuration-items')
+    confirmDiscard(() => setPendingPath(nextPath))
   }
 
   if (loading) {
@@ -131,12 +139,14 @@ export default function ConfigurationItemRecordCreate() {
       <ConfigurationItemForm
         itemData={itemData}
         cfgMsId={cfgMsId}
+        projectId={projectId}
         onChange={setItemData}
         errors={errors}
         onSave={handleSave}
         onCancel={handleCancel}
         saving={saving}
       />
+      {successModal}
     </div>
   )
 }

@@ -16,6 +16,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import ViewToggle from '@nidus/ui/ViewToggle'
+import TestEvidenceSettingCard from '../../components/testing/TestEvidenceSettingCard'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { REGIONAL_FORMAT_DEFAULTS } from '@nidus/shared/utils/regionalFormatConstants.js'
 import { resolveLocalFieldValues, parseLocalFieldDefault } from '@nidus/shared/utils/resolveRegionalFormatSettings.js'
@@ -192,6 +193,8 @@ export default function OrganisationRegionalFormatSettingsPage() {
         {error && (
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
+
+        <TestEvidenceSettingCard scope="organisation" targetId={accountId} canManage={canManage} />
 
         <div className="border-b border-gray-200 dark:border-gray-700">
           <DetailAuditTabList

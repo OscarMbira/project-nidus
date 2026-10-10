@@ -47,16 +47,17 @@ function LazyPage({ page, service, ...rest }) {
 export function RecordLifecycleRouteElements() {
   return (
     <>
-      <Route path="pmo/authorisation/queue" element={wrapPmo(<LazyPage page="AuthorisationQueuePage" service={platformService} pmoView />)} />
-      <Route path="pmo/authorisation/dashboard" element={wrapPmo(<LazyPage page="LifecycleDashboardPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/configure" element={wrapPmo(<LazyPage page="ConfigureLifecycleRulesPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/chains" element={wrapPmo(<LazyPage page="ApprovalChainsOverviewPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/archive-retention" element={wrapPmo(<LazyPage page="ArchiveRetentionRulesPage" service={platformService} />)} />
-      <Route path="pmo/authorisation/archive" element={wrapPmo(<LazyPage page="ArchiveVaultPage" service={platformService} />)} />
+      <Route path="simulator/pmo/authorisation/queue" element={wrapPmo(<LazyPage page="AuthorisationQueuePage" service={platformService} pmoView />)} />
+      <Route path="simulator/pmo/authorisation/dashboard" element={wrapPmo(<LazyPage page="LifecycleDashboardPage" service={platformService} />)} />
+      <Route path="simulator/pmo/authorisation/configure" element={wrapPmo(<LazyPage page="ConfigureLifecycleRulesPage" service={platformService} />)} />
+      <Route path="simulator/pmo/authorisation/chains" element={wrapPmo(<LazyPage page="ApprovalChainsOverviewPage" service={platformService} />)} />
+      <Route path="simulator/pmo/authorisation/archive-retention" element={wrapPmo(<LazyPage page="ArchiveRetentionRulesPage" service={platformService} />)} />
+      <Route path="simulator/pmo/authorisation/archive" element={wrapPmo(<LazyPage page="ArchiveVaultPage" service={platformService} />)} />
 
-      <Route path="pm/authorisation/queue" element={wrapPm(<LazyPage page="PendingApprovalsPage" service={platformService} />)} />
-      <Route path="pm/authorisation/submitted" element={wrapPm(<LazyPage page="MySubmittedRecordsPage" service={platformService} />)} />
-      <Route path="pm/authorisation/chains" element={wrapPm(<LazyPage page="ApprovalChainsOverviewPage" service={platformService} title="Approval Chains (Read-only)" />)} />
+      <Route path="simulator/pm/authorisation/queue/:requestId" element={wrapPm(<LazyPage page="AuthorisationReviewPage" service={platformService} />)} />
+      <Route path="simulator/pm/authorisation/queue" element={wrapPm(<LazyPage page="PendingApprovalsPage" service={platformService} />)} />
+      <Route path="simulator/pm/authorisation/submitted" element={wrapPm(<LazyPage page="MySubmittedRecordsPage" service={platformService} />)} />
+      <Route path="simulator/pm/authorisation/chains" element={wrapPm(<LazyPage page="ApprovalChainsOverviewPage" service={platformService} title="Approval Chains (Read-only)" />)} />
     </>
   )
 }

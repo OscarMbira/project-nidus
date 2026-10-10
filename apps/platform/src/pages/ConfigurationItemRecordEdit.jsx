@@ -10,7 +10,9 @@ import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { ArrowLeft } from 'lucide-react'
 import ConfigurationItemForm from '../components/ci/ConfigurationItemForm'
-import { getConfigurationItemById, updateConfigurationItem } from '../services/configurationItemRecordService'
+import { getConfigurationItemById, updateConfigurationItem, configurationItemWritePayload } from '../services/configurationItemRecordService'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import toast from 'react-hot-toast'
 
 export default function ConfigurationItemRecordEdit() {
@@ -21,6 +23,15 @@ export default function ConfigurationItemRecordEdit() {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [baseline, setBaseline] = useState('')
+  const [pendingPath, setPendingPath] = useState(null)
+  const { showSuccess, modal: successModal } = useSuccessModal()
+  const isDirty = !pendingPath && baseline !== '' && JSON.stringify(itemData) !== baseline
+  const { confirmDiscard } = useUnsavedChangesGuard(isDirty)
+
+  useEffect(() => {
+    if (pendingPath) navigate(pendingPath)
+  }, [pendingPath, navigate])
 
   useEffect(() => {
     if (itemId && projectId) {
@@ -32,7 +43,8 @@ export default function ConfigurationItemRecordEdit() {
     try {
       setLoading(true)
       const data = await getConfigurationItemById(itemId, projectId)
-      setItemData(data)
+      setItemData(data || {})
+      setBaseline(JSON.stringify(data || {}))
     } catch (error) {
       console.error('Error fetching Configuration Item:', error)
       toast.error('Error loading Configuration Item: ' + error.message)
@@ -48,6 +60,10 @@ export default function ConfigurationItemRecordEdit() {
       newErrors.item_name = 'Item name must be at least 3 characters'
     }
 
+    if (!itemData.item_type_id) {
+      newErrors.item_type_id = 'Item type is required'
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       toast.error('Please fill in all required fields')
@@ -56,9 +72,15 @@ export default function ConfigurationItemRecordEdit() {
 
     try {
       setSaving(true)
-      await updateConfigurationItem(itemData.id || itemId, itemData)
-      toast.success('Configuration Item updated successfully')
-      navigate(platformProjectPath(routeKey, 'configuration-items', itemData.configuration_item_identifier || itemId))
+      const updated = await updateConfigurationItem(itemData.id, configurationItemWritePayload(itemData))
+      const recordId = updated.configuration_item_identifier || itemData.configuration_item_identifier || itemId
+      setBaseline(JSON.stringify(itemData))
+      showSuccess({
+        recordId,
+        operation: 'updated',
+        message: 'Configuration item was updated.',
+        onOk: () => setPendingPath(platformProjectPath(routeKey, 'configuration-items', recordId)),
+      })
     } catch (error) {
       console.error('Error updating Configuration Item:', error)
       toast.error('Error updating Configuration Item: ' + error.message)
@@ -68,7 +90,11 @@ export default function ConfigurationItemRecordEdit() {
   }
 
   const handleCancel = () => {
-    navigate(platformProjectPath(routeKey, 'configuration-items', itemData.configuration_item_identifier || itemId))
+    const nextPath = platformProjectPath(routeKey, 'configuration-items', itemData.configuration_item_identifier || itemId)
+    confirmDiscard(() => {
+      setBaseline(JSON.stringify(itemData))
+      setPendingPath(nextPath)
+    })
   }
 
   if (loading) {
@@ -96,12 +122,15 @@ export default function ConfigurationItemRecordEdit() {
       <ConfigurationItemForm
         itemData={itemData}
         cfgMsId={itemData.cfg_ms_id}
+        projectId={projectId}
+        itemId={itemData.id}
         onChange={setItemData}
         errors={errors}
         onSave={handleSave}
         onCancel={handleCancel}
         saving={saving}
       />
+      {successModal}
     </div>
   )
 }

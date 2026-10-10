@@ -37,24 +37,24 @@ export default function SimTestingPageShell({ title, subtitle, children }) {
   const selected = projects.find((p) => p.id === projectId)
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
-      <div className="border-b border-gray-800 bg-gray-950 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
+    <div className="w-full text-gray-900 dark:text-gray-100">
+      <div className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 sticky top-0 z-20 shadow-sm">
+        <div className="px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between">
           <div className="flex items-start gap-3">
             <Link
               to="/simulator/dashboard"
-              className="mt-1 p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
+              className="mt-1 p-1 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Back to simulator dashboard"
             >
               <ChevronLeft className="h-5 w-5" />
             </Link>
             <div>
-              <div className="flex items-center gap-2 text-emerald-400">
+              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                 <FlaskConical className="h-5 w-5" />
                 <span className="text-xs font-semibold uppercase tracking-wide">Practice Testing &amp; QA</span>
               </div>
-              <h1 className="text-xl font-bold text-white mt-0.5">{title}</h1>
-              {subtitle && <p className="text-sm text-gray-400 mt-1">{subtitle}</p>}
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">{title}</h1>
+              {subtitle && <p className="text-sm text-gray-700 dark:text-gray-400 mt-1">{subtitle}</p>}
             </div>
           </div>
           <div className="flex flex-col sm:items-end gap-1 w-full sm:w-auto">
@@ -70,7 +70,7 @@ export default function SimTestingPageShell({ title, subtitle, children }) {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 py-6">{children({ projectId, projectLabel: selected })}</div>
+      <div className="px-4 py-6">{children({ projectId, projectLabel: selected })}</div>
     </div>
   )
 }

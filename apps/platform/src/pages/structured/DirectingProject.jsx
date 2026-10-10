@@ -107,7 +107,6 @@ export default function DirectingProject() {
           project_id: projectId,
           board_name: `${project.project_name} Project Board`,
           board_description: `Project Board for ${project.project_name}`,
-          is_active: true,
           created_by: user.id
         })
         .select()

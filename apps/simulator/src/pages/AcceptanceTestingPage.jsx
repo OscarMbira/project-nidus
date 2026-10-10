@@ -7,6 +7,18 @@ import { getPPDByProject, getOrCreatePPD } from '../services/projectProductDescr
 import { getCriteria, recordAcceptance, getAcceptanceStatus } from '../services/ppdAcceptanceCriteriaService'
 import { format } from 'date-fns'
 import { exportAcceptanceReportToCSV } from '@nidus/shared/utils/ppdExport'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import ViewToggle from '../components/ui/ViewToggle'
+
+const DEFAULT_SORT = { column: 'criteria_title', direction: 'asc' }
+const SORT_ACCESSORS = {
+  criteria_title: (c) => c.criteria_title,
+  priority: (c) => c.priority,
+  acceptance_status: (c) => c.acceptance_status,
+}
 
 export default function AcceptanceTestingPage() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -16,6 +28,21 @@ export default function AcceptanceTestingPage() {
   const [acceptanceStatus, setAcceptanceStatus] = useState(null)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all') // 'all', 'pending', 'passed', 'failed', 'must_have'
+  const [viewMode, setViewMode] = useViewMode('acceptance-testing', 'list')
+  const [search, setSearch] = useState('')
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: DEFAULT_SORT,
+    storageKey: 'acceptance-testing-sort',
+  })
+  const query = search.trim().toLowerCase()
+  const matchingCriteria = query
+    ? criteria.filter((c) =>
+        [c.criteria_reference, c.criteria_title, c.criteria_description].some((v) =>
+          (v || '').toLowerCase().includes(query)
+        )
+      )
+    : criteria
+  const visibleCriteria = sortedData(matchingCriteria, SORT_ACCESSORS)
 
   useEffect(() => {
     if (projectId) {
@@ -100,6 +127,26 @@ export default function AcceptanceTestingPage() {
           </button>
         </div>
       </div>
+    )
+  }
+
+  const renderSortHeader = (column, label) => {
+    const dir = getSortDirectionForColumn(column)
+    return (
+      <th
+        scope="col"
+        aria-sort={dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none'}
+        className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+      >
+        <button
+          type="button"
+          onClick={() => handleSort(column)}
+          className="flex items-center gap-1 uppercase hover:text-gray-700 dark:hover:text-gray-200"
+        >
+          {label}
+          <span aria-hidden="true">{dir === 'asc' ? '↑' : dir === 'desc' ? '↓' : '⇅'}</span>
+        </button>
+      </th>
     )
   }
 
@@ -267,8 +314,67 @@ export default function AcceptanceTestingPage() {
           </p>
         </div>
       ) : (
+        <>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search criteria..."
+            className="flex-1 min-w-[12rem] max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="Acceptance criteria layout" />
+        </div>
+
+        {visibleCriteria.length === 0 && (
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">No criteria match your search.</p>
+        )}
+
+        {viewMode === 'list' && visibleCriteria.length > 0 ? (
+          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableRowNumberHeader className="!normal-case" />
+                  {renderSortHeader('criteria_title', 'Criterion')}
+                  {renderSortHeader('priority', 'Priority')}
+                  {renderSortHeader('acceptance_status', 'Status')}
+                  <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Measurable</th>
+                  <th scope="col" className="px-3 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {visibleCriteria.map((criterion, index) => (
+                  <tr key={criterion.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <td className="px-3 py-4">
+                      <div className="font-mono text-xs text-gray-500 dark:text-gray-400">{criterion.criteria_reference}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{criterion.criteria_title}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{criterion.criteria_description}</div>
+                    </td>
+                    <td className="px-3 py-4 text-sm text-gray-900 dark:text-white capitalize">{criterion.priority?.replace('_', ' ')}</td>
+                    <td className="px-3 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(criterion.acceptance_status || 'pending')}`}>
+                        {(criterion.acceptance_status || 'pending').toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-3 py-4 text-sm text-gray-600 dark:text-gray-400">{criterion.is_measurable ? 'Yes' : 'No'}</td>
+                    <td className="px-3 py-4 text-right whitespace-nowrap">
+                      <div className="inline-flex gap-2">
+                        <button onClick={() => handleRecordAcceptance(criterion.id, 'passed')} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs">Pass</button>
+                        <button onClick={() => handleRecordAcceptance(criterion.id, 'failed')} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs">Fail</button>
+                        <button onClick={() => handleRecordAcceptance(criterion.id, 'waived')} className="px-2 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs">Waive</button>
+                        <button onClick={() => handleRecordAcceptance(criterion.id, 'deferred')} className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs">Defer</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
         <div className="space-y-4">
-          {criteria.map((criterion, index) => (
+          {viewMode !== 'list' && visibleCriteria.map((criterion, index) => (
             <div
               key={criterion.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow"
@@ -361,6 +467,8 @@ export default function AcceptanceTestingPage() {
             </div>
           ))}
         </div>
+        )}
+        </>
       )}
     </div>
   )

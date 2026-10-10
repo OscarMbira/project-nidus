@@ -6,6 +6,7 @@ import { getDecision, deleteDecision } from '../../services/decisionLogService'
 import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
@@ -36,6 +37,31 @@ function DetailRow({ icon: Icon, label, value }) {
         <p className="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">{label}</p>
         <p className="mt-0.5 text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap">{value}</p>
       </div>
+    </div>
+  )
+}
+
+const VIEW_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'rationale', label: 'Rationale' },
+  { value: 'impact', label: 'Impact' },
+  { value: 'alternatives', label: 'Alternatives Considered' },
+  { value: 'audit', label: 'Audit details' },
+]
+
+function ReadOnlyList({ title, viewModeId, fieldId, value, ariaLabelPrefix, itemColumnLabel }) {
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+      <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-4">{title}</h3>
+      <MultiLineListInput
+        viewModeId={viewModeId}
+        id={fieldId}
+        value={value || ''}
+        onChange={() => {}}
+        disabled
+        ariaLabelPrefix={ariaLabelPrefix}
+        itemColumnLabel={itemColumnLabel}
+      />
     </div>
   )
 }
@@ -121,7 +147,7 @@ export default function DecisionLogDetail() {
 
   return (
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
-      <div className="max-w-3xl mx-auto space-y-5">
+      <div className="max-w-4xl mx-auto space-y-5">
 
         <div className="flex items-center gap-3">
           <button type="button" onClick={() => navigate(-1)}
@@ -145,7 +171,7 @@ export default function DecisionLogDetail() {
           />
         </div>
 
-        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} />
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} tabs={VIEW_TABS} ariaLabel="Decision sections" />
 
         {activeTab === 'audit' ? (
           <AuditDetailsPanel description="Who recorded or changed this decision, and how it is classified.">
@@ -165,7 +191,9 @@ export default function DecisionLogDetail() {
               <AuditTimestampPair dateLabel="Last updated" value={decision.updated_at} />
             </AuditCard>
           </AuditDetailsPanel>
-        ) : (
+        ) : null}
+
+        {activeTab === 'details' && (
         <>
         <div className="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 py-5">
           <div className="flex items-start justify-between gap-3">
@@ -188,10 +216,38 @@ export default function DecisionLogDetail() {
         </div>
 
         {decision.description && <Section title="Description" content={decision.description} />}
-        {decision.rationale && <Section title="Rationale" content={decision.rationale} />}
-        {decision.impact && <Section title="Impact" content={decision.impact} />}
-        {decision.alternatives_considered && <Section title="Alternatives Considered" content={decision.alternatives_considered} />}
         </>
+        )}
+
+        {activeTab === 'rationale' && (
+          <ReadOnlyList
+            title="Rationale"
+            viewModeId="decision-rationale-view"
+            fieldId="decision_rationale_view"
+            value={decision.rationale}
+            ariaLabelPrefix="rationale"
+            itemColumnLabel="Rationale"
+          />
+        )}
+        {activeTab === 'impact' && (
+          <ReadOnlyList
+            title="Impact"
+            viewModeId="decision-impact-view"
+            fieldId="decision_impact_view"
+            value={decision.impact}
+            ariaLabelPrefix="impact"
+            itemColumnLabel="Impact"
+          />
+        )}
+        {activeTab === 'alternatives' && (
+          <ReadOnlyList
+            title="Alternatives Considered"
+            viewModeId="decision-alternatives-view"
+            fieldId="decision_alternatives_view"
+            value={decision.alternatives_considered}
+            ariaLabelPrefix="alternative"
+            itemColumnLabel="Alternative"
+          />
         )}
       </div>
     </div>

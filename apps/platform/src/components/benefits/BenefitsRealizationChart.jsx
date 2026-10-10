@@ -12,9 +12,10 @@ export default function BenefitsRealizationChart({ benefits = [] }) {
 
   // Calculate total expected vs actual value
   const expectedValue = benefits.reduce((sum, b) => sum + (parseFloat(b.estimated_value) || 0), 0);
-  const actualValue = benefits
-    .filter(b => b.benefit_status === 'realized' || b.benefit_status === 'achieved')
-    .reduce((sum, b) => sum + (parseFloat(b.actual_value || b.expected_value) || 0), 0);
+  const actualValue = benefits.reduce(
+    (sum, b) => sum + (parseFloat(b.realized_value_currency) || 0),
+    0,
+  );
 
   const valueRealization = expectedValue > 0
     ? (actualValue / expectedValue) * 100
@@ -31,7 +32,7 @@ export default function BenefitsRealizationChart({ benefits = [] }) {
 
       {totalBenefits === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500 dark:text-gray-400">No benefits defined</p>
+          <p className="text-gray-700 dark:text-gray-200">No benefits defined for this project yet.</p>
         </div>
       ) : (
         <>

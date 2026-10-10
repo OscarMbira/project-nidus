@@ -154,7 +154,6 @@ const PM_SHARED_PLATFORM_PREFIXES = [
   '/platform/itto',
   '/platform/product-descriptions',
   '/platform/document-governance',
-  '/platform/decision-log',
   '/platform/work-authorisation',
   '/platform/stage-gates',
   '/platform/governance',
@@ -165,6 +164,13 @@ const PM_SHARED_PLATFORM_PREFIXES = [
   '/platform/releases',
   '/platform/forms',
   '/platform/authorisation',
+  // v966i's plat_pm_benefits Core PM taxonomy category (RAID/Testing/etc.'s sibling) links here
+  // — was missing from this list AND wrongly present in PMO_ONLY_PLATFORM_PREFIXES below, so a
+  // Project Manager clicking their own "Benefits" sidebar item got force-switched onto the PMO
+  // sidebar (isPmoOnlyPlatformPath short-circuits resolveMenuLayoutScope to 'pmo' before role-
+  // based resolution ever runs) — found live 2026-09-11, same bug class as the session-opening
+  // Business Case stale-route incident.
+  '/platform/benefits',
   '/app/project-users',
   '/app/project-members',
 ]
@@ -173,7 +179,11 @@ const PMO_ONLY_PLATFORM_PREFIXES = [
   '/pmo/',
   '/platform/portfolio',
   '/platform/programme',
-  '/platform/benefits',
+  // '/platform/benefits' intentionally NOT here — see the comment on PM_SHARED_PLATFORM_PREFIXES
+  // above. Benefits is shared: a Project Manager reaches it via their own Core PM taxonomy item
+  // and must keep the PM sidebar; a PMO user reaches the same URL family for portfolio/programme
+  // rollups and correctly gets 'pmo' via role-based resolution instead (resolveMenuLayoutScope's
+  // primaryFromRoles check, which now actually runs for this path since it's no longer here).
   '/platform/pmo-admin',
   '/platform/subscription',
   '/platform/organisation',
@@ -213,18 +223,27 @@ export function resolveMenuLayoutScope(layoutScopeProp, pathname = '', roleNames
     return 'pm'
   }
 
-  if (isPmoOnlyPlatformPath(pathname)) {
-    persistMenuLayoutScope('pmo')
-    return 'pmo'
-  }
-
-  // Prefer explicit arg; otherwise reuse whatever useMenu already cached so Layout can pick
-  // the correct shell before (or without) being passed role names.
+  // Resolve role truth (DB-backed: user_roles/roles, via cacheUserMenuRoles) BEFORE consulting
+  // the hardcoded PMO_ONLY_PLATFORM_PREFIXES list below — a static path list must never silently
+  // outrank what the user's actual role says. Found live 2026-09-11: /platform/benefits was
+  // hardcoded PMO-only, so a Project Manager clicking their own Core PM "Benefits" sidebar item
+  // got force-switched onto the PMO shell despite their role clearly being 'pm'. Prefer explicit
+  // arg; otherwise reuse whatever useMenu already cached so Layout can pick the correct shell
+  // before (or without) being passed role names.
   const cachedNames = _cachedUserMenuRoles.roleNames
   const names = Array.isArray(roleNames)
     ? roleNames
     : (Array.isArray(cachedNames) && cachedNames.length ? cachedNames : [])
   const primaryFromRoles = names.length ? resolvePrimaryLayoutScopeFromRoles(names) : null
+
+  // The hardcoded list still applies for genuinely PMO-exclusive admin/infrastructure routes
+  // (subscription, pmo-admin, organisation settings, etc. — pages with no menu_items/role-driven
+  // counterpart at all) and for role-ambiguous visits, but a confirmed 'pm' role always wins.
+  if (isPmoOnlyPlatformPath(pathname) && primaryFromRoles !== 'pm') {
+    persistMenuLayoutScope('pmo')
+    return 'pmo'
+  }
+
   if (primaryFromRoles === 'pm') {
     persistMenuLayoutScope('pm')
     return 'pm'
@@ -253,6 +272,19 @@ export function resolveMenuLayoutScope(layoutScopeProp, pathname = '', roleNames
 }
 
 /** Whether the current URL should render inside PMLayout (PM sidebar shell). */
+/**
+ * Whether a route should render the PM shell, from the path and cached roles only. Unlike
+ * shouldUsePmLayoutShell it never reads the persisted scope, so a PM visit can't leak the PM
+ * shell onto later Platform routes.
+ */
+export function isPmLayoutPath(pathname = '') {
+  if (inferLayoutScopeFromPathname(pathname) === 'pm') return true
+  if (isPmoOnlyPlatformPath(pathname)) return false
+  if (isSharedPmPlatformPath(pathname)) return true
+  const names = Array.isArray(_cachedUserMenuRoles.roleNames) ? _cachedUserMenuRoles.roleNames : []
+  return names.length > 0 && resolvePrimaryLayoutScopeFromRoles(names) === 'pm'
+}
+
 export function shouldUsePmLayoutShell(pathname = '', roleNames = null) {
   const scope = resolveMenuLayoutScope(null, pathname, roleNames)
   return scope === 'pm'
@@ -378,10 +410,7 @@ export async function resolveUserRoleScopes(authUser) {
 }
 
 /**
- * Fine-grained role check — does this user hold ANY of the exact role names given? Narrower
- * than resolveUserRoleScopes()/PMO_LAYOUT_ROLES: used by pages that must gate on a specific
- * role (e.g. Form Template Builder is `pmo_admin`-suite-only, not "any PMO-scope role" —
- * `account_owner` has the PMO sidebar but is deliberately not in this narrower set).
+ * Fine-grained role check — does this user hold ANY of the exact role names given?
  * @param {object} authUser
  * @param {string[]} roleNames - exact role names to match against (case/spacing-insensitive)
  */

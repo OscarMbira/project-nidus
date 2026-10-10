@@ -300,6 +300,26 @@ export async function getBenefitMeasurements(benefitId, filters = {}) {
 }
 
 /**
+ * Get one benefit measurement by id.
+ */
+export async function getBenefitMeasurement(measurementId) {
+  const { data, error } = await platformDb
+    .from('benefit_measurements')
+    .select(`
+      *,
+      measure:measure_id (id, measure_name, measure_unit),
+      benefit:benefit_id (id, benefit_name, benefit_code, measurement_unit),
+      created_by_user:created_by (id, email, full_name)
+    `)
+    .eq('id', measurementId)
+    .eq('is_deleted', false)
+    .maybeSingle()
+
+  if (error) throw error
+  return data
+}
+
+/**
  * Create or update a benefit measurement
  */
 export async function saveBenefitMeasurement(benefitId, measurementData, measurementId = null) {

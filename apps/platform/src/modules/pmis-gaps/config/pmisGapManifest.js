@@ -508,7 +508,7 @@ export function getAllGapRoutePaths() {
   }
   // Procurement sub-routes
   ;[
-    'pm/procurement/vendors', 'pm/procurement/requests', 'pm/procurement/orders',
+    'pm/procurement/vendors', 'pm/procurement/vendor-categories', 'pm/procurement/requests', 'pm/procurement/orders',
     'pm/procurement/contracts', 'pm/procurement/invoices',
     'pmo/procurement/vendors', 'pmo/procurement/requests', 'pmo/procurement/orders',
     'pmo/procurement/contracts', 'pmo/procurement/invoices',

@@ -4,6 +4,7 @@ import { ArrowLeft, Target, CheckCircle, TrendingUp, DollarSign, AlertTriangle }
 import { getBenefits, getBenefitsDashboardStats, getBenefitsVsCosts } from '../../services/benefitsService';
 import BenefitsRealizationChart from '../../components/benefits/BenefitsRealizationChart';
 import { getBenefitMeasurements } from '../../services/benefitsService';
+import { benefitGapProgressPercent } from '@nidus/shared/utils/benefitProgress';
 
 export default function BenefitsRealization() {
   const navigate = useNavigate();
@@ -179,9 +180,7 @@ export default function BenefitsRealization() {
             {benefits
               .filter(b => b.benefit_status === 'realized' || b.benefit_status === 'partially_realized')
               .map((benefit) => {
-                const realizationPercentage = benefit.target_value && benefit.target_value > 0
-                  ? ((benefit.realized_value || benefit.current_value || 0) / benefit.target_value) * 100
-                  : 0;
+                const realizationPercentage = benefitGapProgressPercent(benefit);
 
                 return (
                   <div

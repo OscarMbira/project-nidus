@@ -22,6 +22,22 @@ import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { getByProjectId, saveForProject, getRevisions, setApprovalStatus } from '../../services/projectBudgetCategoryService'
 import { getFundingSources } from '../../services/fundingSourceService'
+import { getBudgetCategories } from '../../services/budgetCategoryService'
+import { describeRevisionChanges } from './budgetRevisionChanges'
+import SelectField from '@nidus/ui/SelectField'
+import { RowActionButton } from '@nidus/ui'
+import { SmartAmountInput } from '../../components/ui/SmartAmountInput'
+
+const formatAmount = (n) => Number(n || 0).toLocaleString()
+
+function changeLabel(change, fundingNames) {
+  const sourceName = (id) => (id ? fundingNames[id] || 'Unknown source' : 'None')
+  if (change.type === 'added') return `Added ${change.name} (${formatAmount(change.to)})`
+  if (change.type === 'removed') return `Removed ${change.name} (was ${formatAmount(change.from)})`
+  if (change.type === 'renamed') return `Renamed ${change.from} → ${change.to}`
+  if (change.type === 'funding') return `${change.name} funding source: ${sourceName(change.from)} → ${sourceName(change.to)}`
+  return `${change.name}: ${formatAmount(change.from)} → ${formatAmount(change.to)}`
+}
 
 const APPROVAL_STYLES = {
   approved: { text: 'text-green-700 dark:text-green-300', bg: 'bg-green-50 dark:bg-green-900/20', label: 'Approved' },
@@ -43,6 +59,9 @@ export default function ProjectBudgetPage() {
   const [uid, setUid] = useState(null)
   const [fundingSources, setFundingSources] = useState([])
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const [categoryMaster, setCategoryMaster] = useState([])
+  const [editingIndex, setEditingIndex] = useState(null)
+  const [budgetNotes, setBudgetNotes] = useState('')
   const [newLine, setNewLine] = useState({ category_name: '', budget_amount: '', funding_source_id: '' })
 
   const load = useCallback(async () => {
@@ -52,13 +71,14 @@ export default function ProjectBudgetPage() {
       const [{ data: p }, catRes, fundsRes] = await Promise.all([
         platformDb
           .from('projects')
-          .select('project_name, project_code, budget_currency, budget_approval_status, budget_approved_by, budget_approved_at')
+          .select('project_name, project_code, budget_currency, budget_approval_status, budget_approved_by, budget_approved_at, budget_notes')
           .eq('id', projectId)
           .single(),
         getByProjectId(projectId),
         getFundingSources(),
       ])
       setProject(p)
+      setBudgetNotes(p?.budget_notes || '')
       setLines(catRes.success ? catRes.data : [])
       setFundingSources(fundsRes.success !== false ? fundsRes.data || [] : [])
 
@@ -81,6 +101,12 @@ export default function ProjectBudgetPage() {
   }, [load])
 
   useEffect(() => {
+    getBudgetCategories().then((res) => {
+      if (res.success) setCategoryMaster(res.data)
+    })
+  }, [])
+
+  useEffect(() => {
     if (activeTab !== 'revisions' || !projectId) return
     getRevisions(projectId).then((res) => {
       if (res.success) setRevisions(res.data)
@@ -98,6 +124,7 @@ export default function ProjectBudgetPage() {
   }, [activeTab, project])
 
   const totalAmount = lines.reduce((sum, l) => sum + (Number(l.budget_amount) || 0), 0)
+  const fundingNames = Object.fromEntries(fundingSources.map((f) => [f.id, f.name]))
   const approvalStyle = APPROVAL_STYLES[project?.budget_approval_status]
 
   const persistLines = async (nextLines) => {
@@ -107,6 +134,7 @@ export default function ProjectBudgetPage() {
         category_name: l.category_name,
         budget_amount: l.budget_amount,
         funding_source_id: l.funding_source_id || null,
+        notes: l.notes || null,
       }))
       const res = await saveForProject(projectId, toSave, uid)
       if (!res.success) throw new Error(res.error || 'Save failed')
@@ -121,13 +149,54 @@ export default function ProjectBudgetPage() {
 
   const handleAddLine = async (e) => {
     e.preventDefault()
-    if (!newLine.category_name.trim() && !(Number(newLine.budget_amount) > 0)) return
-    await persistLines([...lines, newLine])
-    setNewLine({ category_name: '', budget_amount: '', funding_source_id: '' })
+    const name = newLine.category_name.trim()
+    const amount = Number(newLine.budget_amount)
+    if (!name || !(amount > 0)) {
+      toast.error('Enter a category and an amount greater than 0.')
+      return
+    }
+    const line = { ...newLine, category_name: name, budget_amount: amount, notes: newLine.notes?.trim() || null }
+    const nextLines = editingIndex === null ? [...lines, line] : lines.map((l, i) => (i === editingIndex ? line : l))
+    await persistLines(nextLines)
+    setEditingIndex(null)
+    setNewLine({ category_name: '', budget_amount: '', funding_source_id: '', notes: '' })
+  }
+
+  const handleEditLine = (index) => {
+    const line = lines[index]
+    setEditingIndex(index)
+    setNewLine({
+      category_name: line.category_name || '',
+      budget_amount: String(line.budget_amount ?? ''),
+      funding_source_id: line.funding_source_id || '',
+      notes: line.notes || '',
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null)
+    setNewLine({ category_name: '', budget_amount: '', funding_source_id: '', notes: '' })
   }
 
   const handleRemoveLine = async (index) => {
     await persistLines(lines.filter((_, i) => i !== index))
+  }
+
+  const saveBudgetNotes = async () => {
+    setSaving(true)
+    try {
+      const { error } = await platformDb
+        .from('projects')
+        .update({ budget_notes: budgetNotes.trim() || null })
+        .eq('id', projectId)
+      if (error) throw error
+      toast.success('Budget notes saved.')
+      await load()
+    } catch (e) {
+      toast.error(e?.message || 'Failed to save notes')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleApprovalChange = async (status) => {
@@ -168,6 +237,7 @@ export default function ProjectBudgetPage() {
             ariaLabel="Budget sections"
             tabs={[
               { value: 'lines', label: 'Budget Lines' },
+              { value: 'notes', label: 'Notes' },
               { value: 'revisions', label: 'Revision History' },
               { value: 'audit', label: 'Audit details' },
             ]}
@@ -187,6 +257,16 @@ export default function ProjectBudgetPage() {
                   Total budget: {project?.budget_currency || ''} {totalAmount.toLocaleString()}
                 </p>
               </div>
+              {canManage && !readOnlyExecutive && !canManageAll && (
+                <button
+                  type="button"
+                  disabled={saving || project?.budget_approval_status === 'pending' || project?.budget_approval_status === 'approved'}
+                  onClick={() => handleApprovalChange('pending')}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50"
+                >
+                  Submit for approval
+                </button>
+              )}
               {canManageAll && !readOnlyExecutive && (
                 <div className="flex items-center gap-2">
                   <button
@@ -231,11 +311,16 @@ export default function ProjectBudgetPage() {
                     lines.map((line, index) => (
                       <tr key={`${line.category_name}-${index}`}>
                         <TableRowNumberCell number={getDisplayRowNumber(index)} />
-                        <td className="px-4 py-2">{line.category_name}</td>
+                        <td className="px-4 py-2">
+                          {line.category_name}
+                          {line.notes && <div className="text-xs text-gray-500 dark:text-gray-400">{line.notes}</div>}
+                        </td>
                         <td className="px-4 py-2 tabular-nums">{Number(line.budget_amount || 0).toLocaleString()}</td>
                         <td className="px-4 py-2">{line.funding_sources?.name || '—'}</td>
                         {canManage && !readOnlyExecutive && (
                           <td className="px-4 py-2">
+                            <div className="flex items-center gap-1">
+                            <RowActionButton variant="edit" label={`Edit ${line.category_name}`} onClick={() => handleEditLine(index)} />
                             <button
                               type="button"
                               onClick={() => handleRemoveLine(index)}
@@ -246,30 +331,42 @@ export default function ProjectBudgetPage() {
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
+                            </div>
                           </td>
                         )}
                       </tr>
                     ))
                   )}
                 </tbody>
+                {lines.length > 0 && (
+                  <tfoot className="bg-gray-50 dark:bg-gray-800 font-semibold">
+                    <tr>
+                      <td colSpan={2} className="px-4 py-2 text-right">Total</td>
+                      <td className="px-4 py-2 tabular-nums">
+                        {project?.budget_currency ? `${project.budget_currency} ` : ''}{totalAmount.toLocaleString()}
+                      </td>
+                      <td colSpan={canManage && !readOnlyExecutive ? 2 : 1} />
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
 
             {canManage && !readOnlyExecutive && (
               <form onSubmit={handleAddLine} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input
-                  placeholder="Category"
+                <SelectField
+                  options={categoryMaster.map((c) => ({ value: c.name, label: c.name }))}
                   value={newLine.category_name}
-                  onChange={(e) => setNewLine({ ...newLine, category_name: e.target.value })}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm"
+                  onChange={(v) => setNewLine({ ...newLine, category_name: v })}
+                  placeholder="Select category…"
+                  forceSearchable
                 />
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="Amount"
-                  value={newLine.budget_amount}
-                  onChange={(e) => setNewLine({ ...newLine, budget_amount: e.target.value })}
-                  className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm"
+                <SmartAmountInput
+                  value={newLine.budget_amount === '' ? null : Number(newLine.budget_amount)}
+                  onChange={(v) => setNewLine({ ...newLine, budget_amount: v ?? '' })}
+                  placeholder="Amount (e.g. 10k, 3M)"
+                  currency={project?.budget_currency}
+                  min={0}
                 />
                 <select
                   value={newLine.funding_source_id}
@@ -281,10 +378,40 @@ export default function ProjectBudgetPage() {
                     <option key={f.id} value={f.id}>{f.name}</option>
                   ))}
                 </select>
+                <input
+                  placeholder="Notes (optional)"
+                  value={newLine.notes}
+                  onChange={(e) => setNewLine({ ...newLine, notes: e.target.value })}
+                  className="md:col-span-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm"
+                />
+                {editingIndex !== null && (
+                  <button type="button" onClick={handleCancelEdit} className="px-4 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    Cancel
+                  </button>
+                )}
                 <button type="submit" disabled={saving} className="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm disabled:opacity-50">
-                  <Plus className="h-4 w-4" /> Add line
+                  {editingIndex === null ? (<><Plus className="h-4 w-4" /> Add line</>) : 'Save line'}
                 </button>
               </form>
+            )}
+          </div>
+        ) : activeTab === 'notes' ? (
+          <div className="space-y-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+            <label htmlFor="budget-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Overall budget notes</label>
+            <textarea
+              id="budget-notes"
+              rows={6}
+              value={budgetNotes}
+              onChange={(e) => setBudgetNotes(e.target.value)}
+              disabled={!canManage || readOnlyExecutive}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-3 py-2 text-sm"
+            />
+            {canManage && !readOnlyExecutive && (
+              <div className="flex justify-end">
+                <button type="button" onClick={saveBudgetNotes} disabled={saving} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50">
+                  Save notes
+                </button>
+              </div>
             )}
           </div>
         ) : activeTab === 'revisions' ? (
@@ -294,6 +421,7 @@ export default function ProjectBudgetPage() {
                 <tr>
                   <th className="px-4 py-2 text-left">Revision</th>
                   <th className="px-4 py-2 text-left">Total</th>
+                  <th className="px-4 py-2 text-left">What changed</th>
                   <th className="px-4 py-2 text-left">Status at revision</th>
                   <th className="px-4 py-2 text-left">Saved</th>
                 </tr>
@@ -306,11 +434,24 @@ export default function ProjectBudgetPage() {
                     </td>
                   </tr>
                 ) : (
-                  revisions.map((rev) => (
+                  revisions.map((rev, i) => (
                     <tr key={rev.id}>
                       <td className="px-4 py-2">#{rev.revision_number}</td>
                       <td className="px-4 py-2 tabular-nums">{rev.currency || ''} {Number(rev.total_amount || 0).toLocaleString()}</td>
-                      <td className="px-4 py-2">{humanizeAuditToken(rev.approval_status_at_revision) || '—'}</td>
+                      <td className="px-4 py-2">
+                        {(() => {
+                          const changes = describeRevisionChanges(rev.budget_categories, i === 0 ? lines : revisions[i - 1].budget_categories)
+                          if (changes.length === 0) return <span className="text-gray-500 dark:text-gray-400">No line changes</span>
+                          return (
+                            <ul className="space-y-0.5">
+                              {changes.map((change, n) => (
+                                <li key={n}>{changeLabel(change, fundingNames)}</li>
+                              ))}
+                            </ul>
+                          )
+                        })()}
+                      </td>
+                      <td className="px-4 py-2">{rev.approval_status_at_revision ? humanizeAuditToken(rev.approval_status_at_revision) : 'Not set'}</td>
                       <td className="px-4 py-2">{rev.created_at ? new Date(rev.created_at).toLocaleString() : '—'}</td>
                     </tr>
                   ))

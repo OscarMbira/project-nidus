@@ -137,6 +137,27 @@ export async function getTestRunWithResults(id) {
   }
 }
 
+export async function createTestRun({ suiteId, environmentId = null }) {
+  try {
+    const triggeredBy = await resolveUserId()
+    const { data, error } = await simDb
+      .from('tc_test_runs')
+      .insert({
+        suite_id: suiteId,
+        environment_id: environmentId,
+        trigger_type: 'manual',
+        run_status: 'pending',
+        triggered_by: triggeredBy,
+      })
+      .select('id, run_code')
+      .single()
+    if (error) throw error
+    return { success: true, data }
+  } catch (e) {
+    return err(e)
+  }
+}
+
 export async function listTestRuns() {
   try {
     const { data, error } = await simDb

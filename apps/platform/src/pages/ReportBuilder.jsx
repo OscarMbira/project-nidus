@@ -4,6 +4,14 @@ import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Save, Play, Download, Plus, X, Filter, SortAsc, BarChart3, Table as TableIcon } from 'lucide-react'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+
+const CONFIG_TABS = [
+  { value: 'data_source', label: 'Data Source' },
+  { value: 'fields', label: 'Fields' },
+  { value: 'filters', label: 'Filters' },
+  { value: 'sorting', label: 'Sorting' },
+]
 
 export default function ReportBuilder() {
   const navigate = useNavigate()
@@ -27,6 +35,7 @@ export default function ReportBuilder() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [previewMode, setPreviewMode] = useState(false)
+  const [configTab, setConfigTab] = useState('data_source')
 
   useEffect(() => {
     fetchAvailableTables()
@@ -292,8 +301,12 @@ export default function ReportBuilder() {
             </div>
           </div>
 
-          {/* Data Source */}
+          {/* Configuration tabs: Data Source / Fields / Filters / Sorting */}
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <DetailAuditTabList activeTab={configTab} onChange={setConfigTab} tabs={CONFIG_TABS} ariaLabel="Report configuration sections" />
+
+            {configTab === 'data_source' && (
+            <div className="mt-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Data Source
             </h2>
@@ -314,10 +327,11 @@ export default function ReportBuilder() {
               </div>
               {reportConfig.data_source_type === 'table' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="report-data-source-table" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Select Table *
                   </label>
                   <select
+                    id="report-data-source-table"
                     value={reportConfig.data_source_name}
                     onChange={(e) => setReportConfig({ ...reportConfig, data_source_name: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
@@ -332,15 +346,21 @@ export default function ReportBuilder() {
                 </div>
               )}
             </div>
-          </div>
+            </div>
+            )}
 
-          {/* Fields Selection */}
-          {reportConfig.data_source_name && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            {/* Fields Selection */}
+            {configTab === 'fields' && (
+            <div className="mt-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <TableIcon className="h-5 w-5" />
                 Fields
               </h2>
+              {!reportConfig.data_source_name ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                  Select a data source first, on the Data Source tab.
+                </p>
+              ) : (
               <div className="space-y-2">
                 {availableFields.map(field => {
                   const isSelected = reportConfig.field_config.some(f => f.name === field.name)
@@ -365,11 +385,13 @@ export default function ReportBuilder() {
                   )
                 })}
               </div>
+              )}
             </div>
-          )}
+            )}
 
-          {/* Filters */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            {/* Filters */}
+            {configTab === 'filters' && (
+            <div className="mt-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <Filter className="h-5 w-5" />
@@ -430,10 +452,12 @@ export default function ReportBuilder() {
                 </p>
               )}
             </div>
-          </div>
+            </div>
+            )}
 
-          {/* Sorting */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            {/* Sorting */}
+            {configTab === 'sorting' && (
+            <div className="mt-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 <SortAsc className="h-5 w-5" />
@@ -484,6 +508,8 @@ export default function ReportBuilder() {
                 </p>
               )}
             </div>
+            </div>
+            )}
           </div>
         </div>
 

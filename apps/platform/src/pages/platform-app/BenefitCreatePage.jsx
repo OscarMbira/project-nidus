@@ -9,12 +9,10 @@ export default function BenefitCreatePage() {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <BenefitForm
-        usePageLayout
-        onSave={() => navigate('/platform/benefits')}
-        onCancel={() => navigate(-1)}
-      />
-    </div>
+    <BenefitForm
+      usePageLayout
+      onSave={() => navigate(-1)}
+      onCancel={() => navigate(-1)}
+    />
   )
 }

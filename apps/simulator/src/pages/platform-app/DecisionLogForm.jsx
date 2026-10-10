@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, CheckCircle, Gavel } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { getDecision, createDecision, updateDecision } from '../../services/decisionLogService'
+import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
@@ -28,6 +32,23 @@ const EMPTY = {
 const CATEGORIES = ['general','technical','financial','risk','stakeholder','process','resource','compliance','other']
 const STATUSES   = ['proposed','approved','rejected','deferred','superseded']
 const PRIORITIES = ['low','medium','high','critical']
+
+const FORM_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'rationale', label: 'Rationale' },
+  { value: 'impact', label: 'Impact' },
+  { value: 'alternatives', label: 'Alternatives Considered' },
+  { value: 'audit', label: 'Audit details' },
+]
+
+function ListFieldPanel({ title, children }) {
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+      <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{title}</h2>
+      {children}
+    </div>
+  )
+}
 
 function Field({ label, name, value, onChange, type = 'text', options, rows }) {
   const base = 'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
@@ -59,18 +80,26 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
 
 export default function DecisionLogForm() {
   const { id } = useParams()
-  const [searchParams] = useSearchParams()
-  const projectId = searchParams.get('projectId')
+  const { projectId: resolvedProjectId, routeKey } = usePlatformProjectId()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
 
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [form, setForm] = useState(EMPTY)
+  const [baseline, setBaseline] = useState(() => JSON.stringify(EMPTY))
+  const [pendingPath, setPendingPath] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(isEdit)
   const [record, setRecord] = useState(null)
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const isDirty = !pendingPath && JSON.stringify(form) !== baseline
+  const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved decision changes.')
+
+  useEffect(() => {
+    if (pendingPath) navigate(pendingPath)
+  }, [pendingPath, navigate])
 
   useEffect(() => {
     if (formTab !== 'audit' || !record) return
@@ -100,6 +129,19 @@ export default function DecisionLogForm() {
           alternatives_considered: data.alternatives_considered || '',
           review_date: data.review_date || '',
         })
+        setBaseline(JSON.stringify({
+          decision_title: data.decision_title || '',
+          description: data.description || '',
+          decision_date: data.decision_date || '',
+          decided_by_name: data.decided_by_name || '',
+          category: data.category || 'general',
+          status: data.status || 'proposed',
+          priority: data.priority || 'medium',
+          rationale: data.rationale || '',
+          impact: data.impact || '',
+          alternatives_considered: data.alternatives_considered || '',
+          review_date: data.review_date || '',
+        }))
       } catch (e) {
         toast.error(e?.message || 'Failed to load decision')
       } finally {
@@ -109,22 +151,40 @@ export default function DecisionLogForm() {
   }, [id, isEdit])
 
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+  const setList = (name, value) => setForm(f => ({ ...f, [name]: value }))
 
   const handleSave = async () => {
     if (!form.decision_title.trim()) { toast.error('Title is required'); return }
     setSaving(true)
     try {
       const { data: { user } } = await platformDb.auth.getUser()
-      const payload = { ...form, project_id: projectId, updated_by: user?.id }
+      const payload = {
+        ...form,
+        decision_date: form.decision_date || null,
+        review_date: form.review_date || null,
+      }
       let result
       if (isEdit) {
         result = await updateDecision(id, payload)
       } else {
-        result = await createDecision({ ...payload, created_by: user?.id })
+        if (!resolvedProjectId) {
+          toast.error('Select a project before saving')
+          return
+        }
+        result = await createDecision({
+          ...payload,
+          project_id: resolvedProjectId,
+          created_by: user?.id,
+        })
       }
       setSaved(true)
-      toast.success(isEdit ? 'Decision updated' : `Decision created: ${result.decision_reference}`)
-      setTimeout(() => navigate(`/simulator/governance/decisions?projectId=${projectId}`), 1200)
+      setBaseline(JSON.stringify(form))
+      const projectLink = routeKey || resolvedProjectId || ''
+      showSuccess({
+        recordId: result.decision_reference || form.decision_title,
+        operation: isEdit ? 'updated' : 'created',
+        onOk: () => setPendingPath(`/simulator/governance/decisions?projectId=${projectLink}`),
+      })
     } catch (e) {
       toast.error(e?.message || 'Save failed')
     } finally {
@@ -142,9 +202,9 @@ export default function DecisionLogForm() {
 
   return (
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
-      <div className="max-w-2xl mx-auto space-y-5">
+      <div className="max-w-4xl mx-auto space-y-5">
         <div className="flex items-center gap-3">
-          <button type="button" onClick={() => navigate(-1)}
+          <button type="button" onClick={() => confirmDiscard(() => navigate(-1))}
             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 min-h-[40px]">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
@@ -159,9 +219,9 @@ export default function DecisionLogForm() {
           </button>
         </div>
 
-        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} tabs={FORM_TABS} ariaLabel="Decision sections" />
 
-        {formTab === 'audit' ? (
+        {formTab === 'audit' && (
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
             {!record ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this decision is saved.</p>
@@ -185,8 +245,9 @@ export default function DecisionLogForm() {
               </AuditDetailsPanel>
             )}
           </div>
-        ) : (
-        <>
+        )}
+
+        {formTab === 'details' && (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4">
           <Field label="Decision Title *" name="decision_title" value={form.decision_title} onChange={handleChange} />
           <Field label="Description" name="description" value={form.description} onChange={handleChange} rows={3} />
@@ -199,16 +260,50 @@ export default function DecisionLogForm() {
             <Field label="Status" name="status" value={form.status} onChange={handleChange} options={STATUSES} />
             <Field label="Priority" name="priority" value={form.priority} onChange={handleChange} options={PRIORITIES} />
           </div>
-        </div>
-
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Decision Details</h2>
-          <Field label="Rationale" name="rationale" value={form.rationale} onChange={handleChange} rows={3} />
-          <Field label="Impact" name="impact" value={form.impact} onChange={handleChange} rows={3} />
-          <Field label="Alternatives Considered" name="alternatives_considered" value={form.alternatives_considered} onChange={handleChange} rows={3} />
           <Field label="Review Date" name="review_date" value={form.review_date} onChange={handleChange} type="date" />
         </div>
-        </>
+        )}
+
+        {formTab === 'rationale' && (
+          <ListFieldPanel title="Rationale">
+            <MultiLineListInput
+              viewModeId="decision-rationale"
+              id="decision_rationale"
+              value={form.rationale}
+              onChange={(value) => setList('rationale', value)}
+              placeholder="Add a rationale"
+              ariaLabelPrefix="rationale"
+              itemColumnLabel="Rationale"
+            />
+          </ListFieldPanel>
+        )}
+
+        {formTab === 'impact' && (
+          <ListFieldPanel title="Impact">
+            <MultiLineListInput
+              viewModeId="decision-impact"
+              id="decision_impact"
+              value={form.impact}
+              onChange={(value) => setList('impact', value)}
+              placeholder="Add an impact"
+              ariaLabelPrefix="impact"
+              itemColumnLabel="Impact"
+            />
+          </ListFieldPanel>
+        )}
+
+        {formTab === 'alternatives' && (
+          <ListFieldPanel title="Alternatives Considered">
+            <MultiLineListInput
+              viewModeId="decision-alternatives"
+              id="decision_alternatives"
+              value={form.alternatives_considered}
+              onChange={(value) => setList('alternatives_considered', value)}
+              placeholder="Add an alternative"
+              ariaLabelPrefix="alternative"
+              itemColumnLabel="Alternative"
+            />
+          </ListFieldPanel>
         )}
 
         <div className="flex justify-end">
@@ -218,6 +313,7 @@ export default function DecisionLogForm() {
             {saving ? 'Saving…' : isEdit ? 'Update Decision' : 'Record Decision'}
           </button>
         </div>
+        {successModal}
       </div>
     </div>
   )

@@ -22,6 +22,9 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import ProcurementPlanFields, { emptyProcurementPlan, normalizeProcurementPlan, PROCUREMENT_PLAN_TABS } from '../../components/processTemplates/ProcurementPlanFields'
 
 export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath, sim: simProp }) {
   const { slug, id } = useParams()
@@ -33,15 +36,29 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
   const listPath = getTemplateListPath(roleKey, slug)
   const entityType = `process_template_${slug.replace(/-/g, '_')}`
   const [row, setRow] = useState(null)
+  const isProcurementPlan = slug === 'procurement-management-plan'
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [notes, setNotes] = useState('')
+  const [planData, setPlanData] = useState(() => emptyProcurementPlan())
+  const [baseline, setBaseline] = useState('')
   const [status, setStatus] = useState('draft')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const { showSuccess, modal: successModal } = useSuccessModal()
   const [userId, setUserId] = useState(null)
   const [activeTab, setActiveTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const currentSnapshot = JSON.stringify({
+    title,
+    description,
+    notes,
+    status,
+    plan: isProcurementPlan ? normalizeProcurementPlan(planData) : null,
+  })
+  const isDirty = !saved && Boolean(baseline) && currentSnapshot !== baseline
+  const { confirmBack } = useUnsavedChangesGuard(isDirty, 'You have unsaved changes on this template.')
 
   const { saveDraft } = useDraftQueue(entityType, id, {
     projectId: row?.project_id || row?.practice_project_id,
@@ -78,7 +95,16 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
           setTitle(data.title || '')
           setDescription(data.description || '')
           setNotes(data.document_data?.notes || '')
+          const plan = normalizeProcurementPlan(data.document_data)
+          setPlanData(plan)
           setStatus(data.status || 'draft')
+          setBaseline(JSON.stringify({
+            title: data.title || '',
+            description: data.description || '',
+            notes: data.document_data?.notes || '',
+            status: data.status || 'draft',
+            plan: slug === 'procurement-management-plan' ? plan : null,
+          }))
         }
       } catch (e) {
         toast.error(e?.message || 'Load failed')
@@ -111,15 +137,22 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
     setSaving(true)
     try {
       const svc = getTemplateService(slug, { sim })
-      const updated = await svc.update(id, {
+      const updated = await svc.update(row.id, {
         title: title.trim(),
         description: description.trim() || null,
-        document_data: { ...(row.document_data || {}), notes: notes.trim() },
+        document_data: isProcurementPlan
+          ? { ...(row.document_data || {}), ...normalizeProcurementPlan(planData), notes: notes.trim() }
+          : { ...(row.document_data || {}), notes: notes.trim() },
         status,
         updated_by: userId,
       })
-      toast.success(`Updated ${updated.reference_code || updated.id}`)
-      navigate(`${listPath}/${id}`)
+      setSaved(true)
+      showSuccess({
+        recordId: updated.reference_code || updated.title,
+        operation: 'updated',
+        message: `${template?.label || 'Template'} updated.`,
+        onOk: () => navigate(`${listPath}/${updated.reference_code || updated.id}`),
+      })
     } catch (err) {
       toast.error(err?.message || 'Update failed')
     } finally {
@@ -130,7 +163,7 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
   const handleHold = async () => {
     try {
       const svc = getTemplateService(slug, { sim })
-      await svc.setOnHold(id)
+      await svc.setOnHold(row.id)
       await saveDraft({ title, description, notes, status }, id)
       toast.success('Record on hold; draft saved')
       navigate(listPath)
@@ -140,14 +173,23 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto space-y-4">
-      <Link to={`${listPath}/${id}`} className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200">
+    <div className={`w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 mx-auto space-y-4 ${isProcurementPlan ? 'max-w-5xl' : 'max-w-3xl'}`}>
+      <button
+        type="button"
+        onClick={() => confirmBack()}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
         <ArrowLeft className="h-4 w-4" />
-        Back to detail
-      </Link>
+        Back
+      </button>
       <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Edit {template.label}</h1>
 
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Template sections" />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        ariaLabel="Template sections"
+        tabs={isProcurementPlan ? PROCUREMENT_PLAN_TABS : undefined}
+      />
 
       {activeTab === 'audit' && (
         <AuditDetailsPanel description="Who created or changed this template, and how it is classified.">
@@ -169,8 +211,12 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
         </AuditDetailsPanel>
       )}
 
-      {activeTab === 'details' && (
+      {(activeTab === 'details' || (isProcurementPlan && activeTab !== 'audit')) && (
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50 p-5">
+        {activeTab !== 'details' && (
+          <ProcurementPlanFields section={activeTab} value={planData} onChange={setPlanData} />
+        )}
+        {activeTab === 'details' && (<>
         <label className="block">
           <span className="text-sm text-gray-400">Title</span>
           <input
@@ -190,12 +236,12 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
           />
         </label>
         <label className="block">
-          <span className="text-sm text-gray-400">Notes</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300">{isProcurementPlan ? 'Additional notes' : 'Notes'}</span>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={5}
-            className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-mono text-sm"
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
           />
         </label>
         <label className="block">
@@ -213,6 +259,7 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
         {row.is_master && !canCreateMasterTemplate(roleKey) && (
           <p className="text-xs text-amber-400">This is a master template — read-only for your role.</p>
         )}
+        </>)}
         <div className="flex flex-wrap gap-2 pt-2">
           <button
             type="submit"
@@ -232,6 +279,7 @@ export default function ProcessTemplateEditPage({ roleKey: roleKeyProp, basePath
         </div>
       </form>
       )}
+      {successModal}
     </div>
   )
 }

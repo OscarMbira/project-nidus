@@ -50,6 +50,15 @@ export function mainContentSidebarOffsetClass(collapsed) {
 }
 
 /**
+ * Max-width for a page's inner content container. Pages that wrap their content in a
+ * fixed `max-w-7xl mx-auto` stay that width even when the sidebar is hidden, leaving
+ * large empty margins. Widen to the full available width once the sidebar is hidden.
+ */
+export function pageContainerMaxWidthClass(collapsed) {
+  return collapsed ? 'max-w-full' : 'max-w-7xl'
+}
+
+/**
  * Slide classes for the sidebar panel.
  * Below the lg breakpoint the mobile drawer follows `isOpen`.
  * At lg and above the panel follows the persisted hide/show choice.

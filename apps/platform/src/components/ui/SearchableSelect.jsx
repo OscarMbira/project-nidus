@@ -248,6 +248,9 @@ const SearchableSelect = ({
         } else if (allowCustom && searchTerm.trim() && namedCustomActions.length === 0) {
           onChange?.(searchTerm.trim())
           closeMenu()
+        } else if (allowCustom && searchTerm.trim() && namedCustomActions[0]?.onSelect) {
+          namedCustomActions[0].onSelect(searchTerm.trim())
+          closeMenu()
         }
         break
       case 'Escape':

@@ -15,6 +15,7 @@ import {
   exportRecordToJSON,
   exportRecordToPrint,
 } from '@nidus/shared/utils/exportUtils'
+import RecordPreviewModal from '@nidus/ui/RecordPreviewModal'
 
 export default function TestCaseDetail() {
   const { caseId } = useParams()
@@ -30,6 +31,7 @@ function Detail({ caseId, projectId }) {
   const location = useLocation()
   const [tc, setTc] = useState(null)
   const [suites, setSuites] = useState([])
+  const [previewOpen, setPreviewOpen] = useState(false)
   const editing = location.pathname.endsWith('/edit')
   const [err, setErr] = useState(null)
   const [notFound, setNotFound] = useState(false)
@@ -134,7 +136,15 @@ function Detail({ caseId, projectId }) {
                 onExportJSON={() => exportRecordToJSON(exportSections, tc, `test_case_${tc.test_case_ref || tc.id}`)}
                 onExportPrint={() => exportRecordToPrint(exportSections, tc)}
               />
+              <RowActionButton variant="view" label="View test case" onClick={() => setPreviewOpen(true)} />
               <RowActionButton variant="edit" label="Edit test case" onClick={() => navigate(editPath)} />
+              <RecordPreviewModal
+                isOpen={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+                sections={exportSections}
+                record={tc}
+                baseFilename={`test_case_${tc.test_case_ref || tc.id}`}
+              />
             </>
           )}
         </div>

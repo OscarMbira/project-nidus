@@ -124,7 +124,7 @@ export default function TeamCreate() {
     [form, members],
   )
   const isDirty = snapshot !== baseline
-  const { confirmDiscard, requestNavigation } = useUnsavedChangesGuard(
+  const { confirmDiscard, requestNavigation, confirmBack } = useUnsavedChangesGuard(
     isDirty,
     'You have unsaved changes to this team.',
   )
@@ -273,7 +273,7 @@ export default function TeamCreate() {
 
   const listPath = '/platform/teams'
   const goBack = () => {
-    if (isDirty) confirmDiscard(() => navigate(-1))
+    if (isDirty) confirmBack()
     else requestNavigation(-1)
   }
 

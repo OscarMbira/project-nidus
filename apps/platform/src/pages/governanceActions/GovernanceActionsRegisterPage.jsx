@@ -9,13 +9,21 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, LayoutGrid, List as ListIcon, ListTodo } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { platformDb } from '@nidus/supabase'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
 import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getGovernanceActions, GOVERNANCE_ACTION_TYPES, GOVERNANCE_ACTION_STATUSES, getActionTypeLabel } from '../../services/governanceActionService'
+import { deleteAction as deleteQualityAction } from '../../services/qualityActivityActionsService'
+import { deleteAction as deleteIssueAction } from '../../services/issueActionService'
+import { deleteAction as deleteLessonAction } from '../../services/lessonActionService'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { platformProjectPath } from '../../utils/projectRouteParam'
 
 const PAGE_SIZE = 20
 
@@ -33,8 +41,28 @@ function StatusBadge({ status }) {
   )
 }
 
+async function qualityRegisterPath(actionId, projectKey) {
+  const { data } = await platformDb
+    .from('quality_activity_actions')
+    .select('activity_type')
+    .eq('id', actionId)
+    .maybeSingle()
+  const query = projectKey ? `?projectId=${encodeURIComponent(projectKey)}` : ''
+  if (data?.activity_type === 'inspection') return `/platform/quality/inspections${query}`
+  if (data?.activity_type === 'review') return `/platform/quality/reviews${query}`
+  return '/platform/my-quality-actions'
+}
+
+function lessonPaths(row, projectKey) {
+  if (!row.parent_id || !projectKey) return null
+  const view = platformProjectPath(projectKey, 'lessons', row.parent_id)
+  return { view, edit: `${view}/edit` }
+}
+
 export default function GovernanceActionsRegisterPage() {
   const navigate = useNavigate()
+  const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
+  const { showSuccess, modal: successModal } = useSuccessModal()
 
   const [loading, setLoading] = useState(true)
   const [rows, setRows] = useState([])
@@ -53,14 +81,22 @@ export default function GovernanceActionsRegisterPage() {
     let cancelled = false
     ;(async () => {
       setLoading(true)
-      const data = await getGovernanceActions({ actionType: typeFilter || undefined, status: statusFilter || undefined })
-      if (!cancelled) {
-        setRows(data)
-        setLoading(false)
+      if (projectLoading) return
+      try {
+        const data = await getGovernanceActions({
+          actionType: typeFilter || undefined,
+          status: statusFilter || undefined,
+          projectId: projectId || undefined,
+        })
+        if (!cancelled) setRows(data)
+      } catch {
+        if (!cancelled) setRows([])
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     })()
     return () => { cancelled = true }
-  }, [typeFilter, statusFilter])
+  }, [typeFilter, statusFilter, projectId, projectLoading])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -89,9 +125,56 @@ export default function GovernanceActionsRegisterPage() {
   ]
   const exportRows = sorted
 
-  const goToRecord = (row) => {
+  const projectKey = routeKey || projectId || ''
+
+  const openRecord = async (row, mode) => {
+    if (row.action_type === 'lesson') {
+      const paths = lessonPaths(row, projectKey)
+      if (paths) {
+        navigate(mode === 'edit' ? paths.edit : paths.view)
+        return
+      }
+    }
+    if (row.action_type === 'issue' && row.parent_id) {
+      navigate(`/platform/issues/${row.parent_id}`)
+      return
+    }
+    if (row.action_type === 'quality' && row.action_id) {
+      navigate(await qualityRegisterPath(row.action_id, projectKey))
+      return
+    }
     if (row.view_path) navigate(row.view_path)
   }
+
+  const deleteRecord = async (row) => {
+    const label = row.record_label || 'this action'
+    if (!window.confirm(`Delete "${label}"?`)) return
+    try {
+      if (row.action_type === 'quality') {
+        const result = await deleteQualityAction(row.action_id)
+        if (result && result.success === false) throw new Error(result.error || 'Could not delete this action')
+      } else if (row.action_type === 'issue') {
+        await deleteIssueAction(row.action_id)
+      } else if (row.action_type === 'lesson') {
+        const result = await deleteLessonAction(row.action_id)
+        if (result && result.success === false) throw new Error(result.error || 'Could not delete this action')
+      } else {
+        throw new Error('This action cannot be deleted from this register')
+      }
+      setRows((prev) => prev.filter((item) => item.action_id !== row.action_id))
+      showSuccess({ recordId: label, operation: 'deleted', message: 'Action deleted.' })
+    } catch (err) {
+      toast.error(err?.message || 'Could not delete this action')
+    }
+  }
+
+  const rowActions = (row) => (
+    <div className="inline-flex items-center gap-1 justify-end">
+      <RowActionButton variant="view" label="View action" onClick={() => openRecord(row, 'view')} />
+      <RowActionButton variant="edit" label="Edit action" onClick={() => openRecord(row, 'edit')} />
+      <RowActionButton variant="delete" label="Delete action" onClick={() => deleteRecord(row)} />
+    </div>
+  )
 
   if (loading) {
     return <div className="p-8 text-gray-500 dark:text-gray-400">Loading actions…</div>
@@ -107,7 +190,7 @@ export default function GovernanceActionsRegisterPage() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Pending, resolved, and cancelled actions across Quality, Issue, and Lesson activities.
-            Actions are completed on each record's own page — use View to go there.
+            View, edit, or delete an action from its own record.
           </p>
         </div>
         <ExportListMenu columns={exportColumns} data={exportRows} baseFilename="governance-action-register" disabled={exportRows.length === 0} />
@@ -156,7 +239,7 @@ export default function GovernanceActionsRegisterPage() {
 
       {pageRows.length === 0 ? (
         <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          No actions match these filters.
+          {(search.trim() || typeFilter || statusFilter) ? 'No actions match these filters.' : 'No actions for this project yet.'}
         </div>
       ) : viewMode === 'list' ? (
         <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -194,7 +277,7 @@ export default function GovernanceActionsRegisterPage() {
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{r.assigned_to_name || '—'}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{r.due_date || '—'}</td>
                   <td className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800">
-                    <RowActionButton variant="view" label="View action" onClick={() => goToRecord(r)} />
+                    {rowActions(r)}
                   </td>
                 </tr>
               ))}
@@ -212,13 +295,14 @@ export default function GovernanceActionsRegisterPage() {
               <p className="text-xs text-gray-500 dark:text-gray-400">{r.action_type_label}</p>
               <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-2">{r.record_label}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Assigned to: {r.assigned_to_name || '—'}</p>
-              <div className="flex items-center gap-3 pt-2">
-                <RowActionButton variant="view" label="View action" onClick={() => goToRecord(r)} />
+              <div className="flex items-center gap-1 pt-2">
+                {rowActions(r)}
               </div>
             </div>
           ))}
         </div>
       )}
+      {successModal}
     </div>
   )
 }

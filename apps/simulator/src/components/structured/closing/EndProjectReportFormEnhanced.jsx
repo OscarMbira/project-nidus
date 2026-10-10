@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { FileText, User, Target, TrendingUp, Users, Package, CheckCircle, Lightbulb, ArrowRight, X, Save, ArrowLeft, ArrowRight as ArrowRightIcon } from 'lucide-react'
+import { FileText, User, Target, TrendingUp, Users, Package, CheckCircle, Lightbulb, ArrowRight, Save, ArrowLeft, ArrowRight as ArrowRightIcon } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { HoldButton } from '../../ui/HoldButton'
 import { createEndProjectReport, updateEndProjectReport, getEndProjectReportById } from '../../../services/endProjectReportService'
@@ -19,6 +19,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
 
 const FORM_STEPS = [
   { id: 'header', label: 'Document Header', icon: FileText, description: 'Document metadata' },
@@ -72,7 +74,10 @@ export default function EndProjectReportFormEnhanced({
   const [lessons, setLessons] = useState([])
   const [followOnActions, setFollowOnActions] = useState([])
   const [qualityStatus, setQualityStatus] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [recordId, setRecordId] = useState(() => (isLikelyDatabaseUuid(reportId) ? reportId : null))
+  const [loading, setLoading] = useState(
+    () => Boolean(reportId) && mode !== 'create' && !isLikelyDatabaseUuid(reportId)
+  )
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
   const [formTab, setFormTab] = useState('wizard')
@@ -92,21 +97,54 @@ export default function EndProjectReportFormEnhanced({
   }, [formTab, reportId, formData.created_by, formData.updated_by])
 
   useEffect(() => {
-    if (reportId && mode !== 'create') {
-      loadReport()
+    if (!reportId || mode === 'create') {
+      setRecordId(null)
+      return undefined
     }
-  }, [reportId, mode])
+    if (isLikelyDatabaseUuid(reportId)) {
+      setRecordId(reportId)
+      return undefined
+    }
+    if (!projectId) return undefined
+
+    let cancelled = false
+    setLoading(true)
+    resolveEntityId('endProjectReport', reportId, projectId)
+      .then((id) => {
+        if (cancelled) return
+        if (!id) {
+          setRecordId(null)
+          setLoading(false)
+          alert('End project report not found.')
+          return
+        }
+        setRecordId(id)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        console.error('Error resolving end project report:', error)
+        setLoading(false)
+        alert('Error loading report: ' + error.message)
+      })
+    return () => { cancelled = true }
+  }, [reportId, projectId, mode])
 
   useEffect(() => {
-    if (reportId) {
-      loadRelatedData()
+    if (recordId && mode !== 'create') {
+      loadReport(recordId)
     }
-  }, [reportId])
+  }, [recordId, mode])
 
-  const loadReport = async () => {
+  useEffect(() => {
+    if (recordId) {
+      loadRelatedData(recordId)
+    }
+  }, [recordId])
+
+  const loadReport = async (id) => {
     try {
       setLoading(true)
-      const report = await getEndProjectReportById(reportId)
+      const report = await getEndProjectReportById(id)
       setFormData({
         ...report,
         report_date: report.report_date || new Date().toISOString().split('T')[0],
@@ -121,7 +159,7 @@ export default function EndProjectReportFormEnhanced({
     }
   }
 
-  const loadRelatedData = async () => {
+  const loadRelatedData = async (id) => {
     try {
       const [
         bcReviews,
@@ -134,15 +172,15 @@ export default function EndProjectReportFormEnhanced({
         followOnData,
         qualityStat
       ] = await Promise.all([
-        import('../../../services/eprBusinessCaseReviewService').then(m => m.getBenefitsComparison(reportId)),
-        import('../../../services/eprObjectivesReviewService').then(m => m.getTolerancePerformance(reportId)),
-        import('../../../services/eprTeamPerformanceService').then(m => m.getTeamPerformance(reportId)),
-        import('../../../services/eprProductsReviewService').then(m => m.getQualityRecords(reportId)),
-        import('../../../services/eprProductsReviewService').then(m => m.getApprovalRecords(reportId)),
-        import('../../../services/eprProductsReviewService').then(m => m.getOffSpecifications(reportId)),
-        import('../../../services/eprLessonsService').then(m => m.getLessons(reportId)),
-        import('../../../services/eprFollowOnService').then(m => m.getFollowOnActions(reportId)),
-        import('../../../services/eprQualityCheckService').then(m => m.getQualityCheckStatus(reportId))
+        import('../../../services/eprBusinessCaseReviewService').then(m => m.getBenefitsComparison(id)),
+        import('../../../services/eprObjectivesReviewService').then(m => m.getTolerancePerformance(id)),
+        import('../../../services/eprTeamPerformanceService').then(m => m.getTeamPerformance(id)),
+        import('../../../services/eprProductsReviewService').then(m => m.getQualityRecords(id)),
+        import('../../../services/eprProductsReviewService').then(m => m.getApprovalRecords(id)),
+        import('../../../services/eprProductsReviewService').then(m => m.getOffSpecifications(id)),
+        import('../../../services/eprLessonsService').then(m => m.getLessons(id)),
+        import('../../../services/eprFollowOnService').then(m => m.getFollowOnActions(id)),
+        import('../../../services/eprQualityCheckService').then(m => m.getQualityCheckStatus(id))
       ])
       setBusinessCaseReviews(bcReviews.reviews || [])
       setObjectivesReviews(objReviews || [])
@@ -208,11 +246,11 @@ export default function EndProjectReportFormEnhanced({
     }
 
     // Run quality checks on review step
-    if (currentStepId === 'review' && reportId) {
+    if (currentStepId === 'review' && recordId) {
       try {
         const { runQualityChecks, getQualityCheckStatus } = await import('../../../services/eprQualityCheckService')
-        await runQualityChecks(reportId)
-        const status = await getQualityCheckStatus(reportId)
+        await runQualityChecks(recordId)
+        const status = await getQualityCheckStatus(recordId)
         setQualityStatus(status)
       } catch (error) {
         console.error('Error running quality checks:', error)
@@ -234,16 +272,16 @@ export default function EndProjectReportFormEnhanced({
     try {
       setSaving(true)
       
-      if (reportId) {
-        await updateEndProjectReport(reportId, formData)
-      } else {
+      if (recordId) {
+        await updateEndProjectReport(recordId, formData)
+      } else if (!reportId) {
         const newReport = await createEndProjectReport(projectId, formData)
         if (onSave) {
           onSave(newReport)
         }
       }
       
-      if (onSave && reportId) {
+      if (onSave && recordId) {
         onSave()
       }
     } catch (error) {
@@ -279,7 +317,7 @@ export default function EndProjectReportFormEnhanced({
       case 'businesscase':
         return (
           <EPRBusinessCaseReview
-            reportId={reportId}
+            reportId={recordId}
             businessCaseReviews={businessCaseReviews}
             onBusinessCaseReviewsChange={setBusinessCaseReviews}
             projectId={projectId}
@@ -290,7 +328,7 @@ export default function EndProjectReportFormEnhanced({
       case 'objectives':
         return (
           <EPRObjectivesReview
-            reportId={reportId}
+            reportId={recordId}
             objectivesReviews={objectivesReviews}
             onObjectivesReviewsChange={setObjectivesReviews}
             mode={mode}
@@ -299,7 +337,7 @@ export default function EndProjectReportFormEnhanced({
       case 'team':
         return (
           <EPRTeamPerformance
-            reportId={reportId}
+            reportId={recordId}
             teamPerformance={teamPerformance}
             onTeamPerformanceChange={setTeamPerformance}
             mode={mode}
@@ -308,7 +346,7 @@ export default function EndProjectReportFormEnhanced({
       case 'products':
         return (
           <EPRProductsReview
-            reportId={reportId}
+            reportId={recordId}
             qualityRecords={qualityRecords}
             approvalRecords={approvalRecords}
             offSpecifications={offSpecifications}
@@ -322,7 +360,7 @@ export default function EndProjectReportFormEnhanced({
       case 'lessons':
         return (
           <EPRLessonsReport
-            reportId={reportId}
+            reportId={recordId}
             lessons={lessons}
             onLessonsChange={setLessons}
             projectId={projectId}
@@ -332,7 +370,7 @@ export default function EndProjectReportFormEnhanced({
       case 'followon':
         return (
           <EPRFollowOnActions
-            reportId={reportId}
+            reportId={recordId}
             followOnActions={followOnActions}
             onFollowOnActionsChange={setFollowOnActions}
             projectId={projectId}
@@ -343,7 +381,7 @@ export default function EndProjectReportFormEnhanced({
         return (
           <div className="space-y-6">
             <EPRQualityCriteria
-              reportId={reportId}
+              reportId={recordId}
               qualityStatus={qualityStatus}
               onStatusChange={setQualityStatus}
               mode={mode}
@@ -370,27 +408,17 @@ export default function EndProjectReportFormEnhanced({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between z-10">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <FileText className="h-6 w-6" />
-              {mode === 'create' ? 'Create' : mode === 'edit' ? 'Edit' : 'View'} End Project Report
-            </h2>
-            {formData.document_ref && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {formData.document_ref} - Version {formData.version_no}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="h-6 w-6" />
-          </button>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+        <div className="border-b border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <FileText className="h-6 w-6" />
+            {mode === 'create' ? 'Create' : mode === 'edit' ? 'Edit' : 'View'} End Project Report
+          </h2>
+          {formData.document_ref && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              {formData.document_ref} - Version {formData.version_no}
+            </p>
+          )}
         </div>
 
         <div className="px-6 pt-4">
@@ -454,12 +482,12 @@ export default function EndProjectReportFormEnhanced({
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6">
           {renderStepContent()}
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
+        <div className="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 p-6 flex items-center justify-between">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             Step {activeStep + 1} of {FORM_STEPS.length}
           </div>
@@ -467,7 +495,7 @@ export default function EndProjectReportFormEnhanced({
             {mode !== 'view' && (
               <HoldButton
                 entityType="end_project_report"
-                entityId={reportId}
+                entityId={recordId}
                 formData={formData}
                 projectId={projectId}
                 onHoldComplete={onHoldComplete || onCancel}
@@ -516,7 +544,6 @@ export default function EndProjectReportFormEnhanced({
         </div>
         </>
         )}
-      </div>
     </div>
   )
 }

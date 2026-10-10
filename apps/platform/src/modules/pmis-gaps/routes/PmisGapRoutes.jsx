@@ -3,8 +3,7 @@ import { lazy, Suspense } from 'react'
 import ProtectedRoute from '../../../components/ProtectedRoute'
 import { ThemeProvider } from '@nidus/shared/context/ThemeContext'
 import { ToastProvider } from '@nidus/shared/context/ToastContext'
-import Layout from '../../../components/Layout'
-import PMLayout from '../../../components/pm/PMLayout'
+import { AppLayout as Layout } from '../../../components/AppLayout'
 import PMOLayout from '../../../components/pmo/PMOLayout'
 import { createGapListPage } from '../pages/gapPageFactory.jsx'
 
@@ -27,7 +26,7 @@ function withProviders(el) {
 function wrapPm(el) {
   return (
     <Suspense fallback={<Loading />}>
-      {withProviders(<PMLayout>{el}</PMLayout>)}
+      {withProviders(<Layout scope="pm">{el}</Layout>)}
     </Suspense>
   )
 }
@@ -59,7 +58,7 @@ function wrapPlatform(el) {
 function wrapPmOutlet() {
   return (
     <Suspense fallback={<Loading />}>
-      {withProviders(<PMLayout><Outlet /></PMLayout>)}
+      {withProviders(<Layout scope="pm"><Outlet /></Layout>)}
     </Suspense>
   )
 }
@@ -81,7 +80,7 @@ function wrapPlatformOutlet() {
 }
 
 /** Pages that live at /platform/<path> (inside the shell's path="platform/*" nested <Routes>).
- *  Do not wrap with Layout/PMLayout — the shell already did. */
+ *  Do not wrap with Layout — the shell already did. */
 function wrapPlatformNested(el) {
   return (
     <Suspense fallback={<Loading />}>
@@ -176,6 +175,8 @@ const IntegrationCatalogDetailPage = lazy(() => import('../pages/IntegrationCata
 // entry and DB tables (SQL/v644) existed but no page/route ever did, unlike this gap's siblings.
 const VendorListPage = lazy(() => import('../pages/VendorListPage'))
 const VendorDetailPage = lazy(() => import('../pages/VendorDetailPage'))
+const VendorCategoryListPage = lazy(() => import('../pages/VendorCategoryListPage'))
+const VendorCategoryForm = lazy(() => import('../pages/VendorCategoryForm'))
 const VendorPerformanceListPage = lazy(() => import('../pages/VendorPerformanceListPage'))
 const VendorRatingForm = lazy(() => import('../pages/VendorRatingForm'))
 
@@ -412,6 +413,10 @@ export function PmisGapPlatformNestedRouteElements() {
       <Route path="pm/procurement/vendors/create" element={wrapPlatformNested(<VendorDetailPage basePath="/platform/pm/procurement/vendors" />)} />
       <Route path="pm/procurement/vendors/:id" element={wrapPlatformNested(<VendorDetailPage basePath="/platform/pm/procurement/vendors" />)} />
       <Route path="pm/procurement/vendors/:id/edit" element={wrapPlatformNested(<VendorDetailPage basePath="/platform/pm/procurement/vendors" forceEdit />)} />
+      <Route path="pm/procurement/vendor-categories" element={wrapPlatformNested(<VendorCategoryListPage basePath="/platform/pm/procurement/vendor-categories" />)} />
+      <Route path="pm/procurement/vendor-categories/create" element={wrapPlatformNested(<VendorCategoryForm basePath="/platform/pm/procurement/vendor-categories" />)} />
+      <Route path="pm/procurement/vendor-categories/:id" element={wrapPlatformNested(<VendorCategoryForm basePath="/platform/pm/procurement/vendor-categories" />)} />
+      <Route path="pm/procurement/vendor-categories/:id/edit" element={wrapPlatformNested(<VendorCategoryForm basePath="/platform/pm/procurement/vendor-categories" forceEdit />)} />
       <Route path="pm/procurement/performance" element={wrapPlatformNested(<VendorPerformanceListPage basePath="/platform/pm/procurement/performance" />)} />
       <Route path="pm/procurement/performance/create" element={wrapPlatformNested(<VendorRatingForm basePath="/platform/pm/procurement/performance" />)} />
       <Route path="pm/procurement/performance/:id/edit" element={wrapPlatformNested(<VendorRatingForm basePath="/platform/pm/procurement/performance" />)} />

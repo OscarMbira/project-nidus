@@ -63,6 +63,11 @@ export async function updateMeeting(meetingId, patch) {
   return { data, error }
 }
 
+export async function deleteMeeting(meetingId) {
+  const { error } = await platformDb.from('comm_meetings').delete().eq('id', meetingId)
+  return { error }
+}
+
 export async function startMeeting(meetingId) {
   return updateMeeting(meetingId, {
     status: 'in_progress',

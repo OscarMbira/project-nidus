@@ -114,7 +114,7 @@ export async function getExecutionsByRun(runId) {
         steps:test_case_steps(step_number, action, expected_result, test_data)
       ),
       executed_by_user:users!test_case_executions_executed_by_fkey(id, full_name, email),
-      defect:defects(id, defect_ref, title, severity, status)
+      defect:defects!defect_id(id, defect_ref, title, severity, status)
     `)
     .eq('run_id', runId)
     .order('created_at', { ascending: true })
@@ -133,7 +133,7 @@ export async function updateExecution(executionId, updates) {
     .eq('id', executionId)
     .select(`
       *,
-      defect:defects(id, defect_ref, title, severity, status)
+      defect:defects!defect_id(id, defect_ref, title, severity, status)
     `)
     .single()
   if (error) throw error

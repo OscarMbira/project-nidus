@@ -12,7 +12,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { getCycle } from '../../services/okrService'
 
 function basePath(sim) {
-  return sim ? '/simulator/pm/okr/cycles' : '/pm/okr/cycles'
+  return sim ? '/simulator/pm/okr/cycles' : '/platform/pm/okr/cycles'
 }
 
 export default function OkrCycleDetailPage({ sim = false }) {

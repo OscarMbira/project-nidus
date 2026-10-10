@@ -52,48 +52,61 @@ export function UnsavedChangesProvider({ children }) {
     setConfirmOpen(true)
   }, [])
 
-  // The dirty-state history trap adds an entry at the same URL, so a plain navigate(-1) or
-  // history.back() from the page only lands back on that entry and nothing visibly happens.
-  // Pop the trap first, then run the pending action once the browser has finished popping it.
-  const runAfterTrapPop = useCallback((fn) => {
-    const onPop = () => {
-      window.removeEventListener('popstate', onPop)
-      window.setTimeout(() => {
-        fn?.()
-        window.setTimeout(() => {
-          bypassRef.current = false
-        }, 50)
-      }, 0)
-    }
-    window.addEventListener('popstate', onPop)
-    window.history.back()
+  const releaseBypass = useCallback(() => {
+    window.setTimeout(() => {
+      bypassRef.current = false
+    }, 400)
+  }, [])
+
+  // Keep React Router's history idx/key on the trap entry. A bare pushState
+  // wipes them, and the next navigate() then stays on this page.
+  const pushGuardEntry = useCallback(() => {
+    const state = window.history.state && typeof window.history.state === 'object'
+      ? window.history.state
+      : {}
+    window.history.pushState({ ...state, nidusUnsavedGuard: true }, '', window.location.href)
+    historyTrapRef.current = true
   }, [])
 
   const runPendingAction = useCallback(() => {
     const action = pendingActionRef.current
     pendingActionRef.current = null
-    if (action && (action.type === 'callback' || action.type === 'back') && historyTrapRef.current) {
-      historyTrapRef.current = false
-      bypassRef.current = true
-      runAfterTrapPop(action.type === 'back' ? () => window.history.back() : action.fn)
-      return
-    }
+    const trap = historyTrapRef.current || Boolean(window.history.state?.nidusUnsavedGuard)
+    historyTrapRef.current = false
     bypassRef.current = true
-    try {
-      if (!action) return
-      if (action.type === 'navigate') {
-        navigate(action.to)
-      } else if (action.type === 'back') {
-        window.history.back()
-      } else if (action.type === 'callback') {
-        action.fn?.()
-      }
-    } finally {
+
+    const finish = (leave) => {
+      // Leave on the next turn so this click cannot be undone by the guard's popstate.
       window.setTimeout(() => {
-        bypassRef.current = false
+        leave()
+        releaseBypass()
       }, 0)
     }
-  }, [navigate])
+
+    if (!action) {
+      releaseBypass()
+      return
+    }
+
+    if (action.type === 'navigate') {
+      finish(() => navigate(action.to))
+      return
+    }
+
+    if (action.type === 'callback') {
+      finish(() => action.fn?.())
+      return
+    }
+
+    if (action.fallbackTo) {
+      finish(() => navigate(action.fallbackTo))
+      return
+    }
+
+    // Browser Back was cancelled by re-adding the same-URL trap entry.
+    // Step back past that entry and this page.
+    finish(() => window.history.go(trap ? -2 : -1))
+  }, [navigate, releaseBypass])
 
   const requestNavigation = useCallback((to) => {
     if (!isDirty || bypassRef.current) {
@@ -110,6 +123,15 @@ export function UnsavedChangesProvider({ children }) {
     }
     openConfirm({ type: 'callback', fn: onProceed })
   }, [isDirty, openConfirm])
+
+  const confirmBack = useCallback((fallbackTo) => {
+    if (!isDirty || bypassRef.current) {
+      if (fallbackTo) navigate(fallbackTo)
+      else navigate(-1)
+      return
+    }
+    openConfirm({ type: 'back-page', fallbackTo })
+  }, [isDirty, navigate, openConfirm])
 
   const handleKeepEditing = useCallback(() => {
     pendingActionRef.current = null
@@ -141,19 +163,18 @@ export function UnsavedChangesProvider({ children }) {
     }
 
     if (!historyTrapRef.current) {
-      window.history.pushState({ nidusUnsavedGuard: true }, '', window.location.href)
-      historyTrapRef.current = true
+      pushGuardEntry()
     }
 
     const onPopState = () => {
       if (bypassRef.current || !isDirty) return
-      window.history.pushState({ nidusUnsavedGuard: true }, '', window.location.href)
+      pushGuardEntry()
       openConfirm({ type: 'back' })
     }
 
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
-  }, [isDirty, openConfirm])
+  }, [isDirty, openConfirm, pushGuardEntry])
 
   useEffect(() => {
     if (!isDirty) return undefined
@@ -178,8 +199,9 @@ export function UnsavedChangesProvider({ children }) {
       unregisterGuard,
       requestNavigation,
       confirmDiscard,
+      confirmBack,
     }),
-    [isDirty, registerGuard, unregisterGuard, requestNavigation, confirmDiscard],
+    [isDirty, registerGuard, unregisterGuard, requestNavigation, confirmDiscard, confirmBack],
   )
 
   return (
@@ -193,10 +215,10 @@ export function UnsavedChangesProvider({ children }) {
         closeOnOverlayClick={false}
         footer={(
           <>
-            <Button variant="secondary" onClick={handleKeepEditing}>
+            <Button type="button" variant="secondary" onClick={handleKeepEditing}>
               Keep editing
             </Button>
-            <Button variant="destructive" onClick={handleDiscard}>
+            <Button type="button" variant="destructive" onClick={handleDiscard}>
               Discard changes
             </Button>
           </>
@@ -225,12 +247,12 @@ export function useUnsavedChangesContext() {
  */
 export function useUnsavedChangesGuard(isDirty, message) {
   const id = useId()
-  const { registerGuard, unregisterGuard, requestNavigation, confirmDiscard } = useUnsavedChangesContext()
+  const { registerGuard, unregisterGuard, requestNavigation, confirmDiscard, confirmBack } = useUnsavedChangesContext()
 
   useEffect(() => {
     registerGuard(id, isDirty, message)
     return () => unregisterGuard(id)
   }, [id, isDirty, message, registerGuard, unregisterGuard])
 
-  return { requestNavigation, confirmDiscard }
+  return { requestNavigation, confirmDiscard, confirmBack }
 }

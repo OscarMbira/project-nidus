@@ -90,9 +90,10 @@ export default function SelectField({
     )
   }
 
-  const nativeClass =
-    className ||
-    'w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none'
+  const COLOUR_CLASSES = 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+  const nativeClass = className
+    ? `${className} ${className.includes('bg-') ? '' : COLOUR_CLASSES} rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none`.trim()
+    : `w-full rounded-lg border border-gray-300 dark:border-gray-600 ${COLOUR_CLASSES} px-3 py-2 text-sm disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none`
 
   return (
     <select
@@ -110,11 +111,11 @@ export default function SelectField({
       aria-label={ariaLabel}
       className={nativeClass}
     >
-      <option value="">{placeholder}</option>
+      <option value="" className="bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100">{placeholder}</option>
       {list.map((opt, index) => {
         const v = optionValue(opt)
         return (
-          <option key={String(v) || index} value={v}>
+          <option key={String(v) || index} value={v} className="bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100">
             {optionLabel(opt)}
           </option>
         )

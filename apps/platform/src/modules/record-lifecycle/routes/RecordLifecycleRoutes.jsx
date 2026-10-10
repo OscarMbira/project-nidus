@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import ProtectedRoute from '../../../components/ProtectedRoute'
 import { ThemeProvider } from '@nidus/shared/context/ThemeContext'
 import { ToastProvider } from '@nidus/shared/context/ToastContext'
-import PMLayout from '../../../components/pm/PMLayout'
+import { AppLayout as Layout } from '../../../components/AppLayout'
 import PMOLayout from '../../../components/pmo/PMOLayout'
 import * as platformService from '../../../services/recordLifecycleService'
 
@@ -29,7 +29,7 @@ function wrapPmo(el) {
 }
 
 function wrapPm(el) {
-  return <Suspense fallback={<Loading />}>{withProviders(<PMLayout>{el}</PMLayout>)}</Suspense>
+  return <Suspense fallback={<Loading />}>{withProviders(<Layout scope="pm">{el}</Layout>)}</Suspense>
 }
 
 function wrapPmoOutlet() {
@@ -37,7 +37,7 @@ function wrapPmoOutlet() {
 }
 
 function wrapPmOutlet() {
-  return <Suspense fallback={<Loading />}>{withProviders(<PMLayout><Outlet /></PMLayout>)}</Suspense>
+  return <Suspense fallback={<Loading />}>{withProviders(<Layout scope="pm"><Outlet /></Layout>)}</Suspense>
 }
 
 function LazyPage({ page, service, ...rest }) {
@@ -49,6 +49,24 @@ function LazyPage({ page, service, ...rest }) {
 
   if (!Comp) return <Loading />
   return <Comp service={service} {...rest} />
+}
+
+/** Routes inside the platform/* layout. Sidebar links are /platform/pm/authorisation/* . */
+export function RecordLifecyclePlatformNestedRouteElements() {
+  return (
+    <>
+      <Route path="pm/authorisation/queue/:requestId" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="AuthorisationReviewPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pm/authorisation/queue" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="PendingApprovalsPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pm/authorisation/submitted" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="MySubmittedRecordsPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pm/authorisation/chains" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="ApprovalChainsOverviewPage" service={platformService} title="Approval Chains (Read-only)" /></ProtectedRoute></Suspense>} />
+      <Route path="pmo/authorisation/queue" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="AuthorisationQueuePage" service={platformService} pmoView /></ProtectedRoute></Suspense>} />
+      <Route path="pmo/authorisation/dashboard" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="LifecycleDashboardPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pmo/authorisation/configure" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="ConfigureLifecycleRulesPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pmo/authorisation/chains" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="ApprovalChainsOverviewPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pmo/authorisation/archive-retention" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="ArchiveRetentionRulesPage" service={platformService} /></ProtectedRoute></Suspense>} />
+      <Route path="pmo/authorisation/archive" element={<Suspense fallback={<Loading />}><ProtectedRoute requiredPlatform="platform"><LazyPage page="ArchiveVaultPage" service={platformService} /></ProtectedRoute></Suspense>} />
+    </>
+  )
 }
 
 /** Platform-only record lifecycle routes (v730 — simulator routes live in apps/simulator). */
@@ -65,6 +83,7 @@ export function RecordLifecycleRouteElements() {
       </Route>
 
       <Route element={wrapPmOutlet()}>
+        <Route path="pm/authorisation/queue/:requestId" element={<LazyPage page="AuthorisationReviewPage" service={platformService} />} />
         <Route path="pm/authorisation/queue" element={<LazyPage page="PendingApprovalsPage" service={platformService} />} />
         <Route path="pm/authorisation/submitted" element={<LazyPage page="MySubmittedRecordsPage" service={platformService} />} />
         <Route path="pm/authorisation/chains" element={<LazyPage page="ApprovalChainsOverviewPage" service={platformService} title="Approval Chains (Read-only)" />} />

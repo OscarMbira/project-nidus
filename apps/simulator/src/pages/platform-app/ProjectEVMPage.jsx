@@ -7,6 +7,11 @@ import { platformDb } from '@nidus/supabase'
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import SmartAmountInput from '../../components/ui/SmartAmountInput'
+
+function formatNumber(n) {
+  return Number(n || 0).toLocaleString()
+}
 
 export default function ProjectEVMPage() {
   const { projectId } = useParams()
@@ -14,10 +19,11 @@ export default function ProjectEVMPage() {
   const [rows, setRows] = useState([])
   const [project, setProject] = useState(null)
   const [uid, setUid] = useState(null)
-  const [bac, setBac] = useState('100000')
+  const [bac, setBac] = useState(100000)
   const [form, setForm] = useState({ period_date: new Date().toISOString().slice(0, 10), planned_value: '', earned_value: '', actual_cost: '' })
 
   const load = useCallback(async () => {
+    if (!projectId) return
     const { data: p } = await platformDb.from('projects').select('project_name, project_code').eq('id', projectId).single()
     setProject(p)
     const {
@@ -70,16 +76,16 @@ export default function ProjectEVMPage() {
         </div>
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 grid sm:grid-cols-2 gap-3">
-          <label className="text-sm">BAC (budget at completion)</label>
-          <input value={bac} onChange={(e) => setBac(e.target.value)} className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-950 px-2 py-1 text-sm" />
+          <label htmlFor="evm-bac" className="text-sm">BAC (budget at completion)</label>
+          <SmartAmountInput id="evm-bac" value={bac} onChange={(v) => setBac(v ?? 0)} />
         </div>
 
         {metrics && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">SPI: {metrics.spi != null ? metrics.spi.toFixed(3) : '—'}</div>
             <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">CPI: {metrics.cpi != null ? metrics.cpi.toFixed(3) : '—'}</div>
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">EAC: {metrics.eac != null ? metrics.eac.toFixed(0) : '—'}</div>
-            <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">VAC: {metrics.vac != null ? metrics.vac.toFixed(0) : '—'}</div>
+            <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">EAC: {metrics.eac != null ? formatNumber(metrics.eac.toFixed(0)) : '—'}</div>
+            <div className="rounded-lg border border-gray-200 dark:border-gray-800 p-3">VAC: {metrics.vac != null ? formatNumber(metrics.vac.toFixed(0)) : '—'}</div>
           </div>
         )}
 
@@ -109,9 +115,9 @@ export default function ProjectEVMPage() {
                 <tr key={r.id} className="border-t border-gray-100 dark:border-gray-800">
                     <TableRowNumberCell number={getDisplayRowNumber(index)} />
                   <td className="px-3 py-2">{r.period_date}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.planned_value}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.earned_value}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{r.actual_cost}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.planned_value)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.earned_value)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{formatNumber(r.actual_cost)}</td>
                 </tr>
               ))}
             </tbody>

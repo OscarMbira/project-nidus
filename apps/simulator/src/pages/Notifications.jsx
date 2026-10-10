@@ -4,6 +4,11 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Bell, Check, CheckCheck, Settings, Filter, Search, X } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { RowActionButton } from '@nidus/ui'
+import ViewToggle from '../components/ui/ViewToggle'
+import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
 
 export default function Notifications() {
   const navigate = useNavigate()
@@ -12,6 +17,7 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
   const [filter, setFilter] = useState('all') // all, unread, read
+  const [viewMode, setViewMode] = useViewMode('notifications', 'list')
   const [searchQuery, setSearchQuery] = useState('')
   const [showSettings, setShowSettings] = useState(false)
 
@@ -240,6 +246,7 @@ export default function Notifications() {
               </button>
             )}
           </div>
+          <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="Notification layout" />
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-gray-400" />
             <select
@@ -271,6 +278,65 @@ export default function Notifications() {
             <p className="text-gray-400 dark:text-gray-500 text-sm">
               {searchQuery ? 'No notifications match your search' : "You're all caught up!"}
             </p>
+          </div>
+        ) : viewMode === 'list' ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-left">
+                <tr>
+                  <TableRowNumberHeader className="!normal-case" />
+                  <th className="p-3">Notification</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Received</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredNotifications.map((notification, index) => (
+                  <tr
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification)}
+                    className={`border-t border-gray-100 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      !notification.is_read ? 'bg-blue-50 dark:bg-blue-900/10' : ''
+                    }`}
+                  >
+                    <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                    <td className="p-3">
+                      <div className={`font-medium ${!notification.is_read ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}`}>
+                        {notification.title || notification.notification_type}
+                      </div>
+                      <div className="text-gray-600 dark:text-gray-400">{notification.message}</div>
+                    </td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 text-xs font-medium rounded ${getNotificationColor(notification.notification_type)}`}>
+                        {notification.notification_type}
+                      </span>
+                    </td>
+                    <td className="p-3 whitespace-nowrap text-gray-500 dark:text-gray-400">
+                      {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                    </td>
+                    <td className="p-3 text-gray-700 dark:text-gray-300">{notification.is_read ? 'Read' : 'Unread'}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        {!notification.is_read && (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkAsRead(notification.id)}
+                            className="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                            title="Mark as read"
+                            aria-label="Mark as read"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        )}
+                        <RowActionButton variant="delete" label="Delete notification" onClick={() => handleDelete(notification.id)} />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">

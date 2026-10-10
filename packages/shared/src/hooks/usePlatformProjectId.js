@@ -190,6 +190,7 @@ export function usePlatformProjectId() {
   // resolution shortcut above (applyResolved called directly, no DB round-trip), and writing
   // ?projectId= here would re-trigger a second, redundant resolution pass against it.
   useEffect(() => {
+    if (explicitKey && !explicitMiss) return undefined;
     if (loading || !routeKey || !projectId || entityType === 'project') return undefined;
     const qp = searchParams.get('projectId');
     if (qp === routeKey || qp === projectId) return undefined;

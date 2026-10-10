@@ -12,7 +12,7 @@ import { listCycles, getObjective, createObjective, updateObjective } from '../.
 const inputClass = 'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
 
 function basePath(sim) {
-  return sim ? '/simulator/pm/okr/objectives' : '/pm/okr/objectives'
+  return sim ? '/simulator/pm/okr/objectives' : '/platform/pm/okr/objectives'
 }
 
 export default function OkrObjectiveForm({ sim = false }) {

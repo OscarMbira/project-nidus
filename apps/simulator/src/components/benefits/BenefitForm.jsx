@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, Target, DollarSign, Calendar, ArrowLeft } from 'lucide-react';
+import { X, Save, Target, Calendar, ArrowLeft } from 'lucide-react';
 import { saveBenefit } from '../../services/benefitsService';
 import { platformDb } from '@nidus/supabase';
 import { SmartAmountInput } from '../ui/SmartAmountInput';
@@ -10,6 +10,23 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
+import SelectField from '../ui/SelectField';
+
+function byLabel(rows, labelKey) {
+  return [...rows].sort((a, b) =>
+    String(a[labelKey] || '').localeCompare(String(b[labelKey] || ''), undefined, { sensitivity: 'base' }),
+  );
+}
+
+function membershipRows(rows, nestedKey) {
+  const byId = new Map();
+  for (const row of rows || []) {
+    const item = row[nestedKey];
+    if (!item?.id || item.is_deleted) continue;
+    byId.set(item.id, item);
+  }
+  return [...byId.values()];
+}
 
 export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete, usePageLayout = false }) {
   const [formData, setFormData] = useState({
@@ -84,18 +101,46 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
     setLoadingLookup(true);
     setLookupError(null);
     try {
+      const { data: { user } } = await platformDb.auth.getUser();
+      if (!user) throw new Error('Not signed in');
+      const { data: userRow, error: userErr } = await platformDb
+        .from('users')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (userErr) throw userErr;
+      if (!userRow?.id) throw new Error('Could not resolve your user record');
+
       const [portfoliosRes, programmesRes, projectsRes, usersRes] = await Promise.all([
-        platformDb.from('portfolios').select('id, portfolio_name, portfolio_code').eq('is_deleted', false).order('portfolio_name', { ascending: true }),
-        platformDb.from('programmes').select('id, programme_name, programme_code').eq('is_deleted', false).order('programme_name', { ascending: true }),
-        platformDb.from('projects').select('id, project_name, project_code').eq('is_deleted', false).order('project_name', { ascending: true }),
+        platformDb
+          .from('portfolio_memberships')
+          .select('portfolio_id, portfolios:portfolio_id (id, portfolio_name, portfolio_code, is_deleted)')
+          .eq('user_id', userRow.id)
+          .eq('is_active', true)
+          .eq('invitation_status', 'accepted'),
+        platformDb
+          .from('programme_memberships')
+          .select('programme_id, programmes:programme_id (id, programme_name, programme_code, is_deleted)')
+          .eq('user_id', userRow.id)
+          .eq('is_active', true)
+          .eq('invitation_status', 'accepted'),
+        platformDb
+          .from('project_memberships')
+          .select('project_id, projects:project_id (id, project_name, project_code, is_deleted)')
+          .eq('user_id', userRow.id)
+          .eq('is_active', true)
+          .or('invitation_status.eq.accepted,invitation_status.is.null'),
         platformDb.from('users').select('id, email, full_name').eq('is_deleted', false).order('full_name', { ascending: true }),
       ]);
-      if (portfoliosRes.data) setPortfolios(portfoliosRes.data);
-      if (programmesRes.data) setProgrammes(programmesRes.data);
-      if (projectsRes.data) setProjects(projectsRes.data);
-      if (usersRes.data) setUsers(usersRes.data);
       const err = portfoliosRes.error || programmesRes.error || projectsRes.error || usersRes.error;
-      if (err) setLookupError(err?.message || 'Failed to load form data');
+      if (err) {
+        setLookupError(err?.message || 'Failed to load form data');
+        return;
+      }
+      setPortfolios(byLabel(membershipRows(portfoliosRes.data, 'portfolios'), 'portfolio_name'));
+      setProgrammes(byLabel(membershipRows(programmesRes.data, 'programmes'), 'programme_name'));
+      setProjects(byLabel(membershipRows(projectsRes.data, 'projects'), 'project_name'));
+      if (usersRes.data) setUsers(usersRes.data);
     } catch (error) {
       console.error('Error fetching lookup data:', error);
       setLookupError(error?.message || 'Failed to load form data');
@@ -189,30 +234,50 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
     );
   }
 
-  const formHeader = (
-    <div className={`flex items-center justify-between ${usePageLayout ? 'mb-6' : 'sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 z-10'}`}>
+  const formHeader = usePageLayout ? (
+    <div className="mb-6">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
       <div className="flex items-center gap-3">
-        {usePageLayout ? (
-          <button type="button" onClick={onCancel} className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        ) : null}
         <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           {benefit ? 'Edit Benefit' : 'Create Benefit'}
         </h2>
       </div>
-      {!usePageLayout ? (
-        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-          <X className="h-6 w-6" />
-        </button>
-      ) : null}
+    </div>
+  ) : (
+    <div className="flex items-center justify-between sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 z-10">
+      <div className="flex items-center gap-3">
+        <Target className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {benefit ? 'Edit Benefit' : 'Create Benefit'}
+        </h2>
+      </div>
+      <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <X className="h-6 w-6" />
+      </button>
     </div>
   );
 
   const auditTabs = (
     <div className={usePageLayout ? '' : 'px-6 pt-4'}>
-      <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+      <DetailAuditTabList
+        activeTab={formTab}
+        onChange={setFormTab}
+        ariaLabel="Benefit sections"
+        tabs={[
+          { value: 'details', label: 'Details' },
+          { value: 'benefit', label: 'Benefit Details' },
+          { value: 'values', label: 'Values & Targets' },
+          { value: 'audit', label: 'Audit details' },
+        ]}
+      />
     </div>
   );
 
@@ -246,6 +311,7 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
 
   const formBody = (
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className={formTab === 'details' ? 'space-y-6' : 'hidden'}>
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -308,66 +374,57 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Portfolio
                 </label>
-                <select
+                <SelectField
+                  id="portfolio_id"
                   name="portfolio_id"
                   value={formData.portfolio_id}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">None</option>
-                  {portfolios.map(portfolio => (
-                    <option key={portfolio.id} value={portfolio.id}>
-                      {portfolio.portfolio_name} {portfolio.portfolio_code ? `(${portfolio.portfolio_code})` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData((prev) => ({ ...prev, portfolio_id: value || '' }))}
+                  placeholder="None"
+                  options={portfolios.map((portfolio) => ({
+                    value: portfolio.id,
+                    label: `${portfolio.portfolio_name}${portfolio.portfolio_code ? ` (${portfolio.portfolio_code})` : ''}`,
+                  }))}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Programme
                 </label>
-                <select
+                <SelectField
+                  id="programme_id"
                   name="programme_id"
                   value={formData.programme_id}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">None</option>
-                  {programmes.map(programme => (
-                    <option key={programme.id} value={programme.id}>
-                      {programme.programme_name} {programme.programme_code ? `(${programme.programme_code})` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData((prev) => ({ ...prev, programme_id: value || '' }))}
+                  placeholder="None"
+                  options={programmes.map((programme) => ({
+                    value: programme.id,
+                    label: `${programme.programme_name}${programme.programme_code ? ` (${programme.programme_code})` : ''}`,
+                  }))}
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project
                 </label>
-                <select
+                <SelectField
+                  id="project_id"
                   name="project_id"
                   value={formData.project_id}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">None</option>
-                  {projects.map(project => (
-                    <option key={project.id} value={project.id}>
-                      {project.project_name} {project.project_code ? `(${project.project_code})` : ''}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData((prev) => ({ ...prev, project_id: value || '' }))}
+                  placeholder="None"
+                  options={projects.map((project) => ({
+                    value: project.id,
+                    label: `${project.project_name}${project.project_code ? ` (${project.project_code})` : ''}`,
+                  }))}
+                />
               </div>
             </div>
           </div>
+          </div>
 
-          {/* Benefit Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-              Benefit Details
-            </h3>
+          <div className={formTab === 'benefit' ? 'space-y-4' : 'hidden'}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -472,29 +529,24 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Benefit Owner
                 </label>
-                <select
+                <SelectField
+                  id="benefit_owner_user_id"
                   name="benefit_owner_user_id"
                   value={formData.benefit_owner_user_id}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">None</option>
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.full_name || user.email}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => setFormData((prev) => ({ ...prev, benefit_owner_user_id: value || '' }))}
+                  placeholder="None"
+                  searchPlaceholder="Search owners..."
+                  forceSearchable
+                  options={users.map((user) => ({
+                    value: user.id,
+                    label: user.full_name || user.email,
+                  }))}
+                />
               </div>
             </div>
           </div>
 
-          {/* Values */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Values & Targets
-            </h3>
+          <div className={formTab === 'values' ? 'space-y-4' : 'hidden'}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -599,6 +651,7 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
             </div>
           </div>
 
+          <div className={formTab === 'details' ? 'space-y-6' : 'hidden'}>
           {/* Timeline */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
@@ -649,6 +702,7 @@ export default function BenefitForm({ benefit, onSave, onCancel, onHoldComplete,
                 placeholder="Additional notes..."
               />
             </div>
+          </div>
           </div>
 
           {/* Form Actions */}

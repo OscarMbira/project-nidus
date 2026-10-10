@@ -1,19 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Target, Plus, Search, Filter, TrendingUp, CheckCircle, Clock } from 'lucide-react';
 import { DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui';
 import { getBenefits, getBenefitsDashboardStats } from '../../services/benefitsService';
 import BenefitsRegister from '../../components/benefits/BenefitsRegister';
-import BenefitForm from '../../components/benefits/BenefitForm';
 import BenefitsRealizationChart from '../../components/benefits/BenefitsRealizationChart';
 
 export default function Benefits() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [benefits, setBenefits] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showBenefitForm, setShowBenefitForm] = useState(false);
-  const [selectedBenefit, setSelectedBenefit] = useState(null);
   const [pageTab, setPageTab] = useState('dashboard'); // 'dashboard' | 'register'
   const [filters, setFilters] = useState({
     portfolio_id: '',
@@ -46,30 +44,45 @@ export default function Benefits() {
     }
   };
 
+  const benefitPath = (path) => {
+    const projectId = searchParams.get('projectId');
+    if (!projectId) return path;
+    return `${path}?projectId=${encodeURIComponent(projectId)}`;
+  };
+
   const handleCreateBenefit = () => {
-    setSelectedBenefit(null);
-    setShowBenefitForm(true);
+    navigate(benefitPath('/platform/benefits/create'));
   };
 
   const pendingBenefits = useMemo(
-    () => benefits.filter((b) => b.benefit_status !== 'realized').slice(0, 5),
+    () => benefits.filter((b) => b.benefit_status !== 'realized' && b.benefit_status !== 'cancelled' && b.benefit_status !== 'lost'),
     [benefits]
   );
 
+  const upcomingBenefits = useMemo(
+    () => [...pendingBenefits]
+      .filter((b) => b.expected_realization_date)
+      .sort((a, b) => String(a.expected_realization_date).localeCompare(String(b.expected_realization_date)))
+      .slice(0, 6),
+    [pendingBenefits]
+  );
+
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    for (const benefit of benefits) {
+      const key = benefit.benefit_category || 'unset';
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [benefits]);
+
   const handleEditBenefit = (benefit) => {
-    setSelectedBenefit(benefit);
-    setShowBenefitForm(true);
+    navigate(benefitPath(`/platform/benefits/${benefit.id}/edit`));
   };
 
   const showRegisterFiltered = (benefit_status) => {
     setFilters({ ...filters, benefit_status });
     setPageTab('register');
-  };
-
-  const handleBenefitSaved = () => {
-    setShowBenefitForm(false);
-    setSelectedBenefit(null);
-    fetchData();
   };
 
   if (loading) {
@@ -103,14 +116,14 @@ export default function Benefits() {
         {pageTab === 'register' && (
           <div className="flex flex-wrap items-center gap-2 mt-4">
             <button
-              onClick={() => navigate('/benefits/measurements')}
+              onClick={() => navigate(benefitPath('/platform/benefits/measurements'))}
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium transition-colors text-sm"
             >
               <TrendingUp className="h-4 w-4" />
               Measurements
             </button>
             <button
-              onClick={() => navigate('/benefits/realization')}
+              onClick={() => navigate(benefitPath('/platform/benefits/realization'))}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm"
             >
               <CheckCircle className="h-4 w-4" />
@@ -176,19 +189,70 @@ export default function Benefits() {
             </div>
           )}
 
-          {benefits.length > 0 && (
-            <div className="mb-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+            <div className="xl:col-span-2">
               <BenefitsRealizationChart benefits={benefits} measurements={[]} />
             </div>
-          )}
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">By category</h3>
+              {categoryCounts.length === 0 ? (
+                <p className="text-sm text-gray-600 dark:text-gray-300">Categories appear here once benefits are recorded for this project.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {categoryCounts.map(([category, count]) => (
+                    <li key={category}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="capitalize text-gray-700 dark:text-gray-200">{category.replace('_', ' ')}</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{count}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                        <div
+                          className="h-2 rounded-full bg-green-600"
+                          style={{ width: `${Math.round((count / benefits.length) * 100)}%` }}
+                        />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Coming due</h3>
+            {upcomingBenefits.length === 0 ? (
+              <p className="text-sm text-gray-600 dark:text-gray-300">No expected realisation dates yet. Add a date on a benefit to see it here.</p>
+            ) : (
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                {upcomingBenefits.map((benefit) => (
+                  <li key={benefit.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleEditBenefit(benefit)}
+                      className="w-full flex items-center justify-between gap-3 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    >
+                      <span>
+                        <span className="block font-medium text-gray-900 dark:text-white">{benefit.benefit_name}</span>
+                        <span className="block text-xs font-mono text-gray-700 dark:text-gray-200">{benefit.benefit_code}</span>
+                      </span>
+                      <span className="text-sm text-gray-700 dark:text-gray-200 whitespace-nowrap">
+                        {benefit.expected_realization_date}
+                        <span className="ml-2 capitalize text-gray-500 dark:text-gray-300">{(benefit.benefit_status || '').replace('_', ' ')}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
 
           {benefits.length > 0 && (
             <div className="mb-6">
               <RegisterOpenItemsWidget
                 title="Benefits Not Yet Realized"
                 icon={Target}
-                rows={pendingBenefits}
-                totalCount={benefits.filter((b) => b.benefit_status !== 'realized').length}
+                rows={pendingBenefits.slice(0, 5)}
+                totalCount={pendingBenefits.length}
                 columns={[
                   { key: 'benefit_code', label: 'Reference', className: 'font-mono text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap' },
                   { key: 'benefit_name', label: 'Name', className: 'font-medium text-gray-900 dark:text-white' },
@@ -278,16 +342,6 @@ export default function Benefits() {
         </div>
       )}
 
-      {showBenefitForm && (
-        <BenefitForm
-          benefit={selectedBenefit}
-          onSave={handleBenefitSaved}
-          onCancel={() => {
-            setShowBenefitForm(false);
-            setSelectedBenefit(null);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -103,7 +103,7 @@ export default function ConfigurationItemRecordView() {
       <div className="mb-4 flex justify-end">
         <RowActionButton variant="edit" label="Edit configuration item" onClick={handleEdit} />
       </div>
-      <ConfigurationItemView itemId={itemId} onEdit={handleEdit} />
+      <ConfigurationItemView itemId={item.id} onEdit={handleEdit} />
     </div>
   )
 }
