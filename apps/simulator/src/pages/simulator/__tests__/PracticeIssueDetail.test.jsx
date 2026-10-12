@@ -38,7 +38,7 @@ vi.mock('../../../features/local-data-extensions/components/CustomFieldRenderer'
   default: () => null,
 }))
 
-vi.mock('../../../components/ui/ExportRecordButtons', () => ({
+vi.mock('@nidus/ui/ExportRecordButtons', () => ({
   default: () => null,
 }))
 

@@ -15,9 +15,9 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { RowActionButton, ExportListMenu } from '@nidus/ui'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import RowNumberBadge from '../../../components/ui/RowNumberBadge'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { getSessionPMOAdminStatus } from '../../../services/pmoAdminService'
 import {
   listCatalog,

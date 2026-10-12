@@ -15,7 +15,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
-import { usePlatformProjectId } from '../../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { platformDb } from '@nidus/supabase'
 import {
   getRaciMatrix,

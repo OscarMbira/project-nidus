@@ -2,7 +2,7 @@
  * Programme Manager Home (v982 Phase 5 follow-up — Role-Aware Home Pages)
  * Mirrors PortfolioManagerHome.jsx exactly, substituting programme scope.
  */
-import { CurrentProgrammeProvider, useCurrentProgramme } from '../../context/CurrentProgrammeContext'
+import { CurrentProgrammeProvider, useCurrentProgramme } from '../../lib/CurrentProgrammeContext'
 import DashboardFramework from '../../components/dashboard/DashboardFramework'
 import { useDashboardViewerContext } from '../../components/dashboard/useDashboardViewerContext'
 import { PROGRAMME_MANAGER_HOME_WIDGETS } from '../../components/dashboard/widgetRegistry'

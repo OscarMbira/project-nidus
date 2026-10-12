@@ -39,6 +39,7 @@ export async function fetchSubscriptionPlansCatalog(targetSystem = null) {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('is_active', true)
     .order('display_order', { ascending: true })
 

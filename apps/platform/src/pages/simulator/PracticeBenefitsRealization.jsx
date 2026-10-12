@@ -7,8 +7,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Target, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeBenefits } from '../../services/sim/practicePortfolioService'
 import BenefitsRealizationChart from '../../components/programme/BenefitsRealizationChart'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PracticeBenefitsRealization() {
   const [programmes, setProgrammes] = useState([])

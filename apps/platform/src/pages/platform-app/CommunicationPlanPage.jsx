@@ -12,7 +12,7 @@ import { communicationPlanChooserHref, communicationPlanHref } from '@nidus/shar
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import CommunicationLog from '../../components/stakeholders/CommunicationLog'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 

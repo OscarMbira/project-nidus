@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, BarChart3 } from 'lucide-react'
 import StakeholderMonitoringDashboard from '../../components/stakeholders/StakeholderMonitoringDashboard'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 
 export default function StakeholderMonitoringPage() {
   const navigate = useNavigate()

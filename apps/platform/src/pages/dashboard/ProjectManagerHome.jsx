@@ -6,7 +6,7 @@
  * route stays alive, it now points here instead of the old fixed component).
  */
 import { Briefcase } from 'lucide-react'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import PMBoardMemberDashboard from '../pm/PMBoardMemberDashboard'
 import DashboardFramework from '../../components/dashboard/DashboardFramework'
 import { useDashboardViewerContext } from '../../components/dashboard/useDashboardViewerContext'

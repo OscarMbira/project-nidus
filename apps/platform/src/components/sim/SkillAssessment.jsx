@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 
 const SkillAssessment = () => {
   const { theme } = useTheme();

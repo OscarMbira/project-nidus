@@ -10,7 +10,7 @@ import { RowActionButton } from '@nidus/ui';
 import LessonTypeBadge from './LessonTypeBadge';
 import LessonStatusBadge from './LessonStatusBadge';
 import EffectTypeIndicator from './EffectTypeIndicator';
-import RowNumberBadge from '../ui/RowNumberBadge';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 
 export default function LessonCard({ lesson, onView, onEdit, onDelete, onPromote, rowNumber }) {
   const navigate = useNavigate();

@@ -2,13 +2,13 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import SimTestingPageShell from '../../../components/sim/SimTestingPageShell'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import DefectStatusBadge from '../../../components/testing/DefectStatusBadge'
 import DefectSeverityBadge from '../../../components/testing/DefectSeverityBadge'
 import { getPracticeDefects } from '../../../services/sim/practiceDefectService'
 import { SIM_TESTING_BASE } from './simTestingPaths'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'defect_ref', label: 'Ref' },

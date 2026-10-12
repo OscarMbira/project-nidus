@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckSquare, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getPracticeQMS, createPracticeQMS, updatePracticeQMS } from '../../services/sim/practiceQMSService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PRACTICE_QMS_COLUMNS = [
   { key: 'strategy_name', label: 'Name' },

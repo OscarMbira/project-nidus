@@ -2,7 +2,7 @@
  * Simulator PM Delivery - Practice Work Packages
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeWorkPackageList from '../PracticeWorkPackageList'
 
 export default function SimulatorPMDeliveryWorkPackages() {

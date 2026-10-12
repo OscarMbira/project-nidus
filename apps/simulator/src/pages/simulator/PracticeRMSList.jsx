@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Shield, Plus } from 'lucide-react'
 import { getPracticeRMS, createPracticeRMS, updatePracticeRMS } from '../../services/sim/practiceRMSService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { RowActionButton } from '@nidus/ui'
 
 const PRACTICE_RMS_COLUMNS = [

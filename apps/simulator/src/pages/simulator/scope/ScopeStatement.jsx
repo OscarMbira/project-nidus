@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Plus } from 'lucide-react'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
-import { useSuccessModal } from '../../../hooks/useSuccessModal'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { simGetScopeStatement, simSaveScopeStatement } from '../../../services/sim/simPlanningService'
 import { listAssumptions, deleteAssumption } from '../../../services/assumptionService'
 import { listConstraints, deleteConstraint } from '../../../services/constraintService'
 import { simDb } from '../../../services/supabase/supabaseClient'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import {
   exportRecordToExcel,
@@ -18,14 +18,14 @@ import {
   exportRecordToXML,
   exportRecordToJSON,
   exportRecordToPrint,
-} from '../../../utils/exportUtils'
+} from '@nidus/shared/utils/exportUtils'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { RowActionButton } from '@nidus/ui'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 

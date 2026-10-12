@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { SIMULATOR_ROLE_LIST } from '@nidus/shared/constants/simulatorRoles';
 import { getStoredRole } from '../../services/sim/rolePreferenceService';
 

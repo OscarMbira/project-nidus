@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Moon, Sun, Menu } from 'lucide-react'
-import { useTheme } from '../../../context/ThemeContext'
+import { useTheme } from '@nidus/shared/context/ThemeContext'
 import SimulatorTMSidebar from './SimulatorTMSidebar'
 
 export default function SimulatorTMLayout({ children }) {

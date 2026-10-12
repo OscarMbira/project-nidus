@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, Plus, Edit2, Trash2, Save, X } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient';
 import { getQualityRegister } from '../../services/qualityManagementService';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function QualityCriteriaManager({ projectId, qualityRegisterId = null }) {

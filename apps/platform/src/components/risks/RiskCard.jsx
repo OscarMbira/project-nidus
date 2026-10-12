@@ -11,7 +11,7 @@ import RiskTypeBadge from './RiskTypeBadge';
 import RiskStatusBadge from './RiskStatusBadge';
 import RiskScoreBadge from './RiskScoreBadge';
 import ProximityBadge from './ProximityBadge';
-import RowNumberBadge from '../ui/RowNumberBadge';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { RowActionButton } from '@nidus/ui';
 
 export default function RiskCard({ risk, onEdit, onDelete, onEscalate, rowNumber }) {

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { X, Save, Link2, FolderKanban, Target, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { saveInterProjectDependency, checkCircularDependency } from '../../services/dependencyService';
 import { platformDb } from '@nidus/supabase';
-import { useCurrentProject } from '../../context/CurrentProjectContext';
+import { useCurrentProject } from '../../lib/CurrentProjectContext';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
@@ -11,7 +11,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal';
-import SelectField from '../ui/SelectField';
+import SelectField from '@nidus/ui/SelectField';
 import MultiLineListInput from '@nidus/ui/MultiLineListInput';
 import {
   addExternalDependencyItem,

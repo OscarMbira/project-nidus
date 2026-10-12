@@ -21,7 +21,7 @@ import { createManagerAppointment } from '../../services/managerAppointmentServi
 import { managerRoleForEntityType } from '@nidus/shared/utils/appointmentRoleUtils'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 
 const VIEW_KEY = 'pmo-manager-assignments-view'
 const SORT_PREFIX = 'pmo-manager-assignments-sort-'

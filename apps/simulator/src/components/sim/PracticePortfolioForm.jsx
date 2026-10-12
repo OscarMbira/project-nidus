@@ -5,8 +5,8 @@ import { createPracticePortfolio, getPracticePortfolios } from '../../services/s
 import { getPortfolioCategories } from '../../services/portfolioCategoryService'
 import { getBudgetCategories } from '../../services/budgetCategoryService'
 import { getFundingSources } from '../../services/fundingSourceService'
-import { SmartAmountInput } from '../ui/SmartAmountInput'
-import SearchableSelect from '../ui/SearchableSelect'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 export default function PracticePortfolioForm({ onSaved, onCancel, useModalLayout = true }) {
   const [formData, setFormData] = useState({

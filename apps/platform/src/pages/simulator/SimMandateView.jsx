@@ -4,8 +4,8 @@ import { ArrowLeft, Edit, GraduationCap, Award, Rocket } from 'lucide-react'
 import { getSimMandateById, getSimDeliverables, getSimStakeholders, getSimMandateProgress, canCreatePracticeProject, createPracticeProjectFromMandate, getPracticeProjectsFromMandate } from '../../services/simulatorMandateService'
 import { getSimConstraintsByMandate } from '../../services/simMandateConstraintService'
 import ConstraintSelector from '../../components/constraints/ConstraintSelector'
-import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const SIM_MANDATE_VIEW_SECTIONS = [
   { title: 'Mandate', fields: [

@@ -6,7 +6,7 @@ import {
   getSimUserTotalTeamAllocation,
   addSimTeamMember,
 } from '../../services/sim/simTeamService'
-import { useToast } from '../../hooks/useToast'
+import { useToast } from '@nidus/shared/hooks/useToast'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 export default function SimAddTeamMemberModal({ isOpen, onClose, practiceTeamId, practiceProjectId, onSuccess }) {

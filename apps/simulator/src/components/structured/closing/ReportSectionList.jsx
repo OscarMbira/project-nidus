@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import ViewToggle from '../../ui/ViewToggle'
+import ViewToggle from '@nidus/ui/ViewToggle'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
-import RowNumberBadge from '../../ui/RowNumberBadge'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 function cellText(value) {

@@ -26,7 +26,7 @@ import ProjectPlanRiskSection from './ProjectPlanRiskSection'
 import ProjectPlanQualitySection from './ProjectPlanQualitySection'
 import PlanApprovalSection from './PlanApprovalSection'
 import PlanRevisionHistorySection from './PlanRevisionHistorySection'
-import ExportRecordButtons from '../ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const PROJECT_PLAN_SECTIONS = [

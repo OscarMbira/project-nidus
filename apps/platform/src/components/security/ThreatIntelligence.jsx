@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { Shield, Ban, AlertTriangle, CheckCircle, X } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ThreatIntelligence() {

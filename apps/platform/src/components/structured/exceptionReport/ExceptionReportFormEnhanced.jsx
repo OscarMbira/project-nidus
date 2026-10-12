@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, AlertTriangle, TrendingUp, Target, Lightbulb, CheckCircle, X, Save, ArrowLeft, ArrowRight, User } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
-import { HoldButton } from '../../ui/HoldButton'
+import { HoldButton } from '../../shared-app/HoldButton'
 import { 
   createExceptionReport, 
   updateExceptionReport, 

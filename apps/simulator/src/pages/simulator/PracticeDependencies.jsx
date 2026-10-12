@@ -6,11 +6,11 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { getPracticeDependencies } from '../../services/sim/practicePortfolioService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { useViewMode } from '../../hooks/useViewMode'
-import ViewToggle from '../../components/ui/ViewToggle'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const DEP_COLUMNS = [
   { key: 'source_name', label: 'Source' },

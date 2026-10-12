@@ -12,7 +12,7 @@ import { RowActionButton } from '@nidus/ui'
 import MultiLineListInput, { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import { validateEmail, validatePhone } from '../../utils/formValidation'
+import { validateEmail, validatePhone } from '@nidus/shared/utils/formValidation'
 import {
   getGovernanceMembers,
   createGovernanceMember,

@@ -11,6 +11,13 @@ const simulatorFiles = [
   'apps/simulator/src/**/*.js',
 ]
 
+// v1240 / CLAUDE.md rules 34.3 + 49: app code reaches shared code only through @nidus/* package
+// names, never a relative path into packages/ (that is how the old app-local shadow copies hid).
+const NO_RELATIVE_PACKAGES = {
+  group: ['**/packages/*/src/**'],
+  message: 'Import shared code via @nidus/* (packages/* is the single source of truth, rule 34.3).',
+}
+
 export default [
   js.configs.recommended,
   {
@@ -76,6 +83,7 @@ export default [
             group: ['**/apps/simulator/**', '../simulator/**', '../../simulator/**'],
             message: 'Platform code must not import Simulator-only modules.',
           },
+          NO_RELATIVE_PACKAGES,
         ],
       }],
     },
@@ -89,6 +97,22 @@ export default [
             group: ['**/apps/platform/**', '../platform/**', '../../platform/**'],
             message: 'Simulator code must not import Platform-only modules.',
           },
+          NO_RELATIVE_PACKAGES,
+        ],
+      }],
+    },
+  },
+  {
+    // v1239 Slice 5.1: the Planner reaches shared code only through @nidus/*, never another app.
+    files: ['apps/planner/src/**/*.{js,jsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [
+          {
+            group: ['**/apps/platform/**', '**/apps/simulator/**', '../platform/**', '../simulator/**', '../../platform/**', '../../simulator/**'],
+            message: 'Planner code must not import Platform or Simulator modules — shared code lives in packages/* (rule 46).',
+          },
+          NO_RELATIVE_PACKAGES,
         ],
       }],
     },

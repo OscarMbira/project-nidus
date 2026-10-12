@@ -1,0 +1,65 @@
+name: Nidus Project Planner — Build & Deploy
+
+# v1239 Slice 5.1 (D20): the Planner (apps/planner, planner.<domain>) bundles the shared
+# planning screens from packages/planning, so a change there rebuilds the Planner together with
+# the planning-hub and sim-planning-module workflows — one fix, three deploys.
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/planner/**'
+      - 'packages/planning/**'
+      - 'packages/ui/**'
+      - 'packages/shared/**'
+      - 'packages/supabase/**'
+      - 'packages/config/**'
+      - 'scripts/generate-planner-table-allowlist.mjs'
+      - 'SQL/v1251_planner_table_wall.sql'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    paths:
+      - 'apps/planner/**'
+      - 'packages/planning/**'
+      - 'packages/ui/**'
+      - 'packages/shared/**'
+      - 'packages/supabase/**'
+      - 'packages/config/**'
+  workflow_dispatch: {}
+
+jobs:
+  build-planner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      # Fail if a planner screen starts using a table the database wall does not allow (D6).
+      - name: Planner table allow-list is current
+        run: node scripts/generate-planner-table-allowlist.mjs --check
+      - run: node --test scripts/__tests__/generate-planner-table-allowlist.test.mjs
+      - run: pnpm turbo test --filter=@nidus/planning --filter=@nidus/planner-app
+      - run: pnpm turbo build --filter=@nidus/planner-app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.PLATFORM_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PLATFORM_SUPABASE_ANON_KEY }}
+          VITE_PLATFORM_URL: ${{ vars.PLATFORM_URL }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - name: Upload planner build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: planner-dist
+          path: apps/planner/dist
+      - name: Deploy to Vercel (Planner)
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: pnpm dlx vercel deploy apps/planner/dist --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.PLANNER_VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

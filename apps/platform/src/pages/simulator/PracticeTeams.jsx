@@ -17,7 +17,7 @@ import { listPracticeProjectCapacity, upsertCapacitySetting, deleteCapacitySetti
 import { listPracticeProjectLeave, addLeaveEntry, updateLeaveEntry, deleteLeaveEntry, LEAVE_TYPES } from '../../services/sim/simTeamLeaveService'
 import RowActionButton from '@nidus/ui/RowActionButton'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 function RecordPeek({ title, fields, onClose }) {
   return (

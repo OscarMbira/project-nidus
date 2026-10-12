@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import BadgeDisplay from '../../components/sim/BadgeDisplay';
 import { getAllBadges, getUserBadges } from '../../services/simulatorService';
-import { getBadgeProgress } from '../../utils/badgeAwardService';
+import { getBadgeProgress } from '@nidus/shared/utils/badgeAwardService';
 
 const Achievements = () => {
   const { theme } = useTheme();

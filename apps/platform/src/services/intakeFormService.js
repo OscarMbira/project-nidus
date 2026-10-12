@@ -23,6 +23,16 @@ export function generatePublicToken() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+/** Project id → name options for labelling forms (RLS limits rows to the caller's projects). */
+export async function listProjectOptions({ sim = false } = {}) {
+  const query = sim
+    ? client(true).from('practice_projects').select('id, project_name')
+    : client(false).from('projects').select('id, project_name')
+  const { data, error } = await query.order('project_name', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
 // ── Forms ──────────────────────────────────────────────────────────────────
 
 export async function listForms({ sim = false } = {}) {

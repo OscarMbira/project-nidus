@@ -35,8 +35,8 @@ import { fetchDefaultInvitationExpiryDaysForProject, clampInvitationExpiryDays }
 import { platformDb } from '@nidus/supabase'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import ExportListMenu from '../ui/ExportListMenu'
-import ViewToggle from '../ui/ViewToggle'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import ViewToggle from '@nidus/ui/ViewToggle'
 
 const STEPS = {
   UPLOAD: 1,

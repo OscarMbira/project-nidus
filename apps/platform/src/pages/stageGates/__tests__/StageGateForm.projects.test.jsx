@@ -9,7 +9,7 @@ const current = vi.hoisted(() => ({
   loading: false,
 }))
 
-vi.mock('../../../context/CurrentProjectContext', () => ({
+vi.mock('../../../lib/CurrentProjectContext', () => ({
   useCurrentProject: () => current,
 }))
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import Button from '@nidus/ui/Button';
+import Card from '@nidus/ui/Card';
 import { fetchPricingCatalogBundle } from '@nidus/shared/services/subscriptionPlanCatalogService';
 import { BUNDLE_DISCOUNT_PERCENT } from '@nidus/shared/services/subscriptionPreviewCatalog';
 

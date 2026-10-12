@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, User, Target, TrendingUp, Users, Package, CheckCircle, Lightbulb, ArrowRight, Save, ArrowLeft, ArrowRight as ArrowRightIcon } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
-import { HoldButton } from '../../ui/HoldButton'
+import { HoldButton } from '../../shared-app/HoldButton'
 import { createEndProjectReport, updateEndProjectReport, getEndProjectReportById } from '../../../services/endProjectReportService'
 import EPRDocumentHeader from './EPRDocumentHeader'
 import EPRProjectManagerReport from './EPRProjectManagerReport'

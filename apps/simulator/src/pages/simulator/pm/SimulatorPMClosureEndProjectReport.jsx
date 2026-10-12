@@ -2,7 +2,7 @@
  * Simulator PM Closure - Practice End Project Report
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeEndProjectReportList from '../PracticeEndProjectReportList'
 
 export default function SimulatorPMClosureEndProjectReport() {

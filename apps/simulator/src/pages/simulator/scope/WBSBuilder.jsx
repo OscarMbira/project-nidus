@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simListWbsNodes, simSaveWbsNode, simSoftDeleteWbsNode } from '../../../services/sim/simPlanningService'
 import { simDb } from '../../../services/supabase/supabaseClient'
 import WBSTreeView from '../../../components/scope/WBSTreeView'

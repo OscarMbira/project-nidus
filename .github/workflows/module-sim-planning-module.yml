@@ -5,6 +5,7 @@ on:
     branches: [master, main]
     paths:
       - 'packages/modules/sim-planning-module/**'
+      - 'packages/planning/**'
       - 'packages/shared/**'
       - 'packages/ui/**'
       - 'packages/supabase/**'
@@ -13,6 +14,7 @@ on:
   pull_request:
     paths:
       - 'packages/modules/sim-planning-module/**'
+      - 'packages/planning/**'
 
 env:
   MODULE_NAME: sim-planning-module

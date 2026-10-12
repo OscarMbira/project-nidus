@@ -11,7 +11,7 @@ vi.mock('@nidus/shared/hooks/usePlatformProjectId.js', () => ({
   usePlatformProjectId: () => ({ projectId: 'proj-1', routeKey: 'SEED334-PRJ-08' }),
 }))
 
-vi.mock('@nidus/shared/context/BrandingContext', () => ({
+vi.mock('../../../lib/BrandingContext', () => ({
   useBranding: () => ({ branding: null }),
 }))
 

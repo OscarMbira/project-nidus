@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Lock, AlertCircle } from 'lucide-react';
 import { getSubscriptionStatusSummary } from '../../services/subscriptionStatusService';
 import { simDb } from '@nidus/supabase';

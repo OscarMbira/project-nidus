@@ -26,7 +26,7 @@ import { getManageRolesAccess, getIndustryCategories, getIndustrySegments } from
 import { provisionOrganisationTenant, getOrganisationById } from '../../services/organisationService'
 import { getOrgIndustries, getOrgCapabilities, toggleOrganisationCapability } from '../../services/organisationIndustryService'
 import { assignSystemRole, getUserSystemRoles } from '../../services/roleService'
-import { clearSidebarCache } from '../../utils/menuCacheUtils'
+import { clearSidebarCache } from '@nidus/shared/utils/menuCacheUtils'
 
 export default function OrganisationIndustrySettings() {
   const navigate = useNavigate()

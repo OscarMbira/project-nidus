@@ -2,7 +2,7 @@
  * Project Plan Budget Section
  */
 
-import { SmartAmountInput } from '../ui/SmartAmountInput'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 
 export default function ProjectPlanBudgetSection({ formData, onChange, errors, mode }) {
   const handleContingencyChange = (field, value) => {

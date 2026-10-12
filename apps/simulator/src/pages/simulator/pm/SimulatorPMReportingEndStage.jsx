@@ -2,7 +2,7 @@
  * Simulator PM Reporting - Practice End Stage Reports
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeEndStageReportList from '../PracticeEndStageReportList'
 
 export default function SimulatorPMReportingEndStage() {

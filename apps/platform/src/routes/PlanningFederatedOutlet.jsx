@@ -1,8 +1,11 @@
-import { Suspense } from 'react'
-import ModuleLoadingFallback from '../components/ui/ModuleLoadingFallback.jsx'
+import { Suspense, lazy } from 'react'
+import { PlanningProvider } from '@nidus/planning/context/PlanningContext.jsx'
+import ModuleLoadingFallback from '@nidus/ui/ModuleLoadingFallback.jsx'
 import ModuleRoute from '../federation/ModuleRoute.jsx'
 import { PlanningHubRoutes } from '../federation/federatedModules.local.js'
 import { ThemeProvider, ToastProvider, ProtectedRoute, Layout, PMOLayout } from './lazyImports.js'
+
+const PlanningProjectBar = lazy(() => import('../components/planning/PlanningProjectBar'))
 
 function PlanningOutlet({ Layout: LayoutComponent, layoutProps = {} }) {
   return (
@@ -29,7 +32,11 @@ export function PmPlanningFederated() {
   return <PlanningOutlet Layout={Layout} layoutProps={{ scope: 'pm' }} />
 }
 
-/** PMO planning — federated module (remote or bundled fallback). */
+/** PMO planning — federated module (remote or bundled fallback). Same screens, PMO base path (v1239). */
 export function PmoPlanningFederated() {
-  return <PlanningOutlet Layout={PMOLayout} />
+  return (
+    <PlanningProvider mode="platform" basePath="/pmo/planning" ProjectBar={PlanningProjectBar}>
+      <PlanningOutlet Layout={PMOLayout} />
+    </PlanningProvider>
+  )
 }

@@ -11,7 +11,7 @@ import { createBusinessCase } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import BusinessCaseForm from '../../components/businessCase/BusinessCaseForm'
 import { resolveInitiationBasePath } from '@nidus/shared/utils/initiationRouteUtils'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import {
   BUSINESS_CASE_EXPORT_SECTIONS,

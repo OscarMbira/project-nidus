@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { getEngagementActions, saveEngagementAction, deleteEngagementAction, getStakeholders } from '../../services/stakeholderService'
 import { platformDb } from '../../services/supabaseClient'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const STATUS_OPTIONS = [

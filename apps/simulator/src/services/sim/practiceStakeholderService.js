@@ -5,7 +5,7 @@
 
 import { simDb } from '../supabase/supabaseClient'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
-import { buildGapSummary } from '../../utils/stakeholderSEAMUtils'
+import { buildGapSummary } from '@nidus/shared/utils/stakeholderSEAMUtils'
 
 async function getCurrentUserId() {
   const { data: { user: authUser } } = await simDb.auth.getUser()

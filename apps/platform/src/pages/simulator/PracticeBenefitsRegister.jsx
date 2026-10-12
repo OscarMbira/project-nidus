@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import { Target, Search, Plus, FileText } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getAllPracticeBenefitsReviewPlans } from '../../services/sim/practiceBenefitsService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PracticeBenefitsRegister() {
   const navigate = useNavigate()

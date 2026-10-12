@@ -7,6 +7,7 @@ import { platformDb } from './supabase/supabaseClient'
 import {
   getLifecycleTableConfig,
   LIFECYCLE_STATUSES,
+  LIFECYCLE_TABLE_REGISTRY,
 } from '@nidus/config/recordLifecycleRegistry'
 
 const db = platformDb
@@ -397,7 +398,6 @@ export async function listAllAuthorisers(accountId) {
 export async function searchArchiveVault(searchTerm, { limit = 50 } = {}) {
   const cfg = getLifecycleTableConfig('risks')
   const results = []
-  const { LIFECYCLE_TABLE_REGISTRY } = await import('../config/recordLifecycleRegistry')
 
   for (const t of LIFECYCLE_TABLE_REGISTRY) {
     const archiveTable = t.archiveTable || t.liveTable

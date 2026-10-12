@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, BarChart3 } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getPracticeStakeholderStats } from '../../services/sim/practiceStakeholderService'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Papa from 'papaparse'
 import { bulkImportOPAFromParsedRows } from '../../../services/sim/simOPAService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 export default function SimOPABulkUpload() {
   const navigate = useNavigate()

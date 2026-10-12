@@ -7,10 +7,10 @@ import {
   deleteSimPortfolioBudget,
 } from '../../services/simPortfolioService'
 import { platformDb } from '@nidus/supabase'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import SelectField from '../../components/ui/SelectField'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import SelectField from '@nidus/ui/SelectField'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const BUDGET_TYPES    = ['Capital', 'Operational', 'Programme', 'Contingency', 'Reserve']
 const BUDGET_STATUSES = ['draft', 'approved', 'active', 'closed', 'cancelled']

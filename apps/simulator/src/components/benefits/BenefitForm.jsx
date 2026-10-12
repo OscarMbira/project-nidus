@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { X, Save, Target, Calendar, ArrowLeft } from 'lucide-react';
 import { saveBenefit } from '../../services/benefitsService';
 import { platformDb } from '@nidus/supabase';
-import { SmartAmountInput } from '../ui/SmartAmountInput';
-import { HoldButton } from '../ui/HoldButton';
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput';
+import { HoldButton } from '../shared-app/HoldButton';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
-import SelectField from '../ui/SelectField';
+import SelectField from '@nidus/ui/SelectField';
 
 function byLabel(rows, labelKey) {
   return [...rows].sort((a, b) =>

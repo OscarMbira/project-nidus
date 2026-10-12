@@ -12,7 +12,7 @@ vi.mock('../../supabase/supabaseClient', () => ({
   simDb: { from: vi.fn(), storage: { from: vi.fn() } },
 }))
 
-vi.mock('../../../utils/resolveSimInternalUserId', () => ({
+vi.mock('@nidus/shared/utils/resolveSimInternalUserId', () => ({
   resolveSimInternalUserId: vi.fn().mockResolvedValue('user-1'),
 }))
 

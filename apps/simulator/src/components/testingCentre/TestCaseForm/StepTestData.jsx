@@ -1,4 +1,4 @@
-import Textarea from '../../ui/Textarea'
+import Textarea from '@nidus/ui/Textarea'
 
 export default function StepTestData({ form, setForm }) {
   return (

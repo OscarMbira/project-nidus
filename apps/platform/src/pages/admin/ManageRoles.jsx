@@ -6,14 +6,14 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { listProjectFunctionalRoles } from '../../services/teamService'
 import { Shield, Plus, LayoutGrid, List, Search, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { RowActionButton } from '@nidus/ui'
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   getManageRolesAccess,
   getCloneSourceRoles,

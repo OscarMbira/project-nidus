@@ -8,8 +8,8 @@ import { getPortfolios } from '../../../services/portfolioService'
 import { getProgrammesForList } from '../../../services/programmeService'
 import { getAllProjects } from '../../../services/projectService'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
-import ExportListMenu from '../../ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const DEBOUNCE_MS = 300

@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { simDb } from '@nidus/supabase'
 import { Play, Trophy, Target, TrendingUp, BookOpen, Award } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 
 export default function SimulatorDashboard() {
   const [stats, setStats] = useState({

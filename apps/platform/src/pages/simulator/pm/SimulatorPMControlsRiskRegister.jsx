@@ -2,7 +2,7 @@
  * Simulator PM Controls - Practice Risk Register
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeRiskRegister from '../PracticeRiskRegister'
 
 export default function SimulatorPMControlsRiskRegister() {

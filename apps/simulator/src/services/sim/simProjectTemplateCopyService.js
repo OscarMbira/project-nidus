@@ -3,7 +3,7 @@
  */
 
 import { simDb, platformDb } from '../supabase/supabaseClient'
-import { exportToExcel, exportListToPPT } from '../../utils/exportUtils'
+import { exportToExcel, exportListToPPT } from '@nidus/shared/utils/exportUtils'
 
 const COPY = 'project_template_copies'
 const CVERS = 'template_copy_versions'

@@ -1,5 +1,5 @@
 import { simDb } from '../supabase/supabaseClient'
-import { resolveSimInternalUserId } from '../../utils/resolveSimInternalUserId'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 
 // Evidence for Simulator practice test case executions (PRD v1204 parity; SQL/v1202).
 export const PRACTICE_EVIDENCE_BUCKET = 'testing-centre-evidence'

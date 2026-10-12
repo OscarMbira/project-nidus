@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Clock, CheckCircle, XCircle, AlertTriangle, Calendar } from 'lucide-react';
-import DashboardStatCard from '../ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { supabase } from '../../services/supabaseClient';
 import { fetchChangeRequests } from '../../services/changeManagementService';
 

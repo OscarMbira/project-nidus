@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { checkPMOAdminRole } from '../../../services/simRfpService'
-import { useToastContext } from '../../../context/ToastContext'
+import { useToastContext } from '@nidus/shared/context/ToastContext'
 
 export default function SimulatorPMORFPOnHold() {
   const navigate = useNavigate()

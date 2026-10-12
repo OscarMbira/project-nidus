@@ -15,7 +15,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { assessmentFormPath } from '@nidus/shared/utils/assessmentMatrixRoute'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { mapAssessmentRowToSeamDisplay, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_name', label: 'Stakeholder' },

@@ -4,7 +4,7 @@ import HeaderProjectSelector from '../HeaderProjectSelector'
 
 const menu = vi.hoisted(() => ({ layoutHint: null }))
 
-vi.mock('@nidus/shared/hooks/useMenu', () => ({
+vi.mock('../../../lib/useMenu', () => ({
   useMenu: () => ({ layoutHint: menu.layoutHint }),
 }))
 

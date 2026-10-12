@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Plus, Calendar, Play, Pause, Edit2, Trash2, Mail, Clock, AlertCircle } from 'lucide-react'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function ScheduledReports() {

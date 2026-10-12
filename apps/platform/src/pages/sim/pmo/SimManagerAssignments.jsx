@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, LayoutGrid, List, Search, Settings, UserMinus, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import AssignManagerModal from '../../../components/pmo/AssignManagerModal'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import {
   getEligibleManagers,
   getActiveAssignmentCountsForUsers,
@@ -18,8 +18,8 @@ import {
   removePracticeProgrammeManager,
   removePracticePortfolioManager,
 } from '../../../services/sim/simManagerAssignmentService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const VIEW_KEY = 'sim-pmo-manager-assignments-view'
 const SORT_PREFIX = 'sim-pmo-manager-assignments-sort-'

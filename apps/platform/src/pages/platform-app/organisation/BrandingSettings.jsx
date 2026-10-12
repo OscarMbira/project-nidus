@@ -8,7 +8,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Palette, Image, Type, User, Save, RotateCcw, Building2, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
-import { useBranding, applyBrandingToDOM } from '@nidus/shared/context/BrandingContext'
+import { useBranding, applyBrandingToDOM } from '../../../lib/BrandingContext'
 import {
   saveBranding,
   resetBranding,

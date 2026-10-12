@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { CurrentProjectProvider } from '../../../context/CurrentProjectContext'
+import { CurrentProjectProvider } from '../../../lib/CurrentProjectContext'
 import PMProjectSelector from '../../../components/pm/PMProjectSelector'
 import ProjectBudgetPage from '../ProjectBudgetPage'
 import { getByProjectId } from '../../../services/projectBudgetCategoryService'

@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useCurrentProject } from '../../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../../lib/CurrentProjectContext'
 import { getGovernanceActions } from '../../../services/governanceActionService'
 import { ListTodo } from 'lucide-react'
 

@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { TableRowNumberCell } from '../ui/Table';
-import RowNumberBadge from '../ui/RowNumberBadge';
+import { TableRowNumberCell } from '@nidus/ui/Table';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { RowActionButton } from '@nidus/ui';
 
 function formatShortDate(iso) {

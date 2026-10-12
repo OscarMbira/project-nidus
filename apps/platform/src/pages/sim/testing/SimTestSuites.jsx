@@ -3,17 +3,17 @@ import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import SimTestingPageShell from '../../../components/sim/SimTestingPageShell'
 import TestSuiteForm from '../../../components/testing/TestSuiteForm'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import {
   getPracticeTestSuites,
   createPracticeTestSuite,
   deletePracticeTestSuite,
 } from '../../../services/sim/practiceTestSuiteService'
 import { getPracticeTestEnvironments } from '../../../services/sim/practiceTestEnvironmentService'
-import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'name', label: 'Name' },

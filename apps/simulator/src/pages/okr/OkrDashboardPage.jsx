@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Target, Plus, Settings, ListChecks } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { listCycles, listObjectivesWithCycleNames } from '../../services/okrService'
 
 const HEALTH_CLASS = {

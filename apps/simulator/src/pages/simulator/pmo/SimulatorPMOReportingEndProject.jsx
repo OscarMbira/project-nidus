@@ -2,7 +2,7 @@
  * Simulator PMO Reporting - Practice End Project Reports (Read-Only)
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeEndProjectReportList from '../PracticeEndProjectReportList'
 
 export default function SimulatorPMOReportingEndProject() {

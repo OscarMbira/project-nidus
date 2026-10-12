@@ -1,4 +1,4 @@
-import Input from '../../ui/Input'
+import Input from '@nidus/ui/Input'
 
 export default function StepAutomation({ form, setForm }) {
   return (

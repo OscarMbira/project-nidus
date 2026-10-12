@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, TrendingUp, DollarSign, Target, AlertTriangle } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getBenefits, getBenefitsDashboardStats, getBenefitsVsCosts } from '../services/benefitsService';
 import BenefitsRealizationChart from '../components/benefits/BenefitsRealizationChart';
 

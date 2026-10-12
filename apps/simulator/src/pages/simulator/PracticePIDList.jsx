@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus } from 'lucide-react'
 import { getPracticePIDs } from '../../services/sim/practicePIDService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const PRACTICE_PID_COLUMNS = [
   { key: 'pid_title', label: 'Title' },
   { key: 'pid_reference', label: 'Reference' }

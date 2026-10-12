@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, PauseCircle } from 'lucide-react'
-import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
+import { useOPATailoringContext } from '../../lib/useOPATailoringContext'
 import { resolveEntityId } from '@nidus/shared/utils/entityRouteParam'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import { getOPAService } from '../../services/resolvers/opaServiceResolver'

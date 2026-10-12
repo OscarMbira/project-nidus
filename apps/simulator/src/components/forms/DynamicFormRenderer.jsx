@@ -5,7 +5,7 @@ import DynamicTableSection from './DynamicTableSection'
 import { calculateEvmMetrics, calculateRiskScore, calculateThreePointDuration } from '../../services/formCalculations'
 import { buildTranslationIndex, resolveFieldLabel, resolveOptionLabel } from '@nidus/shared/utils/formTranslations'
 
-import CalculatedMetricsSummary from '../ui/CalculatedMetricsSummary'
+import CalculatedMetricsSummary from '@nidus/ui/CalculatedMetricsSummary'
 
 export default function DynamicFormRenderer({
   schema, values = {}, rows = {}, onValueChange, onRowsChange, translations = [], languageCode,

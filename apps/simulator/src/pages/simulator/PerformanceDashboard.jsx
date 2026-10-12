@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Activity, Shield, AlertTriangle, CheckCircle, TrendingUp, Clock } from 'lucide-react';
 import { getPerformanceSummary, checkPerformanceThresholds, getMemoryUsage } from '../../services/performanceService';
 import { checkAccessibility } from '../../services/securityService';

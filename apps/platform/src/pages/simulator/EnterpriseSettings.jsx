@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Settings, Palette, Link2, Key, Shield, Download, CheckCircle } from 'lucide-react';
 import {
   getWhiteLabelConfig,

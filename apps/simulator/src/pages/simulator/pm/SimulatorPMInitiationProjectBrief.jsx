@@ -2,7 +2,7 @@
  * Simulator PM Initiation - Practice Project Brief
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeBriefList from '../PracticeBriefList'
 
 export default function SimulatorPMInitiationProjectBrief() {

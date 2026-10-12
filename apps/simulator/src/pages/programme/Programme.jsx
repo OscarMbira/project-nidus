@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Target, TrendingUp, AlertTriangle, DollarSign, Search } from 'lucide-react';
-import DashboardStatCard from '../../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getProgrammes } from '../../services/programmeService';
 import ProgrammeList from '../../components/programme/ProgrammeList';
 import ProgrammeForm from '../../components/programme/ProgrammeForm';

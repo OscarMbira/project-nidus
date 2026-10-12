@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { Package, Search, Plus } from 'lucide-react'
 import { getConfigurationItemsByProject } from '../../services/configurationItemRecordService'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
 
 const CI_COLUMNS = [

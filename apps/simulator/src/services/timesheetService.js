@@ -1,5 +1,5 @@
 import { platformDb } from './supabase/supabaseClient'
-import { createNotification } from '../utils/notificationUtils'
+import { createNotification } from '@nidus/shared/utils/notificationUtils'
 import { sendEmail } from './emailIntegrationService'
 
 const SELECT = '*'

@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { Package } from 'lucide-react'
-import { HoldButton } from '../ui/HoldButton'
+import { HoldButton } from '../shared-app/HoldButton'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'

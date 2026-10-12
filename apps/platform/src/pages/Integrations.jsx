@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Plus, Plug, CheckCircle, XCircle, RefreshCw, Settings, Trash2, Play, Pause } from 'lucide-react'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function Integrations() {

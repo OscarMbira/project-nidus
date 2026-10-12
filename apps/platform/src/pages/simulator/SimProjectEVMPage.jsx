@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { listSimEvmSnapshots, upsertSimEvmSnapshot } from '../../services/simEvmService'
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'period_date', label: 'Period' },

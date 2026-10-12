@@ -3,7 +3,7 @@ import { Save, Search, Calendar, User, Target, AlertTriangle, CheckCircle } from
 import { saveQualityInspection } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
 import { platformDb } from '@nidus/supabase';
-import FormSurface from '../ui/FormSurface';
+import FormSurface from '@nidus/ui/FormSurface';
 import InheritedQualityFields, {
   QUALITY_INSPECTION_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedQualityFields';

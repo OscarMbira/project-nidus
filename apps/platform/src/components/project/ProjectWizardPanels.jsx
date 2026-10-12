@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import SearchableSelect from '../ui/SearchableSelect'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 import GovernanceSection from './GovernanceSection'
 import BusinessJustificationSection from './BusinessJustificationSection'
 import LifecycleControlsSection from './LifecycleControlsSection'

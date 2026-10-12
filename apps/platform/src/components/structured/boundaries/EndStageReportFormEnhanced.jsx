@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, User, Target, TrendingUp, Package, AlertTriangle, Lightbulb, ArrowRight, CheckCircle, X, Save, ArrowLeft } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
-import { HoldButton } from '../../ui/HoldButton'
+import { HoldButton } from '../../shared-app/HoldButton'
 import { createEndStageReport, updateEndStageReport, fetchEndStageReport } from '../../../services/stageBoundariesService'
 import { generateReportReference, validateReportCompleteness } from '../../../services/endStageReportService'
 import { supabase } from '../../../services/supabaseClient'

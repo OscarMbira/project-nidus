@@ -2,11 +2,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { SearchCode, ClipboardList, LayoutDashboard } from 'lucide-react'
-import PlanHealthScoreCard from './PlanHealthScoreCard'
-import * as healthApi from '../../services/planHealthScoreService'
-import * as intelApi from '../../services/planIntelligenceService'
-import * as microApi from '../../services/microPlanService'
-import * as govApi from '../../services/planGovernanceService'
+import PlanHealthScoreCard from '@nidus/planning/components/PlanHealthScoreCard.jsx'
+import * as healthApi from '@nidus/planning/services/platform/planHealthScoreService.js'
+import * as intelApi from '@nidus/planning/services/platform/planIntelligenceService.js'
+import * as microApi from '@nidus/planning/services/platform/microPlanService.js'
+import * as govApi from '@nidus/planning/services/platform/planGovernanceService.js'
 
 /**
  * Phase 6 — Project overview strip: health, scan, team plans, governance (Platform project detail).

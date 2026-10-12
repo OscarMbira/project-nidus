@@ -1181,7 +1181,19 @@ function createCategoryShell(categoryId, sortOrder, universalDefs) {
 // from the PM/TM layout and groupMenuTreeByIndustryPack had nothing to place in each pack section.
 const INDUSTRY_CATEGORY_ROOT_RE = /^[a-z]{2,4}_cat_/
 
-export function reorganizeMenuRoots(roots = [], layout = 'pmo') {
+/**
+ * v1239 (D19): Project Planner menu rows (pln_*) live in the same menu_items table but belong to
+ * planner.<domain> only. Remove them, at any depth, before any Platform/Simulator sidebar
+ * processing — the same cross-app leak class as plat_/sim_ (memory: menu_items shared table).
+ */
+export function stripPlannerMenuNodes(nodes = []) {
+  return (Array.isArray(nodes) ? nodes : [])
+    .filter((n) => !String(n?.menu_code || '').startsWith('pln_'))
+    .map((n) => (n?.children?.length ? { ...n, children: stripPlannerMenuNodes(n.children) } : n))
+}
+
+export function reorganizeMenuRoots(rootsIn = [], layout = 'pmo') {
+  const roots = stripPlannerMenuNodes(rootsIn)
   const config = LAYOUT_CONFIG[layout] || LAYOUT_CONFIG.pmo
   const { universalDefs, universalIds, trackCodes } = config
   const { categoryOrder, trackOrder } = buildOrderMaps(universalDefs, trackCodes)
@@ -1310,11 +1322,16 @@ export function getTrackAnchorForLayout(layout = 'pmo') {
   return (LAYOUT_CONFIG[layout] || LAYOUT_CONFIG.pmo).trackAnchor
 }
 
-/** Override DB sort_order with v671 category order. */
+/**
+ * Fill missing DB sort_order with the v671 category order — never override a real DB value
+ * (same "missing-only" contract as applyCategoryPresentationLabels above; CLAUDE.md rule 25.1
+ * only allows a frontend fallback when the DB value is actually absent).
+ */
 export function applyCategorySortOrders(nodes = [], layout = 'pmo') {
   const config = LAYOUT_CONFIG[layout] || LAYOUT_CONFIG.pmo
   const { categoryOrder, trackOrder } = buildOrderMaps(config.universalDefs, config.trackCodes)
   return (nodes || []).map((node) => {
+    if (node?.sort_order !== null && node?.sort_order !== undefined) return node
     const code = String(node?.menu_code || '')
     const order = categoryOrder.get(code) ?? trackOrder.get(code)
     return order != null ? { ...node, sort_order: order } : node
@@ -1841,34 +1858,51 @@ function harvestExecSubsectionsForPortfolioDelivery(universalNodes = [], layout 
 }
 
 /**
- * v671 §5.1.1 / v719: Executive Overview → Dashboard only.
+ * v1000: Dissolve Executive Overview — promote Dashboard (and any leftover children)
+ * to the PMO Workspace root; drop the empty category wrapper.
  */
-export function nestExecutiveOverviewSections(universalNodes = [], layout = 'pmo') {
+export function dissolveExecutiveOverviewCategory(universalNodes = [], layout = 'pmo') {
   if (layout !== 'pmo' && layout !== 'sim_pmo') return universalNodes
 
   const execCode = layout === 'sim_pmo' ? 'sim_pmo_cat_exec' : 'pmo-cat-exec'
+  const promoted = []
+  const kept = []
 
-  return universalNodes.map((node) => {
-    if (node.menu_code !== execCode) return node
+  for (const node of universalNodes || []) {
+    if (String(node?.menu_code || '') !== execCode) {
+      kept.push(node)
+      continue
+    }
 
     const buckets = Object.fromEntries(EXEC_OVERVIEW_CHILD_ORDER.map((k) => [k, []]))
     for (const child of node.children || []) {
       buckets[classifyExecutiveOverviewChild(child, layout)].push(child)
     }
 
-    const ordered = []
     for (const child of pickV671DashboardLeaves(buckets.dashboard, layout)) {
-      ordered.push({ ...child, sort_order: EXEC_OVERVIEW_SORT_ORDER.dashboard })
+      promoted.push({
+        ...child,
+        sort_order: Math.min(Number(child?.sort_order) || 99, 5),
+      })
     }
 
     for (const child of sortNodes(buckets.other)) {
       if (isExecutiveOverviewDashboardLeaf(child, layout)) continue
       if (classifyExecutiveOverviewChild(child, layout) !== 'other') continue
-      ordered.push({ ...child, sort_order: EXEC_OVERVIEW_SORT_ORDER.other })
+      promoted.push(child)
     }
+  }
 
-    return { ...node, children: finalizeExecutiveOverviewOrder(ordered, layout) }
-  })
+  if (!promoted.length) return kept
+  return sortNodes([...promoted, ...kept])
+}
+
+/**
+ * v671 §5.1.1 / v719: Executive Overview → Dashboard only.
+ * @deprecated v1000 — prefer dissolveExecutiveOverviewCategory (Dashboard at root).
+ */
+export function nestExecutiveOverviewSections(universalNodes = [], layout = 'pmo') {
+  return dissolveExecutiveOverviewCategory(universalNodes, layout)
 }
 
 /** v851/v852 Forms|Templates domainGroup leaves — not PMO "Forms & Documents". */
@@ -2475,7 +2509,7 @@ export function applyPmoSectionNesting(universalNodes = [], layout = 'pmo') {
   const { universalNodes: sanitized, relocate: misnested } = sanitizeMisnestedUniversalChildren(nodes, layout)
   nodes = sanitized
 
-  let nested = nestExecutiveOverviewSections(nodes, layout)
+  let nested = dissolveExecutiveOverviewCategory(nodes, layout)
   const delivery = nestProjectDeliverySections(nested, layout)
   nested = nestV671UniversalCategories(delivery.universalNodes, layout)
 

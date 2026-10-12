@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { DollarSign, Plus, Edit2, Trash2, User, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { getPlanResources, addResource, updateResource, removeResource, calculateTotalResourceCost } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function BenefitsReviewResources({ planId, onUpdate }) {

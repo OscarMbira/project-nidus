@@ -1,0 +1,74 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+import toast from 'react-hot-toast'
+import { usePlanningProjectId } from '../../../hooks/usePlanningProjectId.js'
+import { platformDb } from '@nidus/supabase'
+import * as healthApi from '../../../services/platform/planHealthScoreService'
+
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
+export default function ExecutivePlanView() {
+  const navigate = useNavigate()
+  const isSim = usePlanning().isSim
+  const ProjectBar = usePlanning().ProjectBar
+  const projectId = usePlanningProjectId()
+  const [milestones, setMilestones] = useState([])
+  const [health, setHealth] = useState(null)
+
+  useEffect(() => {
+    if (!projectId || isSim) return
+    ;(async () => {
+      try {
+        const h = await healthApi.getLatestScore(projectId)
+        setHealth(h)
+        const { data: tasks } = await platformDb
+          .from('tasks')
+          .select('task_name, due_date, progress_percentage')
+          .eq('project_id', projectId)
+          .eq('is_milestone', true)
+          .eq('is_deleted', false)
+          .order('due_date', { ascending: true })
+          .limit(6)
+        setMilestones(tasks || [])
+      } catch (e) {
+        toast.error(e?.message || 'Failed to load executive view')
+      }
+    })()
+  }, [projectId, isSim])
+
+  return (
+    <div className="text-gray-900 dark:text-gray-100 px-4 py-6">
+      <div className="max-w-4xl mx-auto">
+        <button onClick={() => navigate(-1)} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </button>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Executive decision view</h1>
+        <ProjectBar isSim={isSim} />
+        {!projectId && <p className="text-amber-400/90 text-sm">Select a project.</p>}
+        {isSim && <p className="text-gray-500 text-sm mt-4">Simulator executive view uses practice project data.</p>}
+        {projectId && !isSim && (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900/50">
+              <div className="text-sm text-gray-500 dark:text-gray-400">Schedule health</div>
+              <div className="text-3xl font-semibold text-emerald-400 mt-1">{health?.overall_score ?? '—'}</div>
+            </div>
+            <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-900/50">
+              <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">Next milestones</div>
+              <ul className="text-sm space-y-1">
+                {milestones.map((m, index) => (
+                  <li key={m.task_name} className="flex justify-between gap-2">
+                    <span className="text-gray-800 dark:text-gray-200 truncate">{m.task_name}</span>
+                    <span className="text-gray-500 shrink-0">{m.due_date || '—'}</span>
+                  </li>
+                ))}
+                {milestones.length === 0 && <li className="text-gray-500">No milestones found.</li>}
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

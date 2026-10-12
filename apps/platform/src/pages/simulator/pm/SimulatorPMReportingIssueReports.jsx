@@ -2,7 +2,7 @@
  * Simulator PM Reporting - Practice Issue Reports
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeIssueReportList from '../PracticeIssueReportList'
 
 export default function SimulatorPMReportingIssueReports() {

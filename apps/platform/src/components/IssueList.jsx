@@ -3,13 +3,13 @@ import { supabase } from '../services/supabaseClient'
 import { format, differenceInCalendarDays, startOfDay, parseISO, isValid } from 'date-fns'
 import { CheckCircle, Clock, AlertCircle, User, Calendar, Bug, Zap } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import RowNumberBadge from './ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { RowActionButton } from '@nidus/ui'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformIssuePath } from '@nidus/shared/utils/projectRouteParam'
-import { formatIssueUpdatedBy } from '../constants/issueListColumns'
+import { formatIssueUpdatedBy } from '@nidus/shared/constants/issueListColumns'
 
 const CLOSED_STATUSES = new Set(['closed', 'resolved', 'cancelled'])
 

@@ -12,7 +12,7 @@ import QualityActivityParticipants from './QualityActivityParticipants';
 import QualityActivityRecords from './QualityActivityRecords';
 import QualityActivityActions from './QualityActivityActions';
 import QualityActivityExportMenu from './QualityActivityExportMenu';
-import ExportRecordButtons from '../ui/ExportRecordButtons';
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
 
 const QUALITY_ACTIVITY_EXPORT_SECTIONS = [

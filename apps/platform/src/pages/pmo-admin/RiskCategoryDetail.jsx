@@ -22,7 +22,7 @@ import {
   updateRiskCategory,
   updateRiskSubcategory,
 } from '../../services/riskCategoryCatalogService'
-import { similarCatalogueNames } from '../../utils/riskCategoryMatch'
+import { similarCatalogueNames } from '@nidus/shared/utils/riskCategoryMatch'
 import { riskCategoryBasePath } from './riskCategoryPaths'
 
 export default function RiskCategoryDetail() {

@@ -11,7 +11,7 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
-import ViewToggle from '../components/ui/ViewToggle'
+import ViewToggle from '@nidus/ui/ViewToggle'
 
 const DEFAULT_SORT = { column: 'criteria_title', direction: 'asc' }
 const SORT_ACCESSORS = {

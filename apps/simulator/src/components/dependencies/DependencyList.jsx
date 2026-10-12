@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link2, Edit2, Trash2, AlertTriangle, FolderKanban, Target, TrendingUp, ArrowRight } from 'lucide-react';
 import { deleteInterProjectDependency } from '../../services/dependencyService';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
 

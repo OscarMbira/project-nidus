@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import SimTestingPageShell from '../../../components/sim/SimTestingPageShell'
-import DashboardStatCard from '../../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getPracticeDefectStats } from '../../../services/sim/practiceDefectService'
 import DefectTrendChart from '../../../components/testing/DefectTrendChart'
 import DefectBySeverityChart from '../../../components/testing/DefectBySeverityChart'

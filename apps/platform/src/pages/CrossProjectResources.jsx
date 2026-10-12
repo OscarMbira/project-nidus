@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, AlertTriangle, TrendingUp, Calendar, Target, Link2, Search } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getCrossProjectResourceDashboardStats, getCrossProjectAllocations } from '../services/crossResourceService';
 import CrossProjectAllocationList from '../components/resources/CrossProjectAllocationList';
 import CrossProjectAllocationForm from '../components/resources/CrossProjectAllocationForm';

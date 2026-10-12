@@ -73,7 +73,7 @@ vi.mock('../../../services/eprQualityCheckService', () => ({
   runQualityChecks: vi.fn(),
 }))
 
-vi.mock('../../../components/ui/HoldButton', () => ({
+vi.mock('../../../components/shared-app/HoldButton', () => ({
   HoldButton: () => <button type="button">Put on Hold</button>,
 }))
 

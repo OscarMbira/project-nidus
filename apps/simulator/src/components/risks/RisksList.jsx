@@ -7,7 +7,7 @@ import { AlertTriangle } from 'lucide-react';
 import RiskCard from './RiskCard';
 import RiskStatusBadge from './RiskStatusBadge';
 import RiskScoreBadge from './RiskScoreBadge';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
 import { RowActionButton } from '@nidus/ui';
 

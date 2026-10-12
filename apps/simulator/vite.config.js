@@ -31,12 +31,10 @@ export default mergeConfig(
     plugins: federationPlugin ? [federationPlugin] : [],
     resolve: {
       alias: {
-        '@nidus/ui': path.resolve(__dirname, 'src/components/ui'),
-        '@nidus/shared/utils': path.resolve(__dirname, 'src/utils'),
-        '@nidus/shared/hooks': path.resolve(__dirname, 'src/hooks'),
-        '@nidus/shared/context': path.resolve(__dirname, 'src/context'),
-        '@nidus/shared/constants': path.resolve(__dirname, 'src/constants'),
         '@nidus/shared/federation': path.resolve(repoRoot, 'packages/shared/src/federation'),
+        // v1240: module source compiled inside this app resolves app-side components the same way
+        // module builds do ('@shell' = the shell app's src in packages/modules/*/vite.config.js).
+        '@shell': path.resolve(__dirname, 'src'),
       },
     },
     server: {

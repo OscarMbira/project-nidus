@@ -9,7 +9,7 @@ import {
   getPracticeExecutionsByRun,
   updatePracticeExecution,
 } from '../../../services/sim/practiceTestRunService'
-import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 
 export default function SimTestRunExecute() {

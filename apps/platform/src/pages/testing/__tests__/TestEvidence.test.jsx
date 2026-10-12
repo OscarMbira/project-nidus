@@ -23,7 +23,7 @@ vi.mock('../../../services/testCaseExecutionEvidenceService', async (importOrigi
   }
 })
 
-vi.mock('../../../hooks/useProjectRole', () => ({
+vi.mock('@nidus/shared/hooks/useProjectRole', () => ({
   useProjectRole: vi.fn(() => ({ canEdit: false })),
 }))
 

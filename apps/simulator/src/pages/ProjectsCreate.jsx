@@ -4,14 +4,14 @@ import { supabase } from '../services/supabaseClient'
 import { Loader } from 'lucide-react'
 
 // Draft Queue Integration
-import { HoldButton } from '@nidus/ui/HoldButton'
+import { HoldButton } from '../components/shared-app/HoldButton'
 import { AutoSaveIndicator } from '@nidus/ui/AutoSaveIndicator'
-import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
+import { useDraftQueue } from '../lib/useDraftQueue'
 
 import ProjectFormTabs from '../components/project/ProjectFormTabs'
 import ProjectWizardPanels from '../components/project/ProjectWizardPanels'
 
-const ExportRecordMenu = lazy(() => import('../components/ui/ExportRecordMenu'))
+const ExportRecordMenu = lazy(() => import('@nidus/ui/ExportRecordMenu'))
 const ReadinessPanel = lazy(() => import('../components/project/ReadinessPanel'))
 const AuthorisationActions = lazy(() => import('../components/project/AuthorisationActions'))
 

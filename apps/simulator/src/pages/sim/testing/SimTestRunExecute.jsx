@@ -16,7 +16,7 @@ import {
   softDeletePracticeExecutionEvidence,
   getPracticeEvidenceRequirementSettings,
 } from '../../../services/sim/practiceTestCaseExecutionEvidenceService'
-import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 import {
   resolveTestEvidenceRequirement,
   canRemoveTestEvidence,

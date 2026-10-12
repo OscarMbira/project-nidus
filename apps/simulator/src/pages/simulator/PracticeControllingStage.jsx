@@ -10,7 +10,7 @@ import { getPracticeWorkPackages } from '../../services/sim/practiceWorkPackageS
 import { getPracticeCheckpointReports } from '../../services/sim/practiceCheckpointReportService'
 import { getPracticeExceptionReports } from '../../services/sim/practiceExceptionReportService'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function PracticeControllingStage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()

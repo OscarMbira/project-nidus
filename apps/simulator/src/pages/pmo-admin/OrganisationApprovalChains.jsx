@@ -16,7 +16,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { platformDb } from '@nidus/supabase'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   getPmoConfigAccess,
   getApprovalChainTemplates,

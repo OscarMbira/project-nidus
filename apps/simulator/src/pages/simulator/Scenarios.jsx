@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import ScenarioCard from '../../components/sim/ScenarioCard';
 import { getScenarios } from '../../services/simulatorService';
 import { SIMULATOR_ROLE_LIST } from '@nidus/shared/constants/simulatorRoles';

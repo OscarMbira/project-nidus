@@ -9,6 +9,8 @@
     "dev:all": "node scripts/free-dev-ports.mjs && turbo dev --concurrency=30",
     "dev:platform": "node scripts/free-dev-ports.mjs && turbo dev --filter=@nidus/platform-app",
     "dev:simulator": "node scripts/free-dev-ports.mjs && turbo dev --filter=@nidus/simulator-app",
+    "dev:planner": "turbo dev --filter=@nidus/planner-app",
+    "dev:site": "turbo dev --filter=@nidus/site-app",
     "build": "turbo build",
     "build:platform": "turbo build --filter=@nidus/platform-app",
     "build:simulator": "turbo build --filter=@nidus/simulator-app",

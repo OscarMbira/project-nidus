@@ -1,5 +1,5 @@
-import Input from '../../ui/Input'
-import SearchableSelect from '../../ui/SearchableSelect'
+import Input from '@nidus/ui/Input'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 const REUSE = [
   { value: 'true', label: 'Yes' },

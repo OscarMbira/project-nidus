@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Trophy, Medal, Award, Crown } from 'lucide-react';
 import { getLeaderboard, getUserRank } from '../../services/simulatorService';
 import { simDb } from '../../services/supabase/supabaseClient';

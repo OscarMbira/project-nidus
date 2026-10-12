@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import ModuleLoadingFallback from '../../components/ui/ModuleLoadingFallback.jsx'
+import ModuleLoadingFallback from '@nidus/ui/ModuleLoadingFallback.jsx'
 
 /** Bundled fallback — same routes as pmo_module remote exposes. */
 const ModuleRoutes = lazy(() => import('@nidus/pmo-module/routes'))

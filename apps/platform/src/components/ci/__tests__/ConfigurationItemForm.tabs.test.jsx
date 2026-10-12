@@ -29,7 +29,7 @@ vi.mock('../../../services/supabaseClient', () => {
   }
 })
 
-vi.mock('../../ui/HoldButton', () => ({
+vi.mock('../../shared-app/HoldButton', () => ({
   HoldButton: () => null,
 }))
 

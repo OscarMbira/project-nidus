@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import Modal from './Modal'
 import Button from './Button'
 import ApprovalChainDisplay from './ApprovalChainDisplay'
-import PendingChangesDiff from './PendingChangesDiff'
 
 export default function AuthorisationRequestModal({
   open,
@@ -10,9 +9,6 @@ export default function AuthorisationRequestModal({
   onSubmit,
   chain = [],
   progress,
-  pending,
-  pendingLoading = false,
-  pendingError = null,
   mode = 'submit',
   onDecision,
   loading = false,
@@ -45,9 +41,6 @@ export default function AuthorisationRequestModal({
             : 'Review the record, then approve or reject with a mandatory justification.'}
         </p>
         <ApprovalChainDisplay chain={chain} progress={progress} />
-        {mode === 'decide' && (
-          <PendingChangesDiff pending={pending} loading={pendingLoading} error={pendingError} />
-        )}
         <div>
           <label htmlFor="authorisation-notes" className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
             {justificationRequired ? 'Justification (required)' : 'Notes (optional)'}

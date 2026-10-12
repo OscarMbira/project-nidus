@@ -10,8 +10,8 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
-import RecordStatusBadge from '../../components/ui/RecordStatusBadge'
-import AuthorisationRequestModal from '../../components/ui/AuthorisationRequestModal'
+import RecordStatusBadge from '@nidus/ui/RecordStatusBadge'
+import AuthorisationRequestModal from '@nidus/ui/AuthorisationRequestModal'
 import { useToast } from '@nidus/shared/hooks/useToast'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import {
@@ -20,7 +20,7 @@ import {
   submitRecordForAuthorisation,
 } from '../../services/localRegisterRecordService'
 import { supabase } from '../../services/supabaseClient'
-import { isLikelyDatabaseUuid } from '../../utils/isUuid'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 
 function fieldValueToText(field, value) {
   if (value === null || value === undefined || value === '') return '—'

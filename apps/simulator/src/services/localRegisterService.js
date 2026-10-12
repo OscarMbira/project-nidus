@@ -17,7 +17,7 @@
 
 import { supabase, simDb } from './supabaseClient'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
-import { isLikelyDatabaseUuid } from '../utils/isUuid'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 
 async function loadFields(client, registerRowId) {
   const { data, error } = await client

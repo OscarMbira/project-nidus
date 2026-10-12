@@ -6,12 +6,12 @@ import {
   addStakeholderOrganisation,
   loadStakeholderCatalogues,
 } from '../../services/stakeholderCatalogueService';
-import SelectField from '../ui/SelectField';
+import SelectField from '@nidus/ui/SelectField';
 import { platformDb } from '../../services/supabaseClient';
-import StakeholderPhotoField from '../ui/StakeholderPhotoField';
+import StakeholderPhotoField from '@nidus/ui/StakeholderPhotoField';
 import { saveStakeholderPhoto } from '@nidus/shared/services/stakeholderPhotoService';
-import SearchableSelect from '../ui/SearchableSelect';
-import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue';
+import SearchableSelect from '@nidus/ui/SearchableSelect';
+import { useDraftQueue } from '../../lib/useDraftQueue';
 import { buildIanaTimezoneSelectOptions } from '@nidus/shared/utils/ianaTimezoneOptions';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simGetActivity, simSaveActivity, simListWbsNodes } from '../../../services/sim/simPlanningService'
 import { simDb } from '../../../services/supabase/supabaseClient'
-import { SmartAmountInput } from '../../../components/ui/SmartAmountInput'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -14,7 +14,7 @@ import {
   exportRecordToXML,
   exportRecordToJSON,
   exportRecordToPrint,
-} from '../../../utils/exportUtils'
+} from '@nidus/shared/utils/exportUtils'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'

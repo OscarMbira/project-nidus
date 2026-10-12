@@ -21,7 +21,7 @@ import {
   TableRowNumberHeader,
   TableRowNumberCell,
 } from '@nidus/ui/Table'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { engagementPlanEditPath, engagementPlanViewPath } from '@nidus/shared/utils/engagementPlanRoute'
@@ -29,7 +29,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { getDisplayRowNumber, withExportRowNumbers } from '@nidus/shared/utils/tableRowNumberUtils'
 import { platformDb } from '../../services/supabaseClient'
-import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
 
 const BOARD_LEVELS = ['unaware', 'resistant', 'neutral', 'supportive', 'leading', 'unsupportive', 'blocking']
 

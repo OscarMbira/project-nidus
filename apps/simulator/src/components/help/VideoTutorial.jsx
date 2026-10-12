@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, ChevronLeft, ChevronRight, List, Bookmark, BookmarkCheck } from 'lucide-react'
-import { Button } from '../ui/Button'
+import { Button } from '@nidus/ui/Button'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 
 export default function VideoTutorial({ 

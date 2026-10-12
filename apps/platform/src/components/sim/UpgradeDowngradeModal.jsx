@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useThemeContext } from '../../context/ThemeContext';
+import { useThemeContext } from '@nidus/shared/context/ThemeContext';
 import { X, ArrowUp, ArrowDown, Check } from 'lucide-react';
 import { SUBSCRIPTION_TIERS, getTierDetails } from '../../services/subscriptionService';
 import { updateSubscription } from '../../services/stripeService';

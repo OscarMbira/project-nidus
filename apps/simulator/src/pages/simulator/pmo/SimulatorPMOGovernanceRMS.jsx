@@ -2,7 +2,7 @@
  * Simulator PMO Governance - Practice Risk Management Strategy
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeRMSList from '../PracticeRMSList'
 
 export default function SimulatorPMOGovernanceRMS() {

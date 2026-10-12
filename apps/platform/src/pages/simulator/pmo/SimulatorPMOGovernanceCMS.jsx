@@ -2,7 +2,7 @@
  * Simulator PMO Governance - Practice Communication Management Strategy
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeCMSList from '../PracticeCMSList'
 
 export default function SimulatorPMOGovernanceCMS() {

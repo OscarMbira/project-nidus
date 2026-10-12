@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TestingPageShell from '../../components/testing/TestingPageShell'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getDefectStats } from '../../services/defectService'
 import DefectTrendChart from '../../components/testing/DefectTrendChart'
 import DefectBySeverityChart from '../../components/testing/DefectBySeverityChart'

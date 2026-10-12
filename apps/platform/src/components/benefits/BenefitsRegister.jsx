@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, CheckCircle, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { deleteBenefit } from '../../services/benefitsService';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { benefitGapProgressPercent } from '@nidus/shared/utils/benefitProgress'
 import { RowActionButton } from '@nidus/ui'

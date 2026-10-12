@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simListActivities } from '../../../services/sim/simPlanningService'
 import ScheduleGanttView from '../../../components/schedule/GanttChart'
 

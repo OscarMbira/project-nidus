@@ -6,7 +6,7 @@
  * Guide.md.
  */
 import { supabase } from './supabaseClient'
-import { getCurrentUserInternalUserId, getCurrentUserAccountId } from '../utils/accountResolution'
+import { getCurrentUserInternalUserId, getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 /**
  * Fetch the active Tier-1 module registry rows (public.gdpr_export_registry).

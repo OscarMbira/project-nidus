@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { MessageSquare, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getPracticeCMS, createPracticeCMS, updatePracticeCMS } from '../../services/sim/practiceCMSService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PRACTICE_CMS_COLUMNS = [
   { key: 'cms_reference', label: 'Reference' },

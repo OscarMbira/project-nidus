@@ -17,7 +17,7 @@ import {
   Send,
   CheckCircle
 } from 'lucide-react'
-import { HoldButton } from '../../ui/HoldButton'
+import { HoldButton } from '../../shared-app/HoldButton'
 import {
   createHighlightReport,
   updateHighlightReport,

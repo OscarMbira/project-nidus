@@ -10,9 +10,9 @@ import {
   fetchChangeLogEntry, createChangeLogEntry, updateChangeLogEntry,
   deleteChangeLogEntry, resolveUserId,
 } from '../../services/changeLogService'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ChangeLogAttachments from './ChangeLogAttachments'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 // ─── constants ───────────────────────────────────────────────────────────────

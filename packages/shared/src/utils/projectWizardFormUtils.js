@@ -74,7 +74,6 @@ export function getEmptyWizardFormData() {
     project_assumptions: '',
     key_deliverables: '',
     required_approvals: '',
-    industry_category_id: '',
     success_criteria: '',
     project_classification: '',
   }
@@ -152,7 +151,6 @@ export function mapDbProjectToWizardForm(projectRow, methodologyId, budgetCatego
     project_assumptions: d.project_assumptions || '',
     key_deliverables: d.key_deliverables || '',
     required_approvals: d.required_approvals || '',
-    industry_category_id: d.industry_category_id || '',
     success_criteria: d.success_criteria || '',
     project_classification: d.project_classification || '',
   }
@@ -269,7 +267,6 @@ export function wizardFormToProjectUpdatePayload(formData, userId) {
     project_assumptions: formData.project_assumptions || null,
     key_deliverables: formData.key_deliverables || null,
     required_approvals: formData.required_approvals || null,
-    industry_category_id: formData.industry_category_id || null,
     success_criteria: formData.success_criteria || null,
     project_classification: formData.project_classification || null,
     ...(userId ? { updated_by: userId } : {}),

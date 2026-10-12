@@ -1,42 +1,58 @@
-name: Shared Code Changed — Rebuild Both
+name: Shared Packages Changed — Drift Check, Build & Test Dependents
+
+# v1240: packages/* is the single source of truth for shared UI, utils, hooks, context and
+# constants (CLAUDE.md rule 34.3). A change here rebuilds and retests every app and module that
+# depends on it (Turborepo dependency graph), and the drift check fails if an app-local shadow
+# copy or an @nidus/* alias override reappears. Replaces the pre-monorepo version of this file,
+# which watched src/** paths that no longer exist.
 
 on:
   push:
     branches: [master, main]
     paths:
-      - 'src/shared/**'
-      - 'src/services/supabase/**'
-      - 'src/context/**'
-      - 'src/hooks/**'
-      - 'src/utils/**'
-      - 'src/components/ui/**'
-      - 'src/routes/routeCommon.jsx'
-      - 'src/routes/publicRoutes.jsx'
-      - 'src/routes/authRoutes.jsx'
-      - 'vite.base.config.js'
-      - 'package.json'
-      - 'package-lock.json'
-
+      - 'packages/ui/**'
+      - 'packages/shared/**'
+      - 'packages/supabase/**'
+      - 'packages/config/**'
+      - 'apps/*/vite.config.js'
+      - 'scripts/check-shared-drift.mjs'
+      - 'pnpm-lock.yaml'
   pull_request:
     paths:
-      - 'src/shared/**'
-      - 'src/services/supabase/**'
-      - 'src/context/**'
-      - 'src/hooks/**'
-      - 'src/utils/**'
-      - 'src/components/ui/**'
+      - 'packages/ui/**'
+      - 'packages/shared/**'
+      - 'packages/supabase/**'
+      - 'packages/config/**'
+      - 'apps/*/vite.config.js'
+      - 'scripts/check-shared-drift.mjs'
 
 jobs:
-  rebuild-all:
+  drift-build-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run build:all
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Shared package drift check (enforce)
+        run: node scripts/check-shared-drift.mjs --enforce
+
+      - name: Drift check unit tests
+        run: node --test scripts/__tests__/check-shared-drift.test.mjs
+
+      - name: Build and test every dependent of the changed packages
+        run: pnpm turbo build test --continue --filter="...[HEAD^1]"
         env:
           VITE_SUPABASE_URL: ${{ secrets.PLATFORM_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.PLATFORM_SUPABASE_ANON_KEY }}

@@ -7,7 +7,7 @@ import {
   updatePracticeTestCase,
 } from '../../../services/sim/practiceTestCaseService'
 import { getPracticeTestSuites } from '../../../services/sim/practiceTestSuiteService'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { RowActionButton } from '@nidus/ui'
 import {
   exportRecordToExcel,
@@ -17,7 +17,7 @@ import {
   exportRecordToXML,
   exportRecordToJSON,
   exportRecordToPrint,
-} from '../../../utils/exportUtils'
+} from '@nidus/shared/utils/exportUtils'
 import RecordPreviewModal from '@nidus/ui/RecordPreviewModal'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 

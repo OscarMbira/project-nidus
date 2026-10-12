@@ -4,12 +4,12 @@ import { Plus, Search, Eye, Pencil, PauseCircle } from 'lucide-react'
 import { listOPAs } from '../../../services/sim/simOPAService'
 import { listSimulationRunsForPicker } from '../../../services/sim/simProjectOPATailoringService'
 import { ensureEefOpaSampleForAccount } from '../../../services/eefService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
-import ViewToggle from '../../../components/ui/ViewToggle'
-import { useViewMode } from '../../../hooks/useViewMode'
-import { useSortableTable } from '../../../hooks/useSortableTable'
-import { Table, TableBody, TableHeader, TableRow, TableHeaderCell, TableCell } from '../../../components/ui/Table'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { Table, TableBody, TableHeader, TableRow, TableHeaderCell, TableCell } from '@nidus/ui/Table'
 
 const COLS = [
   { key: 'title', label: 'Title' },

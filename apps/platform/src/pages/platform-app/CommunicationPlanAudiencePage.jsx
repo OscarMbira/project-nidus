@@ -10,7 +10,7 @@ import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import {
   deleteCommunicationPlan,
   getCommunicationPlans,

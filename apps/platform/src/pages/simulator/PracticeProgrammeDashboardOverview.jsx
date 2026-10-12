@@ -7,7 +7,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BarChart3, Layers, Target, TrendingUp, CheckCircle, Activity, GitBranch, DollarSign } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getPracticeProgrammesForDashboard } from '../../services/sim/practicePortfolioService'
 
 export default function PracticeProgrammeDashboardOverview() {

@@ -17,8 +17,8 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { platformDb } from '@nidus/supabase'
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   getPmoConfigAccess,
   getProjectClassifications,

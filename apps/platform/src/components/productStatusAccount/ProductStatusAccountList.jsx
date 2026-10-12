@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Filter, Calendar, Package } from 'lucide-react'
 import { getProductStatusAccountByProject } from '../../services/productStatusAccountService'
 import ProductStatusAccountCard from './ProductStatusAccountCard'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const PSA_COLUMNS = [

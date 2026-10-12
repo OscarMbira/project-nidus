@@ -3,7 +3,7 @@
  * Shows list of all practice BRPs (no projectId required).
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeBenefitsReviewPlanList from '../PracticeBenefitsReviewPlanList'
 
 export default function SimulatorPMOInitiationBenefitsReviewPlan() {

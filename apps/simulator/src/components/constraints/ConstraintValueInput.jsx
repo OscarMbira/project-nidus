@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { SmartAmountInput } from '../ui/SmartAmountInput';
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput';
 
 export default function ConstraintValueInput({
   category,

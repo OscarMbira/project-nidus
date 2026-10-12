@@ -4,9 +4,9 @@ import { format } from 'date-fns'
 import { AlertTriangle, TrendingUp, User, Calendar } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { platformRiskPath } from '@nidus/shared/utils/projectRouteParam'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import RowNumberBadge from './ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { RowActionButton } from '@nidus/ui'
 
 export default function RiskList({ risks, onEdit, onRefresh, projectId, routeProjectKey, viewMode = 'list', page = 1, pageSize = 20 }) {

@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Package, Plus } from 'lucide-react'
 import { getPracticeConfigItems, createPracticeConfigItem } from '../../services/sim/practiceConfigMSService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const PRACTICE_CONFIG_ITEM_COLUMNS = [
   { key: 'item_name', label: 'Name' },
   { key: 'item_identifier', label: 'Identifier' }

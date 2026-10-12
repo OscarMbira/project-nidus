@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createCopyFromMaster, listSimulationRunsForPicker } from '../../../services/sim/simProjectTemplateCopyService'
 import { getTemplateById } from '../../../services/sim/simTemplateLibraryService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const BASE = '/simulator/templates'

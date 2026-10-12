@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Plus, FileText, Calendar } from 'lucide-react'
-import { useThemeContext } from '../../../context/ThemeContext'
+import { useThemeContext } from '@nidus/shared/context/ThemeContext'
 import { getPracticePlan } from '../../../services/sim/practicePlanService'
 import { getPracticeStagePlansByProject } from '../../../services/sim/practiceStageplanService'
 

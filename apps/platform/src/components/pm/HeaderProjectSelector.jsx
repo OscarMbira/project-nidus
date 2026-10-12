@@ -1,4 +1,4 @@
-import { useMenu } from '@nidus/shared/hooks/useMenu'
+import { useMenu } from '../../lib/useMenu'
 import PMProjectSelector from './PMProjectSelector'
 
 /**

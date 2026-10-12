@@ -2,7 +2,7 @@
  * Simulator PMO Reporting - Practice Exception Reports (Read-Only)
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeExceptionReportList from '../PracticeExceptionReportList'
 
 export default function SimulatorPMOReportingException() {

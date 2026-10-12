@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useMenu } from '@nidus/shared/hooks/useMenu'
+import { useMenu } from '../lib/useMenu'
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 import { getSidebarNestedItemPadding } from '@nidus/shared/utils/sidebarNavUtils'
 

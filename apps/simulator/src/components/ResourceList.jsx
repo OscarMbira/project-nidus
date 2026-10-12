@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Edit2, Trash2, Calendar, User, Users, TrendingUp, AlertTriangle } from 'lucide-react'
 import { supabase } from '../services/supabaseClient'
-import { TableRowNumberHeader, TableRowNumberCell } from './ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ResourceList({ resources, onEdit, onRefresh }) {

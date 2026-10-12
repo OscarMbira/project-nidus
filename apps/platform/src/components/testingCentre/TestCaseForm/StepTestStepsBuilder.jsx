@@ -1,4 +1,4 @@
-import Textarea from '../../ui/Textarea'
+import Textarea from '@nidus/ui/Textarea'
 import TestStepsBuilder from '../TestStepsBuilder'
 
 export default function StepTestCaseSteps({ form, setForm }) {

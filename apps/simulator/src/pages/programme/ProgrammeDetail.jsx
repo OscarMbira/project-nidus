@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useEntityId } from '@nidus/shared/hooks/useEntityId';
+import { useEntityId } from '../../lib/useEntityId';
 import { ArrowLeft, Target, TrendingUp, AlertTriangle, Activity, Calendar, CheckCircle, Link2, Layers } from 'lucide-react';
 import {
   getProgramme,
@@ -25,7 +25,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import { platformDb } from '../../services/supabase/supabaseClient';
-import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx';
+import TierFormPolicyPanel from '../../components/shared-app/TierFormPolicyPanel.jsx';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils';
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'

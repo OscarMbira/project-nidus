@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../services/supabaseClient';
-import { getConfidenceForecasts } from '../../services/planConfidenceService';
+import { getConfidenceForecasts } from '@nidus/planning/services/platform/planConfidenceService.js';
 import GanttToolbar from './GanttToolbar';
 import GanttTimeline from './GanttTimeline';
 import DependencyManager from './DependencyManager';

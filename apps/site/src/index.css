@@ -1,0 +1,10 @@
+@import "tailwindcss";
+/* v1241: shared packages live outside this app folder, so Tailwind must be told to scan them. */
+@source "../../../packages/ui/src";
+
+/* Tailwind v4 class-based dark mode (same as the product apps). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  color-scheme: light dark;
+}

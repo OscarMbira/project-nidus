@@ -2,7 +2,7 @@
  * Stage Plan Budget Section
  */
 
-import { SmartAmountInput } from '../ui/SmartAmountInput'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 
 export default function StagePlanBudgetSection({ formData, onChange, errors, mode }) {
   return (

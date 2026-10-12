@@ -6,12 +6,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FolderKanban, Plus } from 'lucide-react'
 import { getPracticePortfolios } from '../../services/sim/practicePortfolioService'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { useViewMode } from '../../hooks/useViewMode'
-import ViewToggle from '../../components/ui/ViewToggle'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 export default function PracticePortfolio() {
   const navigate = useNavigate()
   const [portfolioViewMode, setPortfolioViewMode] = useViewMode('simulator-practice-portfolio', 'grid')

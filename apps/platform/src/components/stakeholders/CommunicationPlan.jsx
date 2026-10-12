@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, Plus, Edit2, Trash2, Send, Calendar, User, Mail } from 'lucide-react';
 import { supabase, platformDb } from '../../services/supabaseClient';
-import StakeholderAvatar from '../ui/StakeholderAvatar';
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
 import { getStakeholders } from '../../services/stakeholderService';
 
 export default function CommunicationPlan({ projectId }) {

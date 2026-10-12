@@ -27,7 +27,7 @@ import StagePlanRiskSection from './StagePlanRiskSection'
 import PlanApprovalSection from './PlanApprovalSection'
 import PlanRevisionHistorySection from './PlanRevisionHistorySection'
 import PlanVarianceAnalysis from './PlanVarianceAnalysis'
-import ExportRecordButtons from '../ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const STAGE_PLAN_SECTIONS = [

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ImagePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { RowActionButton } from '@nidus/ui'
-import ZoomableImage from '../ui/ZoomableImage'
+import ZoomableImage from '@nidus/ui/ZoomableImage'
 import { getDefectAttachments, uploadDefectAttachment, deleteDefectAttachment } from '../../services/defectService'
 
 function filesFromClipboard(event) {

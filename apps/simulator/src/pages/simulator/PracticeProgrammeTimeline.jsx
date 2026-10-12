@@ -8,8 +8,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Calendar, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeTimelineData } from '../../services/sim/practicePortfolioService'
 import ProgrammeTimelineView from '../../components/programme/ProgrammeTimelineView'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PracticeProgrammeTimelinePage() {
   const [programmes, setProgrammes] = useState([])

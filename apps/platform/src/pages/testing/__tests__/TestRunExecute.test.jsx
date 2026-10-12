@@ -28,7 +28,7 @@ vi.mock('../../../services/testCaseExecutionEvidenceService', () => ({
   getEvidenceRequirementSettings: vi.fn().mockResolvedValue({ projectValue: null, accountDefault: null }),
 }))
 
-vi.mock('../../../hooks/useProjectRole', () => ({
+vi.mock('@nidus/shared/hooks/useProjectRole', () => ({
   useProjectRole: () => ({ canEdit: false }),
 }))
 

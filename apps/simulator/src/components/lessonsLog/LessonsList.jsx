@@ -8,7 +8,7 @@ import { RowActionButton } from '@nidus/ui';
 import LessonCard from './LessonCard';
 import LessonStatusBadge from './LessonStatusBadge';
 import EffectTypeIndicator from './EffectTypeIndicator';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
 
 export default function LessonsList({

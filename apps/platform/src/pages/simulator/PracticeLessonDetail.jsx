@@ -6,8 +6,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { updatePracticeLessonEntry } from '../../services/sim/practiceLessonsService'
-import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
 const PRACTICE_LESSON_VIEW_SECTIONS = [

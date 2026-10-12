@@ -8,7 +8,7 @@ import { useParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { Package, TrendingUp, AlertCircle, Clock, CheckCircle } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getProductStatusAccountByProject, getStatusSummary } from '../../services/productStatusAccountService'
 import ProductStatusAccountCard from '../../components/productStatusAccount/ProductStatusAccountCard'
 import PSAStatusIndicator from '../../components/productStatusAccount/PSAStatusIndicator'

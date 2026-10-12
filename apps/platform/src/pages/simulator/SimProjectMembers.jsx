@@ -13,15 +13,15 @@ import {
   removeSimProjectMember,
   getSimAssignableRoles,
 } from '../../services/sim/simProjectMembershipService'
-import { useToast } from '../../hooks/useToast'
-import { useSortableTable } from '../../hooks/useSortableTable'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { useViewMode } from '../../hooks/useViewMode'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import ViewToggle from '../../components/ui/ViewToggle'
+import { useToast } from '@nidus/shared/hooks/useToast'
+import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import ViewToggle from '@nidus/ui/ViewToggle'
 import SimAddMemberModal from '../../components/sim/SimAddMemberModal'
 import SimEditMemberRoleModal from '../../components/sim/SimEditMemberRoleModal'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const STORAGE_SORT = 'nidus-sim-project-members-sort'
 const EXPORT_COLS = [

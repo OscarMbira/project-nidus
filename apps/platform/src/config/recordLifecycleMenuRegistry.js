@@ -3,7 +3,7 @@
  * @see projectplan/v639_Record_Lifecycle_Management_Plan.md
  */
 
-/** @type {import('./menuRegistry.js').MenuRegistryEntry[]} */
+/** @type {import('@nidus/config/menuRegistry').MenuRegistryEntry[]} */
 export const RECORD_LIFECYCLE_MENU_REGISTRY = [
   // ── Platform PMO ─────────────────────────────────────────────────────────────
   {

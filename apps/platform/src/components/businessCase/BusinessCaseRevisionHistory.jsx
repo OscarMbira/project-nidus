@@ -6,7 +6,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { History, Loader2 } from 'lucide-react'
 import { getRevisionHistory } from '../../services/businessCaseService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function BusinessCaseRevisionHistory({ caseId }) {

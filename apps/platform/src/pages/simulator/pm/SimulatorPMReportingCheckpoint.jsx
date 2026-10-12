@@ -2,7 +2,7 @@
  * Simulator PM Reporting - Practice Checkpoint Reports
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeCheckpointReportList from '../PracticeCheckpointReportList'
 
 export default function SimulatorPMReportingCheckpoint() {

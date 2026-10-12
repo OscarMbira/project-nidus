@@ -14,7 +14,7 @@ import BriefStatusBadge from '../../components/brief/BriefStatusBadge'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import {
   resolveBriefCharterMode,
   briefCharterLabels,

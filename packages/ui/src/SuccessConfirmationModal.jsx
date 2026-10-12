@@ -23,6 +23,7 @@ export default function SuccessConfirmationModal({
   isOpen,
   onClose,
   operation = 'updated',
+  subject,
   recordId,
   message,
   okLabel = 'OK',
@@ -30,6 +31,10 @@ export default function SuccessConfirmationModal({
   const [copied, setCopied] = useState(false)
   const config = OPERATION_CONFIG[operation] || OPERATION_CONFIG.updated
   const Icon = config.icon
+  const successLine = `${config.label} successfully`
+  const spokenTitle = subject
+    ? `${subject}. ${successLine}`
+    : (recordId ? `${recordId} ${successLine}` : `Record ${successLine}`)
 
   const handleCopy = async () => {
     if (!recordId) return
@@ -46,7 +51,13 @@ export default function SuccessConfirmationModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={recordId ? `${recordId} ${config.label} successfully` : `Record ${config.label} successfully`}
+      ariaLabel={spokenTitle}
+      title={subject ? (
+        <span className="block font-semibold">
+          <span className="block">{subject}</span>
+          <span className="block mt-1">{successLine}</span>
+        </span>
+      ) : spokenTitle}
       size="sm"
       showCloseButton={false}
       closeOnOverlayClick={false}
@@ -64,8 +75,12 @@ export default function SuccessConfirmationModal({
             <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">{message}</p>
           )}
           {recordId && (
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs font-mono text-gray-500 dark:text-gray-400">{recordId}</span>
+            <div className={message || subject ? 'mt-3' : ''}>
+              {subject && (
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Record ID</p>
+              )}
+              <div className="flex items-start gap-2">
+              <span className="text-xs font-mono text-gray-800 dark:text-gray-200 break-all">{recordId}</span>
               {/*
                 Copy-ID is a secondary convenience action, deliberately NOT a <button> and
                 tabIndex=-1 so Modal's auto-focus (which targets the first `button`/`[href]`/
@@ -81,6 +96,7 @@ export default function SuccessConfirmationModal({
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
               </span>
+              </div>
             </div>
           )}
         </div>

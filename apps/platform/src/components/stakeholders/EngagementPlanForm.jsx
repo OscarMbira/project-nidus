@@ -13,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
-import SelectField from '../ui/SelectField'
+import SelectField from '@nidus/ui/SelectField'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 const ENGAGEMENT_LEVELS = [

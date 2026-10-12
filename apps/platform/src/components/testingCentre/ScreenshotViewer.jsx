@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Modal from '../ui/Modal'
+import Modal from '@nidus/ui/Modal'
 
 export default function ScreenshotViewer({ isOpen, onClose, imageUrl, title, note, badgeLabel }) {
   const [zoom, setZoom] = useState(1)

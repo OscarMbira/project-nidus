@@ -14,7 +14,7 @@ import {
   getStakeholderAssessmentByRouteKey,
   saveStakeholderAssessmentMatrix,
 } from '../../services/stakeholderService'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { assessmentRecordKey } from '@nidus/shared/utils/assessmentMatrixRoute'
 

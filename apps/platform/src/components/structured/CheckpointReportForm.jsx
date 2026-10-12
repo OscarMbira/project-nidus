@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, Calendar, Package, CheckCircle, AlertCircle, TrendingUp, Users, Settings, X, Save, ArrowRight, ArrowLeft } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
-import { HoldButton } from '../ui/HoldButton'
+import { HoldButton } from '../shared-app/HoldButton'
 import { createCheckpointReport, updateCheckpointReport, getCheckpointReportById } from '../../services/checkpointReportService'
 import { getProductsByReport } from '../../services/checkpointReportProductsService'
 import { getQualityActivities } from '../../services/checkpointReportQualityService'

@@ -15,7 +15,7 @@
  * in the tree — `/pm/*`'s `PMLayout.jsx` supplies one for that tree, this page supplies its own
  * here rather than depending on route nesting).
  */
-import { CurrentProjectProvider, useCurrentProject } from '../../context/CurrentProjectContext'
+import { CurrentProjectProvider, useCurrentProject } from '../../lib/CurrentProjectContext'
 import DashboardFramework from '../../components/dashboard/DashboardFramework'
 import { useDashboardViewerContext } from '../../components/dashboard/useDashboardViewerContext'
 import { FREELANCER_HOME_WIDGETS } from '../../components/dashboard/widgetRegistry'

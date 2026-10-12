@@ -1,9 +1,13 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import { Toaster } from 'react-hot-toast'
 import { UnsavedChangesProvider } from '@nidus/shared/context/UnsavedChangesContext'
 import { LanguageProvider } from '@nidus/shared/context/LanguageContext'
+import { AppConfigProvider } from '@nidus/shared/context/AppConfigContext'
+import { PlanningProvider } from '@nidus/planning/context/PlanningContext.jsx'
+import { platformDb } from '@nidus/supabase'
 import ErrorBoundary from './components/ErrorBoundary'
+
 import OfflineIndicator from './components/pwa/OfflineIndicator'
 import PWAUpdatePrompt from './components/pwa/PWAUpdatePrompt'
 import { PublicRouteElements } from './routes/publicRoutes'
@@ -12,6 +16,9 @@ import { PlatformRouteElements } from './routes/platformRoutes'
 import * as RC from './routes/routeCommon'
 
 const { PWAInstallPrompt } = RC
+
+// v1239: shared planning screens get the app's own project picker (it uses this app's project service).
+const PlanningProjectBar = lazy(() => import('./components/planning/PlanningProjectBar'))
 
 /** Platform-only SPA shell (v730 monorepo). */
 export default function App() {
@@ -27,6 +34,8 @@ export default function App() {
         }}
       />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AppConfigProvider app="platform" basePath="" db={platformDb}>
+        <PlanningProvider mode="platform" basePath="/pm/planning" ProjectBar={PlanningProjectBar}>
         <LanguageProvider>
           <UnsavedChangesProvider>
             <OfflineIndicator />
@@ -42,6 +51,8 @@ export default function App() {
             </Suspense>
           </UnsavedChangesProvider>
         </LanguageProvider>
+        </PlanningProvider>
+        </AppConfigProvider>
       </BrowserRouter>
     </ErrorBoundary>
   )

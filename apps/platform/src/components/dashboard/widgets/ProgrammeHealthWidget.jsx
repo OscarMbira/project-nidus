@@ -5,7 +5,7 @@
  */
 import { useState, useEffect } from 'react'
 import { getProgrammeRollups } from '../../../services/programmeService'
-import { useCurrentProgramme } from '../../../context/CurrentProgrammeContext'
+import { useCurrentProgramme } from '../../../lib/CurrentProgrammeContext'
 import { Activity } from 'lucide-react'
 
 export default function ProgrammeHealthWidget() {

@@ -2,7 +2,7 @@
  * Simulator PM Initiation - Practice Project Initiation Document (PID)
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticePIDList from '../PracticePIDList'
 
 export default function SimulatorPMInitiationPID() {

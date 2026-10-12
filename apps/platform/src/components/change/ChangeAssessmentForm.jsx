@@ -3,7 +3,7 @@ import { platformDb } from '@nidus/supabase';
 import { X, FileText, DollarSign, Clock, Target, AlertTriangle, TrendingUp } from 'lucide-react';
 import { createChangeAssessment, updateChangeAssessment } from '../../services/changeManagementService';
 import InheritedChangeRequestFields from '../../features/local-data-extensions/components/InheritedChangeRequestFields';
-import { getCurrentUserInternalUserId } from '../../utils/accountResolution';
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';

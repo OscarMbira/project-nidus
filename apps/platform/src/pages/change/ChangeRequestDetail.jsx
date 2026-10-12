@@ -19,7 +19,7 @@ import AuditCard from '@nidus/ui/AuditCard';
 import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
-import { buildChangeRequestExport, changeRequestExportFilename } from '../../utils/changeRequestExport';
+import { buildChangeRequestExport, changeRequestExportFilename } from '../../lib/changeRequestExport';
 
 export default function ChangeRequestDetail() {
   const { id } = useParams();

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import { getPracticePPD } from '../../services/sim/practiceProductDescriptionService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PRACTICE_PPD_COLUMNS = [
   { key: 'product_title', label: 'Title' },

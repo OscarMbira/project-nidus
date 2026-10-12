@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Info, Plus, Trash2 } from 'lucide-react'
-import { SmartAmountInput } from '../ui/SmartAmountInput'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 
 /**
  * FinancialControlsSection

@@ -7,9 +7,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus, Eye, Edit, Trash2, Search } from 'lucide-react'
 import { getAllPracticeBCs, deletePracticeBusinessCase } from '../../services/sim/practiceBusinessCaseService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const STATUS_COLORS = {
   draft: 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200',

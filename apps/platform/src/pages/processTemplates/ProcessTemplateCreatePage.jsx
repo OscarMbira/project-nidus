@@ -3,7 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { ArrowLeft, Pause } from 'lucide-react'
 import ProcessTemplateProjectScope, { useProcessTemplateScope } from '../../components/processTemplates/ProcessTemplateProjectScope'
-import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
+import { useDraftQueue } from '../../lib/useDraftQueue'
 import {
   getTemplateBySlug,
   roleKeyFromPath,

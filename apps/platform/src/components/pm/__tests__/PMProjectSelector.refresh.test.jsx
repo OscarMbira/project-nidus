@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { CurrentProjectProvider } from '../../../context/CurrentProjectContext'
+import { CurrentProjectProvider } from '../../../lib/CurrentProjectContext'
 import PMProjectSelector from '../PMProjectSelector'
 
 vi.mock('@nidus/shared/utils/authSession', () => ({

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Briefcase, Plus, Library } from 'lucide-react'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import {

@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { listSimCostEntries, createSimCostEntry } from '../../services/simProjectCostService'
 import { simDb, platformDb } from '../../services/supabase/supabaseClient'
 

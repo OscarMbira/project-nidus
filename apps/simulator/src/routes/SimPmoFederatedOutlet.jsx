@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import ModuleLoadingFallback from '../components/ui/ModuleLoadingFallback.jsx'
+import ModuleLoadingFallback from '@nidus/ui/ModuleLoadingFallback.jsx'
 import { ThemeProvider, ToastProvider, ProtectedRoute, Layout } from './lazyImports.js'
 
 const SimPmoModuleRoutes = lazy(() => import('./fallback/simPmoModuleRoutes.jsx'))

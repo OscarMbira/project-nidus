@@ -14,8 +14,8 @@ import {
   updatePracticePortfolioCategory,
   deletePracticePortfolioCategory,
 } from '../../services/sim/practicePortfolioCategoryService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function SimPortfolioCategories() {
   const navigate = useNavigate()

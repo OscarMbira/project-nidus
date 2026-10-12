@@ -1,6 +1,6 @@
-import Input from '../../ui/Input'
-import Textarea from '../../ui/Textarea'
-import SearchableSelect from '../../ui/SearchableSelect'
+import Input from '@nidus/ui/Input'
+import Textarea from '@nidus/ui/Textarea'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const METH = [

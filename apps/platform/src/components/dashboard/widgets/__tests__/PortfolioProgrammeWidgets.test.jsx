@@ -14,8 +14,8 @@ const { mockUseCurrentPortfolio, mockUseCurrentProgramme, mockGetPortfolio, mock
   mockGetPortfolio: vi.fn(),
   mockGetProgrammeRollups: vi.fn(),
 }))
-vi.mock('../../../../context/CurrentPortfolioContext', () => ({ useCurrentPortfolio: mockUseCurrentPortfolio }))
-vi.mock('../../../../context/CurrentProgrammeContext', () => ({ useCurrentProgramme: mockUseCurrentProgramme }))
+vi.mock('../../../../lib/CurrentPortfolioContext', () => ({ useCurrentPortfolio: mockUseCurrentPortfolio }))
+vi.mock('../../../../lib/CurrentProgrammeContext', () => ({ useCurrentProgramme: mockUseCurrentProgramme }))
 vi.mock('../../../../services/portfolioService', () => ({ getPortfolio: mockGetPortfolio, getPortfolioProjects: vi.fn(() => Promise.resolve([])) }))
 vi.mock('../../../../services/programmeService', () => ({ getProgrammeRollups: mockGetProgrammeRollups, getProgrammeProjects: vi.fn(() => Promise.resolve([])) }))
 

@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import Sidebar from '../../Sidebar';
 import SimulatorAppHeader from '../../headers/SimulatorAppHeader';
 import PracticeDashboardSwitcher from '../ui/PracticeDashboardSwitcher';
-import { BrandingProvider } from '../../../context/BrandingContext';
-import { MenuProvider } from '../../../hooks/useMenu';
+import { BrandingProvider } from '../../../lib/BrandingContext';
+import { MenuProvider } from '../../../lib/useMenu';
 import { mainContentSidebarOffsetClass, useSidebarCollapsed } from '@nidus/shared/hooks/useSidebarCollapsed';
 
 /**

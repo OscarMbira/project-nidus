@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { History, RotateCcw, ChevronDown, ChevronRight, Loader2 } from 'lucide-react'
-import { useBranding } from '@nidus/shared/context/BrandingContext'
+import { useBranding } from '../../../lib/BrandingContext'
 import { getBrandingHistory, revertBranding } from '../../../services/brandingService'
 
 function formatDate(iso) {

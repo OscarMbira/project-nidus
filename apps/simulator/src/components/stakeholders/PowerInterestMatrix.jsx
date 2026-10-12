@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Target, AlertCircle, CheckCircle, TrendingUp, Info, Edit2 } from 'lucide-react';
 import { getStakeholderAnalysis } from '../../services/stakeholderService';
 import { platformDb } from '../../services/supabaseClient';
-import StakeholderAvatar from '../ui/StakeholderAvatar';
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
 
 function quadrantFromPowerInterest(power, interest) {
   const high = (v) => v >= 4;

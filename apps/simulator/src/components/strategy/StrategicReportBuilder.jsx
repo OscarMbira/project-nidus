@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileText, Plus, Edit2, Trash2, Download, Eye, Calendar, FolderKanban, Target } from 'lucide-react';
 import { getStrategicReports, deleteStrategicReport } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function StrategicReportBuilder({ portfolioId = null, projectId = null, onGenerate }) {

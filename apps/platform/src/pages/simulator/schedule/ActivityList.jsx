@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Plus, LayoutGrid, Table2 } from 'lucide-react'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simListActivities, simSaveActivity } from '../../../services/sim/simPlanningService'
 import { simDb } from '../../../services/supabase/supabaseClient'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'activity_code', label: 'Code' },

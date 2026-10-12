@@ -2,10 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutGrid, List, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import * as platformSvc from '../../services/workAuthorisationService'
 import * as simSvc from '../../services/simWorkAuthorisationService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const SORT_KEYS = ['reference_code', 'title', 'action_type', 'status', 'updated_at']

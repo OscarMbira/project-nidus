@@ -60,7 +60,7 @@ The strategic objective is a PMIS in which project information is **trusted, tra
 
 ## 3. Application Landscape
 
-Project Nidus currently consists of three application contexts.
+Project Nidus currently consists of three application contexts, plus two products built from them (v1239, v1241).
 
 ### Platform
 
@@ -91,6 +91,24 @@ Purpose:
 Primary database schema:
 
 - `admin`
+
+### Project Planner (product line, v1239)
+
+Purpose:
+
+- a standalone scheduling product for teams that do not need the full PMIS (`planner.<domain>`, `apps/planner`)
+- same planning screens as Platform/Simulator (`packages/planning`), same `public` data; an account's `product_edition` (`platform` | `planner`) decides which menus it sees
+- upgrade/downgrade keeps all data
+
+Status: **IN REVIEW** — implemented 2026-10-11; owner test, SQL run, pricing and launch flag pending (plan `projectplan/v1239_dual_mode_planning_product_plan.md`).
+
+### Nidus brand site (v1241)
+
+Purpose:
+
+- one public front door at the apex domain linking to Platform, Simulator and Planner (`apps/site`); product cards are data edited in Admin
+
+Status: **IN REVIEW** — implemented 2026-10-11; DNS and owner checks pending.
 
 Detailed codebase separation, shared-package rules, routing, Module Federation, schema usage, parity requirements, and cross-codebase restrictions are defined only in `CLAUDE.md`.
 
@@ -239,10 +257,12 @@ Strategic areas:
 - scenario analysis
 - schedule quality
 
+Progress (2026-10-11, v1239): `tasks` is now the canonical schedule record in both schemas (Simulator twins + activity backfill); one calendar-aware critical-path engine (client preview + database authority, shared test vectors); shared schedule screens for every product; Workload, time-against-tasks and schedule import/export added.
+
 Completion indicators:
 
-- [ ] Planning entities have clear canonical ownership
-- [ ] Dependencies and date rules behave consistently
+- [x] Planning entities have clear canonical ownership (v1239 D2: `tasks` + `task_dependencies`)
+- [ ] Dependencies and date rules behave consistently (engine done; owner verification of v1245 test vectors pending)
 - [ ] Baselines are controlled
 - [ ] Platform and Simulator coverage is aligned where applicable
 - [ ] Planning views reconcile to authoritative data
@@ -549,6 +569,8 @@ Only roadmap-level debt belongs here. File-level/code-level debt should be captu
 | RR-005 | Weak traceability across PM lifecycle | Governance/assurance gaps | Deliver common traceability capability |
 | RR-006 | Excessive UX complexity | Training/adoption burden | Keep workflows simple and discoverable |
 | RR-007 | AI-assisted coding creates duplicate patterns | Technical debt/regressions | Repository inspection before creation; review gates |
+| RR-008 | Planner database wall misses a table (blank screens) or over-exposes one | Broken Planner screens, or Platform data visible to planner sessions | Generated table allow-list + CI drift check, fail-closed restrictive policies, kill switch (v1239) |
+| RR-009 | Shared code drifts back into app-local copies | Fixes made in one app only | v1240 drift check enforced in CI; aliases removed |
 
 ---
 
@@ -557,6 +579,7 @@ Only roadmap-level debt belongs here. File-level/code-level debt should be captu
 | Date | Change | Reason |
 |---|---|---|
 | 2026-08-18 | Established dedicated root-level roadmap separated from `CLAUDE.md` and feature plans | Reduce instruction duplication and make strategic state explicit |
+| 2026-10-11 | v1240 shared-package consolidation DONE (pending owner smoke test); added Project Planner product line (v1239, IN REVIEW) and Nidus brand site (v1241, IN REVIEW); R3 progress; risks RR-008/RR-009 | Owner-approved planner initiative (v1240 → v1239, v1241) |
 
 ---
 

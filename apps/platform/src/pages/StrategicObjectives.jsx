@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Target, Plus, Search, GitBranch, FolderKanban } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getStrategicObjectives, getStrategicAlignmentDashboardStats } from '../services/strategicService';
 import StrategicObjectivesManager from '../components/strategy/StrategicObjectivesManager';
 import ObjectiveForm from '../components/strategy/ObjectiveForm';

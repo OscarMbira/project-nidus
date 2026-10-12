@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Calendar, Repeat } from 'lucide-react'
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns'
 import { supabase } from '../services/supabaseClient'
-import { getCurrentUserInternalUserId } from '../utils/accountResolution'
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import { RowActionButton } from '@nidus/ui'
 
 function formatReasons(value) {

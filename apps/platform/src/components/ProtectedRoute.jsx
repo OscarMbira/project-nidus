@@ -78,14 +78,25 @@ export default function ProtectedRoute({
         const needsPlatformCheck = !!requiredPlatform
 
         // Step 2: Run org check + platform access update in PARALLEL (saves ~200ms)
-        const [orgStatus] = await Promise.all([
+        const [orgStatus, edition] = await Promise.all([
           needsOrgCheck
             ? checkOrganisationStatusByAuthId(user.id).catch(e => { console.error('Org check error:', e); return null })
             : Promise.resolve(null),
           needsPlatformCheck
             ? updatePlatformAccess(user.id, requiredPlatform).catch(e => console.error('Platform access update error:', e))
-            : Promise.resolve()
+            : Promise.resolve(),
+          // v1239 Slice 8.2: a Project Planner workspace opens the Planner's upgrade page, not the
+          // PMIS. Skipped (null) when the RPC is not installed yet or fails.
+          !isOnboardingRoute
+            ? supabase.rpc('auth_user_account_edition').then(r => (r.error ? null : r.data)).catch(() => null)
+            : Promise.resolve(null)
         ])
+
+        if (edition === 'planner') {
+          const plannerUrl = import.meta.env.VITE_PLANNER_URL || 'http://localhost:5176'
+          window.location.replace(`${plannerUrl}/app/upgrade`)
+          return
+        }
 
         if (needsOrgCheck && orgStatus && !orgStatus.exists) {
           setRedirectTo('/onboarding/organisation-setup')

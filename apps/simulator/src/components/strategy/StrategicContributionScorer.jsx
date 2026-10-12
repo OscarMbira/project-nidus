@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, TrendingUp, Plus, Edit2, Trash2, CheckCircle, DollarSign, BarChart3 } from 'lucide-react';
 import { getStrategicContributions, deleteStrategicContribution } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function StrategicContributionScorer({ projectId = null, objectiveId = null, onAdd, onEdit }) {

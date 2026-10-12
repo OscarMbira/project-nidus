@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { checkPMOAdminRole } from '../../../services/simRfpService'
-import { useToastContext } from '../../../context/ToastContext'
+import { useToastContext } from '@nidus/shared/context/ToastContext'
 import RFPForm from '../../../components/rfp/RFPForm'
 import * as simRfpService from '../../../services/simRfpService'
 

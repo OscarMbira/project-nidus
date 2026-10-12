@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Download, Receipt, Package, Award, FileText } from 'lucide-react';
 import { getUserPurchases, generateReceipt } from '../../services/purchaseService';
 import { simDb } from '../../services/supabase/supabaseClient';

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { FolderKanban, Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
-import DashboardStatCard from '../ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getStrategicObjectives, getProjectObjectiveMappings, getAlignmentScores } from '../../services/strategicService';
 import { platformDb } from '@nidus/supabase';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function StrategicPortfolioView({ portfolioId = null }) {

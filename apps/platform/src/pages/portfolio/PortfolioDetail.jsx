@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEntityId } from '@nidus/shared/hooks/useEntityId';
+import { useEntityId } from '../../lib/useEntityId';
 import { ArrowLeft, Settings, FolderKanban, Users, Target, DollarSign, AlertTriangle, Activity, Layers } from 'lucide-react';
 import { getPortfolio } from '../../services/portfolioService';
 import PortfolioDashboard from '../../components/portfolio/PortfolioDashboard';
@@ -13,7 +13,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
-import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx';
+import TierFormPolicyPanel from '../../components/shared-app/TierFormPolicyPanel.jsx';
 import ForkIndustryTemplatePanel from '@nidus/ui/templates/ForkIndustryTemplatePanel.jsx';
 import ForkLegacyTemplatePanel from '@nidus/ui/templates/ForkLegacyTemplatePanel.jsx';
 import { platformDb } from '../../services/supabase/supabaseClient';

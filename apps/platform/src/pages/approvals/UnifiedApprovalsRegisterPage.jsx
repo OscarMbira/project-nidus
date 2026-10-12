@@ -9,7 +9,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, LayoutGrid, List as ListIcon, ShieldCheck } from 'lucide-react'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'

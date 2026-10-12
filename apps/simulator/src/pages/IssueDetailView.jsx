@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { useEntityId } from '@nidus/shared/hooks/useEntityId'
+import { useEntityId } from '../lib/useEntityId'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { supabase } from '../services/supabaseClient'
 import { platformDb, simDb } from '@nidus/supabase'

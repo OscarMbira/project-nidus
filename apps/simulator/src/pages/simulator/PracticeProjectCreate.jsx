@@ -12,7 +12,7 @@ import { getOrgIndustryOptions } from '../../services/organisationIndustryServic
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function PracticeProjectCreate() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import SimTestingPageShell from '../../../components/sim/SimTestingPageShell'
 import TestRunForm from '../../../components/testing/TestRunForm'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import {
   getPracticeTestRuns,
   createPracticeTestRun,
@@ -11,10 +11,10 @@ import {
 } from '../../../services/sim/practiceTestRunService'
 import { getPracticeTestSuites } from '../../../services/sim/practiceTestSuiteService'
 import { getPracticeTestEnvironments } from '../../../services/sim/practiceTestEnvironmentService'
-import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const COLS = [
   { key: 'run_name', label: 'Run' },

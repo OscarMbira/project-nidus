@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ImagePlus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import ZoomableImage from '../ui/ZoomableImage'
+import ZoomableImage from '@nidus/ui/ZoomableImage'
 import { removeTestCaseStepImage, uploadTestCaseStepImage, withStepImagePreviews } from '../../services/testCaseService'
 
 function filesFromClipboard(event) {

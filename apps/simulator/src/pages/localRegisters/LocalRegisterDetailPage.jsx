@@ -18,7 +18,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import { getRecord } from '../../services/localRegisterRecordService'
 import { supabase } from '../../services/supabaseClient'
-import { isLikelyDatabaseUuid } from '../../utils/isUuid'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 
 function fieldValueToText(field, value) {
   if (value === null || value === undefined || value === '') return '—'

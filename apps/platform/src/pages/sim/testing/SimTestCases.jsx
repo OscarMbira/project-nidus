@@ -2,12 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import SimTestingPageShell from '../../../components/sim/SimTestingPageShell'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { getPracticeTestCases } from '../../../services/sim/practiceTestCaseService'
 import { testCaseDetailPathSegment } from '../../../services/testCaseService'
 import { SIM_TESTING_BASE } from './simTestingPaths'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const EXPORT_COLS = [
   { key: 'test_case_ref', label: 'Ref' },

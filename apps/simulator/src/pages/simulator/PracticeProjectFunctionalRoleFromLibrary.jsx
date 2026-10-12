@@ -17,7 +17,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import { listPracticeProjectFunctionalRoles } from '../../services/sim/simTeamService'
 import { listRoleLibrary, addRolesFromLibrary } from '../../services/sim/projectRoleLibraryService'

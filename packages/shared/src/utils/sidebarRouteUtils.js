@@ -37,23 +37,31 @@ export function extractPracticeProjectId(pathname) {
 /**
  * @param {string|null|undefined} routePath — raw menu_items.route_path
  * @param {string} pathname — location.pathname
+ * @param {string|null} [fallbackProjectId] — the app's own resolved "current project" (e.g. from
+ *   usePlatformProjectId()), used when the URL itself carries no project segment to extract from
+ *   (e.g. the user is on /platform/projects or /platform/dashboard, not a project detail route,
+ *   but a project IS already selected via the header's project switcher). Without this, any menu
+ *   item whose route_path contains :projectId/__PROJECT__ would silently redirect to the bare
+ *   projects list from every non-project-detail page — found live 2026-09-12 via "Closing a
+ *   Project" (/platform/projects/:projectId/closure) redirecting to /platform/projects when
+ *   clicked from the Projects list page.
  * @returns {string} resolved path safe for <Link to=...>
  */
-export function resolveMenuRoutePath(routePath, pathname) {
+export function resolveMenuRoutePath(routePath, pathname, fallbackProjectId = null) {
   if (!routePath || typeof routePath !== 'string') return routePath || '#'
 
   const normalizedRoute = routePath.startsWith('/app/projects/')
     ? routePath.replace(/^\/app\/projects/, '/platform/projects')
     : routePath
 
-  const platformPid = extractPlatformProjectId(pathname)
+  const platformPid = extractPlatformProjectId(pathname) || fallbackProjectId
   if (platformPid && normalizedRoute.includes('/platform/projects/')) {
     return normalizedRoute
       .replaceAll('__PROJECT__', platformPid)
       .replaceAll(':projectId', platformPid)
       .replaceAll('/:id/', `/${platformPid}/`)
   }
-  const pmDashPid = extractPmDashboardProjectId(pathname)
+  const pmDashPid = extractPmDashboardProjectId(pathname) || fallbackProjectId
   if (pmDashPid && normalizedRoute.includes('/pm/projects/')) {
     return normalizedRoute
       .replaceAll(':projectId', pmDashPid)
@@ -89,9 +97,10 @@ const PM_LAYOUT_ROUTE_REWRITES = {
 /**
  * Resolve menu link targets for the active sidebar layout.
  * Shared /platform/* pages stay on the same URL but PM dashboard links use /pm/dashboard.
+ * @param {string|null} [fallbackProjectId] — see resolveMenuRoutePath's own doc.
  */
-export function resolveMenuRoutePathForLayout(routePath, pathname, layout = null) {
-  const resolved = resolveMenuRoutePath(routePath, pathname)
+export function resolveMenuRoutePathForLayout(routePath, pathname, layout = null, fallbackProjectId = null) {
+  const resolved = resolveMenuRoutePath(routePath, pathname, fallbackProjectId)
   if (layout !== 'pm') return resolved
   const base = String(resolved || '').split('?')[0]
   return PM_LAYOUT_ROUTE_REWRITES[base] || resolved
@@ -132,6 +141,18 @@ export function menuPathIsActive(pathname, resolvedPath, search = '') {
     // v851/v852: bare parents stay inactive when a Forms|Templates leaf (?domainGroup=) owns the URL.
     const cur = new URLSearchParams(String(search || '').replace(/^\?/, ''))
     if (cur.get('domainGroup')) {
+      return false
+    }
+    // "Closing a Project" (bare /platform/projects/:id/closure) shares its base path with
+    // several Project Closure taxonomy leaves that deep-link into its tabs/sections (Closure
+    // Checklist ?tab=closure, Outstanding Items ?tab=actions, Handover ?tab=handover, Closure
+    // Report ?tab=end-report, Benefits Transition/Final Acceptance ?tab=closure&section=…) —
+    // without this, the bare leaf would highlight alongside whichever specific one owns the URL
+    // (found live 2026-09-12, same bug class as the domainGroup case above). Scoped to this one
+    // route (rather than every bare-path menu item, like the domainGroup check above) because
+    // ?tab= is a common, reused query key elsewhere in this app (e.g. PMO dashboard deep links)
+    // for pages with no sibling-menu-item concept at all.
+    if (pathNoHash.includes('/closure') && (cur.get('section') || cur.get('tab'))) {
       return false
     }
     return true

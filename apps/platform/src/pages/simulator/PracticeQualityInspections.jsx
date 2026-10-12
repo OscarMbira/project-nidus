@@ -13,9 +13,9 @@ import {
 } from '../../services/sim/practiceQualityService'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const INSPECTION_EXPORT_COLUMNS = [
   { key: 'inspection_title', label: 'Inspection' },

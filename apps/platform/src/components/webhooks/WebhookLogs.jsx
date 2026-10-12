@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getWebhookLogs } from '../../services/webhookService'
 import { supabase } from '../../services/supabaseClient'
 import { RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle, Filter } from 'lucide-react'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function WebhookLogs({ webhookId = null }) {

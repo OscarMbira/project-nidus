@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { getTemplateById, getMasterVersionHistory } from '../../../services/sim/simTemplateLibraryService'
 
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const BASE = '/simulator/templates'
 
 export default function TemplateMasterVersionHistory() {

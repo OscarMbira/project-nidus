@@ -7,7 +7,7 @@ import DefectAttachmentUploader from '../../../components/testing/DefectAttachme
 import DefectHistoryTimeline from '../../../components/testing/DefectHistoryTimeline'
 import DefectStatusBadge from '../../../components/testing/DefectStatusBadge'
 import DefectSeverityBadge from '../../../components/testing/DefectSeverityBadge'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { RowActionButton } from '@nidus/ui'
 import {
   getPracticeDefectById,
@@ -29,8 +29,8 @@ import {
   exportRecordToXML,
   exportRecordToJSON,
   exportRecordToPrint,
-} from '../../../utils/exportUtils'
-import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
+} from '@nidus/shared/utils/exportUtils'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 import { simDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'

@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProgrammeProjects } from '../../../services/programmeService'
-import { useCurrentProgramme } from '../../../context/CurrentProgrammeContext'
+import { useCurrentProgramme } from '../../../lib/CurrentProgrammeContext'
 import { FolderKanban } from 'lucide-react'
 
 export default function ProgrammeProjectsWidget() {

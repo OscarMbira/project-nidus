@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Building2, Search, Star, Eye } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getCorporateLessonsByCategory, searchCorporateLessons } from '../services/corporateLessonsService';
 import { platformDb } from '@nidus/supabase';
 import LessonCard from '../components/lessonsLog/LessonCard';

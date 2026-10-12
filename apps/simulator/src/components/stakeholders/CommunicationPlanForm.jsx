@@ -16,8 +16,8 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { findStakeholderByRouteKey } from '@nidus/shared/utils/communicationPlanRoute'
 import { audienceStakeholders, linesToArray, stakeholderTypeBadgeClass } from './communicationPlanAudience'
-import SelectField from '../ui/SelectField'
-import { getActiveLanguages } from '../../utils/languages'
+import SelectField from '@nidus/ui/SelectField'
+import { getActiveLanguages } from '@nidus/shared/utils/languages'
 import { getCommunicationInformationOptions } from '../../services/stakeholderService'
 
 const STATUSES = ['draft', 'active', 'completed', 'cancelled']

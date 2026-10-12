@@ -32,25 +32,6 @@ export const REGIONAL_FORMAT_DEFAULTS = {
   percent_decimals: 1,
 }
 
-export const CURRENCY_OPTIONS = [
-  { value: 'USD', label: 'USD — US Dollar' },
-  { value: 'EUR', label: 'EUR — Euro' },
-  { value: 'GBP', label: 'GBP — British Pound' },
-  { value: 'ZAR', label: 'ZAR — South African Rand' },
-  { value: 'AUD', label: 'AUD — Australian Dollar' },
-  { value: 'CAD', label: 'CAD — Canadian Dollar' },
-  { value: 'NZD', label: 'NZD — New Zealand Dollar' },
-  { value: 'CHF', label: 'CHF — Swiss Franc' },
-  { value: 'JPY', label: 'JPY — Japanese Yen' },
-  { value: 'CNY', label: 'CNY — Chinese Yuan' },
-  { value: 'INR', label: 'INR — Indian Rupee' },
-  { value: 'KES', label: 'KES — Kenyan Shilling' },
-  { value: 'NGN', label: 'NGN — Nigerian Naira' },
-  { value: 'BWP', label: 'BWP — Botswana Pula' },
-  { value: 'MWK', label: 'MWK — Malawian Kwacha' },
-  { value: 'ZMW', label: 'ZMW — Zambian Kwacha' },
-]
-
 export const DATE_FORMAT_OPTIONS = [
   { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD (2026-09-15)' },
   { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY (15/09/2026)' },

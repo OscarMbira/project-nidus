@@ -2,7 +2,7 @@
  * Simulator PM Closure - Practice Lessons Report
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeLessonsReportList from '../PracticeLessonsReportList'
 
 export default function SimulatorPMClosureLessonsReport() {

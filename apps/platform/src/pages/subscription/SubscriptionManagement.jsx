@@ -261,6 +261,17 @@ export default function SubscriptionManagement() {
         </>
       )}
 
+      {/* v1239 Slice 8.3: account owners can move the workspace to the lighter Planner edition. */}
+      <div className={`${card} mt-6 flex flex-wrap items-center justify-between gap-3`}>
+        <div>
+          <p className="text-sm font-medium">Only need scheduling?</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Switch this workspace to the Project Planner edition. Your data is kept.</p>
+        </div>
+        <button type="button" onClick={() => navigate('/platform/subscription/edition')} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm">
+          Switch to Project Planner
+        </button>
+      </div>
+
       <CancellationReasonModal
         open={showCancelModal}
         onClose={() => setShowCancelModal(false)}

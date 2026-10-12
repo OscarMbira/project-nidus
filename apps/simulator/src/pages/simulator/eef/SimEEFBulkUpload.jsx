@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Papa from 'papaparse'
 import { bulkImportEEFFromParsedRows } from '../../../services/sim/simEEFService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 export default function SimEEFBulkUpload() {
   const navigate = useNavigate()

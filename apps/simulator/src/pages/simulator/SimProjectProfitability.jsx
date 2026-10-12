@@ -2,12 +2,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { listSimRevenueEntries, createSimRevenueEntry, sumAmounts } from '../../services/simProjectRevenueService'
 import { listSimCostEntries } from '../../services/simProjectCostService'
 import { simDb } from '../../services/supabase/supabaseClient'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function SimProjectProfitability() {
   const { projectId } = useParams()

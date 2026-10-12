@@ -1,6 +1,6 @@
 // Reusable dashboard widgets
 
-import DashboardStatCard from './ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 
 const STAT_CARD_BORDER_CLASSES = {
   blue: 'border-blue-200 dark:border-blue-800',

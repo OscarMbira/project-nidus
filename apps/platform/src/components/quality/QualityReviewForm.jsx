@@ -3,7 +3,7 @@ import { Save, FileText, Calendar, Users, Target, CheckCircle } from 'lucide-rea
 import { saveQualityReview } from '../../services/qualityManagementService';
 import { supabase } from '../../services/supabaseClient';
 import { platformDb } from '@nidus/supabase';
-import FormSurface from '../ui/FormSurface';
+import FormSurface from '@nidus/ui/FormSurface';
 import InheritedQualityFields, {
   QUALITY_REVIEW_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedQualityFields';

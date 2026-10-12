@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
 import { getTeamCharter } from '../../services/teamCharterService'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 const EXPORT_SECTIONS = [
   {

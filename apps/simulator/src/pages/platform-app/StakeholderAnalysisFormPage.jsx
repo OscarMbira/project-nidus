@@ -9,7 +9,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import StakeholderAnalysisForm from '../../components/stakeholders/StakeholderAnalysisForm'
 import { getStakeholders, getStakeholderAnalysis, saveStakeholderAnalysis } from '../../services/stakeholderService'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 

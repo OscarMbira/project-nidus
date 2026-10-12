@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { BookOpen, Plus } from 'lucide-react'
 import { getPracticeLessonsLog, getPracticeLessonEntries, createPracticeLessonsLog, createPracticeLessonEntry } from '../../services/sim/practiceLessonsService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const PRACTICE_LESSON_ENTRY_COLUMNS = [
   { key: 'lesson_title', label: 'Title' },

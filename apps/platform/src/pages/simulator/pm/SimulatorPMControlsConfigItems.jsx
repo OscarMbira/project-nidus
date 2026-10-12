@@ -2,7 +2,7 @@
  * Simulator PM Controls - Practice Configuration Item Records
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeConfigItemList from '../PracticeConfigItemList'
 
 export default function SimulatorPMControlsConfigItems() {

@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { Target, Plus, AlertTriangle, CheckCircle, XCircle, Edit2, Trash2, Calendar, User } from 'lucide-react';
 import { getPlanBenefits, addBenefitToPlan, updateBenefitCoverage, removeBenefitFromPlan, getUnmappedBenefits } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function BenefitsCoverageSection({ planId, projectId, onUpdate }) {

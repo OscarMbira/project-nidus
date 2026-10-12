@@ -9,7 +9,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
-import { usePlatformProjectId } from '../../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import {
   getRecurringTaskTemplate,
   createRecurringTaskTemplate,

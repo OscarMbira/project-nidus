@@ -3,7 +3,7 @@
  * @see projectplan/v631_PMIS_Gap_Analysis_Implementation_Plan.md
  */
 
-/** @type {import('./menuRegistry.js').MenuRegistryEntry[]} */
+/** @type {import('@nidus/config/menuRegistry').MenuRegistryEntry[]} */
 export const PMIS_GAP_MENU_REGISTRY = [
   // ── PM: Calendar (GAP-09) ───────────────────────────────────────────────────
   {

@@ -8,7 +8,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { DetailAuditTabList, AuditDetailsPanel, AuditCard, AuditField, AuditTimestampPair } from '@nidus/ui'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
-import SelectField from '../../../components/ui/SelectField'
+import SelectField from '@nidus/ui/SelectField'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { getVendor, createVendor, updateVendor, listVendorCategories, saveVendorCategory } from '../services/procurementService'
 

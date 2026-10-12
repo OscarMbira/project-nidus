@@ -2,7 +2,7 @@
  * Simulator PM Controls - Practice Quality Register
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeQualityRegister from '../PracticeQualityRegister'
 
 export default function SimulatorPMControlsQualityRegister() {

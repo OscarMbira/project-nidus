@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simGetScopeStatement, simSaveScopeStatement } from '../../../services/sim/simPlanningService'
 import { simDb } from '../../../services/supabase/supabaseClient'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -12,7 +12,7 @@ import {
   exportRecordToXML,
   exportRecordToJSON,
   exportRecordToPrint,
-} from '../../../utils/exportUtils'
+} from '@nidus/shared/utils/exportUtils'
 
 function linesToArr(s) {
   return (s || '')

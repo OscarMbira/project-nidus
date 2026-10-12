@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useMenu } from '@nidus/shared/hooks/useMenu'
-import { useSimMenu } from '@nidus/shared/hooks/useSimMenu'
+import { useMenu } from '../lib/useMenu'
+import { useSimMenu } from '../lib/useSimMenu'
 import { performLogout, getLogoutRedirectPath } from '../services/authLogoutService'
 import { getAccessibleWorkspaces, getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import ZoneTabs, { resolveActiveZone, zoneLandingRoute } from './ZoneTabs'
@@ -83,7 +83,7 @@ import {
   FileBox,
 } from 'lucide-react'
 import { useThemeContext } from '@nidus/shared/context/ThemeContext'
-import { useBranding } from '@nidus/shared/context/BrandingContext'
+import { useBranding } from '../lib/BrandingContext'
 import { resolveMenuRoutePathForLayout, menuPathIsActive, getSidebarMenuNodeKey, persistLastActiveMenuKey, readLastActiveMenuKey, resolvePreferredActiveMenuKey, findTopLevelKeyForActiveMenu, menuNodeContainsKey } from '@nidus/shared/utils/sidebarRouteUtils'
 import { persistMenuLayoutScope } from '@nidus/shared/utils/menuLayoutUtils'
 import { resolveSidebarThemeTokens } from '@nidus/shared/utils/sidebarThemeUtils'
@@ -92,7 +92,7 @@ import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import { useOpenPlanningFindingsCount } from '@nidus/shared/hooks/useOpenPlanningFindingsCount'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
-import MethodologySwitcher from './ui/MethodologySwitcher'
+import MethodologySwitcher from '@nidus/ui/MethodologySwitcher'
 
 // Icon mapping for menu items
 const iconMap = {

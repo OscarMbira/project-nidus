@@ -6,7 +6,7 @@
 import { useMemo } from 'react'
 import { AlertTriangle, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { isActiveRisk, summariseProjectRisks } from '../../utils/riskRegisterStats'
+import { isActiveRisk, summariseProjectRisks } from '@nidus/shared/utils/riskRegisterStats'
 
 export default function RiskAlerts({ projectId, risks = [], overdueCount = 0 }) {
   const navigate = useNavigate()

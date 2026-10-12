@@ -1,4 +1,4 @@
-import './utils/suppressSupabaseWarnings'
+import '@nidus/shared/utils/suppressSupabaseWarnings'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'

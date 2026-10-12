@@ -23,6 +23,7 @@ export default defineConfig({
       'src/__tests__/pmoMenuHierarchyUtils.test.js',
       'src/__tests__/pmoMenuSemanticDedupe.test.js',
       'src/__tests__/processTemplatesMenuCodes.test.js',
+      'src/__tests__/v1240PortedConfig.test.js',
     ],
   },
 });

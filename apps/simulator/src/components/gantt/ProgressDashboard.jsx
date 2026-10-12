@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import DashboardStatCard from '../ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 
 /**
  * ProgressDashboard Component

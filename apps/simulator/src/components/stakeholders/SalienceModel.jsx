@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { Triangle, Users } from 'lucide-react'
 import { getStakeholderAnalysis } from '../../services/stakeholderService'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const SALIENCE_CLASSES = [
   'definitive',

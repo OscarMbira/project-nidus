@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Settings, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getPracticeConfigMS, createPracticeConfigMS, updatePracticeConfigMS } from '../../services/sim/practiceConfigMSService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PRACTICE_CONFIG_MS_COLUMNS = [
   { key: 'cfgms_reference', label: 'Reference' },

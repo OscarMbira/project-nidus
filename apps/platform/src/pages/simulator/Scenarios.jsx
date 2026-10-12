@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import ScenarioCard from '../../components/sim/ScenarioCard';
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const Scenarios = () => {
   const { theme } = useTheme();
   const [scenarios, setScenarios] = useState([]);

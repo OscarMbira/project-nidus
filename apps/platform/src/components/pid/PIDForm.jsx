@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { FileText, Target, Settings, Users, Gauge, BarChart3, CheckCircle, ArrowRight, ArrowLeft, X, Save, Link as LinkIcon } from 'lucide-react'
 import { createPID, updatePID } from '../../services/projectInitiationDocumentService'
-import { HoldButton } from '../ui/HoldButton'
+import { HoldButton } from '../shared-app/HoldButton'
 import { supabase } from '../../services/supabaseClient'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'

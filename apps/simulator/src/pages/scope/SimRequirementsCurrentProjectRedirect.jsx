@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 
 /**
  * Controls & Registers has no project segment in its URLs (see v872/v879), but the Requirements

@@ -137,7 +137,7 @@ vi.mock('../supabaseClient', () => ({
   },
 }))
 
-vi.mock('../../utils/accountResolution', () => ({
+vi.mock('@nidus/shared/utils/accountResolution', () => ({
   getCurrentUserInternalUserId: vi.fn(() => Promise.resolve('internal-user-1')),
   getCurrentUserAccountId: vi.fn(() => Promise.resolve('account-1')),
 }))

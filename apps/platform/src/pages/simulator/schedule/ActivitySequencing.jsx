@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import {
   simListDependencies,
   simSaveDependency,
@@ -8,9 +8,9 @@ import {
   simListActivities,
 } from '../../../services/sim/simPlanningService'
 import ActivityNetworkDiagram from '../../../components/schedule/ActivityNetworkDiagram'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const COLS = [
   { key: 'pred', label: 'Predecessor' },

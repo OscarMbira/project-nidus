@@ -6,10 +6,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
-import { getCurrentUserAccountId } from '../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import {
   TIMESHEET_SETTINGS_DEFAULTS,
   resolveTimesheetSettings,

@@ -7,7 +7,7 @@
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useCurrentProject } from '../../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../../lib/CurrentProjectContext'
 import { fetchProjectMilestones } from '../../../services/ganttService'
 import { getMilestoneSummary } from '../../../services/milestoneService'
 import { Flag } from 'lucide-react'

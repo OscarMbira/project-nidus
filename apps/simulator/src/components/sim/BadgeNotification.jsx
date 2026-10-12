@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Award, X } from 'lucide-react';
 
 const BadgeNotification = ({ badge, onClose }) => {

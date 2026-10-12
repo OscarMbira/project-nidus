@@ -1,7 +1,7 @@
 import { useState, useCallback, memo, useEffect } from 'react'
 import { Plus, X, User, Users, Building2 } from 'lucide-react'
 import { getActiveRoles } from '../../services/stakeholderRoleService'
-import SearchableSelect from '../ui/SearchableSelect'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 /**
  * StakeholdersListSimple Component

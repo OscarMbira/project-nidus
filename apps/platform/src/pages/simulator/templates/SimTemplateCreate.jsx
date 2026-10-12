@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createTemplate, listTemplateCategories } from '../../../services/sim/simTemplateLibraryService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { TEMPLATE_TYPE_OPTIONS, defaultContentSchemaForType, emptyContentFromSchema } from '../../../services/templateLibraryConstants'
 
 const BASE = '/simulator/templates'

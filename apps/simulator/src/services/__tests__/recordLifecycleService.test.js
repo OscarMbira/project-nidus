@@ -18,7 +18,7 @@ vi.mock('../supabase/supabaseClient', () => ({
   },
 }))
 
-vi.mock('../../config/recordLifecycleRegistry', () => ({
+vi.mock('@nidus/config/recordLifecycleRegistry', () => ({
   getLifecycleTableConfig: (name) => {
     if (name === 'risks') {
       return {
@@ -33,6 +33,7 @@ vi.mock('../../config/recordLifecycleRegistry', () => ({
     return null
   },
   LIFECYCLE_STATUSES: ['live', 'unauthorised', 'history', 'archived'],
+  LIFECYCLE_TABLE_REGISTRY: [],
 }))
 
 describe('recordLifecycleService', () => {

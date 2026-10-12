@@ -7,7 +7,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Plus, Trash2, Share2, Loader2 } from 'lucide-react'
 import { getDistributionList, addDistributionEntry, removeDistributionEntry } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const empty = () => ({

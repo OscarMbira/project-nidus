@@ -15,8 +15,8 @@ import ViewToggle from '@nidus/ui/ViewToggle'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import RecordLifecycleListHeader from '@nidus/ui/RecordLifecycleListHeader'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
-import useRecordLifecycleFilter from '@nidus/shared/hooks/useRecordLifecycleFilter'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
+import useRecordLifecycleFilter from '../lib/useRecordLifecycleFilter'
 import { applyRecordStatusFilter } from '@nidus/shared/utils/lifecycleListUtils'
 
 export default function Risks() {

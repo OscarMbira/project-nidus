@@ -17,7 +17,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { RowActionButton } from '@nidus/ui'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import {

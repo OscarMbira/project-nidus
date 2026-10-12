@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import { getCopyById, exportCopyToExcel, exportCopyToPpt } from '../../../services/sim/simProjectTemplateCopyService'
-import ExportRecordMenu from '../../../components/ui/ExportRecordMenu'
+import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 
 const BASE = '/simulator/templates'
 

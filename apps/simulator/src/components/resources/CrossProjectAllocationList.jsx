@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Edit2, Trash2, AlertTriangle, FolderKanban, Target, TrendingUp } from 'lucide-react';
 import { deleteCrossProjectAllocation } from '../../services/crossResourceService';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function CrossProjectAllocationList({ allocations, onEdit, onRefresh }) {

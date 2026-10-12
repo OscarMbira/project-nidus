@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../services/supabaseClient'
 import { X, Save, Calendar, User, Clock } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
-import SelectField from './ui/SelectField'
+import SelectField from '@nidus/ui/SelectField'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function ResourceAssignment({ assignment, resourceId, onSave, onCancel }) {

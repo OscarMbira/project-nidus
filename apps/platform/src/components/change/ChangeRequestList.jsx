@@ -1,13 +1,13 @@
 import { useState, useMemo } from 'react';
 import { FileEdit, Plus, Calendar, User, ArrowRight, AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { deleteChangeRequest } from '../../services/changeManagementService';
-import SortToolbar from '../ui/SortToolbar';
+import SortToolbar from '@nidus/ui/SortToolbar';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
-import RowNumberBadge from '../ui/RowNumberBadge';
-import ViewToggle from '../ui/ViewToggle';
-import RowActionButton from '../ui/RowActionButton';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
+import ViewToggle from '@nidus/ui/ViewToggle';
+import RowActionButton from '@nidus/ui/RowActionButton';
 
 export default function ChangeRequestList({ requests, onEdit, onRefresh, onAdd, onSelect, viewMode = 'grid', onViewModeChange }) {
   const [deleting, setDeleting] = useState(null);

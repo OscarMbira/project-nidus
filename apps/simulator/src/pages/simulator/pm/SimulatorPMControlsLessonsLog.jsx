@@ -2,7 +2,7 @@
  * Simulator PM Controls - Practice Lessons Log
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeLessonsLog from '../PracticeLessonsLog'
 
 export default function SimulatorPMControlsLessonsLog() {

@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, Calendar, TrendingUp, AlertTriangle, Users, BarChart3, PieChart, Download, FileText, Target, Link2, Plus, Search } from 'lucide-react'
-import ViewToggle from '../components/ui/ViewToggle'
-import { useViewMode } from '../hooks/useViewMode'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { format, startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns'
 import {
   exportCapacityToCSV,
@@ -15,7 +15,7 @@ import {
 } from '@nidus/shared/utils/capacityReportExport'
 import { getResourceCapacityPlans, getCrossProjectAllocations } from '../services/crossResourceService'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ResourceCapacity() {

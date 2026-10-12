@@ -18,8 +18,8 @@ import {
   Eye,
 } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'

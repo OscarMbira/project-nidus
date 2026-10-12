@@ -2,7 +2,7 @@
  * Simulator PM Delivery - Practice Daily Log
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeDailyLog from '../PracticeDailyLog'
 
 export default function SimulatorPMDeliveryDailyLog() {

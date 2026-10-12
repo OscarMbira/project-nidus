@@ -26,7 +26,7 @@ import { getBudgetCategories } from '../../services/budgetCategoryService'
 import { describeRevisionChanges } from './budgetRevisionChanges'
 import SelectField from '@nidus/ui/SelectField'
 import { RowActionButton } from '@nidus/ui'
-import { SmartAmountInput } from '../../components/ui/SmartAmountInput'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 
 const formatAmount = (n) => Number(n || 0).toLocaleString()
 

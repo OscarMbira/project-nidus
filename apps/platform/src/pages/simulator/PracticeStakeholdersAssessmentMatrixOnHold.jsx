@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { EntityHoldQueue } from '../../components/ui/EntityHoldQueue'
+import { EntityHoldQueue } from '../../components/shared-app/EntityHoldQueue'
 
 export default function PracticeStakeholdersAssessmentMatrixOnHold() {
   const navigate = useNavigate()

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, AlertTriangle, CheckCircle, Target, BarChart3, PieChart } from 'lucide-react';
-import DashboardStatCard from '../ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getQualityManagementStats } from '../../services/qualityManagementService';
 
 export default function QualityMetricsDashboard({ projectId = null }) {

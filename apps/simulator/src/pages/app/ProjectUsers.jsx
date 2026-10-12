@@ -36,7 +36,7 @@ import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
-import { useEntityId } from '@nidus/shared/hooks/useEntityId'
+import { useEntityId } from '../../lib/useEntityId'
 import { projectQueryParam } from '@nidus/shared/utils/entityUrlUtils'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import {

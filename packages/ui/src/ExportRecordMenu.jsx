@@ -16,7 +16,7 @@ import {
   exportRecordToPrint,
   exportRecordToPDF,
 } from '@nidus/shared/utils/exportUtils'
-import { useBranding } from '@nidus/shared/context/BrandingContext'
+import { useBranding } from '@nidus/shared/hooks/useBranding'
 import RecordPreviewModal from './RecordPreviewModal'
 
 /**

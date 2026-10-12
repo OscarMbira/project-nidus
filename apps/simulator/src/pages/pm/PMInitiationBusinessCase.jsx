@@ -5,7 +5,7 @@
 
 import { FileText } from 'lucide-react'
 import BusinessCaseList from '../../components/businessCase/BusinessCaseList'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 export default function PMInitiationBusinessCase() {
   const { projectId, loading: projectLoading } = usePlatformProjectId()

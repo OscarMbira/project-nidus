@@ -1,5 +1,5 @@
 import { Users, TrendingUp, AlertTriangle, Activity, Calendar } from 'lucide-react';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ResourceUtilizationList({ utilization, onRefresh }) {

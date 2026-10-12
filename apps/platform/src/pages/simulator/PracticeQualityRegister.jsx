@@ -6,9 +6,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import { getPracticeQualityRegister } from '../../services/sim/practiceQualityService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { DashboardRegisterTabBar } from '@nidus/ui'
 
 const PRACTICE_QUALITY_COLUMNS = [

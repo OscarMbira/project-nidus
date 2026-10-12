@@ -43,7 +43,7 @@ import WPProgressSection from '../../components/workpackage/WPProgressSection'
 import WorkPackageForm from '../../components/structured/WorkPackageForm'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
-import { countMicroPlansByWorkPackage, startDraftMicroPlanFromWorkPackage } from '../../services/microPlanService'
+import { countMicroPlansByWorkPackage, startDraftMicroPlanFromWorkPackage } from '@nidus/planning/services/platform/microPlanService.js'
 
 const WP_VIEW_SECTIONS = [
   { title: 'Work Package', fields: [

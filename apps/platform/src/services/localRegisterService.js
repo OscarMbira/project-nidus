@@ -10,7 +10,7 @@
 
 import { supabase } from './supabaseClient'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
-import { isLikelyDatabaseUuid } from '../utils/isUuid'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 
 /**
  * Resolve a `local_registers` row from either its UUID or its `register_key` (rule 16.3 —

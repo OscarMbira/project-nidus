@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react'
-import ModuleLoadingFallback from '../components/ui/ModuleLoadingFallback.jsx'
+import ModuleLoadingFallback from '@nidus/ui/ModuleLoadingFallback.jsx'
 import ModuleRoute from '../federation/ModuleRoute.jsx'
 import { ThemeProvider, ToastProvider, ProtectedRoute, PMOLayout } from './lazyImports.js'
 

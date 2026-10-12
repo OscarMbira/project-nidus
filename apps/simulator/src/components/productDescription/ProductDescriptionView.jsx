@@ -33,7 +33,7 @@ import ProductDescriptionRevisionHistory from './ProductDescriptionRevisionHisto
 import ProductDescriptionDistribution from './ProductDescriptionDistribution'
 import PlanApprovalSection from '../plans/PlanApprovalSection'
 import ProductDescriptionExportMenu from './ProductDescriptionExportMenu'
-import ExportRecordButtons from '../ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const PD_VIEW_SECTIONS = [

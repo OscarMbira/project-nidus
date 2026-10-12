@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { simDb } from '../../services/supabase/supabaseClient'
 import { createPracticeProject } from '../../services/sim/practiceProjectService'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function PracticeProjectCreate() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)

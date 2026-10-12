@@ -8,7 +8,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { useFinancialPermissions } from '@nidus/shared/hooks/useFinancialPermissions'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import SmartAmountInput from '../../components/ui/SmartAmountInput'
+import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 
 function formatNumber(n) {
   return Number(n || 0).toLocaleString()

@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Save, ArrowRight, ArrowLeft, AlertTriangle, TrendingUp, FileText, Target, Users, CheckCircle } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { createRisk, updateRisk } from '../../services/riskService'
-import FormSurface, { resolveOversightFormVariant } from '../ui/FormSurface'
+import FormSurface, { resolveOversightFormVariant } from '@nidus/ui/FormSurface'
 import RecordLifecycleFieldLock, { isRecordLifecycleLocked } from '@nidus/ui/RecordLifecycleFieldLock'
 import InheritedRiskRegisterFields from '../../features/local-data-extensions/components/InheritedRiskRegisterFields'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -20,7 +20,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import SimilarRiskPanel from './SimilarRiskPanel'
 import { addRiskCategory, addRiskSubcategory, findSimilarRisks, getRiskCatalogueAccess, listRiskCatalogue } from '../../services/riskCategoryCatalogService'
-import { similarCatalogueNames } from '../../utils/riskCategoryMatch'
+import { similarCatalogueNames } from '@nidus/shared/utils/riskCategoryMatch'
 
 export default function EnhancedRiskForm({ risk, projectId, riskRegisterId, onSave, onCancel, variant: variantProp, accountId: accountIdProp = null }) {
   const location = useLocation()

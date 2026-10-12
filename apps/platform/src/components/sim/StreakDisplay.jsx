@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Flame, Zap } from 'lucide-react';
 
 const StreakDisplay = ({ currentStreak, longestStreak, showBonus = false }) => {

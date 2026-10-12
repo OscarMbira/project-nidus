@@ -15,7 +15,7 @@ import {
   canCreateMasterTemplate,
 } from '../../services/processTemplatesService'
 import { platformDb } from '@nidus/supabase'
-import { useDraftQueue } from '@nidus/shared/hooks/useDraftQueue'
+import { useDraftQueue } from '../../lib/useDraftQueue'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'

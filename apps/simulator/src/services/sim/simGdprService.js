@@ -12,7 +12,7 @@
  * directly, others public.users) — each registry row's owner_identity_space says which.
  */
 import { simDb } from '../supabaseClient'
-import { getCurrentUserInternalUserId, getCurrentUserAccountId } from '../../utils/accountResolution'
+import { getCurrentUserInternalUserId, getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 async function fetchExportRegistry() {
   const { data, error } = await simDb

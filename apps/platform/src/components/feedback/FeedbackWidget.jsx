@@ -3,9 +3,9 @@ import { MessageSquare, X, Send, Camera } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { submitFeedback } from '../../services/feedbackService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
-import Button from '../ui/Button.jsx'
-import Textarea from '../ui/Textarea.jsx'
-import Select from '../ui/Select.jsx'
+import Button from '@nidus/ui/Button.jsx'
+import Textarea from '@nidus/ui/Textarea.jsx'
+import Select from '@nidus/ui/Select.jsx'
 
 const SEND_TIMEOUT_MS = 18000
 

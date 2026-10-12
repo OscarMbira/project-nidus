@@ -14,7 +14,7 @@ import { Clock, AlertTriangle, CheckCircle, XCircle, Flag, ArrowUp, FileX } from
 import { getStageGates, getOverdueGates, flagOverdueGate, escalateGate, checkGateDocumentCompliance } from '../../../services/stageGateService';
 import { platformDb } from '@nidus/supabase';
 import { useNavigate } from 'react-router-dom';
-import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 // Note: stageGateService uses 'stage_gates' table, but actual table is 'stage_boundaries'

@@ -1,5 +1,5 @@
 import { Plus, Trash2, GripVertical } from 'lucide-react'
-import Textarea from '../ui/Textarea'
+import Textarea from '@nidus/ui/Textarea'
 
 const emptyRow = (n) => ({ step_no: n, action: '', input: '', expected: '' })
 

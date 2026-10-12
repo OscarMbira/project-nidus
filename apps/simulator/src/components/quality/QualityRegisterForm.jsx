@@ -4,7 +4,7 @@ import { saveQualityRegisterItem } from '../../services/qualityManagementService
 import { supabase } from '../../services/supabaseClient';
 import { simDb, platformDb } from '@nidus/supabase';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
-import FormSurface from '../ui/FormSurface';
+import FormSurface from '@nidus/ui/FormSurface';
 import InheritedQualityFields, {
   QUALITY_REGISTER_CATEGORY,
 } from '../../features/local-data-extensions/components/InheritedQualityFields';

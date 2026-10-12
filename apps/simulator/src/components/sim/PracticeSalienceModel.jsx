@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { Triangle, Users } from 'lucide-react'
 import { getPracticeStakeholderAnalysis } from '../../services/sim/practiceStakeholderService'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const SALIENCE_CLASSES = [
   'definitive', 'dominant', 'dangerous', 'dependent',

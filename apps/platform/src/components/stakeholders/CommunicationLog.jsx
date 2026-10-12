@@ -7,8 +7,8 @@ import { useState, useEffect } from 'react'
 import { Star, Pencil } from 'lucide-react'
 import { getStakeholderCommunications, getStakeholders, saveStakeholderCommunication } from '../../services/stakeholderService'
 import { platformDb } from '../../services/supabaseClient'
-import StakeholderAvatar from '../ui/StakeholderAvatar'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 function StarRating({ value, max = 5, size = 'sm' }) {

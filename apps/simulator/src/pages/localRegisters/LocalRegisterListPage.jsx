@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus, Search, LayoutGrid, List as ListIcon } from 'lucide-react'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -14,7 +14,7 @@ import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import { listRecords } from '../../services/localRegisterRecordService'
-import { isLikelyDatabaseUuid } from '../../utils/isUuid'
+import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 
 const PAGE_SIZE = 20
 

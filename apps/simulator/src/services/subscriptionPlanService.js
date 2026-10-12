@@ -13,6 +13,7 @@ export const getAvailablePlans = async () => {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('is_active', true)
     .order('display_order', { ascending: true });
 
@@ -44,6 +45,7 @@ export const getPlanByType = async (planType, billingCycle) => {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('plan_type', planType)
     .eq('billing_cycle', billingCycle)
     .eq('is_active', true)
@@ -76,6 +78,7 @@ export const getPlanById = async (planId) => {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('id', planId)
     .eq('is_active', true)
     .single();
@@ -107,6 +110,7 @@ export const getPlansByBillingCycle = async (billingCycle) => {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('billing_cycle', billingCycle)
     .eq('is_active', true)
     .order('display_order', { ascending: true });
@@ -133,6 +137,7 @@ export const getPopularPlan = async () => {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('is_popular', true)
     .eq('is_active', true)
     .eq('billing_cycle', 'yearly') // Prefer yearly if multiple popular plans
@@ -174,6 +179,7 @@ export const calculateAdditionalMemberCost = async (currentLimit, additionalMemb
   const { data: plan, error } = await platformDb
     .from('subscription_plans')
     .select('additional_member_price')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .eq('plan_type', planType)
     .eq('is_active', true)
     .limit(1)
@@ -208,6 +214,7 @@ export const comparePlans = async (planIds) => {
   const { data, error } = await platformDb
     .from('subscription_plans')
     .select('*')
+    .neq('plan_type', 'planner') // v1239: Planner plans are sold in the Planner only
     .in('id', planIds)
     .eq('is_active', true)
     .order('price', { ascending: true });

@@ -1,7 +1,10 @@
 @import "tailwindcss";
-/* Sidebar offset/transform classes are returned from this helper. Tailwind only
-   emits utilities it can see as complete strings in a scanned file. */
-@source "../../../packages/shared/src/hooks/useSidebarCollapsed.js";
+/* v1240: Tailwind only scans this app folder by default. Shared components, hooks and module pages
+   live in packages/*, so scan them too or their classes are silently left out of the CSS. */
+@source "../../../packages/ui/src";
+@source "../../../packages/shared/src";
+@source "../../../packages/planning/src";
+@source "../../../packages/modules/*/src";
 
 /* CRITICAL: Tailwind v4 requires this custom variant definition for dark mode */
 @custom-variant dark (&:where(.dark, .dark *));

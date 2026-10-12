@@ -6,7 +6,7 @@
 
 import { useState } from 'react'
 import { CheckCircle, FileText, Settings, Package, Hash, GitBranch, BarChart3, Layers, Shield, Wrench, FolderArchive, Calendar, Users } from 'lucide-react'
-import { HoldButton } from '../ui/HoldButton'
+import { HoldButton } from '../shared-app/HoldButton'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'

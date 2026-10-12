@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { MessageSquare, Calendar, TrendingUp, TrendingDown, Minus, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { getStakeholderEngagement, saveStakeholderEngagement } from '../../services/stakeholderService';
 import { platformDb } from '../../services/supabaseClient';
-import StakeholderAvatar from '../ui/StakeholderAvatar';
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
 
 export default function EngagementTracker({ projectId, stakeholders = [] }) {
   const [engagement, setEngagement] = useState([]);

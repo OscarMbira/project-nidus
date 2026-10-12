@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link2, AlertTriangle, CheckCircle, Target, TrendingUp, FolderKanban, Search, Plus, Network } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getInterProjectDependencies, getDependencyDashboardStats } from '../services/dependencyService';
 import DependencyList from '../components/dependencies/DependencyList';
 import DependencyForm from '../components/dependencies/DependencyForm';

@@ -3,9 +3,9 @@ import Sidebar from '../Sidebar'
 import PlatformAppHeader from '../headers/PlatformAppHeader'
 import QuickCaptureFab from '../../modules/pmis-gaps/components/QuickCaptureFab'
 import PMProjectSelector from './PMProjectSelector'
-import { BrandingProvider } from '@nidus/shared/context/BrandingContext'
-import { MenuProvider } from '@nidus/shared/hooks/useMenu'
-import { CurrentProjectProvider } from '../../context/CurrentProjectContext'
+import { BrandingProvider } from '../../lib/BrandingContext'
+import { MenuProvider } from '../../lib/useMenu'
+import { CurrentProjectProvider } from '../../lib/CurrentProjectContext'
 import { RoleScopeGate, RoleScopedShell } from '@nidus/ui'
 
 export default function PMLayout({ children }) {

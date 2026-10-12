@@ -11,7 +11,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
-import { getCurrentUserAccountId } from '../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import {
   TIMESHEET_SETTINGS_DEFAULTS,
   getOrganisationTimesheetSettings,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 
 const EventModal = ({ event, onResponse, onClose }) => {
   const { theme } = useTheme();

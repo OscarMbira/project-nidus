@@ -14,7 +14,7 @@ import {
   getEvidenceSignedUrl,
   softDeleteExecutionEvidence,
 } from '../../services/testCaseExecutionEvidenceService'
-import { useProjectRole } from '../../hooks/useProjectRole'
+import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { resolveInternalUserId } from '@nidus/shared/utils/resolveInternalUserId'
 import { canRemoveTestEvidence } from '@nidus/shared/utils/testEvidenceRequirement'
 

@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Users, UserPlus, Pencil, Trash2, Search } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { isPmoAdmin } from '../../services/organisationRoleService'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import {
   getMyTeams,
   getTeamsForProject,

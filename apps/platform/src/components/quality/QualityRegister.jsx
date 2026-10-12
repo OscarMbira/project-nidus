@@ -3,11 +3,11 @@ import { CheckCircle, XCircle, Clock, AlertTriangle, Edit2, Trash2, Eye, FileTex
 import toast from 'react-hot-toast';
 import { deleteQualityRegisterItem, getQualityActivities } from '../../services/qualityManagementService';
 import QualityActivityExportMenu from './QualityActivityExportMenu';
-import ExportListMenu from '../ui/ExportListMenu';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import ExportListMenu from '@nidus/ui/ExportListMenu';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
-import RowNumberBadge from '../ui/RowNumberBadge';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { RowActionButton } from '@nidus/ui';
 
 const QUALITY_REGISTER_COLUMNS = [

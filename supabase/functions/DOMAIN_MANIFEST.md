@@ -23,6 +23,7 @@ New functions should use the prefix convention below.
 | `meeting-ai-extract` | `shared-*` | Both domains |
 | `plan-ai-generate` | `shared-*` | Both domains |
 | `whisper-transcribe` | `shared-*` | Both domains |
+| `site-download` | `site-*` | Public brand site (v1263): email-gated blog downloads — records the lead, returns a 5-minute signed link from the private `site-downloads` bucket |
 
 ## Naming convention for new functions
 

@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import { ShieldAlert, LayoutGrid, List, Search, ArrowLeft, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { RowActionButton } from '@nidus/ui'
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {
   isSystemAdmin,
   getCloneSourceRoles,

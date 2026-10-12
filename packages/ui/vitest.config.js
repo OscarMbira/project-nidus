@@ -18,5 +18,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],
     include: ['src/**/*.{test,spec}.{js,jsx}'],
+    // v1240: components that import @nidus/supabase now run from this package (not the app
+    // copies), and the client validates its URL at import time — placeholders, no real queries.
+    env: {
+      VITE_SUPABASE_URL: 'https://test-placeholder.supabase.co',
+      VITE_SUPABASE_ANON_KEY: 'test-placeholder-anon-key-not-real',
+    },
   },
 })

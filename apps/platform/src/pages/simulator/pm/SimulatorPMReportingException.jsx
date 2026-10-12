@@ -2,7 +2,7 @@
  * Simulator PM Reporting - Practice Exception Reports
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeExceptionReportList from '../PracticeExceptionReportList'
 
 export default function SimulatorPMReportingException() {

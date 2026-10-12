@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Plus, Users, Calendar, TrendingUp, AlertTriangle, Search, Filter } from 'lucide-react'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import ResourceList from '../components/ResourceList'
 import Pagination from '../components/Pagination'
 

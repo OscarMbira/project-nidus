@@ -5,7 +5,7 @@ import { memo, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FileCheck, ExternalLink } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
-import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const PMOGovernanceTab = memo(function PMOGovernanceTab({

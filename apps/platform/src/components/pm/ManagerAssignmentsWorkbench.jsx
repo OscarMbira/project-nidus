@@ -2,13 +2,13 @@ import { lazy, memo, Suspense, useCallback, useDeferredValue, useEffect, useMemo
 import { Link } from 'react-router-dom'
 import { ArrowLeft, LayoutGrid, List, Search, UserMinus, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import {
   getEligibleManagers,
   getActiveAssignmentCountsForUsers,
   getSystemAssignmentLimit,
 } from '../../services/managerAssignmentService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const AssignManagerModal = lazy(() => import('../pmo/AssignManagerModal'))

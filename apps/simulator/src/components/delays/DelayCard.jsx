@@ -1,6 +1,6 @@
 import { Bot } from 'lucide-react'
 import DelaySeverityBadge from './DelaySeverityBadge'
-import RowNumberBadge from '../ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 
 export default function DelayCard({ row, onEdit, readOnly, rowNumber }) {
   const src = row.source_type || 'manual'

@@ -29,7 +29,7 @@ vi.mock('@nidus/shared/context/UnsavedChangesContext', () => ({
   useUnsavedChangesGuard: () => ({ confirmDiscard: (fn) => fn?.() }),
 }))
 
-vi.mock('@nidus/shared/context/BrandingContext', () => ({
+vi.mock('../../../../lib/BrandingContext', () => ({
   useBranding: () => ({ branding: null }),
 }))
 

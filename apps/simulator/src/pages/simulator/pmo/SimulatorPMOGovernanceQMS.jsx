@@ -2,7 +2,7 @@
  * Simulator PMO Governance - Practice Quality Management Strategy
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeQMSList from '../PracticeQMSList'
 
 export default function SimulatorPMOGovernanceQMS() {

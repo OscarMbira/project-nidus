@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Save, X, ChevronLeft, ChevronRight, CheckCircle, AlertCircle } from 'lucide-react'
-import { HoldButton } from '../ui/HoldButton'
+import { HoldButton } from '../shared-app/HoldButton'
 import LessonsReportDocumentInfoSection from './LessonsReportDocumentInfoSection'
 import LessonsReportOverviewSection from './LessonsReportOverviewSection'
 import LessonsReportOverallReviewSection from './LessonsReportOverallReviewSection'

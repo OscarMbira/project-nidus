@@ -30,10 +30,10 @@ vi.mock('../feedback/FeedbackWidget', () => ({ default: () => <div data-testid="
 vi.mock('../ai/AIChatWidget', () => ({ default: () => <div data-testid="ai-chat-widget" /> }))
 vi.mock('../../modules/pmis-gaps/components/QuickCaptureFab', () => ({ default: () => null }))
 vi.mock('../sim/ui/PracticeDashboardSwitcher', () => ({ default: () => null }))
-vi.mock('@nidus/shared/context/BrandingContext', () => ({
+vi.mock('../../lib/BrandingContext', () => ({
   BrandingProvider: ({ children }) => children,
 }))
-vi.mock('@nidus/shared/hooks/useMenu', () => ({
+vi.mock('../../lib/useMenu', () => ({
   MenuProvider: ({ children }) => children,
 }))
 vi.mock('@nidus/shared/hooks/useRoleScopeGuard', () => ({

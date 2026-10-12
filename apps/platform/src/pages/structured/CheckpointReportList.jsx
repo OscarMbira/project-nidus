@@ -15,8 +15,8 @@ import { format } from 'date-fns'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import ViewToggle from '@nidus/ui/ViewToggle'
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const CHECKPOINT_COLUMNS = [

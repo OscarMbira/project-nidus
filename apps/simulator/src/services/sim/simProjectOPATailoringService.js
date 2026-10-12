@@ -8,7 +8,7 @@ import {
   buildDefaultFieldConfigs,
   normalizeFieldConfigs,
 } from '../projectOPATailoringService'
-import { exportToExcel, exportListToPPT } from '../../utils/exportUtils'
+import { exportToExcel, exportListToPPT } from '@nidus/shared/utils/exportUtils'
 
 export { OPA_FIELD_REGISTRY, buildDefaultFieldConfigs, normalizeFieldConfigs }
 

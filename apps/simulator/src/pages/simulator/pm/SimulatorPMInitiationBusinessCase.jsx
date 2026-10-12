@@ -2,7 +2,7 @@
  * Simulator PM Initiation - Practice Business Case
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeBusinessCaseList from '../PracticeBusinessCaseList'
 
 export default function SimulatorPMInitiationBusinessCase() {

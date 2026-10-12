@@ -11,14 +11,14 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import ViewToggle from '../ui/ViewToggle'
-import ExportListMenu from '../ui/ExportListMenu'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { resolveInviteeNamesForInvitation } from '@nidus/shared/utils/invitationInviteeFormat'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import RowNumberBadge from '../ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 
 const STATUS_TABS = [
   { key: '', label: 'All' },

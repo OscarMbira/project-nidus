@@ -1,7 +1,7 @@
 import React from 'react';
-import { useThemeContext } from '../../context/ThemeContext';
+import { useThemeContext } from '@nidus/shared/context/ThemeContext';
 import { Award, Lock } from 'lucide-react';
-import { getBadgeIcon } from '../../utils/badgeIcons.jsx';
+import { getBadgeIcon } from '@nidus/shared/utils/badgeIcons.jsx';
 
 const BadgeDisplay = ({ badge, earned = false, showProgress = false, progress = null }) => {
   const { theme } = useThemeContext();

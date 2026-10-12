@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useThemeContext } from '../../context/ThemeContext';
+import { useThemeContext } from '@nidus/shared/context/ThemeContext';
 import EventModal from '../../components/sim/EventModal';
 import HintsPanel from '../../components/sim/HintsPanel';
 import LevelUpAnimation from '../../components/sim/LevelUpAnimation';
 import BadgeNotification from '../../components/sim/BadgeNotification';
 import { generatePhaseEvents, evaluateResponse, calculateCumulativeImpact } from '../../services/eventEngineService';
-import { useSimulationCompletion } from '../../hooks/useSimulationCompletion';
+import { useSimulationCompletion } from '../../lib/useSimulationCompletion';
 import { simDb } from '../../services/supabase/supabaseClient';
 
 const SimulationRunEnhanced = () => {

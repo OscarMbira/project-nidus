@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Edit, FileText, Search } from 'lucide-react'
 import { getAllBusinessCases } from '../../services/businessCaseService'
 import BusinessCaseStatusBadge from './BusinessCaseStatusBadge'
-import ExportListMenu from '../ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const STATUS_OPTIONS = [

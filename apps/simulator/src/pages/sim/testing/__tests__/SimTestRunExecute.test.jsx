@@ -32,7 +32,7 @@ vi.mock('../../../../services/sim/practiceTestCaseExecutionEvidenceService', () 
   getPracticeEvidenceRequirementSettings: vi.fn().mockResolvedValue({ projectValue: null, accountDefault: null, ownerUserId: null }),
 }))
 
-vi.mock('../../../../utils/resolveSimInternalUserId', () => ({
+vi.mock('@nidus/shared/utils/resolveSimInternalUserId', () => ({
   resolveSimInternalUserId: vi.fn().mockResolvedValue('user-1'),
 }))
 

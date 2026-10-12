@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Briefcase, TrendingUp, DollarSign, Activity, RefreshCw, AlertCircle } from 'lucide-react'
 import { getSimPortfolios, getAllSimPortfolioProjects } from '../../services/simPortfolioService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 function KpiCard({ label, value, icon: Icon, colour }) {
   return (

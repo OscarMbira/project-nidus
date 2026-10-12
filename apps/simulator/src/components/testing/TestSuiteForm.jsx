@@ -12,7 +12,7 @@ import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import SelectField from '@nidus/ui/SelectField'
 import { RowActionButton } from '@nidus/ui'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
-import { environmentIdsFromSuite, legacyEnvironmentLabel, multilineToTags, tagsToMultiline } from '../../utils/suiteFieldValues'
+import { environmentIdsFromSuite, legacyEnvironmentLabel, multilineToTags, tagsToMultiline } from '@nidus/shared/utils/suiteFieldValues'
 
 const SUITE_TYPES = ['functional','regression','smoke','uat','performance','security','integration','exploratory','sanity']
 const STATUSES    = ['draft','active','archived']

@@ -4,10 +4,10 @@ import { BookOpen, Search, ChevronRight, Eye, ThumbsUp, ThumbsDown, Clock, Tag }
 import { getHelpArticles, getHelpCategories, searchHelpArticles, submitHelpFeedback } from '../../services/helpService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import { supabase } from '../../services/supabaseClient'
-import { Input } from '../ui/Input'
-import { Button } from '../ui/Button'
-import { Loading } from '../ui/Loading'
-import { EmptyState } from '../ui/EmptyState'
+import { Input } from '@nidus/ui/Input'
+import { Button } from '@nidus/ui/Button'
+import { Loading } from '@nidus/ui/Loading'
+import { EmptyState } from '@nidus/ui/EmptyState'
 
 export default function KnowledgeBase({ filters = {} }) {
   const [articles, setArticles] = useState([])

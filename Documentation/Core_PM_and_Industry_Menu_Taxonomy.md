@@ -145,7 +145,8 @@ PROJECT MANAGEMENT
 │   │   ├── Network / Dependencies
 │   │   ├── Critical Path
 │   │   ├── Look-Ahead Plan
-│   │   └── Schedule Variance
+│   │   ├── Schedule Variance
+│   │   └── Workload (v1239)
 │   ├── Milestones
 │   │   ├── Milestone Register
 │   │   ├── Key Dates
@@ -1728,3 +1729,54 @@ Exact tables/modules must reuse existing Admin architecture wherever possible.
 
 > **Project Nidus should provide one configurable SaaS PMIS, with a strong generic PM core and industry-aware capability packs—not separate PMIS implementations per industry.**
 
+---
+
+# 23. Project Planner (planner.<domain>) — pln_ menus (v1239)
+
+The standalone Project Planner product has its own sidebar (`pln_` rows, `/app/...` paths). It reuses the shared planning screens; it never shows Platform (`plat_`) or Simulator (`sim_`) rows, and those sidebars never show `pln_` rows. Level 4 tabs are the schedule sub-navigation (Section 17).
+
+```text
+Project Planner
+├── Home (v1239)
+├── Projects (v1239)
+├── Schedule (v1239)
+│   ├── Plan grid
+│   ├── Gantt
+│   ├── Board
+│   ├── Calendar
+│   ├── Network
+│   ├── Critical path
+│   ├── Look-ahead
+│   ├── Variance
+│   ├── Milestones
+│   └── Baselines
+├── Project setup (v1239)
+│   ├── Calendars & exceptions
+│   ├── Dependencies
+│   └── Members & invitations
+├── Planning Hub (v1239)
+│   ├── Overview
+│   ├── Intelligence
+│   ├── Scenarios
+│   ├── Product breakdown
+│   ├── Plan health
+│   ├── AI plan draft
+│   ├── Executive view
+│   ├── Recovery
+│   ├── Confidence forecast
+│   ├── Governance gates
+│   ├── Micro-plans
+│   └── Portfolio collisions
+├── Workload (v1239)
+├── Timesheets (v1239)
+│   └── My week
+├── Import / export (v1239)
+└── Settings (v1239)
+    ├── Workspace
+    ├── Intelligence rules
+    ├── Governance-gate rules
+    ├── Billing
+    └── Upgrade
+```
+
+Schedule sub-navigation (Level 4, every shell — Platform, Simulator and Planner, v1239): Tasks · Board · Gantt · Network · Critical path · Milestones · Look-ahead · Variance · Dependencies · Calendar · Baselines · Workload · My time · Import / export · Due dates.

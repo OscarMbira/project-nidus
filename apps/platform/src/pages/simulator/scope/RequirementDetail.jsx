@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simGetRequirement, simSaveRequirement, simSoftDeleteRequirement } from '../../../services/sim/simPlanningService'
 import { getPracticeStakeholders } from '../../../services/sim/practiceStakeholderService'
 import { simDb } from '../../../services/supabase/supabaseClient'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 
 const inputCls =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500'

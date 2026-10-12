@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { HoldButton } from '../ui/HoldButton'
+import { HoldButton } from '../shared-app/HoldButton'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'

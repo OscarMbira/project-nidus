@@ -4,7 +4,7 @@ import { saveCrossProjectAllocation, checkResourceConflicts } from '../../servic
 import { getMyProjects } from '../../services/projectService';
 import { getUserSystemRoles, getUserProjectRoles } from '../../services/roleService';
 import { supabase } from '../../services/supabaseClient';
-import FormSurface from '../ui/FormSurface';
+import FormSurface from '@nidus/ui/FormSurface';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';

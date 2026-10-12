@@ -5,7 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchDocContext } from '../docFetcher';
 
-vi.mock('../../services/supabase/supabaseClient', () => ({
+vi.mock('@nidus/supabase', () => ({
   platformDb: {
     from: vi.fn(() => ({
       select: vi.fn(() => ({

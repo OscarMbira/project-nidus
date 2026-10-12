@@ -21,7 +21,7 @@ import LessonsReportForm from '../components/lessonsReport/LessonsReportForm'
 import LessonsReportHeader from '../components/lessonsReport/LessonsReportHeader'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import Modal from '@nidus/ui/Modal'
-import { generateLessonsReportPrintHTML } from '../utils/lessonsReportExport'
+import { generateLessonsReportPrintHTML } from '@nidus/shared/utils/lessonsReportExport'
 import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const LESSONS_REPORT_VIEW_SECTIONS = [
@@ -118,12 +118,12 @@ export default function LessonsReportView() {
   }
 
   const handleExportPDF = () => {
-    const { exportLessonsReportToPDF } = require('../utils/lessonsReportExport')
+    const { exportLessonsReportToPDF } = require('@nidus/shared/utils/lessonsReportExport')
     exportLessonsReportToPDF(report, reportLessons.map(rl => rl.lesson), recommendations, approvals, distribution, appendices)
   }
 
   const handleExport = (format) => {
-    const { exportLessonsReportToPDF, exportLessonsReportToWord } = require('../utils/lessonsReportExport')
+    const { exportLessonsReportToPDF, exportLessonsReportToWord } = require('@nidus/shared/utils/lessonsReportExport')
     if (format === 'pdf') {
       exportLessonsReportToPDF(report, reportLessons.map(rl => rl.lesson), recommendations, approvals, distribution, appendices)
     } else if (format === 'word') {

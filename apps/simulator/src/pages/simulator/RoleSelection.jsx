@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { SIMULATOR_ROLE_LIST, canAccessRoleForTier } from '@nidus/shared/constants/simulatorRoles';
 import { simDb } from '../../services/supabase/supabaseClient';
 import { savePreferredRole, getPreferredRole } from '../../services/sim/rolePreferenceService';

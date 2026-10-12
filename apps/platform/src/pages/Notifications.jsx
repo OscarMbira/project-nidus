@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getCurrentUserInternalUserId } from '../utils/accountResolution'
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Bell, Check, CheckCheck, Settings, Filter, Search, X } from 'lucide-react'
@@ -7,8 +7,8 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { RowActionButton } from '@nidus/ui'
-import ViewToggle from '../components/ui/ViewToggle'
-import { getDisplayRowNumber } from '../utils/tableRowNumberUtils'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function Notifications() {
   const navigate = useNavigate()

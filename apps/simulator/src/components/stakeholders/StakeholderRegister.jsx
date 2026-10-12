@@ -1,12 +1,12 @@
 import { useState, useMemo } from 'react';
 import { Users, Building, Mail, Phone, MapPin } from 'lucide-react';
 import { platformDb } from '../../services/supabaseClient';
-import StakeholderAvatar from '../ui/StakeholderAvatar';
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar';
 import { deleteStakeholder, excludeStakeholderFromProject } from '../../services/stakeholderService';
 import { getCompletenessPercent } from '@nidus/shared/utils/stakeholderCompleteness';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
-import RowNumberBadge from '../ui/RowNumberBadge';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
 import { RowActionButton } from '@nidus/ui';
 

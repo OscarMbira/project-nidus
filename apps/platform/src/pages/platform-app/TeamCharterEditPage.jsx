@@ -10,7 +10,7 @@ import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import { getTeamCharter, createTeamCharter, updateTeamCharter } from '../../services/teamCharterService'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 const EMPTY = {
   title: 'Team Charter',

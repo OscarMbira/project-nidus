@@ -11,7 +11,6 @@ import {
   LoadingFallbackWithTimeout,
   LoginPageSkeleton,
   RedirectProjectsTemplatesToLibrary,
-  NidusHomepage,
   ThemeProvider,
   ToastProvider,
   Layout,
@@ -45,10 +44,6 @@ import {
   TraceabilityMatrixPage,
   WBSBuilderPage,
   ScheduleManagementPlanPage,
-  ActivityListPage,
-  ActivityDetailPage,
-  ActivitySequencingPage,
-  GanttChartPage,
   ProjectsOnHold,
   BenefitsOnHold,
   StakeholdersOnHold,
@@ -652,11 +647,8 @@ import {
   SimRequirementDetailPage,
   SimTraceabilityMatrixPage,
   SimWBSBuilderPage,
-  SimScheduleManagementPlanPage,
-  SimActivityListPage,
+  SimScheduleManagementPlanPage, ScheduleRoutes,
   SimActivityDetailPage,
-  SimActivitySequencingPage,
-  SimGanttChartPage,
   PracticeProjects,
   SimProjectMembers,
   ProjectUsers,
@@ -898,10 +890,7 @@ import {
   CostActualDetailPage,
   CostActualForm,
   UnifiedApprovalsRegisterPage,
-  SimProjectCalendarSettingsPage,
-  SimProjectCalendarExceptionsListPage,
-  SimProjectCalendarExceptionDetailPage,
-} from './routeCommon'
+  } from './routeCommon'
 
 
 export function SimulatorRouteElements() {
@@ -2389,13 +2378,14 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
-                <Route path="simulator/practice-projects/:projectId/schedule/activities" element={
+                {/* v1239 Slice 3.5 — shared schedule screens (@nidus/planning, sim mode). Estimating pages above keep explicit routes. */}
+                <Route path="simulator/practice-projects/:projectId/schedule/*" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
                       <ToastProvider>
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
-                            <SimActivityListPage />
+                            <ScheduleRoutes fallback={<LoadingFallback />} />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>
@@ -2428,98 +2418,7 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
-                <Route path="simulator/practice-projects/:projectId/schedule/dependencies" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimActivitySequencingPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-projects/:projectId/schedule/gantt" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimGanttChartPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 {/* Project Calendar (v963 Phase 4) */}
-                <Route path="simulator/practice-projects/:projectId/schedule/calendar" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimProjectCalendarSettingsPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimProjectCalendarExceptionsListPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions/create" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimProjectCalendarExceptionDetailPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions/:exceptionId" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimProjectCalendarExceptionDetailPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-projects/:projectId/schedule/calendar/exceptions/:exceptionId/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimProjectCalendarExceptionDetailPage forceEdit />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
                 <Route path="simulator/practice-projects/:projectId/opa-templates" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>

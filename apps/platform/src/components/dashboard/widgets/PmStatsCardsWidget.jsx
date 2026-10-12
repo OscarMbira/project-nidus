@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardStatCard } from '@nidus/ui'
 import { supabase } from '../../../services/supabaseClient'
-import { useCurrentProject } from '../../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../../lib/CurrentProjectContext'
 import { CheckSquare, BarChart3, Layers, GraduationCap } from 'lucide-react'
 
 const EMPTY_STATS = {

@@ -7,8 +7,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Layers, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeProjects } from '../../services/sim/practicePortfolioService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PracticeProgrammeProjectsPage() {
   const [programmes, setProgrammes] = useState([])

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import ModuleLoadingFallback from '../../components/ui/ModuleLoadingFallback.jsx'
+import ModuleLoadingFallback from '@nidus/ui/ModuleLoadingFallback.jsx'
 
 const ModuleRoutes = lazy(() => import('@nidus/sim-pmo-module/routes'))
 

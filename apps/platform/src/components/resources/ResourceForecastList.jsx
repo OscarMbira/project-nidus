@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, Target, TrendingUp, Calendar } from 'lucide-react';
 import { RowActionButton } from '@nidus/ui';
 import { deleteResourceForecast } from '../../services/crossResourceService';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ResourceForecastList({ forecasts, onView, onEdit, onRefresh }) {

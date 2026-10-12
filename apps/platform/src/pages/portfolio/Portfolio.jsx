@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, FolderKanban, TrendingUp, AlertTriangle, DollarSign, Search } from 'lucide-react';
-import DashboardStatCard from '../../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getPortfolios } from '../../services/portfolioService';
 import PortfolioList from '../../components/portfolio/PortfolioList';
 import PortfolioForm from '../../components/portfolio/PortfolioForm';

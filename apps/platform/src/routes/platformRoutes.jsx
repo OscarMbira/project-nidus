@@ -10,9 +10,7 @@ import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
   LoginPageSkeleton,
-  RedirectProjectsTemplatesToLibrary,
-  NidusHomepage,
-  ThemeProvider,
+  RedirectProjectsTemplatesToLibrary,  ThemeProvider,
   ToastProvider,
   Layout,
   ProtectedRoute,
@@ -46,10 +44,7 @@ import {
   DeliverableRegisterListPage,
   DeliverableRegisterFormPage,
   ScheduleManagementPlanPage,
-  ActivityListPage,
   ActivityDetailPage,
-  ActivitySequencingPage,
-  GanttChartPage,
   ProjectsOnHold,
   BenefitsOnHold,
   StakeholdersOnHold,
@@ -279,7 +274,7 @@ import {
   SecuritySettings,
   PWASettingsV675,
   ExecutiveDashboard,
-  SubscriptionManagement,
+  SubscriptionManagement, SwitchEditionPage,
   OrganisationProfile,
   StageGateList,
   StageGateForm,
@@ -312,12 +307,7 @@ import {
   ProjectBoardPage,
   GovernanceMembersBulkUploadPage,
   GovernanceMeetingCalendarPage,
-  CriticalPathPage,
-  LookAheadPlanPage,
-  ScheduleVariancePage,
-  PlanningDependenciesPage,
-  PlanningCalendarsPage,
-  PlanningBaselinesPage,
+  PlanningBaselinesPage, ScheduleRoutes, ScheduleDependenciesScreen, ScheduleCalendarScreen,
   ProjectBudgetBaseline,
   ProjectEVMPage,
   ProjectsEVMLandingPage,
@@ -962,9 +952,6 @@ import {
   IntegrationsHomePage,
   IntegrationConfigPage,
   IntegrationSyncPage,
-  ProjectCalendarSettingsPage,
-  ProjectCalendarExceptionsListPage,
-  ProjectCalendarExceptionDetailPage,
   AssumptionsListPage,
   AssumptionDetailPage,
   AssumptionForm,
@@ -4245,13 +4232,10 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="projects/:projectId/schedule/activities" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ActivityListPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
+                              {/* v1239 Slice 3.5 — shared schedule screens (@nidus/planning) on tasks. ActivityDetail and
+                                  ScheduleManagementPlan keep their explicit routes above, which rank before these splats. */}
+                              <Route path="schedule/*" element={<ProtectedRoute><ScheduleRoutes fallback={<LoadingFallback />} /></ProtectedRoute>} />
+                              <Route path="projects/:projectId/schedule/*" element={<ProtectedRoute><ScheduleRoutes fallback={<LoadingFallback />} /></ProtectedRoute>} />
                               <Route path="projects/:projectId/schedule/activities/new" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -4266,76 +4250,20 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="projects/:projectId/schedule/dependencies" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ActivitySequencingPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="projects/:projectId/schedule/gantt" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <GanttChartPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
                               {/* v1025: flat, id-less siblings for sidebar access from /pm/* (Planning
                                   group) — same pattern as ProjectBudgetPage; these 3 page components
                                   already resolve projectId via usePlatformProjectId(). */}
-                              <Route path="schedule/activities" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ActivityListPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="schedule/dependencies" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ActivitySequencingPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="schedule/gantt" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <GanttChartPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="schedule/critical-path" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <CriticalPathPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="schedule/look-ahead" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <LookAheadPlanPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="schedule/variance" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ScheduleVariancePage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
                               <Route path="planning/dependencies" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <PlanningDependenciesPage />
+                                    <ScheduleDependenciesScreen />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
                               <Route path="planning/calendars" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <PlanningCalendarsPage />
+                                    <ScheduleCalendarScreen />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -4347,41 +4275,6 @@ export function PlatformRouteElements() {
                                 </Suspense>
                               } />
                               {/* Project Calendar (v963 Phase 4) */}
-                              <Route path="projects/:projectId/schedule/calendar" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ProjectCalendarSettingsPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="projects/:projectId/schedule/calendar/exceptions" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ProjectCalendarExceptionsListPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="projects/:projectId/schedule/calendar/exceptions/create" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ProjectCalendarExceptionDetailPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="projects/:projectId/schedule/calendar/exceptions/:exceptionId" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ProjectCalendarExceptionDetailPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="projects/:projectId/schedule/calendar/exceptions/:exceptionId/edit" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <ProjectCalendarExceptionDetailPage forceEdit />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
                               {/* End Project Report Routes */}
                               <Route path="projects/:projectId/closure" element={
                                 <Suspense fallback={<LoadingFallback />}>
@@ -5330,6 +5223,7 @@ export function PlatformRouteElements() {
 
                               {/* v675: Subscription */}
                               <Route path="subscription" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
+                              <Route path="subscription/edition" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SwitchEditionPage /></ProtectedRoute></Suspense>} />
                               <Route path="subscription/upgrade" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
                               <Route path="subscription/billing-history" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />
                               <Route path="subscription/payment-methods" element={<Suspense fallback={<LoadingFallback />}><ProtectedRoute><SubscriptionManagement /></ProtectedRoute></Suspense>} />

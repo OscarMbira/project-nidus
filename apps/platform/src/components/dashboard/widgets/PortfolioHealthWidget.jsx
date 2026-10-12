@@ -9,7 +9,7 @@
  */
 import { useState, useEffect } from 'react'
 import { getPortfolio } from '../../../services/portfolioService'
-import { useCurrentPortfolio } from '../../../context/CurrentPortfolioContext'
+import { useCurrentPortfolio } from '../../../lib/CurrentPortfolioContext'
 import { Activity, AlertTriangle } from 'lucide-react'
 
 function healthColour(score) {

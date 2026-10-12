@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
+import Button from '@nidus/ui/Button';
+import Card from '@nidus/ui/Card';
 
 const CTASection = () => {
   const navigate = useNavigate();

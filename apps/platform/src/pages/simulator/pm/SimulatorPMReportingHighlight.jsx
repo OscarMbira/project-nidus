@@ -2,7 +2,7 @@
  * Simulator PM Reporting - Practice Highlight Reports
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeHighlightReportList from '../PracticeHighlightReportList'
 
 export default function SimulatorPMReportingHighlight() {

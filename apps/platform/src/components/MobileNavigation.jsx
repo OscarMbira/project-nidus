@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, Home, LayoutDashboard, FolderKanban, Settings, HelpCircle, LogOut } from 'lucide-react'
-import { useMenu } from '@nidus/shared/hooks/useMenu'
+import { useMenu } from '../lib/useMenu'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { supabase } from '../services/supabaseClient'
 import { resolveMenuRoutePath, menuPathIsActive } from '@nidus/shared/utils/sidebarRouteUtils'

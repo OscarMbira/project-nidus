@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAffiliateTracking } from '@nidus/shared/hooks/useAffiliateTracking';
 import { motion } from 'framer-motion';
@@ -17,7 +17,9 @@ import Button from '@nidus/ui/Button';
 import Card from '@nidus/ui/Card';
 import ThemeToggle from '../components/ThemeToggle';
 import SimulatorFooter from '../components/homepage/SimulatorFooter';
-import { supabase } from '../services/supabaseClient';
+// v1241 Amendment A: the shared Nidus header (company menus + Simulator product bar) replaces the
+// old page header and the Nidus family bar.
+import SimulatorHeader from '../components/homepage/SimulatorHeader';
 
 const learningPathSteps = [
   { 
@@ -129,39 +131,6 @@ const testimonials = [
 const SimulatorHomepage = () => {
   const navigate = useNavigate();
   useAffiliateTracking('simulator');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsLoggedIn(!!user);
-    } catch (error) {
-      setIsLoggedIn(false);
-    }
-  };
-
-  const handleHomeClick = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (isLoggedIn) {
-      // Logout and redirect to NidusHomepage
-      try {
-        await supabase.auth.signOut();
-        navigate('/', { replace: true });
-      } catch (error) {
-        console.error('Logout error:', error);
-        navigate('/', { replace: true });
-      }
-    } else {
-      // Not logged in, redirect to NidusHomepage
-      navigate('/', { replace: true });
-    }
-  };
 
   const sectionVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -170,88 +139,7 @@ const SimulatorHomepage = () => {
 
   return (
     <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-      {/* Header - Always dark theme with green gradient, not affected by theme toggle */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-green-900 via-emerald-800 to-teal-900 shadow-md border-b border-green-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
-          <Link to="/" className="flex items-center gap-3 shrink-0">
-            <Zap className="h-6 w-6 text-green-300" />
-            <div className="flex flex-col">
-              <span className="text-3xl font-bold">
-                <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                  Project
-                </span>
-                <span className="bg-gradient-to-r from-orange-400 via-red-500 to-red-600 bg-clip-text text-transparent ml-1">
-                  Nidus
-                </span>
-              </span>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-green-300 mt-0.5">Simulator</span>
-                <div className="h-0.5 bg-green-400 mt-0.5"></div>
-              </div>
-            </div>
-          </Link>
-          <nav className="hidden md:flex items-center gap-3 lg:gap-4 ml-6 lg:ml-8 shrink-0">
-            <button
-              type="button"
-              onClick={handleHomeClick}
-              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
-            >
-              Home
-            </button>
-            <Link
-              to="/simulator/features"
-              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              to="/simulator/blog"
-              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
-            >
-              Blog
-            </Link>
-            <Link
-              to="/simulator/resources"
-              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
-            >
-              Resources
-            </Link>
-            <Link
-              to="/simulator/pricing"
-              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
-              to="/documentation/simulator"
-              className="whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
-            >
-              Documentation
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2 ml-auto shrink-0">
-            <Link
-              to="/simulator/affiliate"
-              className="hidden md:inline-flex whitespace-nowrap text-sm font-medium text-green-200 hover:text-white transition-colors"
-            >
-              Become an Affiliate
-            </Link>
-            <Link
-              to="/simulator/request-demo"
-              className="hidden md:inline-flex items-center justify-center whitespace-nowrap px-3 py-1.5 text-sm font-medium text-green-200 hover:text-white transition-colors border border-green-400/50 hover:bg-green-800/50 hover:border-green-300 rounded-md"
-            >
-              Request Demo
-            </Link>
-            <ThemeToggle />
-            <Button variant="outline" size="sm" asChild className="whitespace-nowrap bg-transparent border-green-400/50 text-green-200 hover:bg-green-800/50 hover:border-green-300">
-              <Link to="/simulator/login">Log in</Link>
-            </Button>
-            <Button size="sm" asChild className="whitespace-nowrap bg-green-600 hover:bg-green-500 text-white shadow-lg">
-              <Link to="/simulator/register">Get started</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SimulatorHeader />
 
       {/* Hero Section */}
       <section className="relative py-12 md:py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-800 dark:to-gray-900 overflow-hidden">

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { HelpCircle, MessageSquare, Search, Send, CheckCircle } from 'lucide-react';
 import { createSupportTicket, searchFAQs, getFAQCategories } from '../../services/supportService';
 import { simDb } from '../../services/supabase/supabaseClient';

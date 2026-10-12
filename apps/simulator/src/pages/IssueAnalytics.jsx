@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { BarChart3, PieChart, TrendingUp, Clock, AlertTriangle } from 'lucide-react'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { getIssueSummary, getIssuesByType, getIssuesByPriority, getIssuesBySeverity, getIssueTrends, getIssueAging, getResolutionMetrics, getActionEffectiveness } from '../services/issueAnalyticsService'
 
 export default function IssueAnalytics() {

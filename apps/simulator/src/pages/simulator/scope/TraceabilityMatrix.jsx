@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useSimPracticeOwner } from '../../../hooks/useSimPracticeOwner'
+import { useSimPracticeOwner } from '../../../lib/useSimPracticeOwner'
 import { simListTraceability, simSaveTraceabilityRow, simSoftDeleteTraceRow } from '../../../services/sim/simPlanningService'
 import { simListWbsNodes } from '../../../services/sim/simPlanningService'
-import ExportListMenu from '../../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const COLS = [
   { key: 'requirement_label', label: 'Requirement' },

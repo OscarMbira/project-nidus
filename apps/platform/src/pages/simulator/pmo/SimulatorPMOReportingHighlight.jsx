@@ -2,7 +2,7 @@
  * Simulator PMO Reporting - Practice Highlight Reports (Read-Only)
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeHighlightReportList from '../PracticeHighlightReportList'
 
 export default function SimulatorPMOReportingHighlight() {

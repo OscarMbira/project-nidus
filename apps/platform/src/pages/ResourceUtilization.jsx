@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Calendar, Users, Activity, Search, Download } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getCrossProjectUtilization, getResourceUtilizationSummary } from '../services/crossResourceService';
 import ResourceUtilizationList from '../components/resources/ResourceUtilizationList';
 

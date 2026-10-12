@@ -9,7 +9,7 @@ import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
-import { useCurrentProject } from '../context/CurrentProjectContext'
+import { useCurrentProject } from '../lib/CurrentProjectContext'
 
 const RMS_COLUMNS = [
   { key: 'rms_reference', label: 'Reference' },

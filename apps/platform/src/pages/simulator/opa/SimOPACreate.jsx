@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createOPA, listOPACategories, listSimulationRunsForPicker } from '../../../services/sim/simOPAService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 export default function SimOPACreate() {
   const navigate = useNavigate()

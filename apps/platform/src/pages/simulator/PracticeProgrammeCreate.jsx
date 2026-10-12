@@ -10,7 +10,7 @@ import { ArrowLeft, FolderTree, Save, User, Calendar, DollarSign } from 'lucide-
 import { simDb } from '../../services/supabase/supabaseClient'
 import { createPracticeProgramme } from '../../services/sim/practicePortfolioService'
 import { getPortfolioCategories } from '../../services/portfolioCategoryService'
-import SearchableSelect from '../../components/ui/SearchableSelect'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 const EMPTY_FORM = {
   programme_code: '',

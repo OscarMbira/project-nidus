@@ -8,10 +8,10 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save, Plus, Trash2, ListPlus, Upload } from 'lucide-react'
 import * as defaultRfpService from '../../services/rfpService'
 import { getPortfolioCategories } from '../../services/portfolioCategoryService'
-import SearchableSelect from '../ui/SearchableSelect'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 const RFPLineItemEditor = lazy(() => import('./RFPLineItemEditor'))
-import { SmartAmountInput } from '../ui/SmartAmountInput'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'

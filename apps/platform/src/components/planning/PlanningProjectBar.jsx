@@ -213,7 +213,5 @@ export default function PlanningProjectBar({ isSim = false, autoSelectSingle = f
  * Raw ?projectId= from the URL (may be project_code or UUID).
  * Prefer usePlatformProjectId() when you need a resolved UUID for API calls.
  */
-export function usePlanningProjectId() {
-  const [searchParams] = useSearchParams()
-  return searchParams.get('projectId') || ''
-}
+// v1239: one implementation, shared with the planning package.
+export { usePlanningProjectId } from '@nidus/planning/hooks/usePlanningProjectId.js'

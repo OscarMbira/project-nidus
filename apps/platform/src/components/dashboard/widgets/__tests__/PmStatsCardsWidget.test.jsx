@@ -8,7 +8,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 
-vi.mock('../../../../context/CurrentProjectContext', () => ({
+vi.mock('../../../../lib/CurrentProjectContext', () => ({
   useCurrentProject: () => ({ currentProjectId: 'proj-1', currentProject: { projectCode: 'PRJ-001' } }),
 }))
 

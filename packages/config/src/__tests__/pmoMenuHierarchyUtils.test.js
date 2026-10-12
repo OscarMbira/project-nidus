@@ -239,9 +239,11 @@ describe('reorganizePmoMenuRoots', () => {
       { menu_code: 'pmo-cat-project-delivery', menu_label: 'Portfolio & Delivery', children: [] },
     ]
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
-    expect(exec.children.map((c) => c.menu_label)).toEqual(['Dashboard'])
+    expect(exec.children.filter((c) => c.menu_label === 'Dashboard')).toHaveLength(1)
     expect(delivery.children.map((c) => c.menu_label)).toEqual(
       expect.arrayContaining(['Portfolio', 'Programme', 'Planning Intelligence'])
     )
@@ -312,7 +314,9 @@ describe('reorganizePmoMenuRoots', () => {
       { menu_code: 'pmo-cat-project-delivery', menu_label: 'Portfolio & Delivery', children: [] },
     ]
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
     expect(exec.children.filter((c) => c.menu_label === 'Dashboard')).toHaveLength(1)
 
@@ -452,7 +456,9 @@ describe('reorganizePmoMenuRoots', () => {
       { menu_code: 'pmo-cat-project-delivery', menu_label: 'Portfolio & Delivery', children: [] },
     ]
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
     expect(exec.children.filter((c) => c.menu_label === 'Dashboard')).toHaveLength(1)
     const planning = delivery.children.find((c) => c.menu_label === 'Planning Intelligence')
@@ -756,7 +762,9 @@ describe('reorganizePmoMenuRoots', () => {
     ]
     const { universalNodes } = reorganizePmoMenuRoots(roots)
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
     expect(exec?.children?.some((c) => c.menu_label === 'Dashboard')).toBe(true)
     const execution = delivery?.children?.find((c) => c.menu_label === 'Project Execution')
@@ -1048,7 +1056,9 @@ describe('reorganizePmoMenuRoots', () => {
     ]
     const { universalNodes } = reorganizePmoMenuRoots(roots)
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
     const planning = delivery?.children?.find((c) => c.menu_label === 'Planning Intelligence')
     const allDashboards = []
@@ -1101,10 +1111,12 @@ describe('reorganizePmoMenuRoots', () => {
       { menu_code: 'pmo-cat-project-delivery', menu_label: 'Portfolio & Delivery', children: [] },
     ]
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
     expect(exec.children.filter((c) => String(c.menu_label || '').trim().toLowerCase() === 'dashboard')).toHaveLength(1)
-    expect(exec.children).toHaveLength(1)
+    expect(nested.some((n) => n.menu_code === 'pmo_dashboard_legacy')).toBe(false)
     expect(delivery.children.map((c) => c.menu_label)).toEqual(
       expect.arrayContaining(['Portfolio', 'Programme', 'Planning Intelligence'])
     )
@@ -1130,7 +1142,9 @@ describe('reorganizePmoMenuRoots', () => {
       { menu_code: 'pmo-cat-project-delivery', menu_label: 'Portfolio & Delivery', children: [] },
     ]
     const { universalNodes: nested } = applyPmoSectionNesting(universalNodes, 'pmo')
-    const exec = nested.find((n) => n.menu_code === 'pmo-cat-exec')
+    // v1000: Executive Overview is dissolved — its Dashboard sits at the PMO root.
+    expect(nested.find((n) => n.menu_code === 'pmo-cat-exec')).toBeUndefined()
+    const exec = { children: nested }
     const delivery = nested.find((n) => n.menu_code === 'pmo-cat-project-delivery')
     expect(exec.children.filter((c) => String(c.menu_label || '').trim().toLowerCase() === 'dashboard')).toHaveLength(1)
     expect(delivery.children.some((c) => c.menu_label === 'Planning Intelligence')).toBe(true)

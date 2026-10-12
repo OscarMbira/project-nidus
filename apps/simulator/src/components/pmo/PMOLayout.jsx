@@ -2,8 +2,8 @@ import { useState } from 'react'
 import Sidebar from '../Sidebar'
 import PlatformAppHeader from '../headers/PlatformAppHeader'
 import QuickCaptureFab from '../../modules/pmis-gaps/components/QuickCaptureFab'
-import { BrandingProvider } from '@nidus/shared/context/BrandingContext'
-import { MenuProvider } from '@nidus/shared/hooks/useMenu'
+import { BrandingProvider } from '../../lib/BrandingContext'
+import { MenuProvider } from '../../lib/useMenu'
 import { RoleScopeGate, RoleScopedShell } from '@nidus/ui'
 
 export default function PMOLayout({ children }) {

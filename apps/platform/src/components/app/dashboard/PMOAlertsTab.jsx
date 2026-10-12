@@ -5,7 +5,7 @@
 import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
-import RagStatusBadge from '../../ui/RagStatusBadge';
+import RagStatusBadge from '@nidus/ui/RagStatusBadge';
 import { mapSeverityToRag, worstRagFromAlertItems } from '../../../services/dashboardService';
 
 const PMOAlertsTab = memo(function PMOAlertsTab({

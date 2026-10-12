@@ -48,7 +48,7 @@ import {
 import ManagerAppointmentForm, { MANAGER_APPOINTMENT_EMPTY } from '../../components/pm/ManagerAppointmentForm'
 import { isManagerAppointmentRole } from '@nidus/shared/utils/appointmentRoleUtils'
 import { createManagerAppointment } from '../../services/managerAppointmentService'
-import SearchableSelect from '../../components/ui/SearchableSelect'
+import SearchableSelect from '@nidus/ui/SearchableSelect'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 

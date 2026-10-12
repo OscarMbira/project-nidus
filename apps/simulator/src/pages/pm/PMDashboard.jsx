@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../services/supabaseClient'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { fetchProjectMilestones } from '../../services/ganttService'
 import PMBoardMemberDashboard from './PMBoardMemberDashboard'
 import {

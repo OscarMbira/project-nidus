@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getPortfolioProjects } from '../../../services/portfolioService'
-import { useCurrentPortfolio } from '../../../context/CurrentPortfolioContext'
+import { useCurrentPortfolio } from '../../../lib/CurrentPortfolioContext'
 import { FolderKanban } from 'lucide-react'
 
 export default function PortfolioProjectsWidget() {

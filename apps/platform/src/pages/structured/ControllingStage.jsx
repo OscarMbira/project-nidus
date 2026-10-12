@@ -7,7 +7,7 @@ import { checkpointReportCreatePath, checkpointReportDetailPath } from '@nidus/s
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, BarChart3, Settings } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import WorkPackageForm from '../../components/structured/WorkPackageForm'
 import WorkPackageList from '../../components/structured/WorkPackageList'
 // Legacy component kept for backward compatibility

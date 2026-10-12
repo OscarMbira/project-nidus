@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getActionsByUser } from '../services/lessonActionService';
 import { platformDb } from '@nidus/supabase';
 import { useNavigate } from 'react-router-dom';

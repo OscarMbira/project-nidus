@@ -1,0 +1,51 @@
+name: Nidus Brand Site — Build & Deploy
+
+# v1241: apex-domain brand site (apps/site). The build prerenders the page from
+# public.site_products / public.site_content; it fails if that data cannot be read (rule 26),
+# leaving the previous deploy live.
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/site/**'
+      - 'packages/ui/**'
+      - 'pnpm-lock.yaml'
+  pull_request:
+    paths:
+      - 'apps/site/**'
+  workflow_dispatch: {}
+  # Content edits in Admin show on the live page immediately (client refresh); re-run this
+  # workflow when search engines should also see them in the prerendered HTML.
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo test --filter=@nidus/site-app
+      - run: pnpm turbo build --filter=@nidus/site-app
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.PLATFORM_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.PLATFORM_SUPABASE_ANON_KEY }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - name: Upload site build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-dist
+          path: apps/site/dist
+      - name: Deploy to Vercel (Brand site)
+        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+        run: pnpm dlx vercel deploy apps/site/dist --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_PROJECT_ID: ${{ secrets.SITE_VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}

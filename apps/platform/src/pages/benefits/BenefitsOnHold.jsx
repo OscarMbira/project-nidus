@@ -11,7 +11,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus } from 'lucide-react';
-import { EntityHoldQueue } from '@nidus/ui/EntityHoldQueue';
+import { EntityHoldQueue } from '../../components/shared-app/EntityHoldQueue';
 
 export function BenefitsOnHold() {
   const navigate = useNavigate();

@@ -9,7 +9,7 @@ import {
   buildPmoOverviewMetricsFromSummaries,
   getPmoOverviewMetrics,
 } from '../../../services/dashboardService';
-import RagStatusBadge from '../../ui/RagStatusBadge';
+import RagStatusBadge from '@nidus/ui/RagStatusBadge';
 import {
   PortfolioLifecycleCharts,
   ProgrammesLifecycleCharts,

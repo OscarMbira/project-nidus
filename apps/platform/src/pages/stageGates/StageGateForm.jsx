@@ -8,7 +8,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Save, Flag, ArrowLeft } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 import SelectField from '@nidus/ui/SelectField';
-import { useCurrentProject } from '../../context/CurrentProjectContext';
+import { useCurrentProject } from '../../lib/CurrentProjectContext';
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
 import AuditCard from '@nidus/ui/AuditCard';

@@ -25,7 +25,7 @@ const RISK_EMPTY_FILTERS = { search: '', risk_category: '', risk_type: '', statu
 import { getRiskRegisterByProject, updateRiskRegister } from '../services/riskRegisterService';
 import { getRisksByProject, createRisk, updateRisk, deleteRisk, closeRisk } from '../services/riskService';
 import { getOverdueResponses } from '../services/riskResponseService';
-import { summariseProjectRisks, topOpenRisks } from '../utils/riskRegisterStats';
+import { summariseProjectRisks, topOpenRisks } from '@nidus/shared/utils/riskRegisterStats';
 import { escalateRiskToIssue } from '../services/riskService';
 import RisksList from '../components/risks/RisksList';
 import RisksFilters from '../components/risks/RisksFilters';

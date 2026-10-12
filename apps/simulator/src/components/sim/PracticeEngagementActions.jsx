@@ -12,8 +12,8 @@ import {
   getPracticeStakeholders,
 } from '../../services/sim/practiceStakeholderService'
 import { platformDb } from '../../services/supabaseClient'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const STATUS_OPTIONS = [
   { value: 'open', label: 'Open' },

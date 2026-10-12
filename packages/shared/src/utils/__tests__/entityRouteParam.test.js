@@ -36,6 +36,7 @@ const PROJECT_UUID = 'd880e846-f08e-4c1a-83c4-fd51d1db2b70'
 
 describe('resolveEntityId', () => {
   beforeEach(() => {
+    globalThis.sessionStorage?.clear() // resolver caches lookups in sessionStorage (jsdom)
     mockPlatformDb = makeSupabaseMock([])
     mockSimDb = makeSupabaseMock([])
   })
@@ -90,6 +91,7 @@ describe('resolveEntityId', () => {
 
 describe('getEntityCode', () => {
   beforeEach(() => {
+    globalThis.sessionStorage?.clear() // resolver caches lookups in sessionStorage (jsdom)
     mockPlatformDb = makeSupabaseMock([])
     mockSimDb = makeSupabaseMock([])
   })

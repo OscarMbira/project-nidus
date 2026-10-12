@@ -12,7 +12,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import DocumentAttachmentsPanel from '@nidus/ui/DocumentAttachmentsPanel'
-import SignatoriesPanel from '@nidus/ui/SignatoriesPanel'
+import SignatoriesPanel from '@shell/components/shared-app/SignatoriesPanel'
 import { simDb, platformDb } from '@nidus/supabase'
 import { resolveDocumentAttachmentsForExport } from '@nidus/shared/services/processTemplateAttachmentService'
 import {

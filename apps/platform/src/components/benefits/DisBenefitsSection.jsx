@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Edit2, Trash2, TrendingDown, Shield, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { getDisBenefitsForPlan, saveDisBenefit, deleteDisBenefit, updateMitigationStatus } from '../../services/disBenefitsService';
 import { platformDb } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function DisBenefitsSection({ planId, projectId, onUpdate }) {

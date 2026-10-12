@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileText, Search, Filter, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { platformDb } from '../../services/supabaseClient'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const CMS_COLUMNS = [
   { key: 'cms_reference', label: 'Reference' },

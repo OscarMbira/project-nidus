@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@nidus/supabase'
+import { getAuthenticatedUser } from './authSession'
 
 /**
  * Create a notification
@@ -231,15 +232,14 @@ export async function notifyCommentAdded(commentId, entityType, entityId, projec
  */
 export async function getUnreadCount() {
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { user } = await getAuthenticatedUser()
     if (!user) return 0
 
-    // Get internal user ID from users table
     const { data: userRecord, error: userError } = await supabase
       .from('users')
       .select('id')
       .eq('auth_user_id', user.id)
-      .single()
+      .maybeSingle()
 
     if (userError || !userRecord) {
       // User record not found, return 0 silently

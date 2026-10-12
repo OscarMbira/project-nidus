@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getAuditTrail, searchAuditLog, exportAuditLog } from '../../services/auditService'
 import { FileText, Download, Search, Filter, Calendar } from 'lucide-react'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function AuditLogViewer({ onEventClick }) {

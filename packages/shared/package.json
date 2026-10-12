@@ -15,7 +15,8 @@
     "./components/domain/*": "./src/components/domain/*",
     "./components/subscription/*": "./src/components/subscription/*.jsx",
     "./components/*": "./src/components/*",
-    "./federation/*": "./src/federation/*"
+    "./federation/*": "./src/federation/*",
+    "./site/*": "./src/site/*"
   },
   "scripts": {
     "build": "node -e \"console.log('@nidus/shared: no build step')\"",

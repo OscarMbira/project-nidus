@@ -33,4 +33,12 @@ describe('roleSkillsUtils', () => {
     expect(parseSkillsLines('')).toEqual([])
     expect(parseSkillsLines('React\nTypeScript\n')).toEqual(['React', 'TypeScript'])
   })
+  it('rejects duplicate role names', () => {
+    const res = validateRoleSkillsLinks([
+      { role: 'Developer', skills: 'A' },
+      { role: 'developer', skills: 'B' },
+    ])
+    expect(res.ok).toBe(false)
+    expect(res.error).toMatch(/unique/i)
+  })
 })

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import federation from '@originjs/vite-plugin-federation'
+import { FEDERATION_SHARED, PLANNING_FEDERATION_SHARED } from '../../shared/src/federation/federationShared.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../../..')
@@ -20,11 +21,7 @@ export default defineConfig({
         './routes': './src/routes.jsx',
         './Module': './src/index.jsx',
       },
-      shared: {
-        react: { singleton: true, requiredVersion: '^18.3.1' },
-        'react-dom': { singleton: true, requiredVersion: '^18.3.1' },
-        'react-router-dom': { singleton: true, requiredVersion: '^6.30.2' },
-      },
+      shared: { ...FEDERATION_SHARED, ...PLANNING_FEDERATION_SHARED },
     }),
     {
       name: 'module-health-endpoint',
@@ -46,11 +43,6 @@ export default defineConfig({
       '@platform': platformSrc,
       '@simulator': simulatorSrc,
       '@shell': shellSrc,
-      '@nidus/ui': path.resolve(shellSrc, 'components/ui'),
-      '@nidus/shared/utils': path.resolve(shellSrc, 'utils'),
-      '@nidus/shared/hooks': path.resolve(shellSrc, 'hooks'),
-      '@nidus/shared/context': path.resolve(shellSrc, 'context'),
-      '@nidus/shared/constants': path.resolve(shellSrc, 'constants'),
     },
   },
   build: {

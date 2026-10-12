@@ -4,7 +4,7 @@
 
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 
 export default function PracticeEndProjectReportView() {
   const { id } = useParams()

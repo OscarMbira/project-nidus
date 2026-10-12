@@ -11,7 +11,7 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import { getRecord, createRecord, updateRecord } from '../../services/localRegisterRecordService'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 function FieldInput({ field, value, onChange }) {
   const commonClass =

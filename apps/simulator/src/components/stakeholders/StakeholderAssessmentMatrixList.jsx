@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
-import ViewToggle from '../ui/ViewToggle'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import ViewToggle from '@nidus/ui/ViewToggle'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { platformDb } from '../../services/supabaseClient'
-import StakeholderAvatar from '../ui/StakeholderAvatar'
-import RowNumberBadge from '../ui/RowNumberBadge'
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { RowActionButton } from '@nidus/ui'
 
 function sortIndicator(direction) {

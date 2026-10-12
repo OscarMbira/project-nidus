@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Award, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import { verifyCertificate } from '../../services/certificateService';
 

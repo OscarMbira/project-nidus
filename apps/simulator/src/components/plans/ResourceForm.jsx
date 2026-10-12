@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Save } from 'lucide-react'
-import { SmartAmountInput } from '../ui/SmartAmountInput'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'

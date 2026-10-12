@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Package, Plus } from 'lucide-react'
 import { getPracticeWorkPackages } from '../../services/sim/practiceWorkPackageService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PRACTICE_WP_COLUMNS = [
   { key: 'work_package_name', label: 'Name' },

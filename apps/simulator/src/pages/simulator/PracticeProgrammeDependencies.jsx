@@ -8,8 +8,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { GitBranch, Search } from 'lucide-react'
 import { getPracticeProgrammesForList, getPracticeProgrammeDependencies } from '../../services/sim/practicePortfolioService'
 import DependencyMapVisualization from '../../components/programme/DependencyMapVisualization'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PracticeProgrammeDependenciesPage() {
   const [programmes, setProgrammes] = useState([])

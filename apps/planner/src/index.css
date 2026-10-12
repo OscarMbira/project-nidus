@@ -1,0 +1,13 @@
+@import "tailwindcss";
+/* Tailwind only scans this app folder by default; the screens and shared UI live in packages/*. */
+@source "../../../packages/ui/src";
+@source "../../../packages/shared/src";
+@source "../../../packages/planning/src";
+
+/* Tailwind v4 dark mode by class (rule 28.1) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html, body, #root { min-height: 100%; }
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}

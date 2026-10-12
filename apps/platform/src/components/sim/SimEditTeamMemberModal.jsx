@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Loader } from 'lucide-react'
 import { getSimTeamFunctionalRoles, updateSimTeamMember } from '../../services/sim/simTeamService'
-import { useToast } from '../../hooks/useToast'
+import { useToast } from '@nidus/shared/hooks/useToast'
 
 export default function SimEditTeamMemberModal({ isOpen, onClose, practiceTeamId, member, onSuccess }) {
   const { showToast } = useToast()

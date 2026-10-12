@@ -5,7 +5,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Briefcase, Gamepad2, ChevronDown, Check } from 'lucide-react'
-import { usePlatform } from '@nidus/shared/context/PlatformContext'
+import { usePlatform } from '../lib/PlatformContext'
 
 export default function PlatformSwitcher() {
   const { currentPlatform, platforms, changePlatform, hasMultiplePlatforms } = usePlatform()

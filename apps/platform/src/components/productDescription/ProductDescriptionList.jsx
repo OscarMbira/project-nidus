@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Search, Filter } from 'lucide-react'
 import { getProductDescriptionByProject } from '../../services/productDescriptionService'
 import ProductDescriptionCard from './ProductDescriptionCard'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PD_COLUMNS = [
   { key: 'product_title', label: 'Product Title' },

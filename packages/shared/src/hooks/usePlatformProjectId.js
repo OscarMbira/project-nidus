@@ -7,6 +7,7 @@ import {
   resolveProjectRouteKeyFromId,
 } from '@nidus/shared/utils/projectRouteParam';
 import { readCurrentPmProjectId } from '@nidus/shared/utils/currentProjectStorage';
+import { useCurrentProject } from './useCurrentProject';
 
 /**
  * Resolves /platform/projects/:idOrCode → real projects.id for API calls.
@@ -14,16 +15,20 @@ import { readCurrentPmProjectId } from '@nidus/shared/utils/currentProjectStorag
  *
  * Fallback chain (each step only applies when the previous is not a real project):
  *   1. Route path param `:projectId`.
- *   2. Route path param `:id` only on `/projects/:id`.
- *   3. `?projectId=` when it resolves to a project row.
- *   4. The PM area's last-selected project in localStorage.
- * A UUID that is not a project is skipped.
+ *   2. Route path param `:id` only on `/projects/:id` — record routes such as
+ *      `/assumptions/:id` use `:id` for that record, not the project.
+ *   3. `?projectId=` query string, when it resolves to a project row.
+ *   4. CurrentProjectContext's validated `currentProjectId`.
+ *   5. The PM area's last-selected project in localStorage.
+ * A UUID that is not a project (for example an assumption id left in `?projectId=`)
+ * is skipped so the register does not query the wrong project and show an empty list.
  */
 export function usePlatformProjectId() {
   const params = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { currentProjectId: contextProjectId } = useCurrentProject();
   const queryProjectId = searchParams.get('projectId');
   const entityType = searchParams.get('entityType');
   const entityId = searchParams.get('entityId');
@@ -99,8 +104,11 @@ export function usePlatformProjectId() {
     if (!explicitMiss) return undefined;
     let cancelled = false;
     const fallbacks = [];
-    const decodedValue = decodeProjectRouteSegment(storedProjectId);
-    if (decodedValue && decodedValue !== explicitKey) fallbacks.push(decodedValue);
+    for (const value of [contextProjectId, storedProjectId]) {
+      const decodedValue = decodeProjectRouteSegment(value);
+      if (!decodedValue || decodedValue === explicitKey || fallbacks.includes(decodedValue)) continue;
+      fallbacks.push(decodedValue);
+    }
 
     if (fallbacks.length === 0) {
       setProjectId(null);
@@ -137,7 +145,7 @@ export function usePlatformProjectId() {
     return () => {
       cancelled = true;
     };
-  }, [explicitMiss, explicitKey, storedProjectId]);
+  }, [explicitMiss, explicitKey, contextProjectId, storedProjectId]);
 
   // /pm/* routes carry no project path segment, so a raw-UUID ?projectId= would otherwise stay
   // in the address bar forever. Rewrite it to project_code once resolvable — idempotent, since
@@ -180,12 +188,12 @@ export function usePlatformProjectId() {
   }, [params.projectId, params.id, onProjectPath, location.pathname, location.search, location.hash, navigate]);
 
   // Write the resolved project back into ?projectId= whenever it's missing or stale. Covers two
-  // cases: (1) a ?projectId= pointing at some other record's id, and (2) no ?projectId= in the
-  // URL at all — resolved purely via localStorage fallback (e.g. a bare /platform/timesheets
-  // link). Without this second case, sibling components that read ?projectId= directly off the
-  // URL (PlanningProjectBar, for one) never learn which project was actually resolved, and show
-  // an empty "Select a project…" picker even though the page itself has real project-scoped data
-  // loaded.
+  // cases: (1) a ?projectId= pointing at some other record's id (assumption, risk, …), and
+  // (2) no ?projectId= in the URL at all — resolved purely via CurrentProjectContext/localStorage
+  // fallback (e.g. a bare /platform/timesheets link). Without this second case, sibling
+  // components that read ?projectId= directly off the URL (PlanningProjectBar, for one) never
+  // learn which project was actually resolved, and show an empty "Select a project…" picker even
+  // though the page itself has real project-scoped data loaded.
   // Skipped for the legacy entityType=project pattern (v864) — that has its own dedicated
   // resolution shortcut above (applyResolved called directly, no DB round-trip), and writing
   // ?projectId= here would re-trigger a second, redundant resolution pass against it.

@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import {
   HeartPulse, Calendar, DollarSign, ShieldAlert, GitPullRequest, CheckSquare, Bug, Users,
 } from 'lucide-react'
-import { useCurrentProject } from '../../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../../lib/CurrentProjectContext'
 import { getProjectHealthSummary } from '../../../services/projectHealthSummaryService'
 import { formatCurrency } from '@nidus/shared/utils/amountShorthand'
 

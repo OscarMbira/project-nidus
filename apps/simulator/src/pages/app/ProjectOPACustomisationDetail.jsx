@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Archive } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import { useOPATailoringContext } from '../../hooks/useOPATailoringContext'
+import { useOPATailoringContext } from '../../lib/useOPATailoringContext'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 

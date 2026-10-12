@@ -5,7 +5,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { supabase } from '../../services/supabaseClient'
 import { format } from 'date-fns'
 import { Plus, Package, CheckCircle, Clock, AlertCircle, FileText, CheckSquare, Link as LinkIcon, ExternalLink, BarChart3 } from 'lucide-react'
-import DashboardStatCard from '../../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import ProductForm from '../../components/structured/ProductForm'
 import QualityCriteria from '../../components/structured/QualityCriteria'
 import { getProductDeliverables, createProductDescriptionFromDeliverable } from '../../services/productDeliverableService'

@@ -8,7 +8,7 @@ import { getWorkCategories } from '../../../services/timesheetWorkCategoryServic
 import { getOvertimeTypes } from '../../../services/timesheetOvertimeTypeService'
 import { getTasksByProject } from '../../../services/taskService'
 import { resolveTimesheetSettings } from '../../../services/timesheetSettingsService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'

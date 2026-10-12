@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { Plus, Play, Pause, Settings, Trash2, Filter, Search, Zap } from 'lucide-react'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { format } from 'date-fns'
 
 export default function Automation() {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useEntityId } from '@nidus/shared/hooks/useEntityId';
+import { useEntityId } from '../../lib/useEntityId';
 import { ArrowLeft, Target, TrendingUp, AlertTriangle, Activity, Calendar, CheckCircle, Link2, Layers } from 'lucide-react';
 import {
   getProgramme,
@@ -25,7 +25,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
-import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx';
+import TierFormPolicyPanel from '../../components/shared-app/TierFormPolicyPanel.jsx';
 import ForkIndustryTemplatePanel from '@nidus/ui/templates/ForkIndustryTemplatePanel.jsx';
 import ForkLegacyTemplatePanel from '@nidus/ui/templates/ForkLegacyTemplatePanel.jsx';
 import { platformDb } from '../../services/supabase/supabaseClient';

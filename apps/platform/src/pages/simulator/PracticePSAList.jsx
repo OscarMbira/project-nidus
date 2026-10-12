@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus } from 'lucide-react'
 import { getPracticePSA } from '../../services/sim/practiceProductDescriptionService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const PRACTICE_PSA_COLUMNS = [
   { key: 'product_name', label: 'Product' },

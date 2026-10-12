@@ -126,7 +126,9 @@ serve(async (req) => {
         currency: currency || 'USD',
         status: 'pending',
         payment_provider: 'paynow',
-        metadata: metadata || {},
+        // v1239: record who started the payment (server-side, not client-supplied) so the
+        // webhook can check they own the account before changing a Planner subscription/edition.
+        metadata: { ...(metadata || {}), initiated_by_auth_user_id: user.id },
         poll_url: pollUrl,
         created_at: new Date().toISOString(),
       });

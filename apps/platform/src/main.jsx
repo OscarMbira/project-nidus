@@ -1,12 +1,12 @@
 // IMPORTANT: Import warning suppression FIRST, before any other imports
 // This ensures console overrides are in place before Supabase/React Router load
-import './utils/suppressSupabaseWarnings'
+import '@nidus/shared/utils/suppressSupabaseWarnings'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { debugTheme } from './utils/themeDebugger'
+import { debugTheme } from '@nidus/shared/utils/themeDebugger'
 import { initAppErrorReporting } from '@nidus/shared/utils/initAppErrorReporting'
 import { platformDb } from '@nidus/supabase'
 
@@ -31,7 +31,7 @@ window.__nidusErrorReporter = initAppErrorReporting({
 })()
 // Defer testTailwindDarkMode - not needed for initial render
 if (import.meta.env.DEV) {
-  import('./utils/testTailwindDarkMode').catch(() => {})
+  import('@nidus/shared/utils/testTailwindDarkMode').catch(() => {})
 }
 
 // Initialize theme before React renders to prevent flash

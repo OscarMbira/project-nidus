@@ -3,7 +3,7 @@
  * "Quick Actions" section. Static links, no data fetch.
  */
 import { Link } from 'react-router-dom'
-import { useCurrentProject } from '../../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../../lib/CurrentProjectContext'
 import { Calendar, Layers, AlertTriangle, AlertCircle, BarChart3, FileText } from 'lucide-react'
 
 const QUICK_ACTIONS = [

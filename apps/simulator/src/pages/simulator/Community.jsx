@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { MessageSquare, Plus, Pin, Lock } from 'lucide-react';
 import { simDb } from '../../services/supabase/supabaseClient';
 import { Link } from 'react-router-dom';

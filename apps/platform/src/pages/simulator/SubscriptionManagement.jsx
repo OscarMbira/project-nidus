@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { CreditCard, Calendar, Download, AlertCircle, RefreshCw } from 'lucide-react';
 import { getUserSubscription, getTierDetails, isSubscriptionActive, getDaysUntilExpiry, isInGracePeriod, getGracePeriodDaysRemaining } from '../../services/subscriptionService';
 import { getCustomerPortalUrl, getBillingHistory } from '../../services/stripeService';

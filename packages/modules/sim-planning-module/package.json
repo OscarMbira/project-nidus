@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@nidus/config": "workspace:*",
+    "@nidus/planning": "workspace:*",
     "@nidus/shared": "workspace:*",
     "@nidus/supabase": "workspace:*",
     "@nidus/ui": "workspace:*",

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Target, Plus, Filter, BarChart3 } from 'lucide-react';
-import DashboardStatCard from '../../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getKPIDefinitions, getKPIStats } from '../../services/kpiService';
 import KPITracker from '../../components/analytics/KPITracker';
 import { supabase } from '../../services/supabaseClient';

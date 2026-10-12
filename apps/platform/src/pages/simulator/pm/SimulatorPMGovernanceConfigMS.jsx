@@ -2,7 +2,7 @@
  * Simulator PM Governance - Practice Configuration Management Strategy
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeConfigMSList from '../PracticeConfigMSList'
 
 export default function SimulatorPMGovernanceConfigMS() {

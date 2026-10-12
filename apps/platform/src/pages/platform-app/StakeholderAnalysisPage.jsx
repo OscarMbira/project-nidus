@@ -10,10 +10,10 @@ import PowerInterestMatrix from '../../components/stakeholders/PowerInterestMatr
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { RowActionButton } from '@nidus/ui'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { platformDb } from '../../services/supabaseClient'
-import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
 
 export default function StakeholderAnalysisPage() {
   const navigate = useNavigate()

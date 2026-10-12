@@ -2,7 +2,7 @@
  * Simulator PM Delivery - Practice Product Description
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeProductDescriptionList from '../PracticeProductDescriptionList'
 
 export default function SimulatorPMDeliveryProductDescription() {

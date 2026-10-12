@@ -18,7 +18,7 @@ import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { getCurrentUserAccountId } from '../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { deleteMeeting, listMeetingsForAccount } from '../../services/communications/meetingService'
 
 const STATUS_COLORS = {

@@ -4,7 +4,7 @@
  * Wrapper page for Practice PM dashboard that provides read/tailor permissions for practice mandates
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeBriefList from '../PracticeBriefList'
 
 export default function SimulatorPMGovernanceMandateTemplate() {

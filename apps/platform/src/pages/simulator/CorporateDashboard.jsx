@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Users, TrendingUp, Award, Clock, UserPlus, Download } from 'lucide-react';
 import { getCorporateLicense, getTeamMembers, getCorporateAnalytics } from '../../services/corporateService';
 import { simDb } from '../../services/supabase/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const CorporateDashboard = () => {
   const { theme } = useTheme();

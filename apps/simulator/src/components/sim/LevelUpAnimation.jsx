@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Sparkles, Trophy, Star } from 'lucide-react';
 
 const LevelUpAnimation = ({ level, onComplete }) => {

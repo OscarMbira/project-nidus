@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createEEF, listEEFCategories, listSimulationRunsForPicker } from '../../../services/sim/simEEFService'
-import { getCurrentUserAccountId } from '../../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 
 export default function SimEEFCreate() {
   const navigate = useNavigate()

@@ -9,7 +9,7 @@ const ctx = vi.hoisted(() => ({
   projects: [{ projectId: 'p-seed', projectCode: 'SEED334-PRJ-08', projectName: 'Velocity Freight' }],
 }))
 
-vi.mock('../../../context/CurrentProjectContext', () => ({
+vi.mock('../../../lib/CurrentProjectContext', () => ({
   useCurrentProject: () => ({ currentProjectId: ctx.currentProjectId, projects: ctx.projects, loading: false }),
 }))
 

@@ -53,6 +53,7 @@ export default function SelectField({
   disabled = false,
   required = false,
   allowCustom = false,
+  customValueActions = [],
   forceSearchable = false,
   forceNative = false,
   openAbove = false,
@@ -63,6 +64,7 @@ export default function SelectField({
   icon,
   loading = false,
   descriptionColumnLabel = '',
+  descriptionColumnBeside = false,
   'aria-label': ariaLabel,
 }) {
   const list = Array.isArray(options) ? options : []
@@ -80,12 +82,14 @@ export default function SelectField({
         disabled={disabled}
         required={required}
         allowCustom={allowCustom}
+        customValueActions={customValueActions}
         openAbove={openAbove}
         combobox={combobox}
         className={className}
         icon={icon}
         loading={loading}
         descriptionColumnLabel={descriptionColumnLabel}
+        descriptionColumnBeside={descriptionColumnBeside}
       />
     )
   }

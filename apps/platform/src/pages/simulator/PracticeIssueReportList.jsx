@@ -6,9 +6,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus } from 'lucide-react'
 import { getPracticeIssueReports } from '../../services/sim/practiceIssueReportService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const PRACTICE_ISSUE_REPORT_COLUMNS = [
   { key: 'report_title', label: 'Title' },
   { key: 'report_date', label: 'Date' }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Target, Plus, Edit2, Trash2, CheckCircle, AlertTriangle, TrendingUp, FolderKanban } from 'lucide-react';
 import { deleteStrategicObjective } from '../../services/strategicService';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function StrategicObjectivesManager({ objectives = [], onEdit, onRefresh }) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle, TrendingDown, Search, Filter } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getDependencyImpacts } from '../services/dependencyService';
 import SortToolbar from '@nidus/ui/SortToolbar';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';

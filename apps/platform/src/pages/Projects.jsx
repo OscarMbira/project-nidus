@@ -29,7 +29,7 @@ import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
 import { useViewMode } from '@nidus/shared/hooks/useViewMode';
 import ViewToggle from '@nidus/ui/ViewToggle';
 import RecordLifecycleListHeader from '@nidus/ui/RecordLifecycleListHeader';
-import useRecordLifecycleFilter from '@nidus/shared/hooks/useRecordLifecycleFilter';
+import useRecordLifecycleFilter from '../lib/useRecordLifecycleFilter';
 
 const PROJECT_COLUMNS = [
   { key: 'project_name', label: 'Project Name' },

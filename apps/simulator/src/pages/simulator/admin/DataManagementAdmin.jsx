@@ -15,7 +15,7 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import {
   getGdprDashboardData,
   processDataExportRequest,

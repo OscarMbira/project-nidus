@@ -8,7 +8,7 @@ import {
   userCanManageWorkPlanApprovals,
 } from '../../services/projectWorkPlanService'
 import { resolveTimesheetSettings } from '../../services/timesheetSettingsService'
-import { getCurrentUserAccountId } from '../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import WorkPlanReviewPanel from './WorkPlanReviewPanel'
 
 const STATUS_BADGE_CLASSES = {

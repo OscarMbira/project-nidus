@@ -13,7 +13,7 @@ import {
   updatePrivacyPreferences, getPrivacyPreferences,
 } from '../../services/gdprService'
 import { supabase } from '../../services/supabaseClient'
-import { getCurrentUserInternalUserId } from '../../utils/accountResolution'
+import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
 export default function PrivacyCenter() {

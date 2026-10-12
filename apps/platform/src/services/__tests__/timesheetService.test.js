@@ -8,7 +8,7 @@ vi.mock('../supabase/supabaseClient', () => ({
   platformDb: { from: (...args) => mockFrom(...args) },
 }))
 
-vi.mock('../../utils/notificationUtils', () => ({
+vi.mock('@nidus/shared/utils/notificationUtils', () => ({
   createNotification: (...args) => mockCreateNotification(...args),
 }))
 

@@ -9,7 +9,7 @@ import { useNavigate, useParams, useLocation, useSearchParams } from 'react-rout
 import { ArrowLeft } from 'lucide-react'
 import CommunicationPlanForm from '../../components/stakeholders/CommunicationPlanForm'
 import { getCommunicationPlans, getStakeholders, saveCommunicationPlan } from '../../services/stakeholderService'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import {

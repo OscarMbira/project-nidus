@@ -3,7 +3,7 @@
  */
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
-import { validateEmail, validatePhone } from '../utils/formValidation'
+import { validateEmail, validatePhone } from '@nidus/shared/utils/formValidation'
 import { createProjectContact, getProjectContacts } from './projectContactsService'
 import { ensureProjectFunctionalRole, listProjectFunctionalRoles } from './teamService'
 

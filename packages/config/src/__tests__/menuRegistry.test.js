@@ -7,7 +7,7 @@ import {
 } from '../menuRegistry'
 import { applyRegistryCategoryFallback, collectMenuRoutePaths, applySimulatorRegistryFallback } from '../menuRegistryUtils'
 import { stripVirtualMenuItems } from '../menuDbOnlyUtils'
-import { applySimulatorMenuTransform } from '@nidus/shared/hooks/useMenu'
+import { applySimulatorMenuTransform } from '@nidus/shared/utils/simulatorMenuTransform'
 import {
   PMO_CATEGORY_DEFS,
   resolveRegistryCategoryId,

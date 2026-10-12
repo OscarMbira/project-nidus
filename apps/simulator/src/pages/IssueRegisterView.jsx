@@ -32,7 +32,7 @@ import ViewToggle from '@nidus/ui/ViewToggle'
 import { DashboardStatCard } from '@nidus/ui'
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx'
 import RecordLifecycleListHeader from '@nidus/ui/RecordLifecycleListHeader'
-import useRecordLifecycleFilter from '@nidus/shared/hooks/useRecordLifecycleFilter'
+import useRecordLifecycleFilter from '../lib/useRecordLifecycleFilter'
 import { ISSUE_REGISTER_CATEGORY } from '../features/local-data-extensions/components/InheritedIssueRegisterFields'
 import { platformDb, simDb } from '@nidus/supabase'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -44,7 +44,7 @@ import IssuesByPriorityChart from '../components/issues/IssuesByPriorityChart'
 import IssueHeatmap from '../components/issues/IssueHeatmap'
 import CriticalIssuesAlert from '../components/issues/CriticalIssuesAlert'
 import OpenIssuesWidget from '../components/issues/OpenIssuesWidget'
-import { ISSUE_EXPORT_COLUMNS, mapIssueForListExport } from '../constants/issueListColumns'
+import { ISSUE_EXPORT_COLUMNS, mapIssueForListExport } from '@nidus/shared/constants/issueListColumns'
 
 function statusCount(summary, key) {
   return summary?.issues_by_status?.[key] || 0

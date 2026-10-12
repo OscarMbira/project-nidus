@@ -15,8 +15,8 @@ import { Plus, Search, FileText, Calendar, User } from 'lucide-react'
 import { getLessonsReportsByProject, deleteLessonsReport } from '../services/lessonsReportService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { RowActionButton, ViewToggle } from '@nidus/ui'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../components/ui/Table'
-import RowNumberBadge from '../components/ui/RowNumberBadge'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 
 const LESSONS_REPORT_COLUMNS = [
   { key: 'report_reference', label: 'Reference' },

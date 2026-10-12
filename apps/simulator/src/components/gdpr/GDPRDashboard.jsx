@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { ShieldCheck, FileText, Trash2, AlertTriangle, Clock, CheckCircle } from 'lucide-react'
-import DashboardStatCard from '../ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 
 export default function GDPRDashboard() {
   const [stats, setStats] = useState({

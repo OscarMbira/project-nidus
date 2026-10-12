@@ -8,7 +8,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Building2, Home, AlertTriangle } from 'lucide-react'
-import { getCurrentUserAccountId, getCurrentUserInternalUserId } from '../../utils/accountResolution'
+import { getCurrentUserAccountId, getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
 import { userHasPmoOrOwner } from '../../services/timesheetSettingsService'
 import { getTimesheetOverview } from '../../services/timesheetOverviewService'
 import { getMyProjects } from '../../services/projectService'

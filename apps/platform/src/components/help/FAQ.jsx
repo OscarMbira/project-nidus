@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { MessageCircle, ChevronDown, ChevronUp, Search, HelpCircle } from 'lucide-react'
 import { getHelpArticles, getHelpCategories, searchHelpArticles } from '../../services/helpService'
-import { Input } from '../ui/Input'
-import { Loading } from '../ui/Loading'
-import { EmptyState } from '../ui/EmptyState'
+import { Input } from '@nidus/ui/Input'
+import { Loading } from '@nidus/ui/Loading'
+import { EmptyState } from '@nidus/ui/EmptyState'
 
 export default function FAQ({ category = 'faq' }) {
   const [faqs, setFaqs] = useState([])

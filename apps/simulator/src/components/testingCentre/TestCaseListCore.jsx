@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LayoutGrid, List, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import * as platform from '../../services/testingCentreService'
 import * as sim from '../../services/simTestingCentreService'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-import RowNumberBadge from '../ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 const SORT_KEYS = ['test_case_code', 'title', 'module', 'test_type', 'priority', 'status', 'updated_at']
 
 function sortInd(key, sk, sd) {

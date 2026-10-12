@@ -9,8 +9,8 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { RowActionButton, ExportListMenu } from '@nidus/ui'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { listTemplates, deleteTemplate } from '../services/notificationPreferencesService'
 
 const PAGE_SIZE = 20

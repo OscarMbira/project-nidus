@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import simulatorService from '../../services/simulatorService';
 import ProgressBar from '../../components/sim/ProgressBar';
 import StreakDisplay from '../../components/sim/StreakDisplay';

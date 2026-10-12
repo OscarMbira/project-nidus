@@ -21,7 +21,7 @@ import {
   toggleMenuItemSelection,
   expandSelectedMenuItemIds,
   representativeIdsForMenuItemIds,
-} from '../../utils/menuItemSelectionUtils'
+} from '@nidus/shared/utils/menuItemSelectionUtils'
 import { getManageRolesAccess, getGrantableMenuItems } from '../../services/organisationCustomRoleService'
 import {
   getMenuBundleById,

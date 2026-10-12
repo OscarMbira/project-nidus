@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Target, Link, Plus, Edit2, Trash2, CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
 import { getProjectObjectiveMappings, deleteProjectObjectiveMapping, calculateProjectAlignmentScore } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function ProjectObjectiveMapper({ projectId, onAddMapping, onEdit }) {

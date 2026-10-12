@@ -2,7 +2,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import federation from '@originjs/vite-plugin-federation'
 import { buildRemotesFromEnv } from './buildRemotes.js'
-import { FEDERATION_SHARED } from './federationShared.js'
+import { FEDERATION_SHARED, PLANNING_FEDERATION_SHARED } from './federationShared.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(__dirname, '../..')
@@ -20,7 +20,7 @@ export function createFederationHostPlugin({ modules, env }) {
   return federation({
     name: 'nidus_shell',
     remotes: buildRemotesFromEnv(modules, env),
-    shared: FEDERATION_SHARED,
+    shared: { ...FEDERATION_SHARED, ...PLANNING_FEDERATION_SHARED },
   })
 }
 

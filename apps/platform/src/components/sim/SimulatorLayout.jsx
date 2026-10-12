@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui';
 import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils';
 import { Moon, Sun, ChevronRight, ChevronDown, LogOut } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { simulatorMenuConfig, filterSimMenuBySubscription } from '../../config/simulatorMenuConfig';
 import {
   LayoutDashboard,

@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { Info, Plus, Trash2 } from 'lucide-react'
-import SmartAmountInput from '../ui/SmartAmountInput'
+import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import { getBudgetCategories } from '../../services/budgetCategoryService'
 import { getFundingSources } from '../../services/fundingSourceService'

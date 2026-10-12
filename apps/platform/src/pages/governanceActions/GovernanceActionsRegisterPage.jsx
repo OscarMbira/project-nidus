@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, LayoutGrid, List as ListIcon, ListTodo } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -23,7 +23,7 @@ import { deleteAction as deleteQualityAction } from '../../services/qualityActiv
 import { deleteAction as deleteIssueAction } from '../../services/issueActionService'
 import { deleteAction as deleteLessonAction } from '../../services/lessonActionService'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
-import { platformProjectPath } from '../../utils/projectRouteParam'
+import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 
 const PAGE_SIZE = 20
 

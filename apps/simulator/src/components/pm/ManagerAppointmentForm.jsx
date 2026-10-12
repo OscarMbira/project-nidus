@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import SmartAmountInput from '../ui/SmartAmountInput'
+import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 import MultiLineListInput from '../project/MultiLineListInput'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import {

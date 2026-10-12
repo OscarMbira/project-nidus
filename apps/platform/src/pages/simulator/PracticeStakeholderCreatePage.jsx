@@ -7,10 +7,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
-import { useDraftQueue } from '../../hooks/useDraftQueue'
+import { useDraftQueue } from '../../lib/useDraftQueue'
 import { createPracticeStakeholder } from '../../services/sim/practiceStakeholderService'
 import { simDb } from '../../services/supabase/supabaseClient'
-import StakeholderPhotoField from '../../components/ui/StakeholderPhotoField'
+import StakeholderPhotoField from '@nidus/ui/StakeholderPhotoField'
 import { saveStakeholderPhoto } from '@nidus/shared/services/stakeholderPhotoService'
 
 const DEFAULT_FORM = {

@@ -9,7 +9,7 @@ const ctx = vi.hoisted(() => ({
   currentProjectId: null,
 }))
 
-vi.mock('../../../context/CurrentProjectContext', () => ({
+vi.mock('../../../lib/CurrentProjectContext', () => ({
   useCurrentProject: () => ({
     projects: ctx.projects,
     currentProjectId: ctx.currentProjectId,

@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { getLessonsReportsByProject, deleteLessonsReport } from '../../services/lessonsReportService'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { RowActionButton } from '@nidus/ui'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const PREVIEW_COUNT = 3

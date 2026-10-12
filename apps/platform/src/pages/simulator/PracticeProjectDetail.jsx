@@ -7,14 +7,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Edit2, Trash2, ArrowLeft } from 'lucide-react'
 import { getPracticeProjectById, deletePracticeProject } from '../../services/sim/practiceProjectService'
-import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 import CustomFieldRenderer from '../../features/local-data-extensions/components/CustomFieldRenderer'
 import { buildCustomFieldExportParts } from '../../features/local-data-extensions/utils/exportMerge'
 import { platformDb, simDb } from '../../services/supabase/supabaseClient'
 import { resolveLdeAccountForCurrentUser } from '../../features/local-data-extensions/utils/bootstrapLdeAccount'
 
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 const PRACTICE_PROJECT_VIEW_SECTIONS = [
   { title: 'Project', fields: [
     { key: 'project_name', label: 'Name' },

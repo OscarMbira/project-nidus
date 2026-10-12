@@ -39,6 +39,8 @@ const SearchableSelect = ({
   className = '',
   disabled = false,
   allowCustom = false,
+  /** When set, a new name must be committed through one of these actions instead of a bare custom value. */
+  customValueActions = [],
   loading = false,
   /** When true, always open above. When false/undefined, auto-flip near viewport edges. */
   openAbove = false,
@@ -51,6 +53,8 @@ const SearchableSelect = ({
   combobox = false,
   /** When options include `description`, show it as a right-hand column; this labels that column. */
   descriptionColumnLabel = '',
+  /** Place the description column beside the name instead of at the far edge of a wide list. */
+  descriptionColumnBeside = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -74,6 +78,51 @@ const SearchableSelect = ({
     ),
     [options],
   )
+
+  const descriptionColumnClass = descriptionColumnBeside
+    ? 'grid grid-cols-[minmax(8rem,16rem)_8.5rem] items-center gap-x-6 text-left'
+    : 'grid w-full grid-cols-[minmax(0,1fr)_7.5rem] items-center gap-4 text-left'
+
+  const namedCustomActions = Array.isArray(customValueActions)
+    ? customValueActions.filter((action) => action?.key)
+    : []
+
+  const renderCustomActions = (term, bordered) => {
+    if (!allowCustom || !term) return null
+    if (namedCustomActions.length === 0) {
+      return (
+        <button
+          type="button"
+          onClick={() => {
+            onChange?.(term)
+            closeMenu()
+          }}
+          className={`w-full px-4 py-2.5 text-left text-sm text-blue-600 transition-colors hover:bg-gray-100 dark:text-blue-400 dark:hover:bg-gray-700 ${
+            bordered ? 'border-t border-gray-200 dark:border-gray-600' : ''
+          }`}
+        >
+          Use &quot;{term}&quot; as custom value
+        </button>
+      )
+    }
+    return (
+      <div className={bordered ? 'border-t border-gray-200 dark:border-gray-600' : ''}>
+        {namedCustomActions.map((action) => (
+          <button
+            key={action.key}
+            type="button"
+            onClick={() => {
+              action.onSelect?.(term)
+              closeMenu()
+            }}
+            className="w-full px-4 py-2.5 text-left text-sm text-blue-600 transition-colors hover:bg-gray-100 dark:text-blue-400 dark:hover:bg-gray-700"
+          >
+            {typeof action.label === 'function' ? action.label(term) : action.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
 
   const updatePanelPosition = useCallback(() => {
     const el = triggerRef.current
@@ -196,8 +245,11 @@ const SearchableSelect = ({
         if (focusedIndex >= 0 && filteredOptions[focusedIndex]) {
           onChange?.(optionValue(filteredOptions[focusedIndex]))
           closeMenu()
-        } else if (allowCustom && searchTerm.trim()) {
+        } else if (allowCustom && searchTerm.trim() && namedCustomActions.length === 0) {
           onChange?.(searchTerm.trim())
+          closeMenu()
+        } else if (allowCustom && searchTerm.trim() && namedCustomActions[0]?.onSelect) {
+          namedCustomActions[0].onSelect(searchTerm.trim())
           closeMenu()
         }
         break
@@ -208,7 +260,7 @@ const SearchableSelect = ({
       default:
         break
     }
-  }, [isOpen, filteredOptions, focusedIndex, onChange, allowCustom, searchTerm, openMenu, closeMenu])
+  }, [isOpen, filteredOptions, focusedIndex, onChange, allowCustom, searchTerm, openMenu, closeMenu, namedCustomActions.length])
 
   const handleSelect = useCallback((option) => {
     if (!option) return
@@ -260,31 +312,22 @@ const SearchableSelect = ({
           {loading ? (
             <div className="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">Loading...</div>
           ) : filteredOptions.length === 0 ? (
-            <div className="px-4 py-3 text-center text-sm text-gray-500 dark:text-gray-400">
+            <div className="px-0 py-1 text-sm text-gray-500 dark:text-gray-400">
               {allowCustom && searchTerm.trim() ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange?.(searchTerm.trim())
-                    closeMenu()
-                  }}
-                  className="w-full text-left text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                >
-                  Use &quot;{searchTerm.trim()}&quot; as custom value
-                </button>
+                renderCustomActions(searchTerm.trim(), false)
               ) : (
-                'No options found'
+                <div className="px-4 py-3 text-center">No options found</div>
               )}
             </div>
           ) : (
             <>
               {showDescriptionColumn && descriptionColumnLabel ? (
                 <div
-                  className="sticky top-0 z-[1] flex items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-600 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300"
+                  className={`sticky top-0 z-[1] border-b border-gray-200 bg-gray-50 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-700 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 ${descriptionColumnClass}`}
                   aria-hidden="true"
                 >
                   <span className="min-w-0 truncate">Name</span>
-                  <span className="shrink-0 text-right">{descriptionColumnLabel}</span>
+                  <span>{descriptionColumnLabel}</span>
                 </div>
               ) : null}
               {filteredOptions.map((option, index) => {
@@ -311,13 +354,13 @@ const SearchableSelect = ({
                     } ${isFocused && !isSelected ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
                   >
                     {showDescriptionColumn ? (
-                      <span className="flex w-full items-center justify-between gap-3">
+                      <span className={descriptionColumnClass}>
                         <span className="min-w-0 truncate">{String(optLabel)}</span>
                         <span
-                          className={`shrink-0 text-right text-xs font-normal ${
+                          className={`text-sm font-medium ${
                             isSelected
-                              ? 'text-blue-700 dark:text-blue-100'
-                              : 'text-gray-600 dark:text-gray-300'
+                              ? 'text-blue-800 dark:text-white'
+                              : 'text-gray-900 dark:text-gray-100'
                           }`}
                         >
                           {optDescription || '—'}
@@ -331,18 +374,7 @@ const SearchableSelect = ({
               })}
               {allowCustom && searchTerm.trim() && !filteredOptions.some((opt) =>
                 optionLabel(opt).toLowerCase() === searchTerm.trim().toLowerCase(),
-              ) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onChange?.(searchTerm.trim())
-                    closeMenu()
-                  }}
-                  className="w-full border-t border-gray-200 px-4 py-2.5 text-left text-sm text-blue-600 transition-colors hover:bg-gray-100 dark:border-gray-600 dark:text-blue-400 dark:hover:bg-gray-700"
-                >
-                  Use &quot;{searchTerm.trim()}&quot; as custom value
-                </button>
-              )}
+              ) && renderCustomActions(searchTerm.trim(), true)}
             </>
           )}
         </div>

@@ -10,7 +10,7 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode';
 import ViewToggle from '@nidus/ui/ViewToggle';
 import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import SelectField from '../../components/ui/SelectField'
+import SelectField from '@nidus/ui/SelectField'
 
 const MEASUREMENTS_BASE = '/simulator/benefits/measurements'
 

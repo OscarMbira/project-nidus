@@ -14,9 +14,9 @@ import ExportListMenu from '@nidus/ui/ExportListMenu'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import { DashboardRegisterTabBar, DashboardStatCard, RegisterOpenItemsWidget } from '@nidus/ui'
 import { platformDb } from '../../services/supabaseClient'
-import StakeholderAvatar from '../../components/ui/StakeholderAvatar'
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_reference', label: 'Record ID' },

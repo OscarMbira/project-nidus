@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { CheckCircle, Loader } from 'lucide-react';
 import { createSubscriptionRecord } from '../../services/subscriptionService';
 import { simDb } from '../../services/supabase/supabaseClient';

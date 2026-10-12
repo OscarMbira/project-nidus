@@ -5,7 +5,7 @@
  */
 import { memo } from 'react';
 import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
-import RagStatusBadge from '../../ui/RagStatusBadge';
+import RagStatusBadge from '@nidus/ui/RagStatusBadge';
 import { mapSeverityToRag, worstRagFromAlertItems } from '../../../services/dashboardService';
 
 /** Shell: neutral surface; color comes from border-l + count text */

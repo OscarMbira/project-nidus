@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../services/supabaseClient'
 import { ArrowLeft, AlertTriangle, CheckCircle, XCircle, Filter, Search, Link2, Target, TrendingUp, FolderKanban } from 'lucide-react'
-import DashboardStatCard from '../components/ui/DashboardStatCard'
+import DashboardStatCard from '@nidus/ui/DashboardStatCard'
 import { format } from 'date-fns'
 import { getResourceConflicts } from '../services/crossResourceService'
 

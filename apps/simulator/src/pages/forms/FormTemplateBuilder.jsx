@@ -69,8 +69,8 @@ import {
   summarizeFormTemplateDefaultsSave,
   summarizeFormTemplateSaveChanges,
 } from '@nidus/shared/utils/formTemplateSaveSummary'
-import SelectOptionsEditor from '../../components/ui/SelectOptionsEditor'
-import CompletedExampleManager from '../../components/ui/CompletedExampleManager'
+import SelectOptionsEditor from '@nidus/ui/SelectOptionsEditor'
+import CompletedExampleManager from '../../components/shared-app/CompletedExampleManager'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import FormTranslationBulkImport from '../../components/forms/FormTranslationBulkImport'
 import FormExcelSchemaImportModal from '../../components/forms/FormExcelSchemaImportModal'

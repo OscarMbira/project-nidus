@@ -5,7 +5,7 @@
 import { useState } from 'react'
 import { DocumentGovernanceProvider, useDocumentGovernance } from '@nidus/shared/context/DocumentGovernanceContext'
 import MandateList from '../mandate/MandateList'
-import TailorDocumentModal from '@nidus/ui/TailorDocumentModal'
+import TailorDocumentModal from '../../components/shared-app/TailorDocumentModal'
 
 function PMGovernanceMandateTemplateContent() {
   const { canTailor } = useDocumentGovernance()

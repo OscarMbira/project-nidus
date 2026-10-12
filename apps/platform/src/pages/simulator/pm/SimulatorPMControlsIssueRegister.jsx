@@ -2,7 +2,7 @@
  * Simulator PM Controls - Practice Issue Register
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticeIssueRegister from '../PracticeIssueRegister'
 
 export default function SimulatorPMControlsIssueRegister() {

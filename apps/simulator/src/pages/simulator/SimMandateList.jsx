@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Eye, Edit, GraduationCap, Search } from 'lucide-react'
 import { getAllSimMandates } from '../../services/simulatorMandateService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const SIM_MANDATE_COLUMNS = [
   { key: 'mandate_reference', label: 'Reference' },

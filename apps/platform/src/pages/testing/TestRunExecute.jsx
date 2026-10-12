@@ -12,7 +12,7 @@ import {
   softDeleteExecutionEvidence,
   getEvidenceRequirementSettings,
 } from '../../services/testCaseExecutionEvidenceService'
-import { useProjectRole } from '../../hooks/useProjectRole'
+import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { resolveInternalUserId } from '@nidus/shared/utils/resolveInternalUserId'
 import {
   resolveTestEvidenceRequirement,

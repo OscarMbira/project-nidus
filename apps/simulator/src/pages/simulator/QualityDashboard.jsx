@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { 
   analyzeEventQuality, 
   analyzeDifficultyCalibration, 
   generateQualityReport 
-} from '../../utils/eventQualityAnalyzer';
+} from '@nidus/shared/utils/eventQualityAnalyzer';
 import { BarChart3, TrendingUp, AlertTriangle, CheckCircle, Loader } from 'lucide-react';
 
 const QualityDashboard = () => {

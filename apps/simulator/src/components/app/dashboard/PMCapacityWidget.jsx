@@ -13,7 +13,7 @@ import { useState, useEffect, memo } from 'react';
 import { Users, AlertTriangle, CheckCircle, Clock, User } from 'lucide-react';
 import { platformDb } from '@nidus/supabase';
 import ReassignPMModal from './ReassignPMModal';
-import { TableRowNumberHeader, TableRowNumberCell } from '../../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const PMCapacityWidget = memo(function PMCapacityWidget({ organizationId }) {

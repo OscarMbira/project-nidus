@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useThemeContext } from '../../context/ThemeContext';
+import { useThemeContext } from '@nidus/shared/context/ThemeContext';
 import { Package, ShoppingCart, Check, Star } from 'lucide-react';
 import { getScenarioPacks, processScenarioPackPurchase, userOwnsItem, updatePurchaseStatus } from '../../services/purchaseService';
 import { PURCHASE_TYPES } from '../../services/purchaseService';

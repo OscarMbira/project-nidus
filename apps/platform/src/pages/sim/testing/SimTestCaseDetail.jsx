@@ -7,7 +7,7 @@ import {
   updatePracticeTestCase,
 } from '../../../services/sim/practiceTestCaseService'
 import { getPracticeTestSuites } from '../../../services/sim/practiceTestSuiteService'
-import ExportRecordButtons from '../../../components/ui/ExportRecordButtons'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import {
   exportRecordToExcel,
   exportRecordToWord,
@@ -16,7 +16,7 @@ import {
   exportRecordToXML,
   exportRecordToJSON,
   exportRecordToPrint,
-} from '../../../utils/exportUtils'
+} from '@nidus/shared/utils/exportUtils'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 
 const PID_KEY = 'practice_project_id'

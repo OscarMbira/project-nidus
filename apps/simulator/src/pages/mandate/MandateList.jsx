@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Plus, Eye, Edit, FileText, Search } from 'lucide-react'
 import { getAllMandates, getUnlinkedMandates } from '../../services/projectMandateService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
-import { usePlatformProjectId } from '../../hooks/usePlatformProjectId'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 /** All mandate fields for list export; Word/PPT choose-fields modal shows these (user picks up to 10). */
 const MANDATE_COLUMNS = [

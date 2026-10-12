@@ -22,7 +22,7 @@ vi.mock('../../../services/rfpService', () => ({
   checkPMOAdminRole: vi.fn(),
 }))
 
-vi.mock('../../../context/ToastContext', () => ({
+vi.mock('@nidus/shared/context/ToastContext', () => ({
   useToastContext: () => ({ error: vi.fn() }),
 }))
 

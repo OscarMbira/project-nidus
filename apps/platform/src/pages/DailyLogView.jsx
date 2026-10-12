@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { BookOpen, Plus, Search, Filter, Calendar, List, Clock, AlertCircle, CheckCircle, Download, Grid, History } from 'lucide-react';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getDailyLogByProject, getSummary } from '../services/dailyLogService';
 import { getEntries, addEntry, updateEntry, deleteEntry, completeEntry } from '../services/dailyLogEntryService';
 import { getOverdueEntries } from '../services/dailyLogEntryService';

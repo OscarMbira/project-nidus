@@ -8,7 +8,7 @@ import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { deletePracticeTestEnvironment, getPracticeTestEnvironments } from '../../../services/sim/practiceTestEnvironmentService'
-import { resolveSimInternalUserId } from '../../../utils/resolveSimInternalUserId'
+import { resolveSimInternalUserId } from '@nidus/shared/utils/resolveSimInternalUserId'
 import { SIM_TESTING_BASE } from './simTestingPaths'
 
 const EXPORT_COLS = [

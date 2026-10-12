@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, Edit2, Trash2, TrendingUp, AlertTriangle, DollarSign, Users, Eye } from 'lucide-react';
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table';
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table';
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils';
-import RowNumberBadge from '../ui/RowNumberBadge';
+import RowNumberBadge from '@nidus/ui/RowNumberBadge';
 import { deleteProgramme } from '../../services/programmeService';
-import SortToolbar from '../ui/SortToolbar';
+import SortToolbar from '@nidus/ui/SortToolbar';
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable';
 
 export default function ProgrammeList({ programmes, onRefresh, viewMode = 'grid' }) {

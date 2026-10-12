@@ -4,7 +4,7 @@ import { ArrowLeft, TrendingUp, AlertTriangle, Calendar, Target, Plus, Search } 
 import { getResourceForecasts, saveResourceForecast, deleteResourceForecast } from '../services/crossResourceService';
 import ResourceForecastList from '../components/resources/ResourceForecastList';
 import ResourceForecastForm from '../components/resources/ResourceForecastForm';
-import DashboardStatCard from '../components/ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 
 export default function ResourceForecasts() {
   const navigate = useNavigate();

@@ -5,7 +5,7 @@
  */
 import { platformDb } from '@nidus/supabase'
 import { getCurrentUserAccountId, getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
-import { orderSimilarRisks } from '../utils/riskCategoryMatch'
+import { orderSimilarRisks } from '@nidus/shared/utils/riskCategoryMatch'
 
 const CATEGORY_SELECT = 'id, organisation_id, category_code, category_name, is_active, created_at, created_by, updated_at, updated_by'
 const SUBCATEGORY_SELECT = 'id, organisation_id, category_code, subcategory_code, subcategory_name, is_active, display_order, created_at, created_by, updated_at, updated_by'

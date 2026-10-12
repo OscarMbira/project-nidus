@@ -1,11 +1,11 @@
 import { Table2, AlertTriangle } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import ExportListMenu from '../ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 import { SEAM_LEVELS, prettySeamLevel } from '@nidus/shared/utils/stakeholderSEAMUtils'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { platformDb } from '../../services/supabaseClient'
-import StakeholderAvatar from '../ui/StakeholderAvatar'
+import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
 
 const SEAM_COLUMNS = [
   { key: 'stakeholder_name', label: 'Stakeholder' },

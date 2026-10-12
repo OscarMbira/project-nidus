@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useTheme } from '../../context/ThemeContext'
+import { useTheme } from '@nidus/shared/context/ThemeContext'
 import { simDb } from '../../services/supabase/supabaseClient'
 import SimHealthGauges from '../../components/sim/SimHealthGauges'
 import SimPhaseProgressBar from '../../components/sim/SimPhaseProgressBar'

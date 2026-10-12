@@ -2,7 +2,7 @@
  * Simulator PM Delivery - Practice Product Status Account
  */
 
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext'
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext'
 import PracticePSAList from '../PracticePSAList'
 
 export default function SimulatorPMDeliveryProductStatusAccount() {

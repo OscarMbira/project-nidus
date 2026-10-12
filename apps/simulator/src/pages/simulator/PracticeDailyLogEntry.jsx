@@ -6,8 +6,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeDailyLogEntry, updatePracticeDailyLogEntry } from '../../services/sim/practiceDailyLogService'
-import ExportRecordButtons from '../../components/ui/ExportRecordButtons'
-import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '../../utils/exportUtils'
+import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { exportRecordToExcel, exportRecordToWord, exportRecordToPPT, exportRecordToCSV, exportRecordToXML, exportRecordToJSON, exportRecordToPrint } from '@nidus/shared/utils/exportUtils'
 
 const PRACTICE_DAILY_LOG_ENTRY_SECTIONS = [
   { title: 'Daily Log Entry', fields: [

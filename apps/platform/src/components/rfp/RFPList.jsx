@@ -11,7 +11,7 @@ import * as defaultRfpService from '../../services/rfpService'
 import { platformDb } from '@nidus/supabase'
 import RFPStatusBadge from './RFPStatusBadge'
 import RFPStats from './RFPStats'
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const RFPListRow = memo(function RFPListRow({ rfp, readOnly, deletingId, onView, onEdit, onDelete }) {

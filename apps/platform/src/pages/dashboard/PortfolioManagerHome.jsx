@@ -4,7 +4,7 @@
  * (CurrentPortfolioProvider — mirrors CurrentProjectProvider's pattern, own provider mounted here
  * since there's no dedicated /portfolio-manager/* route tree to inherit one from).
  */
-import { CurrentPortfolioProvider, useCurrentPortfolio } from '../../context/CurrentPortfolioContext'
+import { CurrentPortfolioProvider, useCurrentPortfolio } from '../../lib/CurrentPortfolioContext'
 import DashboardFramework from '../../components/dashboard/DashboardFramework'
 import { useDashboardViewerContext } from '../../components/dashboard/useDashboardViewerContext'
 import { PORTFOLIO_MANAGER_HOME_WIDGETS } from '../../components/dashboard/widgetRegistry'

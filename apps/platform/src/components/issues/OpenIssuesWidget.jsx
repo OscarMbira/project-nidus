@@ -7,7 +7,7 @@ import { AlertCircle, Clock, Search } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import { formatIssueAge, getIssueAgeDays } from '../IssueList'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const OPEN_STATUSES = [

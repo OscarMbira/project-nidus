@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { simDb, platformDb } from '@nidus/supabase';
 import { FileText, AlertTriangle, Target, TrendingUp, BarChart3, CheckSquare } from 'lucide-react';
 import { createChangeRequest, updateChangeRequest, fetchChangeAssessment, createChangeAssessment, updateChangeAssessment } from '../../services/changeManagementService';
-import FormSurface from '../ui/FormSurface';
+import FormSurface from '@nidus/ui/FormSurface';
 import InheritedChangeRequestFields from '../../features/local-data-extensions/components/InheritedChangeRequestFields';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
 import { getSimProjectMembers } from '../../services/sim/simProjectMembershipService';
@@ -15,7 +15,7 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
-import SelectField from '../ui/SelectField'
+import SelectField from '@nidus/ui/SelectField'
 import { getPracticeStakeholders } from '../../services/sim/practiceStakeholderService'
 import {
   addChangeRequestorOption,

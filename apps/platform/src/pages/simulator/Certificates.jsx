@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import { Award, Download, Share2, Package, CheckCircle, ExternalLink } from 'lucide-react';
 import { getUserCertificates, shareToLinkedIn, orderPhysicalCertificate } from '../../services/certificateService';
 import { simDb } from '../../services/supabase/supabaseClient';

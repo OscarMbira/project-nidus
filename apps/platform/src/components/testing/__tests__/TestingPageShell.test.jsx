@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import TestingPageShell from '../TestingPageShell'
 
-vi.mock('../../../context/CurrentProjectContext', () => ({
+vi.mock('../../../lib/CurrentProjectContext', () => ({
   useCurrentProject: () => ({
     projects: [{ projectId: 'p1', projectName: 'Demo', projectCode: 'DEMO-01' }],
     currentProjectId: 'p1',

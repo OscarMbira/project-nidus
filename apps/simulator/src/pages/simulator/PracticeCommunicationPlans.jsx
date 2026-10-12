@@ -8,9 +8,9 @@ import { ArrowLeft, FileText } from 'lucide-react'
 import { getPracticeCommunicationPlans, getPracticeCommunicationLog } from '../../services/sim/practiceStakeholderService'
 import { getMyPracticeProjects } from '../../services/sim/practiceProjectService'
 import { simDb } from '../../services/supabase/supabaseClient'
-import ExportListMenu from '../../components/ui/ExportListMenu'
-import { TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function PracticeCommunicationPlans() {
   const navigate = useNavigate()

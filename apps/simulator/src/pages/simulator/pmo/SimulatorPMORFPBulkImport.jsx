@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { checkPMOAdminRole } from '../../../services/simRfpService'
-import { useToastContext } from '../../../context/ToastContext'
+import { useToastContext } from '@nidus/shared/context/ToastContext'
 import RFPBulkImport from '../../../components/rfp/RFPBulkImport'
 import * as simRfpBulkImportService from '../../../services/simRfpBulkImportService'
 

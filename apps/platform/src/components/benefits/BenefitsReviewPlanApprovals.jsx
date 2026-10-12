@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, Plus, User, MessageSquare } from 'lucide-react';
 import { getApprovals, requestApproval, recordApproval, getMyPendingApprovals } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function BenefitsReviewPlanApprovals({ planId, planStatus, onUpdate }) {

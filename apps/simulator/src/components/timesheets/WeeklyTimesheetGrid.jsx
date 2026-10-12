@@ -11,7 +11,7 @@ import {
 import { getWorkCategories } from '../../services/timesheetWorkCategoryService'
 import { resolveTimesheetSettings } from '../../services/timesheetSettingsService'
 import { getTasksByProject } from '../../services/taskService'
-import { getCurrentUserAccountId } from '../../utils/accountResolution'
+import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import SelectField from '@nidus/ui/SelectField'
 import OvertimeGrid from './OvertimeGrid'
 import ReviewDecisionBadge from './ReviewDecisionBadge'

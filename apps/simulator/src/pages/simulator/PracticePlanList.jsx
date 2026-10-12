@@ -7,7 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getPracticePlan, createPracticePlan, updatePracticePlan } from '../../services/sim/practicePlanService'
-import ExportListMenu from '../../components/ui/ExportListMenu'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
 
 const PRACTICE_PLAN_COLUMNS = [
   { key: 'plan_title', label: 'Title' },

@@ -7,12 +7,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { getPracticeProgrammesForList } from '../../services/sim/practicePortfolioService'
-import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '../../components/ui/Table'
-import { useViewMode } from '../../hooks/useViewMode'
-import ViewToggle from '../../components/ui/ViewToggle'
-import { getDisplayRowNumber } from '../../utils/tableRowNumberUtils'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
-import RowNumberBadge from '../../components/ui/RowNumberBadge'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 export default function PracticeProgramme() {
   const navigate = useNavigate()
   const [programmeViewMode, setProgrammeViewMode] = useViewMode('simulator-practice-programme', 'grid')

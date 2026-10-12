@@ -4,7 +4,7 @@ import {
   canAccessRoleForTier,
   getRolesForSubscriptionTier,
   ROLE_NPC_MAPPING,
-} from '../../../../../packages/shared/src/constants/simulatorRoles.js';
+} from '@nidus/shared/constants/simulatorRoles';
 
 describe('v734 role selection flow', () => {
   it('validates all five canonical role IDs', () => {

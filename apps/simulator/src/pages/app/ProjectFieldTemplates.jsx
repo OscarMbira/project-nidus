@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
-import TierFormPolicyPanel from '@nidus/ui/TierFormPolicyPanel.jsx'
+import TierFormPolicyPanel from '../../components/shared-app/TierFormPolicyPanel.jsx'
 import { listProjectCopiedFormTemplates } from '@nidus/shared/services/projectFormTemplateCatalog.js'
 import { buildPmTemplatesListPath } from '@nidus/shared/utils/organisationalTemplateRoutes'
 import { getMenuLabel } from '@nidus/shared/services/menuLabelService.js'

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Target, TrendingUp, CheckCircle, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
-import DashboardStatCard from '../ui/DashboardStatCard';
+import DashboardStatCard from '@nidus/ui/DashboardStatCard';
 import { getAlignmentScores, getStrategicAlignmentDashboardStats } from '../../services/strategicService';
 import { supabase } from '../../services/supabaseClient';
-import { TableRowNumberHeader, TableRowNumberCell } from '../ui/Table'
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 export default function AlignmentDashboard({ portfolioId = null, projectId = null }) {

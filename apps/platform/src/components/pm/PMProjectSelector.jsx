@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Briefcase, ChevronDown } from 'lucide-react'
-import { useCurrentProject } from '../../context/CurrentProjectContext'
+import { useCurrentProject } from '../../lib/CurrentProjectContext'
 
 /**
  * Current-project selector for /pm/* pages — one searchable combobox ("CODE — Name"). Rendered in

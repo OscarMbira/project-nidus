@@ -6,7 +6,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, Pencil } from 'lucide-react';
-import { PracticeDocumentGovernanceProvider } from '../../../context/PracticeDocumentGovernanceContext';
+import { PracticeDocumentGovernanceProvider } from '@nidus/shared/context/PracticeDocumentGovernanceContext';
 import { simDb } from '../../../services/supabase/supabaseClient';
 import { getMyPracticeProjects } from '../../../services/sim/practiceProjectService';
 import {
@@ -14,10 +14,10 @@ import {
   getPracticeLessonEntries,
 } from '../../../services/sim/practiceLessonsService';
 import PMOOversightHeader from '../../../components/pmo/PMOOversightHeader';
-import ExportListMenu from '../../../components/ui/ExportListMenu';
-import { useToastContext } from '../../../context/ToastContext';
-import { TableRowNumberHeader, TableRowNumberCell } from '../../../components/ui/Table'
-import { getDisplayRowNumber } from '../../../utils/tableRowNumberUtils'
+import ExportListMenu from '@nidus/ui/ExportListMenu';
+import { useToastContext } from '@nidus/shared/context/ToastContext';
+import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
 const EXPORT_COLUMNS = [
   { key: 'lesson_title', label: 'Title' },

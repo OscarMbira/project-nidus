@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '@nidus/shared/context/ThemeContext';
 import ScenarioReview from '../../components/sim/ScenarioReview';
 import { simDb } from '../../services/supabase/supabaseClient';
 
