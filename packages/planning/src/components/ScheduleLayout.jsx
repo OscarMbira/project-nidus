@@ -2,11 +2,13 @@
  * v1239 Slice 3 — page frame for the shared schedule screens: title, project picker (when the
  * URL does not already name the project), the schedule sub-navigation (Level 4 tabs, so no new
  * sidebar items), the Recalculate action and the save-conflict banner (Slice 3.4).
+ * Every schedule view shows a Back control above the title (rule 73: browser history).
  */
 import { NavLink, useParams } from 'react-router-dom'
 import { RefreshCw } from 'lucide-react'
 import { usePlanning } from '@nidus/planning/context/PlanningContext.jsx'
 import { useScheduleLinks } from '../hooks/useSchedule.js'
+import BackButton from './BackButton.jsx'
 
 export const SCHEDULE_TABS = [
   { sub: 'activities', label: 'Tasks' },
@@ -58,6 +60,7 @@ export default function ScheduleLayout({ title, description, schedule = null, ac
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 space-y-4">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
         <div>
+          <BackButton />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
           {description && <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{description}</p>}
         </div>

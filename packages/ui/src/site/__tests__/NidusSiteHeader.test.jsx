@@ -96,7 +96,7 @@ describe('NidusSiteHeader — product layout (v1264)', () => {
     for (const label of ['Products', 'Solutions', 'Resources', 'Company']) expect(within(nav).queryByRole('button', { name: label })).toBeNull()
     expect(within(nav).getByRole('button', { name: 'Project Nidus' })).toBeTruthy()
     expect(screen.getAllByRole('navigation', { name: 'Main' })).toHaveLength(1)
-    expect(screen.getByText('Project Nidus Platform')).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Project Nidus Platform' }).textContent).toBe('Platform') // under the wordmark
   })
 
   it('hides a product link that duplicates the CTA and shows the configured CTA', () => {

@@ -9,7 +9,8 @@ Platform, Simulator and Planner public pages used to show **two stacked header r
 Now each product has **one header row built around that product**:
 
 ```
-[Project Nidus | ▦ Platform]  Features  Pricing  Docs  Affiliates  Project Nidus ▾     ☀  Sign in  [Request a demo]
+[Project Nidus]  Features  Pricing  Docs  Affiliates  Project Nidus ▾     ☀  Sign in  [Request a demo]
+ Platform
 ```
 
 - **The product's own links are the main menu.** Pricing here means this product's pricing.

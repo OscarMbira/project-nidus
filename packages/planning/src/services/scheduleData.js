@@ -314,9 +314,12 @@ export function createScheduleData(isSim) {
       .select()
       .single()
     if (error) fail(error, 'Could not save the baseline.')
-    await Promise.all(tasks.map((t) =>
+    const results = await Promise.all(tasks.map((t) =>
       db.from('tasks').update({ baseline_start_date: t.planned_start_date, baseline_end_date: t.planned_end_date, baseline_duration_days: t.estimated_duration_days }).eq('id', t.id)
     ))
+    // Supabase returns errors rather than throwing: report them instead of silently losing the task dates.
+    const failed = results.filter((r) => r?.error)
+    if (failed.length) fail(failed[0].error, `The baseline was saved, but ${failed.length} task(s) could not be updated with its dates.`)
     return data
   }
 
@@ -412,6 +415,26 @@ export function previewSchedule({ tasks, dependencies = [], calendar = null, pro
 
 /** { taskId: row_version } for the recalculate RPC's conflict check. */
 export const expectedVersionsOf = (tasks) => Object.fromEntries(tasks.map((t) => [t.id, t.row_version ?? 1]))
+
+/**
+ * A task's baseline dates: its own baseline_* columns, else its entry in the most recent schedule
+ * baseline snapshot (project_baselines.baseline_data.tasks), e.g. a baseline saved before the
+ * columns were filled. `baselines` is newest first (listBaselines). Null when neither has dates.
+ */
+export function taskBaselineDates(task, baselines = []) {
+  if (!task) return null
+  if (task.baseline_start_date || task.baseline_end_date) {
+    return { start: task.baseline_start_date || null, finish: task.baseline_end_date || null, name: null, date: null }
+  }
+  for (const b of baselines) {
+    if (b?.baseline_type && b.baseline_type !== 'schedule') continue
+    const entry = (b?.baseline_data?.tasks || []).find((t) => t.id === task.id || (task.task_code && t.task_code === task.task_code))
+    if (entry && (entry.start || entry.finish)) {
+      return { start: entry.start || null, finish: entry.finish || null, name: b.baseline_name || null, date: b.baseline_date || String(b.created_at || '').slice(0, 10) || null }
+    }
+  }
+  return null
+}
 
 /** Calendar-day variance of finish vs baseline finish (positive = late). Null when either is missing. */
 export function finishVarianceDays(task) {

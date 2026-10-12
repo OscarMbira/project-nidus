@@ -7,7 +7,8 @@
  *   brand   (brand site, currentProduct null), company-led, as v1241 Amendment A:
  *     [Project Nidus]  Products ▾  Solutions ▾  Pricing  Resources ▾  Company ▾     ☀  Sign in ▾  [CTA]
  *   product (Platform / Simulator / Planner public pages), product-led, one row:
- *     [Project Nidus | ▦ Platform]  Features  Pricing  Docs …  Project Nidus ▾     ☀  Sign in  [CTA]
+ *     [Project Nidus]  Features  Pricing  Docs …  Project Nidus ▾     ☀  Sign in  [CTA]
+ *      Platform        (product name under the wordmark)
  *     Project Nidus ▾ = other products (+ their sign-in), Compare products, Solutions, Resources, Company.
  *
  * - Colours and the primary button (CTA) come from site_header_settings (one row per header),
@@ -284,21 +285,24 @@ export default function NidusSiteHeader({ chrome, currentProduct = null, onBrand
   )
 }
 
+/** "Project Nidus Platform" → "Platform" (the wordmark above already says Project Nidus). */
+const shortProductName = (name) => String(name || '').replace(/^project\s+nidus\s+/i, '') || name
+
 /** Product layout, left side: wordmark | product name, then the product's own links + switcher. */
 function ProductLeft({ product, logoLink, links, LinkComponent, children }) {
   const landing = resolveProductHref(product, 'landing_url', product.slug)
-  // Phones: icon only (name kept for screen readers); the name shows from the sm breakpoint.
+  // Lockup: wordmark with the product name under it, e.g. "Project Nidus" / "Platform".
   const name = (
-    <span className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-[var(--nh-strong)]">
-      <ProductIcon iconKey={product.icon_key} className="h-5 w-5 text-[var(--nh-accent)]" aria-hidden="true" />
-      <span className="sr-only sm:not-sr-only">{product.name}</span>
+    <span className="block whitespace-nowrap text-sm font-semibold leading-tight text-[var(--nh-muted)]">
+      {shortProductName(product.name)}
     </span>
   )
   return (
     <>
-      {logoLink}
-      <span className="hidden h-6 w-px bg-[var(--nh-border)] sm:block" aria-hidden="true" />
-      {landing ? <ExtLink to={landing} className="hover:opacity-80">{name}</ExtLink> : name}
+      <div className="flex flex-col items-start">
+        {logoLink}
+        {landing ? <ExtLink to={landing} aria-label={product.name} className="hover:opacity-80">{name}</ExtLink> : name}
+      </div>
       <nav aria-label="Main" className="hidden items-center lg:flex">
         {links.map((l) => <AppLink key={l.link_key} href={l.url} LinkComponent={LinkComponent} className={navCls}>{l.label}</AppLink>)}
         {children}

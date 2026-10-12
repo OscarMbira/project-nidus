@@ -22,7 +22,7 @@ import { ScheduleConflictError } from '../../../services/scheduleData.js'
 import { scheduleLinkFor } from '../../../hooks/useSchedule.js'
 import { layoutGantt } from '../../../components/ScheduleGanttChart.jsx'
 import { networkColumns } from '../ScheduleNetworkScreen.jsx'
-import { validateTask } from '../TaskFormScreen.jsx'
+import { validateTask, dateWarnings, daysBetween } from '../TaskFormScreen.jsx'
 import { PRESETS } from '../ScheduleFilteredListScreen.jsx'
 import TaskFormScreen from '../TaskFormScreen.jsx'
 import ScheduleGridScreen from '../ScheduleGridScreen.jsx'
@@ -168,5 +168,55 @@ describe('schedule screen contract', () => {
   it('no schedule screen ships a dark-only surface', () => {
     const offenders = files.filter((f) => /className="[^"]*(?<!dark:)\bbg-gray-9[05]0\b/.test(fs.readFileSync(path.join(dir, f), 'utf8')))
     expect(offenders).toEqual([])
+  })
+})
+
+describe('task dates: planned, actual and baseline', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('checks planned order, warns on future actual dates and counts day shifts', () => {
+    expect(validateTask({ task_name: 'A', estimated_duration_days: 2, percentage_complete: 0, planned_start_date: '2026-10-12', planned_end_date: '2026-10-10' })).toMatch(/Planned finish/)
+    expect(dateWarnings({ actual_start_date: '2026-10-20' }, '2026-10-12')).toHaveLength(1)
+    expect(dateWarnings({ actual_start_date: '2026-10-01', actual_end_date: '2026-10-12' }, '2026-10-12')).toEqual([])
+    expect(daysBetween('2026-10-16', '2026-10-14')).toBe(2)
+    expect(daysBetween('', '2026-10-14')).toBeNull()
+  })
+
+  it('typing a planned date on an Automatic task switches it to Manual and says so', async () => {
+    fake.api = makeApi()
+    renderAt('/platform/pm/schedule/tasks/TSK-0001/edit?projectId=PRJ-1', <TaskFormScreen />, 'platform', '/platform/pm/schedule/tasks/:taskKey/edit')
+    const start = await screen.findByDisplayValue('2026-10-12')
+    expect(screen.getByDisplayValue('Automatic')).toBeInTheDocument()
+    fireEvent.change(start, { target: { value: '2026-10-19' } })
+    expect(screen.getByDisplayValue('Manual')).toBeInTheDocument()
+    expect(screen.getByText(/this task is now Manual/)).toBeInTheDocument()
+  })
+
+  it('shows the baseline and how far the plan has moved from it', async () => {
+    fake.api = makeApi({ getTask: vi.fn(async () => ({ ...TASK, baseline_start_date: '2026-10-12', baseline_end_date: '2026-10-12' })) })
+    renderAt('/platform/pm/schedule/tasks/TSK-0001/edit?projectId=PRJ-1', <TaskFormScreen />, 'platform', '/platform/pm/schedule/tasks/:taskKey/edit')
+    expect(await screen.findByText(/Planned finish \+2 days/)).toBeInTheDocument()
+  })
+
+  it('says when no baseline has been saved', async () => {
+    fake.api = makeApi()
+    renderAt('/platform/pm/schedule/tasks/TSK-0001/edit?projectId=PRJ-1', <TaskFormScreen />, 'platform', '/platform/pm/schedule/tasks/:taskKey/edit')
+    expect(await screen.findByText(/none saved yet/)).toBeInTheDocument()
+  })
+})
+
+describe('baseline dates fallback', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('uses the latest saved schedule baseline when the task has no baseline columns', async () => {
+    fake.api = makeApi({
+      listBaselines: vi.fn(async () => [
+        { baseline_name: 'Scope', baseline_type: 'scope', baseline_data: { tasks: [{ id: 't1', start: '2026-01-01', finish: '2026-01-02' }] } },
+        { baseline_name: 'Initial plan', baseline_type: 'schedule', baseline_date: '2026-10-01', baseline_data: { tasks: [{ id: 't1', start: '2026-10-12', finish: '2026-10-13' }] } },
+      ]),
+    })
+    renderAt('/platform/pm/schedule/tasks/TSK-0001/edit?projectId=PRJ-1', <TaskFormScreen />, 'platform', '/platform/pm/schedule/tasks/:taskKey/edit')
+    expect(await screen.findByText(/Baseline \(Initial plan, 2026-10-01\)/)).toBeInTheDocument()
+    expect(screen.getByText(/Planned finish \+1 day\b/)).toBeInTheDocument()
   })
 })
