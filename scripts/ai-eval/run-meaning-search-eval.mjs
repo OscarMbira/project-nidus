@@ -34,12 +34,14 @@ let totalMs = 0
 let memory = null
 for (let i = 0; i < list.length; i += 50) {
   const batch = list.slice(i, i + 50)
-  const res = await fetch(`${url}/functions/v1/ai-embed`, {
+  // gte-small runs in ai-embed; the D22a spike model has its own function (deploy it only for the spike).
+  const fn = model === 'gte-small' ? 'ai-embed' : 'ai-embed-spike'
+  const res = await fetch(`${url}/functions/v1/${fn}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-ai-cron-secret': secret },
-    body: JSON.stringify({ mode: 'eval', model, texts: batch }),
+    body: JSON.stringify({ mode: 'eval', texts: batch }),
   })
-  if (!res.ok) { console.error(`ai-embed failed: ${res.status} ${await res.text()}`); process.exit(2) }
+  if (!res.ok) { console.error(`${fn} failed: ${res.status} ${await res.text()}`); process.exit(2) }
   const body = await res.json()
   body.vectors.forEach((v, j) => vectors.set(batch[j], v))
   totalMs += body.ms || 0

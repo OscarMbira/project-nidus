@@ -3,8 +3,9 @@
  * pg_cron (SQL v1284 → ai_embed_kick) with the x-ai-cron-secret header; never by browsers.
  *
  *   POST {}                                   embed waiting search_index rows (public + sim) in batches
- *   POST { mode: 'eval', texts, model? }        return embeddings for the meaning-search eval and the
- *                                             multilingual spike (scripts/ai-eval) — same secret
+ *   POST { mode: 'eval', texts }              return gte-small embeddings for the meaning-search eval
+ *                                             (scripts/ai-eval) — same secret. The D22a multilingual spike
+ *                                             is a separate function, ai-embed-spike.
  *
  * A row is stored only if its text has not changed while it was being embedded; failures are
  * retried up to 3 times, then shown in Admin → AI Centre → Meaning Search.
@@ -19,20 +20,6 @@ import { guessLanguage, toVectorLiteral } from '../_shared/ai/embedding.js'
 const BATCH = 40
 const TIME_BUDGET_MS = 45_000
 
-// D22a feasibility spike only (eval mode): an open multilingual model run in the edge runtime.
-// Never used for stored embeddings unless the owner approves a switch (then: re-embed via Admin).
-const SPIKE_MODEL = 'multilingual-e5-small'
-// deno-lint-ignore no-explicit-any
-let spikePipeline: any = null
-async function spikeEmbed(text: string): Promise<number[]> {
-  if (!spikePipeline) {
-    const { pipeline } = await import('npm:@huggingface/transformers@3.2.4')
-    spikePipeline = await pipeline('feature-extraction', 'Xenova/multilingual-e5-small')
-  }
-  const out = await spikePipeline(`query: ${text}`, { pooling: 'mean', normalize: true })
-  return Array.from(out.data as ArrayLike<number>)
-}
-
 serve(async (req) => {
   try {
     if (req.method !== 'POST') return json(req, 405, { error: 'Method not allowed' })
@@ -42,13 +29,12 @@ serve(async (req) => {
 
     if (body?.mode === 'eval') {
       const texts: string[] = Array.isArray(body.texts) ? body.texts.slice(0, 200).map((t: unknown) => String(t)) : []
-      const model = body.model === SPIKE_MODEL ? SPIKE_MODEL : EMBED_MODEL
       const started = Date.now()
       const vectors = []
-      for (const t of texts) vectors.push(model === SPIKE_MODEL ? await spikeEmbed(t) : await embed(t))
+      for (const t of texts) vectors.push(await embed(t))
       // deno-lint-ignore no-explicit-any
       const memory = (Deno as any).memoryUsage?.().rss
-      return json(req, 200, { model, vectors, ms: Date.now() - started, memory_mb: memory ? Math.round(memory / 1048576) : null })
+      return json(req, 200, { model: EMBED_MODEL, vectors, ms: Date.now() - started, memory_mb: memory ? Math.round(memory / 1048576) : null })
     }
 
     const { data: settings } = await db.from('ai_platform_settings').select('kill_switch').eq('id', true).maybeSingle()
