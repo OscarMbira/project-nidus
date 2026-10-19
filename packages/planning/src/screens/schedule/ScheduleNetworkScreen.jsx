@@ -3,9 +3,9 @@
  * them, so the flow reads left to right. Critical tasks are outlined red.
  */
 import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
-import { useSchedule, useScheduleLinks, useScheduleProjectId } from '../../hooks/useSchedule.js'
+import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
+import { useTaskModal } from '../../hooks/useTaskModal.js'
 
 /** Column = longest chain of predecessors. Pure; exported for tests. Cycles are ignored (the DB rejects them). */
 export function networkColumns(tasks, dependencies) {
@@ -32,8 +32,7 @@ export function networkColumns(tasks, dependencies) {
 }
 
 export default function ScheduleNetworkScreen() {
-  const navigate = useNavigate()
-  const link = useScheduleLinks()
+  const { openTask } = useTaskModal()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const columns = useMemo(() => networkColumns(schedule.tasks, schedule.dependencies), [schedule.tasks, schedule.dependencies])
@@ -52,7 +51,7 @@ export default function ScheduleNetworkScreen() {
                 {col.map((t) => {
                   const after = schedule.dependencies.filter((d) => d.successor_task_id === t.id).map((d) => byId.get(d.predecessor_task_id)?.task_name).filter(Boolean)
                   return (
-                    <button key={t.id} type="button" onClick={() => navigate(link(`tasks/${encodeURIComponent(t.task_code || t.id)}`))}
+                    <button key={t.id} type="button" onClick={() => openTask(t)}
                       className={`text-left rounded-lg border-2 p-3 bg-white dark:bg-gray-900 hover:shadow ${t.is_critical_path ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'}`}>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{t.task_name}</p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">{t.planned_start_date || '—'} → {t.planned_end_date || '—'}</p>

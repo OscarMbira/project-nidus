@@ -2,6 +2,8 @@
  * v1239 Slice 4.1 — Task calendar (tasks by due date), shared by every shell (moved from
  * apps/platform/src/pages). Reads tasks via useTaskSource(): Platform/Planner → public,
  * Simulator → sim (practice projects).
+ * v1265: `embedded` (the schedule's Due dates tab) — shown inside ScheduleLayout, which gives the
+ * title, Back, tabs, full screen and project picker; tasks open in the task modal.
  */
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -10,6 +12,7 @@ import { format, isSameDay } from 'date-fns'
 import 'react-calendar/dist/Calendar.css'
 import { useTaskSource } from '../../hooks/useTaskSource.js'
 import { useScheduleProjectId } from '../../hooks/useSchedule.js'
+import { useTaskModal } from '../../hooks/useTaskModal.js'
 
 // sim.tasks cannot embed the public task_statuses lookup: attach it from a second read.
 export async function withStatuses(source, rows) {
@@ -19,8 +22,9 @@ export async function withStatuses(source, rows) {
   return rows.map((t) => ({ ...t, task_statuses: byId.get(t.status_id) || null }))
 }
 
-export default function TasksCalendar() {
+export default function TasksCalendar({ embedded = false }) {
   const navigate = useNavigate()
+  const taskModal = useTaskModal()
   const source = useTaskSource()
   const { projectId: contextProjectId, loading: projectContextLoading } = useScheduleProjectId()
   const [tasks, setTasks] = useState([])
@@ -46,13 +50,14 @@ export default function TasksCalendar() {
   }, [selectedDate, tasks])
 
   const goToCreateTask = useCallback(() => {
+    if (embedded) { taskModal.newTask(); return }
     navigate(source.createPath(), {
       state: {
         dueDate: selectedDate,
         ...(filterProject && filterProject !== 'all' ? { projectId: filterProject } : {}),
       },
     })
-  }, [navigate, selectedDate, filterProject, source])
+  }, [navigate, selectedDate, filterProject, source, embedded, taskModal])
 
   const fetchData = async () => {
     try {
@@ -168,7 +173,12 @@ export default function TasksCalendar() {
   }
 
   return (
-    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
+    <div className={embedded ? '' : 'w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6'}>
+      {embedded ? (
+        <div className="mb-4 flex justify-end">
+          <button type="button" onClick={goToCreateTask} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">+ New Task</button>
+        </div>
+      ) : (
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -203,6 +213,7 @@ export default function TasksCalendar() {
           </button>
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -241,7 +252,7 @@ export default function TasksCalendar() {
                 {selectedDateTasks.map((task) => (
                   <div
                     key={task.id}
-                    onClick={() => navigate(source.taskPath(task))}
+                    onClick={() => (embedded ? taskModal.openTask(task) : navigate(source.taskPath(task)))}
                     className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow border-l-4"
                     style={{
                       borderLeftColor: task.task_statuses?.status_color || '#6B7280'

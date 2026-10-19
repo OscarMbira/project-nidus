@@ -8,6 +8,7 @@
  */
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import ScheduleLayout from '../components/ScheduleLayout.jsx'
 
 const ScheduleGridScreen = lazy(() => import('../screens/schedule/ScheduleGridScreen.jsx'))
 const TaskFormScreen = lazy(() => import('../screens/schedule/TaskFormScreen.jsx'))
@@ -23,6 +24,15 @@ const ScheduleTimeScreen = lazy(() => import('../screens/schedule/ScheduleTimeSc
 const ScheduleExchangeScreen = lazy(() => import('../screens/schedule/ScheduleExchangeScreen.jsx'))
 const TasksBoard = lazy(() => import('../screens/tasks/TasksBoard.jsx'))
 const TasksCalendar = lazy(() => import('../screens/tasks/TasksCalendar.jsx'))
+
+// v1265: Board and Due dates sit inside the schedule frame like every other tab (Back, tabs,
+// full screen, task modal); the standalone /tasks/board and /tasks/calendar pages are unchanged.
+function ScheduleBoardTab() {
+  return <ScheduleLayout title="Board" description="Tasks as cards by status."><TasksBoard embedded /></ScheduleLayout>
+}
+function ScheduleDueDatesTab() {
+  return <ScheduleLayout title="Due dates" description="Tasks by due date. Pick a day to see what is due."><TasksCalendar embedded /></ScheduleLayout>
+}
 
 export default function ScheduleRoutes({ fallback = null }) {
   return (
@@ -48,10 +58,10 @@ export default function ScheduleRoutes({ fallback = null }) {
         <Route path="calendar/exceptions/:exceptionId/edit" element={<CalendarExceptionFormScreen />} />
         <Route path="baselines" element={<ScheduleBaselinesScreen />} />
         <Route path="workload" element={<ScheduleWorkloadScreen />} />
-        <Route path="board" element={<TasksBoard />} />
+        <Route path="board" element={<ScheduleBoardTab />} />
         <Route path="time" element={<ScheduleTimeScreen />} />
         <Route path="exchange" element={<ScheduleExchangeScreen />} />
-        <Route path="due-dates" element={<TasksCalendar />} />
+        <Route path="due-dates" element={<ScheduleDueDatesTab />} />
       </Routes>
     </Suspense>
   )

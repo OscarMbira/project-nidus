@@ -11,6 +11,7 @@
  */
 import { platformDb, simDb } from '@nidus/supabase'
 import { buildCalendar, scheduleProject, ScheduleCycleError } from '../engine/schedule.js'
+import { expandSummaryLinks, isAncestorOf } from './planOutline.js'
 
 export const DEPENDENCY_TYPES = [
   { value: 'finish_to_start', short: 'FS', label: 'Finish → Start' },
@@ -28,9 +29,16 @@ const TASK_COLUMNS = [
   'estimated_hours', 'actual_hours', 'estimated_duration_days', 'percentage_complete', 'is_milestone',
   'schedule_mode', 'constraint_type', 'constraint_date', 'row_version',
   'earliest_start_date', 'earliest_finish_date', 'latest_start_date', 'latest_finish_date', 'slack_days', 'is_critical_path',
-  'baseline_start_date', 'baseline_end_date', 'baseline_duration_days',
+  'baseline_start_date', 'baseline_end_date', 'baseline_duration_days', 'is_blocked', 'due_date',
   'created_at', 'created_by', 'updated_at', 'updated_by',
-].join(', ')
+]
+// v1265 S1: outline order + user WBS code (SQL/v1265_task_outline_and_summaries.sql).
+const OUTLINE_COLUMNS = ['outline_position', 'wbs_code']
+const TASK_SELECT = [...TASK_COLUMNS, ...OUTLINE_COLUMNS].join(', ')
+const TASK_SELECT_LEGACY = TASK_COLUMNS.join(', ')
+
+/** True when the database has not had a newer migration yet (column missing). */
+const isMissingColumn = (error) => error?.code === '42703' || /column .* does not exist/i.test(error?.message || '')
 
 /** Fields a task form may write. Everything else (float, critical flag, row_version) is engine/DB-owned. */
 export const EDITABLE_TASK_FIELDS = [
@@ -38,6 +46,7 @@ export const EDITABLE_TASK_FIELDS = [
   'planned_start_date', 'planned_end_date', 'actual_start_date', 'actual_end_date',
   'estimated_hours', 'estimated_duration_days', 'percentage_complete', 'is_milestone',
   'schedule_mode', 'constraint_type', 'constraint_date',
+  'outline_position', 'wbs_code',
 ]
 
 export class ScheduleConflictError extends Error {
@@ -81,13 +90,16 @@ export function createScheduleData(isSim) {
   // ── Tasks ────────────────────────────────────────────────────────────────
   async function listTasks(projectId) {
     if (!projectId) return []
-    const { data, error } = await db
+    const query = (columns) => db
       .from('tasks')
-      .select(TASK_COLUMNS)
+      .select(columns)
       .eq(fk, projectId)
       .eq('is_deleted', false)
       .order('planned_start_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: true })
+    let { data, error } = await query(TASK_SELECT)
+    // Before SQL v1265 is applied the outline columns do not exist yet: load without them.
+    if (error && isMissingColumn(error)) ({ data, error } = await query(TASK_SELECT_LEGACY))
     if (error) fail(error, 'Could not load tasks.')
     return data || []
   }
@@ -95,10 +107,14 @@ export function createScheduleData(isSim) {
   /** By task_code (display id, rule 16.1) or UUID, within the project. */
   async function getTask(projectId, key) {
     if (!key) return null
-    let q = db.from('tasks').select(TASK_COLUMNS).eq('is_deleted', false)
-    q = looksLikeUuid(key) ? q.eq('id', key) : q.eq('task_code', key)
-    if (projectId) q = q.eq(fk, projectId)
-    const { data, error } = await q.maybeSingle()
+    const query = (columns) => {
+      let q = db.from('tasks').select(columns).eq('is_deleted', false)
+      q = looksLikeUuid(key) ? q.eq('id', key) : q.eq('task_code', key)
+      if (projectId) q = q.eq(fk, projectId)
+      return q.maybeSingle()
+    }
+    let { data, error } = await query(TASK_SELECT)
+    if (error && isMissingColumn(error)) ({ data, error } = await query(TASK_SELECT_LEGACY))
     if (error) fail(error, 'Could not load the task.')
     return data || null
   }
@@ -117,7 +133,7 @@ export function createScheduleData(isSim) {
         .update({ ...row, updated_by: uid, updated_at: new Date().toISOString() })
         .eq('id', existing.id)
         .eq('row_version', existing.row_version ?? 1)
-        .select(TASK_COLUMNS)
+        .select(TASK_SELECT_LEGACY)
         .maybeSingle()
       if (error) fail(error, 'Could not save the task.')
       if (!data) throw new ScheduleConflictError()
@@ -126,7 +142,7 @@ export function createScheduleData(isSim) {
     const { data, error } = await db
       .from('tasks')
       .insert({ ...row, [fk]: projectId, task_code: '', created_by: uid, task_type: row.is_milestone ? 'milestone' : 'task' })
-      .select(TASK_COLUMNS)
+      .select(TASK_SELECT_LEGACY)
       .single()
     if (error) fail(error, 'Could not create the task.')
     // The display-ID trigger runs AFTER INSERT: re-read to show the assigned code.
@@ -146,6 +162,27 @@ export function createScheduleData(isSim) {
     if (!data) throw new ScheduleConflictError()
   }
 
+  /**
+   * v1265: delete a task and all its sub-tasks (a summary's whole branch), as desktop plans do,
+   * so sub-tasks are never left without their parent. The task itself is checked against the
+   * version the screen loaded (conflict → reload prompt); then the schedule is recalculated.
+   */
+  async function deleteTaskTree(projectId, task, descendants = []) {
+    await deleteTask(task)
+    const ids = descendants.map((t) => t.id)
+    if (ids.length) {
+      const uid = await currentUserId()
+      const { error } = await db
+        .from('tasks')
+        .update({ is_deleted: true, deleted_at: new Date().toISOString(), deleted_by: uid })
+        .in('id', ids)
+        .eq(fk, projectId)
+      if (error) fail(error, `The task was deleted, but its ${ids.length} sub-task(s) could not be.`)
+    }
+    await recalculate(projectId, null).catch(() => {})
+    return { deleted: 1 + ids.length }
+  }
+
   /** People who can be assigned: active project members (names from public users, read-only). */
   async function listTeam(projectId) {
     if (!projectId) return []
@@ -162,6 +199,23 @@ export function createScheduleData(isSim) {
     return (users || [])
       .map((u) => ({ id: u.id, name: u.full_name || u.email || 'Unnamed' }))
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+  }
+
+  /** v1265: names for any user ids (e.g. assignees who are not on the project team). */
+  async function listUserNames(ids) {
+    const wanted = [...new Set((ids || []).filter(Boolean))]
+    if (!wanted.length) return []
+    const { data, error } = await platformDb.from('users').select('id, full_name, email').in('id', wanted)
+    if (error) fail(error, 'Could not load user names.')
+    return (data || []).map((u) => ({ id: u.id, name: u.full_name || u.email || 'Unnamed' }))
+  }
+
+  /** v1265: the project's name (Plan sheet project summary row). */
+  async function getProjectName(projectId) {
+    if (!projectId) return null
+    const { data, error } = await db.from(isSim ? 'practice_projects' : 'projects').select('project_name').eq('id', projectId).maybeSingle()
+    if (error) return null
+    return data?.project_name || null
   }
 
   // ── Dependencies (within the project) ─────────────────────────────────────
@@ -186,6 +240,9 @@ export function createScheduleData(isSim) {
     const deps = context?.dependencies || (await listDependencies(projectId, tasks))
     if (deps.some((d) => d.predecessor_task_id === predecessorId && d.successor_task_id === successorId)) {
       throw new Error('These tasks are already linked.')
+    }
+    if (isAncestorOf(tasks, predecessorId, successorId) || isAncestorOf(tasks, successorId, predecessorId)) {
+      throw new Error('A summary task cannot be linked to one of its own sub-tasks.')
     }
     try {
       previewSchedule({ tasks, dependencies: [...deps, { predecessor_task_id: predecessorId, successor_task_id: successorId, dependency_type: type, lag_days: lag }] })
@@ -296,31 +353,72 @@ export function createScheduleData(isSim) {
       .eq(fk, projectId)
       .order('created_at', { ascending: false })
     if (error) fail(error, 'Could not load baselines.')
-    return (data || []).filter((b) => b.is_deleted !== true)
+    // v1265: schedule baselines newest first by number (B2, B1, B0); others by date.
+    return (data || [])
+      .filter((b) => b.is_deleted !== true)
+      .sort((a, b) => (b.baseline_number ?? -1) - (a.baseline_number ?? -1) || String(b.created_at || '').localeCompare(String(a.created_at || '')))
   }
 
   /**
-   * Saves the current task dates as a schedule baseline: one project_baselines row (task dates
-   * in baseline_data), and copies planned dates into tasks.baseline_* for the variance screen.
+   * Saves the current task dates as a schedule baseline (one project_baselines row, task dates in
+   * baseline_data). v1265: the database numbers it (B0, B1 …). B0 is approved automatically and
+   * made active; later baselines need a reason and must be approved before they can be active.
    */
-  async function saveBaseline(projectId, { name, comments }, tasks) {
+  async function saveBaseline(projectId, { name, reason, changeRequestRef, comments }, tasks, existing = []) {
     if (!String(name || '').trim()) throw new Error('Give the baseline a name.')
+    const isRebaseline = existing.some((b) => (b.baseline_type || 'schedule') === 'schedule')
+    if (isRebaseline && !String(reason || '').trim()) throw new Error('Say why the plan is being re-baselined.')
     const uid = await currentUserId()
     const today = new Date().toISOString().slice(0, 10)
     const snapshot = tasks.map((t) => ({ id: t.id, task_code: t.task_code, task_name: t.task_name, start: t.planned_start_date, finish: t.planned_end_date, duration: t.estimated_duration_days }))
-    const { data, error } = await db
-      .from('project_baselines')
-      .insert({ [fk]: projectId, baseline_name: name.trim(), baseline_type: 'schedule', baseline_date: today, baseline_data: { tasks: snapshot }, comments: comments || null, created_by: uid })
-      .select()
-      .single()
+    const row = { [fk]: projectId, baseline_name: name.trim(), baseline_type: 'schedule', baseline_date: today, baseline_data: { tasks: snapshot }, comments: comments || null, created_by: uid }
+    if (String(reason || '').trim()) row.reason = reason.trim()
+    if (String(changeRequestRef || '').trim()) row.change_request_ref = changeRequestRef.trim()
+    const { data, error } = await db.from('project_baselines').insert(row).select().single()
     if (error) fail(error, 'Could not save the baseline.')
-    const results = await Promise.all(tasks.map((t) =>
-      db.from('tasks').update({ baseline_start_date: t.planned_start_date, baseline_end_date: t.planned_end_date, baseline_duration_days: t.estimated_duration_days }).eq('id', t.id)
-    ))
-    // Supabase returns errors rather than throwing: report them instead of silently losing the task dates.
-    const failed = results.filter((r) => r?.error)
-    if (failed.length) fail(failed[0].error, `The baseline was saved, but ${failed.length} task(s) could not be updated with its dates.`)
+    if (data.baseline_number === 0) {
+      await activateBaseline(data.id)
+    } else if (data.baseline_number === undefined) {
+      // Before SQL v1265 S2: copy the dates straight onto the tasks, as before.
+      const results = await Promise.all(tasks.map((t) =>
+        db.from('tasks').update({ baseline_start_date: t.planned_start_date, baseline_end_date: t.planned_end_date, baseline_duration_days: t.estimated_duration_days }).eq('id', t.id)
+      ))
+      // Supabase returns errors rather than throwing: report them instead of silently losing the task dates.
+      const failed = results.filter((r) => r?.error)
+      if (failed.length) fail(failed[0].error, `The baseline was saved, but ${failed.length} task(s) could not be updated with its dates.`)
+    }
     return data
+  }
+
+  /** v1265: approve a baseline; the justification is required (rule 53). */
+  async function approveBaseline(baselineId, notes) {
+    if (!String(notes || '').trim()) throw new Error('Write why you are approving this baseline.')
+    const { data, error } = await db.rpc('approve_schedule_baseline', { p_baseline_id: baselineId, p_notes: notes.trim() })
+    if (error) fail(error, 'Could not approve the baseline.')
+    return data
+  }
+
+  /** v1265: make an approved baseline the active one (copies its dates onto the tasks). */
+  async function activateBaseline(baselineId) {
+    const { data, error } = await db.rpc('activate_schedule_baseline', { p_baseline_id: baselineId })
+    if (error) fail(error, 'Could not make this baseline active.')
+    return data
+  }
+
+  /** v1265: the project's status date (NULL = today) for Planned % complete. */
+  async function getStatusDate(projectId) {
+    if (!projectId) return null
+    const { data, error } = await db.from(isSim ? 'practice_projects' : 'projects').select('status_date').eq('id', projectId).maybeSingle()
+    if (error) return null // before SQL v1265 S2 the column does not exist: use today
+    return data?.status_date || null
+  }
+
+  async function setStatusDate(projectId, date) {
+    const { data, error } = isSim
+      ? await db.rpc('set_practice_project_status_date', { p_practice_project_id: projectId, p_date: date || null })
+      : await db.rpc('set_project_status_date', { p_project_id: projectId, p_date: date || null })
+    if (error) fail(error, 'Could not save the status date.')
+    return data || null
   }
 
   /**
@@ -377,10 +475,12 @@ export function createScheduleData(isSim) {
   }
 
   return {
-    isSim, fk, listTasks, getTask, saveTask, deleteTask, listTeam, importPlan,
+    isSim, fk, listTasks, getTask, saveTask, deleteTask, deleteTaskTree, listTeam, importPlan,
+    getCurrentUserId: currentUserId,
     listDependencies, addDependency, removeDependency, listExternalDependencies,
     getCalendarRows, getEngineCalendar, saveCalendar, getCalendarException, saveCalendarException, deleteCalendarException,
-    recalculate, listBaselines, saveBaseline,
+    recalculate, listBaselines, saveBaseline, approveBaseline, activateBaseline, getStatusDate, setStatusDate,
+    listUserNames, getProjectName,
   }
 }
 
@@ -395,13 +495,18 @@ export function toEngineCalendar(calendar, exceptions = []) {
   })
 }
 
-/** Engine preview over DB rows (same inputs the RPC builds). Throws ScheduleCycleError on a loop. */
+/**
+ * Engine preview over DB rows (same inputs the RPC builds). Throws ScheduleCycleError on a loop.
+ * v1265: only leaf tasks are scheduled and links on summaries apply to their leaves (planOutline).
+ */
 export function previewSchedule({ tasks, dependencies = [], calendar = null, projectStart = null }) {
   const start = projectStart || tasks.map((t) => t.planned_start_date).filter(Boolean).sort()[0] || new Date().toISOString().slice(0, 10)
+  const links = dependencies.map((d) => ({ pred: d.predecessor_task_id, succ: d.successor_task_id, type: dependencyShort(d.dependency_type), lag: d.lag_days }))
+  const { leafIds, deps } = expandSummaryLinks(tasks, links)
   return scheduleProject({
     projectStart: start,
     calendar: calendar || buildCalendar(),
-    tasks: tasks.map((t) => ({
+    tasks: tasks.filter((t) => leafIds.has(t.id)).map((t) => ({
       id: t.id,
       duration: t.is_milestone ? 0 : (t.estimated_duration_days ?? 1),
       mode: t.schedule_mode,
@@ -409,7 +514,7 @@ export function previewSchedule({ tasks, dependencies = [], calendar = null, pro
       constraintType: t.constraint_type,
       constraintDate: t.constraint_date,
     })),
-    dependencies: dependencies.map((d) => ({ pred: d.predecessor_task_id, succ: d.successor_task_id, type: dependencyShort(d.dependency_type), lag: d.lag_days })),
+    dependencies: deps,
   })
 }
 
@@ -426,7 +531,9 @@ export function taskBaselineDates(task, baselines = []) {
   if (task.baseline_start_date || task.baseline_end_date) {
     return { start: task.baseline_start_date || null, finish: task.baseline_end_date || null, name: null, date: null }
   }
-  for (const b of baselines) {
+  // v1265: the active baseline first, then newest first.
+  const ordered = [...baselines].sort((x, y) => Number(Boolean(y?.is_active_baseline)) - Number(Boolean(x?.is_active_baseline)))
+  for (const b of ordered) {
     if (b?.baseline_type && b.baseline_type !== 'schedule') continue
     const entry = (b?.baseline_data?.tasks || []).find((t) => t.id === task.id || (task.task_code && t.task_code === task.task_code))
     if (entry && (entry.start || entry.finish)) {

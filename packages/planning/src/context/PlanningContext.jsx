@@ -9,6 +9,8 @@
  *   ProjectBar      the shell's project picker component (props: { isSim, autoSelectSingle, anyRole }).
  *                   It stays in each app because it uses the app's own project service; the Planner
  *                   app passes its own. Screens render it via usePlanning().ProjectBar.
+ *   headerProjectPicker  v1265: true when the shell header already has a project picker
+ *                   (Platform). The schedule views then do not show a second one.
  */
 import { createContext, useContext, useMemo } from 'react'
 
@@ -21,7 +23,7 @@ function NoProjectBar() {
   return null
 }
 
-export function PlanningProvider({ mode, basePath, ProjectBar = null, children }) {
+export function PlanningProvider({ mode, basePath, ProjectBar = null, headerProjectPicker = false, children }) {
   if (!PLANNING_MODES.includes(mode)) {
     throw new Error(`Unknown planning mode "${mode}" (expected ${PLANNING_MODES.join(', ')})`)
   }
@@ -31,8 +33,9 @@ export function PlanningProvider({ mode, basePath, ProjectBar = null, children }
       isSim: mode === 'simulator',
       basePath: String(basePath || '').replace(/\/$/, ''),
       ProjectBar: ProjectBar || NoProjectBar,
+      headerProjectPicker: Boolean(headerProjectPicker),
     }),
-    [mode, basePath, ProjectBar]
+    [mode, basePath, ProjectBar, headerProjectPicker]
   )
   return <PlanningContext.Provider value={value}>{children}</PlanningContext.Provider>
 }

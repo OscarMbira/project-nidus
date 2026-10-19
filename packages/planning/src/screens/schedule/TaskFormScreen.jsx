@@ -7,9 +7,14 @@
  * - After a save the schedule is recalculated by the database (SQL v1245) so dates stay right.
  * - Details / Links / Audit details tabs (rules 63.1); unsaved-changes guard (rule 52);
  *   "Keep for later" draft for new tasks (rule 37); success modal (rule 16).
+ * - v1265: `tasks/new?parent=<task code or id>` creates a sub-task (Plan sheet + button); it is
+ *   placed last among its siblings.
+ * - v1265: the form is also shown as a modal over the schedule views (components/TaskModal.jsx,
+ *   owner decision 2026-10-12, rule 65 task-form exception). `TaskForm` is the shared body; the
+ *   route screen and the modal only differ in how they open, close and move between modes.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import { Save } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import SelectField from '@nidus/ui/SelectField'
@@ -24,12 +29,14 @@ import BackButton from '../../components/BackButton.jsx'
 import { ConflictBanner, ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useScheduleData, useScheduleLinks, useScheduleProjectId } from '../../hooks/useSchedule.js'
 import { DEPENDENCY_TYPES, dependencyShort, ScheduleConflictError, expectedVersionsOf, taskBaselineDates } from '../../services/scheduleData.js'
+import { predecessorChoices } from '../../services/planOutline.js'
 
 const EMPTY = {
   task_name: '', task_description: '', estimated_duration_days: 1, is_milestone: false,
   schedule_mode: 'auto', planned_start_date: '', planned_end_date: '',
   constraint_type: 'asap', constraint_date: '', percentage_complete: 0,
   actual_start_date: '', actual_end_date: '', estimated_hours: '', priority: 'medium', assigned_to_user_id: '',
+  parent_task_id: '', outline_position: '',
 }
 
 const CONSTRAINTS = [
@@ -69,6 +76,14 @@ export function validateTask(form) {
   if (form.planned_start_date && form.planned_end_date && form.planned_end_date < form.planned_start_date) return 'Planned finish cannot be before planned start.'
   if (form.actual_start_date && form.actual_end_date && form.actual_end_date < form.actual_start_date) return 'Actual finish cannot be before actual start.'
   return null
+}
+
+/** v1265: which form tab holds the field a validation message is about. */
+export function tabForProblem(message) {
+  const m = String(message || '').toLowerCase()
+  if (/name/.test(m)) return 'details'
+  if (/% done|actual/.test(m)) return 'progress'
+  return 'schedule' // duration, manual start, constraint, planned dates
 }
 
 const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -129,15 +144,36 @@ function Field({ label, children, hint }) {
   )
 }
 
+/** Routed page: `tasks/new`, `tasks/:taskKey`, `tasks/:taskKey/edit` (direct links keep working). */
 export default function TaskFormScreen() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { taskKey } = useParams()
+  const [searchParams] = useSearchParams()
   const link = useScheduleLinks()
+  const mode = !taskKey ? 'new' : pathname.endsWith('/edit') ? 'edit' : 'view'
+  return (
+    <TaskForm
+      taskKey={taskKey ? decodeURIComponent(taskKey) : null}
+      mode={mode}
+      parentKey={searchParams.get('parent')}
+      onClose={() => navigate(-1)}
+      onModeChange={(next, key) => navigate(link(`tasks/${encodeURIComponent(key)}${next === 'edit' ? '/edit' : ''}`))}
+      onSaved={(key) => navigate(link(`tasks/${encodeURIComponent(key)}`), { replace: true })}
+    />
+  )
+}
+
+/**
+ * The task form body. mode 'new' | 'view' | 'edit'; variant 'page' | 'modal'.
+ * onClose() leaves; onModeChange(mode, key) switches view ↔ edit; onSaved(key) after a save.
+ */
+export function TaskForm({ taskKey = null, mode = 'view', parentKey = null, variant = 'page', onClose, onModeChange, onSaved, renderClose = null }) {
   const data = useScheduleData()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
-  const isNew = !taskKey
-  const isEdit = isNew || pathname.endsWith('/edit')
+  const isNew = mode === 'new'
+  const isEdit = mode !== 'view'
+  const inModal = variant === 'modal'
   const { showSuccess, modal } = useSuccessModal()
 
   const [tab, setTab] = useState('details')
@@ -153,6 +189,8 @@ export default function TaskFormScreen() {
   const [error, setError] = useState(null)
   const [conflict, setConflict] = useState(null)
   const [draft, setDraft] = useState(null)
+  const [me, setMe] = useState(null)
+  const [onlyMine, setOnlyMine] = useState(false)
   const [newLink, setNewLink] = useState({ predecessorId: '', type: 'finish_to_start', lag: 0 })
 
   const load = async () => {
@@ -162,11 +200,12 @@ export default function TaskFormScreen() {
     setConflict(null)
     try {
       const listPromise = data.listTasks(projectId)
-      const [found, list, links, people, saved] = await Promise.all([
-        isNew ? Promise.resolve(null) : data.getTask(projectId, decodeURIComponent(taskKey)),
+      const [found, list, links, people, userId, saved] = await Promise.all([
+        isNew ? Promise.resolve(null) : data.getTask(projectId, taskKey),
         listPromise,
         listPromise.then((t) => data.listDependencies(projectId, t)),
         data.listTeam(projectId).catch(() => []),
+        data.getCurrentUserId ? data.getCurrentUserId().catch(() => null) : Promise.resolve(null),
         // Fallback source for baseline dates (taskBaselineDates); the form still works without it.
         isNew || !data.listBaselines ? Promise.resolve([]) : data.listBaselines(projectId).catch(() => []),
       ])
@@ -175,8 +214,18 @@ export default function TaskFormScreen() {
       setTasks(list)
       setDeps(links)
       setTeam(people)
+      setMe(userId)
       setBaselines(saved)
       const f = toForm(found)
+      // New sub-task (v1265): under the chosen parent, after its existing sub-tasks.
+      if (isNew && parentKey) {
+        const parent = list.find((t) => t.task_code === parentKey || t.id === parentKey)
+        if (parent) {
+          const siblings = list.filter((t) => t.parent_task_id === parent.id)
+          f.parent_task_id = parent.id
+          f.outline_position = Math.max(0, ...siblings.map((t) => Number(t.outline_position) || 0)) + 1
+        }
+      }
       setForm(f)
       setSnapshot(JSON.stringify(f))
       if (isNew) setDraft(readDraft(projectId))
@@ -188,7 +237,7 @@ export default function TaskFormScreen() {
   }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load() }, [projectId, taskKey])
+  useEffect(() => { load() }, [projectId, taskKey, parentKey, mode])
 
   const isDirty = isEdit && JSON.stringify(form) !== snapshot
   const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved changes to this task. Leave without saving?')
@@ -207,12 +256,18 @@ export default function TaskFormScreen() {
   }
 
   const byId = useMemo(() => new Map(tasks.map((t) => [t.id, t])), [tasks])
+  const parentTask = form.parent_task_id ? byId.get(form.parent_task_id) : null
+  const parentHasChildren = parentTask ? tasks.some((t) => t.parent_task_id === parentTask.id && t.id !== task?.id) : false
   const predecessors = task ? deps.filter((d) => d.successor_task_id === task.id) : []
   const successors = task ? deps.filter((d) => d.predecessor_task_id === task.id) : []
 
   const save = async () => {
     const problem = validateTask(form)
-    if (problem) { setError(problem); return }
+    if (problem) {
+      setError(problem)
+      setTab(tabForProblem(problem)) // show the field that needs fixing
+      return
+    }
     setSaving(true)
     setError(null)
     try {
@@ -229,7 +284,7 @@ export default function TaskFormScreen() {
         recordId: key,
         operation,
         message: `"${saved.task_name}" was ${operation}.`,
-        onOk: () => navigate(link(`tasks/${encodeURIComponent(key)}`), { replace: true }),
+        onOk: () => onSaved?.(key),
       })
     } catch (err) {
       if (err instanceof ScheduleConflictError) setConflict(err.message)
@@ -243,7 +298,7 @@ export default function TaskFormScreen() {
     writeDraft(projectId, form)
     setSnapshot(JSON.stringify(form))
     // Let the guard see the clean state before leaving.
-    setTimeout(() => navigate(-1), 0)
+    setTimeout(() => onClose?.(), 0)
   }
 
   const addLink = async () => {
@@ -268,12 +323,19 @@ export default function TaskFormScreen() {
     }
   }
 
+  const requestClose = () => confirmDiscard(() => onClose?.())
   if (!projectId) return <div className="p-6">{projectLoading ? <Loading /> : <ChooseProject />}</div>
-  if (loading) return <Loading text="Loading task…" />
+  if (loading) {
+    return inModal
+      ? <div className="flex items-start justify-between"><h1 id="task-modal-title" className="sr-only">Task</h1><Loading text="Loading task…" />{renderClose?.(requestClose)}</div>
+      : <Loading text="Loading task…" />
+  }
 
-  const title = isNew ? 'New task' : `${isEdit ? 'Edit' : ''} ${task?.task_name || 'Task'}`.trim()
+  const title = isNew ? (parentTask ? 'New sub-task' : 'New task') : `${isEdit ? 'Edit' : ''} ${task?.task_name || 'Task'}`.trim()
   const tabs = [
     { value: 'details', label: 'Details' },
+    { value: 'schedule', label: 'Schedule' },
+    { value: 'progress', label: 'Progress' },
     ...(isNew ? [] : [{ value: 'links', label: 'Links' }]),
     { value: 'audit', label: 'Audit details' },
   ]
@@ -281,30 +343,37 @@ export default function TaskFormScreen() {
   const linkName = (id) => { const t = byId.get(id); return t ? `${t.task_code ? `${t.task_code} · ` : ''}${t.task_name}` : 'Unknown task' }
 
   return (
-    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 space-y-4 max-w-5xl">
-      <BackButton label="Back to schedule" />
+    <div className={inModal ? 'space-y-4' : 'w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6 space-y-4 max-w-5xl'}>
+      {!inModal && <BackButton label="Back to schedule" />}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{title}</h1>
+          <h1 id={inModal ? 'task-modal-title' : undefined} className={`${inModal ? 'text-xl' : 'text-2xl'} font-bold text-gray-900 dark:text-white`}>{title}</h1>
           {task?.task_code && <p className="font-mono text-sm text-blue-600 dark:text-blue-400">{task.task_code}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
           {!isEdit && (
-            <RowActionButton variant="edit" label="Edit task" onClick={() => navigate(link(`tasks/${encodeURIComponent(task.task_code || task.id)}/edit`))} />
+            <RowActionButton variant="edit" label="Edit task" onClick={() => onModeChange?.('edit', task.task_code || task.id)} />
           )}
           {isEdit && (
             <>
-              <button type="button" onClick={() => confirmDiscard(() => navigate(-1))} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800">Cancel</button>
+              <button type="button" onClick={requestClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800">Cancel</button>
               {isNew && <button type="button" onClick={keepForLater} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800">Keep for later</button>}
               <button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm disabled:opacity-50">
                 <Save className="h-4 w-4" /> {saving ? 'Saving…' : 'Save'}
               </button>
             </>
           )}
+          {renderClose?.(requestClose)}
         </div>
       </div>
 
       <ConflictBanner message={conflict} onReload={load} />
+      {parentTask && (
+        <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+          Sub-task of <span className="font-medium text-gray-900 dark:text-gray-100">{parentTask.task_code ? `${parentTask.task_code} · ` : ''}{parentTask.task_name}</span>
+          {isNew && !parentHasChildren && <span className="block text-xs text-gray-500 dark:text-gray-400">It will become a summary task: its dates and % complete will come from its sub-tasks.</span>}
+        </p>
+      )}
       {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
       {isNew && draft && (
         <div className="rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 p-3 flex flex-wrap items-center justify-between gap-2 text-sm text-blue-900 dark:text-blue-100">
@@ -321,10 +390,32 @@ export default function TaskFormScreen() {
           <DetailAuditTabList activeTab={tab} onChange={setTab} tabs={tabs} />
         </div>
 
+        {/* v1265: the old long Details tab is split into Details / Schedule / Progress so each fits on screen. */}
         {tab === 'details' && (
           <fieldset disabled={disabled} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2"><Field label="Task name *"><input className={input} value={form.task_name} onChange={set('task_name')} maxLength={200} /></Field></div>
-            <div className="sm:col-span-2"><Field label="Description"><textarea className={input} rows={3} value={form.task_description || ''} onChange={set('task_description')} /></Field></div>
+            <div className="sm:col-span-2"><Field label="Description"><textarea className={input} rows={4} value={form.task_description || ''} onChange={set('task_description')} /></Field></div>
+            <Field label="Priority" hint="How important this task is. Whether it is on the critical path is worked out from the schedule (Schedule tab).">
+              <select className={input} value={form.priority || 'medium'} onChange={set('priority')}>
+                <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option>
+              </select>
+            </Field>
+            <Field label="Assigned to" hint={team.length ? undefined : 'Add people to the project team to assign them.'}>
+              <SelectField
+                options={team.map((m) => ({ value: m.id, label: m.name }))}
+                value={form.assigned_to_user_id || ''}
+                onChange={(v) => setForm((f) => ({ ...f, assigned_to_user_id: v || '' }))}
+                placeholder="Nobody yet"
+                searchPlaceholder="Search team"
+                aria-label="Assigned to"
+                disabled={disabled}
+              />
+            </Field>
+          </fieldset>
+        )}
+
+        {tab === 'schedule' && (
+          <fieldset disabled={disabled} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Duration (working days)" hint={form.is_milestone ? 'Milestones have no duration.' : undefined}>
               <input type="number" min={1} className={input} value={form.is_milestone ? 0 : form.estimated_duration_days} onChange={set('estimated_duration_days')} disabled={disabled || form.is_milestone} />
             </Field>
@@ -337,11 +428,13 @@ export default function TaskFormScreen() {
                 <option value="manual">Manual</option>
               </select>
             </Field>
-            <Field label="Priority">
-              <select className={input} value={form.priority || 'medium'} onChange={set('priority')}>
-                <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option>
-              </select>
-            </Field>
+            {form.schedule_mode === 'auto' ? (
+              <Field label="Date constraint">
+                <select className={input} value={form.constraint_type} onChange={set('constraint_type')}>
+                  {CONSTRAINTS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </Field>
+            ) : <span className="hidden sm:block" />}
             {/* Planned dates: editable in both modes. On an Automatic task they show the calculated
                 dates; typing one switches the task to Manual (setPlanned). */}
             <Field
@@ -358,40 +451,27 @@ export default function TaskFormScreen() {
                 You set the dates, so this task is now Manual: links no longer move it. Switch Scheduling back to Automatic to undo.
               </p>
             )}
-            {form.schedule_mode === 'auto' && (
-              <>
-                <Field label="Date constraint">
-                  <select className={input} value={form.constraint_type} onChange={set('constraint_type')}>
-                    {CONSTRAINTS.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
-                </Field>
-                {form.constraint_type !== 'asap' && <Field label="Constraint date *"><input type="date" className={input} value={form.constraint_date || ''} onChange={set('constraint_date')} /></Field>}
-              </>
+            {form.schedule_mode === 'auto' && form.constraint_type !== 'asap' && (
+              <Field label="Constraint date *"><input type="date" className={input} value={form.constraint_date || ''} onChange={set('constraint_date')} /></Field>
             )}
             {!isNew && (
               <p className="sm:col-span-2 text-xs text-gray-500 dark:text-gray-400">
                 Float {task?.slack_days ?? '—'} days{task?.is_critical_path ? ' · On the critical path' : ''}
               </p>
             )}
-            <BaselineSummary task={task} form={form} baselines={baselines} />
+          </fieldset>
+        )}
+
+        {tab === 'progress' && (
+          <fieldset disabled={disabled} className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="% done"><input type="number" min={0} max={100} className={input} value={form.percentage_complete} onChange={set('percentage_complete')} /></Field>
-            <Field label="Assigned to" hint={team.length ? undefined : 'Add people to the project team to assign them.'}>
-              <SelectField
-                options={team.map((m) => ({ value: m.id, label: m.name }))}
-                value={form.assigned_to_user_id || ''}
-                onChange={(v) => setForm((f) => ({ ...f, assigned_to_user_id: v || '' }))}
-                placeholder="Nobody yet"
-                searchPlaceholder="Search team"
-                aria-label="Assigned to"
-                disabled={disabled}
-              />
-            </Field>
             <Field label="Estimated hours"><input type="number" min={0} step="0.5" className={input} value={form.estimated_hours ?? ''} onChange={set('estimated_hours')} /></Field>
             <Field label="Actual start"><input type="date" className={input} value={form.actual_start_date || ''} onChange={set('actual_start_date')} /></Field>
             <Field label="Actual finish"><input type="date" className={input} value={form.actual_end_date || ''} onChange={set('actual_end_date')} /></Field>
             {isEdit && dateWarnings(form).map((w) => (
               <p key={w} role="status" className="sm:col-span-2 text-xs text-amber-700 dark:text-amber-300">{w}</p>
             ))}
+            <BaselineSummary task={task} form={form} baselines={baselines} />
           </fieldset>
         )}
 
@@ -411,12 +491,24 @@ export default function TaskFormScreen() {
               )}
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
                 <div className="sm:col-span-2">
+                  {/* v1265: searchable (rule 69), plan order with outline numbers; tasks the scheduler
+                      would refuse are not offered. "Only my tasks" is optional (off by default). */}
                   <Field label="Add a task this one comes after">
-                    <select className={input} value={newLink.predecessorId} onChange={(e) => setNewLink({ ...newLink, predecessorId: e.target.value })}>
-                      <option value="">Choose a task…</option>
-                      {tasks.filter((t) => t.id !== task.id).map((t) => <option key={t.id} value={t.id}>{linkName(t.id)}</option>)}
-                    </select>
+                    <SelectField
+                      options={predecessorChoices(tasks, task, { existing: predecessors.map((d) => d.predecessor_task_id), userId: me })
+                        .filter((o) => !onlyMine || o.mine)}
+                      value={newLink.predecessorId}
+                      onChange={(v) => setNewLink({ ...newLink, predecessorId: v || '' })}
+                      placeholder="Choose a task…"
+                      searchPlaceholder="Search by name, ID or outline number"
+                      aria-label="Add a task this one comes after"
+                      forceSearchable
+                    />
                   </Field>
+                  <label className="mt-1 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                    <input type="checkbox" checked={onlyMine} onChange={(e) => setOnlyMine(e.target.checked)} disabled={!me} />
+                    Only my tasks
+                  </label>
                 </div>
                 <Field label="Type">
                   <select className={input} value={newLink.type} onChange={(e) => setNewLink({ ...newLink, type: e.target.value })}>

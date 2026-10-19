@@ -7,12 +7,18 @@
  *
  * props: tasks (DB rows), dependencies (DB rows), zoom 'day'|'week'|'month', showBaseline,
  *        onTaskClick(task)
+ * v1265 Plan sheet: keepOrder (rows in the given order, undated rows keep their slot),
+ *        hideNames (the sheet shows the names), summary bars for tasks with is_summary,
+ *        compare_start_date / compare_end_date: a second baseline drawn as a thin amber bar.
  */
 import { useMemo, useState } from 'react'
 
 const DAY_MS = 86400000
 const PX_PER_DAY = { day: 28, week: 10, month: 3.5 }
-const ROW_H = 34
+/** Row and header heights, shared with the Plan sheet so its rows line up with the bars. */
+export const GANTT_ROW_H = 34
+export const GANTT_HEADER_H = 32
+const ROW_H = GANTT_ROW_H
 const NAME_W = 240
 
 const toMs = (d) => {
@@ -22,24 +28,31 @@ const toMs = (d) => {
 const iso = (ms) => new Date(ms).toISOString().slice(0, 10)
 
 /** Pure layout: x/width per task and the visible date range. Exported for tests. */
-export function layoutGantt(tasks, zoom = 'week', showBaseline = false) {
+export function layoutGantt(tasks, zoom = 'week', showBaseline = false, keepOrder = false) {
   const px = PX_PER_DAY[zoom] || PX_PER_DAY.week
   const dated = tasks.filter((t) => t.planned_start_date)
-  if (!dated.length) return { rows: [], startMs: null, width: 0, px }
-  const dates = dated.flatMap((t) => [t.planned_start_date, t.planned_end_date || t.planned_start_date, ...(showBaseline ? [t.baseline_start_date, t.baseline_end_date] : [])]).filter(Boolean).map(toMs)
+  if (!dated.length && !keepOrder) return { rows: [], startMs: null, width: 0, px }
+  if (!dated.length) return { rows: tasks.map((t, i) => ({ task: t, index: i, left: null, width: 0, baseline: null, milestone: false })), startMs: Date.now(), width: 0, px }
+  const dates = dated.flatMap((t) => [t.planned_start_date, t.planned_end_date || t.planned_start_date, ...(showBaseline ? [t.baseline_start_date, t.baseline_end_date] : []), t.compare_start_date, t.compare_end_date]).filter(Boolean).map(toMs)
   const startMs = Math.min(...dates) - 2 * DAY_MS
   const endMs = Math.max(...dates) + 7 * DAY_MS
   const x = (d) => ((toMs(d) - startMs) / DAY_MS) * px
-  const rows = [...dated]
-    .sort((a, b) => a.planned_start_date.localeCompare(b.planned_start_date) || String(a.task_name).localeCompare(String(b.task_name)))
+  const ordered = keepOrder
+    ? tasks
+    : [...dated].sort((a, b) => a.planned_start_date.localeCompare(b.planned_start_date) || String(a.task_name).localeCompare(String(b.task_name)))
+  const rows = ordered
     .map((t, i) => {
+      if (!t.planned_start_date) return { task: t, index: i, left: null, width: 0, baseline: null, milestone: false }
       const finish = t.planned_end_date || t.planned_start_date
       const left = x(t.planned_start_date)
       const width = Math.max(px, x(finish) - left + px) // inclusive finish day
       const baseline = showBaseline && t.baseline_start_date && t.baseline_end_date
         ? { left: x(t.baseline_start_date), width: Math.max(px, x(t.baseline_end_date) - x(t.baseline_start_date) + px) }
         : null
-      return { task: t, index: i, left, width, baseline, milestone: !!t.is_milestone }
+      const compare = t.compare_start_date && t.compare_end_date
+        ? { left: x(t.compare_start_date), width: Math.max(px, x(t.compare_end_date) - x(t.compare_start_date) + px) }
+        : null
+      return { task: t, index: i, left, width, baseline, compare, milestone: !!t.is_milestone && !t.is_summary, summary: !!t.is_summary }
     })
   return { rows, startMs, width: ((endMs - startMs) / DAY_MS) * px, px }
 }
@@ -64,8 +77,8 @@ function scaleTicks(startMs, width, px, zoom) {
   return ticks
 }
 
-export default function ScheduleGanttChart({ tasks, dependencies = [], zoom = 'week', showBaseline = false, onTaskClick }) {
-  const { rows, startMs, width, px } = useMemo(() => layoutGantt(tasks, zoom, showBaseline), [tasks, zoom, showBaseline])
+export default function ScheduleGanttChart({ tasks, dependencies = [], zoom = 'week', showBaseline = false, onTaskClick, keepOrder = false, hideNames = false }) {
+  const { rows, startMs, width, px } = useMemo(() => layoutGantt(tasks, zoom, showBaseline, keepOrder), [tasks, zoom, showBaseline, keepOrder])
   const rowById = useMemo(() => new Map(rows.map((r) => [r.task.id, r])), [rows])
   // Today is read once per mount (render must stay pure).
   const [todayMs] = useState(() => toMs(iso(Date.now())))
@@ -75,13 +88,13 @@ export default function ScheduleGanttChart({ tasks, dependencies = [], zoom = 'w
   const height = rows.length * ROW_H
   const ticks = scaleTicks(startMs, width, px, zoom)
   const todayX = ((todayMs - startMs) / DAY_MS) * px
-  const undated = tasks.length - rows.length
+  const undated = keepOrder ? 0 : tasks.length - rows.length
 
   const arrows = dependencies
     .map((d) => {
       const a = rowById.get(d.predecessor_task_id)
       const b = rowById.get(d.successor_task_id)
-      if (!a || !b) return null
+      if (!a || !b || a.left === null || b.left === null) return null
       const x1 = a.left + a.width
       const y1 = a.index * ROW_H + ROW_H / 2
       const x2 = b.left
@@ -95,7 +108,7 @@ export default function ScheduleGanttChart({ tasks, dependencies = [], zoom = 'w
     <div className="overflow-x-auto print:overflow-visible" data-testid="schedule-gantt">
       <div className="flex min-w-max">
         {/* Task names */}
-        <div className="sticky left-0 z-10 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700" style={{ width: NAME_W }}>
+        {!hideNames && <div className="sticky left-0 z-10 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700" style={{ width: NAME_W }}>
           <div className="h-8 border-b border-gray-200 dark:border-gray-700 px-3 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-center">Task</div>
           {rows.map((r) => (
             <button
@@ -109,7 +122,7 @@ export default function ScheduleGanttChart({ tasks, dependencies = [], zoom = 'w
               {r.task.task_name}
             </button>
           ))}
-        </div>
+        </div>}
         {/* Timeline */}
         <div className="relative" style={{ width }}>
           <div className="h-8 relative border-b border-gray-200 dark:border-gray-700">
@@ -138,16 +151,35 @@ export default function ScheduleGanttChart({ tasks, dependencies = [], zoom = 'w
               {arrows.map((a) => <path key={a.id} d={a.path} fill="none" stroke="currentColor" strokeWidth="1.2" markerEnd="url(#gantt-arrow)" />)}
             </svg>
             {rows.map((r) => {
+              if (r.left === null) return null
               const top = r.index * ROW_H
               const critical = r.task.is_critical_path
               const pct = Math.min(100, Math.max(0, Number(r.task.percentage_complete || 0)))
+              const summaryTone = critical ? 'bg-red-700 dark:bg-red-500' : 'bg-gray-800 dark:bg-gray-200'
               const label = `${r.task.task_name}: ${r.task.planned_start_date} → ${r.task.planned_end_date || r.task.planned_start_date}${critical ? ' (critical)' : ''}`
               return (
                 <div key={`bar${r.task.id}`}>
                   {r.baseline && (
                     <div className="absolute h-1.5 rounded bg-gray-400/70 dark:bg-gray-500/70" style={{ left: r.baseline.left, width: r.baseline.width, top: top + ROW_H - 9 }} title="Baseline" />
                   )}
-                  {r.milestone ? (
+                  {r.compare && (
+                    <div className="absolute h-1 rounded bg-amber-500/80 dark:bg-amber-400/80" style={{ left: r.compare.left, width: r.compare.width, top: top + ROW_H - 4 }} title="Compared baseline" />
+                  )}
+                  {r.summary ? (
+                    <button
+                      type="button"
+                      onClick={() => onTaskClick?.(r.task)}
+                      aria-label={label}
+                      title={label}
+                      className="absolute"
+                      style={{ left: r.left, width: r.width, top: top + 10, height: ROW_H - 20 }}
+                    >
+                      {/* summary bracket: thin bar with end caps */}
+                      <span className={`block h-1.5 rounded-sm ${summaryTone}`} />
+                      <span className={`absolute left-0 top-0 h-full w-1 ${summaryTone}`} />
+                      <span className={`absolute right-0 top-0 h-full w-1 ${summaryTone}`} />
+                    </button>
+                  ) : r.milestone ? (
                     <button
                       type="button"
                       onClick={() => onTaskClick?.(r.task)}

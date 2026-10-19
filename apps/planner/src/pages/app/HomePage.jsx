@@ -55,7 +55,7 @@ export default function HomePage() {
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Starts {p.planned_start_date || '—'}</p>
               <div className="mt-4 flex flex-wrap gap-2 text-sm">
                 <Link to={`/app/schedule/activities${q}`} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700"><CalendarRange className="h-4 w-4" /> Tasks</Link>
-                <Link to={`/app/schedule/gantt${q}`} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700"><BarChart3 className="h-4 w-4" /> Gantt</Link>
+                <Link to={`/app/schedule/gantt${q}`} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700"><BarChart3 className="h-4 w-4" /> Plan Sheet</Link>
               </div>
             </div>
           )

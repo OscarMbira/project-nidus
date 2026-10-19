@@ -4,16 +4,19 @@
  * views cannot drift apart. Rows open the routed task page.
  */
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { RowActionButton } from '@nidus/ui'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
-import { useSchedule, useScheduleLinks, useScheduleProjectId } from '../../hooks/useSchedule.js'
+import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
+import { useTaskModal } from '../../hooks/useTaskModal.js'
 import { finishVarianceDays } from '../../services/scheduleData.js'
 
 const today = () => new Date().toISOString().slice(0, 10)
 const addDays = (d, n) => new Date(Date.parse(d) + n * 86400000).toISOString().slice(0, 10)
 const idCol = { key: 'task_code', label: 'ID', render: (t) => <span className="font-mono text-blue-600 dark:text-blue-400">{t.task_code || '—'}</span> }
+// v1265: "Priority" is chosen on the task; "Critical path" is calculated (no float). Shown apart so a
+// Critical-priority task that has float is not mistaken for a critical-path task.
+const priorityCol = { key: 'priority', label: 'Priority', value: (t) => (t.priority ? t.priority[0].toUpperCase() + t.priority.slice(1) : '') }
 const yesNo = (key) => (t) => (t[key] ? 'Yes' : 'No')
 
 function VarianceCell({ task }) {
@@ -45,7 +48,8 @@ export const PRESETS = {
     columns: [
       { key: 'task_name', label: 'Milestone' }, idCol,
       { key: 'planned_start_date', label: 'Date' }, { key: 'baseline_start_date', label: 'Baseline date' },
-      { key: 'actual_end_date', label: 'Achieved' }, { key: 'is_critical_path', label: 'Critical', value: yesNo('is_critical_path') },
+      { key: 'actual_end_date', label: 'Achieved' }, priorityCol,
+      { key: 'is_critical_path', label: 'Critical path', value: yesNo('is_critical_path') },
     ],
   },
   'look-ahead': {
@@ -63,7 +67,8 @@ export const PRESETS = {
       { key: 'task_name', label: 'Task' }, idCol,
       { key: 'planned_start_date', label: 'Start' }, { key: 'planned_end_date', label: 'Finish' },
       { key: 'percentage_complete', label: '% done', value: (t) => Number(t.percentage_complete || 0) },
-      { key: 'is_critical_path', label: 'Critical', value: yesNo('is_critical_path') },
+      priorityCol,
+      { key: 'is_critical_path', label: 'Critical path', value: yesNo('is_critical_path') },
     ],
   },
   variance: {
@@ -82,13 +87,12 @@ export const PRESETS = {
 
 export default function ScheduleFilteredListScreen({ preset }) {
   const cfg = PRESETS[preset]
-  const navigate = useNavigate()
-  const link = useScheduleLinks()
+  const { openTask } = useTaskModal()
   const { projectId, loading: projectLoading } = useScheduleProjectId()
   const schedule = useSchedule(projectId, { withCalendar: false })
   const [days, setDays] = useState(21)
   const rows = useMemo(() => schedule.tasks.filter((t) => cfg.filter(t, days)), [schedule.tasks, cfg, days])
-  const open = (t, edit = false) => navigate(link(`tasks/${encodeURIComponent(t.task_code || t.id)}${edit ? '/edit' : ''}`))
+  const open = (t, edit = false) => openTask(t, edit ? 'edit' : 'view')
 
   return (
     <ScheduleLayout title={cfg.title} description={cfg.description} schedule={projectId ? schedule : null}>
