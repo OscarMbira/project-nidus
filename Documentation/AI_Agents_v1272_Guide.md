@@ -54,8 +54,11 @@ Account / Organisation Settings → **AI Settings** (Simulator: PMO Admin → AI
 `vector` (meaning search), `pg_cron` and `pg_net` (background jobs).
 
 ### SQL, in order (each `_tests.sql` straight after its file)
-1. Admin `v235`, `v236`, `v237`, `v238`, `v239`, `v240`, `v241` (E:\project-nidus-admin\SQL).
-2. Monorepo `v1272` (+tests), `v1273`, `v1274`, `v1275`, `v1276` (+tests), `v1277` (+tests), `v1278`, `v1279`, `v1280`, `v1281` (+tests), `v1282`, `v1283` (+tests), `v1284`, `v1285`, `v1286` (+tests), `v1287`, `v1288`.
+Run the monorepo files **first**: the Admin RPCs read and write tables they create.
+1. Monorepo `v1272` (+tests), `v1273`, `v1274`, `v1275`, `v1276` (+tests), `v1277` (+tests), `v1278`, `v1279`, `v1280`, `v1281` (+tests), `v1282`, `v1283` (+tests), `v1284`, `v1285`, `v1286` (+tests), `v1287`, `v1288` (E:\project-nidus\SQL).
+2. Admin `v235`, `v236`, `v237`, `v238`, `v239`, `v240`, `v241` (E:\project-nidus-admin\SQL).
+
+Dependencies, if you run phase by phase: Admin v236 needs monorepo v1272–v1273 · v237 needs v1274–v1275 · v238 needs v1283 · v239 needs v1285–v1287 · v240 needs v1288.
 3. `node scripts/generate-planner-table-allowlist.mjs --write` (already up to date in the repo), then re-run `SQL/v1251_planner_table_wall.sql`.
 4. `UPDATE public.ai_job_config SET functions_base_url = 'https://<project-ref>.supabase.co/functions/v1', cron_secret = '<AI_CRON_SECRET>', updated_at = NOW();`
 

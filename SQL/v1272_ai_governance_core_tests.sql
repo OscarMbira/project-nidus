@@ -42,6 +42,13 @@ BEGIN
     AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'sim' AND table_name = 'ai_conversations' AND column_name = 'organisation_id'),
     NULL);
 
+  -- Without the v1272 tables nothing else can be checked: report it instead of failing on T2.
+  IF to_regclass('public.ai_platform_settings') IS NULL OR to_regclass('public.ai_credit_ledger') IS NULL THEN
+    INSERT INTO v1272_results VALUES ('T2-T12 not run', FALSE,
+      'v1272 tables are missing: run SQL/v1272_ai_governance_core.sql first (and fix any error it reports), then re-run this file');
+    RETURN;
+  END IF;
+
   -- T2
   INSERT INTO v1272_results SELECT 'T2 settings singleton defaults',
     COUNT(*) = 1 AND bool_and(model_agent <> '' AND warn_percent = 80 AND retention_min_months <= conversation_retention_months), NULL

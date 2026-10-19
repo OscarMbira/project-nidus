@@ -202,8 +202,8 @@ Located during build: scenario authoring for the built-in (global) scenarios is 
 ---
 
 ## Owner run order (per phase gate) — full list in `Documentation/AI_Agents_v1272_Guide.md` §3
-1. Admin SQL for that phase (A-files) in number order.
-2. Monorepo SQL for that phase in number order, each `_tests.sql` straight after its migration.
+1. Monorepo SQL for that phase in number order, each `_tests.sql` straight after its migration.
+2. Admin SQL for that phase (A-files) in number order — after the monorepo files, because the Admin RPCs use their tables.
 3. Phase 1 only: `node scripts/generate-planner-table-allowlist.mjs --write`, then re-run `SQL/v1251_planner_table_wall.sql`.
 4. Deploy changed edge functions and set the `ANTHROPIC_API_KEY` secret. Remove `GEMINI_API_KEY` after Phase 1.
 5. Restart dev servers and try the slice.
