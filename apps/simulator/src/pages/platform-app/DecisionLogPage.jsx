@@ -8,6 +8,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { RowActionButton, DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
+import AskNidusAboutButton from '@nidus/ui/ai/AskNidusAboutButton.jsx' // v1272 S1.3
 
 const VIEW_KEY = 'tm-decision-log-view-v1'
 
@@ -173,6 +174,7 @@ export default function DecisionLogPage() {
             <Gavel className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             Decision Log
           </h1>
+          <AskNidusAboutButton registerLabel="Decision Log" />
           <DashboardRegisterTabBar
             value={pageTab}
             onChange={setPageTab}

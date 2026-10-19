@@ -59,7 +59,10 @@ export const TasksDetail = lazy(() => import('../pages/TasksDetail'))
 export const MethodologySelection = lazy(() => import('../pages/MethodologySelection'))
 // Platform and Simulator Dashboards (new structure)
 export const PlatformDashboard = lazy(() => import('../pages/platform-app/Dashboard'))
-export const AIWorkspace = lazy(() => import('../pages/platform-app/AIWorkspace'))
+export const AIWorkspace = lazy(() => import('@nidus/ui/ai/AskNidusWorkspace.jsx')) // v1272 Ask Nidus
+export const AiSettingsPage = lazy(() => import('@nidus/ui/ai/AiSettingsPage.jsx')) // v1272
+export const ReportLayoutsPage = lazy(() => import('@nidus/ui/reports/ReportLayoutsPage.jsx')) // v1272 D12a
+export const ReportLayoutEditor = lazy(() => import('@nidus/ui/reports/ReportLayoutEditor.jsx')) // v1272 D12a
 export const SubmitFeedback = lazy(() => import('../pages/support/SubmitFeedback'))
 // PMO and PM Independent Dashboards
 export const PMODashboard = lazy(() => import('../pages/pmo/PMODashboard'))
@@ -548,7 +551,7 @@ export const ResourceDetail = lazy(() => import('../pages/ResourceDetail'))
 export const ResourceEdit = lazy(() => import('../pages/ResourceEdit'))
 export const ResourceAssignmentEdit = lazy(() => import('../pages/ResourceAssignmentEdit'))
 export const ResourceConflicts = lazy(() => import('../pages/ResourceConflicts'))
-export const ReportBuilder = lazy(() => import('../pages/ReportBuilder'))
+export const ReportBuilder = lazy(() => import('@nidus/ui/reports/CatalogueReportBuilder.jsx')) // v1272 D11
 export const AnalyticsDashboard = lazy(() => import('../pages/AnalyticsDashboard'))
 // v1055: Reports taxonomy expansion — 4 new dedicated report pages
 export const ProjectStatusReportPage = lazy(() => import('../pages/reports/ProjectStatusReportPage'))

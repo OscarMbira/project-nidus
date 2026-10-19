@@ -17,6 +17,7 @@ import { platformDb } from '../../services/supabaseClient'
 import StakeholderAvatar from '@nidus/ui/StakeholderAvatar'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useCurrentProject } from '../../lib/CurrentProjectContext'
+import AskNidusAboutButton from '@nidus/ui/ai/AskNidusAboutButton.jsx' // v1272 S1.3
 
 const EXPORT_COLUMNS = [
   { key: 'stakeholder_reference', label: 'Record ID' },
@@ -258,6 +259,7 @@ export default function StakeholderRegisterPage() {
                 <Users2 className="h-7 w-7 text-purple-500 shrink-0" />
                 Stakeholder Register
               </h1>
+              <AskNidusAboutButton registerLabel="Stakeholder Register" className="mt-2" />
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Identify and maintain stakeholder information
               </p>

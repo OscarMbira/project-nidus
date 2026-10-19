@@ -50,14 +50,18 @@ export async function checkCertificateEligibility(userId, templateCode) {
       const minScore = template.min_score || 75;
       const { data: runs } = await simDb
         .from('simulation_runs')
-        .select('total_score, max_possible_score')
+        .select('id, total_score, max_possible_score')
         .eq('user_id', userId)
         .eq('status', 'completed')
         .in('scenario_id', scenarioIds);
-      const passed = (runs || []).some((r) => {
-        const pct = r.max_possible_score ? (r.total_score / r.max_possible_score) * 100 : r.total_score;
-        return pct >= minScore;
-      });
+      // v1272 Phase 3 (D14): sim.ai_run_score blends in the AI Assessor only for scenarios switched to
+      // "counts toward score"; otherwise it is the rule-based percentage.
+      const scores = await Promise.all((runs || []).map(async (r) => {
+        const { data: s } = await simDb.rpc('ai_run_score', { p_run_id: r.id })
+        if (s?.score != null) return Number(s.score)
+        return r.max_possible_score ? (r.total_score / r.max_possible_score) * 100 : r.total_score
+      }))
+      const passed = scores.some((pct) => pct >= minScore);
       if (!passed) return { eligible: false, reason: 'Required scenario score not met' };
     }
   }

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@nidus/shared/context/ThemeContext';
-import { generateAIHint } from '../../services/openaiService';
 import { Lightbulb, X, Loader } from 'lucide-react';
 
 const HintsPanel = ({ scenario, phase, currentEvent, projectHealth, difficulty, onClose }) => {
@@ -15,29 +14,10 @@ const HintsPanel = ({ scenario, phase, currentEvent, projectHealth, difficulty, 
     }
   }, [currentEvent, phase]);
 
-  const loadHint = async () => {
-    setLoading(true);
-    try {
-      const aiHint = await generateAIHint({
-        scenario,
-        phase,
-        currentEvent,
-        projectHealth,
-        difficulty,
-      });
-
-      if (aiHint) {
-        setHint(aiHint);
-      } else {
-        // Fallback to contextual hints based on event category
-        setHint(generateFallbackHint(currentEvent));
-      }
-    } catch (error) {
-      console.error('Error loading hint:', error);
-      setHint(generateFallbackHint(currentEvent));
-    } finally {
-      setLoading(false);
-    }
+  // v1272: browser-side AI hints removed (no provider keys in the browser). Category hints only.
+  const loadHint = () => {
+    setLoading(false);
+    setHint(generateFallbackHint(currentEvent));
   };
 
   const generateFallbackHint = (event) => {

@@ -77,7 +77,10 @@ export const SimulationRunHistory = lazy(() => import('../pages/simulator/Simula
 export const SimulationDebrief = lazy(() => import('../pages/simulator/SimulationDebrief'))
 export const SimLiveRunRedirect = lazy(() => import('../pages/simulator/SimLiveRunRedirect'))
 export const SimAIWorkspace = lazy(() => import('../pages/simulator/SimAIWorkspace'))
-export const AIWorkspace = lazy(() => import('../pages/platform-app/AIWorkspace'))
+export const AIWorkspace = lazy(() => import('@nidus/ui/ai/AskNidusWorkspace.jsx')) // v1272 Ask Nidus
+export const AiSettingsPage = lazy(() => import('@nidus/ui/ai/AiSettingsPage.jsx')) // v1272
+export const ReportLayoutsPage = lazy(() => import('@nidus/ui/reports/ReportLayoutsPage.jsx')) // v1272 D12a
+export const ReportLayoutEditor = lazy(() => import('@nidus/ui/reports/ReportLayoutEditor.jsx')) // v1272 D12a
 export const SubmitFeedback = lazy(() => import('../pages/support/SubmitFeedback'))
 // PMO and PM Independent Dashboards
 export const PMODashboard = lazy(() => import('../pages/pmo/PMODashboard'))
@@ -523,7 +526,7 @@ export const ResourceCalendarEntryPage = lazy(() => import('../pages/ResourceCal
 export const ResourceEdit = lazy(() => import('../pages/ResourceEdit'))
 export const ResourceAssignmentEdit = lazy(() => import('../pages/ResourceAssignmentEdit'))
 export const ResourceConflicts = lazy(() => import('../pages/ResourceConflicts'))
-export const ReportBuilder = lazy(() => import('../pages/ReportBuilder'))
+export const ReportBuilder = lazy(() => import('@nidus/ui/reports/CatalogueReportBuilder.jsx')) // v1272 D11
 export const AnalyticsDashboard = lazy(() => import('../pages/AnalyticsDashboard'))
 export const Benefits = lazy(() => import('../pages/platform-app/Benefits'))
 export const BenefitsRegisterPage = lazy(() => import('../pages/benefits/Benefits'))

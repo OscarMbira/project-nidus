@@ -39,6 +39,7 @@ import { RISK_REGISTER_CATEGORY } from '../features/local-data-extensions/compon
 import { platformDb } from '@nidus/supabase';
 import { fetchBatchExportForEntities } from '../features/local-data-extensions/api/customFieldValuesApi';
 import { platformRiskPath } from '@nidus/shared/utils/projectRouteParam';
+import AskNidusAboutButton from '@nidus/ui/ai/AskNidusAboutButton.jsx' // v1272 S1.3
 
 const RISK_COLUMNS = [
   { key: 'risk_identifier', label: 'ID' },
@@ -324,6 +325,7 @@ export default function RiskRegisterView() {
             <AlertTriangle className="w-6 h-6" />
             Risk Register
           </h1>
+          <AskNidusAboutButton registerLabel="Risk Register" className="mt-2" />
           {register && (
             <p className="text-sm text-gray-500 mt-1">
               Reference: {register.register_reference} • Version: {register.version_number || '1.0'}

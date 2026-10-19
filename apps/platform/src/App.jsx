@@ -35,7 +35,7 @@ export default function App() {
       />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AppConfigProvider app="platform" basePath="" db={platformDb}>
-        <PlanningProvider mode="platform" basePath="/pm/planning" ProjectBar={PlanningProjectBar}>
+        <PlanningProvider mode="platform" basePath="/pm/planning" ProjectBar={PlanningProjectBar} headerProjectPicker>
         <LanguageProvider>
           <UnsavedChangesProvider>
             <OfflineIndicator />

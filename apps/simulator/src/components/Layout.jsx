@@ -8,7 +8,7 @@ import PlatformAppHeader from './headers/PlatformAppHeader'
 import SimulatorAppHeader from './headers/SimulatorAppHeader'
 import HelpButton from './help/HelpButton'
 import FeedbackWidget from './feedback/FeedbackWidget'
-import AIChatWidget from './ai/AIChatWidget'
+import AskNidusWidget from '@nidus/ui/ai/AskNidusWidget.jsx'
 import QuickCaptureFab from '../modules/pmis-gaps/components/QuickCaptureFab'
 import { BrandingProvider } from '../lib/BrandingContext'
 import { MenuProvider } from '../lib/useMenu'
@@ -157,7 +157,7 @@ const Layout = ({ children, scope: scopeProp = null }) => {
 
       <HelpButton />
       <FeedbackWidget />
-      {!isAuthPage && <AIChatWidget />}
+      {!isAuthPage && <AskNidusWidget workspacePath="/simulator/ai-workspace" settingsPath="/simulator/organisation/ai-settings" />}
       {!isAuthPage && <QuickCaptureFab />}
     </div>
     </MenuProvider>

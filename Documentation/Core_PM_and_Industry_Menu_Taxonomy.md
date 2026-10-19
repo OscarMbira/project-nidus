@@ -141,7 +141,7 @@ PROJECT MANAGEMENT
 ├── Planning
 │   ├── Schedule
 │   │   ├── Activity Register
-│   │   ├── Gantt
+│   │   ├── Plan Sheet (renamed from Gantt, v1265)
 │   │   ├── Network / Dependencies
 │   │   ├── Critical Path
 │   │   ├── Look-Ahead Plan
@@ -1741,7 +1741,7 @@ Project Planner
 ├── Projects (v1239)
 ├── Schedule (v1239)
 │   ├── Plan grid
-│   ├── Gantt
+│   ├── Plan Sheet (renamed from Gantt, v1265)
 │   ├── Board
 │   ├── Calendar
 │   ├── Network
@@ -1779,4 +1779,32 @@ Project Planner
     └── Upgrade
 ```
 
-Schedule sub-navigation (Level 4, every shell — Platform, Simulator and Planner, v1239): Tasks · Board · Gantt · Network · Critical path · Milestones · Look-ahead · Variance · Dependencies · Calendar · Baselines · Workload · My time · Import / export · Due dates.
+Schedule sub-navigation (Level 4, every shell — Platform, Simulator and Planner, v1239): Tasks · Board · Plan Sheet (renamed from Gantt, v1265) · Network · Critical path · Milestones · Look-ahead · Variance · Dependencies · Calendar · Baselines · Workload · My time · Import / export · Due dates.
+
+# 24. Ask Nidus and AI (v1272)
+
+Additive entries for the AI agents foundation (PRD `projectprd/v1272_ai_agents_foundation_PRD.md`, D19). Existing entries above are unchanged; the "AI Assistant" / "AI Workspace" leaves now display as "Ask Nidus". Agents themselves are in-page buttons, not menus: "Draft with AI" (highlight report create page), "File to registers" (meeting page), "Suggest mapping" (bulk-upload flows) and the floating Ask Nidus widget on every page.
+
+```text
+Platform
+├── Ask Nidus (v1272 — label of the existing /platform/ai leaf)
+├── Account / Organisation Settings
+│   └── AI Settings (v1272) — AI notice, on/off, retention, AI credit usage
+├── Template Library
+│   └── Highlight report layouts (v1272) — sections, order, AI drafting instructions
+└── Reports
+    └── Report Builder (v1272 — now runs on the Ask Nidus data catalogue)
+
+Simulator
+├── Ask Nidus (v1272 — label of the existing AI Workspace leaves, /simulator/ai-workspace)
+├── PMO Admin
+│   ├── AI Settings (v1272)
+│   └── Highlight report layouts (v1272)
+└── Delivery → Reporting
+    └── Report Builder (v1272)
+
+Project Planner
+├── Ask Nidus (v1272) — schedule, resources and dependencies only
+└── Settings
+    └── AI settings (v1272)
+```

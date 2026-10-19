@@ -45,6 +45,7 @@ import IssueHeatmap from '../components/issues/IssueHeatmap'
 import CriticalIssuesAlert from '../components/issues/CriticalIssuesAlert'
 import OpenIssuesWidget from '../components/issues/OpenIssuesWidget'
 import { ISSUE_EXPORT_COLUMNS, mapIssueForListExport } from '@nidus/shared/constants/issueListColumns'
+import AskNidusAboutButton from '@nidus/ui/ai/AskNidusAboutButton.jsx' // v1272 S1.3
 
 function statusCount(summary, key) {
   return summary?.issues_by_status?.[key] || 0
@@ -391,6 +392,7 @@ export default function IssueRegisterView() {
             <AlertCircle className="w-6 h-6" />
             Issue Register
           </h1>
+          <AskNidusAboutButton registerLabel="Issue Register" className="mt-2" />
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {project?.project_name}
             {issueRegister?.register_reference ? ` · ${issueRegister.register_reference}` : ''}

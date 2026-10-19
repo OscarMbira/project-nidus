@@ -1,6 +1,10 @@
-/** v505 User → NPC messaging */
+/** v505 User → NPC messaging. v1272 Phase 3 (D15): replies come from the AI stakeholder (sim-ai-npc). */
 import { simDb } from '../supabase/supabaseClient'
 import { getSimAuthUserId } from './simAuth'
+import { requestNpcReply } from './simAiAgentsService'
+
+// Rule-based acknowledgement used when AI is off for the organisation or unavailable.
+const STANDARD_ACK = "Thanks — I've logged your note and will reflect progress on the next status pulse."
 
 export async function sendMessageToNPC(runId, npcCharacterId, messageType, subject, body, linkedArtefact = {}) {
   try {
@@ -14,14 +18,18 @@ export async function sendMessageToNPC(runId, npcCharacterId, messageType, subje
       body,
       linked_artefact_type: linkedArtefact.type || null,
       linked_artefact_id: linkedArtefact.id || null,
-      npc_response:
-        "Thanks — I've logged your note and will reflect progress on the next status pulse.",
-      npc_responded_at: new Date().toISOString(),
       npc_response_score: null,
     }
     const { data, error } = await simDb.from('npc_user_messages').insert(row).select().single()
     if (error) return { success: false, error: error.message }
-    return { success: true, data }
+    try {
+      const ai = await requestNpcReply(runId, data.id)
+      return { success: true, data: { ...data, npc_response: ai.reply, trust_delta: ai.trust_delta, trust_after: ai.trust, ai_generated: true } }
+    } catch (aiError) {
+      const npcResponse = STANDARD_ACK
+      await simDb.from('npc_user_messages').update({ npc_response: npcResponse, npc_responded_at: new Date().toISOString() }).eq('id', data.id)
+      return { success: true, data: { ...data, npc_response: npcResponse }, aiNotice: aiError.message }
+    }
   } catch (e) {
     return { success: false, error: e.message }
   }

@@ -77,7 +77,7 @@ export async function generateDebrief(runId, userId, runData = {}) {
   let debrief = null
   try {
     const { data, error } = await simDb.functions.invoke('ai-simulator-debrief', {
-      body: { runSummary },
+      body: { runSummary, assessments: runData.assessments || undefined },
     })
     if (!error && data?.debrief) debrief = data.debrief
   } catch {}

@@ -444,7 +444,15 @@ export function validateContactImportRows(rows, existingContacts = [], opts = {}
  * Build preview from file + existing project data.
  */
 export async function previewContactImport(projectId, file) {
-  const parsed = await parseContactImportFile(file)
+  return previewContactImportRows(projectId, await parseContactImportFile(file))
+}
+
+/**
+ * Preview already-parsed rows (v1272: also used after the Import Mapper re-keys a file's columns).
+ * @param {string} projectId
+ * @param {{ rows: object[], errors?: { message: string }[] }} parsed
+ */
+export async function previewContactImportRows(projectId, parsed) {
   if (parsed.errors?.length && !parsed.rows?.length) {
     return {
       success: false,

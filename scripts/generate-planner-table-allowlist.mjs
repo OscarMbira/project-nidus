@@ -26,7 +26,13 @@ const EXTS = ['', '.js', '.jsx', '.mjs', '/index.js', '/index.jsx']
 
 // Tables the shell needs that are reached through Supabase helpers rather than `.from()`:
 // the shared public header/footer reads these through the REST endpoint (packages/shared/src/site).
-export const ALWAYS = ['site_products', 'site_content', 'site_nav_links', 'site_pages'] // shared public header/footer (REST)
+// v1272 D16: Ask Nidus answers Planner questions about schedule, resources and dependencies through
+// security-invoker views (public.ai_v_*) called via RPC, so their base tables are listed here too.
+export const ALWAYS = [
+  'site_products', 'site_content', 'site_nav_links', 'site_pages', // shared public header/footer (REST)
+  'project_statuses', 'resource_assignments', 'task_assignments', // Ask Nidus planner catalogue (v1272)
+  'ai_docs_index', // Ask Nidus help-docs search tool, run with the user's session (v1272)
+]
 
 function resolveFile(base) {
   for (const ext of EXTS) {

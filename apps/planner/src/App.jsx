@@ -34,6 +34,10 @@ const UpgradePage = lazy(() => import('./pages/app/UpgradePage.jsx'))
 const BillingPage = lazy(() => import('./pages/app/BillingPage.jsx'))
 const ScheduleRoutes = lazy(() => import('@nidus/planning/routes/ScheduleRoutes.jsx'))
 const PlanningHubRoutes = lazy(() => import('@nidus/planning/routes/PlanningHubRoutes.jsx'))
+// v1272 Ask Nidus (D16: schedule, resources and dependencies only)
+const AskNidusWorkspace = lazy(() => import('@nidus/ui/ai/AskNidusWorkspace.jsx'))
+const AiSettingsPage = lazy(() => import('@nidus/ui/ai/AiSettingsPage.jsx'))
+const AskNidusWidget = lazy(() => import('@nidus/ui/ai/AskNidusWidget.jsx'))
 
 const Spinner = ({ text = 'Loading…' }) => <div className="p-6 text-sm text-gray-600 dark:text-gray-300">{text}</div>
 
@@ -89,6 +93,11 @@ function AppLayout() {
       <Suspense fallback={<Spinner />}>
         <Outlet />
       </Suspense>
+      {pathname !== '/app/ask' && (
+        <Suspense fallback={null}>
+          <AskNidusWidget workspacePath="/app/ask" settingsPath="/app/settings/ai" />
+        </Suspense>
+      )}
     </PlannerShell>
   )
 }
@@ -111,6 +120,8 @@ export function PlannerRoutes() {
           <Route path="planning/*" element={<PlanningHubRoutes fallback={<Spinner />} />} />
           <Route path="members" element={<MembersPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="settings/ai" element={<AiSettingsPage />} />
+          <Route path="ask" element={<AskNidusWorkspace settingsPath="/app/settings/ai" />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="upgrade" element={<UpgradePage />} />
           <Route path="invite/:token" element={<InviteAcceptPage />} />

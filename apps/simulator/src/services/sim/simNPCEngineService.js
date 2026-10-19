@@ -8,6 +8,8 @@ import {
   handleToleranceBreach,
   updateEVMSnapshot,
 } from './simRunStateService'
+import { applyAdaptiveDifficulty, loadNpcMemory, personaliseEvent } from './simAiAgentsService'
+import { responseDeadlineDays, selectTemplates, templateControls } from '@nidus/shared/utils/simAdaptiveDifficulty'
 
 export async function getPendingEvents(runId) {
   const { data, error } = await simDb
@@ -23,7 +25,7 @@ export async function getPendingEvents(runId) {
 export async function generateNextEvents(runId, maxEvents = 2) {
   const { data: run, error: runErr } = await simDb
     .from('simulation_runs')
-    .select('sim_day, methodology, active_stage, scenario_id, practice_project_id, phase_events_fired, user_role, project_health')
+    .select('id, sim_day, methodology, active_stage, scenario_id, practice_project_id, phase_events_fired, user_role, project_health, difficulty_level')
     .eq('id', runId)
     .single()
   if (runErr || !run) return { success: false, inserted: 0, error: runErr?.message || 'Run not found' }
@@ -44,13 +46,15 @@ export async function generateNextEvents(runId, maxEvents = 2) {
     if (t.methodology !== 'any' && t.methodology !== methodology) return false
     if (t.phase_trigger && t.phase_trigger !== 'any' && t.phase_trigger !== stage) return false
     if (t.emitting_role === run.user_role) return false
-    const lastDay = fired[t.template_code]
-    if (typeof lastDay === 'number' && run.sim_day - lastDay < (t.cooldown_days || 7)) return false
     return true
   })
 
+  // v1272 Phase 3 (D27): the run's difficulty level tunes severity cap, cooldowns, weights and
+  // response time; selection is rule-based and deterministic (no AI).
+  const controls = templateControls(run.difficulty_level || 3)
   let inserted = 0
-  const pick = candidates.slice(0, maxEvents)
+  const pick = selectTemplates(candidates, controls, { simDay: run.sim_day || 0, fired, max: Math.max(maxEvents, controls.maxEvents) })
+  const memory = await loadNpcMemory(runId).catch(() => ({}))
 
   const { data: assignments } = await simDb
     .from('npc_run_assignments')
@@ -61,8 +65,10 @@ export async function generateNextEvents(runId, maxEvents = 2) {
 
   for (const tmpl of pick) {
     const npcId = roleToNpc[tmpl.emitting_role] || null
-    const deadline = new Date(Date.now() + 3 * 86400000).toISOString()
-    const { error: insErr } = await simDb.from('ai_events').insert({
+    // Low stakeholder trust (D15) shortens the response time, so escalations come sooner.
+    const days = responseDeadlineDays(controls, memory[npcId]?.trust_score ?? 0)
+    const deadline = new Date(Date.now() + days * 86400000).toISOString()
+    const { data: insertedRow, error: insErr } = await simDb.from('ai_events').insert({
       run_id: runId,
       event_type: 'npc_template',
       event_category: tmpl.category,
@@ -71,15 +77,17 @@ export async function generateNextEvents(runId, maxEvents = 2) {
       severity: tmpl.severity,
       triggered_at: new Date().toISOString(),
       response_deadline: deadline,
-      event_data: { template_code: tmpl.template_code },
+      event_data: { template_code: tmpl.template_code, difficulty_level: controls.level },
       npc_character_id: npcId,
       npc_event_template_id: tmpl.id,
       response_options: tmpl.options,
       max_score: 100,
-    })
+    }).select('id').single()
     if (!insErr) {
       inserted += 1
       fired[tmpl.template_code] = run.sim_day
+      // AI re-words the event around the learner's project in the background (options unchanged).
+      if (insertedRow?.id) personaliseEvent(runId, insertedRow.id)
     }
   }
 
@@ -233,6 +241,7 @@ export async function tickSimulationClock(runId) {
     })
     .eq('id', runId)
 
+  await applyAdaptiveDifficulty({ ...run, sim_day: nextDay }).catch(() => null)
   await generateNextEvents(runId, 2)
   await updateEVMSnapshot(runId)
   await applyNPCAutonomousActions(runId)

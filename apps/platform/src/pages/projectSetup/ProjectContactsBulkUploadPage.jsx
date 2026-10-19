@@ -9,11 +9,17 @@ import { platformDb } from '@nidus/supabase'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import {
-  previewContactImport,
+  parseContactImportFile,
+  previewContactImportRows,
+  CONTACT_IMPORT_LEGEND,
   bulkCreateProjectContacts,
   downloadContactImportTemplate,
   CONTACT_IMPORT_TEMPLATE_COLUMNS,
 } from '../../services/projectContactsBulkService'
+import ColumnMappingStep from '@nidus/ui/ai/ColumnMappingStep.jsx'
+import { dictionaryFromColumns, needsMapping } from '@nidus/shared/utils/importMapping'
+
+const CONTACT_DICTIONARY = dictionaryFromColumns(CONTACT_IMPORT_LEGEND)
 
 export default function ProjectContactsBulkUploadPage() {
   const { projectId } = usePlatformProjectId()
@@ -24,6 +30,7 @@ export default function ProjectContactsBulkUploadPage() {
   const [busy, setBusy] = useState(false)
   const [importing, setImporting] = useState(false)
   const [preview, setPreview] = useState(null)
+  const [mappingInput, setMappingInput] = useState(null) // v1272 Import Mapper: { headers, rows, errors }
   const [uid, setUid] = useState(null)
 
   const resolveUid = useCallback(async () => {
@@ -43,7 +50,13 @@ export default function ProjectContactsBulkUploadPage() {
     if (!f || !projectId) return
     setBusy(true)
     try {
-      const result = await previewContactImport(projectId, f)
+      const parsed = await parseContactImportFile(f)
+      const headers = [...new Set((parsed.rows || []).flatMap((r) => Object.keys(r || {})))]
+      if (parsed.rows?.length && needsMapping(headers, CONTACT_DICTIONARY)) {
+        setMappingInput({ headers, rows: parsed.rows, errors: parsed.errors || [] })
+        return
+      }
+      const result = await previewContactImportRows(projectId, parsed)
       if (!result.success && result.parseErrors?.length) {
         toast.error(result.parseErrors[0]?.message || 'Could not parse file')
       }
@@ -176,6 +189,29 @@ export default function ProjectContactsBulkUploadPage() {
             </span>
           </label>
         </div>
+
+        {mappingInput && (
+          <ColumnMappingStep
+            target="project_contacts"
+            templateLabel="Project contacts"
+            columns={CONTACT_IMPORT_LEGEND}
+            headers={mappingInput.headers}
+            rows={mappingInput.rows}
+            onCancel={() => { setMappingInput(null); setFile(null) }}
+            onConfirm={async ({ rows }) => {
+              const errors = mappingInput.errors
+              setMappingInput(null)
+              setBusy(true)
+              try {
+                setPreview(await previewContactImportRows(projectId, { rows, errors }))
+              } catch (err) {
+                toast.error(err?.message || 'Preview failed')
+              } finally {
+                setBusy(false)
+              }
+            }}
+          />
+        )}
 
         {preview && (
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 space-y-4">

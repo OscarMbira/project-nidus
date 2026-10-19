@@ -25,7 +25,7 @@ const SimulationRunEnhanced = () => {
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [scores, setScores] = useState(null);
   const [showHints, setShowHints] = useState(true);
-  const [useAI, setUseAI] = useState(!!import.meta.env.VITE_OPENAI_API_KEY);
+  const useAI = false; // v1272: browser-side AI removed; events and feedback come from templates
   const [userId, setUserId] = useState(null);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [showBadgeNotification, setShowBadgeNotification] = useState(false);

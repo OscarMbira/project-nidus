@@ -4,21 +4,27 @@
  *           → 3. confirm. Tasks are added to the project; nothing already there changes.
  *   Export: the current plan as XLSX (with Instructions + Legend sheets), CSV (with a `#` data
  *           dictionary) or XML. Templates come in XLSX and CSV, each with its legend (rule 71).
+ *   v1272 Phase 2: a spreadsheet laid out differently (another tool's export) goes through the Import
+ *           Mapper step first (Platform and Simulator; not in the Planner edition, PRD D16).
  */
 import { useState } from 'react'
 import { Download, Upload, FileCheck2 } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { useAppConfig } from '@nidus/shared/context/AppConfigContext'
+import { dictionaryFromColumns, needsMapping, readTabularFile } from '@nidus/shared/utils/importMapping'
+import ColumnMappingStep from '@nidus/ui/ai/ColumnMappingStep.jsx'
 import PlanningTable from '../../components/PlanningTable.jsx'
 import ScheduleLayout, { ChooseProject, Loading } from '../../components/ScheduleLayout.jsx'
 import { useSchedule, useScheduleProjectId } from '../../hooks/useSchedule.js'
 import {
   buildPreview, readCsv, readXml, readWorkbook, buildCsv, buildWorkbook, buildXml,
-  toExportRows, downloadBlob, TYPE_TO_DB,
+  toExportRows, downloadBlob, TYPE_TO_DB, TEMPLATE_COLUMNS,
 } from '../../services/scheduleExchangeService.js'
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const btn = 'inline-flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50'
 const STEPS = ['Choose file', 'Check', 'Done']
+const SCHEDULE_DICTIONARY = dictionaryFromColumns(TEMPLATE_COLUMNS)
 
 async function readFile(file) {
   const name = file.name.toLowerCase()
@@ -40,6 +46,8 @@ export default function ScheduleExchangeScreen() {
   const [preview, setPreview] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
+  const [mappingInput, setMappingInput] = useState(null) // v1272 Import Mapper: { headers, rows }
+  const { app } = useAppConfig()
 
   const choose = async (e) => {
     const file = e.target.files?.[0]
@@ -48,6 +56,15 @@ export default function ScheduleExchangeScreen() {
     setError(null)
     setBusy(true)
     try {
+      const lower = file.name.toLowerCase()
+      if (app !== 'planner' && /\.(csv|xlsx|xls)$/.test(lower)) {
+        const raw = await readTabularFile(file)
+        if (raw.rows.length && needsMapping(raw.headers, SCHEDULE_DICTIONARY)) {
+          setFileName(file.name)
+          setMappingInput(raw)
+          return
+        }
+      }
       const rows = await readFile(file)
       setFileName(file.name)
       setPreview(buildPreview(rows))
@@ -115,7 +132,27 @@ export default function ScheduleExchangeScreen() {
             </div>
             {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-            {step === 0 && (
+            {step === 0 && mappingInput && (
+              <ColumnMappingStep
+                target="schedule_tasks"
+                templateLabel="Schedule"
+                columns={TEMPLATE_COLUMNS}
+                headers={mappingInput.headers}
+                rows={mappingInput.rows}
+                onCancel={() => { setMappingInput(null); setFileName('') }}
+                onConfirm={({ rows }) => {
+                  setMappingInput(null)
+                  try {
+                    setPreview(buildPreview(rows))
+                    setStep(1)
+                  } catch (err) {
+                    setError(err.message)
+                  }
+                }}
+              />
+            )}
+
+            {step === 0 && !mappingInput && (
               <div className="space-y-3">
                 <p className="text-sm text-gray-700 dark:text-gray-300">Choose a schedule file: XML from a desktop planning tool, or a spreadsheet (XLSX / CSV) laid out like the template.</p>
                 <label className={`${btn} cursor-pointer w-fit`}>
@@ -171,7 +208,7 @@ export default function ScheduleExchangeScreen() {
 
             {step === 2 && (
               <div className="space-y-3">
-                <p className="text-sm text-gray-800 dark:text-gray-200">Import finished. The tasks are on the Tasks and Gantt tabs.</p>
+                <p className="text-sm text-gray-800 dark:text-gray-200">Import finished. The tasks are on the Tasks and Plan Sheet tabs.</p>
                 <button type="button" className={btn} onClick={reset}>Import another file</button>
               </div>
             )}

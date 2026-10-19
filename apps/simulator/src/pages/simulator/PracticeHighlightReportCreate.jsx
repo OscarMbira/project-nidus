@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeHighlightReport } from '../../services/sim/practiceHighlightReportService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import DraftWithAiButton from '@nidus/ui/ai/DraftWithAiButton.jsx'
 
 export default function PracticeHighlightReportCreate() {
   const navigate = useNavigate()
@@ -40,10 +41,12 @@ export default function PracticeHighlightReportCreate() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <button onClick={() => navigate(-1)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+      <button onClick={() => navigate(-1)} className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-white">
         <ArrowLeft className="h-4 w-4 mr-2" /> Back
       </button>
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Create Practice Highlight Report</h1>
+      {/* v1272 D12: AI drafts the practice report from your practice project data */}
+      <DraftWithAiButton projectId={projectId} className="mb-4" />
       <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
       {formTab === 'audit' ? (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

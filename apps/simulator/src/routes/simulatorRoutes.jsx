@@ -5,6 +5,7 @@ import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { V734RoleRouteElements } from './v734RoleRoutes.jsx'
+import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor } from './lazyImports' // v1272 AI settings + report layouts
 import { SimPmoFederated, SimPmoTemplateLibraryFederated, SimPmoOrganisationalTemplatesFederated, SimPmOrganisationalTemplatesFederated, SimPmProjectTemplatesFederated, SimPmProjectDocumentsFederated, SimDocumentOversightFederated } from './SimPmoFederatedOutlet.jsx'
 import {
   LoadingFallback,
@@ -1984,6 +1985,59 @@ export function SimulatorRouteElements() {
                 <Route path="simulator/admin/documentation" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><DocumentationAdminList /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/admin/documentation/new" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><DocumentationAdminEditor /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
                 <Route path="simulator/admin/documentation/edit/:id" element={<Suspense fallback={<LoadingFallback />}><ThemeProvider><ToastProvider><ProtectedRoute requiredPlatform="simulator"><Layout><DocumentationAdminEditor /></Layout></ProtectedRoute></ToastProvider></ThemeProvider></Suspense>} />
+                {/* v1272: Ask Nidus workspace (menus sim_pm_ai / sim_learner_ai) and organisation AI settings */}
+                <Route path="simulator/ai-workspace" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AIWorkspace settingsPath="/simulator/organisation/ai-settings" />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/report-layouts" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ReportLayoutsPage basePath="/simulator/report-layouts" />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/report-layouts/:nodeId" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ReportLayoutEditor basePath="/simulator/report-layouts" />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/organisation/ai-settings" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <AiSettingsPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/ai" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -5888,6 +5942,20 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout scope="pmo">
                             <TimesheetSettings />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* v1272 D11: Report Builder on the sim data catalogue (was imported but never mounted) */}
+                <Route path="simulator/reports/builder" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ReportBuilder />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>

@@ -6,7 +6,6 @@
  */
 
 import { simDb } from './supabase/supabaseClient';
-import { generateAIEvent, generateAIFeedback } from './openaiService';
 
 // =============================================
 // EVENT CATEGORIES & TYPES
@@ -332,34 +331,11 @@ const EVENT_TEMPLATES = {
 // =============================================
 
 /**
- * Generate a random event based on simulation context
- * Tries AI generation first, falls back to templates
+ * Generate a random event based on simulation context.
+ * v1272: template-based only. Browser-side AI generation (VITE_OPENAI_API_KEY) was removed;
+ * AI wording comes back server-side with the adaptive scenario agent (PRD D27).
  */
-export const generateEvent = async (context = {}) => {
-  const { phase, difficulty, previousEvents = [], projectHealth = {}, scenario, useAI = true } = context;
-
-  // Try AI generation if enabled and API key is available
-  if (useAI && import.meta.env.VITE_OPENAI_API_KEY) {
-    try {
-      const aiEvent = await generateAIEvent({
-        scenario,
-        phase,
-        difficulty,
-        previousEvents,
-        projectHealth,
-      });
-
-      if (aiEvent) {
-        return aiEvent;
-      }
-    } catch (error) {
-      console.warn('AI event generation failed, falling back to templates:', error);
-    }
-  }
-
-  // Fallback to template-based generation
-  return generateTemplateEvent(context);
-};
+export const generateEvent = async (context = {}) => generateTemplateEvent(context);
 
 /**
  * Generate event from templates (fallback method)
@@ -442,25 +418,7 @@ export const evaluateResponse = async (event, selectedOptionIndex, enhanceFeedba
     throw new Error('Invalid option selected');
   }
 
-  let feedback = option.feedback;
-
-  // Enhance feedback with AI if requested and available
-  if (enhanceFeedback && import.meta.env.VITE_OPENAI_API_KEY) {
-    try {
-      const enhancedFeedback = await generateAIFeedback({
-        eventTitle: event.title,
-        selectedOption: option.text,
-        feedback: option.feedback,
-        score: option.score,
-        isOptimal: option.isOptimal,
-      });
-      if (enhancedFeedback) {
-        feedback = enhancedFeedback;
-      }
-    } catch (error) {
-      console.warn('AI feedback enhancement failed:', error);
-    }
-  }
+  const feedback = option.feedback;
 
   return {
     score: option.score,

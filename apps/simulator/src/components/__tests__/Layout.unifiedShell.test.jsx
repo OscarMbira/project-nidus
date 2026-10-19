@@ -27,7 +27,7 @@ vi.mock('../headers/PlatformAppHeader', () => ({ default: () => null }))
 vi.mock('../MobileNavigation', () => ({ default: () => null }))
 vi.mock('../help/HelpButton', () => ({ default: () => <div data-testid="help-button" /> }))
 vi.mock('../feedback/FeedbackWidget', () => ({ default: () => <div data-testid="feedback-widget" /> }))
-vi.mock('../ai/AIChatWidget', () => ({ default: () => <div data-testid="ai-chat-widget" /> }))
+vi.mock('@nidus/ui/ai/AskNidusWidget.jsx', () => ({ default: () => <div data-testid="ai-chat-widget" /> }))
 vi.mock('../../modules/pmis-gaps/components/QuickCaptureFab', () => ({ default: () => null }))
 vi.mock('../sim/ui/PracticeDashboardSwitcher', () => ({ default: () => null }))
 vi.mock('../../lib/BrandingContext', () => ({

@@ -409,6 +409,7 @@ Strategic areas:
 - leaderboards
 - custom scenarios
 - commercial packaging
+- AI stakeholders, adaptive difficulty and AI Assessor (v1272 — built; IN REVIEW pending owner SQL, deploy and Phase 3 gate)
 
 Completion indicators:
 
@@ -436,6 +437,7 @@ Strategic areas:
 - system administration
 - publishing/synchronisation
 - audit and configuration governance
+- AI governance: Admin AI Centre — kill switch, plan credits, models, data catalogue, meaning search, Assessor calibration (v1272 — built; IN REVIEW)
 
 Completion indicators:
 
@@ -463,6 +465,7 @@ Strategic areas:
 - print outputs
 - filtered reporting
 - reconciliation
+- Ask Nidus natural-language questions over the PMIS, Report Builder on the same query runner, AI-drafted highlight reports (v1272 — built; IN REVIEW)
 
 Completion indicators:
 
@@ -580,6 +583,7 @@ Only roadmap-level debt belongs here. File-level/code-level debt should be captu
 |---|---|---|
 | 2026-08-18 | Established dedicated root-level roadmap separated from `CLAUDE.md` and feature plans | Reduce instruction duplication and make strategic state explicit |
 | 2026-10-11 | v1240 shared-package consolidation DONE (pending owner smoke test); added Project Planner product line (v1239, IN REVIEW) and Nidus brand site (v1241, IN REVIEW); R3 progress; risks RR-008/RR-009 | Owner-approved planner initiative (v1240 → v1239, v1241) |
+| 2026-10-19 | v1272 AI agents foundation (Phases 0–3) built across Platform, Simulator, Planner and Admin; all phase gates (owner SQL, deploy, evals, REVIEW.md) still open | Owner-approved PRD/plan v1272 |
 
 ---
 

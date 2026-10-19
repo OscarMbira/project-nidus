@@ -1,18 +1,16 @@
 /**
  * aiInsightsService.js (Phase 6)
  * Proactive dashboard insights — default rule-based (no external API).
- * Optional Gemini narrative when org insights_mode = 'gemini'.
+ * Optional AI narrative when org insights_mode = 'ai' (legacy value 'gemini' still accepted).
  * Stores in ai_insights_cache (expires 24h).
  */
 
 import { platformDb } from './supabase/supabaseClient'
 import { isValidAccountId } from '@nidus/shared/utils/accountResolution'
 
-// Gemini now runs entirely server-side via the ai-chat Supabase Edge Function (supabase/
-// functions/ai-chat), which reads GEMINI_API_KEY as a server secret — never a VITE_-prefixed
-// variable, which gets baked into the client bundle (Platform fix, 2026-09-11, mirrored here
-// for parity).
-const AI_CHAT_URL = import.meta.env.VITE_AI_CHAT_URL || ''
+// v1272: the narrative comes from the ai-insights edge function (signed-in users only, AI gate,
+// credits). No AI key or URL lives in the browser.
+import { AiBlockedError, callAiFunction } from '@nidus/shared/services/askNidusService'
 
 /** Fetch data for rule-based insight categories (RLS applies) */
 async function fetchInsightData() {
@@ -103,26 +101,15 @@ function buildRuleBasedInsights(data) {
   return items
 }
 
-/** Optional: send aggregated rule-based text to Gemini for a short narrative (Phase 6.2) */
-async function generateGeminiNarrative(ruleBasedText) {
-  if (!AI_CHAT_URL || !ruleBasedText) return null
+/** Optional: turn the rule-based findings into a short AI narrative (Phase 6.2, v1272 ai-insights). */
+async function generateAiNarrative(ruleBasedText) {
+  if (!ruleBasedText) return null
   try {
-    const question = `Based on these project management data points, write 2 to 4 very short bullet-point insights for the dashboard. No preamble. Bullets only.\n\n${ruleBasedText}`
-    const res = await fetch(AI_CHAT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question }),
-    })
-    if (!res.ok) return null
-    const json = await res.json()
-    const text = json.answer || ''
-    if (!text.trim()) return null
-    return text.trim().split(/\n+/).filter(Boolean).slice(0, 5).map((line) => ({
-      text: line.replace(/^[-*•]\s*/, '').trim(),
-      severity: 'info',
-      module: 'general',
-    }))
-  } catch {
+    const { bullets } = await callAiFunction(platformDb, 'ai-insights', { app: 'simulator', findings: ruleBasedText })
+    if (!Array.isArray(bullets) || bullets.length === 0) return null
+    return bullets.map((text) => ({ text, severity: 'info', module: 'general' }))
+  } catch (err) {
+    if (!(err instanceof AiBlockedError)) console.warn('[aiInsights] narrative failed:', err)
     return null
   }
 }
@@ -136,7 +123,7 @@ async function getOrgInsightsMode(orgId) {
       .select('insights_mode')
       .eq('organisation_id', orgId)
       .maybeSingle()
-    return data?.insights_mode === 'gemini' ? 'gemini' : 'template'
+    return ['ai', 'gemini'].includes(data?.insights_mode) ? 'ai' : 'template'
   } catch {
     return 'template'
   }
@@ -167,11 +154,11 @@ export async function generateInsights(userId, orgId = null) {
     let insights = buildRuleBasedInsights(data)
 
     const mode = await getOrgInsightsMode(orgId)
-    if (mode === 'gemini' && insights.length > 0) {
+    if (mode === 'ai' && insights.length > 0) {
       const aggregated = insights.map((i) => i.text).join('\n')
-      const geminiInsights = await generateGeminiNarrative(aggregated)
-      if (Array.isArray(geminiInsights) && geminiInsights.length > 0) {
-        insights = geminiInsights
+      const aiInsights = await generateAiNarrative(aggregated)
+      if (Array.isArray(aiInsights) && aiInsights.length > 0) {
+        insights = aiInsights
       }
     }
 

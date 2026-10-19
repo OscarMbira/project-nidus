@@ -4,6 +4,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { ArrowLeft } from 'lucide-react'
 import HighlightReportForm from '../../components/structured/highlightReport/HighlightReportForm'
+import DraftWithAiButton from '@nidus/ui/ai/DraftWithAiButton.jsx'
 
 export default function HighlightReportCreate() {
   const { projectId, routeKey } = usePlatformProjectId()
@@ -34,6 +35,8 @@ export default function HighlightReportCreate() {
           Back to Stage Boundaries
         </button>
       </div>
+      {/* v1272 D12: AI drafts a highlight report as a draft the PM then edits */}
+      <DraftWithAiButton projectId={projectId} className="mb-4" />
       <HighlightReportForm
         projectId={projectId}
         stageBoundaryId={stageBoundaryId}

@@ -9,6 +9,7 @@ import SimNPCTeamView from '../../components/sim/SimNPCTeamView'
 import SimActivityFeed from '../../components/sim/SimActivityFeed'
 import { tickSimulationClock } from '../../services/sim/simNPCEngineService'
 import { getPendingEvents } from '../../services/sim/simNPCEngineService'
+import { loadNpcMemory } from '../../services/sim/simAiAgentsService'
 
 export default function SimulationRunDashboard() {
   const { runId } = useParams()
@@ -18,6 +19,7 @@ export default function SimulationRunDashboard() {
   const [pending, setPending] = useState(0)
   const [tickMsg, setTickMsg] = useState('')
   const [feed, setFeed] = useState([])
+  const [memory, setMemory] = useState({}) // v1272 Phase 3: AI stakeholder trust per NPC
 
   const load = async () => {
     const { data: r } = await simDb.from('simulation_runs').select('*').eq('id', runId).single()
@@ -30,6 +32,7 @@ export default function SimulationRunDashboard() {
       npc_characters: (chars || []).find((c) => c.id === a.npc_character_id),
     }))
     setAssignments(merged)
+    setMemory(await loadNpcMemory(runId).catch(() => ({})))
     const pe = await getPendingEvents(runId)
     setPending((pe.data || []).length)
     const { data: acts } = await simDb
@@ -101,7 +104,7 @@ export default function SimulationRunDashboard() {
       </div>
       <section className={`rounded-xl border p-4 ${theme === 'dark' ? 'border-gray-700 bg-gray-800/40' : 'border-gray-200 bg-white'}`}>
         <h2 className="font-semibold mb-3">NPC team</h2>
-        <SimNPCTeamView assignments={assignments} theme={theme} />
+        <SimNPCTeamView assignments={assignments} memory={memory} runId={runId} onMessageSent={() => loadNpcMemory(runId).then(setMemory).catch(() => {})} />
       </section>
       <section className={`rounded-xl border p-4 ${theme === 'dark' ? 'border-gray-700 bg-gray-800/40' : 'border-gray-200 bg-white'}`}>
         <h2 className="font-semibold mb-3">Activity</h2>

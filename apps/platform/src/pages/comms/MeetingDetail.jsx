@@ -48,6 +48,13 @@ export default function MeetingDetail() {
           >
             Summary
           </Link>
+          {/* v1272 Phase 2: Meeting-to-Register agent */}
+          <Link
+            to={`${basePath}/review/${meetingId}`}
+            className="inline-flex px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm min-h-[44px] items-center"
+          >
+            File to registers
+          </Link>
         </div>
       </div>
       <section>

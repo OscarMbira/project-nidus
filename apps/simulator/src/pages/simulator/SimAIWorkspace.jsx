@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Bot } from 'lucide-react'
 import { supabase } from '../../services/supabaseClient'
 import {
@@ -137,14 +137,18 @@ ${content.topTip ? `<p><strong>Key takeaway:</strong> ${content.topTip}</p>` : '
   }, [])
 
   return (
-    <div className="flex flex-col h-full bg-gray-900">
-      <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-700 bg-gray-800 shrink-0">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+      <header className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shrink-0">
         <Bot className="w-6 h-6 text-purple-400" />
-        <h1 className="font-semibold text-gray-100">Simulator AI Workspace</h1>
+        <h1 className="font-semibold text-gray-900 dark:text-gray-100">Simulator AI Workspace</h1>
+        {/* v1272: Ask Nidus practice mode — ask questions about your practice data */}
+        <Link to="/simulator/ai-workspace" className="ml-auto rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
+          Ask Nidus
+        </Link>
       </header>
 
       {/* Mobile tabs */}
-      <div className="lg:hidden flex border-b border-gray-700 bg-gray-800">
+      <div className="lg:hidden flex border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         {[
           { id: TAB_DEBRIEF, label: 'Debrief' },
           { id: TAB_SCORES, label: 'Scores' },

@@ -16,6 +16,13 @@ vi.mock('../../../services/sim/simNPCEngineService', () => ({
   scoreEventResponse: vi.fn(),
 }))
 
+vi.mock('../../../services/sim/simAiAgentsService', () => ({
+  assessDecision: vi.fn().mockResolvedValue(null),
+  listAssessments: vi.fn().mockResolvedValue([]),
+  listMyFlags: vi.fn().mockResolvedValue([]),
+  recordEventOutcome: vi.fn().mockResolvedValue(null),
+}))
+
 vi.mock('../../../services/supabase/supabaseClient', () => ({
   simDb: {
     from: vi.fn(() => ({
@@ -23,6 +30,7 @@ vi.mock('../../../services/supabase/supabaseClient', () => ({
         eq: vi.fn(() => ({
           eq: vi.fn(() => ({
             limit: vi.fn().mockResolvedValue({ data: [], error: null }),
+            order: vi.fn(() => ({ limit: vi.fn().mockResolvedValue({ data: [], error: null }) })),
           })),
         })),
       })),

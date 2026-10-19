@@ -46,6 +46,7 @@ export default defineConfig({
       'src/services/__tests__/briefTeamStructureDiagramService.test.js',
       'src/services/__tests__/governanceChartService.test.js',
       'src/services/__tests__/signedImageCache.test.js',
+      'src/services/__tests__/askNidusService.test.js',
       'src/__tests__/idGenerationMigration.test.js',
     ],
   },

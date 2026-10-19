@@ -6,6 +6,7 @@ import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../mod
 import { RecordLifecycleRouteElements, RecordLifecyclePlatformNestedRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
 import { PmoFederated } from './PmoFederatedOutlet.jsx'
+import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor } from './lazyImports' // v1272 AI settings + report layouts
 import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
@@ -1535,7 +1536,7 @@ export function PlatformRouteElements() {
                               <Route path="ai" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
-                                    <AIWorkspace />
+                                    <AIWorkspace settingsPath="/platform/organisation/ai-settings" />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -2532,6 +2533,27 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <OrganisationRegionalFormatSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="report-layouts" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ReportLayoutsPage basePath="/platform/report-layouts" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="report-layouts/:nodeId" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ReportLayoutEditor basePath="/platform/report-layouts" />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="organisation/ai-settings" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <AiSettingsPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

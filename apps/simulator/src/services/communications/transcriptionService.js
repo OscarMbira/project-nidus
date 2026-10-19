@@ -12,7 +12,7 @@ export async function transcribeAudioBlob(audio, { mimeType = 'audio/webm' } = {
   const audioBase64 = btoa(binary)
 
   const { data, error } = await platformDb.functions.invoke('whisper-transcribe', {
-    body: { audioBase64, mimeType },
+    body: { audioBase64, mimeType, app: 'simulator' },
   })
   if (error) return { text: null, error }
   return { text: data?.text || '', error: null }
