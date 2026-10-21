@@ -39,6 +39,26 @@ export function defaultChoice(row) {
 
 const db = (isSim) => (isSim ? simDb : platformDb)
 
+/** v1290: the menu item whose can_use grant decides who may file meeting outcomes. */
+export const FILING_MENU_CODE = { platform: 'plat_pm_comms_pending_review', simulator: 'sim_pm_comms_pending_review' }
+
+/**
+ * v1290: may the signed-in user file meeting outcomes to the registers? Follows the role grant on
+ * the Pending AI Reviews menu item (can_use), so admins decide per role. Team Members can view but
+ * not file by default. Fails closed: if the check cannot run, the page is view-only.
+ */
+export async function canFileMeetingItems(isSim) {
+  const code = isSim ? FILING_MENU_CODE.simulator : FILING_MENU_CODE.platform
+  try {
+    const { data, error } = await platformDb.rpc('auth_user_can_use_menu', { p_menu_codes: [code] })
+    if (error) throw error
+    return data === true
+  } catch (e) {
+    console.warn('canFileMeetingItems: permission check failed, view-only', e?.message || e)
+    return false
+  }
+}
+
 export async function runMeetingRegisterAgent({ isSim, meetingId, projectId = null, notes = '' }) {
   const { data, error } = await platformDb.functions.invoke('meeting-register-agent', {
     body: { app: isSim ? 'simulator' : 'platform', meeting_id: meetingId, project_id: projectId, notes: notes || undefined },

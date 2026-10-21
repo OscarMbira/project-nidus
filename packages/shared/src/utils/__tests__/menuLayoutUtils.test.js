@@ -8,6 +8,7 @@ import {
   resolveLayoutType,
   resolveMenuLayoutScope,
   shouldUsePmLayoutShell,
+  isPmoOnlyPlatformPath,
 } from '../menuLayoutUtils'
 
 describe('inferLayoutScopeFromPathname', () => {
@@ -24,6 +25,12 @@ describe('inferLayoutScopeFromPathname', () => {
   it('does not confuse /pm with /pmo', () => {
     expect(inferLayoutScopeFromPathname('/pmo/settings')).toBe('pmo')
     expect(inferLayoutScopeFromPathname('/pm/dashboard')).toBe('pm')
+  })
+
+  it('keeps the PMO sidebar on PMO Configuration area pages in both apps (v1292)', () => {
+    expect(inferLayoutScopeFromPathname('/platform/pmo-admin/configuration/areas/risk_categories/edit')).toBe('pmo')
+    expect(inferLayoutScopeFromPathname('/simulator/pmo/configuration/areas/create')).toBe('pmo')
+    expect(isPmoOnlyPlatformPath('/platform/pmo-admin/configuration/areas/PCA-0001')).toBe(true)
   })
 })
 

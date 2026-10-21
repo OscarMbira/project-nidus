@@ -22,6 +22,7 @@
  * treats it as a third tab for navigation purposes.
  */
 import { CheckSquare, Briefcase, Building2 } from 'lucide-react'
+import { PMO_LAYOUT_ROLES } from '@nidus/shared/utils/menuLayoutUtils'
 
 const ZONES = [
   { id: 'my-work', label: 'My Work', icon: CheckSquare },
@@ -64,21 +65,34 @@ export function zoneLandingRoute(zoneId, isSimulatorContext) {
   if (isSimulatorContext) {
     if (zoneId === 'my-work') return '/simulator/my-work'
     if (zoneId === 'delivery') return '/simulator/pm/dashboard'
-    return '/simulator/pmo/dashboard'
+    return '/simulator/pmo/configuration'
   }
   if (zoneId === 'my-work') return '/platform/my-work'
   if (zoneId === 'delivery') return '/pm/dashboard'
-  return '/platform/dashboard'
+  return '/platform/pmo-admin/configuration'
 }
 
-export default function ZoneTabs({ activeZone, onSelect }) {
+/**
+ * Whether the Platform "Organisation" zone is relevant to this user. Its landing page (PMO
+ * Configuration) and sidebar tree are organisation-level, so the tab is only shown to
+ * organisation-level roles. Unknown roles (menu still loading) keep the tab.
+ * @param {string[]|null|undefined} roleNames - layoutHint.roleNames (normalised)
+ * @param {boolean} isSimulatorContext - the Simulator keeps the tab for every role
+ */
+export function canOpenOrganisationZone(roleNames, isSimulatorContext) {
+  if (isSimulatorContext || !Array.isArray(roleNames) || roleNames.length === 0) return true
+  return roleNames.some((r) => PMO_LAYOUT_ROLES.has(String(r).trim().toLowerCase().replace(/\s+/g, '_')))
+}
+
+export default function ZoneTabs({ activeZone, onSelect, showOrganisation = true }) {
+  const zones = ZONES.filter((zone) => zone.id !== 'organisation' || showOrganisation || activeZone === 'organisation')
   return (
     <div
       className="flex min-w-0 items-center gap-1 mb-3 p-1 rounded-lg bg-gray-100 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700"
       role="tablist"
       aria-label="Application zones"
     >
-      {ZONES.map((zone) => {
+      {zones.map((zone) => {
         const Icon = zone.icon
         const isActive = activeZone === zone.id
         return (

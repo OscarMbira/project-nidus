@@ -107,7 +107,10 @@ function PlatformLogin() {
         }
 
         // Get post-login route based on organisation status
+        // Return to the page that sent the user here (ProtectedRoute passes it as state.from).
+        const fromState = location.state?.from
         const returnTo = new URLSearchParams(window.location.search).get('returnTo')
+          || (fromState?.pathname ? fromState.pathname + (fromState.search || '') : null)
         const routeResult = await getPostLoginRoute(result.user.id, returnTo)
         navigate(routeResult.route, { replace: true })
       } else {

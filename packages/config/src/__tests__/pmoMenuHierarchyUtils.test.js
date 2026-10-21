@@ -1270,3 +1270,48 @@ describe('reorganizePmoMenuRoots', () => {
     expect(governance?.children?.some((c) => c.menu_label === 'Quality Strategy')).toBe(true)
   })
 })
+
+// v1289 — Communications section: one DB row (plat_pm_communications / sim_pm_communications)
+// shown as its own top-level section in every layout, with Comms Hub pages grouped inside it.
+import { reorganizeMenuRoots as reorganizeForComms } from '../pmoMenuHierarchyUtils.js'
+import { dedupePmoMenuTree as dedupeForComms } from '../pmoMenuSemanticDedupe.js'
+
+describe('v1289 Communications section', () => {
+  const leaf = (code, label, path) => ({ id: code, menu_code: code, menu_label: label, route_path: path, children: [], sort_order: 1 })
+  const platformLeaves = [
+    leaf('plat_pm_comms_hub', 'Comms Hub', '/platform/comms'),
+    leaf('plat_pm_comms_messages', 'Channel Messages', '/platform/comms/messages'),
+    leaf('plat_pm_comms_direct', 'Direct Messages', '/platform/comms/direct'),
+    leaf('plat_pm_comms_summaries', 'Meeting Summaries', '/platform/comms/meetings/summaries'),
+    leaf('plat_pm_comms_pending_review', 'Pending AI Reviews', '/platform/comms/pending-review'),
+  ]
+  const platformSection = {
+    id: 'w', menu_code: 'plat_pm_communications', menu_label: 'Communications', route_path: null, sort_order: 117,
+    children: platformLeaves,
+  }
+  const childCodes = (nodes, code) => {
+    const node = nodes.find((n) => n.menu_code === code)
+    return node ? dedupeForComms(node.children || []).map((c) => c.menu_code) : null
+  }
+
+  it.each(['pm', 'tm', 'pmo'])('keeps the Communications section with all five pages in the %s layout', (layout) => {
+    const { universalNodes } = reorganizeForComms([platformSection], layout)
+    expect(childCodes(universalNodes, 'plat_pm_communications')).toEqual(platformLeaves.map((l) => l.menu_code))
+  })
+
+  it('groups stray Comms Hub pages under Communications instead of Email & Notifications (PMO)', () => {
+    const { universalNodes } = reorganizeForComms(platformLeaves, 'pmo')
+    expect(childCodes(universalNodes, 'plat_pm_communications')).toHaveLength(5)
+    expect(universalNodes.find((n) => n.menu_code === 'pmo-cat-email-notifications')).toBeUndefined()
+  })
+
+  it.each(['sim_pm', 'sim_pmo'])('groups Simulator Comms Hub pages, Meetings and Meeting Summaries both kept (%s)', (layout) => {
+    const simLeaves = [
+      leaf('sim_pm_comms_hub', 'Comms Hub', '/simulator/comms'),
+      leaf('sim_pm_comms_meetings', 'Meetings', '/simulator/comms/meetings'),
+      leaf('sim_pm_comms_summaries', 'Meeting Summaries', '/simulator/comms/meetings/summaries'),
+    ]
+    const { universalNodes } = reorganizeForComms(simLeaves, layout)
+    expect(childCodes(universalNodes, 'sim_pm_communications')).toEqual(simLeaves.map((l) => l.menu_code))
+  })
+})

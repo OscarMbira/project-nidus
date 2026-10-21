@@ -104,3 +104,67 @@ describe('system prompt', () => {
     expect(toolStatus('search_records', {}, catalogue)).toBe('Searching records…')
   })
 })
+
+describe('v1294 project scope', () => {
+  const okResult = { entity: 'risks', entity_label: 'Risks', total_count: 0, row_count: 0, rows: [] }
+  const P1 = '11111111-1111-1111-1111-111111111111'
+  const P2 = '22222222-2222-2222-2222-222222222222'
+
+  it('adds the allowed projects to every query', async () => {
+    const db = { rpc: vi.fn().mockResolvedValue({ data: okResult, error: null }) }
+    await executeTool('query_records', { entity: 'risks', group_by: ['project_name'] }, { db, edition: 'platform', allowedProjectIds: [P1] })
+    expect(db.rpc).toHaveBeenCalledWith('ai_run_query', { p_spec: { entity: 'risks', group_by: ['project_name'], project_ids: [P1] } })
+  })
+
+  it('refuses a project outside the scope without querying', async () => {
+    const db = { rpc: vi.fn() }
+    const out = await executeTool('query_records', { entity: 'risks', project_id: P2 }, { db, edition: 'platform', allowedProjectIds: [P1] })
+    expect(out.isError).toBe(true)
+    expect(out.content).toMatch(/OUT_OF_SCOPE/)
+    expect(db.rpc).not.toHaveBeenCalled()
+  })
+
+  it('ignores a project list sent by the model, and adds none when the scope is unlimited', async () => {
+    const db = { rpc: vi.fn().mockResolvedValue({ data: okResult, error: null }) }
+    await executeTool('query_records', { entity: 'risks', project_ids: [P2] }, { db, edition: 'platform', allowedProjectIds: null })
+    expect(db.rpc).toHaveBeenCalledWith('ai_run_query', { p_spec: { entity: 'risks' } })
+  })
+
+  it('an empty scope still sends an empty list (no rows, fails closed)', async () => {
+    const db = { rpc: vi.fn().mockResolvedValue({ data: okResult, error: null }) }
+    await executeTool('query_records', { entity: 'risks' }, { db, edition: 'platform', allowedProjectIds: [] })
+    expect(db.rpc).toHaveBeenCalledWith('ai_run_query', { p_spec: { entity: 'risks', project_ids: [] } })
+  })
+
+  it('keeps only search hits from allowed projects', async () => {
+    const hits = [
+      { entity_type: 'risks', display_id: 'RSK-1', title: 'A', project_id: P1, project_name: 'One' },
+      { entity_type: 'risks', display_id: 'RSK-2', title: 'B', project_id: P2, project_name: 'Two' },
+      { entity_type: 'lessons', display_id: 'LES-1', title: 'C', project_id: null, project_name: null },
+    ]
+    const db = { rpc: vi.fn().mockResolvedValue({ data: hits, error: null }) }
+    const out = await executeTool('search_records', { text: 'steel' }, { db, edition: 'platform', allowedProjectIds: [P1] })
+    expect(db.rpc).toHaveBeenCalledWith('ai_search_records', expect.objectContaining({ p_project_id: P1, p_limit: 50 }))
+    expect(out.data.hits.map((h) => h.display_id)).toEqual(['RSK-1'])
+  })
+})
+
+describe('v1294 scope line in the system prompt', () => {
+  const dynamicText = (context) => buildAskNidusSystem({ app: 'platform', catalogue, context })[1].text
+
+  it('says the conversation covers only the current project', () => {
+    const text = dynamicText({ projectId: 'p1', projectName: 'Velocity Freight', scope: { mode: 'project', project_ids: ['p1'], can_choose_all: true } })
+    expect(text).toMatch(/covers only the current project/)
+    expect(text).toMatch(/All my projects/)
+  })
+
+  it('describes assigned-only and organisation-wide scopes', () => {
+    expect(dynamicText({ scope: { mode: 'all', project_ids: ['a', 'b'] } })).toMatch(/only the 2 projects the user is assigned to/)
+    expect(dynamicText({ scope: { mode: 'all', project_ids: null, org_wide: true } })).toMatch(/every project in the organisation/)
+    expect(dynamicText({ scope: { mode: 'project', project_ids: [] } })).toMatch(/not assigned to any project/)
+  })
+
+  it('leaves the Simulator / Planner wording unchanged when there is no scope', () => {
+    expect(dynamicText({})).toMatch(/No project is open/)
+  })
+})

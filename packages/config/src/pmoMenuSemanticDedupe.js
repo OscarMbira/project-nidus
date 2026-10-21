@@ -297,6 +297,8 @@ function emailLeafSemanticKey(node = {}) {
   }
   if (/invitation expiry|invitation-settings|invitation_expiry|plat_email_inv_expiry/.test(text)) return 'email:invitation-expiry'
   if (/pending ai review|pending-review|ai-reviews|plat_email_ai|pmo_comms_pending/.test(text)) return 'email:pending-ai-reviews'
+  // v1289: Meeting Summaries sits beside Meetings in the Communications section — keep both.
+  if (/meeting summar|comms\/meetings\/summaries/.test(text)) return 'email:meeting-summaries'
   if (/meetings|comms\/meetings|plat_email_meetings|pmo_comms_meetings/.test(text)) return 'email:meetings'
   if (/direct message|comms\/direct|direct-messages|plat_email_direct|pmo_comms_direct/.test(text)) return 'email:direct-messages'
   if (

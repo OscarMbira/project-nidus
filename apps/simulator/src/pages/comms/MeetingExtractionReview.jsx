@@ -6,16 +6,20 @@
  * issues and decisions and suggests owners, due dates, the organisation's own values and possible
  * duplicates. The person then chooses, per item: create a draft, add it as an update to the existing
  * record, or set it aside. Nothing reaches a register until they press "File selected items".
+ *
+ * v1290: only people whose role may use Pending AI Reviews (can_use on that menu item) can run the
+ * agent or file items. Everyone else, Team Members by default, sees the items read-only.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Bot, CheckCircle2, Loader2, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Bot, CheckCircle2, Eye, Loader2, TriangleAlert } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb, simDb } from '@nidus/supabase'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { useIsSimulator } from './useIsSimulator'
 import {
+  canFileMeetingItems,
   defaultChoice,
   FILING_KINDS,
   fileMeetingItem,
@@ -50,6 +54,8 @@ export default function MeetingExtractionReview() {
   const [running, setRunning] = useState(false)
   const [filing, setFiling] = useState(false)
   const [error, setError] = useState('')
+  const [canFile, setCanFile] = useState(null) // null while checking; view-only until confirmed
+  const readOnly = canFile !== true
 
   const load = useCallback(async () => {
     setError('')
@@ -75,8 +81,14 @@ export default function MeetingExtractionReview() {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    let live = true
+    canFileMeetingItems(isSim).then((ok) => { if (live) setCanFile(ok) })
+    return () => { live = false }
+  }, [isSim])
+
   // Project picker only when the meeting has no project (and nothing is staged yet).
-  const needsProject = !loading && !projectId
+  const needsProject = !loading && !projectId && !readOnly
   useEffect(() => {
     if (!needsProject) return
     const q = isSim
@@ -93,6 +105,7 @@ export default function MeetingExtractionReview() {
   useUnsavedChangesGuard(isDirty && !filing, 'You have meeting items you have not filed yet.')
 
   const runAgent = async () => {
+    if (readOnly) return
     setRunning(true)
     setError('')
     try {
@@ -108,6 +121,7 @@ export default function MeetingExtractionReview() {
   }
 
   const fileSelected = async () => {
+    if (readOnly) return
     setFiling(true)
     setError('')
     const results = []
@@ -146,12 +160,21 @@ export default function MeetingExtractionReview() {
             {meeting?.actual_start || meeting?.scheduled_start ? ` · ${new Date(meeting.actual_start || meeting.scheduled_start).toLocaleDateString()}` : ''}
           </p>
         </div>
-        <button type="button" onClick={runAgent} disabled={running || !projectId || (!pending.length && !handled.length && !hasTranscript && !notes.trim())}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
-          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
-          {pending.length || handled.length ? 'Refresh AI suggestions' : 'File to registers with AI'}
-        </button>
+        {!readOnly && (
+          <button type="button" onClick={runAgent} disabled={running || !projectId || (!pending.length && !handled.length && !hasTranscript && !notes.trim())}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+            {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
+            {pending.length || handled.length ? 'Refresh AI suggestions' : 'File to registers with AI'}
+          </button>
+        )}
       </div>
+
+      {canFile === false && (
+        <p className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+          <Eye className="mt-0.5 h-4 w-4 shrink-0" />
+          You can view these meeting items, but your role cannot file them to the registers. Ask your Project Manager or PMO admin to file them, or to give your role use of Pending AI Reviews.
+        </p>
+      )}
 
       {needsProject && (
         <label className="block rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
@@ -163,7 +186,7 @@ export default function MeetingExtractionReview() {
         </label>
       )}
 
-      {!pending.length && !handled.length && !hasTranscript && (
+      {!readOnly && !pending.length && !handled.length && !hasTranscript && (
         <label className="block rounded-lg border border-gray-200 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900">
           <span className="mb-1 block font-medium text-gray-900 dark:text-gray-100">This meeting has no transcript. Paste the meeting notes:</span>
           <textarea className={inputCls} rows={6} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={48000}
@@ -176,12 +199,13 @@ export default function MeetingExtractionReview() {
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
         </p>
       )}
-      {needsEnrichment && pending.length > 0 && !running && (
+      {!readOnly && needsEnrichment && pending.length > 0 && !running && (
         <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
           Some items have no AI suggestions yet (owner, duplicates). Use “Refresh AI suggestions” or file them as they are.
         </p>
       )}
 
+      <fieldset disabled={readOnly} className="min-w-0 space-y-6">
       {FILING_KINDS.map(({ kind, label }) => {
         const rows = items[kind].filter((r) => !isHandled(r))
         if (!rows.length) return null
@@ -238,8 +262,9 @@ export default function MeetingExtractionReview() {
           </section>
         )
       })}
+      </fieldset>
 
-      {pending.length > 0 && (
+      {!readOnly && pending.length > 0 && (
         <div className="sticky bottom-2 flex flex-col gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {toFile.length} of {pending.length} item(s) will be filed. Records are created as drafts for you to complete.
@@ -251,7 +276,7 @@ export default function MeetingExtractionReview() {
         </div>
       )}
 
-      {!pending.length && !handled.length && !running && (hasTranscript || notes.trim()) && projectId && (
+      {!readOnly && !pending.length && !handled.length && !running && (hasTranscript || notes.trim()) && projectId && (
         <p className="text-sm text-gray-600 dark:text-gray-400">Press “File to registers with AI” to find the actions, risks, issues and decisions in this meeting.</p>
       )}
 

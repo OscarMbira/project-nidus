@@ -209,7 +209,7 @@ BEGIN
     IF (p_spec ->> 'project_id') !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
       RAISE EXCEPTION 'AIQ: project_id must be a project id (uuid)';
     END IF;
-    v_where := v_where || 't.project_id = ($1->>''project_id'')::uuid';
+    v_where := v_where || 't.project_id = ($1->>''project_id'')::uuid'::text;   -- ::text: an untyped literal is read as an array
     v_explain_f := v_explain_f || 'current project only'::text;
   END IF;
 

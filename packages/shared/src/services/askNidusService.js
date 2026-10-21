@@ -60,15 +60,16 @@ async function accessToken(db) {
  * @param {string|null} [args.conversationId]
  * @param {string|null} [args.projectId]
  * @param {string|null} [args.projectName]
+ * @param {boolean} [args.scopeAll]  v1294: "All my projects" (multi-project roles; the server decides)
  * @param {(event: object) => void} [args.onEvent]
  * @param {AbortSignal} [args.signal]
  */
-export async function askNidus({ db, app, question, conversationId = null, projectId = null, projectName = null, onEvent = () => {}, signal }) {
+export async function askNidus({ db, app, question, conversationId = null, projectId = null, projectName = null, scopeAll = false, onEvent = () => {}, signal }) {
   const token = await accessToken(db)
   const res = await fetch(`${FUNCTIONS_URL}/agent-run`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, apikey: ANON_KEY },
-    body: JSON.stringify({ app, question, conversation_id: conversationId, project_id: projectId, project_name: projectName }),
+    body: JSON.stringify({ app, question, conversation_id: conversationId, project_id: projectId, project_name: projectName, scope_all: scopeAll === true }),
     signal,
   })
   if (!res.ok) {
@@ -242,6 +243,45 @@ export function recordLink(basePath, routeTemplate, row) {
     .replace('{project_id}', encodeURIComponent(row.__project_id || ''))
   if (path.includes('{') || path.includes('//')) return null
   // Simulator templates already start with /simulator; don't double the base path.
+  return basePath && !path.startsWith(basePath) ? `${basePath}${path}` : path
+}
+
+/**
+ * v1295: the query for the records behind one grouped result row — the original description
+ * (filters and project limits included) plus the row's group values. The database ignores the
+ * aggregates and returns the matching records.
+ */
+export function drillSpec(result, row, limit = 200) {
+  const spec = result?.spec
+  if (result?.mode !== 'grouped' || !spec?.entity || !row) return null
+  const groupKeys = (result.columns || []).filter((c) => !c.aggregate).map((c) => c.key)
+  return { ...spec, drill: Object.fromEntries(groupKeys.map((k) => [k, row[k] ?? null])), limit }
+}
+
+/** v1295: run the drill-down query (same RLS and project limits; no AI, so no credits). */
+export async function drillIntoGroup(db, result, row) {
+  const spec = drillSpec(result, row)
+  if (!spec) throw new Error('These records cannot be opened from here.')
+  const { data, error } = await db.rpc('ai_run_query', { p_spec: spec })
+  if (error) throw new Error(String(error.message || error).replace(/^AIQ(_EDITION)?:\s*/, ''))
+  return data
+}
+
+/**
+ * v1295: link to the register's list page (catalogue list_route). {project_id} needs all the
+ * records shown to be in one project; otherwise the page opens with that project selected when
+ * there is exactly one. Returns null when the register has no list page.
+ */
+export function registerLink(basePath, listRoute, rows = []) {
+  if (!listRoute) return null
+  const projects = [...new Set((rows || []).map((r) => r.__project_id).filter(Boolean))]
+  let path = listRoute
+  if (path.includes('{project_id}')) {
+    if (projects.length !== 1) return null
+    path = path.replace('{project_id}', encodeURIComponent(projects[0]))
+  } else if (projects.length === 1 && !path.startsWith('/simulator')) {
+    path += `${path.includes('?') ? '&' : '?'}projectId=${encodeURIComponent(projects[0])}`
+  }
   return basePath && !path.startsWith(basePath) ? `${basePath}${path}` : path
 }
 

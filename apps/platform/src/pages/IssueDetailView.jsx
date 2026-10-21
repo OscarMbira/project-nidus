@@ -236,7 +236,6 @@ export default function IssueDetailView() {
     }
   }
 
-  const issuesRegisterPath = platformProjectPath(routeKey || projectId || '', 'issues/register')
   const risksListPath = platformProjectPath(routeKey || projectId || '', 'risks')
 
   if (projectRouteLoading || issueEntityLoading || loading) {
@@ -257,10 +256,10 @@ export default function IssueDetailView() {
           <p className="text-gray-500 dark:text-gray-400 mb-4">Issue not found</p>
           <button
             type="button"
-            onClick={() => navigate(issuesRegisterPath)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
-            Back to Issue Register
+            Back
           </button>
         </div>
       </div>
@@ -274,10 +273,10 @@ export default function IssueDetailView() {
           <p className="text-gray-500 dark:text-gray-400 mb-4">Issue not found</p>
           <button
             type="button"
-            onClick={() => navigate(issuesRegisterPath)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
-            Back to Issue Register
+            Back
           </button>
         </div>
       </div>
@@ -293,11 +292,11 @@ export default function IssueDetailView() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
         type="button"
-        onClick={() => navigate(issuesRegisterPath)}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Issue Register
+        Back
       </button>
 
       {/* Header */}

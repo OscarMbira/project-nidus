@@ -73,6 +73,7 @@ export default function AskNidusChat({
   onConversationChange = () => {},
   projectId = null,
   projectName = null,
+  scopeAll = false,
   settingsPath = null,
   prefill = '',
   className = '',
@@ -149,6 +150,7 @@ export default function AskNidusChat({
         conversationId: activeConversation.current,
         projectId,
         projectName,
+        scopeAll,
         onEvent: (ev) => {
           if (ev.type === 'status') setLive((l) => ({ ...l, status: ev.text }))
           if (ev.type === 'table') results.push({ kind: 'table', ...ev.result })

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { AiBlockedError, parseSseBuffer, recordLink, saveResultAsReport } from '../askNidusService.js'
+import { AiBlockedError, drillIntoGroup, drillSpec, parseSseBuffer, recordLink, registerLink, saveResultAsReport } from '../askNidusService.js'
 
 describe('parseSseBuffer', () => {
   it('returns complete events and keeps the unfinished tail', () => {
@@ -48,5 +48,40 @@ describe('AiBlockedError', () => {
     const e = new AiBlockedError('Ask your owner', 'not_enabled')
     expect(e.reason).toBe('not_enabled')
     expect(e).toBeInstanceOf(Error)
+  })
+})
+
+describe('v1295 drill-down', () => {
+  const grouped = {
+    mode: 'grouped',
+    spec: { entity: 'risks', group_by: ['project_name', 'level'], aggregates: [{ fn: 'count', alias: 'n' }], project_ids: ['p1'], limit: 50 },
+    columns: [{ key: 'project_name' }, { key: 'level' }, { key: 'n', aggregate: true }],
+  }
+
+  it('builds the records query from the row group values, keeping filters and project limits', () => {
+    const spec = drillSpec(grouped, { project_name: 'Velocity Freight', level: 'high', n: 6 })
+    expect(spec).toEqual({ ...grouped.spec, drill: { project_name: 'Velocity Freight', level: 'high' }, limit: 200 })
+    expect(drillSpec(grouped, { project_name: 'X', level: null, n: 1 }).drill.level).toBeNull()
+  })
+
+  it('does not drill into record results or results without a query', () => {
+    expect(drillSpec({ ...grouped, mode: 'rows' }, {})).toBeNull()
+    expect(drillSpec({ ...grouped, spec: null }, {})).toBeNull()
+  })
+
+  it('runs the query and turns runner errors into plain messages', async () => {
+    const db = { rpc: vi.fn().mockResolvedValueOnce({ data: { mode: 'rows' }, error: null })
+      .mockResolvedValueOnce({ data: null, error: { message: 'AIQ: "level" cannot be used to group results' } }) }
+    await expect(drillIntoGroup(db, grouped, { project_name: 'A', level: 'high' })).resolves.toEqual({ mode: 'rows' })
+    expect(db.rpc).toHaveBeenCalledWith('ai_run_query', { p_spec: expect.objectContaining({ drill: { project_name: 'A', level: 'high' } }) })
+    await expect(drillIntoGroup(db, grouped, { project_name: 'A', level: 'high' })).rejects.toThrow(/^"level" cannot be used/)
+  })
+
+  it('links to the register list page, with the project when the records share one', () => {
+    expect(registerLink('', '/platform/risks', [{ __project_id: 'p1' }, { __project_id: 'p1' }])).toBe('/platform/risks?projectId=p1')
+    expect(registerLink('', '/platform/risks', [{ __project_id: 'p1' }, { __project_id: 'p2' }])).toBe('/platform/risks')
+    expect(registerLink('', '/simulator/practice-projects/{project_id}/milestones', [{ __project_id: 's1' }])).toBe('/simulator/practice-projects/s1/milestones')
+    expect(registerLink('', '/simulator/practice-projects/{project_id}/milestones', [{ __project_id: 's1' }, { __project_id: 's2' }])).toBeNull()
+    expect(registerLink('', null, [])).toBeNull()
   })
 })

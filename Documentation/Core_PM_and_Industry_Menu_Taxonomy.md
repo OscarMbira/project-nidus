@@ -1808,3 +1808,48 @@ Project Planner
 └── Settings
     └── AI settings (v1272)
 ```
+
+# 25. Communications (v1289)
+
+Additive entries. Comms Hub pages (team messaging, direct messages, meeting summaries and the AI review queue for meeting follow-ups) now have one home: a **Communications** section in the Core PM sidebar. The same section appears for PMO, Project Manager, Team Manager, Team Lead and Team Member roles. Existing entries above are unchanged: **Governance → Meetings** stays the place for meetings on the Platform, and **Stakeholders → Communications** stays the communication *plan* (who is told what, when). This section is for the conversations themselves.
+
+Rules carried forward:
+
+- One page, one menu home. Pages are not duplicated across sections (Meetings is under Governance, so the Platform Communications section links to Meeting Summaries, not Meetings).
+- Create actions are not menu items. "Schedule Meeting" is the button on the Meetings page.
+- Every `/platform/comms/*` and `/simulator/comms/*` page is grouped into this section by the sidebar, in every layout, even if its menu row has no parent.
+
+```text
+Platform
+└── Communications (v1289)
+    ├── Comms Hub (v1289) — /platform/comms
+    ├── Channel Messages (v1289) — /platform/comms/messages
+    ├── Direct Messages (v1289) — /platform/comms/direct
+    ├── Meeting Summaries (v1289) — /platform/comms/meetings/summaries
+    └── Pending AI Reviews (v1289) — /platform/comms/pending-review
+        (meetings themselves: Governance → Meetings — /platform/comms/meetings)
+
+Simulator
+└── Practice Communications (v1289)
+    ├── Comms Hub (v1289) — /simulator/comms
+    ├── Channel Messages (v1289) — /simulator/comms/messages
+    ├── Direct Messages (v1289) — /simulator/comms/direct
+    ├── Meetings (v1289) — /simulator/comms/meetings
+    ├── Meeting Summaries (v1289) — /simulator/comms/meetings/summaries
+    └── Pending AI Reviews (v1289) — /simulator/comms/pending-review
+```
+
+# 26. PMO Configuration (v1292)
+
+Additive entries (PRD `projectprd/v1292_pmo_configuration_managed_areas_PRD.md`). PMO Configuration is the organisation's guided entry point into its setup pages, and the landing page of the sidebar's **Organisation** zone tab. Its areas (Delivery Methodology, Risk Categories, … AI Settings) are page content, not menu items.
+
+```text
+Platform
+└── PMO Configuration (v988) — /platform/pmo-admin/configuration
+        (v1292: also shown to Account Owners)
+
+Simulator
+└── PMO Admin
+    ├── PMO Configuration (v1292) — /simulator/pmo/configuration
+    └── AI Settings (v1272)
+```

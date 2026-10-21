@@ -71,6 +71,7 @@ describe('menu registry entries (v982 Phase 7 + risk categories)', () => {
     'pmo_risk_categories',
     'plat_pm_risk_categories',
     'sim_pm_risk_categories',
+    'sim_pmo_admin_configuration',
   ])('includes %s', (code) => {
     expect(codes.has(code)).toBe(true)
   })
@@ -78,6 +79,16 @@ describe('menu registry entries (v982 Phase 7 + risk categories)', () => {
   it('files the PMO Configuration items under Administration', () => {
     const entry = MENU_REGISTRY.find((e) => e.menu_code === 'pmo_configuration_home')
     expect(entry.category).toBe('pmo-cat-admin')
+  })
+
+  it('gives Account Owners the PMO Configuration link in both apps (v1292)', () => {
+    for (const code of ['pmo_configuration_home', 'sim_pmo_admin_configuration']) {
+      const entry = MENU_REGISTRY.find((e) => e.menu_code === code)
+      expect(entry.roles).toContain('account_owner')
+    }
+    const sim = MENU_REGISTRY.find((e) => e.menu_code === 'sim_pmo_admin_configuration')
+    expect(sim.route_path).toBe('/simulator/pmo/configuration')
+    expect(sim.domain).toBe('simulator')
   })
 
   it('still includes entries that only the package had', () => {

@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import ZoneTabs, { resolveActiveZone, zoneLandingRoute } from '../ZoneTabs'
+import ZoneTabs, { resolveActiveZone, zoneLandingRoute, canOpenOrganisationZone } from '../ZoneTabs'
 
 describe('resolveActiveZone', () => {
   it('resolves Delivery for the pm layout', () => {
@@ -18,11 +18,13 @@ describe('resolveActiveZone', () => {
   it('resolves Organisation for the pmo layout', () => {
     expect(resolveActiveZone('/platform/dashboard', 'pmo')).toBe('organisation')
     expect(resolveActiveZone('/platform/pmo-admin/configuration', 'pmo')).toBe('organisation')
+    expect(resolveActiveZone('/platform/pmo-admin/configuration/areas/risk_categories/edit', 'pmo')).toBe('organisation')
   })
 
   it('resolves the Simulator-equivalent layouts the same way', () => {
     expect(resolveActiveZone('/simulator/pm/dashboard', 'sim_pm')).toBe('delivery')
     expect(resolveActiveZone('/simulator/pmo/dashboard', 'sim_pmo')).toBe('organisation')
+    expect(resolveActiveZone('/simulator/pmo/configuration/areas/create', 'sim_pmo')).toBe('organisation')
   })
 
   it('resolves Delivery for /simulator/practice-projects/* regardless of layout (v982 Phase 7 follow-up — a genuine gap the original phase flagged, not guessed at)', () => {
@@ -49,13 +51,13 @@ describe('zoneLandingRoute', () => {
   it('maps each zone to its Platform landing route', () => {
     expect(zoneLandingRoute('my-work', false)).toBe('/platform/my-work')
     expect(zoneLandingRoute('delivery', false)).toBe('/pm/dashboard')
-    expect(zoneLandingRoute('organisation', false)).toBe('/platform/dashboard')
+    expect(zoneLandingRoute('organisation', false)).toBe('/platform/pmo-admin/configuration')
   })
 
   it('maps each zone to its Simulator landing route', () => {
     expect(zoneLandingRoute('my-work', true)).toBe('/simulator/my-work')
     expect(zoneLandingRoute('delivery', true)).toBe('/simulator/pm/dashboard')
-    expect(zoneLandingRoute('organisation', true)).toBe('/simulator/pmo/dashboard')
+    expect(zoneLandingRoute('organisation', true)).toBe('/simulator/pmo/configuration')
   })
 })
 
@@ -80,5 +82,30 @@ describe('ZoneTabs component', () => {
     render(<ZoneTabs activeZone="delivery" onSelect={() => {}} />)
     expect(screen.queryByRole('tab', { name: /account/i })).not.toBeInTheDocument()
     expect(screen.getAllByRole('tab')).toHaveLength(3)
+  })
+})
+
+describe('Organisation zone visibility', () => {
+  it('is offered only to users with an organisation-level role on the Platform', () => {
+    expect(canOpenOrganisationZone(['project_manager', 'team_member'], false)).toBe(false)
+    expect(canOpenOrganisationZone(['project_manager', 'pmo_admin'], false)).toBe(true)
+    expect(canOpenOrganisationZone(['Account Owner'], false)).toBe(true)
+  })
+
+  it('stays visible while roles are unknown and in the Simulator', () => {
+    expect(canOpenOrganisationZone(undefined, false)).toBe(true)
+    expect(canOpenOrganisationZone([], false)).toBe(true)
+    expect(canOpenOrganisationZone(['project_manager'], true)).toBe(true)
+  })
+
+  it('hides the Organisation tab when showOrganisation is false', () => {
+    render(<ZoneTabs activeZone="delivery" onSelect={() => {}} showOrganisation={false} />)
+    expect(screen.queryByRole('tab', { name: /organisation/i })).not.toBeInTheDocument()
+    expect(screen.getAllByRole('tab')).toHaveLength(2)
+  })
+
+  it('keeps the tab when the user is already in the Organisation zone', () => {
+    render(<ZoneTabs activeZone="organisation" onSelect={() => {}} showOrganisation={false} />)
+    expect(screen.getByRole('tab', { name: /organisation/i })).toBeInTheDocument()
   })
 })

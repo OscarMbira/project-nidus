@@ -4,7 +4,7 @@ import { useMenu } from '../lib/useMenu'
 import { useSimMenu } from '../lib/useSimMenu'
 import { performLogout, getLogoutRedirectPath } from '../services/authLogoutService'
 import { getAccessibleWorkspaces, getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
-import ZoneTabs, { resolveActiveZone, zoneLandingRoute } from './ZoneTabs'
+import ZoneTabs, { resolveActiveZone, zoneLandingRoute, canOpenOrganisationZone } from './ZoneTabs'
 import {
   LayoutDashboard,
   FolderKanban,
@@ -675,7 +675,11 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
               vertical bar appears (Windows classic scrollbars shrink width → 1px overflow). */}
           <nav className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden py-4 px-3">
             {activeZone && (
-              <ZoneTabs activeZone={activeZone} onSelect={handleZoneSelect} />
+              <ZoneTabs
+                activeZone={activeZone}
+                onSelect={handleZoneSelect}
+                showOrganisation={canOpenOrganisationZone(layoutHint?.roleNames, isSimulatorContext)}
+              />
             )}
             {showMethodologySwitcher && !loading && (
               <MethodologySwitcher onChange={() => refetch?.()} />

@@ -1,7 +1,9 @@
 /**
  * v1272 — agent-run: Ask Nidus (PRD stories 12–23, 27d/27e, 28; D1–D4, D10, D16, D18).
  *
- * POST { app: 'platform'|'simulator'|'planner', question, conversation_id?, project_id?, project_name? }
+ * POST { app: 'platform'|'simulator'|'planner', question, conversation_id?, project_id?, project_name?, scope_all? }
+ *   v1294 (Platform): project_id = the header project; scope_all = "All my projects" (multi-project
+ *   roles only). public.ai_project_scope decides the allowed projects; the data tools enforce them.
  * Response: text/event-stream of JSON events
  *   { type: 'status', text }                         progress ("Looking up risks…")
  *   { type: 'table', result }                        an ai_run_query result to render
@@ -55,6 +57,23 @@ serve(async (req) => {
   }
   if (run.blocked) return json(req, 403, run.blocked)
 
+  // v1294: which projects this Platform conversation may use (header project, or "All my projects"
+  // for multi-project roles). Enforced by the data tools. If the check fails, nothing is allowed.
+  let scope: { mode: string; project_ids: string[] | null; org_wide?: boolean; can_choose_all?: boolean } | null = null
+  if (app === 'platform') {
+    const { data, error } = await run.publicDb.rpc('ai_project_scope', { p_project_id: projectId, p_all: body.scope_all === true })
+    scope = error || !data ? { mode: 'project', project_ids: [] } : data
+    if (error) console.warn('[agent-run] ai_project_scope failed, no project data allowed', error.message)
+  }
+  const allowedProjectIds = scope ? scope.project_ids : undefined
+  const scopedProjectId = !scope ? projectId
+    : scope.mode === 'project' && allowedProjectIds?.length === 1 ? allowedProjectIds[0] : null
+  let scopedProjectName = typeof body.project_name === 'string' ? body.project_name.slice(0, 200) : null
+  if (scopedProjectId && scopedProjectId !== projectId) {
+    const { data } = await run.db.from('ai_v_projects').select('project_name').eq('id', scopedProjectId).maybeSingle()
+    scopedProjectName = data?.project_name || null
+  }
+
   const encoder = new TextEncoder()
   const stream = new ReadableStream({
     async start(controller) {
@@ -76,7 +95,7 @@ serve(async (req) => {
             organisation_id: run.accountId,
           }
           if (run.schema === 'public') {
-            row.project_id = projectId
+            row.project_id = scopedProjectId
             row.domain = app
           }
           const { data, error } = await run.db.from('ai_conversations').insert(row).select('id').single()
@@ -116,8 +135,9 @@ serve(async (req) => {
           context: {
             today: new Date().toISOString().slice(0, 10),
             userName: run.userName,
-            projectId,
-            projectName: typeof body.project_name === 'string' ? body.project_name.slice(0, 200) : null,
+            projectId: scopedProjectId,
+            projectName: scopedProjectName,
+            scope,
             languageName: lang?.name,
             languageCode: run.languageCode,
           },
@@ -138,7 +158,7 @@ serve(async (req) => {
           messages: normaliseHistory(messages),
           maxIterations: run.settings.max_agent_iterations || 8,
           executeTool: (name: string, input: Record<string, unknown>) =>
-            executeTool(name, input, { db: run.db, publicDb: run.publicDb, edition: run.edition, projectId, embed: embedLiteral }),
+            executeTool(name, input, { db: run.db, publicDb: run.publicDb, edition: run.edition, projectId: scopedProjectId, allowedProjectIds, embed: embedLiteral }),
           onEvent: (ev: Record<string, any>) => {
             if (ev.type === 'tool_start') send({ type: 'status', text: toolStatus(ev.name, ev.input, catalogue) })
             if (ev.type === 'tool_end' && ev.data) {

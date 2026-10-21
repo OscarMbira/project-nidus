@@ -156,14 +156,25 @@ function keywordsOf(text) {
     .filter((w) => w.length >= 3 && !/^\d+$/.test(w)))].slice(0, 30)
 }
 
+/** v1294: the model asked about a project outside this conversation's scope. */
+function outOfScope() {
+  return {
+    content: 'OUT_OF_SCOPE: that project is not part of this conversation. Tell the user, briefly, which projects this conversation covers (see Scope).',
+    isError: true,
+    summary: { error: 'out_of_scope' },
+  }
+}
+
 /**
  * Execute a tool.
  * @param {string} name
  * @param {object} input
- * @param {object} ctx  { db, publicDb, edition, projectId, embed? }
+ * @param {object} ctx  { db, publicDb, edition, projectId, embed?, allowedProjectIds? }
  *   db       — user-session Supabase client bound to the app schema (public or sim)
  *   publicDb — user-session client on public (help docs live there)
  *   embed    — optional (text) => pgvector literal | null, for meaning search (Phase 2b)
+ *   allowedProjectIds — v1294: projects this conversation may use (array; [] = none).
+ *              null/undefined = no extra limit beyond RLS (PMO "All my projects", Simulator, Planner).
  * @returns {Promise<{content: any, isError?: boolean, data?: any, summary?: any}>}
  */
 export async function executeTool(name, input, ctx) {
@@ -172,9 +183,16 @@ export async function executeTool(name, input, ctx) {
     return { content: `Tool ${name} is not available.`, isError: true }
   }
 
+  const allowed = Array.isArray(ctx.allowedProjectIds) ? ctx.allowedProjectIds : null
+
   if (name === 'query_records') {
     const spec = { ...input }
     if (!spec.entity || typeof spec.entity !== 'string') return { content: 'entity is required', isError: true }
+    delete spec.project_ids // only the scope below may set this
+    if (allowed) {
+      if (spec.project_id && !allowed.includes(spec.project_id)) return outOfScope()
+      spec.project_ids = allowed
+    }
     const { data, error } = await ctx.db.rpc('ai_run_query', { p_spec: spec })
     if (error) {
       const msg = String(error.message || error)
@@ -193,11 +211,14 @@ export async function executeTool(name, input, ctx) {
   if (name === 'search_records') {
     const text = String(input.text || '').trim()
     if (!text) return { content: 'text is required', isError: true }
+    if (allowed && input.project_id && !allowed.includes(input.project_id)) return outOfScope()
+    const limit = Math.min(Math.max(Number(input.limit) || 15, 1), 50)
     const params = {
       p_text: text,
       p_entity_types: Array.isArray(input.entity_types) && input.entity_types.length ? input.entity_types : null,
-      p_project_id: input.project_id || null,
-      p_limit: Math.min(Math.max(Number(input.limit) || 15, 1), 50),
+      p_project_id: input.project_id || (allowed?.length === 1 ? allowed[0] : null),
+      // v1294: a project list is applied after the search, so ask for more to fill the answer.
+      p_limit: allowed ? 50 : limit,
     }
     // Phase 2b: keyword + meaning (hybrid) when an embedding is available; keyword search otherwise.
     const embedding = ctx.embed ? await ctx.embed(text) : null
@@ -206,7 +227,7 @@ export async function executeTool(name, input, ctx) {
       : await ctx.db.rpc('ai_search_records', params)
     if (error && embedding) ({ data, error } = await ctx.db.rpc('ai_search_records', params))
     if (error) return { content: `Search failed: ${error.message}`, isError: true }
-    const hits = data || []
+    const hits = (data || []).filter((h) => !allowed || allowed.includes(h.project_id)).slice(0, limit)
     return {
       content: { matches: hits.map((h) => ({ register: h.entity_type, ref: h.display_id, title: h.title, project: h.project_name, score: h.score, match: h.matched || 'keyword' })) },
       data: { kind: 'search', text, hits },

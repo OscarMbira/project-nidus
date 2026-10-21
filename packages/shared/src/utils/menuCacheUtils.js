@@ -207,7 +207,9 @@
 // 131->132 (2026-10-06): v1218 adds Configuration Item Types under Quality.
 // 132->133 (2026-10-11): v1240 makes this one shared file for Platform (was 132) and Simulator
 // (was 74), and the PMO sidebar drops the empty Executive Overview wrapper (v1000 port).
-const SIDEBAR_CACHE_VERSION = 133
+// 133->134 (2026-10-20): v1292 adds Simulator PMO Admin → PMO Configuration and gives Account
+// Owners the Platform PMO Configuration link.
+const SIDEBAR_CACHE_VERSION = 134
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

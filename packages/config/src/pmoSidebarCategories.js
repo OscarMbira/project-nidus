@@ -36,6 +36,9 @@ export const PM_CATEGORY_DEFS = [
   { id: 'plat_grp_pm_reporting', label: 'Reporting & Analytics', order: 90 },
   { id: 'plat_grp_pm_financial', label: 'Financial', order: 100 },
   { id: 'plat_grp_pm_auth', label: 'Authorisation', order: 110 },
+  // v1289: one Communications section (Comms Hub, messages, meeting summaries, AI review queue)
+  // shared by the PM, Team and PMO layouts — same DB row in each.
+  { id: 'plat_pm_communications', label: 'Communications', order: 117, menuIcon: 'message-square' },
   { id: 'plat_sec_cross_fw', label: 'Cross-Framework', order: 120, menuIcon: 'grid' },
   { id: 'pmo-cat-knowledge-assets', label: 'Knowledge & Resources', order: 130 },
   { id: 'pmo-cat-email-notifications', label: 'Email & Notifications', order: 140 },
@@ -56,6 +59,7 @@ export const PMO_CATEGORY_DEFS = [
   { id: 'pmo-cat-stakeholders', label: 'Stakeholders', order: 9 },
   { id: 'pmo-cat-knowledge-assets', label: 'Knowledge & Operations', order: 10 },
   { id: 'pmo-cat-audit-compliance', label: 'Audit Trail & Compliance', order: 11 },
+  { id: 'plat_pm_communications', label: 'Communications', order: 11.5, menuIcon: 'message-square' }, // v1289
   { id: 'pmo-cat-email-notifications', label: 'Email & Notifications', order: 12 },
   { id: 'pmo-cat-account-subscription', label: 'Account & Subscription', order: 12.5 },
   { id: 'pmo-cat-admin', label: 'Administration', order: 13 },

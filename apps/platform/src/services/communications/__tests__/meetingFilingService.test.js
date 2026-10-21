@@ -18,6 +18,7 @@ const fakeDb = {
   from: (name) => table(name),
   auth: { getUser: () => Promise.resolve({ data: { user: { id: 'auth-1' } } }) },
   functions: { invoke: vi.fn() },
+  rpc: vi.fn(),
 }
 
 vi.mock('../../supabase/supabaseClient', () => ({ platformDb: fakeDb }))
@@ -31,7 +32,7 @@ vi.mock('../../dailyLogEntryService', () => ({ addEntry: vi.fn() }))
 vi.mock('../../dailyLogService', () => ({ createDailyLog: vi.fn(), getDailyLogByProject: vi.fn() }))
 vi.mock('../../sim/practiceDailyLogService', () => ({ createPracticeDailyLog: vi.fn(), createPracticeDailyLogEntry: vi.fn(), getPracticeDailyLog: vi.fn() }))
 
-const { defaultChoice, fileMeetingItem, filingSummary, isHandled } = await import('../meetingFilingService')
+const { canFileMeetingItems, defaultChoice, fileMeetingItem, filingSummary, isHandled } = await import('../meetingFilingService')
 
 beforeEach(() => { calls.length = 0; createDecision.mockClear() })
 
@@ -78,5 +79,24 @@ describe('filingSummary', () => {
     expect(s.message).toContain('2 draft records created')
     expect(s.message).toContain('RSK-0042')
     expect(s.message).toContain('1 set aside')
+  })
+})
+
+describe('canFileMeetingItems (v1290)', () => {
+  it('follows the can_use grant on the Pending AI Reviews menu item of the right app', async () => {
+    fakeDb.rpc.mockResolvedValueOnce({ data: true, error: null })
+    expect(await canFileMeetingItems(false)).toBe(true)
+    expect(fakeDb.rpc).toHaveBeenLastCalledWith('auth_user_can_use_menu', { p_menu_codes: ['plat_pm_comms_pending_review'] })
+    fakeDb.rpc.mockResolvedValueOnce({ data: false, error: null })
+    expect(await canFileMeetingItems(true)).toBe(false)
+    expect(fakeDb.rpc).toHaveBeenLastCalledWith('auth_user_can_use_menu', { p_menu_codes: ['sim_pm_comms_pending_review'] })
+  })
+  it('is view-only when the check fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    fakeDb.rpc.mockResolvedValueOnce({ data: null, error: { message: 'function does not exist' } })
+    expect(await canFileMeetingItems(false)).toBe(false)
+    fakeDb.rpc.mockRejectedValueOnce(new Error('network'))
+    expect(await canFileMeetingItems(false)).toBe(false)
+    warn.mockRestore()
   })
 })

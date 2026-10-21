@@ -6,10 +6,19 @@
  * target of Phase 1's "Getting Started as PMO Admin" CTA.
  * Route: /platform/pmo-admin/configuration
  */
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Compass, Sliders, Layers, FileStack, GitBranch, ShieldCheck, Users, Database, ArrowLeft, Package, Tags, UserCog, ClipboardCheck, CalendarRange, Settings,
+  Compass, Sliders, Layers, FileStack, GitBranch, ShieldCheck, Users, Database, ArrowLeft, Package, Tags, UserCog, ClipboardCheck, CalendarRange, Settings, Sparkles, Search,
 } from 'lucide-react'
+import { useViewMode } from '@nidus/shared/hooks/useViewMode'
+import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
+import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import ViewToggle from '@nidus/ui/ViewToggle'
+import ExportListMenu from '@nidus/ui/ExportListMenu'
+import RowNumberBadge from '@nidus/ui/RowNumberBadge'
+import { RowActionButton } from '@nidus/ui'
+import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 
 const CARDS = [
   {
@@ -76,6 +85,13 @@ const CARDS = [
     cta: 'Choose a capability profile →',
   },
   {
+    icon: Sparkles,
+    title: 'AI Settings',
+    description: 'Accept the AI notice, turn Ask Nidus on or off, set how long conversations are kept, and check AI credit usage.',
+    to: '/platform/organisation/ai-settings',
+    cta: 'Open AI settings →',
+  },
+  {
     icon: FileStack,
     title: 'Templates',
     description: 'Industry templates and their governance — required stage gates and approval chains.',
@@ -112,11 +128,46 @@ const CARDS = [
   },
 ]
 
+const EXPORT_COLUMNS = [
+  { key: 'title', label: 'Area' },
+  { key: 'description', label: 'Description' },
+]
+
+const DEFAULT_SORT = { column: 'title', direction: 'asc' }
+
+const SORT_ACCESSORS = {
+  title: (card) => card.title,
+  description: (card) => card.description,
+}
+
 export default function PmoConfigurationHome() {
   const navigate = useNavigate()
+  const [viewMode, setViewMode] = useViewMode('pmo-configuration-home', 'list')
+  const [search, setSearch] = useState('')
+  const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
+    defaultSort: DEFAULT_SORT,
+    storageKey: 'nidus-pmo-configuration-home',
+  })
+
+  const displayCards = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    const filtered = q
+      ? CARDS.filter((card) => card.title.toLowerCase().includes(q) || card.description.toLowerCase().includes(q))
+      : CARDS
+    return sortedData(filtered, SORT_ACCESSORS)
+  }, [search, sortedData])
+
+  const exportData = useMemo(
+    () => displayCards.map((card) => ({ title: card.title, description: card.description })),
+    [displayCards],
+  )
+
+  const openAction = (card) => (
+    <RowActionButton variant="view" label={`Open ${card.title}`} onClick={() => navigate(card.to)} />
+  )
 
   return (
-    <div className="min-h-full bg-gray-50 dark:bg-gray-900">
+    <div className="w-full">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -125,31 +176,98 @@ export default function PmoConfigurationHome() {
           <Compass className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">PMO Configuration</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Set up your organisation's methodology, classifications, templates, workflows, authorities, roles, and reference data — once, in one place.
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {CARDS.map((card) => {
-            const Icon = card.icon
-            return (
-              <div key={card.title} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex flex-col">
-                <Icon className="h-7 w-7 text-emerald-600 dark:text-emerald-400 mb-3" aria-hidden />
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">{card.title}</h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 flex-1">{card.description}</p>
-                <button
-                  type="button"
-                  onClick={() => navigate(card.to)}
-                  className="mt-4 text-left text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
-                >
-                  {card.cta}
-                </button>
-              </div>
-            )
-          })}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search configuration areas..."
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ExportListMenu
+              columns={EXPORT_COLUMNS}
+              data={exportData}
+              baseFilename="PMO-Configuration-Areas"
+              disabled={!displayCards.length}
+            />
+            <ViewToggle value={viewMode} onChange={setViewMode} ariaLabel="PMO configuration layout" />
+          </div>
         </div>
+
+        {displayCards.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800">
+            <p className="text-gray-700 dark:text-gray-200">No configuration areas match your search.</p>
+          </div>
+        ) : viewMode === 'list' ? (
+          <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableRowNumberHeader />
+                  <TableHeaderCell sortable sortDirection={getSortDirectionForColumn('title')} onSort={() => handleSort('title')}>Area</TableHeaderCell>
+                  <TableHeaderCell sortable sortDirection={getSortDirectionForColumn('description')} onSort={() => handleSort('description')}>Description</TableHeaderCell>
+                  <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-200">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {displayCards.map((card, index) => {
+                  const Icon = card.icon
+                  return (
+                    <tr key={card.title} className="border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <TableRowNumberCell number={getDisplayRowNumber(index)} />
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2 font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
+                          <Icon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" aria-hidden />
+                          {card.title}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-gray-700 dark:text-gray-200">{card.description}</td>
+                      <td className="px-3 py-3">
+                        <div className="flex justify-end">{openAction(card)}</div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {displayCards.map((card, index) => {
+              const Icon = card.icon
+              return (
+                <div key={card.title} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-5 flex flex-col">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <RowNumberBadge number={getDisplayRowNumber(index)} />
+                      <Icon className="h-7 w-7 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                    </div>
+                    {openAction(card)}
+                  </div>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1">{card.title}</h2>
+                  <p className="text-sm text-gray-700 dark:text-gray-200 flex-1">{card.description}</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(card.to)}
+                    className="mt-4 text-left text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300"
+                  >
+                    {card.cta}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )

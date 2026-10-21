@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useEntityId } from '../lib/useEntityId'
-import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam'
 import { platformDb } from '@nidus/supabase'
 import { format } from 'date-fns'
 import { ArrowLeft, Edit2, AlertTriangle, TrendingUp, User, Calendar, CheckCircle, Clock, MessageSquare, Paperclip, Link as LinkIcon, X, Link2 } from 'lucide-react'
@@ -76,7 +75,7 @@ export default function RiskDetail() {
   const params = useParams()
   // Nested project route uses :riskId; legacy /platform/risks/:id uses :id
   const riskParam = params.riskId || params.id
-  const { projectId, routeKey, loading: projectRouteLoading } = usePlatformProjectId()
+  const { projectId, loading: projectRouteLoading } = usePlatformProjectId()
   const { uuid: riskUuid, loading: riskEntityLoading, error: riskResolveError } = useEntityId(
     riskParam && projectId ? riskParam : '',
     'risk',
@@ -165,7 +164,6 @@ export default function RiskDetail() {
     setRefreshKey(prev => prev + 1)
   }
 
-  const risksListPath = platformProjectPath(routeKey || projectId || '', 'risks')
 
   if (projectRouteLoading || riskEntityLoading || loading) {
     return (
@@ -185,10 +183,10 @@ export default function RiskDetail() {
           <p className="text-gray-500 dark:text-gray-400 mb-4">Risk not found</p>
           <button
             type="button"
-            onClick={() => navigate(risksListPath)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
-            Back to Risks
+            Back
           </button>
         </div>
       </div>
@@ -202,10 +200,10 @@ export default function RiskDetail() {
           <p className="text-gray-500 dark:text-gray-400 mb-4">Risk not found</p>
           <button
             type="button"
-            onClick={() => navigate(risksListPath)}
+            onClick={() => navigate(-1)}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
           >
-            Back to Risks
+            Back
           </button>
         </div>
       </div>
@@ -254,11 +252,11 @@ export default function RiskDetail() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <button
         type="button"
-        onClick={() => navigate(risksListPath)}
+        onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to Risks
+        Back
       </button>
 
       <div className="mb-6">

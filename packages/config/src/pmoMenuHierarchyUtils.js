@@ -353,6 +353,7 @@ export const SIM_PMO_CATEGORY_DEFS = [
   { id: 'sim_pmo_cat_workflows', label: 'Practice Workflows & Governance', order: 70 },
   { id: 'sim_pmo_cat_process_templates', label: 'Practice Process Templates', order: 80 },
   { id: 'sim_pmo_cat_knowledge', label: 'Practice Knowledge & Assets', order: 90 },
+  { id: 'sim_pm_communications', label: 'Practice Communications', order: 95 }, // v1289
   { id: 'sim_pmo_cat_email', label: 'Practice Email & Notifications', order: 100 },
   { id: 'sim_pmo_cat_admin', label: 'Practice Administration', order: 110 },
   { id: 'sim_pmo_cat_system_admin', label: 'Simulator System Administration', order: 120 },
@@ -365,6 +366,7 @@ export const SIM_PM_CATEGORY_DEFS = [
   { id: 'sim_pm_cat_teams', label: 'Practice Teams', order: 25 },
   { id: 'sim_pm_cat_controls', label: 'Practice Controls & Registers', order: 30 },
   { id: 'sim_pm_cat_process_templates', label: 'Practice Process Templates', order: 70 },
+  { id: 'sim_pm_communications', label: 'Practice Communications', order: 85 }, // v1289
   { id: 'sim_pm_cat_cross_framework', label: 'Practice Cross-Framework', order: 90 },
   { id: 'sim_pm_cat_learning', label: 'Learning Hub', order: 95 },
 ]
@@ -453,8 +455,18 @@ function sortChildren(node) {
   return { ...node, children: sortNodes(node.children.map(sortChildren)) }
 }
 
+/**
+ * v1289: every Comms Hub page (messages, direct messages, meetings, summaries, AI review queue)
+ * belongs to the single Communications section, in every layout.
+ */
+function isCommsRoute(node, app) {
+  const path = String(node?.route_path || '').trim().toLowerCase()
+  return new RegExp(`^/${app}/comms(/|$)`).test(path)
+}
+
 function inferPlatformCategoryId(node = {}) {
   const code = String(node?.menu_code || '').trim()
+  if (isCommsRoute(node, 'platform')) return 'plat_pm_communications'
   const legacyTarget = LEGACY_CATEGORY_SHELL_TARGETS[code]
   if (legacyTarget) return legacyTarget
   if (PMO_UNIVERSAL_CATEGORY_IDS.has(code) || PLATFORM_TRACK_CODES.has(code)) return code
@@ -649,6 +661,7 @@ const SIM_PMO_SEC_TARGETS = {
 
 function inferSimPmoCategoryId(node = {}) {
   const code = String(node?.menu_code || '').trim()
+  if (isCommsRoute(node, 'simulator')) return 'sim_pm_communications'
   if (SIM_PMO_SEC_TARGETS[code]) return SIM_PMO_SEC_TARGETS[code]
   if (REGISTRY_SIMULATOR.has(code)) return REGISTRY_SIMULATOR.get(code)
   if (SIM_PMO_UNIVERSAL_IDS.has(code) || SIM_PMO_TRACK_CODES.has(code)) return code
@@ -792,6 +805,7 @@ export function flattenPmLayoutSectionRoots(nodes = []) {
 
 function inferPmPlatformCategoryId(node = {}) {
   const code = String(node?.menu_code || '').trim()
+  if (isCommsRoute(node, 'platform')) return 'plat_pm_communications'
   if (PM_PLATFORM_SEC_TARGETS[code]) return PM_PLATFORM_SEC_TARGETS[code]
   if (PM_TRACK_AND_GROUP_CODE_TARGETS[code]) return PM_TRACK_AND_GROUP_CODE_TARGETS[code]
   if (PM_UNIVERSAL_CATEGORY_IDS.has(code) || PLATFORM_TRACK_CODES.has(code)) return code
@@ -1125,6 +1139,7 @@ const SIM_PM_SEC_TARGETS = {
 
 function inferSimPmCategoryId(node = {}) {
   const code = String(node?.menu_code || '').trim()
+  if (isCommsRoute(node, 'simulator')) return 'sim_pm_communications'
   if (SIM_PM_SEC_TARGETS[code]) return SIM_PM_SEC_TARGETS[code]
   if (REGISTRY_SIMULATOR.has(code)) return REGISTRY_SIMULATOR.get(code)
   if (SIM_PM_UNIVERSAL_IDS.has(code) || SIM_PM_TRACK_CODES.has(code)) return code

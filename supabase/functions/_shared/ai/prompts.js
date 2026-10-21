@@ -28,6 +28,30 @@ export function catalogueText(catalogue) {
 }
 
 /**
+ * v1294: which projects this Platform conversation covers (ai_project_scope). The data tools
+ * enforce it; this line lets the AI explain it instead of guessing.
+ * @param {object} context  { projectId, projectName, scope?: { mode, org_wide, project_ids, can_choose_all } }
+ */
+export function scopeLine(context = {}) {
+  const scope = context.scope
+  if (!scope) return null
+  const ids = Array.isArray(scope.project_ids) ? scope.project_ids : null
+  const change = scope.can_choose_all
+    ? 'pick another project in the header, or switch the toggle to "All my projects"'
+    : 'pick another of their projects in the header'
+  if (ids && ids.length === 0) {
+    return 'Scope: the user is not assigned to any project, so no project data is available. Say so briefly and suggest they ask their Project Manager to add them to a project.'
+  }
+  if (scope.mode === 'project' && ids?.length === 1) {
+    return `Scope: this conversation covers only the current project. The data tools return nothing else. If the user asks about other projects, say this conversation covers ${context.projectName || 'the current project'} only, and that they can ${change}.`
+  }
+  if (!ids) {
+    return 'Scope: every project in the organisation that the user can see. Use group_by project_name for comparisons across projects.'
+  }
+  return `Scope: only the ${ids.length} projects the user is assigned to. The data tools return nothing else. If the user asks about other projects, say Ask Nidus covers only their own projects.`
+}
+
+/**
  * @param {object} args
  * @param {string} args.app        platform | simulator | planner
  * @param {object} args.catalogue  ai_catalogue_for_session() result
@@ -68,7 +92,10 @@ export function buildAskNidusSystem({ app = 'platform', catalogue, context = {} 
     context.userName ? `The user is ${context.userName}${context.orgName ? ` at ${context.orgName}` : ''}.` : null,
     context.projectId
       ? `Current project: ${context.projectName || 'the open project'} (project_id ${context.projectId}).`
-      : 'No project is open; questions are about the whole organisation unless the user names a project.',
+      : context.scope
+        ? null
+        : 'No project is open; questions are about the whole organisation unless the user names a project.',
+    scopeLine(context),
     context.languageName ? `User's preferred language: ${context.languageName} (${context.languageCode}).` : null,
   ].filter(Boolean).join('\n')
 

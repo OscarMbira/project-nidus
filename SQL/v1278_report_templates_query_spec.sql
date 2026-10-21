@@ -78,7 +78,9 @@ BEGIN
 END $$;
 
 -- created_by defaults to the caller so "Save as report" rows always have an owner.
-ALTER TABLE public.report_templates ALTER COLUMN created_by SET DEFAULT auth.uid();
+-- v1293: public.report_templates.created_by references public.users(id), so the default is the
+-- caller's users.id (current_internal_user_id), not auth.uid() — the latter broke every save.
+ALTER TABLE public.report_templates ALTER COLUMN created_by SET DEFAULT public.current_internal_user_id();
 
 INSERT INTO database_tables (table_name, table_description, is_system_table, is_active)
 VALUES ('sim.report_templates', 'Simulator Report Builder templates and saved Ask Nidus reports (v1278)', false, true)

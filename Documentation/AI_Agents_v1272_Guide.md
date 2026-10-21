@@ -10,11 +10,22 @@ Ask questions about your data in plain words — "Which projects have more than 
 - Counts, totals, averages and groupings are worked out by the database, so the numbers match the registers.
 - Every answer says what was queried (register, filters, grouping). Tables have row numbers, links to each record and the usual export menu.
 - **Save as report** turns an answer into a Report Builder report you can run again.
+- **Click a grouped row to see its records (v1295).**
+  - In a breakdown such as "Velocity Freight · high · 6", click the row to list those 6 records under the table. Each record links to its page, and **Open <register>** goes to the register's list page, with the project selected when all the records belong to one project.
+  - It uses the answer's own filters and project scope, makes no AI call (so no credits), and works the same in Report Builder.
+  - Register list pages come from the catalogue (`ai_catalogue_entities.list_route`). Registers without one show the records but no register link.
+  - Run `SQL/v1295_ai_result_drilldown.sql`, then `_tests.sql`.
 - Follow-up questions use the conversation so far. Rate answers with thumbs up/down.
 - You only ever see records you already have access to.
 - "Find risks similar to supplier delays" finds records by meaning as well as by words.
 - **Ask Nidus about this** on the Risk, Issue, Stakeholder and Decision registers opens Ask Nidus for that register.
 - In the Project Planner, Ask Nidus covers the schedule, resources and dependencies only.
+- **Which projects it looks at (Platform, v1294):** Ask Nidus follows the project picked in the header. There is no second project list on the page.
+  - **PMO Admin, Account Owner, Project / Programme / Portfolio Manager:** a **This project | All my projects** toggle. "All my projects" means every project in the organisation for PMO Admins and Account Owners, and the projects you are assigned to for Project, Programme and Portfolio Managers. With no project open, PMO roles start on "All my projects".
+  - **Everyone else** (Team Manager, Team Lead, Team Member, …): only the header project, and only projects you are assigned to. If you have just one project, it is used automatically.
+  - This is enforced on the server for every query and search, not just shown on screen. Ask about another project and Ask Nidus says which projects the conversation covers. "Assigned" means the same list as the header selector: projects you are a member of, manage or own.
+  - The Simulator and Project Planner keep their own project picker.
+  - Run `SQL/v1294_ai_project_scope.sql`, then `SQL/v1294_ai_project_scope_tests.sql`, and redeploy `agent-run`.
 - Answers come in the language of your question (or your saved language). Record text is never translated.
 
 ### Draft with AI (highlight reports)
@@ -57,6 +68,11 @@ Account / Organisation Settings → **AI Settings** (Simulator: PMO Admin → AI
 Run the monorepo files **first**: the Admin RPCs read and write tables they create.
 1. Monorepo `v1272` (+tests), `v1273`, `v1274`, `v1275`, `v1276` (+tests), `v1277` (+tests), `v1278`, `v1279`, `v1280`, `v1281` (+tests), `v1282`, `v1283` (+tests), `v1284`, `v1285`, `v1286` (+tests), `v1287`, `v1288` (E:\project-nidus\SQL).
 2. Admin `v235`, `v236`, `v237`, `v238`, `v239`, `v240`, `v241` (E:\project-nidus-admin\SQL).
+3. Fixes after go-live (monorepo):
+   - `v1291`: lifetime subscriptions get their plan's AI credits.
+   - `v1293`: Save as report.
+   - `v1294` (+tests): Ask Nidus project scope.
+   - `v1295` (+tests): click a grouped row to see its records.
 
 Dependencies, if you run phase by phase: Admin v236 needs monorepo v1272–v1273 · v237 needs v1274–v1275 · v238 needs v1283 · v239 needs v1285–v1287 · v240 needs v1288.
 3. `node scripts/generate-planner-table-allowlist.mjs --write` (already up to date in the repo), then re-run `SQL/v1251_planner_table_wall.sql`.
