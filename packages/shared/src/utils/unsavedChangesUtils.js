@@ -60,3 +60,15 @@ export function aggregateDirtyState(guards) {
     message: message || 'You have unsaved changes. Discard them and leave this page?',
   }
 }
+
+/**
+ * Path one level up from `pathname` (e.g. `/a/b/create` -> `/a/b`). Used when Discard follows
+ * a browser Back but the page is the first entry in the tab's history, so there is nothing to
+ * go back to.
+ * @param {string} pathname
+ */
+export function getParentPath(pathname) {
+  const parts = String(pathname || '').split('/').filter(Boolean)
+  parts.pop()
+  return `/${parts.join('/')}`
+}

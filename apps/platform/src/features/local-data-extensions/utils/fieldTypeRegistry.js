@@ -13,6 +13,7 @@ export const FIELD_TYPES = [
   'dropdown',
   'multi_select',
   'json',
+  'multi_line',
 ]
 
 const registry = {
@@ -28,6 +29,8 @@ const registry = {
   dropdown: { label: 'Dropdown', dataType: 'string', multiline: false },
   multi_select: { label: 'Multi-select', dataType: 'json', multiline: false },
   json: { label: 'JSON', dataType: 'json', multiline: true },
+  // v1311: Local Register custom fields — newline-separated list ("Multi-value list").
+  multi_line: { label: 'Multi-value list (one per line)', dataType: 'string', multiline: true },
 }
 
 export function getFieldTypeMeta(type) {

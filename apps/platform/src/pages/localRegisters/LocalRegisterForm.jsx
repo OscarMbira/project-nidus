@@ -8,50 +8,23 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import {
+  groupRegisterFields,
+  buildRegisterTabs,
+  DETAILS_TAB,
+  AUDIT_TAB,
+  CUSTOM_FIELDS_TAB,
+} from '@nidus/shared/utils/registerFieldGroups'
+import LocalRegisterAuditPanel from './LocalRegisterAuditPanel'
+import RegisterFieldInput from '@nidus/ui/RegisterFieldInput'
+import RegisterCustomFieldsHeader from '@nidus/ui/RegisterCustomFieldsHeader'
+import AddRegisterCustomFieldDialog from '@nidus/ui/AddRegisterCustomFieldDialog'
+import { useRegisterCustomFields } from '../../lib/useRegisterCustomFields'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import { getRecord, createRecord, updateRecord } from '../../services/localRegisterRecordService'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
-
-function FieldInput({ field, value, onChange }) {
-  const commonClass =
-    'w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm'
-
-  if (field.field_type === 'boolean') {
-    return (
-      <label className="inline-flex items-center gap-2">
-        <input type="checkbox" checked={!!value} onChange={(e) => onChange(e.target.checked)} />
-        <span className="text-sm text-gray-700 dark:text-gray-300">Yes</span>
-      </label>
-    )
-  }
-  if (field.field_type === 'dropdown') {
-    return (
-      <select value={value ?? ''} onChange={(e) => onChange(e.target.value)} className={commonClass}>
-        <option value="">Select…</option>
-        {(field.dropdown_options || []).map((opt) => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
-    )
-  }
-  if (field.field_type === 'date') {
-    return <input type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value)} className={commonClass} />
-  }
-  if (field.field_type === 'number' || field.field_type === 'currency') {
-    return (
-      <input
-        type="number"
-        step={field.field_type === 'currency' ? '0.01' : 'any'}
-        value={value ?? ''}
-        onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
-        className={commonClass}
-      />
-    )
-  }
-  // text, user_picker (plain text entry for v1 — a real user picker is a future extension)
-  return <input type="text" value={value ?? ''} onChange={(e) => onChange(e.target.value)} className={commonClass} />
-}
 
 export default function LocalRegisterForm() {
   const { registerId, recordId } = useParams()
@@ -83,6 +56,8 @@ export default function LocalRegisterForm() {
   const [status, setStatus] = useState('')
   const [fieldValues, setFieldValues] = useState({})
   const [initialSnapshot, setInitialSnapshot] = useState(null)
+  const [savedRecord, setSavedRecord] = useState(null)
+  const [activeTab, setActiveTab] = useState(DETAILS_TAB)
 
   useEffect(() => {
     let cancelled = false
@@ -97,6 +72,7 @@ export default function LocalRegisterForm() {
         const recordResult = await getRecord(recordId)
         if (cancelled) return
         const record = recordResult.data
+        setSavedRecord(record)
         setTitle(record?.title || '')
         setDescription(record?.description || '')
         setStatus(record?.status || defaultStatus)
@@ -116,6 +92,31 @@ export default function LocalRegisterForm() {
     return JSON.stringify({ title, description, status, fieldValues }) !== initialSnapshot
   }, [title, description, status, fieldValues, initialSnapshot])
 
+  // One tab per field_group (v1297); ungrouped fields stay on Details with Title/Description/Status.
+  const { detailsFields, groups } = useMemo(() => groupRegisterFields(register?.fields), [register])
+
+  // Organisation custom fields (v1311): values live in fieldValues under cf__<id>, so they save
+  // with the record; the "Custom Fields" tab sits just before Audit details.
+  const customFields = useRegisterCustomFields(register)
+  const [addFieldOpen, setAddFieldOpen] = useState(false)
+
+  // Required custom fields must be filled before Save (booleans always have a value). Listed
+  // with their tab beside Save, since a missing field may sit on a tab that isn't open.
+  const missingRequiredLabels = useMemo(() => {
+    const isMissing = (field) => {
+      if (!field.is_required || field.field_type === 'boolean') return false
+      const value = fieldValues[field.field_key]
+      return value === undefined || value === null || String(value).trim() === ''
+    }
+    const withTab = (fields, tabLabel) => fields.filter(isMissing).map((f) => `${f.field_label} (${tabLabel})`)
+    return [
+      ...withTab(detailsFields, 'Details'),
+      ...groups.flatMap((g) => withTab(g.fields, g.label)),
+      ...withTab(customFields.fields, 'Custom Fields'),
+    ]
+  }, [detailsFields, groups, customFields.fields, fieldValues])
+  const hasMissingRequired = missingRequiredLabels.length > 0
+
   const { requestNavigation, confirmDiscard } = useUnsavedChangesGuard(
     isDirty,
     'You have unsaved changes to this record.'
@@ -128,8 +129,37 @@ export default function LocalRegisterForm() {
     setFieldValues((prev) => ({ ...prev, [fieldKey]: value }))
   }
 
+  const openAddCustomField = () => {
+    customFields.loadLibrary()
+    setAddFieldOpen(true)
+  }
+  const handleAttachCustomField = async (definitionId) => {
+    const result = await customFields.attach(definitionId)
+    if (result.success) {
+      setAddFieldOpen(false)
+      showSuccess({
+        recordId: result.field?.label,
+        operation: 'updated',
+        message: `“${result.field?.label}” was added to ${register.label}.`,
+      })
+    }
+    return result
+  }
+  const handleCreateCustomField = async (input) => {
+    const result = await customFields.create(input)
+    if (result.success) {
+      setAddFieldOpen(false)
+      showSuccess({
+        recordId: result.field?.label,
+        operation: 'created',
+        message: `Custom field “${result.field?.label}” is now available to everyone in your organisation.`,
+      })
+    }
+    return result
+  }
+
   const handleSave = async () => {
-    if (!title.trim()) return
+    if (!title.trim() || hasMissingRequired) return
     setSaving(true)
     const payload = { title: title.trim(), description: description.trim() || null, status, fieldValues }
 
@@ -183,7 +213,7 @@ export default function LocalRegisterForm() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 w-full space-y-6">
       <button
         type="button"
         onClick={handleCancel}
@@ -197,8 +227,20 @@ export default function LocalRegisterForm() {
         {isEdit ? `Edit ${register.label}` : `New ${register.label}`}
       </h1>
 
-      <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-        <div>
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        tabs={buildRegisterTabs(groups, { includeCustomFields: true })}
+        ariaLabel={`${register.label} sections`}
+      />
+
+      {activeTab === AUDIT_TAB ? (
+        <LocalRegisterAuditPanel register={register} record={savedRecord} />
+      ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        {activeTab === DETAILS_TAB && (
+        <>
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
           <input
             type="text"
@@ -208,7 +250,7 @@ export default function LocalRegisterForm() {
           />
         </div>
 
-        <div>
+        <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
           <textarea
             value={description}
@@ -230,13 +272,31 @@ export default function LocalRegisterForm() {
             ))}
           </select>
         </div>
+        </>
+        )}
 
-        {(register.fields || []).map((field) => (
-          <div key={field.id}>
+        {activeTab === CUSTOM_FIELDS_TAB && (
+          <RegisterCustomFieldsHeader
+            count={customFields.used}
+            limit={customFields.limit}
+            loading={customFields.loading}
+            error={customFields.error}
+            onAdd={openAddCustomField}
+            onManage={customFields.canManage ? () => navigate(customFields.managePath) : null}
+          />
+        )}
+
+        {(activeTab === DETAILS_TAB
+          ? detailsFields
+          : activeTab === CUSTOM_FIELDS_TAB
+            ? customFields.fields
+            : groups.find((g) => g.value === activeTab)?.fields || []
+        ).map((field) => (
+          <div key={field.id} className={['multi_line', 'long_text'].includes(field.field_type) ? 'md:col-span-2' : ''}>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {field.field_label} {field.is_required && '*'}
             </label>
-            <FieldInput
+            <RegisterFieldInput
               field={field}
               value={fieldValues[field.field_key]}
               onChange={(value) => handleFieldChange(field.field_key, value)}
@@ -244,12 +304,13 @@ export default function LocalRegisterForm() {
           </div>
         ))}
       </div>
+      )}
 
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={handleSave}
-          disabled={saving || !title.trim()}
+          disabled={saving || !title.trim() || hasMissingRequired}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium"
         >
           {saving ? 'Saving…' : 'Save'}
@@ -262,6 +323,22 @@ export default function LocalRegisterForm() {
           Cancel
         </button>
       </div>
+      {(!title.trim() || hasMissingRequired) && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Required to save: {[...(!title.trim() ? ['Title (Details)'] : []), ...missingRequiredLabels].join(', ')}
+        </p>
+      )}
+      <AddRegisterCustomFieldDialog
+        isOpen={addFieldOpen}
+        onClose={() => setAddFieldOpen(false)}
+        registerLabel={register.label}
+        library={customFields.library}
+        libraryLoading={customFields.libraryLoading}
+        count={customFields.used}
+        limit={customFields.limit}
+        onAttach={handleAttachCustomField}
+        onCreate={handleCreateCustomField}
+      />
       {modal}
     </div>
   )

@@ -13,10 +13,12 @@ import { createRegisterDefinition } from '../../services/localRegisterService'
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
+  { value: 'multi_line', label: 'Multi-line list' },
   { value: 'number', label: 'Number' },
   { value: 'currency', label: 'Currency' },
   { value: 'date', label: 'Date' },
   { value: 'dropdown', label: 'Dropdown' },
+  { value: 'multi_select', label: 'Multi-select dropdown' },
   { value: 'boolean', label: 'Yes/No' },
   { value: 'user_picker', label: 'Person' },
 ]
@@ -85,7 +87,7 @@ export default function RegisterDefinitionBuilder() {
         fieldType: f.fieldType,
         isRequired: f.isRequired,
         displayOrder: index,
-        dropdownOptions: f.fieldType === 'dropdown' ? f.dropdownOptions : null,
+        dropdownOptions: ['dropdown', 'multi_select'].includes(f.fieldType) ? f.dropdownOptions : null,
       })),
     }
     if (scopeLevel === 'portfolio') params.scopePortfolioId = scopeEntityId
@@ -206,7 +208,7 @@ export default function RegisterDefinitionBuilder() {
               <input type="checkbox" checked={f.isRequired} onChange={(e) => updateField(index, { isRequired: e.target.checked })} />
               Required
             </label>
-            {f.fieldType === 'dropdown' && (
+            {['dropdown', 'multi_select'].includes(f.fieldType) && (
               <input
                 type="text"
                 value={(f.dropdownOptions || []).map((o) => o.label).join(', ')}

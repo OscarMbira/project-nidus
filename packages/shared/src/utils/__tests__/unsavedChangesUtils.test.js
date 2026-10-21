@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect } from 'vitest'
-import { aggregateDirtyState, evaluateLinkClickForGuard } from '../unsavedChangesUtils.js'
+import { aggregateDirtyState, evaluateLinkClickForGuard, getParentPath } from '../unsavedChangesUtils.js'
 
 function clickEvent(overrides = {}) {
   return {
@@ -71,5 +71,17 @@ describe('evaluateLinkClickForGuard', () => {
     anchor.href = '/current?tab=1'
     const event = clickEvent({ target: anchor })
     expect(evaluateLinkClickForGuard(event, '/current?tab=1')).toEqual({ intercept: false })
+  })
+})
+
+describe('getParentPath', () => {
+  it('drops the last path segment', () => {
+    expect(getParentPath('/platform/local-registers/fin_x/create')).toBe('/platform/local-registers/fin_x')
+    expect(getParentPath('/platform/risks/RSK-1/edit/')).toBe('/platform/risks/RSK-1')
+  })
+
+  it('stops at the root', () => {
+    expect(getParentPath('/platform')).toBe('/')
+    expect(getParentPath('')).toBe('/')
   })
 })

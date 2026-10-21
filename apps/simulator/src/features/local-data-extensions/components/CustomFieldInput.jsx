@@ -55,7 +55,7 @@ export default function CustomFieldInput({
     )
   }
 
-  if (type === 'long_text' || type === 'json') {
+  if (type === 'long_text' || type === 'json' || type === 'multi_line') {
     return (
       <div>
         {commonLabel}

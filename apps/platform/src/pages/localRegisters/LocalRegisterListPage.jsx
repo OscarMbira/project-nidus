@@ -9,20 +9,30 @@ import { Plus, Search, LayoutGrid, List as ListIcon } from 'lucide-react'
 import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { RowActionButton } from '@nidus/ui'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
+import Modal from '@nidus/ui/Modal'
+import Button from '@nidus/ui/Button'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getRegisterDefinition } from '../../services/localRegisterService'
-import { listRecords } from '../../services/localRegisterRecordService'
+import { listRecords, deleteRecord } from '../../services/localRegisterRecordService'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import { registerFieldExportValue, registerRecordSearchText } from '@nidus/shared/utils/registerCustomFields'
+import { useRegisterCustomFields } from '../../lib/useRegisterCustomFields'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 
 const PAGE_SIZE = 20
 
-function fieldValueToText(value) {
+function fieldValueToText(value, field) {
   if (value === null || value === undefined || value === '') return '—'
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  return String(value)
+  // Dropdown / multi-select values are option keys — show their labels.
+  const labelOf = (v) => (field?.dropdown_options || []).find((o) => o.value === v)?.label || v
+  if (Array.isArray(value)) return value.length ? value.map(labelOf).join('; ') : '—'
+  if (field?.field_type === 'dropdown') return labelOf(value)
+  // Multi-line list fields are newline-joined — show them inline in a table cell.
+  return String(value).split(/\r?\n/).filter(Boolean).join('; ')
 }
 
 export default function LocalRegisterListPage() {
@@ -53,6 +63,12 @@ export default function LocalRegisterListPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const [viewMode, setViewMode] = useViewMode(`local-register-${registerId}`, 'list')
+  const [pendingDelete, setPendingDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const { showSuccess, modal: successModal } = useSuccessModal()
+  // Organisation custom fields (v1311): extra list columns, searchable, exported.
+  const customFields = useRegisterCustomFields(register)
   const [resolvedScope, setResolvedScope] = useState({ scopeLevel: '', scopeEntityId: '' })
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
@@ -118,7 +134,7 @@ export default function LocalRegisterListPage() {
   const filteredRecords = useMemo(() => {
     const term = search.trim().toLowerCase()
     if (!term) return records
-    return records.filter((r) => (r.title || '').toLowerCase().includes(term))
+    return records.filter((r) => registerRecordSearchText(r).includes(term))
   }, [records, search])
 
   const sortAccessors = useMemo(() => ({
@@ -131,15 +147,24 @@ export default function LocalRegisterListPage() {
   const pageStart = (page - 1) * PAGE_SIZE
   const pageRows = sorted.slice(pageStart, pageStart + PAGE_SIZE)
 
+  // Built-in then custom fields; values exported readably (option labels, Yes/No, one list item per line).
+  const exportFields = useMemo(
+    () => [...(register?.fields || []), ...customFields.fields],
+    [register, customFields.fields]
+  )
+
   const exportColumns = useMemo(() => {
     const base = [{ key: 'title', label: register?.label ? `${register.label} Title` : 'Title' }, { key: 'status', label: 'Status' }]
-    const fieldCols = (register?.fields || []).map((f) => ({ key: f.field_key, label: f.field_label }))
-    return [...base, ...fieldCols]
-  }, [register])
+    return [...base, ...exportFields.map((f) => ({ key: f.field_key, label: f.field_label }))]
+  }, [register, exportFields])
 
   const exportRows = useMemo(
-    () => sorted.map((r) => ({ title: r.title, status: r.status, ...(r.field_values || {}) })),
-    [sorted]
+    () => sorted.map((r) => ({
+      title: r.title,
+      status: (register?.status_workflow || []).find((st) => st.key === r.status)?.label || r.status,
+      ...Object.fromEntries(exportFields.map((f) => [f.field_key, registerFieldExportValue(r.field_values?.[f.field_key], f)])),
+    })),
+    [sorted, register, exportFields]
   )
 
   if (loading) {
@@ -150,7 +175,25 @@ export default function LocalRegisterListPage() {
   }
 
   const fields = register.fields || []
+  const tableFields = [...fields.slice(0, 4), ...customFields.fields]
   const statusOptions = register.status_workflow || []
+
+  // Soft delete (is_deleted). Not offered while a record awaits approval — it is locked (rule 53).
+  const canDelete = (record) => record.record_status !== 'unauthorised'
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    setDeleting(true)
+    setDeleteError('')
+    const result = await deleteRecord(pendingDelete.id)
+    setDeleting(false)
+    if (!result.success) {
+      setDeleteError(result.error || 'Failed to delete record')
+      return
+    }
+    setRecords((prev) => prev.filter((r) => r.id !== pendingDelete.id))
+    showSuccess({ recordId: pendingDelete.display_id || pendingDelete.title, operation: 'deleted' })
+    setPendingDelete(null)
+  }
 
   return (
     <div className="p-4 sm:p-6 space-y-4">
@@ -228,7 +271,7 @@ export default function LocalRegisterListPage() {
                 >
                   Title
                 </TableHeaderCell>
-                {fields.slice(0, 4).map((f) => (
+                {tableFields.map((f) => (
                   <TableHeaderCell key={f.id} sortable={false} className="!normal-case whitespace-nowrap">
                     {f.field_label}
                   </TableHeaderCell>
@@ -251,9 +294,9 @@ export default function LocalRegisterListPage() {
                 <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <TableRowNumberCell number={getDisplayRowNumber(index, { page, pageSize: PAGE_SIZE })} />
                   <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{record.title}</td>
-                  {fields.slice(0, 4).map((f) => (
+                  {tableFields.map((f) => (
                     <td key={f.id} className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                      {fieldValueToText(record.field_values?.[f.field_key])}
+                      {fieldValueToText(record.field_values?.[f.field_key], f)}
                     </td>
                   ))}
                   <td className="px-4 py-3 text-sm">
@@ -273,6 +316,13 @@ export default function LocalRegisterListPage() {
                         label={`Edit ${register.label}`}
                         onClick={() => navigate(`/platform/local-registers/${routeKey}/${record.id}/edit`)}
                       />
+                      {canDelete(record) && (
+                        <RowActionButton
+                          variant="delete"
+                          label={`Delete ${register.label}`}
+                          onClick={() => { setDeleteError(''); setPendingDelete(record) }}
+                        />
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -305,11 +355,41 @@ export default function LocalRegisterListPage() {
                   label={`Edit ${register.label}`}
                   onClick={() => navigate(`/platform/local-registers/${routeKey}/${record.id}/edit`)}
                 />
+                {canDelete(record) && (
+                  <RowActionButton
+                    variant="delete"
+                    label={`Delete ${register.label}`}
+                    onClick={() => { setDeleteError(''); setPendingDelete(record) }}
+                  />
+                )}
               </div>
             </div>
           ))}
         </div>
       )}
+      <Modal
+        isOpen={!!pendingDelete}
+        onClose={() => !deleting && setPendingDelete(null)}
+        title={`Delete ${register.label}`}
+        size="sm"
+        footer={(
+          <>
+            <Button type="button" variant="secondary" onClick={() => setPendingDelete(null)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleting}>
+              {deleting ? 'Deleting…' : 'Delete'}
+            </Button>
+          </>
+        )}
+      >
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          Delete <span className="font-medium text-gray-900 dark:text-gray-100">{pendingDelete?.title}</span>
+          {pendingDelete?.display_id ? ` (${pendingDelete.display_id})` : ''}? It will be removed from this register.
+        </p>
+        {deleteError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{deleteError}</p>}
+      </Modal>
+      {successModal}
     </div>
   )
 }

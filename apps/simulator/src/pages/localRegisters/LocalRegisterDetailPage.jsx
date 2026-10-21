@@ -11,18 +11,28 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Pencil } from 'lucide-react'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
-import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
-import AuditCard from '@nidus/ui/AuditCard'
-import AuditField from '@nidus/ui/AuditField'
-import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import { getRecord } from '../../services/localRegisterRecordService'
-import { supabase } from '../../services/supabaseClient'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
+import {
+  groupRegisterFields,
+  buildRegisterTabs,
+  DETAILS_TAB,
+  AUDIT_TAB,
+  CUSTOM_FIELDS_TAB,
+} from '@nidus/shared/utils/registerFieldGroups'
+import RegisterCustomFieldsHeader from '@nidus/ui/RegisterCustomFieldsHeader'
+import { useRegisterCustomFields } from '../../lib/useRegisterCustomFields'
+import LocalRegisterAuditPanel from './LocalRegisterAuditPanel'
+import { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
 
 function fieldValueToText(field, value) {
   if (value === null || value === undefined || value === '') return '—'
   if (field.field_type === 'boolean') return value ? 'Yes' : 'No'
+  // Dropdown / multi-select values are option keys — show their labels.
+  const labelOf = (v) => (field.dropdown_options || []).find((o) => o.value === v)?.label || v
+  if (Array.isArray(value)) return value.length ? value.map(labelOf).join(', ') : '—'
+  if (field.field_type === 'dropdown') return labelOf(value)
   if (field.field_type === 'currency') return `$${Number(value).toLocaleString()}`
   return String(value)
 }
@@ -34,8 +44,9 @@ export default function LocalRegisterDetailPage() {
   const [loading, setLoading] = useState(true)
   const [register, setRegister] = useState(null)
   const [record, setRecord] = useState(null)
-  const [userLabels, setUserLabels] = useState({})
-  const [activeTab, setActiveTab] = useState('details')
+  const [activeTab, setActiveTab] = useState(DETAILS_TAB)
+  // Organisation custom fields (v1311) — read-only here; added from the create/edit form.
+  const customFields = useRegisterCustomFields(register)
 
   useEffect(() => {
     let cancelled = false
@@ -56,15 +67,6 @@ export default function LocalRegisterDetailPage() {
       ) {
         navigate(`/simulator/local-registers/${registerResult.data.register_key}/${recordId}`, { replace: true })
       }
-
-      const userIds = [recordResult.data?.owner_user_id, recordResult.data?.created_by, recordResult.data?.updated_by]
-        .filter(Boolean)
-      if (userIds.length > 0) {
-        const { data: users } = await supabase.from('users').select('id, full_name').in('id', userIds)
-        if (!cancelled && users) {
-          setUserLabels(Object.fromEntries(users.map((u) => [u.id, u.full_name])))
-        }
-      }
       setLoading(false)
     })()
     return () => { cancelled = true }
@@ -79,9 +81,16 @@ export default function LocalRegisterDetailPage() {
 
   const routeKey = register.register_key || registerId
   const statusLabel = (register.status_workflow || []).find((s) => s.key === record.status)?.label || record.status
+  const { detailsFields, groups } = groupRegisterFields(register.fields)
+  const visibleFields =
+    activeTab === DETAILS_TAB
+      ? detailsFields
+      : activeTab === CUSTOM_FIELDS_TAB
+        ? customFields.fields
+        : groups.find((g) => g.value === activeTab)?.fields || []
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 w-full space-y-6">
       <button
         type="button"
         onClick={() => navigate(-1)}
@@ -108,49 +117,69 @@ export default function LocalRegisterDetailPage() {
         </button>
       </div>
 
-      <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel={`${register.label} sections`} />
+      <DetailAuditTabList
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        tabs={buildRegisterTabs(groups, { includeCustomFields: true })}
+        ariaLabel={`${register.label} sections`}
+      />
 
-      {activeTab === 'details' ? (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-          <div>
-            <p className="text-xs uppercase text-gray-400 mb-1">Status</p>
-            <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
-              {statusLabel}
-            </span>
-          </div>
-          {record.description && (
-            <div>
-              <p className="text-xs uppercase text-gray-400 mb-1">Description</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{record.description}</p>
-            </div>
+      {activeTab === AUDIT_TAB ? (
+        <LocalRegisterAuditPanel register={register} record={record} />
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {activeTab === DETAILS_TAB && (
+            <>
+              <div>
+                <p className="text-xs uppercase text-gray-400 mb-1">Status</p>
+                <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+                  {statusLabel}
+                </span>
+              </div>
+              {record.description && (
+                <div className="md:col-span-2">
+                  <p className="text-xs uppercase text-gray-400 mb-1">Description</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-300">{record.description}</p>
+                </div>
+              )}
+            </>
           )}
-          {(register.fields || []).map((field) => (
-            <div key={field.id}>
+          {activeTab === CUSTOM_FIELDS_TAB && (
+            <RegisterCustomFieldsHeader
+              count={customFields.used}
+              limit={customFields.limit}
+              loading={customFields.loading}
+              error={customFields.error}
+              onManage={customFields.canManage ? () => navigate(customFields.managePath) : null}
+            />
+          )}
+          {visibleFields.map((field) => (
+            <div key={field.id} className={['multi_line', 'long_text'].includes(field.field_type) ? 'md:col-span-2' : ''}>
               <p className="text-xs uppercase text-gray-400 mb-1">{field.field_label}</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                {fieldValueToText(field, record.field_values?.[field.field_key])}
-              </p>
+              {field.field_type === 'multi_line' &&
+              parseMultiLineValue(String(record.field_values?.[field.field_key] ?? '')).length > 0 ? (
+                <ul className="list-disc pl-5 space-y-0.5 text-sm text-gray-700 dark:text-gray-300">
+                  {parseMultiLineValue(String(record.field_values[field.field_key])).map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              ) : field.field_type === 'url' && record.field_values?.[field.field_key] ? (
+                <a
+                  href={String(record.field_values[field.field_key])}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                >
+                  {String(record.field_values[field.field_key])}
+                </a>
+              ) : (
+                <p className={`text-sm text-gray-700 dark:text-gray-300${field.field_type === 'long_text' ? ' whitespace-pre-wrap' : ''}`}>
+                  {fieldValueToText(field, record.field_values?.[field.field_key])}
+                </p>
+              )}
             </div>
           ))}
         </div>
-      ) : (
-        <AuditDetailsPanel description="Who created or changed this record.">
-          <AuditCard title="Identity">
-            <AuditField label="Display ID" value={record.display_id || '—'} />
-            <AuditField label="Register" value={register.label} />
-            <AuditField label="Status" value={statusLabel} />
-          </AuditCard>
-          <AuditCard title="Classification">
-            <AuditField label="Scope" value={register.scope_level} />
-            <AuditField label="Owner" value={userLabels[record.owner_user_id] || '—'} />
-          </AuditCard>
-          <AuditCard title="Record history">
-            <AuditField label="Created by" value={userLabels[record.created_by] || '—'} />
-            <AuditTimestampPair dateLabel="Created at" value={record.created_at} />
-            <AuditField label="Updated by" value={userLabels[record.updated_by] || '—'} />
-            <AuditTimestampPair dateLabel="Updated at" value={record.updated_at} />
-          </AuditCard>
-        </AuditDetailsPanel>
       )}
     </div>
   )

@@ -11,7 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import Modal from '@nidus/ui/Modal'
 import Button from '@nidus/ui/Button'
-import { aggregateDirtyState, evaluateLinkClickForGuard } from '../utils/unsavedChangesUtils.js'
+import { aggregateDirtyState, evaluateLinkClickForGuard, getParentPath } from '../utils/unsavedChangesUtils.js'
 
 const UnsavedChangesContext = createContext(null)
 
@@ -100,6 +100,15 @@ export function UnsavedChangesProvider({ children }) {
 
     if (action.fallbackTo) {
       finish(() => navigate(action.fallbackTo))
+      return
+    }
+
+    // This page is the first entry in the tab's history (opened in a new tab or from a pasted
+    // link): history.go() below would silently do nothing, so go up one level instead.
+    // React Router's history index is kept on the trap entry (pushGuardEntry).
+    const pageIdx = window.history.state?.idx
+    if (typeof pageIdx === 'number' && pageIdx < 1) {
+      finish(() => navigate(getParentPath(window.location.pathname), { replace: true }))
       return
     }
 
