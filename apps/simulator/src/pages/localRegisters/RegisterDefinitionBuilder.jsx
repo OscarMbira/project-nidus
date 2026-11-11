@@ -13,6 +13,7 @@ import { createRegisterDefinition } from '../../services/localRegisterService'
 
 const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
+  { value: 'long_text', label: 'Notes (long text)' },
   { value: 'multi_line', label: 'Multi-line list' },
   { value: 'number', label: 'Number' },
   { value: 'currency', label: 'Currency' },

@@ -72,6 +72,25 @@ describe('evaluateLinkClickForGuard', () => {
     const event = clickEvent({ target: anchor })
     expect(evaluateLinkClickForGuard(event, '/current?tab=1')).toEqual({ intercept: false })
   })
+
+  it('ignores links to the same page that only differ in query string or hash (sidebar section toggles)', () => {
+    for (const href of ['/platform/registers/x/1/edit#', '/platform/registers/x/1/edit', '/platform/registers/x/1/edit?tab=2']) {
+      const anchor = document.createElement('a')
+      anchor.setAttribute('href', href)
+      const event = clickEvent({ target: anchor })
+      expect(evaluateLinkClickForGuard(event, '/platform/registers/x/1/edit?projectId=SEED334-PRJ-08')).toEqual({ intercept: false })
+    }
+  })
+
+  it('still intercepts a link to another page', () => {
+    const anchor = document.createElement('a')
+    anchor.setAttribute('href', '/platform/registers/x')
+    const event = clickEvent({ target: anchor })
+    expect(evaluateLinkClickForGuard(event, '/platform/registers/x/1/edit?projectId=SEED334-PRJ-08')).toEqual({
+      intercept: true,
+      targetPath: '/platform/registers/x',
+    })
+  })
 })
 
 describe('getParentPath', () => {

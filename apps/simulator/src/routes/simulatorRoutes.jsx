@@ -620,6 +620,7 @@ import {
   ProjectMemberInvitation,
   LocalRegisterListPage,
   LocalRegisterForm,
+  LocalRegisterNewPage,
   LocalRegisterDetailPage,
   RegisterDefinitionBuilder,
   LocalRegistersIndexPage,
@@ -1384,6 +1385,19 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                <Route path="simulator/local-registers/:registerId/new" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegisterNewPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/local-registers/:registerId/create" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>
@@ -1404,6 +1418,20 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <LocalRegisterDetailPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* Organisation template edit (v1336) — the register form in template mode. */}
+                <Route path="simulator/local-registers/:registerId/templates/:templateId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <LocalRegisterForm />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>

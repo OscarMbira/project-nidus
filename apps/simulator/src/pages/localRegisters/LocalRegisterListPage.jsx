@@ -18,13 +18,22 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { getRegisterDefinition } from '../../services/localRegisterService'
 import { listRecords, deleteRecord } from '../../services/localRegisterRecordService'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
-import { registerFieldExportValue, registerRecordSearchText } from '@nidus/shared/utils/registerCustomFields'
+import { formatRegisterAmount, registerFieldExportValue, registerRecordSearchText } from '@nidus/shared/utils/registerCustomFields'
+import { useRegionalFormatSettings } from '@nidus/shared/hooks/useRegionalFormatSettings'
 import { useRegisterCustomFields } from '../../lib/useRegisterCustomFields'
+import { useRegisterTemplates } from '../../lib/useRegisterTemplates'
 
 const PAGE_SIZE = 20
 
-function fieldValueToText(value, field) {
+function fieldValueToText(value, field, settings) {
   if (value === null || value === undefined || value === '') return '—'
+  // Date & time, record references and calculated values (v1337) use the shared formatter.
+  if (field?.field_type === 'datetime' || field?.field_type === 'record_ref' || field?.calculation?.op) {
+    return (registerFieldExportValue(value, field, settings) || '—').split('\n').filter(Boolean).join('; ')
+  }
+  // Amounts and numbers in the organisation's regional format (rule 68).
+  const amount = formatRegisterAmount(value, field, settings)
+  if (amount !== null) return amount
   if (typeof value === 'boolean') return value ? 'Yes' : 'No'
   // Dropdown / multi-select values are option keys — show their labels.
   const labelOf = (v) => (field?.dropdown_options || []).find((o) => o.value === v)?.label || v
@@ -37,7 +46,7 @@ function fieldValueToText(value, field) {
 export default function LocalRegisterListPage() {
   const { registerId } = useParams()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   // Required for a system-defined register (it carries no scope of its own, v932) so its
   // records don't mix across every project/org that uses it. A member-created register is
@@ -60,6 +69,7 @@ export default function LocalRegisterListPage() {
   const { showSuccess, modal: successModal } = useSuccessModal()
   // Organisation custom fields (v1311): extra list columns, searchable, exported.
   const customFields = useRegisterCustomFields(register)
+  const regionalSettings = useRegionalFormatSettings(null)
 
   const { handleSort, getSortDirectionForColumn, sortedData } = useSortableTable({
     defaultSort: { column: 'created_at', direction: 'desc' },
@@ -106,6 +116,25 @@ export default function LocalRegisterListPage() {
 
   const routeKey = register?.register_key || registerId
 
+  // Templates (v1336) — document registers: New → Blank / From template, a Templates tab, and
+  // one record per project where the register asks for it (v1339).
+  const templateProjectId = queryScopeLevel === 'project' ? queryScopeEntityId || null : null
+  const templates = useRegisterTemplates({
+    register,
+    projectId: templateProjectId,
+    basePath: '/simulator',
+    scopeSuffix: scopeQuerySuffix,
+    loadRegister: getRegisterDefinition,
+  })
+  const listTab = templates.enabled && searchParams.get('tab') === 'templates' ? 'templates' : 'records'
+  const switchTab = (tab) => {
+    const next = new URLSearchParams(searchParams)
+    if (tab === 'templates') next.set('tab', 'templates')
+    else next.delete('tab')
+    setSearchParams(next, { replace: true })
+  }
+  const existingProjectRecord = register?.one_record_per_project && templateProjectId ? records[0] || null : null
+
   const filteredRecords = useMemo(() => {
     const term = search.trim().toLowerCase()
     if (!term) return records
@@ -137,9 +166,9 @@ export default function LocalRegisterListPage() {
     () => sorted.map((r) => ({
       title: r.title,
       status: (register?.status_workflow || []).find((st) => st.key === r.status)?.label || r.status,
-      ...Object.fromEntries(exportFields.map((f) => [f.field_key, registerFieldExportValue(r.field_values?.[f.field_key], f)])),
+      ...Object.fromEntries(exportFields.map((f) => [f.field_key, registerFieldExportValue(r.field_values?.[f.field_key], f, regionalSettings)])),
     })),
-    [sorted, register, exportFields]
+    [sorted, register, exportFields, regionalSettings]
   )
 
   if (loading) {
@@ -188,159 +217,185 @@ export default function LocalRegisterListPage() {
           />
           <button
             type="button"
-            onClick={() => navigate(`/simulator/local-registers/${routeKey}/create${scopeQuerySuffix}`)}
+            onClick={() => (existingProjectRecord
+              ? navigate(`/simulator/local-registers/${routeKey}/${existingProjectRecord.id}`)
+              : templates.openNew())}
+            title={existingProjectRecord ? 'A project has one ' + register.label + ' — open it to make changes' : undefined}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium"
           >
             <Plus className="h-4 w-4" />
-            New {register.label}
+            {existingProjectRecord ? `Open ${register.label}` : `New ${register.label}`}
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-            placeholder={`Search ${register.label.toLowerCase()}…`}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
-          />
-        </div>
-        <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-          <button
-            type="button"
-            onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''}`}
-            aria-label="Table view"
-          >
-            <ListIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''}`}
-            aria-label="Card view"
-          >
-            <LayoutGrid className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-          </button>
-        </div>
-      </div>
-
-      {pageRows.length === 0 ? (
-        <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          No records yet.
-        </div>
-      ) : viewMode === 'list' ? (
-        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead className="bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <TableRowNumberHeader className="!normal-case" />
-                <TableHeaderCell
-                  sortable
-                  sortDirection={getSortDirectionForColumn('title')}
-                  onSort={() => handleSort('title')}
-                  className="!normal-case whitespace-nowrap"
-                >
-                  Title
-                </TableHeaderCell>
-                {tableFields.map((f) => (
-                  <TableHeaderCell key={f.id} sortable={false} className="!normal-case whitespace-nowrap">
-                    {f.field_label}
-                  </TableHeaderCell>
-                ))}
-                <TableHeaderCell
-                  sortable
-                  sortDirection={getSortDirectionForColumn('status')}
-                  onSort={() => handleSort('status')}
-                  className="!normal-case whitespace-nowrap"
-                >
-                  Status
-                </TableHeaderCell>
-                <TableHeaderCell sortable={false} className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700">
-                  Actions
-                </TableHeaderCell>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {pageRows.map((record, index) => (
-                <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                  <TableRowNumberCell number={getDisplayRowNumber(index, { page, pageSize: PAGE_SIZE })} />
-                  <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{record.title}</td>
-                  {tableFields.map((f) => (
-                    <td key={f.id} className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                      {fieldValueToText(record.field_values?.[f.field_key], f)}
-                    </td>
-                  ))}
-                  <td className="px-4 py-3 text-sm">
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
-                      {statusOptions.find((s) => s.key === record.status)?.label || record.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800">
-                    <div className="inline-flex items-center gap-3 justify-end">
-                      <RowActionButton
-                        variant="view"
-                        label={`View ${register.label}`}
-                        onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}`)}
-                      />
-                      <RowActionButton
-                        variant="edit"
-                        label={`Edit ${register.label}`}
-                        onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}/edit`)}
-                      />
-                      {canDelete(record) && (
-                        <RowActionButton
-                          variant="delete"
-                          label={`Delete ${register.label}`}
-                          onClick={() => { setDeleteError(''); setPendingDelete(record) }}
-                        />
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {pageRows.map((record, index) => (
-            <div
-              key={record.id}
-              className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 space-y-2"
+      {templates.enabled && (
+        <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700" role="tablist" aria-label={`${register.label} views`}>
+          {[['records', 'Records'], ['templates', 'Templates']].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={listTab === value}
+              onClick={() => switchTab(value)}
+              className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${listTab === value
+                ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
             >
-              <div className="flex items-start justify-between">
-                <span className="text-xs text-gray-400">#{getDisplayRowNumber(index, { page, pageSize: PAGE_SIZE })}</span>
-                <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
-                  {statusOptions.find((s) => s.key === record.status)?.label || record.status}
-                </span>
-              </div>
-              <h3 className="font-medium text-gray-900 dark:text-white">{record.title}</h3>
-              <div className="flex items-center gap-3 pt-2">
-                <RowActionButton
-                  variant="view"
-                  label={`View ${register.label}`}
-                  onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}`)}
-                />
-                <RowActionButton
-                  variant="edit"
-                  label={`Edit ${register.label}`}
-                  onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}/edit`)}
-                />
-                {canDelete(record) && (
-                  <RowActionButton
-                    variant="delete"
-                    label={`Delete ${register.label}`}
-                    onClick={() => { setDeleteError(''); setPendingDelete(record) }}
-                  />
-                )}
-              </div>
-            </div>
+              {label}
+            </button>
           ))}
         </div>
+      )}
+
+      {listTab === 'templates' ? templates.templatesTab : (
+      <>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+              placeholder={`Search ${register.label.toLowerCase()}…`}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded ${viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''}`}
+              aria-label="Table view"
+            >
+              <ListIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded ${viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''}`}
+              aria-label="Card view"
+            >
+              <LayoutGrid className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          </div>
+        </div>
+
+        {pageRows.length === 0 ? (
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            No records yet.
+          </div>
+        ) : viewMode === 'list' ? (
+          <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <TableRowNumberHeader className="!normal-case" />
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('title')}
+                    onSort={() => handleSort('title')}
+                    className="!normal-case whitespace-nowrap"
+                  >
+                    Title
+                  </TableHeaderCell>
+                  {tableFields.map((f) => (
+                    <TableHeaderCell key={f.id} sortable={false} className="!normal-case whitespace-nowrap">
+                      {f.field_label}
+                    </TableHeaderCell>
+                  ))}
+                  <TableHeaderCell
+                    sortable
+                    sortDirection={getSortDirectionForColumn('status')}
+                    onSort={() => handleSort('status')}
+                    className="!normal-case whitespace-nowrap"
+                  >
+                    Status
+                  </TableHeaderCell>
+                  <TableHeaderCell sortable={false} className="!normal-case text-right sticky right-0 bg-gray-50 dark:bg-gray-700">
+                    Actions
+                  </TableHeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {pageRows.map((record, index) => (
+                  <tr key={record.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <TableRowNumberCell number={getDisplayRowNumber(index, { page, pageSize: PAGE_SIZE })} />
+                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{record.title}</td>
+                    {tableFields.map((f) => (
+                      <td key={f.id} className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                        {fieldValueToText(record.field_values?.[f.field_key], f, regionalSettings)}
+                      </td>
+                    ))}
+                    <td className="px-4 py-3 text-sm">
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+                        {statusOptions.find((s) => s.key === record.status)?.label || record.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right sticky right-0 bg-white dark:bg-gray-800">
+                      <div className="inline-flex items-center gap-3 justify-end">
+                        <RowActionButton
+                          variant="view"
+                          label={`View ${register.label}`}
+                          onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}`)}
+                        />
+                        <RowActionButton
+                          variant="edit"
+                          label={`Edit ${register.label}`}
+                          onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}/edit`)}
+                        />
+                        {canDelete(record) && (
+                          <RowActionButton
+                            variant="delete"
+                            label={`Delete ${register.label}`}
+                            onClick={() => { setDeleteError(''); setPendingDelete(record) }}
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pageRows.map((record, index) => (
+              <div
+                key={record.id}
+                className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 space-y-2"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-xs text-gray-400">#{getDisplayRowNumber(index, { page, pageSize: PAGE_SIZE })}</span>
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+                    {statusOptions.find((s) => s.key === record.status)?.label || record.status}
+                  </span>
+                </div>
+                <h3 className="font-medium text-gray-900 dark:text-white">{record.title}</h3>
+                <div className="flex items-center gap-3 pt-2">
+                  <RowActionButton
+                    variant="view"
+                    label={`View ${register.label}`}
+                    onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}`)}
+                  />
+                  <RowActionButton
+                    variant="edit"
+                    label={`Edit ${register.label}`}
+                    onClick={() => navigate(`/simulator/local-registers/${routeKey}/${record.id}/edit`)}
+                  />
+                  {canDelete(record) && (
+                    <RowActionButton
+                      variant="delete"
+                      label={`Delete ${register.label}`}
+                      onClick={() => { setDeleteError(''); setPendingDelete(record) }}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </>
       )}
       <Modal
         isOpen={!!pendingDelete}
@@ -365,6 +420,8 @@ export default function LocalRegisterListPage() {
         {deleteError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{deleteError}</p>}
       </Modal>
       {successModal}
+      {templates.pickerElement}
+      {templates.previewElement}
     </div>
   )
 }

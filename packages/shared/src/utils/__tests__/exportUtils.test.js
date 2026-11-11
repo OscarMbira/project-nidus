@@ -88,6 +88,142 @@ describe('generateRecordPdfBlob (v853 — preview, no download)', () => {
     expect(textCalls.some((t) => String(t).startsWith('Date: '))).toBe(true)
     expect(textCalls.some((t) => String(t).startsWith('Time: '))).toBe(true)
   })
+
+  it('draws a table field as a header row plus one row per entry, not as bullet text (v1331)', async () => {
+    const tableSections = [{
+      title: 'Risks',
+      fields: [{
+        key: 'risks_mitigations',
+        label: 'Risks, Challenges and Mitigations',
+        table: { headers: ['Risk', 'Consequence', 'Mitigation'], rows: [['Window overrun', 'Go-live delayed', 'Rehearse'], ['Low data quality', 'Rejected loads', 'Cleansing sprint']] },
+      }],
+    }]
+    await generateRecordPdfBlob(tableSections, { risks_mitigations: 'Window overrun – Go-live delayed – Rehearse' }, 'Test')
+
+    const textCalls = mockDoc.text.mock.calls.map((call) => call[0])
+    expect(textCalls).toContainEqual(['Risk'])
+    expect(textCalls).toContainEqual(['Mitigation'])
+    expect(textCalls).toContainEqual(['Cleansing sprint'])
+    expect(textCalls.some((t) => String(t).includes('Window overrun – Go-live delayed'))).toBe(false)
+    // 3 header cells (filled + bordered) and 6 body cells (bordered).
+    expect(mockDoc.rect.mock.calls.filter((call) => call[4] === 'FD').length).toBe(3)
+    expect(mockDoc.rect.mock.calls.filter((call) => call[4] === undefined).length).toBe(6)
+  })
+})
+
+describe('record PDF — keep with next (headings stay with their content)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  const orderOf = (fn, match) => {
+    const i = fn.mock.calls.findIndex((call) => match(call))
+    return i === -1 ? null : fn.mock.invocationCallOrder[i]
+  }
+
+  it('moves a section heading to the next page when its first field would not fit under it', async () => {
+    // 18 one-line fields leave the second section heading just enough room for itself, but not
+    // for its first field — previously the heading stayed behind on its own.
+    const filler = Array.from({ length: 18 }, (_, i) => ({ key: `f${i}`, label: `Field ${i}` }))
+    const values = Object.fromEntries(filler.map((f) => [f.key, 'value']))
+    const keepSections = [
+      { title: 'Overview', fields: filler },
+      { title: 'Scope', fields: [{ key: 'in_scope', label: 'In Scope' }] },
+    ]
+    await generateRecordPdfBlob(keepSections, { ...values, in_scope: 'Retail customers' }, 'Test')
+
+    const pageBreak = orderOf(mockDoc.addPage, () => true)
+    const heading = orderOf(mockDoc.text, (call) => call[0] === '2. Scope')
+    const firstField = orderOf(mockDoc.text, (call) => Array.isArray(call[0]) && call[0][0] === '2.1 In Scope')
+    expect(pageBreak).not.toBeNull()
+    expect(pageBreak).toBeLessThan(heading)
+    expect(heading).toBeLessThan(firstField)
+    expect(mockDoc.addPage).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps a table header row with its first row', async () => {
+    const filler = Array.from({ length: 19 }, (_, i) => ({ key: `f${i}`, label: `Field ${i}` }))
+    const values = Object.fromEntries(filler.map((f) => [f.key, 'value']))
+    const tableSections = [{
+      title: 'Plan',
+      fields: [
+        ...filler,
+        { key: 'deliverables', label: 'Key Deliverables', table: { headers: ['Deliverable', 'Owner'], rows: [['Customer master', 'Nomvula Khumalo']] } },
+      ],
+    }]
+    await generateRecordPdfBlob(tableSections, values, 'Test')
+
+    const pageBreak = orderOf(mockDoc.addPage, () => true)
+    const label = orderOf(mockDoc.text, (call) => Array.isArray(call[0]) && call[0][0] === '1.20 Key Deliverables')
+    const header = orderOf(mockDoc.text, (call) => Array.isArray(call[0]) && call[0][0] === 'Deliverable')
+    const firstRow = orderOf(mockDoc.text, (call) => Array.isArray(call[0]) && call[0][0] === 'Customer master')
+    expect(pageBreak).toBeLessThan(label)
+    expect(label).toBeLessThan(header)
+    expect(header).toBeLessThan(firstRow)
+    expect(mockDoc.addPage).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('record PDF — Detail | Value tables and linked record blocks', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('draws single-value fields as one Detail | Value table without field numbers', async () => {
+    const factSections = [{
+      title: 'Health',
+      fields: [
+        { key: 'overall_rag', label: 'Overall RAG', fact: true },
+        { key: 'schedule_rag', label: 'Schedule RAG', fact: true },
+        { key: 'headline', label: 'Headline This Period' },
+      ],
+    }]
+    await generateRecordPdfBlob(factSections, { overall_rag: 'Amber', schedule_rag: 'Green', headline: 'On track' }, 'Test')
+    const textCalls = mockDoc.text.mock.calls.map((call) => call[0])
+    expect(textCalls).toContainEqual(['Detail'])
+    expect(textCalls).toContainEqual(['Value'])
+    expect(textCalls).toContainEqual(['Overall RAG'])
+    expect(textCalls).toContainEqual(['Amber'])
+    // The long-text field keeps its heading, numbered 1.1 (the facts take no number).
+    expect(textCalls).toContainEqual(['1.1 Headline This Period'])
+  })
+
+  it('draws a linked record as description, Detail | Value table, captioned bullets and a captioned table', async () => {
+    const linkedSections = [{
+      title: 'Related',
+      fields: [{
+        key: 'workstreams__w1',
+        label: 'Customer and digital channels',
+        blocks: [
+          { type: 'text', text: 'Channels delivery.' },
+          { type: 'table', headers: ['Detail', 'Value'], rows: [['Workstream Lead', 'Amina Diallo']] },
+          { type: 'list', caption: 'Objectives', items: ['Single customer view'] },
+          { type: 'table', caption: 'Key Deliverables', headers: ['Deliverable', 'Owner'], rows: [['Customer master', 'Nomvula Khumalo']] },
+        ],
+      }],
+    }]
+    await generateRecordPdfBlob(linkedSections, { workstreams__w1: 'flat text' }, 'Test')
+    const textCalls = mockDoc.text.mock.calls.map((call) => call[0])
+    expect(textCalls).toContainEqual(['1.1 Customer and digital channels'])
+    expect(textCalls).toContain('Channels delivery.')
+    expect(textCalls).toContainEqual(['Workstream Lead'])
+    expect(textCalls).toContainEqual(['Amina Diallo'])
+    expect(textCalls).toContain('Objectives')
+    expect(textCalls).toContain('• Single customer view')
+    expect(textCalls).toContain('Key Deliverables')
+    expect(textCalls).toContainEqual(['Customer master'])
+    expect(textCalls.some((t) => String(t).includes('flat text'))).toBe(false)
+  })
+})
+
+describe('tableColumnFractions (v1331)', () => {
+  it('sums to 1, gives long columns more room and every column at least a share', async () => {
+    const { tableColumnFractions } = await import('../exportUtils.js')
+    const fractions = tableColumnFractions(['Code', 'Description'], [['14901', 'Migration suspense for customer accounts and their accruals']])
+    expect(fractions.reduce((a, b) => a + b, 0)).toBeCloseTo(1)
+    expect(fractions[1]).toBeGreaterThan(fractions[0])
+    expect(fractions[0]).toBeGreaterThanOrEqual(0.09)
+  })
 })
 
 describe('exported field-mapping helpers (v853 — reused by preview components)', () => {

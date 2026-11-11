@@ -56,6 +56,11 @@ export default function ExportRecordMenu({
   // to embed inline in Word/PPT/Print/PDF (v863). Fields not present here still export fine via
   // the plain-text value already in `record` (e.g. resolveAttachmentFieldsForExport's textValues).
   attachmentAssets = {},
+  // Optional (v1318): complete formal document export — (format: 'word' | 'pdf', branding) => Promise.
+  // When given, "Complete document (Word)" / "(PDF)" appear at the top of the menu.
+  onExportDocument = null,
+  // Optional (v1318): (branding) => Promise<Blob> — the complete document for the View preview.
+  onBuildDocumentPdf = null,
 }) {
   const { branding: contextBranding } = useBranding()
   const branding = brandingProp || contextBranding
@@ -123,6 +128,16 @@ export default function ExportRecordMenu({
     }
   }
 
+  const handleExportDocument = async (format) => {
+    setOpen(false)
+    setExporting(true)
+    try {
+      await onExportDocument(format, branding)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const btnBase =
     'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border disabled:opacity-50 disabled:cursor-not-allowed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
 
@@ -157,6 +172,27 @@ export default function ExportRecordMenu({
           <>
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden="true" />
             <div className="absolute right-0 mt-1 py-1 min-w-[180px] rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg z-20">
+              {onExportDocument && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleExportDocument('word')}
+                    disabled={!record || exporting}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    <FileText className="w-4 h-4 text-blue-600" /> Complete document (Word)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleExportDocument('pdf')}
+                    disabled={!record || exporting}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    <FileDown className="w-4 h-4 text-red-600" /> Complete document (PDF)
+                  </button>
+                  <div className="my-1 border-t border-gray-200 dark:border-gray-600" role="separator" />
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => { handleExportPDF() }}
@@ -244,6 +280,8 @@ export default function ExportRecordMenu({
         baseFilename={baseFilename}
         branding={branding}
         attachmentAssets={attachmentAssets}
+        buildDocumentPdf={onBuildDocumentPdf}
+        exportDocument={onExportDocument}
       />
 
       {/* Field selector modal for Word / PowerPoint — record view: no max, Select all available */}

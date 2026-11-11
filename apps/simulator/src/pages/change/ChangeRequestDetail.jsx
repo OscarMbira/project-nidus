@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, FileText, Clock, User, DollarSign, Calendar, Package } from 'lucide-react';
 import { RowActionButton } from '@nidus/ui';
 import { fetchChangeRequest, fetchChangeAssessment } from '../../services/changeManagementService';
-import { platformDb } from '@nidus/supabase';
+import { platformDb, simDb } from '@nidus/supabase';
+import { loadRequirementLabels } from '@nidus/shared/services/requirementExtrasService';
 import ChangeRequestForm from '../../components/change/ChangeRequestForm';
 import ChangeAssessmentForm from '../../components/change/ChangeAssessmentForm';
 import ChangeImpactAnalysis from '../../components/change/ChangeImpactAnalysis';
@@ -74,6 +75,16 @@ export default function ChangeRequestDetail() {
 
   const [exportSections, setExportSections] = useState([]);
   const [exportRecord, setExportRecord] = useState(null);
+  // v1338 Requirement Changes: "CODE – Name" of the linked practice-project requirements.
+  const [relatedRequirementLabels, setRelatedRequirementLabels] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRequirementLabels(simDb, request?.related_requirement_ids).then((labels) => {
+      if (!cancelled) setRelatedRequirementLabels(labels);
+    });
+    return () => { cancelled = true; };
+  }, [request]);
 
   useEffect(() => {
     if (!request) {
@@ -85,11 +96,11 @@ export default function ChangeRequestDetail() {
     buildChangeRequestExport(platformDb, request, assessment, crAccountId, auditUserLabels).then(({ sections, record }) => {
       if (!cancelled) {
         setExportSections(sections);
-        setExportRecord(record);
+        setExportRecord({ ...record, related_requirements_label: relatedRequirementLabels.join('\n') });
       }
     });
     return () => { cancelled = true; };
-  }, [request, assessment, crAccountId, auditUserLabels]);
+  }, [request, assessment, crAccountId, auditUserLabels, relatedRequirementLabels]);
 
   useEffect(() => {
     // sim.practice_projects has no account_id column (unlike public.projects) — resolve the
@@ -354,6 +365,16 @@ export default function ChangeRequestDetail() {
                     <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
                       {request.impact_summary}
                     </p>
+                  </div>
+                )}
+                {relatedRequirementLabels.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Related requirements
+                    </label>
+                    <ul className="list-disc pl-5 space-y-0.5 text-gray-900 dark:text-white">
+                      {relatedRequirementLabels.map((label) => <li key={label}>{label}</li>)}
+                    </ul>
                   </div>
                 )}
                 {request.status_reason && (

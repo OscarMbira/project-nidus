@@ -8,13 +8,17 @@ Custom fields belong to **your organisation**: everyone in your organisation see
 
 ### Add a field
 1. Open a record (create or edit) and go to the **Custom Fields** tab (just before *Audit details*).
-2. Click **Add custom field**.
+2. Click **Add custom field**. A panel opens inside the tab (your record stays on screen, unsaved values are kept).
 3. **Use an existing field** (first tab) — your organisation may already have the field you need, perhaps on another register. Search the list and click **Add to this register**. Reusing a field keeps reports consistent and avoids duplicates.
 4. Otherwise choose **Create a new field**:
-   - **Field name** — if the name already exists in your organisation (ignoring case, spaces and punctuation) you are offered the existing field instead. Similar names show **Did you mean …?**.
+   - **Field name** — a short name, used to spot duplicates.
+   - **Field label** (optional) — what everyone sees on forms, lists and exports; leave blank to use the field name.
+   - **Field name check** — if the name already exists in your organisation (ignoring case, spaces and punctuation) you are offered the existing field instead. Similar names show **Did you mean …?**.
    - **Type** — Text, Notes (long text), Number, Date, Yes / No, Link (URL), Dropdown, Multi-select dropdown or Multi-value list.
    - **Options** — for the two dropdown types, one option per line.
    - **Required** — tick it only if every record in this register must have a value; a required field blocks saving until it is filled.
+   - **More options (optional)** — depending on the type: a **default value** (new records start with it; dates can default to today), **minimum and maximum** (value, length, date or number of items) and **allowed characters** (letters, digits, a reference code, or your own list). Values that break these rules are shown in red and block saving until fixed.
+   - **Dropdown values** — choose Type *Dropdown* or *Multi-select dropdown* and enter one value per line.
 5. Click **Create field**. It is available immediately to everyone in your organisation.
 
 ### Fill in and use custom fields
@@ -29,6 +33,7 @@ Each organisation can add a limited number of custom fields to any one register 
 ## For PMO admins
 Only PMO admins can change a field after it is created. Use **Manage fields** on the Custom Fields tab (or *PMO Admin › Local Data Extensions*):
 - **Rename** a field, edit its dropdown options or change *Required* — *Field Definitions*.
+- **Default value, minimum/maximum and allowed characters** — *Validation Rules*.
 - **Retire** a field (status *Deprecated*) — it disappears from every register; values already saved on records are kept.
 - **Remove a field from one register** — *Screen Mapping*, screen "Local Registers › <register name>".
 - Every field created or attached from a register is recorded in **Audit History** with who did it.
@@ -52,5 +57,7 @@ Every change needs a reason and is written to the admin audit log. Lowering a li
 3. `SQL/v1313_local_register_custom_fields_tests.sql` (read-only result table; leaves no data)
 4. `SQL/v1251_planner_table_wall.sql` (re-run: two new public tables)
 5. Admin: `E:\project-nidus-admin\SQL\v242_local_register_custom_field_limit_admin_rpc.sql`
+6. `SQL/v1314_local_register_custom_field_settings.sql` (optional settings + field label)
+7. `SQL/v1315_local_register_custom_field_settings_tests.sql` (pure tests, no data)
 
 PRD: `projectprd/v1311_local_register_custom_fields_PRD.md` · Plan: `projectplan/v1311_local_register_custom_fields_plan.md`

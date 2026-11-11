@@ -23,6 +23,8 @@ export default function ExportRecordButtons({
   onExportXML,
   onExportJSON,
   onExportPrint,
+  onExportDocument = null,
+  onBuildDocumentPdf = null,
   disabled = false
 }) {
   if (sections && record) {
@@ -32,6 +34,8 @@ export default function ExportRecordButtons({
         record={record}
         baseFilename={baseFilename || title || 'Record'}
         disabled={disabled}
+        onExportDocument={onExportDocument}
+        onBuildDocumentPdf={onBuildDocumentPdf}
       />
     )
   }

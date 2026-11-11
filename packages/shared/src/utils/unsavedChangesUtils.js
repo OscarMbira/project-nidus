@@ -39,6 +39,11 @@ export function evaluateLinkClickForGuard(event, currentPath) {
   const targetPath = `${url.pathname}${url.search}${url.hash}`
   const current = currentPath ?? `${window.location.pathname}${window.location.search}${window.location.hash}`
   if (targetPath === current) return { intercept: false }
+  // Same page (only the query string or #hash differs): the form stays mounted, so nothing is
+  // lost. Sidebar section headers are <Link to="#"> toggles that resolve to this page — they used
+  // to open the dialog, and Discard then "navigated" to the page already shown.
+  const currentPathname = new URL(current, window.location.origin).pathname
+  if (url.pathname === currentPathname) return { intercept: false }
 
   return { intercept: true, targetPath }
 }

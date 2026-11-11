@@ -14,6 +14,8 @@ import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution';
 import SelectField from '@nidus/ui/SelectField';
+import MultiSelectDropdown from '@nidus/ui/MultiSelectDropdown';
+import { useRelatedRequirementOptions } from '@nidus/shared/hooks/useRelatedRequirementOptions';
 import { getStakeholders } from '../../services/stakeholderService';
 import { loadStakeholderCatalogues } from '../../services/stakeholderCatalogueService';
 import {
@@ -60,7 +62,12 @@ export default function ChangeRequestForm({
     owner_user_id: request?.owner_user_id || '',
     current_approver_user_id: request?.current_approver_user_id || '',
     status_reason: request?.status_reason || '',
-    notes: request?.notes || ''
+    notes: request?.notes || '',
+    related_requirement_ids: Array.isArray(request?.related_requirement_ids) ? request.related_requirement_ids : [],
+  });
+  // v1338 Requirement Changes: link the change to the project's requirements.
+  const relatedRequirements = useRelatedRequirementOptions({
+    db: platformDb, projectId: projectId || request?.project_id || null, projectColumn: 'project_id', changeTable: 'change_requests',
   });
   const [auditUserLabels, setAuditUserLabels] = useState({});
   const [assessment, setAssessment] = useState(null);
@@ -294,6 +301,9 @@ export default function ChangeRequestForm({
         notes: formData.notes,
         status: request ? request.status : 'submitted'
       };
+      if (relatedRequirements.available) {
+        requestData.related_requirement_ids = formData.related_requirement_ids.length ? formData.related_requirement_ids : null;
+      }
 
       if (request) {
         requestData.status_reason = formData.status_reason || null;
@@ -748,6 +758,26 @@ export default function ChangeRequestForm({
                 A quick summary at submission time. A full multi-dimensional impact analysis happens later, in Assessment.
               </p>
             </div>
+
+            {relatedRequirements.available && (
+              <div>
+                <label htmlFor="related_requirement_ids" className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Related requirements
+                </label>
+                <MultiSelectDropdown
+                  id="related_requirement_ids"
+                  value={formData.related_requirement_ids}
+                  options={relatedRequirements.options}
+                  onChange={(ids) => setFormData({ ...formData, related_requirement_ids: ids })}
+                  placeholder={relatedRequirements.options.length ? 'Add a requirement…' : 'No requirements for this project yet'}
+                  ariaLabel="Related requirements"
+                  disabled={!relatedRequirements.options.length}
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Requirements this change adds, alters or removes. They appear under IT → Requirements → Requirement Changes.
+                </p>
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">

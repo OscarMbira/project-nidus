@@ -15,6 +15,7 @@ import ChangeRequestForm from '../components/change/ChangeRequestForm';
 import ChangeRequestList from '../components/change/ChangeRequestList';
 import ChangeAssessmentForm from '../components/change/ChangeAssessmentForm';
 import { useViewMode } from '@nidus/shared/hooks/useViewMode';
+import { useInitialFilterFromQuery } from '@nidus/shared/hooks/useInitialFilterFromQuery';
 import TierFieldCustomisationPanel from '@nidus/ui/TierFieldCustomisationPanel.jsx';
 import { CHANGE_REQUEST_CATEGORY } from '../features/local-data-extensions/components/InheritedChangeRequestFields';
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution';
@@ -23,7 +24,18 @@ export default function ChangeManagement() {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('projectId');
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // `?filter=requirements` (v1338 Requirement Changes): only changes linked to requirements.
+  const queryFilter = useInitialFilterFromQuery(['filter']);
+  const [requirementsOnly, setRequirementsOnly] = useState(queryFilter.filter === 'requirements');
+  const [activeTab, setActiveTab] = useState(queryFilter.filter === 'requirements' ? 'requests' : 'dashboard');
+  const [seenFilter, setSeenFilter] = useState(queryFilter.filter);
+  if (queryFilter.filter !== seenFilter) {
+    setSeenFilter(queryFilter.filter);
+    if (queryFilter.filter === 'requirements') {
+      setRequirementsOnly(true);
+      setActiveTab('requests');
+    }
+  }
   const [project, setProject] = useState(null);
   const [accountId, setAccountId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,7 +54,7 @@ export default function ChangeManagement() {
       loadProjectData();
       loadChangeData();
     }
-  }, [projectId]);
+  }, [projectId, requirementsOnly]);
 
   const loadProjectData = async () => {
     try {
@@ -65,7 +77,7 @@ export default function ChangeManagement() {
   const loadChangeData = async () => {
     try {
       setLoading(true);
-      const requestsData = await fetchChangeRequests(projectId);
+      const requestsData = await fetchChangeRequests({ project_id: projectId, requirements_only: requirementsOnly });
       setRequests(requestsData);
     } catch (error) {
       console.error('Error loading change data:', error);
@@ -124,6 +136,21 @@ export default function ChangeManagement() {
           );
         }
         return (
+          <>
+          {requirementsOnly && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+              <span className="rounded bg-blue-50 px-2 py-1 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                Changes linked to requirements
+              </span>
+              <button
+                type="button"
+                onClick={() => setRequirementsOnly(false)}
+                className="text-blue-600 hover:underline dark:text-blue-400"
+              >
+                Show all changes
+              </button>
+            </div>
+          )}
           <ChangeRequestList
             requests={requests}
             onEdit={handleEditRequest}
@@ -136,6 +163,7 @@ export default function ChangeManagement() {
             viewMode={changeRequestViewMode}
             onViewModeChange={setChangeRequestViewMode}
           />
+          </>
         );
 
       case 'settings':

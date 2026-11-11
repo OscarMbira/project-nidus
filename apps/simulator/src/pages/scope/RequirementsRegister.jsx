@@ -10,14 +10,28 @@ import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import RowNumberBadge from '@nidus/ui/RowNumberBadge'
 import { RowActionButton, DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+import { useInitialFilterFromQuery } from '@nidus/shared/hooks/useInitialFilterFromQuery'
+import { useRequirementExtras } from '@nidus/shared/hooks/useRequirementExtras'
+import { VERIFICATION_METHODS, optionLabel } from '@nidus/shared/services/requirementExtrasService'
+import {
+  REQUIREMENT_CATEGORIES,
+  requirementCategoryFromQuery,
+  requirementListTitle,
+} from '@nidus/shared/utils/requirementCategories'
 
-const EXPORT_COLS = [
+const BASE_EXPORT_COLS = [
   { key: 'requirement_code', label: 'Record ID' },
   { key: 'name', label: 'Name' },
   { key: 'category', label: 'Category' },
   { key: 'priority', label: 'Priority' },
   { key: 'status', label: 'Status' },
   { key: 'version', label: 'Version' },
+]
+const EXTRA_EXPORT_COLS = [
+  { key: 'nfr_area', label: 'Non-functional area' },
+  { key: 'owner_name', label: 'Owner' },
+  { key: 'verification', label: 'Verification method' },
+  { key: 'rationale', label: 'Rationale' },
 ]
 
 function SortTh({ label, col, sortCol, sortDir, onSort }) {
@@ -54,7 +68,19 @@ export default function RequirementsRegister() {
   const [bulkOpen, setBulkOpen] = useState(false)
   const [bulkText, setBulkText] = useState('')
   const [bulkMsg, setBulkMsg] = useState(null)
-  const [pageTab, setPageTab] = useState('dashboard') // 'dashboard' | 'register'
+  const extras = useRequirementExtras(platformDb)
+  // IT → Requirements menu links open the register already filtered (`?category=functional`, v1338).
+  const queryFilter = useInitialFilterFromQuery(['category'])
+  const queryCategory = requirementCategoryFromQuery(queryFilter.category)
+  const [categoryFilter, setCategoryFilter] = useState(queryCategory)
+  const [pageTab, setPageTab] = useState(queryCategory ? 'register' : 'dashboard') // 'dashboard' | 'register'
+  // The menu links change only the query string, so the page stays mounted: follow the URL.
+  const [seenQueryCategory, setSeenQueryCategory] = useState(queryCategory)
+  if (queryCategory !== seenQueryCategory) {
+    setSeenQueryCategory(queryCategory)
+    setCategoryFilter(queryCategory)
+    if (queryCategory) setPageTab('register')
+  }
 
   const setSort = (col, dir) => {
     setSortCol(col)
@@ -92,6 +118,7 @@ export default function RequirementsRegister() {
     const q = search.trim().toLowerCase()
     let list = rows.filter((r) => {
       if (statusFilter && (r.status || 'unknown') !== statusFilter) return false
+      if (categoryFilter && r.category !== categoryFilter) return false
       if (!q) return true
       return (
         (r.name || '').toLowerCase().includes(q) ||
@@ -109,7 +136,17 @@ export default function RequirementsRegister() {
       })
     }
     return list
-  }, [rows, search, statusFilter, sortCol, sortDir])
+  }, [rows, search, statusFilter, categoryFilter, sortCol, sortDir])
+
+  const exportCols = extras.available ? [...BASE_EXPORT_COLS, ...EXTRA_EXPORT_COLS] : BASE_EXPORT_COLS
+  const exportRows = useMemo(
+    () => filtered.map((r) => ({
+      ...r,
+      nfr_area: optionLabel(extras.areas, r.nfr_area_key),
+      verification: optionLabel(VERIFICATION_METHODS, r.verification_method),
+    })),
+    [filtered, extras.areas]
+  )
 
   const dashboardStats = useMemo(() => {
     const byStatus = {}
@@ -201,7 +238,7 @@ export default function RequirementsRegister() {
       <div className="mb-6 flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Requirements register</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{requirementListTitle(categoryFilter)}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">Collect requirements (Process Guide 5.3).</p>
           </div>
           <DashboardRegisterTabBar
@@ -213,7 +250,7 @@ export default function RequirementsRegister() {
         </div>
         {pageTab === 'register' && (
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <ExportListMenu columns={EXPORT_COLS} data={filtered} baseFilename={`Requirements_${projectId}`} />
+            <ExportListMenu columns={exportCols} data={exportRows} baseFilename={`Requirements_${projectId}`} />
             <div className="flex overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600">
               <button
                 type="button"
@@ -295,12 +332,25 @@ export default function RequirementsRegister() {
 
       {pageTab === 'register' && (
       <div role="tabpanel" aria-label="Requirements register">
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search…"
-        className="mb-4 w-full max-w-md rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
-      />
+      <div className="mb-4 flex flex-wrap gap-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search…"
+          className="w-full max-w-md rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label="Filter by category"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        >
+          <option value="">All categories</option>
+          {REQUIREMENT_CATEGORIES.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </div>
 
       {statusFilter && (
         <div className="mb-4 flex items-center gap-2 text-sm">
@@ -330,9 +380,19 @@ export default function RequirementsRegister() {
                 <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   <SortTh label="Category" col="category" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
                 </th>
+                {extras.available && (
+                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <SortTh label="Area" col="nfr_area_key" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
+                  </th>
+                )}
                 <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   <SortTh label="Priority" col="priority" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
                 </th>
+                {extras.available && (
+                  <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <SortTh label="Owner" col="owner_name" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
+                  </th>
+                )}
                 <th className="p-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   <SortTh label="Status" col="status" sortCol={sortCol} sortDir={sortDir} onSort={setSort} />
                 </th>
@@ -348,7 +408,13 @@ export default function RequirementsRegister() {
                   <td className="p-3 font-mono text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">{r.requirement_code || '—'}</td>
                   <td className="p-3 font-medium text-gray-900 dark:text-gray-100">{r.name}</td>
                   <td className="p-3 capitalize text-gray-600 dark:text-gray-300 whitespace-nowrap">{(r.category || '—').replace(/_/g, ' ')}</td>
+                  {extras.available && (
+                    <td className="p-3 text-gray-700 dark:text-gray-200 whitespace-nowrap">{optionLabel(extras.areas, r.nfr_area_key) || '—'}</td>
+                  )}
                   <td className="p-3 capitalize text-gray-600 dark:text-gray-300 whitespace-nowrap">{r.priority || '—'}</td>
+                  {extras.available && (
+                    <td className="p-3 text-gray-700 dark:text-gray-200 whitespace-nowrap">{r.owner_name || '—'}</td>
+                  )}
                   <td className="p-3 capitalize text-gray-600 dark:text-gray-300 whitespace-nowrap">{r.status || '—'}</td>
                   <td
                     className="p-3 text-right sticky right-0 min-w-[8.5rem] whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]"

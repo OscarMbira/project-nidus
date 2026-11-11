@@ -38,3 +38,16 @@ describe('ExportRecordMenu — View button (v853)', () => {
     expect(screen.getByTestId('preview-modal')).toBeInTheDocument()
   })
 })
+
+describe('ExportRecordMenu — complete document (v1318)', () => {
+  it('offers Word and PDF document export only when onExportDocument is given', async () => {
+    const onExportDocument = vi.fn().mockResolvedValue(undefined)
+    const { rerender } = render(<ExportRecordMenu sections={sections} record={record} baseFilename="Test_Record" />)
+    fireEvent.click(screen.getByRole('button', { name: /Export/i }))
+    expect(screen.queryByText('Complete document (Word)')).not.toBeInTheDocument()
+
+    rerender(<ExportRecordMenu sections={sections} record={record} baseFilename="Test_Record" onExportDocument={onExportDocument} />)
+    fireEvent.click(screen.getByText('Complete document (PDF)'))
+    expect(onExportDocument).toHaveBeenCalledWith('pdf', expect.anything())
+  })
+})

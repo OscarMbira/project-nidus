@@ -492,7 +492,7 @@ BANKING & FINANCIAL SERVICES
 │       └── Deployment
 │
 ├── Data Migration
-│   ├── Migration Strategy
+│   ├── Data Migration Strategy (v1328 — was Migration Strategy)
 │   ├── Data Scope
 │   ├── Source Systems
 │   ├── Data Mapping
@@ -504,6 +504,10 @@ BANKING & FINANCIAL SERVICES
 │   │   ├── Mock 2
 │   │   ├── Dress Rehearsal
 │   │   └── Final Migration
+│   ├── Migration Runbook (v1337)
+│   │   ├── Run Summary
+│   │   └── Steps by Window and Batch
+│   ├── Runbook Steps (v1337)
 │   ├── Reconciliations
 │   │   ├── Record Counts
 │   │   ├── Financial
@@ -557,6 +561,28 @@ BANKING & FINANCIAL SERVICES
 │   ├── ATMs
 │   ├── Agency Banking
 │   └── Channel Readiness
+│
+├── Change Management (v1339)
+│   ├── Change Management Strategy (v1339)
+│   ├── Change Impact Assessment (v1339)
+│   ├── Change Readiness (v1339)
+│   ├── Change Network (v1339)
+│   ├── Change Communications & Engagement (v1339)
+│   ├── Resistance & Concerns (v1339)
+│   ├── Adoption Tracking (v1339)
+│   └── Change Sign-Off (v1339)
+│
+├── Training (v1339)
+│   ├── Training Strategy (v1339)
+│   ├── Training Needs Analysis (v1339)
+│   ├── Curriculum (v1339)
+│   ├── Training Materials (v1339)
+│   ├── Trainers (v1339)
+│   ├── Training Sessions (v1339)
+│   ├── Attendance & Assessment (v1339)
+│   ├── Training Environment (v1339)
+│   ├── Training Effectiveness (v1339)
+│   └── Training Sign-Off (v1339)
 │
 ├── Cutover
 │   ├── Cutover Strategy
@@ -757,14 +783,15 @@ INFORMATION TECHNOLOGY
 │   ├── Workstreams
 │   ├── Releases
 │   └── Technology Milestones
-├── Requirements
-│   ├── Business Requirements
-│   ├── Functional Requirements
-│   ├── Non-Functional Requirements
-│   ├── User Stories
-│   ├── Acceptance Criteria
-│   ├── Traceability
-│   └── Requirement Changes
+├── Requirements (category v1338 — replaces the Technology Delivery → Requirements link)
+│   ├── Requirements Specification (v1338 — BRD / FRS document; shows the register's requirements and use cases)
+│   ├── All Requirements (v1338)
+│   ├── Business Requirements (v1338 — register filtered by category)
+│   ├── Functional Requirements (v1338 — register filtered by category)
+│   ├── Non-Functional Requirements (v1338 — register filtered by category; grouped by area)
+│   ├── Use Cases (v1338)
+│   ├── Traceability (v1338 menu link to the existing matrix)
+│   └── Requirement Changes (v1338 — change requests linked to requirements)
 ├── Architecture
 │   ├── Enterprise Architecture
 │   ├── Solution Architecture

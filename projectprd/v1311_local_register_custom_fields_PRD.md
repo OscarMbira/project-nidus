@@ -49,7 +49,7 @@ Let any user who can edit a register add a **custom field** for their organisati
 22. As a System Admin, I can set, change or remove a per-organisation override of that limit.
 23. As a System Admin, every change to the limit is recorded in the Admin audit log with a reason.
 24. As a Simulator user, I get the same Custom Fields behaviour on Simulator registers, stored in Simulator tables only.
-25. As any user, the Custom Fields tab and dialog work in light and dark mode and on mobile widths.
+25. As any user, the Custom Fields tab and its inline add-field panel (non-modal, rule 65) work in light and dark mode and on mobile widths.
 
 ## d) Implementation decisions (settled in the 2026-10-21 interview)
 

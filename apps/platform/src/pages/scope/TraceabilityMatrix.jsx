@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
+import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { listTraceabilityForProject, saveTraceabilityRow, softDeleteTraceabilityRow } from '../../services/requirementsTraceabilityService'
 import { listWbsNodes } from '../../services/wbsNodeService'
 import ExportListMenu from '@nidus/ui/ExportListMenu'
@@ -13,7 +14,10 @@ const COLS = [
 ]
 
 export default function TraceabilityMatrix() {
-  const { projectId } = useParams()
+  const { projectId: routeProjectId } = useParams()
+  // IT → Requirements → Traceability (v1338) opens without a project in the path: use the current project.
+  const { projectId: contextProjectId } = usePlatformProjectId()
+  const projectId = routeProjectId || contextProjectId
   const { canEdit } = useProjectRole(projectId)
   const [loading, setLoading] = useState(true)
   const [rows, setRows] = useState([])
@@ -70,17 +74,17 @@ export default function TraceabilityMatrix() {
     if (res.success) load()
   }
 
-  if (!projectId) return <p className="p-6 text-gray-500">Missing project.</p>
-  if (loading) return <div className="flex min-h-[40vh] items-center justify-center">Loading…</div>
+  if (!projectId) return <p className="p-6 text-gray-500 dark:text-gray-400">Select a project in the header to view traceability.</p>
+  if (loading) return <div className="flex min-h-[40vh] items-center justify-center text-gray-500 dark:text-gray-400">Loading…</div>
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 dark:bg-gray-950">
+    <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
       <nav className="mb-4 text-sm text-gray-500 dark:text-gray-400">
         <Link to={`/platform/projects/${projectId}`} className="hover:underline">
           Project
         </Link>
         <span className="mx-2">/</span>
-        <span>Traceability matrix</span>
+        <span className="text-gray-700 dark:text-gray-300">Traceability matrix</span>
       </nav>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -97,10 +101,10 @@ export default function TraceabilityMatrix() {
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-700">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-100 dark:bg-gray-800">
-            <tr>
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <table className="min-w-full text-sm text-gray-900 dark:text-gray-100">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr className="text-gray-700 dark:text-gray-200">
               <th className="p-3 text-left">Requirement</th>
               <th className="p-3 text-left">Deliverable</th>
               <th className="p-3 text-left">WBS</th>
@@ -112,9 +116,9 @@ export default function TraceabilityMatrix() {
             {tableData.map((r) => (
               <tr key={r.id} className="border-t border-gray-200 dark:border-gray-700">
                 <td className="p-3">{r.requirement_label}</td>
-                <td className="p-3">{r.deliverable_description || '—'}</td>
-                <td className="p-3">{r.wbs_code}</td>
-                <td className="p-3">{r.status}</td>
+                <td className="p-3 text-gray-700 dark:text-gray-200">{r.deliverable_description || '—'}</td>
+                <td className="p-3 text-gray-700 dark:text-gray-200">{r.wbs_code}</td>
+                <td className="p-3 text-gray-700 dark:text-gray-200">{r.status}</td>
                 {canEdit && (
                   <td className="p-3">
                     <button type="button" className="text-red-600 hover:underline dark:text-red-400" onClick={() => del(r.id)}>
@@ -130,15 +134,15 @@ export default function TraceabilityMatrix() {
 
       {editing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl border border-gray-600 bg-gray-900 p-6">
-            <h3 className="text-lg font-semibold text-white">{editing === 'new' ? 'Add trace row' : 'Edit row'}</h3>
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{editing === 'new' ? 'Add trace row' : 'Edit row'}</h3>
             <div className="mt-4 space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Requirement</label>
+                <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Requirement</label>
                 <select
                   value={form.requirement_id}
                   onChange={(e) => setForm((f) => ({ ...f, requirement_id: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 >
                   {requirements.map((q) => (
                     <option key={q.id} value={q.id}>
@@ -148,11 +152,11 @@ export default function TraceabilityMatrix() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">WBS node</label>
+                <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">WBS node</label>
                 <select
                   value={form.wbs_node_id}
                   onChange={(e) => setForm((f) => ({ ...f, wbs_node_id: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="">—</option>
                   {wbsNodes.map((n) => (
@@ -163,20 +167,20 @@ export default function TraceabilityMatrix() {
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Deliverable description</label>
+                <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Deliverable description</label>
                 <textarea
                   value={form.deliverable_description}
                   onChange={(e) => setForm((f) => ({ ...f, deliverable_description: e.target.value }))}
                   rows={3}
-                  className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs text-gray-400">Status</label>
+                <label className="mb-1 block text-xs text-gray-600 dark:text-gray-400">Status</label>
                 <select
                   value={form.status}
                   onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-                  className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 >
                   <option value="open">open</option>
                   <option value="closed">closed</option>
@@ -184,7 +188,7 @@ export default function TraceabilityMatrix() {
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-2">
-              <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-gray-500 px-4 py-2 text-gray-300">
+              <button type="button" onClick={() => setEditing(null)} className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700">
                 Cancel
               </button>
               <button type="button" onClick={save} className="rounded-lg bg-emerald-600 px-4 py-2 text-white">

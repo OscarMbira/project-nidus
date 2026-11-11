@@ -46,6 +46,7 @@ export const CHANGE_REQUEST_EXPORT_SECTIONS = [
       { key: 'urgency', label: 'Urgency' },
       { key: 'business_criticality', label: 'Business Criticality' },
       { key: 'impact_summary', label: 'Impact' },
+      { key: 'related_requirements_label', label: 'Related Requirements' },
       { key: 'notes', label: 'Additional Notes' },
       { key: 'status_reason', label: 'Decision Notes' },
     ],

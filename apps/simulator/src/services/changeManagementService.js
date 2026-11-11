@@ -165,6 +165,8 @@ export async function fetchChangeRequests(projectIdOrFilters) {
   const category = filters.category ?? filters.change_category
   if (category) query = query.eq('change_category', category)
   if (filters.priority) query = query.eq('priority', filters.priority)
+  // v1338 Requirement Changes: only changes linked to at least one requirement.
+  if (filters.requirements_only) query = query.not('related_requirement_ids', 'is', null)
   const search = typeof filters.search === 'string' ? filters.search.trim().replace(/,/g, ' ') : ''
   if (search) {
     const pat = `%${search}%`

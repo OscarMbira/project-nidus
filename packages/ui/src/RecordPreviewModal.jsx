@@ -42,8 +42,15 @@ export default function RecordPreviewModal({
   baseFilename = 'Record',
   branding,
   attachmentAssets = {},
+  // Optional (document registers, v1318): the complete document. buildDocumentPdf(branding) →
+  // Promise<Blob> is shown on the PDF and Word tabs (same layout as the Word file);
+  // exportDocument(format, branding) downloads it.
+  buildDocumentPdf = null,
+  exportDocument = null,
 }) {
   const [activeTab, setActiveTab] = useState('pdf')
+  const isDocument = typeof buildDocumentPdf === 'function'
+  const showsPdf = activeTab === 'pdf' || (isDocument && activeTab === 'word')
   const [pdfUrl, setPdfUrl] = useState(null)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -54,10 +61,13 @@ export default function RecordPreviewModal({
   }, [isOpen])
 
   useEffect(() => {
-    if (!isOpen || activeTab !== 'pdf' || !record) return
+    if (!isOpen || !showsPdf || !record || (pdfUrl && isDocument)) return
     let cancelled = false
     setPdfLoading(true)
-    generateRecordPdfBlob(sections, record, baseFilename, branding, '—', attachmentAssets)
+    const build = isDocument
+      ? buildDocumentPdf(branding)
+      : generateRecordPdfBlob(sections, record, baseFilename, branding, '—', attachmentAssets)
+    build
       .then((blob) => {
         if (cancelled) return
         setPdfUrl(URL.createObjectURL(blob))
@@ -67,7 +77,7 @@ export default function RecordPreviewModal({
       })
     return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, activeTab, sections, record, baseFilename, attachmentAssets])
+  }, [isOpen, showsPdf, sections, record, baseFilename, attachmentAssets])
 
   useEffect(() => {
     return () => {
@@ -89,7 +99,8 @@ export default function RecordPreviewModal({
     if (!record) return
     setExporting(true)
     try {
-      if (activeTab === 'pdf') await exportRecordToPDF(sections, record, baseFilename, branding, '—', attachmentAssets)
+      if (isDocument && (activeTab === 'pdf' || activeTab === 'word')) await exportDocument(activeTab, branding)
+      else if (activeTab === 'pdf') await exportRecordToPDF(sections, record, baseFilename, branding, '—', attachmentAssets)
       else if (activeTab === 'word') await exportRecordToWord(sections, record, baseFilename, branding, '—', attachmentAssets)
       else if (activeTab === 'ppt') await exportRecordToPPT(sections, record, baseFilename, branding, '—', attachmentAssets)
       else if (activeTab === 'excel') exportRecordToExcel(sections, record, baseFilename, branding)
@@ -156,15 +167,15 @@ export default function RecordPreviewModal({
 
         <div
           className={`min-h-0 flex-1 ${
-            activeTab === 'pdf'
+            showsPdf
               ? 'bg-gray-200 dark:bg-gray-950'
               : 'overflow-auto bg-gray-100 p-4 dark:bg-gray-950 sm:p-6'
           }`}
         >
-          {activeTab === 'pdf' && (
+          {showsPdf && (
             pdfLoading || !pdfUrl ? (
               <div className="flex h-full min-h-[50vh] items-center justify-center text-sm text-gray-600 dark:text-gray-300">
-                Generating PDF preview…
+                {isDocument ? 'Building the complete document…' : 'Generating PDF preview…'}
               </div>
             ) : (
               <iframe
@@ -174,7 +185,7 @@ export default function RecordPreviewModal({
               />
             )
           )}
-          {activeTab === 'word' && (
+          {activeTab === 'word' && !isDocument && (
             <WordStylePreview sections={sections} record={record} baseFilename={baseFilename} branding={branding} attachmentAssets={attachmentAssets} />
           )}
           {activeTab === 'ppt' && (

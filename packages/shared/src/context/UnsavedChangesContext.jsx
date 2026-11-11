@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Modal from '@nidus/ui/Modal'
 import Button from '@nidus/ui/Button'
 import { aggregateDirtyState, evaluateLinkClickForGuard, getParentPath } from '../utils/unsavedChangesUtils.js'
@@ -19,8 +19,16 @@ const DEFAULT_MESSAGE = 'You have unsaved changes. Discard them and leave this p
 
 export function UnsavedChangesProvider({ children }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [guards, setGuards] = useState(() => new Map())
   const [confirmOpen, setConfirmOpen] = useState(false)
+  // After Discard starts a navigation, the dialog stays open (buttons disabled, "Leaving this
+  // page…") until the next page renders. Navigations run as transitions (v7_startTransition), so
+  // the old page stays on screen while the next page's code loads — without this the dialog
+  // closed and nothing seemed to happen.
+  const [leaving, setLeaving] = useState(false)
+  const leavingTimerRef = useRef(null)
+  const leavingFromRef = useRef('')
   const pendingActionRef = useRef(null)
   const bypassRef = useRef(false)
   const historyTrapRef = useRef(false)
@@ -60,11 +68,15 @@ export function UnsavedChangesProvider({ children }) {
 
   // Keep React Router's history idx/key on the trap entry. A bare pushState
   // wipes them, and the next navigate() then stays on this page.
+  // Only one trap per page: a form that goes clean and dirty again is still on its trap, and a
+  // second one would make Discard after browser Back (history.go(-2)) land on the same page.
   const pushGuardEntry = useCallback(() => {
     const state = window.history.state && typeof window.history.state === 'object'
       ? window.history.state
       : {}
-    window.history.pushState({ ...state, nidusUnsavedGuard: true }, '', window.location.href)
+    if (!state.nidusUnsavedGuard) {
+      window.history.pushState({ ...state, nidusUnsavedGuard: true }, '', window.location.href)
+    }
     historyTrapRef.current = true
   }, [])
 
@@ -143,14 +155,40 @@ export function UnsavedChangesProvider({ children }) {
   }, [isDirty, navigate, openConfirm])
 
   const handleKeepEditing = useCallback(() => {
+    if (leaving) return
     pendingActionRef.current = null
+    setConfirmOpen(false)
+  }, [leaving])
+
+  const finishLeaving = useCallback(() => {
+    window.clearTimeout(leavingTimerRef.current)
+    leavingTimerRef.current = null
+    setLeaving(false)
     setConfirmOpen(false)
   }, [])
 
   const handleDiscard = useCallback(() => {
-    setConfirmOpen(false)
+    if (leaving) return
+    const hrefBefore = window.location.href
+    leavingFromRef.current = `${location.pathname}${location.search}${location.hash}`
+    setLeaving(true)
     runPendingAction()
-  }, [runPendingAction])
+    // No address change shortly after the action (e.g. a callback that only closes a panel, or an
+    // in-memory router): close at once. Otherwise wait for the next page (effect below), at most 20s.
+    window.setTimeout(() => {
+      if (window.location.href === hrefBefore) finishLeaving()
+    }, 250)
+    leavingTimerRef.current = window.setTimeout(finishLeaving, 20000)
+  }, [leaving, location, runPendingAction, finishLeaving])
+
+  // The router's location only changes when the next page is rendered (end of the transition).
+  useEffect(() => {
+    if (!leaving) return
+    const current = `${location.pathname}${location.search}${location.hash}`
+    if (current !== leavingFromRef.current) finishLeaving()
+  }, [leaving, location, finishLeaving])
+
+  useEffect(() => () => window.clearTimeout(leavingTimerRef.current), [])
 
   useEffect(() => {
     if (!isDirty) return undefined
@@ -222,19 +260,21 @@ export function UnsavedChangesProvider({ children }) {
         title="Unsaved changes"
         size="sm"
         closeOnOverlayClick={false}
+        showCloseButton={!leaving}
+        closeOnEscape={!leaving}
         footer={(
           <>
-            <Button type="button" variant="secondary" onClick={handleKeepEditing}>
+            <Button type="button" variant="secondary" onClick={handleKeepEditing} disabled={leaving}>
               Keep editing
             </Button>
-            <Button type="button" variant="destructive" onClick={handleDiscard}>
-              Discard changes
+            <Button type="button" variant="destructive" onClick={handleDiscard} loading={leaving}>
+              {leaving ? 'Leaving…' : 'Discard changes'}
             </Button>
           </>
         )}
       >
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          {message || DEFAULT_MESSAGE}
+        <p className="text-sm text-gray-600 dark:text-gray-300" role={leaving ? 'status' : undefined}>
+          {leaving ? 'Discarding your changes and opening the next page…' : (message || DEFAULT_MESSAGE)}
         </p>
       </Modal>
     </UnsavedChangesContext.Provider>

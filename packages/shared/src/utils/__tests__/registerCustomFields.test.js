@@ -9,6 +9,12 @@ import {
   customFieldErrorMessage,
   registerFieldExportValue,
   registerRecordSearchText,
+  customFieldSettingsErrors,
+  customFieldSettingsFor,
+  customFieldDefaultValue,
+  validateRegisterCustomValue,
+  customFieldHint,
+  formatRegisterAmount,
 } from '../registerCustomFields'
 
 const LIBRARY = [
@@ -58,6 +64,11 @@ describe('duplicate detection', () => {
     expect(findExactFieldMatch('Vendor Ticket', LIBRARY)).toBeNull()
   })
 
+  it('also matches an existing field name', () => {
+    const library = [{ id: '9', label: 'Vendor reference (ticket)', name: 'lr_vendor_ref' }]
+    expect(findExactFieldMatch('Vendor Ref', library)?.id).toBe('9')
+  })
+
   it('suggests similar names but not the exact match', () => {
     expect(findSimilarFields('Vendor Ticket', LIBRARY).map((f) => f.id)).toEqual(['1'])
     expect(findSimilarFields('Cost Center', LIBRARY).map((f) => f.id)).toEqual(['2'])
@@ -86,6 +97,73 @@ describe('registerFieldExportValue', () => {
     expect(registerFieldExportValue(true, { field_type: 'boolean' })).toBe('Yes')
     expect(registerFieldExportValue('a\nb', { field_type: 'multi_line' })).toBe('a\nb')
     expect(registerFieldExportValue(null, dropdown)).toBe('')
+  })
+})
+
+describe('custom field settings (v1314)', () => {
+  it('flags impossible ranges and bad defaults before creating', () => {
+    expect(customFieldSettingsErrors('number', { min: 10, max: 1 })).toContain('Minimum value cannot be greater than the maximum')
+    expect(customFieldSettingsErrors('number', { min: 1, max: 10, defaultValue: 50 })).toContain('The default value must be within the minimum and maximum')
+    expect(customFieldSettingsErrors('date', { minDate: '2026-12-01', maxDate: '2026-01-01' })).toHaveLength(1)
+    expect(customFieldSettingsErrors('text', { allowedCharacters: 'custom' })).toContain('List the characters that are allowed')
+    expect(customFieldSettingsErrors('dropdown', { defaultValue: 'Medium' }, ['Low', 'High'])).toHaveLength(1)
+    expect(customFieldSettingsErrors('text', { minLength: 2, maxLength: 20 })).toEqual([])
+  })
+
+  it('reports which settings apply to a type', () => {
+    expect(customFieldSettingsFor('text')).toMatchObject({ length: true, characters: true, numberRange: false })
+    expect(customFieldSettingsFor('multi_select')).toMatchObject({ itemCount: true, characters: false })
+  })
+
+  it('resolves defaults, including today for dates', () => {
+    const today = new Date(2026, 9, 22)
+    expect(customFieldDefaultValue({ field_type: 'date', rules: { defaultValue: 'today' } }, today)).toBe('2026-10-22')
+    expect(customFieldDefaultValue({ field_type: 'number', rules: { defaultValue: 5 } })).toBe(5)
+    expect(customFieldDefaultValue({ field_type: 'text', rules: {} })).toBeUndefined()
+  })
+
+  it('validates values against the rules', () => {
+    const code = { field_type: 'text', rules: { minLength: 3, maxLength: 6, pattern: '^[0-9]*$', patternMessage: 'Digits only' } }
+    expect(validateRegisterCustomValue(code, '12')).toEqual(['Must be at least 3 characters'])
+    expect(validateRegisterCustomValue(code, '12a4')).toEqual(['Digits only'])
+    expect(validateRegisterCustomValue(code, '')).toEqual([])
+    expect(validateRegisterCustomValue({ field_type: 'number', rules: { min: 1, max: 5 } }, 9)).toEqual(['Must be at most 5'])
+    expect(validateRegisterCustomValue({ field_type: 'date', rules: { minDate: '2026-01-01' } }, '2025-12-31')).toEqual(['Must be on or after 2026-01-01'])
+    expect(validateRegisterCustomValue({ field_type: 'multi_line', rules: { maxItems: 1, maxLength: 3 } }, 'abcd\nx')).toEqual([
+      'Allows at most 1 item',
+      'Item 1: Must be at most 3 characters',
+    ])
+    expect(validateRegisterCustomValue({ field_type: 'multi_select', rules: { minItems: 2 } }, ['a'])).toEqual(['Needs at least 2 items'])
+  })
+
+  it('describes the rules in a short hint', () => {
+    expect(customFieldHint({ field_type: 'text', rules: { minLength: 2, maxLength: 20, pattern: '^[0-9]*$', patternMessage: 'Digits only' } }))
+      .toBe('2–20 characters · Digits only')
+    expect(customFieldHint({ field_type: 'number', rules: { min: 1 } })).toBe('At least 1')
+    expect(customFieldHint({ field_type: 'text', rules: {} })).toBe('')
+  })
+})
+
+describe('amount formatting (rule 68)', () => {
+  const usd = { currency_code: 'USD', locale: 'en-US', decimal_places: 2 }
+
+  it('formats currency with symbol, grouping and decimals from the regional settings', () => {
+    expect(formatRegisterAmount(18500000, { field_type: 'currency' }, usd)).toBe('$18,500,000.00')
+    expect(formatRegisterAmount('2650000', { field_type: 'currency' }, { ...usd, currency_code: 'ZAR', locale: 'en-ZA' }))
+      .toMatch(/R\s?2[\s,]650[\s,]000[.,]00/)
+    expect(registerFieldExportValue(18500000, { field_type: 'currency' }, usd)).toBe('$18,500,000.00')
+  })
+
+  it('groups plain numbers but keeps their own decimals', () => {
+    expect(formatRegisterAmount(850000, { field_type: 'number' }, usd)).toBe('850,000')
+    expect(formatRegisterAmount(70, { field_type: 'number' }, usd)).toBe('70')
+    expect(formatRegisterAmount('12.5', { field_type: 'number' }, usd)).toBe('12.5')
+  })
+
+  it('leaves non-amount fields and non-numeric values alone', () => {
+    expect(formatRegisterAmount('RCA-100', { field_type: 'text' }, usd)).toBeNull()
+    expect(formatRegisterAmount('abc', { field_type: 'currency' }, usd)).toBeNull()
+    expect(formatRegisterAmount('', { field_type: 'currency' }, usd)).toBeNull()
   })
 })
 

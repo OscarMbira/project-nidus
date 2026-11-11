@@ -1,24 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Paperclip, Camera, X, Download, ZoomIn, ZoomOut, RotateCw, FileText, History, Trash2, RefreshCw } from 'lucide-react'
 import { getCurrentUserInternalUserId } from '@nidus/shared/utils/accountResolution'
-import {
-  deleteDocumentAttachment,
-  formatFileSizeLabel,
-  getAttachmentSignedUrl,
-  isImageMimeType,
-  listAttachmentVersionHistory,
-  listDocumentAttachments,
-  replaceDocumentAttachment,
-  restoreAttachmentVersion,
-  updateAttachmentCaption,
-  uploadDocumentAttachment,
-  validateAttachmentFile,
-  DEFAULT_MAX_FILES,
-} from '@nidus/shared/services/processTemplateAttachmentService'
+import * as processTemplateAttachmentService from '@nidus/shared/services/processTemplateAttachmentService'
+
+/**
+ * The attachment service in use. Defaults to process_templates documents (v867); Local Register
+ * document records pass localRegisterAttachmentPanelService (v1318) — same shape.
+ */
+const AttachmentServiceContext = createContext(processTemplateAttachmentService)
 
 /** Full-size preview modal for one attachment version — same pattern as AttachmentField.jsx's (v863). */
 function AttachmentPreviewModal({ attachment, db, onClose }) {
+  const { getAttachmentSignedUrl, isImageMimeType } = useContext(AttachmentServiceContext)
   const [url, setUrl] = useState(null)
   const [loading, setLoading] = useState(true)
   const [zoom, setZoom] = useState(1)
@@ -114,6 +108,7 @@ function AttachmentPreviewModal({ attachment, db, onClose }) {
 }
 
 function VersionHistoryDropdown({ attachment, db, onRestore, onPreview, onClose }) {
+  const { listAttachmentVersionHistory } = useContext(AttachmentServiceContext)
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -162,8 +157,10 @@ function VersionHistoryDropdown({ attachment, db, onRestore, onPreview, onClose 
   )
 }
 
-function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplace, onDelete }) {
+function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplace, onDelete, captionPlaceholder }) {
+  const { getAttachmentSignedUrl, updateAttachmentCaption, formatFileSizeLabel, isImageMimeType } = useContext(AttachmentServiceContext)
   const [thumbUrl, setThumbUrl] = useState(null)
+  const [thumbError, setThumbError] = useState(null)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [captionValue, setCaptionValue] = useState(attachment.caption || '')
   const isImage = isImageMimeType(attachment.mime_type)
@@ -172,7 +169,9 @@ function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplac
     if (!isImage) return
     let cancelled = false
     getAttachmentSignedUrl(db, attachment.storage_path).then((result) => {
-      if (!cancelled && result.success) setThumbUrl(result.data)
+      if (cancelled) return
+      if (result.success) setThumbUrl(result.data)
+      else setThumbError(result.message || 'Could not load the image')
     })
     return () => { cancelled = true }
   }, [attachment.storage_path, db, isImage])
@@ -183,12 +182,12 @@ function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplac
         type="button"
         onClick={() => onOpenPreview(attachment)}
         className="flex h-24 w-full items-center justify-center overflow-hidden rounded bg-gray-100 dark:bg-gray-800"
-        title="Preview"
+        title={thumbError || "Preview"}
       >
         {isImage && thumbUrl ? (
           <img src={thumbUrl} alt={attachment.caption || attachment.file_name} className="h-full w-full object-cover" />
         ) : (
-          <FileText className="h-8 w-8 text-gray-400" />
+          <FileText className={`h-8 w-8 ${thumbError ? 'text-red-400' : 'text-gray-400'}`} aria-label={thumbError || undefined} />
         )}
       </button>
       <p className="truncate text-[11px] text-gray-600 dark:text-gray-300" title={attachment.file_name}>
@@ -213,7 +212,7 @@ function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplac
               })
             }
           }}
-          placeholder="Caption (optional)"
+          placeholder={captionPlaceholder}
           className="w-full rounded border border-gray-200 bg-white px-1.5 py-1 text-[11px] text-gray-900 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
         />
       )}
@@ -265,8 +264,36 @@ function AttachmentThumbnail({ attachment, db, disabled, onOpenPreview, onReplac
  * Document-level Attachments panel for process_templates documents (v867). Unlike
  * AttachmentField.jsx (v863, field-level), this has no `field.accept`/`maxFiles`
  * config and no field_key — one gallery per document, keyed by templateNodeId.
+ * v1318: `service` swaps the storage backend (Local Register document records pass
+ * localRegisterAttachmentPanelService, with the record id as templateNodeId); `title`,
+ * `description` and `captionPlaceholder` adjust the wording.
  */
-export default function DocumentAttachmentsPanel({ db, templateNodeId, disabled = false, mode = 'platform' }) {
+export default function DocumentAttachmentsPanel(props) {
+  return (
+    <AttachmentServiceContext.Provider value={props.service || processTemplateAttachmentService}>
+      <AttachmentsPanelBody {...props} />
+    </AttachmentServiceContext.Provider>
+  )
+}
+
+function AttachmentsPanelBody({
+  db,
+  templateNodeId,
+  disabled = false,
+  mode = 'platform',
+  title = 'Attachments',
+  description = 'Attach supporting images or files to this document — e.g. a process-flow diagram for clarity.',
+  captionPlaceholder = 'Caption (optional)',
+}) {
+  const {
+    DEFAULT_MAX_FILES,
+    deleteDocumentAttachment,
+    listDocumentAttachments,
+    replaceDocumentAttachment,
+    restoreAttachmentVersion,
+    uploadDocumentAttachment,
+    validateAttachmentFile,
+  } = useContext(AttachmentServiceContext)
   const [attachments, setAttachments] = useState([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -375,10 +402,8 @@ export default function DocumentAttachmentsPanel({ db, templateNodeId, disabled 
   return (
     <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Attachments</h2>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Attach supporting images or files to this document — e.g. a process-flow diagram for clarity.
-        </p>
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{description}</p>
       </div>
 
       <div
@@ -397,6 +422,7 @@ export default function DocumentAttachmentsPanel({ db, templateNodeId, disabled 
                 onOpenPreview={setPreviewTarget}
                 onReplace={(file, opts) => handleReplace(attachment.attachment_group_id, file, opts)}
                 onDelete={() => handleDelete(attachment.attachment_group_id)}
+                captionPlaceholder={captionPlaceholder}
               />
             ))}
           </div>

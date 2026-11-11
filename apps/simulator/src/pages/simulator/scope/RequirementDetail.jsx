@@ -12,27 +12,40 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
+import RequirementExtraFields from '@nidus/ui/RequirementExtraFields'
+import { useRequirementExtras } from '@nidus/shared/hooks/useRequirementExtras'
+import {
+  VERIFICATION_METHODS,
+  optionLabel,
+  requirementExtraValues,
+  requirementExtrasFromRow,
+} from '@nidus/shared/services/requirementExtrasService'
 
 const inputCls =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500'
 
-const SECTIONS = [
-  {
-    title: 'Requirement',
-    fields: [
-      { key: 'requirement_code', label: 'Code' },
-      { key: 'version', label: 'Version' },
-      { key: 'name', label: 'Name' },
-      { key: 'description', label: 'Description' },
-      { key: 'category', label: 'Category' },
-      { key: 'priority', label: 'Priority (MoSCoW)' },
-      { key: 'source_stakeholder', label: 'Source stakeholder' },
-      { key: 'acceptance_criteria', label: 'Acceptance criteria' },
-      { key: 'traceability_tag', label: 'Traceability tag' },
-      { key: 'status', label: 'Status' },
-    ],
-  },
-]
+function buildSections(extrasAvailable) {
+  return [
+    {
+      title: 'Requirement',
+      fields: [
+        { key: 'requirement_code', label: 'Code' },
+        { key: 'version', label: 'Version' },
+        { key: 'name', label: 'Name' },
+        { key: 'description', label: 'Description' },
+        { key: 'category', label: 'Category' },
+        ...(extrasAvailable ? [{ key: 'nfr_area', label: 'Non-functional area' }] : []),
+        { key: 'priority', label: 'Priority (MoSCoW)' },
+        { key: 'source_stakeholder', label: 'Source stakeholder' },
+        ...(extrasAvailable ? [{ key: 'owner_name', label: 'Owner' }, { key: 'rationale', label: 'Rationale' }] : []),
+        { key: 'acceptance_criteria', label: 'Acceptance criteria' },
+        ...(extrasAvailable ? [{ key: 'verification', label: 'Verification method' }] : []),
+        { key: 'traceability_tag', label: 'Traceability tag' },
+        { key: 'status', label: 'Status' },
+      ],
+    },
+  ]
+}
 
 export default function RequirementDetail() {
   const { projectId, reqId } = useParams()
@@ -45,6 +58,7 @@ export default function RequirementDetail() {
   const [success, setSuccess] = useState(null)
   const [record, setRecord] = useState(null)
   const [formTab, setFormTab] = useState('details')
+  const extras = useRequirementExtras(simDb)
   const [form, setForm] = useState({
     requirement_code: '',
     name: '',
@@ -56,6 +70,7 @@ export default function RequirementDetail() {
     acceptance_criteria: '',
     traceability_tag: '',
     version: '1.0',
+    ...requirementExtrasFromRow(null),
   })
 
   const loadStakeholders = useCallback(async () => {
@@ -90,6 +105,7 @@ export default function RequirementDetail() {
         acceptance_criteria: d.acceptance_criteria || '',
         traceability_tag: d.traceability_tag || '',
         version: d.version || '1.0',
+        ...requirementExtrasFromRow(d),
       })
     }
     setLoading(false)
@@ -117,6 +133,7 @@ export default function RequirementDetail() {
           ...form,
           source_stakeholder_id: form.source_stakeholder_id || null,
           status: asDraft ? 'draft' : form.status,
+          extra_columns: requirementExtraValues(form, extras.available),
         },
         user.id
       )
@@ -165,6 +182,8 @@ export default function RequirementDetail() {
   const exportRecord = {
     ...form,
     source_stakeholder: stakeholderLabel,
+    nfr_area: optionLabel(extras.areas, form.nfr_area_key),
+    verification: optionLabel(VERIFICATION_METHODS, form.verification_method),
   }
   const exportFilename = `Requirement_${form.requirement_code || reqId || 'draft'}`
 
@@ -185,7 +204,7 @@ export default function RequirementDetail() {
       <div className="mb-6 flex flex-wrap justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{isNew ? 'New requirement' : 'Requirement'}</h1>
         <ExportRecordButtons
-          sections={SECTIONS}
+          sections={buildSections(extras.available)}
           record={exportRecord}
           baseFilename={exportFilename}
         />
@@ -320,6 +339,14 @@ export default function RequirementDetail() {
               ))}
             </select>
           </div>
+          <RequirementExtraFields
+            section="details"
+            form={form}
+            onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+            disabled={!canEdit}
+            available={extras.available}
+            areas={extras.areas}
+          />
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Acceptance criteria</label>
             <textarea
@@ -330,6 +357,14 @@ export default function RequirementDetail() {
               className={inputCls}
             />
           </div>
+          <RequirementExtraFields
+            section="acceptance"
+            form={form}
+            onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+            disabled={!canEdit}
+            available={extras.available}
+            areas={extras.areas}
+          />
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Traceability tag</label>
             <input

@@ -40,6 +40,29 @@ function formatSignatureDateTime(isoString) {
 /** Signature card grid: fixed column count, wraps to further rows when there are many signatories. */
 const SIGNATURE_CARD_COLS = 3
 
+/** A record-export field's table ({ headers, rows }) when it has at least one row (v1331). */
+function fieldTable(field) {
+  const table = field?.table
+  return table && Array.isArray(table.headers) && Array.isArray(table.rows) && table.rows.length ? table : null
+}
+
+/**
+ * Column widths as fractions (sum 1), weighted by how much text each column holds so long
+ * descriptions get more room than short codes. Every column gets at least 10%.
+ */
+export function tableColumnFractions(headers, rows) {
+  const n = headers.length || 1
+  const weights = headers.map((h, i) => {
+    const lengths = [String(h || '').length, ...rows.map((r) => String(r[i] ?? '').length)]
+    const avg = lengths.reduce((a, b) => a + b, 0) / lengths.length
+    return Math.max(4, Math.min(avg, 60))
+  })
+  const total = weights.reduce((a, b) => a + b, 0) || n
+  const raw = weights.map((w) => Math.max(w / total, 0.1))
+  const sum = raw.reduce((a, b) => a + b, 0)
+  return raw.map((f) => f / sum)
+}
+
 /**
  * Fetch an attachment image and its natural dimensions for embedding — shared by Word/PPT/PDF.
  * Returns null on any fetch/decode failure so callers can fall back to a text line.
@@ -47,7 +70,7 @@ const SIGNATURE_CARD_COLS = 3
  * @param {number} [maxWidthPt]
  * @param {number} [maxHeightPt]
  */
-async function loadAttachmentImageForEmbed(url, maxWidthPt = 360, maxHeightPt = 360) {
+export async function loadAttachmentImageForEmbed(url, maxWidthPt = 360, maxHeightPt = 360) {
   try {
     const res = await fetch(url)
     if (!res.ok) return null
@@ -112,6 +135,8 @@ function wordSectionBanner(titleText, headerHex) {
               new Paragraph({
                 children: [new TextRun({ text: titleText, bold: true, color: 'FFFFFF', size: 22 })],
                 spacing: { before: 60, after: 60 },
+                keepNext: true,
+                keepLines: true,
               }),
             ],
           }),
@@ -175,16 +200,52 @@ function getNumberedSectionInfo(sections) {
     const sectionNum = sIdx + 1
     const cleanTitle = stripLeadingNumber(sec.title || '')
     sectionTitles.push(`${sectionNum}. ${cleanTitle}`)
-    ;(sec.fields || []).forEach((f, fIdx) => {
+    let fieldNum = 0
+    ;(sec.fields || []).forEach((f) => {
+      // Single-value fields (`fact`) are rows of a Detail | Value table and take no number.
+      if (!f.fact) fieldNum += 1
       flatNumberedFields.push({
         key: f.key,
-        label: `${sectionNum}.${fIdx + 1} ${f.label || f.key}`,
+        label: f.fact ? (f.label || f.key) : `${sectionNum}.${fieldNum} ${f.label || f.key}`,
         ...(f.help ? { help: f.help } : {}),
         ...(f.example ? { example: f.example } : {}),
       })
     })
   })
   return { sectionTitles, flatNumberedFields }
+}
+
+/**
+ * A section's fields as render steps: consecutive single-value fields (`fact`) become one
+ * { facts: [{ field, index }] } step (a Detail | Value table); every other field is { field, index }.
+ * `index` is the field's position in the flat numbered list, starting at `startIndex`.
+ */
+function sectionRenderSteps(fields, startIndex) {
+  const steps = []
+  ;(fields || []).forEach((field, i) => {
+    const entry = { field, index: startIndex + i }
+    const last = steps[steps.length - 1]
+    if (field.fact && last?.facts) last.facts.push(entry)
+    else if (field.fact) steps.push({ facts: [entry] })
+    else steps.push(entry)
+  })
+  return steps
+}
+
+/** A Detail | Value table for single-value fields. */
+function factsTable(facts, record, flatNumberedFields, blankPlaceholder) {
+  return {
+    headers: ['Detail', 'Value'],
+    rows: facts.map(({ field, index }) => [
+      flatNumberedFields[index]?.label ?? (field.label || field.key),
+      displayValue(record?.[field.key], blankPlaceholder),
+    ]),
+  }
+}
+
+/** A field's document blocks (linked records): text, captioned tables and captioned lists. */
+function fieldBlocks(field) {
+  return Array.isArray(field?.blocks) && field.blocks.length ? field.blocks : null
 }
 
 /** True when a list item already starts with "1. ", "• ", "- ", etc. */
@@ -898,24 +959,67 @@ export async function exportRecordToWord(sections, record, baseFilename, brandin
   children.push(new Paragraph({ text: '' }))
 
   const { sectionTitles, flatNumberedFields } = getNumberedSectionInfo(sections)
+  // Header row repeats on every page and stays with the first data row; rows never split.
+  // A cell's lines become separate paragraphs (Word ignores line breaks inside a run).
+  const wordTable = (table) => {
+    const TABLE_DXA = 9000
+    const widths = tableColumnFractions(table.headers, table.rows).map((f) => Math.floor(f * TABLE_DXA))
+    const tableCell = (text, i, header) => new TableCell({
+      width: { size: widths[i], type: WidthType.DXA },
+      shading: header ? { type: ShadingType.CLEAR, color: 'auto', fill: headerHex || '1a365d' } : undefined,
+      margins: { top: 60, bottom: 60, left: 80, right: 80 },
+      children: String(text ?? '').split('\n').map((line) => new Paragraph({
+        keepNext: header,
+        children: [new TextRun({ text: line, bold: header, color: header ? 'FFFFFF' : undefined, size: 18 })],
+      })),
+    })
+    return new Table({
+      width: { size: widths.reduce((a, b) => a + b, 0), type: WidthType.DXA },
+      columnWidths: widths,
+      rows: [
+        new TableRow({ tableHeader: true, cantSplit: true, children: table.headers.map((h, i) => tableCell(h, i, true)) }),
+        ...table.rows.map((row) => new TableRow({ cantSplit: true, children: table.headers.map((_, i) => tableCell(row[i], i, false)) })),
+      ],
+    })
+  }
+  const pushTable = (table) => {
+    children.push(wordTable(table))
+    children.push(new Paragraph({ text: '', spacing: { after: WORD_SPACING.bodyAfter } }))
+  }
+  const pushCaption = (caption) => {
+    if (!caption) return
+    children.push(new Paragraph({ keepNext: true, keepLines: true, spacing: { before: 80, after: 40 }, children: [new TextRun({ text: caption, bold: true })] }))
+  }
   let flatIdx = 0
   for (const [sIdx, { title, fields }] of sections.entries()) {
     if (!title || !fields?.length) continue
-    children.push(new Paragraph({ text: '', spacing: { before: WORD_SPACING.heading1Before } }))
+    const steps = sectionRenderSteps(fields, flatIdx)
+    flatIdx += fields.length
+    // Keep with next (as in Word): the section banner and each field heading stay on the same
+    // page as the start of their content instead of being left alone at the foot of a page.
+    children.push(new Paragraph({ text: '', keepNext: true, spacing: { before: WORD_SPACING.heading1Before } }))
     children.push(wordSectionBanner(sectionTitles[sIdx], headerHex))
-    children.push(new Paragraph({ text: '', spacing: { after: WORD_SPACING.heading1After } }))
-    for (const field of fields) {
+    children.push(new Paragraph({ text: '', keepNext: true, spacing: { after: WORD_SPACING.heading1After } }))
+    for (const step of steps) {
+      // Single values: one Detail | Value table.
+      if (step.facts) {
+        pushTable(factsTable(step.facts, record, flatNumberedFields, blankPlaceholder))
+        continue
+      }
+      const { field, index } = step
       const { key, label } = field
-      const numberedLabel = flatNumberedFields[flatIdx]?.label ?? (label || key)
-      flatIdx += 1
+      const numberedLabel = flatNumberedFields[index]?.label ?? (label || key)
       children.push(new Paragraph({
         text: numberedLabel,
         heading: HeadingLevel.HEADING_2,
+        keepNext: true,
+        keepLines: true,
         spacing: { after: WORD_SPACING.heading2After }
       }))
       fieldGuidanceLines(field).forEach((line) => {
         children.push(new Paragraph({
           children: [new TextRun({ text: line, italics: true, size: 18, color: '666666' })],
+          keepNext: true,
           spacing: { after: 40 }
         }))
       })
@@ -1000,6 +1104,34 @@ export async function exportRecordToWord(sections, record, baseFilename, brandin
             }
           }
         }
+        continue
+      }
+
+      const blocks = fieldBlocks(field)
+      if (blocks) {
+        for (const block of blocks) {
+          if (block.type === 'table') {
+            pushCaption(block.caption)
+            pushTable(block)
+          } else if (block.type === 'list') {
+            pushCaption(block.caption)
+            block.items.forEach((item, i) => {
+              children.push(new Paragraph({
+                text: item,
+                ...(block.plain || itemHasOwnListMarker(item) ? {} : { bullet: { level: 0 } }),
+                spacing: { after: i < block.items.length - 1 ? 40 : WORD_SPACING.bodyAfter },
+              }))
+            })
+          } else {
+            children.push(new Paragraph({ children: [new TextRun({ text: block.text || '' })], spacing: { after: WORD_SPACING.bodyAfter } }))
+          }
+        }
+        continue
+      }
+
+      const table = fieldTable(field)
+      if (table) {
+        pushTable(table)
         continue
       }
 
@@ -1096,10 +1228,28 @@ export async function exportRecordToPPT(sections, record, baseFilename, branding
       fontSize: titleFontSize, bold: true, color: 'FFFFFF'
     })
     let y = contentTop
-    for (const field of fields) {
+    const addPptTable = (table) => {
+      const colW = tableColumnFractions(table.headers, table.rows).map((f) => f * w)
+      const headerRow = table.headers.map((h) => ({ text: h, options: { bold: true, color: 'FFFFFF', fill: { color: headerHex } } }))
+      const bodyRows = table.rows.map((row) => table.headers.map((_, i) => ({ text: String(row[i] ?? '') })))
+      const rowH = 0.28
+      slide.addTable([headerRow, ...bodyRows], {
+        x: marginX, y, w, colW, fontSize: 9, color: bodyColor, border: { type: 'solid', pt: 0.5, color: 'BFBFBF' },
+        valign: 'top', autoPage: true, autoPageRepeatHeader: true, rowH,
+      })
+      y += Math.min(rowH * (table.rows.length + 1), 3.6) + gapAfterBulletBlock
+    }
+    const steps = sectionRenderSteps(fields, flatLabelIdx)
+    flatLabelIdx += fields.length
+    for (const step of steps) {
+      // Single values: one Detail | Value table.
+      if (step.facts) {
+        addPptTable(factsTable(step.facts, record, flatNumberedFields, blankPlaceholder))
+        continue
+      }
+      const { field, index } = step
       const { key, label } = field
-      const numberedLabel = flatNumberedFields[flatLabelIdx]?.label ?? `${label || key}`
-      flatLabelIdx += 1
+      const numberedLabel = flatNumberedFields[index]?.label ?? `${label || key}`
       const labelText = `${numberedLabel}:`
       slide.addText(labelText, { x: marginX, y, w, h: lineHeight, fontSize: labelFontSize, bold: true, color: bodyColor })
       y += lineHeight + gapAfterLabel
@@ -1177,6 +1327,39 @@ export async function exportRecordToPPT(sections, record, baseFilename, branding
             }
           }
         }
+        continue
+      }
+
+      const blocks = fieldBlocks(field)
+      if (blocks) {
+        for (const block of blocks) {
+          if (block.caption) {
+            slide.addText(block.caption, { x: marginX, y, w, h: lineHeight, fontSize: labelFontSize, bold: true, color: bodyColor })
+            y += lineHeight + gapAfterLabel
+          }
+          if (block.type === 'table') {
+            addPptTable(block)
+          } else if (block.type === 'list') {
+            const runs = block.items.map((item, i) => ({
+              text: item,
+              options: { bullet: !block.plain && !itemHasOwnListMarker(item), breakLine: i < block.items.length - 1 },
+            }))
+            const blockH = Math.min(bulletLineHeight * block.items.length, 3.5)
+            slide.addText(runs, { x: marginX, y, w, h: blockH, fontSize: labelFontSize, color: bodyColor })
+            y += blockH + gapAfterBulletBlock
+          } else {
+            const text = block.text || ''
+            const h = lineHeight * Math.max(1, Math.ceil(text.length / 80))
+            slide.addText(text, { x: marginX, y, w, h, fontSize: labelFontSize, color: bodyColor })
+            y += h + gapAfterSingleValue
+          }
+        }
+        continue
+      }
+
+      const table = fieldTable(field)
+      if (table) {
+        addPptTable(table)
         continue
       }
 
@@ -1499,19 +1682,51 @@ export function exportRecordToPrint(sectionsOrFields, record, baseFilename, bran
     }).join('')
   }
 
+  // Table field (v1331) — a real table inside the value cell.
+  const tableHtml = (table) => {
+    const th = table.headers.map((h) => `<th style="background:${headerCss};color:#fff;text-align:left;padding:4px 6px;border:1px solid #ccc;">${escapeHtml(h)}</th>`).join('')
+    const trs = table.rows.map((row) => `<tr style="page-break-inside:avoid;">${table.headers.map((_, i) => `<td style="padding:4px 6px;vertical-align:top;white-space:pre-line;">${escapeHtml(row[i] ?? '')}</td>`).join('')}</tr>`).join('')
+    return `<table style="width:100%;border-collapse:collapse;"><thead style="display:table-header-group;"><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`
+  }
+  const tableFieldHtml = (field) => {
+    const table = fieldTable(field)
+    return table ? tableHtml(table) : null
+  }
+  // Linked record blocks: description, Detail | Value table, captioned lists and tables.
+  const blocksHtml = (field) => {
+    const blocks = fieldBlocks(field)
+    if (!blocks) return null
+    return blocks.map((block) => {
+      const caption = block.caption ? `<div style="font-weight:bold;margin:8px 0 4px;page-break-after:avoid;">${escapeHtml(block.caption)}</div>` : ''
+      if (block.type === 'table') return `${caption}${tableHtml(block)}`
+      if (block.type === 'list') {
+        const items = block.items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')
+        return `${caption}<ul style="margin:0 0 6px 18px;padding:0;${block.plain ? 'list-style:none;margin-left:0;' : ''}">${items}</ul>`
+      }
+      return `<p style="margin:0 0 6px;">${escapeHtml(block.text || '')}</p>`
+    }).join('')
+  }
+
   let body = ''
   if (isSections && sectionTitles.length) {
     let flatIdx = 0
     sectionsOrFields.forEach((sec, sIdx) => {
-      body += `<h2 style="background:${headerCss};color:#fff;padding:8px 10px;margin:16px 0 8px;font-size:14px;">${escapeHtml(sectionTitles[sIdx])}</h2><table style="margin-bottom:16px;">`
-      ;(sec.fields || []).forEach((field) => {
+      body += `<h2 style="background:${headerCss};color:#fff;padding:8px 10px;margin:16px 0 8px;font-size:14px;page-break-after:avoid;">${escapeHtml(sectionTitles[sIdx])}</h2><table style="margin-bottom:16px;width:100%;">`
+      const steps = sectionRenderSteps(sec.fields || [], flatIdx)
+      flatIdx += (sec.fields || []).length
+      steps.forEach((step) => {
+        // Single values: one Detail | Value table across both columns.
+        if (step.facts) {
+          body += `<tr><td colspan="2" style="padding:4px 8px;">${tableHtml(factsTable(step.facts, record, flatNumberedFields, blankPlaceholder))}</td></tr>`
+          return
+        }
+        const { field, index } = step
         const { key, label } = field
-        const l = flatNumberedFields[flatIdx]?.label ?? (label || key)
-        flatIdx += 1
+        const l = flatNumberedFields[index]?.label ?? (label || key)
         const guidanceHtml = fieldGuidanceLines(field)
           .map((line) => `<div style="font-size:12px;font-style:italic;color:#666;margin-top:2px;">${escapeHtml(line)}</div>`)
           .join('')
-        const valueHtml = attachmentCellHtml(key) ?? escapeHtml(displayValue(record[key], blankPlaceholder))
+        const valueHtml = attachmentCellHtml(key) ?? blocksHtml(field) ?? tableFieldHtml(field) ?? escapeHtml(displayValue(record[key], blankPlaceholder))
         body += `<tr><td style="font-weight:bold;padding:4px 8px;vertical-align:top;">${escapeHtml(l)}${guidanceHtml}</td><td style="padding:4px 8px;">${valueHtml}</td></tr>`
       })
       body += '</table>'
@@ -1523,7 +1738,7 @@ export function exportRecordToPrint(sectionsOrFields, record, baseFilename, bran
       const guidanceHtml = fieldGuidanceLines(field)
         .map((line) => `<div style="font-size:12px;font-style:italic;color:#666;margin-top:2px;">${escapeHtml(line)}</div>`)
         .join('')
-      const valueHtml = attachmentCellHtml(key) ?? escapeHtml(displayValue(record[key], blankPlaceholder))
+      const valueHtml = attachmentCellHtml(key) ?? tableFieldHtml(field) ?? escapeHtml(displayValue(record[key], blankPlaceholder))
       body += `<tr><td style="font-weight:bold;padding:4px 8px;vertical-align:top;">${escapeHtml(label || key)}${guidanceHtml}</td><td style="padding:4px 8px;">${valueHtml}</td></tr>`
     })
     body += '</table>'
@@ -1578,9 +1793,147 @@ async function _buildRecordPdfDocument(sections, record, title, branding, blankP
   const g = parseInt(fillHex.slice(2, 4), 16) || 54
   const b = parseInt(fillHex.slice(4, 6), 16) || 93
 
+  const TABLE_PAD = 4
+  const TABLE_LINE = 10
+  const tableColumnWidths = (table) => tableColumnFractions(table.headers, table.rows).map((f) => f * maxWidth)
+  const tableRowHeight = (cells, colW, header) => {
+    doc.setFont(undefined, header ? 'bold' : 'normal')
+    doc.setFontSize(8)
+    const wrapped = cells.map((c, i) => doc.splitTextToSize(String(c ?? ''), colW[i] - TABLE_PAD * 2))
+    return { wrapped, header, h: Math.max(...wrapped.map((l) => Math.max(l.length, 1))) * TABLE_LINE + TABLE_PAD * 2 }
+  }
+  const fieldValueText = (field) => {
+    const parsed = parseFieldValue(record[field.key])
+    let value = parsed.isList ? formatParsedListDisplay(parsed, blankPlaceholder) : (parsed.text || blankPlaceholder)
+    const guidance = fieldGuidanceLines(field)
+    if (guidance.length) value = `${guidance.join('\n')}\n\n${value}`
+    return value
+  }
+  const fieldLabel = (field, idx) => flatNumberedFields[idx]?.label ?? (field.label || field.key)
+
+  /** Header row plus first row — the least that may start a table on a page. */
+  const tableStartHeight = (table) => {
+    const colW = tableColumnWidths(table)
+    const first = table.rows[0] ? tableRowHeight(table.headers.map((_, i) => table.rows[0][i]), colW, false).h : 0
+    const height = tableRowHeight(table.headers, colW, true).h + first
+    doc.setFont(undefined, 'normal')
+    doc.setFontSize(9)
+    return height
+  }
+  /** Bordered table; rows never split, the header row repeats on each page the table continues on. */
+  const drawTable = (table) => {
+    const colW = tableColumnWidths(table)
+    const measure = (cells, header) => tableRowHeight(cells, colW, header)
+    const paint = ({ wrapped, header, h }) => {
+      doc.setFont(undefined, header ? 'bold' : 'normal')
+      doc.setFontSize(8)
+      doc.setDrawColor(190)
+      doc.setLineWidth(0.5)
+      let x = marginX
+      wrapped.forEach((lines, i) => {
+        if (header) {
+          doc.setFillColor(r, g, b)
+          doc.rect(x, y, colW[i], h, 'FD')
+          doc.setTextColor(255)
+        } else {
+          doc.rect(x, y, colW[i], h)
+          doc.setTextColor(0)
+        }
+        doc.text(lines, x + TABLE_PAD, y + TABLE_PAD + 7)
+        x += colW[i]
+      })
+      doc.setTextColor(0)
+      y += h
+    }
+    // The header row never sits alone at the foot of a page: it goes with the first row.
+    const headerRow = measure(table.headers, true)
+    const firstRow = table.rows[0] ? measure(table.headers.map((_, i) => table.rows[0][i]), false) : null
+    ensureSpace(headerRow.h + (firstRow ? firstRow.h : 0))
+    paint(headerRow)
+    for (const row of table.rows) {
+      const measured = measure(table.headers.map((_, i) => row[i]), false)
+      if (y + measured.h > pageHeight - 40) {
+        doc.addPage()
+        y = 40
+        paint(measure(table.headers, true))
+      }
+      paint(measured)
+    }
+    doc.setFont(undefined, 'normal')
+    doc.setFontSize(9)
+    doc.setDrawColor(0)
+    y += 14
+  }
+  const captionHeight = (caption) => (caption ? 14 : 0)
+  const drawCaption = (caption) => {
+    if (!caption) return
+    doc.setFont(undefined, 'bold')
+    doc.setFontSize(9)
+    doc.text(caption, marginX, y)
+    doc.setFont(undefined, 'normal')
+    y += 14
+  }
+  /** Lines that flow across pages. */
+  const drawLines = (text, indent = 0) => {
+    doc.setFont(undefined, 'normal')
+    doc.setFontSize(9)
+    for (const line of doc.splitTextToSize(text, maxWidth - indent)) {
+      ensureSpace(12)
+      doc.text(line, marginX + indent, y)
+      y += 12
+    }
+  }
+  const blockStartHeight = (block) => {
+    if (!block) return 0
+    if (block.type === 'table') return captionHeight(block.caption) + tableStartHeight(block)
+    if (block.type === 'list') return captionHeight(block.caption) + 12
+    doc.setFontSize(9)
+    return Math.min(doc.splitTextToSize(block.text || '', maxWidth).length, 2) * 12
+  }
+  /** Linked record blocks: description, Detail | Value table, captioned lists and tables. */
+  const drawBlocks = (blocks) => {
+    for (const block of blocks) {
+      ensureSpace(blockStartHeight(block))
+      if (block.type === 'table') {
+        drawCaption(block.caption)
+        drawTable(block)
+      } else if (block.type === 'list') {
+        drawCaption(block.caption)
+        block.items.forEach((item) => drawLines(block.plain || itemHasOwnListMarker(item) ? item : `${BULLET} ${item}`, block.plain ? 0 : 6))
+        y += 8
+      } else {
+        drawLines(block.text || '')
+        y += 8
+      }
+    }
+  }
+  /**
+   * Keep with next (as in Word): a field heading plus the first part of its content — two lines of
+   * text, or a table's header row and first row. Nothing that starts a page may be left behind.
+   */
+  const fieldStartHeight = (field, idx) => {
+    doc.setFont(undefined, 'bold')
+    doc.setFontSize(9)
+    const labelH = doc.splitTextToSize(fieldLabel(field, idx), maxWidth).length * 12 + 2
+    doc.setFont(undefined, 'normal')
+    const assets = attachmentAssets[field.key]
+    if (Array.isArray(assets)) return labelH + (assets.length ? 60 : 14)
+    const blocks = fieldBlocks(field)
+    if (blocks) return labelH + blockStartHeight(blocks[0])
+    const table = fieldTable(field)
+    if (table) return labelH + tableStartHeight(table)
+    doc.setFontSize(9)
+    return labelH + Math.min(doc.splitTextToSize(fieldValueText(field), maxWidth).length, 2) * 12
+  }
+  const stepTable = (step) => factsTable(step.facts, record, flatNumberedFields, blankPlaceholder)
+  const stepStartHeight = (step) => (step.facts ? tableStartHeight(stepTable(step)) : fieldStartHeight(step.field, step.index))
+
   for (const [sIdx, { title: sectionTitle, fields }] of (sections || []).entries()) {
     if (!sectionTitle || !fields?.length) continue
-    ensureSpace(28)
+    const steps = sectionRenderSteps(fields, flatIdx)
+    flatIdx += fields.length
+    // The section bar stays on the same page as its first heading and the start of its content.
+    ensureSpace(28 + stepStartHeight(steps[0]))
     doc.setFillColor(r, g, b)
     doc.rect(marginX, y - 12, maxWidth, 20, 'F')
     doc.setTextColor(255)
@@ -1589,12 +1942,17 @@ async function _buildRecordPdfDocument(sections, record, title, branding, blankP
     doc.setTextColor(0)
     y += 22
 
-    for (const field of fields) {
-      const { key, label } = field
-      const numberedLabel = flatNumberedFields[flatIdx]?.label ?? (label || key)
-      flatIdx += 1
-
-      ensureSpace(20)
+    for (const step of steps) {
+      // Single values: one Detail | Value table.
+      if (step.facts) {
+        drawTable(stepTable(step))
+        continue
+      }
+      const { field, index } = step
+      const { key } = field
+      // Keep the field heading with the start of its content (never alone at the foot of a page).
+      ensureSpace(fieldStartHeight(field, index))
+      const numberedLabel = fieldLabel(field, index)
       doc.setFont(undefined, 'bold')
       doc.setFontSize(9)
       const labelLines = doc.splitTextToSize(numberedLabel, maxWidth)
@@ -1710,20 +2068,22 @@ async function _buildRecordPdfDocument(sections, record, title, branding, blankP
         continue
       }
 
-      const parsed = parseFieldValue(record[key])
-      let value
-      if (parsed.isList) {
-        value = formatParsedListDisplay(parsed, blankPlaceholder)
-      } else {
-        value = parsed.text || blankPlaceholder
+      const blocks = fieldBlocks(field)
+      if (blocks) {
+        drawBlocks(blocks)
+        y += 4
+        continue
       }
-      const guidance = fieldGuidanceLines(field)
-      if (guidance.length) value = `${guidance.join('\n')}\n\n${value}`
 
-      const valueLines = doc.splitTextToSize(value, maxWidth)
-      ensureSpace(valueLines.length * 12 + 10)
-      doc.text(valueLines, marginX, y)
-      y += valueLines.length * 12 + 10
+      const table = fieldTable(field)
+      if (table) {
+        drawTable(table)
+        continue
+      }
+
+      // Flow long values across pages line by line.
+      drawLines(fieldValueText(field))
+      y += 10
     }
     y += 8
   }

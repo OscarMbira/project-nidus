@@ -182,6 +182,8 @@ export async function simSaveRequirement(practiceProjectId, payload, authUserId)
     acceptance_criteria: payload.acceptance_criteria ?? null,
     traceability_tag: payload.traceability_tag ?? null,
     version: payload.version || '1.0',
+    // v1338 owner / rationale / verification / area — present only once those columns exist.
+    ...(payload.extra_columns || {}),
     updated_at: new Date().toISOString(),
   }
   if (payload.id) {

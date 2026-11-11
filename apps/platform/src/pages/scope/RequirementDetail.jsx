@@ -12,6 +12,15 @@ import { platformDb } from '@nidus/supabase'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { RowActionButton } from '@nidus/ui'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import RequirementExtraFields from '@nidus/ui/RequirementExtraFields'
+import { useRequirementExtras } from '@nidus/shared/hooks/useRequirementExtras'
+import {
+  VERIFICATION_METHODS,
+  optionLabel,
+  requirementExtraValues,
+  requirementExtrasFromRow,
+} from '@nidus/shared/services/requirementExtrasService'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
@@ -21,23 +30,43 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 const inputCls =
   'w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500'
 
-const SECTIONS = [
-  {
-    title: 'Requirement',
-    fields: [
-      { key: 'requirement_code', label: 'Code' },
-      { key: 'version', label: 'Version' },
-      { key: 'name', label: 'Name' },
-      { key: 'description', label: 'Description' },
-      { key: 'category', label: 'Category' },
-      { key: 'priority', label: 'Priority (MoSCoW)' },
-      { key: 'source_stakeholder', label: 'Source stakeholder' },
-      { key: 'acceptance_criteria', label: 'Acceptance criteria' },
-      { key: 'traceability_tag', label: 'Traceability tag' },
-      { key: 'status', label: 'Status' },
-    ],
-  },
+const FORM_TABS = [
+  { value: 'details', label: 'Details' },
+  { value: 'acceptance', label: 'Acceptance' },
+  { value: 'traceability', label: 'Traceability' },
+  { value: 'audit', label: 'Audit details' },
 ]
+
+function buildSections(extrasAvailable) {
+  return [
+    {
+      title: 'Requirement',
+      fields: [
+        { key: 'requirement_code', label: 'Code' },
+        { key: 'version', label: 'Version' },
+        { key: 'name', label: 'Name' },
+        { key: 'description', label: 'Description' },
+        { key: 'category', label: 'Category' },
+        ...(extrasAvailable ? [{ key: 'nfr_area', label: 'Non-functional area' }] : []),
+        { key: 'priority', label: 'Priority (MoSCoW)' },
+        { key: 'source_stakeholder', label: 'Source stakeholder' },
+        ...(extrasAvailable ? [{ key: 'owner_name', label: 'Owner' }, { key: 'rationale', label: 'Rationale' }] : []),
+        { key: 'status', label: 'Status' },
+      ],
+    },
+    {
+      title: 'Acceptance',
+      fields: [
+        { key: 'acceptance_criteria', label: 'Acceptance criteria' },
+        ...(extrasAvailable ? [{ key: 'verification', label: 'Verification method' }] : []),
+      ],
+    },
+    {
+      title: 'Traceability',
+      fields: [{ key: 'traceability_tag', label: 'Traceability tag' }],
+    },
+  ]
+}
 
 export default function RequirementDetail() {
   const { reqId } = useParams()
@@ -53,6 +82,7 @@ export default function RequirementDetail() {
   const [resolvedReqId, setResolvedReqId] = useState(null)
   const [formTab, setFormTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const extras = useRequirementExtras(platformDb)
   const [form, setForm] = useState({
     requirement_code: '',
     name: '',
@@ -64,6 +94,7 @@ export default function RequirementDetail() {
     acceptance_criteria: '',
     traceability_tag: '',
     version: '1.0',
+    ...requirementExtrasFromRow(null),
   })
 
   const loadStakeholders = useCallback(async () => {
@@ -105,6 +136,7 @@ export default function RequirementDetail() {
         acceptance_criteria: d.acceptance_criteria || '',
         traceability_tag: d.traceability_tag || '',
         version: d.version || '1.0',
+        ...requirementExtrasFromRow(d),
       })
       if (d.requirement_code && d.requirement_code !== reqId) {
         navigate(platformProjectPath(routeKey, 'scope', 'requirements', d.requirement_code), { replace: true })
@@ -143,6 +175,7 @@ export default function RequirementDetail() {
           ...form,
           source_stakeholder_id: form.source_stakeholder_id || null,
           status: asDraft ? 'draft' : form.status,
+          extra_columns: requirementExtraValues(form, extras.available),
         },
         user.id
       )
@@ -190,6 +223,8 @@ export default function RequirementDetail() {
   const exportRecord = {
     ...form,
     source_stakeholder: stakeholderLabel,
+    nfr_area: optionLabel(extras.areas, form.nfr_area_key),
+    verification: optionLabel(VERIFICATION_METHODS, form.verification_method),
   }
   const exportFilename = `Requirement_${form.requirement_code || reqId || 'draft'}`
 
@@ -218,7 +253,7 @@ export default function RequirementDetail() {
       <div className="mb-6 flex flex-wrap justify-between gap-4">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{isNew ? 'New requirement' : 'Requirement'}</h1>
         <ExportRecordButtons
-          sections={SECTIONS}
+          sections={buildSections(extras.available)}
           record={exportRecord}
           baseFilename={exportFilename}
         />
@@ -239,7 +274,7 @@ export default function RequirementDetail() {
       )}
 
       <div className="mb-4">
-        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+        <DetailAuditTabList activeTab={formTab} onChange={setFormTab} tabs={FORM_TABS} />
       </div>
 
       {formTab === 'audit' ? (
@@ -268,6 +303,7 @@ export default function RequirementDetail() {
         </div>
       ) : (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+          {formTab === 'details' && (<>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Code</label>
@@ -317,12 +353,12 @@ export default function RequirementDetail() {
                 className={inputCls}
               >
                 <option value="">—</option>
-                <option value="business">business</option>
-                <option value="functional">functional</option>
-                <option value="non_functional">non_functional</option>
-                <option value="technical">technical</option>
-                <option value="regulatory">regulatory</option>
-                <option value="other">other</option>
+                <option value="business">Business</option>
+                <option value="functional">Functional</option>
+                <option value="non_functional">Non-functional</option>
+                <option value="technical">Technical</option>
+                <option value="regulatory">Regulatory</option>
+                <option value="other">Other</option>
               </select>
             </div>
             <div>
@@ -334,10 +370,10 @@ export default function RequirementDetail() {
                 className={inputCls}
               >
                 <option value="">—</option>
-                <option value="must">must</option>
-                <option value="should">should</option>
-                <option value="could">could</option>
-                <option value="wont">wont</option>
+                <option value="must">Must</option>
+                <option value="should">Should</option>
+                <option value="could">Could</option>
+                <option value="wont">Won't</option>
               </select>
             </div>
           </div>
@@ -358,25 +394,6 @@ export default function RequirementDetail() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Acceptance criteria</label>
-            <textarea
-              value={form.acceptance_criteria}
-              onChange={(e) => setForm((f) => ({ ...f, acceptance_criteria: e.target.value }))}
-              disabled={!canEdit}
-              rows={3}
-              className={inputCls}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Traceability tag</label>
-            <input
-              value={form.traceability_tag}
-              onChange={(e) => setForm((f) => ({ ...f, traceability_tag: e.target.value }))}
-              disabled={!canEdit}
-              className={inputCls}
-            />
-          </div>
-          <div>
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Status</label>
             <select
               value={form.status}
@@ -384,13 +401,59 @@ export default function RequirementDetail() {
               disabled={!canEdit}
               className={inputCls}
             >
-              <option value="draft">draft</option>
-              <option value="approved">approved</option>
-              <option value="deferred">deferred</option>
-              <option value="rejected">rejected</option>
-              <option value="implemented">implemented</option>
+              <option value="draft">Draft</option>
+              <option value="approved">Approved</option>
+              <option value="deferred">Deferred</option>
+              <option value="rejected">Rejected</option>
+              <option value="implemented">Implemented</option>
             </select>
           </div>
+          <RequirementExtraFields
+            section="details"
+            form={form}
+            onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+            disabled={!canEdit}
+            available={extras.available}
+            areas={extras.areas}
+          />
+          </>)}
+          {formTab === 'acceptance' && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Acceptance criteria</label>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">One criterion per line. Each line should be something that can be shown to be true.</p>
+              <MultiLineListInput
+                viewModeId="requirement-acceptance-criteria"
+                id="acceptance_criteria"
+                value={form.acceptance_criteria}
+                onChange={(value) => setForm((f) => ({ ...f, acceptance_criteria: value }))}
+                disabled={!canEdit}
+                ariaLabelPrefix="Acceptance criterion"
+                itemColumnLabel="Criterion"
+              />
+              <div className="mt-4">
+                <RequirementExtraFields
+                  section="acceptance"
+                  form={form}
+                  onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+                  disabled={!canEdit}
+                  available={extras.available}
+                  areas={extras.areas}
+                />
+              </div>
+            </div>
+          )}
+          {formTab === 'traceability' && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">Traceability tag</label>
+              <input
+                value={form.traceability_tag}
+                onChange={(e) => setForm((f) => ({ ...f, traceability_tag: e.target.value }))}
+                disabled={!canEdit}
+                placeholder="Design, test or work-package reference"
+                className={inputCls}
+              />
+            </div>
+          )}
           {canEdit && (
             <div className="flex flex-wrap gap-2 pt-2">
               <button

@@ -240,6 +240,11 @@ export async function fetchChangeRequests(projectIdOrFilters) {
       query = query.eq('priority', filters.priority);
     }
 
+    // v1338 Requirement Changes: only changes linked to at least one requirement.
+    if (filters.requirements_only) {
+      query = query.not('related_requirement_ids', 'is', null);
+    }
+
     const search = typeof filters.search === 'string' ? filters.search.trim().replace(/,/g, ' ') : '';
     if (search) {
       const pat = `%${search}%`;

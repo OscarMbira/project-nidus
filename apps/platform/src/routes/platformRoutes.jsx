@@ -694,6 +694,7 @@ import {
   ProjectMemberInvitation,
   LocalRegisterListPage,
   LocalRegisterForm,
+  LocalRegisterNewPage,
   LocalRegisterDetailPage,
   RegisterDefinitionBuilder,
   LocalRegistersIndexPage,
@@ -2750,6 +2751,13 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              <Route path="local-registers/:registerId/new" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegisterNewPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="local-registers/:registerId/create" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2761,6 +2769,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <LocalRegisterDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* Organisation template edit (v1336) — the register form in template mode. */}
+                              <Route path="local-registers/:registerId/templates/:templateId/edit" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <LocalRegisterForm />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -4230,6 +4246,13 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <RequirementDetailPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="scope/traceability" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <TraceabilityMatrixPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

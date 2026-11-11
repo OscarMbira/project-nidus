@@ -60,7 +60,7 @@ FROM (VALUES
   ('00000000-0000-4000-9001-00000000000a', 'fin_core_banking_environments', 'Environments', 'Core banking project environments', '[{"key":"not_provisioned","label":"Not Provisioned"},{"key":"provisioned","label":"Provisioned"},{"key":"ready","label":"Ready"}]'),
   ('00000000-0000-4000-9001-00000000000b', 'fin_customisation', 'Customisation', 'Core banking customisation items', '[{"key":"register","label":"Registered"},{"key":"justification","label":"Justification"},{"key":"design","label":"Design"},{"key":"build","label":"Build"},{"key":"testing","label":"Testing"},{"key":"deployed","label":"Deployed"}]'),
   -- Data Migration
-  ('00000000-0000-4000-9001-00000000000c', 'fin_migration_strategy', 'Migration Strategy', 'Data migration strategy', '[{"key":"draft","label":"Draft"},{"key":"approved","label":"Approved"}]'),
+  ('00000000-0000-4000-9001-00000000000c', 'fin_migration_strategy', 'Data Migration Strategy', 'Data migration strategy', '[{"key":"draft","label":"Draft"},{"key":"approved","label":"Approved"}]'),
   ('00000000-0000-4000-9001-00000000000d', 'fin_data_scope', 'Data Scope', 'Data migration scope items', '[{"key":"in_scope","label":"In Scope"},{"key":"out_of_scope","label":"Out of Scope"}]'),
   ('00000000-0000-4000-9001-00000000000e', 'fin_source_systems', 'Source Systems', 'Source systems for data migration', '[{"key":"identified","label":"Identified"},{"key":"connected","label":"Connected"},{"key":"extracted","label":"Extracted"}]'),
   ('00000000-0000-4000-9001-00000000000f', 'fin_data_mapping', 'Data Mapping', 'Source to target data mapping', '[{"key":"draft","label":"Draft"},{"key":"reviewed","label":"Reviewed"},{"key":"approved","label":"Approved"}]'),

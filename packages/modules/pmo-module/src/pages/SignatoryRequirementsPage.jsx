@@ -28,6 +28,7 @@ import {
   resolveEffectiveSignatoryRequirements,
   saveSignatoryRequirementsForTables,
 } from '@nidus/shared/services/processTemplateSignatoryService'
+import { listRegisterDocumentTypes } from '@nidus/shared/services/localRegisterSignoffService'
 
 const DOCUMENT_TABLES = [
   'project_charters', 'assumption_logs', 'project_management_plans',
@@ -157,6 +158,16 @@ export default function SignatoryRequirementsPage() {
   const [userId, setUserId] = useState(null)
   const [pageTitle, setPageTitle] = useState('')
   const [labels, setLabels] = useState({})
+  // Local Register document types ('local_register:<key>', v1318) listed after the process documents.
+  const [registerDocs, setRegisterDocs] = useState([])
+  const allDocumentTables = useMemo(
+    () => [...DOCUMENT_TABLES, ...registerDocs.map((d) => d.documentTable)],
+    [registerDocs],
+  )
+  const allLabels = useMemo(
+    () => ({ ...labels, ...Object.fromEntries(registerDocs.map((d) => [d.documentTable, `${d.label} (register)`])) }),
+    [labels, registerDocs],
+  )
   const [roleOptions, setRoleOptions] = useState([])
   const [selectedTables, setSelectedTables] = useState([DOCUMENT_TABLES[0]])
   const [slots, setSlots] = useState([])
@@ -249,6 +260,14 @@ export default function SignatoryRequirementsPage() {
         ;(data || []).forEach((r) => { map[r.table_name] = r.table_description })
         setLabels(map)
       })
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    listRegisterDocumentTypes(platformDb).then((result) => {
+      if (!cancelled && result.success) setRegisterDocs(result.data)
+    })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -353,7 +372,7 @@ export default function SignatoryRequirementsPage() {
       accountId,
       scopeType,
       scopeId: needsEntity ? scopeId : null,
-      documentTables: DOCUMENT_TABLES,
+      documentTables: allDocumentTables,
     })
     setDocCounts(result.success ? result.data : {})
   }
@@ -368,12 +387,12 @@ export default function SignatoryRequirementsPage() {
         accountId,
         scopeType,
         scopeId: needsEntity ? scopeId : null,
-        documentTables: DOCUMENT_TABLES,
+        documentTables: allDocumentTables,
       })
       if (!cancelled) setDocCounts(result.success ? result.data : {})
     })()
     return () => { cancelled = true }
-  }, [accountId, scopeType, scopeId, needsEntity]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [accountId, scopeType, scopeId, needsEntity, allDocumentTables]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load slots / mode for primary selected type (keep inherit/none cheap — no full resolve)
   useEffect(() => {
@@ -439,20 +458,20 @@ export default function SignatoryRequirementsPage() {
   const filteredDocTables = useMemo(() => {
     const q = docSearch.trim().toLowerCase()
     const list = !q
-      ? [...DOCUMENT_TABLES]
-      : DOCUMENT_TABLES.filter((t) => {
-          const label = String(labels[t] || t).toLowerCase()
+      ? [...allDocumentTables]
+      : allDocumentTables.filter((t) => {
+          const label = String(allLabels[t] || t).toLowerCase()
           return label.includes(q) || t.toLowerCase().includes(q)
         })
     return list.sort((a, b) => {
-      const la = String(labels[a] || a).localeCompare(String(labels[b] || b), undefined, { sensitivity: 'base' })
+      const la = String(allLabels[a] || a).localeCompare(String(allLabels[b] || b), undefined, { sensitivity: 'base' })
       return la
     })
-  }, [docSearch, labels])
+  }, [docSearch, allLabels, allDocumentTables])
 
   const selectedDocNames = useMemo(
-    () => selectedTables.map((t) => String(labels[t] || t).trim() || t),
-    [selectedTables, labels],
+    () => selectedTables.map((t) => String(allLabels[t] || t).trim() || t),
+    [selectedTables, allLabels],
   )
   const editingDocLabel = selectedDocNames.length === 0
     ? 'No document type selected'
@@ -583,7 +602,7 @@ export default function SignatoryRequirementsPage() {
       return
     }
     refreshDocCounts()
-    const names = selectedTables.map((t) => labels[t] || t)
+    const names = selectedTables.map((t) => allLabels[t] || t)
     const summary = names.length === 1 ? names[0] : `${names.length} document types`
     showSuccess({
       recordId: summary,
@@ -720,7 +739,7 @@ export default function SignatoryRequirementsPage() {
                       onChange={() => toggleTable(t)}
                       className="mt-0.5 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-600"
                     />
-                    <span className="truncate">{labels[t] || t}</span>
+                    <span className="truncate">{allLabels[t] || t}</span>
                   </label>
                   <span className={`w-16 shrink-0 text-center text-xs font-medium ${badge.className}`}>{badge.label}</span>
                   <span className="w-10 shrink-0 text-center text-xs text-gray-500 dark:text-gray-400">{badge.count}</span>

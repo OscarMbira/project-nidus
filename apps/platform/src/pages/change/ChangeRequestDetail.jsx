@@ -20,6 +20,7 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import { buildChangeRequestExport, changeRequestExportFilename } from '../../lib/changeRequestExport';
+import { loadRequirementLabels } from '@nidus/shared/services/requirementExtrasService';
 
 export default function ChangeRequestDetail() {
   const { id } = useParams();
@@ -60,6 +61,16 @@ export default function ChangeRequestDetail() {
 
   const [exportSections, setExportSections] = useState([]);
   const [exportRecord, setExportRecord] = useState(null);
+  // v1338 Requirement Changes: "CODE – Name" of the linked requirements.
+  const [relatedRequirementLabels, setRelatedRequirementLabels] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadRequirementLabels(platformDb, request?.related_requirement_ids).then((labels) => {
+      if (!cancelled) setRelatedRequirementLabels(labels);
+    });
+    return () => { cancelled = true; };
+  }, [request]);
 
   useEffect(() => {
     if (!request) {
@@ -71,11 +82,11 @@ export default function ChangeRequestDetail() {
     buildChangeRequestExport(platformDb, request, assessment, crAccountId).then(({ sections, record }) => {
       if (!cancelled) {
         setExportSections(sections);
-        setExportRecord(record);
+        setExportRecord({ ...record, related_requirements_label: relatedRequirementLabels.join('\n') });
       }
     });
     return () => { cancelled = true; };
-  }, [request, assessment, crAccountId]);
+  }, [request, assessment, crAccountId, relatedRequirementLabels]);
 
   useEffect(() => {
     if (activeTab !== 'audit' || !request) return;
@@ -359,6 +370,16 @@ export default function ChangeRequestDetail() {
                     <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
                       {request.impact_summary}
                     </p>
+                  </div>
+                )}
+                {relatedRequirementLabels.length > 0 && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Related requirements
+                    </label>
+                    <ul className="list-disc pl-5 space-y-0.5 text-gray-900 dark:text-white">
+                      {relatedRequirementLabels.map((label) => <li key={label}>{label}</li>)}
+                    </ul>
                   </div>
                 )}
                 {request.status_reason && (

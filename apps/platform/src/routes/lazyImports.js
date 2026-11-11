@@ -667,6 +667,7 @@ export const UnifiedApprovalsRegisterPage = lazy(() => import('../pages/approval
 // Local Register Engine (v931)
 export const LocalRegisterListPage = lazy(() => import('../pages/localRegisters/LocalRegisterListPage'))
 export const LocalRegisterForm = lazy(() => import('../pages/localRegisters/LocalRegisterForm'))
+export const LocalRegisterNewPage = lazy(() => import('../pages/localRegisters/LocalRegisterNewPage'))
 export const LocalRegisterDetailPage = lazy(() => import('../pages/localRegisters/LocalRegisterDetailPage'))
 export const RegisterDefinitionBuilder = lazy(() => import('../pages/localRegisters/RegisterDefinitionBuilder'))
 export const LocalRegistersIndexPage = lazy(() => import('../pages/localRegisters/LocalRegistersIndexPage'))

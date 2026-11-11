@@ -4,6 +4,8 @@
  * picked options show as removable chips above a dropdown of the ones not yet picked.
  */
 import { X } from 'lucide-react'
+import SearchableSelect from './SearchableSelect'
+import { SEARCHABLE_SELECT_MIN_OPTIONS } from './SelectField'
 
 export default function MultiSelectDropdown({
   id,
@@ -43,6 +45,17 @@ export default function MultiSelectDropdown({
           ))}
         </ul>
       )}
+      {remaining.length >= SEARCHABLE_SELECT_MIN_OPTIONS ? (
+        // Long option lists are searchable (rule 69): pick one to add it as a chip.
+        <SearchableSelect
+          value=""
+          options={remaining}
+          onChange={(v) => v && setSelected([...selected, v])}
+          placeholder={placeholder}
+          searchPlaceholder="Search options…"
+          disabled={disabled}
+        />
+      ) : (
       <select
         id={id}
         value=""
@@ -56,6 +69,7 @@ export default function MultiSelectDropdown({
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
       </select>
+      )}
     </div>
   )
 }

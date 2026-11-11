@@ -11,7 +11,7 @@
  */
 
 const NEVER_LISTED = new Set(['admin']) // Admin is internal: never shown publicly
-export const SITE_CHROME_CACHE_KEY = 'nidus:siteChrome:v2'
+export const SITE_CHROME_CACHE_KEY = 'nidus:siteChrome:v3'
 const CACHE_TTL_MS = 10 * 60 * 1000
 
 /** Brand-site routes that are not site_pages rows. */
@@ -149,12 +149,18 @@ export async function fetchSiteChromeRows({ baseUrl, anonKey }) {
   return { products, content, navLinks, pages, headers }
 }
 
-function readCache() {
+/**
+ * Last loaded rows, kept in localStorage so a new tab or a reopened browser draws the menus at once
+ * (stale-while-revalidate): { rows, fresh } — fresh is false after 10 minutes, when the caller shows
+ * the rows and refreshes them in the background. null when nothing was ever loaded here.
+ */
+export function readSiteChromeCache() {
   try {
-    const raw = sessionStorage.getItem(SITE_CHROME_CACHE_KEY)
+    const raw = localStorage.getItem(SITE_CHROME_CACHE_KEY)
     if (!raw) return null
     const { at, rows } = JSON.parse(raw)
-    return Date.now() - at < CACHE_TTL_MS ? rows : null
+    if (!rows) return null
+    return { rows, fresh: Date.now() - at < CACHE_TTL_MS }
   } catch {
     return null
   }
@@ -162,17 +168,22 @@ function readCache() {
 
 function writeCache(rows) {
   try {
-    sessionStorage.setItem(SITE_CHROME_CACHE_KEY, JSON.stringify({ at: Date.now(), rows }))
+    localStorage.setItem(SITE_CHROME_CACHE_KEY, JSON.stringify({ at: Date.now(), rows }))
   } catch {
     /* storage unavailable — reload next time */
   }
 }
 
-/** Rows for the product apps, cached for 10 minutes per browser session (rule 66). */
-export async function getSiteChromeRowsCached({ baseUrl, anonKey }) {
-  const cached = readCache()
-  if (cached) return cached
+/** Load the rows from the database and remember them (rule 66). */
+export async function refreshSiteChromeRows({ baseUrl, anonKey }) {
   const rows = await fetchSiteChromeRows({ baseUrl, anonKey })
   writeCache(rows)
   return rows
+}
+
+/** Rows for the product apps: the cached copy while it is fresh, otherwise a fresh load. */
+export async function getSiteChromeRowsCached({ baseUrl, anonKey }) {
+  const cached = readSiteChromeCache()
+  if (cached?.fresh) return cached.rows
+  return refreshSiteChromeRows({ baseUrl, anonKey })
 }

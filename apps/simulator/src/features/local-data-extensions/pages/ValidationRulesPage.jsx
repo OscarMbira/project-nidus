@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLdeContext } from './LocalDataExtensionsRoutes'
-import { listDefinitions, upsertDefinition } from '../api/customFieldsApi'
+import { listDefinitions, listOptions, upsertDefinition } from '../api/customFieldsApi'
 import ValidationRuleBuilder from '../components/ValidationRuleBuilder'
 
 export default function ValidationRulesPage() {
@@ -9,6 +9,7 @@ export default function ValidationRulesPage() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(null)
   const [rulesDraft, setRulesDraft] = useState({})
+  const [expandedOptions, setExpandedOptions] = useState([])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -21,9 +22,15 @@ export default function ValidationRulesPage() {
     load()
   }, [load])
 
-  const expand = (d) => {
+  const expand = async (d) => {
     setExpanded(d.id)
     setRulesDraft(d.validation_rules || {})
+    setExpandedOptions([])
+    // Dropdown / multi-select defaults are picked from the field's own options (v1314).
+    if (d.field_type === 'dropdown' || d.field_type === 'multi_select') {
+      const res = await listOptions(platformDb, d.id)
+      setExpandedOptions(res.data || [])
+    }
   }
 
   const saveRules = async (def) => {
@@ -59,7 +66,12 @@ export default function ValidationRulesPage() {
           </div>
           {expanded === d.id && (
             <div className="mt-4 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4">
-              <ValidationRuleBuilder rules={rulesDraft} onChange={setRulesDraft} />
+              <ValidationRuleBuilder
+                rules={rulesDraft}
+                onChange={setRulesDraft}
+                fieldType={d.field_type}
+                options={expandedOptions}
+              />
               <button
                 type="button"
                 className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm"

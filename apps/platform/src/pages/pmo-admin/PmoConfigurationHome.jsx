@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Compass, Sliders, Layers, FileStack, GitBranch, ShieldCheck, Users, Database, ArrowLeft, Package, Tags, UserCog, ClipboardCheck, CalendarRange, Settings, Sparkles, Search,
+  Compass, Sliders, Layers, FileStack, GitBranch, ShieldCheck, Users, Database, ArrowLeft, Package, Tags, UserCog, ClipboardCheck, CalendarRange, Settings, Sparkles, Search, Factory,
 } from 'lucide-react'
 import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import { useSortableTable } from '@nidus/shared/hooks/useSortableTable'
@@ -76,6 +76,13 @@ const CARDS = [
     description: 'Define complexity levels and link them to which template governance a project inherits.',
     to: '/platform/pmo-admin/project-classifications',
     cta: 'Manage classifications →',
+  },
+  {
+    icon: Factory,
+    title: 'Industries & Capabilities',
+    description: 'Choose the industries your organisation works in (and the primary one), which adds their menus, and switch off industry items you do not use.',
+    to: '/platform/admin/organisation-industries',
+    cta: 'Manage industries →',
   },
   {
     icon: Package,

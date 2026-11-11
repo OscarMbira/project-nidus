@@ -31,3 +31,18 @@ describe('MultiSelectDropdown', () => {
     expect(screen.getByRole('option', { name: 'All options selected' })).toBeInTheDocument()
   })
 })
+
+describe('MultiSelectDropdown with a long list (rule 69)', () => {
+  const MANY = Array.from({ length: 14 }, (_, i) => ({ value: `opt${i}`, label: `Option ${i}` }))
+
+  it('uses the searchable picker instead of a plain select', () => {
+    const { container } = render(<MultiSelectDropdown value={[]} options={MANY} onChange={() => {}} ariaLabel="Data objects" />)
+    expect(container.querySelector('select')).toBeNull()
+    expect(screen.getByText('Add…')).toBeInTheDocument()
+  })
+
+  it('keeps a plain select for short lists', () => {
+    const { container } = render(<MultiSelectDropdown value={[]} options={MANY.slice(0, 5)} onChange={() => {}} ariaLabel="Data objects" />)
+    expect(container.querySelector('select')).not.toBeNull()
+  })
+})

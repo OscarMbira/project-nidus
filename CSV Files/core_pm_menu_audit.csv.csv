@@ -1,0 +1,207 @@
+depth,path,menu_code,route_path
+1,Reporting Tools,plat_pm_rep_tools,null
+1,Budget,plat_pm_budget,/platform/budget
+2,Reporting Tools › Report Library,plat_pm_rep_library,/platform/reports
+2,Reporting Tools › Report Builder,plat_pm_rep_builder,/platform/report-builder
+2,Reporting Tools › Analytics Dashboards,plat_pm_analytics,/platform/analytics
+2,Reporting Tools › Custom Metrics,plat_pm_custom_metrics,/platform/analytics/custom-metrics
+1,Planning Poker,plat_pm_a_planning_poker,/pm/planning/planning-poker
+1,Project Initiation Document,plat_pm_s_pid,/platform/pid
+1,My Expenses,plat_pm_my_expenses,/platform/expenses/my
+1,Stakeholder Register,plat_pm_stkh_register,/platform/stakeholders/register
+1,My Projects,plat_pm_my_projects,/platform/projects
+1,ITTO Templates,plat_pm_p_itto_templates,/platform/itto/templates
+1,Checkpoint Reports,plat_pm_s_checkpoint,/platform/structured/checkpoint-reports
+1,Story Map,plat_pm_a_story_map,/platform/story-map
+1,Value Stream Map,plat_pm_a_vsm,/platform/value-stream-map
+1,Communication Mgmt Strategy,plat_pm_s_cms,/pm/governance/communication-strategy
+1,All Teams,plat_pm_all_teams,/platform/teams
+1,Dashboard,plat_pm_dashboard,/platform/dashboard
+1,My Tasks,plat_pm_my_tasks,/platform/tasks
+1,Ask Nidus,plat_pm_ai,/platform/ai
+1,Actuals,plat_pm_cost_actuals,/platform/cost-actuals
+1,Risk Categories,plat_pm_risk_categories,/platform/pmo-admin/risk-categories
+1,Highlight Reports,plat_pm_s_highlight,/pm/reporting/highlight
+1,All Projects,plat_pm_all_projects,/platform/projects
+1,All Tasks,plat_pm_all_tasks,/platform/tasks
+1,My Team,plat_pm_my_team,/platform/my-team
+1,ITTO Project,plat_pm_p_itto_project,/platform/itto/project
+1,Stakeholder Analysis,plat_pm_stkh_analysis,/platform/stakeholders/analysis
+1,Expense Approvals,plat_pm_exp_approvals,/platform/expenses/approvals
+1,Benefits Review Plan,plat_pm_s_benefits_rp,/pm/initiation/benefits-review-plan
+1,Configuration Mgmt Strategy,plat_pm_s_conf_ms,/pm/governance/configuration-strategy
+1,Kaizen Board,plat_pm_a_kaizen,/platform/kaizen-board
+1,Releases / Sprints,plat_pm_a_releases,/platform/releases
+1,Agile Process Forms,plat_pm_a_process_forms,/platform/agile-process-forms
+1,Project Setup,plat_pm_project_setup,null
+2,Project Setup › Project Details,plat_pm_s_project_details,/platform/project-details
+2,Project Setup › Project Mandate,plat_pm_s_mandate,/platform/mandates/list
+2,Project Setup › Project Brief,plat_pm_s_brief,/pm/initiation/project-brief
+2,Project Setup › Business Case,plat_pm_s_business_case,/pm/initiation/business-case
+2,Project Setup › Project Charter,plat_pm_s_charter,/pm/initiation/project-charter
+2,Project Setup › Project Initiation Documents (PIDs),plat_s_pids,/pm/initiation/pid
+2,Project Setup › Benefits Review Plans,plat_s_benefits_review,/pm/initiation/benefits-review-plan
+2,Project Setup › Project Team,plat_pm_project_team,null
+3,Project Setup › Project Team › Team Members,plat_pm_pt_members,/platform/teams
+3,Project Setup › Project Team › Project Roles & Skills,plat_pm_pt_project_roles,/platform/project-roles
+3,Project Setup › Project Team › RACI,plat_pm_pt_raci,/pm/resources/raci
+3,Project Setup › Project Team › Team Structure,plat_pm_pt_org_structure,/platform/project-team/team-structure
+3,Project Setup › Project Team › Contact Directory,plat_pm_pt_contacts,/platform/project-contacts
+2,Project Setup › Governance Setup,plat_pm_ps_governance,null
+3,Project Setup › Governance Setup › Governance Structure,plat_pm_gov_structure,/platform/governance-structure
+3,Project Setup › Governance Setup › Steering Committee,plat_pm_gov_steering,/platform/governance/steering-committee
+3,Project Setup › Governance Setup › Project Board,plat_pm_gov_board,/platform/governance/project-board
+3,Project Setup › Governance Setup › Governance Framework,plat_pm_s_gov_framework,/platform/governance/framework
+2,Project Setup › Regional & Format Settings,plat_pm_s_regional_format,/platform/project-setup/regional-format-settings
+2,Project Setup › Timesheet Settings,plat_pm_s_timesheet_settings,/platform/project-setup/timesheet-settings
+2,Project Setup › Working Days & Holidays,plat_pm_s_working_days_holidays,/platform/projects/:id/schedule/calendar
+2,Project Setup › Document Signatory,plat_pm_s_document_signatory,/pm/initiation/document-signatory
+2,Project Setup › Environments,plat_pm_testing_environments,/platform/testing/environments
+1,Scope & Deliverables,plat_pm_scope_deliverables,null
+2,Scope & Deliverables › Scope Statement,plat_pm_planning_scope_statement,/platform/scope/statement
+2,Scope & Deliverables › Product Breakdown Structure,plat_pm_sd_pbs,/platform/scope/pbs
+2,Scope & Deliverables › Work Breakdown Structure,plat_pm_planning_wbs,/platform/scope/wbs
+2,Scope & Deliverables › Deliverable Register,plat_pm_sd_deliverable_register,/platform/deliverable-register
+2,Scope & Deliverables › Requirements Register,plat_pm_requirements,/platform/scope/requirements
+2,Scope & Deliverables › EEF,plat_pm_eef,/platform/eef
+1,Organizational Templates,plat_pm_templates,/platform/templates
+1,Forecast & Performance,plat_pm_cost_evm,/platform/evm
+2,Organizational Templates › Templates,plat_pm_templates_templates,/platform/templates/organisational?domainGroup=templates
+2,Organizational Templates › Forms,plat_pm_templates_forms,/platform/templates/organisational?domainGroup=forms
+1,Project Templates,plat_pm_project_templates,/platform/templates/project
+2,Project Templates › Templates,plat_pm_project_templates_templates,/platform/templates/project?domainGroup=templates
+2,Project Templates › Forms,plat_pm_project_templates_forms,/platform/templates/project?domainGroup=forms
+1,Documents,plat_pm_documents,null
+2,Documents › Document Register,plat_pm_project_documents,/platform/documents/project
+2,Documents › Version History,plat_pm_doc_history,/platform/documents/history
+1,Quality Mgmt Strategy,plat_pm_s_qms,/pm/governance/quality-strategy
+1,ITTO Drafts,plat_pm_p_itto_drafts,/platform/itto/drafts
+1,Work Packages,plat_pm_s_work_packages,/pm/delivery/work-packages
+1,Financial Reports,plat_pm_fin_reports,/platform/financial-reports
+1,Engagement Planning,plat_pm_stkh_engagement,/platform/stakeholders/engagement
+1,Create Project,plat_pm_create_project,/platform/projects/create
+1,Issue Reports,plat_pm_s_issue_rep,/pm/reporting/issues
+1,Task Board,plat_pm_task_board,/platform/tasks/board
+1,Risk Mgmt Strategy,plat_pm_s_rms,/pm/governance/risk-strategy
+1,Communication Plans,plat_pm_stkh_comms,/platform/stakeholders/communications
+1,Exception Reports,plat_pm_s_exception,/pm/reporting/exception
+1,Product Descriptions,plat_pm_s_prod_desc,/platform/product-descriptions
+1,Skill Matrix,plat_pm_skill_matrix,/platform/resources/skills
+1,Task Calendar,plat_pm_task_calendar,/platform/tasks/calendar
+1,Communication formats,plat_pm_stkh_comm_options,/platform/stakeholders/communication-options
+1,Document Governance,plat_pm_s_doc_gov,/platform/document-governance
+1,Calendar,plat_pm_calendar,/platform/calendar
+1,Archives / On Hold,plat_pm_archives,/platform/projects/on-hold
+1,Power/Interest Matrix,plat_pm_stkh_matrix,/platform/stakeholders/assessment-matrix
+1,End Stage Reports,plat_pm_s_end_stage,/pm/reporting/end-stage
+1,Standard Reports,plat_pm_rep_standard,null
+1,Project Product Description,plat_pm_s_ppd,/platform/ppd
+2,Standard Reports › Project Status Report,plat_pm_rep_status,/platform/reports/status
+2,Standard Reports › Executive Report,plat_pm_rep_exec,/platform/reports/executive
+2,Standard Reports › Schedule Report,plat_pm_rep_schedule,/platform/reports/schedule
+2,Standard Reports › Cost Report,plat_pm_rep_cost,/platform/reports/cost
+2,Standard Reports › RAID Report,plat_pm_rep_raid,/platform/raid-log
+2,Standard Reports › Change Report,plat_pm_rep_change,/platform/change-requests
+2,Standard Reports › Resource Report,plat_pm_rep_resource,/platform/resources/directory
+2,Standard Reports › Quality Report,plat_pm_rep_quality,/pm/controls/quality-register
+2,Standard Reports › Testing Report,plat_pm_rep_testing,/platform/testing/cases
+1,Constraints Register,plat_pm_constraints_reg,/platform/constraints
+1,Quality,plat_pm_quality,null
+1,End Project Report,plat_pm_s_end_project,/platform/structured/end-project-report
+1,Assessment Matrix,plat_pm_stkh_assess,/platform/stakeholders/assessment-matrix
+2,Quality › Quality Plan,plat_pm_quality_plan,/platform/qms
+2,Quality › Quality Register,plat_pm_quality_reg,/pm/controls/quality-register
+2,Quality › Quality Reviews,plat_pm_quality_reviews,/platform/quality/reviews
+2,Quality › Acceptance,plat_pm_quality_accept,/platform/ppd/acceptance
+2,Quality › Testing Centre,plat_pm_testing_centre,/platform/testing-centre
+2,Quality › Non-Conformance,plat_pm_quality_nc,/platform/quality/non-conformance
+2,Quality › Configuration Item Register,plat_pm_config_reg,/pm/controls/configuration-items
+2,Quality › Configuration Item Types,plat_pm_config_item_types,/pm/controls/configuration-item-types
+1,Dependency Parties,plat_pm_external_dependencies,/platform/dependency-parties
+1,Planning,plat_pm_planning,null
+2,Planning › Schedule,plat_pm_planning_schedule,null
+3,Planning › Schedule › Activity Register,plat_pm_planning_activities,/platform/schedule/activities
+3,Planning › Schedule › Gantt,plat_pm_planning_gantt,/platform/schedule/gantt
+3,Planning › Schedule › Network / Dependencies,plat_pm_planning_sequencing,/platform/schedule/dependencies
+3,Planning › Schedule › Critical Path,plat_pm_planning_critical_path,/platform/schedule/critical-path
+3,Planning › Schedule › Schedule Management Plan,plat_pm_planning_schedule_mgmt_plan,/platform/projects/:projectId/schedule/management-plan
+3,Planning › Schedule › Look-Ahead Plan,plat_pm_planning_look_ahead,/platform/schedule/look-ahead
+3,Planning › Schedule › Workload,plat_pm_planning_workload,/platform/projects/:id/schedule/workload
+3,Planning › Schedule › Schedule Variance,plat_pm_planning_variance,/platform/schedule/variance
+2,Planning › Baselines,plat_pm_a_scurve,/platform/planning/baselines
+2,Planning › Planning Assumptions,plat_pm_planning_assumptions,/platform/assumptions
+2,Planning › Milestones,plat_pm_planning_milestones,/platform/milestones
+2,Planning › Dependencies,plat_pm_planning_dependencies,/platform/planning/dependencies
+2,Planning › Calendars,plat_pm_planning_calendar,/platform/planning/calendars
+2,Planning › Scenario Planning,plat_pm_planning_scenarios,/pm/planning/scenarios
+1,RAID,plat_pm_raid,null
+2,RAID › Risk Register,plat_pm_risk_reg,/pm/controls/risk-register
+2,RAID › Assumptions Register,plat_pm_assumptions_reg,/platform/assumptions
+2,RAID › Issue Register,plat_pm_issue_log,/pm/controls/issue-register
+2,RAID › Dependency Register,plat_pm_dependencies_reg,/platform/dependencies
+2,RAID › RAID Log,plat_pm_raid_log,/platform/raid-log
+2,RAID › Delay Register,plat_pm_delay_reg,/platform/delays
+1,Policies & Compliance,plat_pm_s_policies,/platform/governance/policies
+1,Manage Roles,plat_pm_manage_roles,/platform/admin/manage-roles
+1,My Daily Log,plat_pm_daily_log,/platform/daily-log/my-entries
+1,Testing,plat_pm_testing,null
+2,Testing › Test Planning,plat_pm_testing_plan,/platform/testing
+2,Testing › Test Cases,plat_pm_testing_cases,null
+3,Testing › Test Cases › Repository,plat_pm_testing_cases_repo,/platform/testing/cases
+3,Testing › Test Cases › Suites,plat_pm_testing_cases_suites,/platform/testing/suites
+2,Testing › Test Execution,plat_pm_testing_exec,/platform/testing/runs
+2,Testing › Defects,plat_pm_testing_defects,null
+3,Testing › Defects › Defect Register,plat_pm_testing_defects_reg,/platform/testing/defects
+3,Testing › Defects › Severity / Priority,plat_pm_testing_defects_sev,/platform/testing/defects/dashboard
+2,Testing › Evidence,plat_pm_testing_evidence,/platform/testing/evidence
+1,Change Control,plat_pm_change_control,null
+2,Change Control › Change Requests,plat_pm_change_requests,/platform/change-requests
+2,Change Control › Change Log,plat_pm_change_log,/platform/change
+1,Resources,plat_pm_resources,null
+2,Resources › Resource Plan,plat_pm_resource_plan,/platform/resources/plan
+2,Resources › Capacity Planning,plat_pm_capacity,/platform/resources/capacity
+2,Resources › Resource Directory,plat_pm_resource_dir,/platform/resources/directory
+2,Resources › Resource Calendar,plat_pm_resource_calendar,/platform/resources/calendar
+2,Resources › Time Entry & Work Plan,plat_tm_timesheets,/platform/timesheets
+2,Resources › Approvals,plat_tl_timesheet_mgmt,/platform/timesheets/team
+2,Resources › Assignments,plat_pm_manage_members,/platform/project-users
+1,Work Authorisations,plat_pm_s_work_auth,/platform/work-authorisation
+1,Stage Gate Reviews,plat_pm_s_stage_gates,/platform/stage-gates
+1,Benefits,plat_pm_benefits,null
+2,Benefits › Benefits Register,plat_pm_benefits_reg,/platform/benefits/register
+2,Benefits › Measures,plat_pm_ben_measures,/platform/benefits/measurements
+2,Benefits › Realisation Tracking,plat_pm_ben_realisation,/platform/benefits/realization
+2,Benefits › Post-Implementation Review,plat_pm_ben_pir,/platform/benefits/realization-reports
+2,Benefits › Strategy & OKRs,plat_xf_okr,/platform/pm/okr
+1,Governance,plat_pm_governance,null
+2,Governance › Decision Log,plat_pm_s_decision_log,/platform/governance/decisions
+2,Governance › Pending My Approval,plat_pm_pending_approval,/platform/pm/authorisation/queue
+2,Governance › Actions,plat_pm_governance_actions,/platform/governance-actions
+2,Governance › My Submitted Records,plat_pm_submitted,/platform/pm/authorisation/submitted
+2,Governance › Approval Chains,plat_pm_approval_chains,/platform/pm/authorisation/chains
+2,Governance › Meetings,plat_pm_gov_meetings,/platform/governance/meeting-calendar
+2,Governance › Meetings,plat_tm_meetings,/platform/comms/meetings
+2,Governance › Stage Gates,plat_pm_gov_stage_gates,/platform/stage-gates
+1,Communications,plat_pm_communications,null
+2,Communications › Comms Hub,plat_pm_comms_hub,/platform/comms
+2,Communications › Channel Messages,plat_pm_comms_messages,/platform/comms/messages
+2,Communications › Direct Messages,plat_pm_comms_direct,/platform/comms/direct
+2,Communications › Meeting Summaries,plat_pm_comms_summaries,/platform/comms/meetings/summaries
+2,Communications › Pending AI Reviews,plat_pm_comms_pending_review,/platform/comms/pending-review
+1,Project Closure,plat_pm_project_closure,null
+2,Project Closure › Lessons Log,plat_pm_lessons_ctrl,/pm/controls/lessons-log
+2,Project Closure › Closure Checklist,plat_pm_closure_checklist,/platform/projects/:projectId/closure?tab=closure
+2,Project Closure › Outstanding Items,plat_pm_closure_outstanding,/platform/projects/:projectId/closure?tab=actions
+2,Project Closure › Handover,plat_pm_closure_handover,/platform/projects/:projectId/closure?tab=handover
+2,Project Closure › Final Acceptance,plat_pm_closure_acceptance,/platform/projects/:projectId/closure?section=approval
+2,Project Closure › Benefits Transition,plat_pm_closure_benefits_transition,/platform/projects/:projectId/closure?tab=closure&section=benefits
+2,Project Closure › Closure Report,plat_pm_closure_report,/platform/projects/:projectId/closure?tab=end-report
+2,Project Closure › Closing a Project,plat_pm_project_closure_closing,/platform/projects/:projectId/closure
+2,Project Closure › Archive,plat_pm_closure_archive,/platform/closure/archive
+1,Procurement,plat_pm_procurement,null
+2,Procurement › Procurement Plan,plat_pm_proc_plan,/pm/process-templates/t/procurement-management-plan
+2,Procurement › Vendors,plat_pm_proc_vendors,/platform/pm/procurement/vendors
+2,Procurement › Vendor Categories,plat_pm_proc_vendor_categories,/platform/pm/procurement/vendor-categories
+2,Procurement › Vendor Performance,plat_pm_proc_performance,/platform/pm/procurement/performance
+1,Timesheet Overview,plat_pm_rep_timesheet_overview,/platform/reports/timesheet-overview
+1,Work Plan Variance,plat_pm_rep_work_plan_variance,/platform/reports/work-plan-variance

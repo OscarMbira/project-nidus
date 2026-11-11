@@ -8,6 +8,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { supabase } from '../../services/supabaseClient'
+import { simDb } from '@nidus/supabase'
+import RegisterVersionHistory from '@nidus/ui/RegisterVersionHistory'
 
 export default function LocalRegisterAuditPanel({ register, record }) {
   const [userLabels, setUserLabels] = useState({})
@@ -37,6 +39,7 @@ export default function LocalRegisterAuditPanel({ register, record }) {
   const statusLabel = (register?.status_workflow || []).find((s) => s.key === record.status)?.label || record.status
 
   return (
+    <>
     <AuditDetailsPanel description="Who created or changed this record.">
       <AuditCard title="Identity">
         <AuditField label="Display ID" value={record.display_id || '—'} />
@@ -54,5 +57,10 @@ export default function LocalRegisterAuditPanel({ register, record }) {
         <AuditTimestampPair dateLabel="Updated at" value={record.updated_at} />
       </AuditCard>
     </AuditDetailsPanel>
+    {/* Template provenance + content version history (v1336 / v1339). */}
+    <div className="mt-4">
+      <RegisterVersionHistory db={simDb} register={register} record={record} />
+    </div>
+    </>
   )
 }

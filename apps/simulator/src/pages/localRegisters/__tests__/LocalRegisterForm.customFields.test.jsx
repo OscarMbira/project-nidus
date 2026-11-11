@@ -75,6 +75,51 @@ describe('LocalRegisterForm custom fields', () => {
     expect(payload.fieldValues).toEqual({ cf__def1: 'VT-1001' })
   })
 
+  it('applies default values to a new record and blocks values that break the rules', async () => {
+    customFieldsResponse = {
+      fields: [
+        { id: 'def3', label: 'Region Code', field_type: 'text', required: false, options: [],
+          rules: { defaultValue: 'ZW', minLength: 2, maxLength: 3, pattern: '^[A-Za-z]*$', patternMessage: 'Letters and spaces only' } },
+      ],
+      used: 1, limit: 30, can_manage: false,
+    }
+    renderForm()
+    fireEvent.change(within(await screen.findByText('Title *').then((l) => l.parentElement)).getByRole('textbox'), {
+      target: { value: 'Home Loan' },
+    })
+    fireEvent.click(await screen.findByRole('tab', { name: 'Custom Fields' }))
+    const input = await screen.findByLabelText('Region Code')
+    expect(input).toHaveValue('ZW')
+    expect(screen.getByText('2–3 characters · Letters and spaces only')).toBeInTheDocument()
+
+    fireEvent.change(input, { target: { value: 'Z9' } })
+    expect(screen.getAllByText(/Letters and spaces only/).length).toBeGreaterThan(1)
+    expect(screen.getByText(/Fix before saving: Region Code \(Custom Fields\)/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+
+    fireEvent.change(input, { target: { value: 'ZAF' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(createRecord).toHaveBeenCalled())
+    expect(createRecord.mock.calls[0][1].fieldValues).toEqual({ cf__def3: 'ZAF' })
+  })
+
+  it('saves an untouched default with the new record', async () => {
+    customFieldsResponse = {
+      fields: [{ id: 'def4', label: 'Priority', field_type: 'dropdown', required: false,
+        options: [{ value: 'low', label: 'Low' }, { value: 'high', label: 'High' }], rules: { defaultValue: 'high' } }],
+      used: 1, limit: 30, can_manage: false,
+    }
+    renderForm()
+    fireEvent.change(within(await screen.findByText('Title *').then((l) => l.parentElement)).getByRole('textbox'), {
+      target: { value: 'Personal Loan' },
+    })
+    await screen.findByRole('tab', { name: 'Custom Fields' })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await waitFor(() => expect(createRecord).toHaveBeenCalled())
+    expect(createRecord.mock.calls[0][1].fieldValues).toEqual({ cf__def4: 'high' })
+  })
+
   it('creates a new organisation field from the dialog', async () => {
     customFieldsResponse = { fields: [], used: 0, limit: 30, can_manage: false }
     addRegisterCustomField.mockImplementation(async () => {
@@ -89,12 +134,12 @@ describe('LocalRegisterForm custom fields', () => {
     expect(await screen.findByText(/No custom fields yet/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Add custom field' }))
-    const dialog = await screen.findByRole('dialog')
+    const dialog = await screen.findByRole('region', { name: 'Add custom field' })
     fireEvent.change(within(dialog).getByLabelText('Field name *'), { target: { value: 'Cost Centre' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create field' }))
 
     await waitFor(() =>
-      expect(addRegisterCustomField).toHaveBeenCalledWith('reg1', 'acct1', { label: 'Cost Centre', fieldType: 'text', options: [], required: false })
+      expect(addRegisterCustomField).toHaveBeenCalledWith('reg1', 'acct1', { name: 'Cost Centre', label: 'Cost Centre', fieldType: 'text', options: [], required: false, rules: {} })
     )
     expect(await screen.findByLabelText('Cost Centre')).toBeInTheDocument()
   })

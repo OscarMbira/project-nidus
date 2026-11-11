@@ -10,6 +10,7 @@ import {
   saveScopedSignatoryConfig,
   getLedPracticeTeamsForUser,
 } from '@nidus/shared/services/processTemplateSignatoryService'
+import { listRegisterDocumentTypes } from '@nidus/shared/services/localRegisterSignoffService'
 
 // Same 23 document tables as Platform (SQL/v880c mirrors the CHECK constraint) — table
 // labels come from public.database_tables, shared across apps.
@@ -248,6 +249,23 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
   const [ledTeams, setLedTeams] = useState([])
   const [roleOptions, setRoleOptions] = useState([])
   const [labels, setLabels] = useState({})
+  // Local Register document types ('local_register:<key>', v1318) listed with the process documents.
+  const [registerDocs, setRegisterDocs] = useState([])
+  const allDocumentTables = useMemo(
+    () => [...DOCUMENT_TABLES, ...registerDocs.map((d) => d.documentTable)],
+    [registerDocs],
+  )
+  const allLabels = useMemo(
+    () => ({ ...labels, ...Object.fromEntries(registerDocs.map((d) => [d.documentTable, `${d.label} (register)`])) }),
+    [labels, registerDocs],
+  )
+  useEffect(() => {
+    let cancelled = false
+    listRegisterDocumentTypes(simDb).then((result) => {
+      if (!cancelled && result.success) setRegisterDocs(result.data)
+    })
+    return () => { cancelled = true }
+  }, [])
   const [docSearch, setDocSearch] = useState('')
   const [selectedTable, setSelectedTable] = useState(DOCUMENT_TABLES[0])
   const [loading, setLoading] = useState(true)
@@ -345,16 +363,16 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
 
   const filteredDocTables = useMemo(() => {
     const q = docSearch.trim().toLowerCase()
-    const list = !q ? [...DOCUMENT_TABLES] : DOCUMENT_TABLES.filter((t) => String(labels[t] || t).toLowerCase().includes(q))
-    return list.sort((a, b) => String(labels[a] || a).localeCompare(String(labels[b] || b), undefined, { sensitivity: 'base' }))
-  }, [docSearch, labels])
+    const list = !q ? [...allDocumentTables] : allDocumentTables.filter((t) => String(allLabels[t] || t).toLowerCase().includes(q))
+    return list.sort((a, b) => String(allLabels[a] || a).localeCompare(String(allLabels[b] || b), undefined, { sensitivity: 'base' }))
+  }, [docSearch, allLabels, allDocumentTables])
 
   const handleSaved = (scopeLabel) => {
     setRefreshKey((k) => k + 1)
     showSuccess({
-      recordId: labels[selectedTable] || selectedTable,
+      recordId: allLabels[selectedTable] || selectedTable,
       operation: 'updated',
-      message: `Signatory requirements for "${labels[selectedTable] || selectedTable}" saved (${scopeLabel}).`,
+      message: `Signatory requirements for "${allLabels[selectedTable] || selectedTable}" saved (${scopeLabel}).`,
     })
   }
 
@@ -402,14 +420,14 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
           className="w-full max-w-md rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         >
           {filteredDocTables.map((t) => (
-            <option key={t} value={t}>{labels[t] || t}</option>
+            <option key={t} value={t}>{allLabels[t] || t}</option>
           ))}
         </select>
       </div>
 
       {isOwner && (
         <ScopeEditor
-          title={`Project requirements — ${labels[selectedTable] || selectedTable}`}
+          title={`Project requirements — ${allLabels[selectedTable] || selectedTable}`}
           icon={ShieldCheck}
           scopeType="project"
           scopeId={practiceProjectId}
@@ -422,7 +440,7 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
 
       {ledTeams.length > 0 && (
         <ReadOnlySummary
-          label={`Current project-level requirement for ${labels[selectedTable] || selectedTable} (what your team inherits by default)`}
+          label={`Current project-level requirement for ${allLabels[selectedTable] || selectedTable} (what your team inherits by default)`}
           config={readOnlyConfig}
           loading={readOnlyLoading}
         />
@@ -431,7 +449,7 @@ export default function ProjectTeamSignatoryPanel({ practiceProjectId }) {
       {ledTeams.map((team) => (
         <ScopeEditor
           key={team.id}
-          title={`${team.team_name} — ${labels[selectedTable] || selectedTable}`}
+          title={`${team.team_name} — ${allLabels[selectedTable] || selectedTable}`}
           icon={Users}
           scopeType="team"
           scopeId={team.id}

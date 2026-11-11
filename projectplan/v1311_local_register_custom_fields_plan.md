@@ -80,6 +80,16 @@ Admin repo SQL: `v242_local_register_custom_field_limit_admin_rpc.sql` (see Admi
 - SQL not executed — owner runs v1311 → v1312 → v1313 (tests; leaves no data) → re-run v1251 → Admin v242. v1313 is the database-level test of the RPC rules.
 - Not exercised in a browser (light/dark, mobile) or against live RLS.
 
+### Amendment 2026-10-22 — add-field UI made non-modal
+Owner request: the "Add custom field" dialog became an inline panel (rule 65). `@nidus/ui` `AddRegisterCustomFieldDialog` was renamed to `AddRegisterCustomFieldPanel`; it opens inside the Custom Fields tab under the header (the header button hides while it is open), so the record being edited and its unsaved values stay on screen. A routed page was not used because leaving the form would interrupt the record edit. Tests: panel 7 (incl. non-modal + close), Platform 10, Simulator 7 — pass.
+
+### Amendment B 2026-10-22 — optional field settings + field label
+Owner request: when creating a custom field, optionally capture default value, min/max values, allowed characters and dropdown values; LDE must also offer Default value; a separate Field label.
+- SQL `v1314_local_register_custom_field_settings.sql`: `public.lr_cf_build_rules` (+ `lr_cf_slug/num/count/date`) validates settings per type and builds the allowed-characters pattern server-side; `local_register_add_custom_field` gains `p_rules` and `p_name` (public + sim; old 6-arg version dropped); field JSON returns `rules`; library returns `name`. Rules live in LDE `validation_rules` (LDE keys min/max/minLength/maxLength/pattern/patternMessage + new defaultValue/minDate/maxDate/minItems/maxItems/allowedCharacters). Tests: `v1315_local_register_custom_field_settings_tests.sql` (pure, no data).
+- UI: `@nidus/ui` `CustomFieldSettingsFields` ("More options (optional)" in the add panel), Field name + Field label, "Dropdown values" wording; forms apply defaults to new records (computed, not stored until Save), show a hint per custom field, inline errors and a "Fix before saving" list; LDE `ValidationRuleBuilder` (both apps) gains Default value (type-aware, dropdown options loaded), Min length, earliest/latest date and min/max items.
+- Validation of values is client-side (same as built-in register fields); the server validates the settings themselves.
+- Tests: shared 16, panel 10, Platform registers + LDE 34, Simulator 9 — pass.
+
 ### Remaining risks / notes
 - A custom field marked **Required** blocks saving older records in that register until filled (by design, D9; explained in the add dialog).
 - Retiring/detaching a field hides it but keeps its `cf__` values on records; re-attaching shows them again.
