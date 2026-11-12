@@ -47,6 +47,7 @@ const LESSON_EXPORT_SECTIONS = [
   ]}
 ];
 
+import RecordCustomFields from '../components/shared-app/RecordCustomFields'
 export default function LessonDetailView() {
   const { lessonId } = useParams()
   const { projectId, routeKey, loading: projectRouteLoading } = usePlatformProjectId();
@@ -365,6 +366,10 @@ export default function LessonDetailView() {
         </div>
       </div>
       </>
+      )}
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab !== 'audit' && lesson?.id && (
+        <RecordCustomFields projectId={lesson?.project_id} entityType="lesson" entityId={lesson?.id} screenCode="lesson_detail" />
       )}
     </div>
   );

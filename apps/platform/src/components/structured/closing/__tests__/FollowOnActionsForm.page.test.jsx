@@ -101,4 +101,33 @@ describe('FollowOnActionsForm', () => {
     expect(assigned.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(due.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
+  it('saves the newly exposed rationale, outcome and handover fields (v1340 wave 4)', async () => {
+    supabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'auth-user-1' } } })
+    supabase.from.mockImplementation(() => {
+      const filters = {}
+      const api = {
+        select: () => api,
+        eq: (column, value) => { filters[column] = value; return api },
+        order: () => Promise.resolve({ data: [], error: null }),
+        maybeSingle: () => Promise.resolve({ data: filters.auth_user_id ? { id: 'user-row-1' } : null, error: null }),
+      }
+      return api
+    })
+    updateFollowOnAction.mockClear()
+    updateFollowOnAction.mockResolvedValue({ id: 'a1', action_title: action.action_title })
+
+    render(<FollowOnActionsForm projectId="project-1" action={{ ...action, action_rationale: 'Audit asks for it' }} onClose={() => {}} />)
+    expect(screen.getByDisplayValue('Audit asks for it')).toBeInTheDocument()
+    fireEvent.change(screen.getByPlaceholderText('What will be true once the action is done'), { target: { value: 'Pack filed in the archive' } })
+    fireEvent.click(screen.getByLabelText('Hand this action over to operations'))
+    fireEvent.click(screen.getByRole('button', { name: 'Update Action' }))
+
+    await waitFor(() => expect(updateFollowOnAction).toHaveBeenCalled())
+    const payload = updateFollowOnAction.mock.calls[0][1]
+    expect(payload.action_rationale).toBe('Audit asks for it')
+    expect(payload.expected_outcome).toBe('Pack filed in the archive')
+    expect(payload.transition_to_operations).toBe(true)
+    expect(payload.recommended_start_date).toBeNull()
+  })
 })
+

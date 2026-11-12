@@ -15,6 +15,8 @@ import { hydrateDelayForm, isCostAmount, isDelayRecordId, isWholeDayCount, LINK_
 
 const STEPS = ['Basic', 'Impact', 'Resolution', 'Links']
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
+
 export default function DelayForm({
   open,
   onClose,
@@ -410,6 +412,17 @@ export default function DelayForm({
           )}
         </div>
         </>
+        )}
+        {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+        {formTab === 'details' && form.id && (
+          <div className="px-4 pb-4">
+            <RecordCustomFields
+              projectId={isSim ? form.practice_project_id : form.project_id}
+              entityType="delay"
+              entityId={form.id}
+              screenCode="delay_detail"
+            />
+          </div>
         )}
       </div>
   )

@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react'
 import { getStakeholder } from '../../services/stakeholderService'
 import StakeholderProfile from '../../components/stakeholders/StakeholderProfile'
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function StakeholderProfilePage() {
   const { stakeholderId } = useParams()
   const navigate = useNavigate()
@@ -77,6 +78,10 @@ export default function StakeholderProfilePage() {
         <ArrowLeft className="h-5 w-5" /> Back to register
       </button>
       <StakeholderProfile stakeholder={stakeholder} onEdit={handleEdit} />
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {stakeholder?.id && (
+        <RecordCustomFields projectId={stakeholder?.project_id} entityType="stakeholder" entityId={stakeholder?.id} screenCode="stakeholder_detail" />
+      )}
     </div>
   )
 }

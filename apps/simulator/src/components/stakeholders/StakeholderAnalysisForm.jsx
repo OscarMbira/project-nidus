@@ -96,6 +96,16 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
     analysis_date: new Date().toISOString().split('T')[0],
     analysis_period: '',
     notes: '',
+    // v1340 wave 4: stored columns the form did not show before
+    power_description: '',
+    interest_description: '',
+    depends_on_project: false,
+    project_depends_on_them: false,
+    attitude_notes: '',
+    support_rationale: '',
+    potential_objections: '',
+    influence_strategy: '',
+    engagement_approach: '',
   })
   const [formTab, setFormTab] = useState('position')
   const [auditUserLabels, setAuditUserLabels] = useState({})
@@ -143,6 +153,15 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
         analysis_date: analysis.analysis_date || new Date().toISOString().split('T')[0],
         analysis_period: analysis.analysis_period || '',
         notes: analysis.notes || '',
+        power_description: analysis.power_description || '',
+        interest_description: analysis.interest_description || '',
+        depends_on_project: !!analysis.depends_on_project,
+        project_depends_on_them: !!analysis.project_depends_on_them,
+        attitude_notes: analysis.attitude_notes || '',
+        support_rationale: analysis.support_rationale || '',
+        potential_objections: analysis.potential_objections || '',
+        influence_strategy: analysis.influence_strategy || '',
+        engagement_approach: analysis.engagement_approach || '',
       })
     } else if (stakeholderId) {
       setFormData(prev => ({ ...prev, stakeholder_id: stakeholderId, project_id: projectId }))
@@ -309,6 +328,34 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
               <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Salience class (auto)</span>
               <p className="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg capitalize text-gray-900 dark:text-gray-100">{formData.salience_class || '—'}</p>
             </div>
+            <div>
+              <label htmlFor="sa-power_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Why this power level</label>
+              <textarea id="sa-power_description" name="power_description" rows={2} value={formData.power_description} onChange={handleChange} placeholder="What gives this stakeholder their influence over the project" className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="sa-interest_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Why this interest level</label>
+              <textarea id="sa-interest_description" name="interest_description" rows={2} value={formData.interest_description} onChange={handleChange} placeholder="What this stakeholder cares about in the project" className={fieldClass} />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={!!formData.depends_on_project}
+                  onChange={(e) => { setIsDirty(true); setFormData((prev) => ({ ...prev, depends_on_project: e.target.checked })) }}
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                />
+                This stakeholder depends on the project
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <input
+                  type="checkbox"
+                  checked={!!formData.project_depends_on_them}
+                  onChange={(e) => { setIsDirty(true); setFormData((prev) => ({ ...prev, project_depends_on_them: e.target.checked })) }}
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500"
+                />
+                The project depends on this stakeholder
+              </label>
+            </div>
           </>
         )}
 
@@ -351,6 +398,18 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
                 ))}
               </div>
             </div>
+            <div>
+              <label htmlFor="sa-attitude_notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Attitude notes</label>
+              <textarea id="sa-attitude_notes" name="attitude_notes" rows={2} value={formData.attitude_notes} onChange={handleChange} placeholder="What shapes their current attitude" className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="sa-support_rationale" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Reasons for support (or resistance)</label>
+              <textarea id="sa-support_rationale" name="support_rationale" rows={2} value={formData.support_rationale} onChange={handleChange} placeholder="Why they support or resist the project" className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="sa-potential_objections" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Potential objections</label>
+              <textarea id="sa-potential_objections" name="potential_objections" rows={2} value={formData.potential_objections} onChange={handleChange} placeholder="Concerns they are likely to raise" className={fieldClass} />
+            </div>
           </>
         )}
 
@@ -383,6 +442,14 @@ export default function StakeholderAnalysisForm({ analysis, stakeholderId, proje
               placeholder="Add an engagement approach"
               ariaLabelPrefix="engagement strategy"
             />
+            </div>
+            <div>
+              <label htmlFor="sa-influence_strategy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Influence strategy</label>
+              <textarea id="sa-influence_strategy" name="influence_strategy" rows={2} value={formData.influence_strategy} onChange={handleChange} placeholder="How the project will move them toward the desired attitude" className={fieldClass} />
+            </div>
+            <div>
+              <label htmlFor="sa-engagement_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Engagement approach</label>
+              <textarea id="sa-engagement_approach" name="engagement_approach" rows={2} value={formData.engagement_approach} onChange={handleChange} placeholder="Who engages them, how and how often" className={fieldClass} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>

@@ -108,6 +108,7 @@ PROJECT MANAGEMENT
 │       ├── PMO Oversight
 │       ├── Escalation Path
 │       └── Governance Framework (Delegated Authorities under Setup retired v1102 — use PMO Configuration → Authorities; principles MultiLineList + escalation steps table v1103)
+│       └── Policies & Compliance — register engine, organisation-wide (v1445 — tabs Details / Scope & Applicability / Requirements & Controls / Review & Attestation / Notes; replaces the v687 form)
 │   ├── Document Signatory (v1067)
 │   │   ├── Project-scope requirements (Project Manager, editable)
 │   │   ├── Team-scope requirements (per team led, editable by that team's lead)

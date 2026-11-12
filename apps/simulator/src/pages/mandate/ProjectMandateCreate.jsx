@@ -9,21 +9,7 @@ import { useDraftQueue } from '../../lib/useDraftQueue'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
-
-const MANDATE_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'mandate_reference', label: 'Reference' },
-    { key: 'mandate_title', label: 'Title' },
-    { key: 'document_status', label: 'Status' },
-  ]},
-  { title: 'Scope', fields: [{ key: 'scope', label: 'Scope' }] },
-  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Objectives' }] },
-  { title: 'Constraints', fields: [{ key: 'constraints', label: 'Constraints' }] },
-  { title: 'Proposed Roles', fields: [
-    { key: 'proposed_executive_name', label: 'Proposed Executive' },
-    { key: 'proposed_pm_name', label: 'Proposed PM' },
-  ]},
-]
+import { buildMandateExportSections, buildMandateExportRecord } from '@nidus/shared/utils/mandateExportSections'
 
 /** Convert JSON-array / legacy text columns ↔ newline-joined MultiLineListInput value. */
 function toMultiline(value) {
@@ -227,8 +213,8 @@ function ProjectMandateCreate() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordMenu
-              sections={MANDATE_EXPORT_SECTIONS}
-              record={formData}
+              sections={buildMandateExportSections(formData)}
+              record={buildMandateExportRecord(formData)}
               baseFilename={`Mandate_${formData.mandate_reference || formData.mandate_title || 'Draft'}`}
             />
           </div>

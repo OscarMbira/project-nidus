@@ -52,6 +52,7 @@ export default function ChangeRequestForm({
     urgency: request?.urgency || 'medium',
     business_criticality: request?.business_criticality || 'medium',
     submission_date: request?.submission_date || new Date().toISOString().split('T')[0],
+    approval_required_by_date: request?.approval_required_by_date || '', // v1340 wave 4
     requestor_name: request?.requestor_name || '',
     requestor_organization: request?.requestor_organization || '',
     change_board_id: request?.change_board_id || '',
@@ -261,6 +262,7 @@ export default function ChangeRequestForm({
         urgency: formData.urgency,
         business_criticality: formData.business_criticality,
         submission_date: formData.submission_date,
+        approval_required_by_date: formData.approval_required_by_date || null,
         requestor_name: formData.requestor_name,
         requestor_organization: formData.requestor_organization,
         change_board_id: formData.change_board_id || null,
@@ -434,6 +436,19 @@ export default function ChangeRequestForm({
                   onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                  Decision Needed By
+                </label>
+                <input
+                  type="date"
+                  value={formData.approval_required_by_date}
+                  min={formData.submission_date || undefined}
+                  onChange={(e) => setFormData({ ...formData, approval_required_by_date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
 

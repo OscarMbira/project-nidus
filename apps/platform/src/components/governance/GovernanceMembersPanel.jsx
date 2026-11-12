@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
-import { RowActionButton } from '@nidus/ui'
+import { RowActionButton, DetailAuditTabList, RecordAuditDetails } from '@nidus/ui'
 import MultiLineListInput, { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
@@ -49,6 +49,9 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
   const [uid, setUid] = useState(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  // v1340 (rule 63.1): Details / Audit details tabs on the member form.
+  const [editingRecord, setEditingRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
 
@@ -74,9 +77,11 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
 
   useEffect(() => { load() }, [load])
 
-  const openCreate = () => { setEditingId(null); setForm(EMPTY_FORM); setFormOpen(true) }
+  const openCreate = () => { setEditingId(null); setEditingRecord(null); setFormTab('details'); setForm(EMPTY_FORM); setFormOpen(true) }
   const openEdit = (m) => {
     setEditingId(m.id)
+    setEditingRecord(m)
+    setFormTab('details')
     setForm({
       member_name: m.member_name || '',
       role_title: m.role_title || '',
@@ -165,6 +170,22 @@ export default function GovernanceMembersPanel({ bodyType, title, description, b
         </div>
 
         {formOpen && (
+          <div className="mb-2">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          </div>
+        )}
+        {formOpen && formTab === 'audit' && (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <RecordAuditDetails
+              db={platformDb}
+              record={editingRecord}
+              noun="member"
+              identity={[{ label: 'Name', value: editingRecord?.member_name }, { label: 'Role / title', value: editingRecord?.role_title }, { label: 'Organisation', value: editingRecord?.organisation }]}
+              classification={[{ label: 'Body', value: title }, { label: 'Chair', value: editingRecord ? (editingRecord.is_chair ? 'Yes' : 'No') : null }, { label: 'Appointed', value: editingRecord?.appointed_date }, { label: 'End date', value: editingRecord?.end_date }]}
+            />
+          </div>
+        )}
+        {formOpen && formTab === 'details' && (
           <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Name *</label>

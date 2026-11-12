@@ -28,6 +28,7 @@ const STATUS_BADGE = {
   slipped: 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300',
 }
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function MilestoneDetailPage() {
   const { projectId, id } = useParams()
   const navigate = useNavigate()
@@ -133,6 +134,10 @@ export default function MilestoneDetailPage() {
             <AuditTimestampPair dateLabel="Updated at" value={milestone.updated_at} />
           </AuditCard>
         </AuditDetailsPanel>
+      )}
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && milestone?.id && (
+        <RecordCustomFields projectId={milestone?.project_id} entityType="milestone" entityId={milestone?.id} screenCode="milestone_detail" />
       )}
     </div>
   )

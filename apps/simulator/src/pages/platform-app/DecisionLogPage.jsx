@@ -2,9 +2,10 @@ import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Plus, Search, LayoutGrid, Table2, ArrowUpDown, Download, Gavel } from 'lucide-react'
-import { getDecisions, deleteDecision } from '../../services/decisionLogService'
+import { getDecisions, deleteDecision } from '../../services/sim/simDecisionService'
 import { exportListToCSV, exportListToJSON, exportListToXML, exportListToPrint } from '@nidus/shared/utils/exportUtils'
-import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
+import { usePracticeProjectParam } from '../../lib/usePracticeProjectParam'
+import PlanningProjectBar from '../../components/planning/PlanningProjectBar'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import { RowActionButton, DashboardRegisterTabBar, RegisterOpenItemsWidget, DashboardStatCard } from '@nidus/ui'
@@ -51,7 +52,8 @@ function StatusBadge({ status }) {
 
 export default function DecisionLogPage() {
   const navigate = useNavigate()
-  const { projectId, loading: projectLoading } = usePlatformProjectId()
+  // v1448: practice project from ?projectId= (sim.project_decisions), not a Platform project.
+  const { projectId, routeKey, loading: projectLoading } = usePracticeProjectParam()
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -163,11 +165,7 @@ export default function DecisionLogPage() {
 
   return (
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
-        {!projectLoading && !projectId && (
-          <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700/50 dark:bg-amber-900/30 dark:text-amber-200">
-            Select a project in the header (e.g. SEED334-PRJ-08 Velocity Freight) to load the Decision Log.
-          </p>
-        )}
+        <PlanningProjectBar isSim autoSelectSingle />
 
         <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -227,7 +225,7 @@ export default function DecisionLogPage() {
             renderRowActions={(row) => (
               <>
                 <RowActionButton variant="view" label="View decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}`)} />
-                <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}/edit?projectId=${projectId}`)} />
+                <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}/edit?projectId=${routeKey}`)} />
                 <RowActionButton variant="delete" label="Delete decision" onClick={() => handleDelete(row.id)} disabled={deleting === row.id} />
               </>
             )}
@@ -267,7 +265,7 @@ export default function DecisionLogPage() {
               )}
             </div>
             {projectId && (
-              <Link to={`/simulator/governance/decisions/new?projectId=${projectId}`}
+              <Link to={`/simulator/governance/decisions/new?projectId=${routeKey}`}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-sm font-medium text-white">
                 <Plus className="h-4 w-4" /> New Decision
               </Link>
@@ -316,7 +314,7 @@ export default function DecisionLogPage() {
 
         {!loading && !projectLoading && !projectId && (
           <div className="text-center py-16 text-amber-800 dark:text-amber-200">
-            <p>Select a project in the header to load the Decision Log.</p>
+            <p>Select a practice project above to load the Decision Log.</p>
           </div>
         )}
 
@@ -325,7 +323,7 @@ export default function DecisionLogPage() {
             <Gavel className="h-10 w-10 mx-auto mb-3 opacity-40" />
             <p>No decisions recorded yet.</p>
             {projectId && (
-              <Link to={`/simulator/governance/decisions/new?projectId=${projectId}`}
+              <Link to={`/simulator/governance/decisions/new?projectId=${routeKey}`}
                 className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-2 text-sm font-medium text-white">
                 <Plus className="h-4 w-4" /> Record First Decision
               </Link>
@@ -359,7 +357,7 @@ export default function DecisionLogPage() {
                     <td className="px-3 py-3 text-right sticky right-0 min-w-[8.5rem] whitespace-nowrap bg-white dark:bg-gray-800 group-hover:bg-gray-50 dark:group-hover:bg-gray-700/50 z-[2] shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]">
                       <div className="inline-flex items-center justify-end gap-1">
                         <RowActionButton variant="view" label="View decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}`)} />
-                        <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}/edit?projectId=${projectId}`)} />
+                        <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}/edit?projectId=${routeKey}`)} />
                         <RowActionButton variant="delete" label="Delete decision" onClick={() => handleDelete(row.id)} disabled={deleting === row.id} />
                       </div>
                     </td>
@@ -388,7 +386,7 @@ export default function DecisionLogPage() {
                   <span className={`text-xs capitalize ${PRIORITY_COLORS[row.priority] || ''}`}>{row.priority} priority</span>
                   <div className="flex gap-2">
                     <RowActionButton variant="view" label="View decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}`)} />
-                    <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}/edit?projectId=${projectId}`)} />
+                    <RowActionButton variant="edit" label="Edit decision" onClick={() => navigate(`/simulator/governance/decisions/${row.id}/edit?projectId=${routeKey}`)} />
                     <RowActionButton variant="delete" label="Delete decision" onClick={() => handleDelete(row.id)} disabled={deleting === row.id} />
                   </div>
                 </div>

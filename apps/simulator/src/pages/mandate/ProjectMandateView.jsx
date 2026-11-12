@@ -2,45 +2,23 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import { getMandateViewData } from '../../services/projectMandateService'
+import { getMandateViewData, getDependencies, addDependency, updateDependency, deleteDependency } from '../../services/projectMandateService'
+import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
+
+// v1340 wave 4 follow-up (SQL v1447): read-only here; edited on the mandate edit page.
+const DEPENDENCY_SERVICE = { list: getDependencies, add: addDependency, update: updateDependency, remove: deleteDependency }
 import { submitForApproval, confirmMandateWithoutFormalApproval } from '../../services/mandateWorkflowService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import ConstraintListItem from '../../components/constraints/ConstraintListItem'
 import MandateSubmitModal from '../../components/mandate/MandateSubmitModal'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
+import { buildMandateExportSections, buildMandateExportRecord } from '@nidus/shared/utils/mandateExportSections'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
-
-/** All mandate fields for export; Word/PPT let user choose up to 10. */
-const MANDATE_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'mandate_reference', label: 'Reference' },
-    { key: 'mandate_title', label: 'Title' },
-    { key: 'version_number', label: 'Version' },
-    { key: 'created_date', label: 'Created Date' },
-    { key: 'document_status', label: 'Status' },
-    { key: 'project_created_date', label: 'Project Created Date' }
-  ]},
-  { title: '1. Purpose', fields: [{ key: 'purpose', label: 'Purpose' }] },
-  { title: '2. Authority', fields: [{ key: 'authority_responsible', label: 'Authority Responsible' }] },
-  { title: '3. Background', fields: [{ key: 'background', label: 'Background' }] },
-  { title: '4. Project Objectives', fields: [{ key: 'project_objectives', label: 'Objectives' }] },
-  { title: '5. Scope', fields: [
-    { key: 'scope', label: 'In-Scope' },
-    { key: 'scope_exclusions', label: 'Out-of-Scope Exclusions' }
-  ]},
-  { title: '7. Interfaces', fields: [{ key: 'interfaces', label: 'Interfaces' }] },
-  { title: '8. Quality Expectations', fields: [{ key: 'quality_expectations', label: 'Quality Expectations' }] },
-  { title: '9. Outline Business Case', fields: [{ key: 'outline_business_case', label: 'Outline Business Case' }] },
-  { title: '11. Proposed Roles', fields: [
-    { key: 'proposed_executive_name', label: 'Proposed Executive' },
-    { key: 'proposed_pm_name', label: 'Proposed PM' }
-  ]}
-]
 
 /** Parse JSON array or return raw string for display */
 function parseListOrText(value) {
@@ -74,6 +52,11 @@ export default function ProjectMandateView() {
   const [approvalHistory, setApprovalHistory] = useState([])
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [confirmingWithoutApproval, setConfirmingWithoutApproval] = useState(false)
+  const [dependencies, setDependencies] = useState([])
+  const mandateExportChildren = useMemo(
+    () => ({ constraints, documents: associatedDocuments, stakeholders, dependencies }),
+    [constraints, associatedDocuments, stakeholders, dependencies],
+  )
 
   const fetchMandate = useCallback(async () => {
     if (!mandateIdentifier) return
@@ -303,8 +286,8 @@ export default function ProjectMandateView() {
           
           <div className="flex flex-wrap gap-3 items-center">
             <ExportRecordMenu
-              sections={MANDATE_EXPORT_SECTIONS}
-              record={mandate}
+              sections={buildMandateExportSections(mandate, mandateExportChildren)}
+              record={buildMandateExportRecord(mandate, mandateExportChildren)}
               baseFilename={`Mandate_${mandate.mandate_reference || mandate.id}`}
             />
             {canConfirmWithoutApproval && (
@@ -598,6 +581,8 @@ export default function ProjectMandateView() {
             </div>
           </div>
         </div>
+
+        <MandateDependenciesSection mandateId={mandate.id} readOnly viewModeId="mandate-dependencies-view" service={DEPENDENCY_SERVICE} onRowsChange={setDependencies} />
 
         {/* Project Link */}
         {mandate.project_id && mandate.project && (

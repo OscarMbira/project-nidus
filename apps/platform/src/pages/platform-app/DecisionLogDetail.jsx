@@ -78,6 +78,7 @@ function Section({ title, content }) {
   )
 }
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function DecisionLogDetail() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
@@ -250,6 +251,10 @@ export default function DecisionLogDetail() {
           />
         )}
       </div>
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && decision?.id && (
+        <RecordCustomFields projectId={decision?.project_id} entityType="decision" entityId={decision?.id} screenCode="decision_detail" />
+      )}
     </div>
   )
 }

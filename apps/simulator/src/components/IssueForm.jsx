@@ -231,6 +231,7 @@ export default function IssueForm({
     raised_by_id: '',
     author_id: '',
     due_date: '',
+    estimated_resolution_date: '', // v1340 wave 4
     date_raised: '',
     impact_description: '',
     cause_description: '',
@@ -342,6 +343,7 @@ export default function IssueForm({
           raised_by_id: issue.raised_by_id || issue.reported_by_user_id || '',
           author_id: issue.author_id || '',
           due_date: issue.due_date ? format(new Date(issue.due_date), 'yyyy-MM-dd') : '',
+          estimated_resolution_date: issue.estimated_resolution_date ? String(issue.estimated_resolution_date).slice(0, 10) : '',
           date_raised: issue.date_raised ? format(new Date(issue.date_raised), 'yyyy-MM-dd') : '',
           impact_description: issue.impact_description || '',
           cause_description: issue.cause_description || '',
@@ -650,6 +652,7 @@ export default function IssueForm({
         linked_user_story_ids: formData.user_story_ids,
         linked_kanban_card_ids: formData.kanban_card_ids,
         due_date: formData.due_date || null,
+        estimated_resolution_date: formData.estimated_resolution_date || null,
         status: issue ? issue.status : 'draft',
       }
 
@@ -865,6 +868,19 @@ export default function IssueForm({
                     type="date"
                     name="due_date"
                     value={formData.due_date}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Calendar className="h-4 w-4 inline mr-1" />
+                    Estimated Resolution Date
+                  </label>
+                  <input
+                    type="date"
+                    name="estimated_resolution_date"
+                    value={formData.estimated_resolution_date}
                     onChange={handleChange}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />

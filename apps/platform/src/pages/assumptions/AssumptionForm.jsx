@@ -52,6 +52,7 @@ export default function AssumptionForm() {
   const [impactSeverity, setImpactSeverity] = useState('')
   const [nextReviewDate, setNextReviewDate] = useState('')
   const [notes, setNotes] = useState('')
+  const [impactIfInvalid, setImpactIfInvalid] = useState('') // v1340 wave 4
   const [initialSnapshot, setInitialSnapshot] = useState(null)
 
   const effectiveProjectId = projectId || searchParams.get('projectId')
@@ -80,16 +81,17 @@ export default function AssumptionForm() {
         setImpactSeverity(a?.impact_severity || '')
         setNextReviewDate(a?.next_review_date || '')
         setNotes(a?.notes || '')
+        setImpactIfInvalid(a?.impact_if_invalid || '')
         setInitialSnapshot(JSON.stringify({
           assumptionText: a?.assumption_text, validationStatus: a?.validation_status,
           ownerUserId: a?.owner_user_id, impactSeverity: a?.impact_severity,
-          nextReviewDate: a?.next_review_date, notes: a?.notes,
+          nextReviewDate: a?.next_review_date, notes: a?.notes, impactIfInvalid: a?.impact_if_invalid || '',
         }))
         setLoading(false)
       } else {
         setInitialSnapshot(JSON.stringify({
           assumptionText: '', validationStatus: 'active', ownerUserId: '', impactSeverity: '',
-          nextReviewDate: '', notes: '',
+          nextReviewDate: '', notes: '', impactIfInvalid: '',
         }))
       }
     })()
@@ -98,8 +100,8 @@ export default function AssumptionForm() {
 
   const isDirty = useMemo(() => {
     if (initialSnapshot === null) return false
-    return JSON.stringify({ assumptionText, validationStatus, ownerUserId, impactSeverity, nextReviewDate, notes }) !== initialSnapshot
-  }, [assumptionText, validationStatus, ownerUserId, impactSeverity, nextReviewDate, notes, initialSnapshot])
+    return JSON.stringify({ assumptionText, validationStatus, ownerUserId, impactSeverity, nextReviewDate, notes, impactIfInvalid }) !== initialSnapshot
+  }, [assumptionText, validationStatus, ownerUserId, impactSeverity, nextReviewDate, notes, impactIfInvalid, initialSnapshot])
 
   const { requestNavigation, confirmDiscard } = useUnsavedChangesGuard(
     isDirty,
@@ -117,6 +119,7 @@ export default function AssumptionForm() {
           assumptionText: assumptionText.trim(), validationStatus, ownerUserId: ownerUserId || null,
           impactSeverity: impactSeverity || null, nextReviewDate: nextReviewDate || null,
           notes: notes.trim() || null,
+          impactIfInvalid: impactIfInvalid.trim() || null,
         })
       : await createAssumption({
           projectId: projectId || searchParams.get('projectId'),
@@ -126,6 +129,7 @@ export default function AssumptionForm() {
           impactSeverity: impactSeverity || null,
           nextReviewDate: nextReviewDate || null,
           notes: notes.trim() || null,
+          impactIfInvalid: impactIfInvalid.trim() || null,
         })
     setSaving(false)
     if (!result.success) return
@@ -216,6 +220,17 @@ export default function AssumptionForm() {
               className={inputClass}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Impact if this assumption proves wrong</label>
+          <textarea
+            value={impactIfInvalid}
+            onChange={(e) => setImpactIfInvalid(e.target.value)}
+            rows={2}
+            placeholder="What happens to the project if this turns out to be false"
+            className={inputClass}
+          />
         </div>
 
         <div>

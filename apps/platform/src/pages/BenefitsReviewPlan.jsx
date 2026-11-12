@@ -23,14 +23,7 @@ import BenefitsReviewSchedule from '../components/benefits/BenefitsReviewSchedul
 import DisBenefitsSection from '../components/benefits/DisBenefitsSection';
 import { exportBenefitsReviewPlanToPDF, printBenefitsReviewPlan } from '@nidus/shared/utils/benefitsReviewPlanExport';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
-
-const BRP_VIEW_SECTIONS = [
-  { title: 'Plan', fields: [
-    { key: 'document_ref', label: 'Reference' },
-    { key: 'plan_title', label: 'Title' },
-    { key: 'status', label: 'Status' }
-  ]}
-];
+import { buildBenefitsReviewPlanExportSections, buildBenefitsReviewPlanExportRecord } from '@nidus/shared/utils/benefitsReviewPlanExportSections';
 
 export default function BenefitsReviewPlan() {
   const { projectId, routeKey, loading: projectIdLoading, error: projectIdError } = usePlatformProjectId();
@@ -281,8 +274,8 @@ export default function BenefitsReviewPlan() {
           {!showForm && plan && (
             <div className="flex items-center gap-2">
               <ExportRecordButtons
-                sections={BRP_VIEW_SECTIONS}
-                record={plan}
+                sections={buildBenefitsReviewPlanExportSections(plan, { coverage, resources, reviews, disBenefits })}
+                record={buildBenefitsReviewPlanExportRecord(plan, { coverage, resources, reviews, disBenefits })}
                 baseFilename={`BenefitsReviewPlan_${plan.document_ref || plan.brp_reference || plan.id}`}
               />
               <button

@@ -20,7 +20,7 @@ import BusinessCaseStatusBadge from '../../components/businessCase/BusinessCaseS
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import { resolveInitiationBasePath } from '@nidus/shared/utils/initiationRouteUtils'
 import {
-  BUSINESS_CASE_EXPORT_SECTIONS,
+  buildBusinessCaseExportSections,
   buildBusinessCaseExportRecord,
   businessCaseExportFilename,
 } from '@nidus/shared/utils/businessCaseExportSections'
@@ -149,7 +149,7 @@ export default function BusinessCaseViewPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             <ExportRecordButtons
-              sections={BUSINESS_CASE_EXPORT_SECTIONS}
+              sections={buildBusinessCaseExportSections(businessCase)}
               record={buildBusinessCaseExportRecord(businessCase)}
               baseFilename={businessCaseExportFilename(businessCase)}
             />

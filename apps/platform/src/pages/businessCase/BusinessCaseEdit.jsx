@@ -27,7 +27,7 @@ import InheritedBusinessCaseFields, {
 } from '../../features/local-data-extensions/components/InheritedBusinessCaseFields'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import {
-  BUSINESS_CASE_EXPORT_SECTIONS,
+  buildBusinessCaseExportSections,
   buildBusinessCaseExportRecord,
   businessCaseExportFilename,
 } from '@nidus/shared/utils/businessCaseExportSections'
@@ -219,7 +219,7 @@ export default function BusinessCaseEdit() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordButtons
-              sections={BUSINESS_CASE_EXPORT_SECTIONS}
+              sections={buildBusinessCaseExportSections({ ...businessCase, ...form })}
               record={buildBusinessCaseExportRecord({ ...businessCase, ...form })}
               baseFilename={businessCaseExportFilename(businessCase)}
             />

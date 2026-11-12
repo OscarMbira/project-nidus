@@ -11,7 +11,7 @@ import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { listAllRegistersForAccount, updateRegisterDefinition } from '../../services/localRegisterService'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 
-const SCOPE_LABELS = { pmo: 'PMO', portfolio: 'Portfolio', programme: 'Programme', project: 'Project' }
+const SCOPE_LABELS = { pmo: 'PMO', portfolio: 'Portfolio', programme: 'Programme', project: 'Project', organisation: 'Organisation' }
 
 export default function ManageLocalRegistersPage() {
   const navigate = useNavigate()

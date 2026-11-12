@@ -35,6 +35,7 @@ const FORM_TABS = [
   { value: 'escalation', label: 'Escalation' },
   { value: 'relationships', label: 'Relationships' },
   { value: 'stakeholder', label: 'Requirements & expectations' },
+  { value: 'health', label: 'Relationship health' },
   { value: 'notes', label: 'Notes' },
   { value: 'audit', label: 'Audit details' },
 ]
@@ -75,6 +76,16 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
     interrelationships: '',
     related_engagement_links: '',
     notes: '',
+    // v1340 wave 4: stored columns the form did not show before (optional values saved as null)
+    preferred_meeting_type: null,
+    information_needs: '',
+    information_sensitivity_level: null,
+    trust_level: null,
+    engagement_barriers: '',
+    mitigation_actions: '',
+    engagement_period_start: null,
+    engagement_period_end: null,
+    engagement_status: 'active',
   })
   const [owners, setOwners] = useState([])
   const [formTab, setFormTab] = useState('levels')
@@ -114,6 +125,15 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
         interrelationships: plan.interrelationships || '',
         related_engagement_links: plan.related_engagement_links || '',
         notes: plan.notes || '',
+        preferred_meeting_type: plan.preferred_meeting_type || null,
+        information_needs: plan.information_needs || '',
+        information_sensitivity_level: plan.information_sensitivity_level || null,
+        trust_level: plan.trust_level || null,
+        engagement_barriers: plan.engagement_barriers || '',
+        mitigation_actions: plan.mitigation_actions || '',
+        engagement_period_start: plan.engagement_period_start || null,
+        engagement_period_end: plan.engagement_period_end || null,
+        engagement_status: plan.engagement_status || 'active',
       })
       setIsDirty(false)
     } else if (stakeholderId || projectId) {
@@ -152,6 +172,12 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
     const { name, value } = e.target
     setIsDirty(true)
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  // Optional dates and lists: an empty choice is stored as null, not ''.
+  const setOptional = (name, value) => {
+    setIsDirty(true)
+    setFormData(prev => ({ ...prev, [name]: value || null }))
   }
 
   const handleSubmit = async (e) => {
@@ -312,6 +338,32 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
                 </select>
               </div>
             </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-preferred_meeting_type">Preferred meeting type</label>
+                <select id="engagement-plan-preferred_meeting_type" value={formData.preferred_meeting_type || ''} onChange={(e) => setOptional('preferred_meeting_type', e.target.value)} className={fieldClass}>
+                  <option value="">Not set</option>
+                  <option value="1-on-1">One-to-one</option>
+                  <option value="group">Group meeting</option>
+                  <option value="presentation">Presentation</option>
+                  <option value="workshop">Workshop</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-information_sensitivity_level">Information sensitivity</label>
+                <select id="engagement-plan-information_sensitivity_level" value={formData.information_sensitivity_level || ''} onChange={(e) => setOptional('information_sensitivity_level', e.target.value)} className={fieldClass}>
+                  <option value="">Not set</option>
+                  <option value="public">Public</option>
+                  <option value="internal">Internal</option>
+                  <option value="confidential">Confidential</option>
+                  <option value="restricted">Restricted</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-information_needs">Information needs</label>
+              <textarea id="engagement-plan-information_needs" name="information_needs" value={formData.information_needs} onChange={handleChange} rows={3} placeholder="What this stakeholder needs to know, and when" className={fieldClass} />
+            </div>
           </>
         )}
 
@@ -424,6 +476,47 @@ export default function EngagementPlanForm({ plan, stakeholderId, projectId, sta
               />
             </section>
           </div>
+        )}
+
+        {formTab === 'health' && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-trust_level">Trust level</label>
+                <select id="engagement-plan-trust_level" value={formData.trust_level || ''} onChange={(e) => setOptional('trust_level', e.target.value)} className={fieldClass}>
+                  <option value="">Not set</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                  <option value="building">Building</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_status">Engagement status</label>
+                <select id="engagement-plan-engagement_status" name="engagement_status" value={formData.engagement_status || 'active'} onChange={handleChange} className={fieldClass}>
+                  <option value="active">Active</option>
+                  <option value="on-hold">On hold</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_start">Engagement starts</label>
+                <input id="engagement-plan-engagement_period_start" type="date" value={formData.engagement_period_start || ''} onChange={(e) => setOptional('engagement_period_start', e.target.value)} className={fieldClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_period_end">Engagement ends</label>
+                <input id="engagement-plan-engagement_period_end" type="date" value={formData.engagement_period_end || ''} onChange={(e) => setOptional('engagement_period_end', e.target.value)} className={fieldClass} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-engagement_barriers">Barriers to engagement</label>
+              <textarea id="engagement-plan-engagement_barriers" name="engagement_barriers" value={formData.engagement_barriers} onChange={handleChange} rows={3} placeholder="What makes engaging this stakeholder difficult" className={fieldClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" htmlFor="engagement-plan-mitigation_actions">Actions to overcome the barriers</label>
+              <textarea id="engagement-plan-mitigation_actions" name="mitigation_actions" value={formData.mitigation_actions} onChange={handleChange} rows={3} placeholder="What the project will do about each barrier" className={fieldClass} />
+            </div>
+          </>
         )}
 
         {formTab === 'notes' && (

@@ -20,6 +20,12 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import TableListInput from '@nidus/ui/TableListInput'
+
+const KEY_MILESTONE_COLUMNS = [
+  { key: 'milestone', label: 'Milestone' },
+  { key: 'target_date', label: 'Target Date' },
+]
 
 const RISK_COLORS = {
   low: 'text-green-600 dark:text-green-400',
@@ -210,7 +216,18 @@ export default function BusinessCaseViewComponent({
           <Field label="Planned End Date" value={businessCase.end_date} />
         </div>
         <Field label="Timescale Description" value={businessCase.timescale_description} multiline />
-        <Field label="Key Milestones" value={businessCase.key_milestones} multiline />
+        {businessCase.key_milestones ? (
+          <div className="mb-3">
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Key Milestones</p>
+            <TableListInput
+              viewModeId="bc-key-milestones-view"
+              columns={KEY_MILESTONE_COLUMNS}
+              value={businessCase.key_milestones}
+              ariaLabelPrefix="milestone"
+              disabled
+            />
+          </div>
+        ) : null}
       </Section>
 
       {/* Section 7 & 8: Costs & Investment Appraisal */}

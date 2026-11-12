@@ -14,6 +14,12 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import TableListInput from '@nidus/ui/TableListInput'
+
+const KEY_MILESTONE_COLUMNS = [
+  { key: 'milestone', label: 'Milestone' },
+  { key: 'target_date', label: 'Target Date' },
+]
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -207,14 +213,12 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
           </div>
           <div>
             <label className={labelClass}>Key Milestones</label>
-            <MultiLineListInput
+            <TableListInput
               viewModeId="bc-key-milestones"
-              id="bc_key_milestones"
+              columns={KEY_MILESTONE_COLUMNS}
               value={data.key_milestones || ''}
               onChange={(next) => setListField('key_milestones', next)}
-              placeholder="Add a milestone with target date…"
               ariaLabelPrefix="milestone"
-              itemColumnLabel="Milestone"
             />
           </div>
         </div>

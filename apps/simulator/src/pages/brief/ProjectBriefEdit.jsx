@@ -12,33 +12,16 @@ import { ArrowLeft, Save, Send } from 'lucide-react'
 import { getBriefByProject, updateBrief, canEdit } from '../../services/projectBriefService'
 import { submitForApproval } from '../../services/briefApprovalService'
 import ProjectBriefForm from '../../components/brief/ProjectBriefForm'
+import { useBriefExportChildren } from '../../lib/useBriefExportChildren'
 import BriefCompletionProgress from '../../components/brief/BriefCompletionProgress'
 import QualityCriteriaChecklist from '../../components/brief/QualityCriteriaChecklist'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { buildBriefExportSections, buildBriefExportRecord } from '@nidus/shared/utils/briefExportSections'
 import {
   resolveBriefCharterMode,
   briefCharterLabels,
   briefCharterDocPath,
 } from '@nidus/shared/utils/briefCharterTerminology.js'
-
-const BRIEF_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'brief_reference', label: 'Reference' },
-    { key: 'version_number', label: 'Version' },
-    { key: 'document_status', label: 'Status' },
-  ]},
-  { title: 'Background', fields: [{ key: 'background', label: 'Background' }] },
-  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Project Objectives' }] },
-  { title: 'Scope', fields: [
-    { key: 'project_scope', label: 'Project Scope' },
-    { key: 'scope_exclusions', label: 'Scope Exclusions' },
-  ]},
-  { title: 'Business Case', fields: [
-    { key: 'outline_business_case_summary', label: 'Outline Business Case Summary' },
-    { key: 'business_option_selected', label: 'Business Option Selected' },
-    { key: 'dis_benefits_description', label: 'Dis-benefits' },
-  ]},
-]
 
 export default function ProjectBriefEdit() {
   const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
@@ -48,6 +31,7 @@ export default function ProjectBriefEdit() {
   const labels = briefCharterLabels(mode)
   const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode)
   const [brief, setBrief] = useState(null)
+  const briefExportChildren = useBriefExportChildren(brief?.id)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})
@@ -195,8 +179,8 @@ export default function ProjectBriefEdit() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordButtons
-              sections={BRIEF_EXPORT_SECTIONS}
-              record={brief}
+              sections={buildBriefExportSections(brief, briefExportChildren)}
+              record={buildBriefExportRecord(brief, briefExportChildren)}
               baseFilename={`${labels.singular}_${brief.brief_reference || 'Draft'}`}
             />
           </div>

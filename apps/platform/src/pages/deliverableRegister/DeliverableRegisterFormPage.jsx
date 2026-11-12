@@ -27,6 +27,7 @@ const STATUS_LABELS = {
   rework: 'Rework / Rejected',
 }
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function DeliverableRegisterFormPage({ mode: modeProp }) {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -209,6 +210,10 @@ export default function DeliverableRegisterFormPage({ mode: modeProp }) {
             </AuditDetailsPanel>
           )}
         </div>
+      )}
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && record?.id && (
+        <RecordCustomFields projectId={record?.project_id} entityType="deliverable" entityId={record?.id} screenCode="deliverable_detail" />
       )}
     </div>
   )

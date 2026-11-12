@@ -29,7 +29,7 @@ import { getOrCreateIssueRegister } from './issueRegisterService'
 
 const SELECT_COLUMNS = `
   id, project_id, assumption_code, assumption_description, status, validation_notes,
-  owner_user_id, impact_severity, next_review_date, converted_to_risk_id, converted_to_issue_id,
+  owner_user_id, impact_severity, next_review_date, impact_if_invalid, converted_to_risk_id, converted_to_issue_id,
   created_at, created_by, updated_at, updated_by,
   owner:owner_user_id (id, full_name, email),
   created_by_user:created_by (id, full_name, email),
@@ -140,6 +140,7 @@ export async function createAssumption(params) {
         next_review_date: params.nextReviewDate || null,
         identified_by_user_id: currentUserId,
         validation_notes: params.notes || null,
+        impact_if_invalid: params.impactIfInvalid || null,
         created_by: currentUserId,
         updated_by: currentUserId,
       })
@@ -182,6 +183,7 @@ export async function updateAssumption(assumptionId, updates) {
     if (updates.impactSeverity !== undefined) patch.impact_severity = updates.impactSeverity || null
     if (updates.nextReviewDate !== undefined) patch.next_review_date = updates.nextReviewDate || null
     if (updates.notes !== undefined) patch.validation_notes = updates.notes
+    if (updates.impactIfInvalid !== undefined) patch.impact_if_invalid = updates.impactIfInvalid || null
     if (updates.convertedToRiskId !== undefined) patch.converted_to_risk_id = updates.convertedToRiskId
     if (updates.convertedToIssueId !== undefined) patch.converted_to_issue_id = updates.convertedToIssueId
 

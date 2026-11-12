@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react'
-import { getMandateByIdOrReference, updateMandate } from '../../services/projectMandateService'
+import { getMandateByIdOrReference, updateMandate, getDependencies, addDependency, updateDependency, deleteDependency } from '../../services/projectMandateService'
+import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
+
+// v1340 wave 4 follow-up (SQL v1447): mandate_dependencies, saved row by row.
+const DEPENDENCY_SERVICE = { list: getDependencies, add: addDependency, update: updateDependency, remove: deleteDependency }
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import { HoldButton } from '../../components/shared-app/HoldButton'
 import { AutoSaveIndicator } from '@nidus/ui/AutoSaveIndicator'
@@ -15,21 +19,7 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
-
-const MANDATE_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'mandate_reference', label: 'Reference' },
-    { key: 'mandate_title', label: 'Title' },
-    { key: 'document_status', label: 'Status' },
-  ]},
-  { title: 'Scope', fields: [{ key: 'scope', label: 'Scope' }] },
-  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Objectives' }] },
-  { title: 'Constraints', fields: [{ key: 'constraints', label: 'Constraints' }] },
-  { title: 'Proposed Roles', fields: [
-    { key: 'proposed_executive_name', label: 'Proposed Executive' },
-    { key: 'proposed_pm_name', label: 'Proposed PM' },
-  ]},
-]
+import { buildMandateExportSections, buildMandateExportRecord } from '@nidus/shared/utils/mandateExportSections'
 
 function toMultiline(value) {
   if (!value) return ''
@@ -314,8 +304,8 @@ export default function ProjectMandateEdit() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordMenu
-              sections={MANDATE_EXPORT_SECTIONS}
-              record={formData}
+              sections={buildMandateExportSections(formData)}
+              record={buildMandateExportRecord(formData)}
               baseFilename={`Mandate_${formData.mandate_reference || mandateRef || 'Draft'}`}
             />
           </div>
@@ -552,6 +542,12 @@ export default function ProjectMandateEdit() {
             </button>
           </div>
         </form>
+      )}
+
+      {activeTab === 'details' && (
+        <div className="mt-6">
+          <MandateDependenciesSection mandateId={internalMandateId} viewModeId="mandate-dependencies-edit" service={DEPENDENCY_SERVICE} />
+        </div>
       )}
     </div>
   )

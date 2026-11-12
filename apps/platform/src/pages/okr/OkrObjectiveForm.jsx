@@ -4,6 +4,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { platformDb } from '@nidus/supabase'
+import { DetailAuditTabList, RecordAuditDetails } from '@nidus/ui'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -32,6 +34,9 @@ export default function OkrObjectiveForm({ sim = false }) {
   const [healthStatus, setHealthStatus] = useState('on_track')
   const [progressPct, setProgressPct] = useState(0)
   const [initialSnapshot, setInitialSnapshot] = useState(null)
+  // v1340 (rule 63.1): Details / Audit details tabs.
+  const [record, setRecord] = useState(null)
+  const [tab, setTab] = useState('details')
 
   useEffect(() => {
     let cancelled = false
@@ -51,6 +56,7 @@ export default function OkrObjectiveForm({ sim = false }) {
 
       const record = await getObjective(objectiveId, { sim })
       if (cancelled || !record) return
+      setRecord(record)
       setCycleId(record.cycle_id || '')
       setTitle(record.objective_title || '')
       setDescription(record.objective_description || '')
@@ -125,6 +131,18 @@ export default function OkrObjectiveForm({ sim = false }) {
 
       {error && <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">{error}</div>}
 
+      <DetailAuditTabList activeTab={tab} onChange={setTab} />
+      {tab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <RecordAuditDetails
+                db={platformDb}
+                record={record}
+                noun="objective"
+                identity={[{ label: 'Objective', value: record?.objective_title }]}
+                classification={[{ label: 'Scope', value: record?.scope_level }, { label: 'Health', value: record?.health_status }, { label: 'Progress %', value: record?.progress_pct }]}
+          />
+        </div>
+      ) : (<>
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cycle *</label>
@@ -184,6 +202,7 @@ export default function OkrObjectiveForm({ sim = false }) {
           Cancel
         </button>
       </div>
+      </>)}
       {modal}
     </div>
   )

@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, GraduationCap, Award, Rocket } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import { getSimMandateById, getSimDeliverables, getSimStakeholders, getSimMandateProgress, canCreatePracticeProject, createPracticeProjectFromMandate, getPracticeProjectsFromMandate } from '../../services/simulatorMandateService'
+import { getSimMandateById, getSimDeliverables, getSimStakeholders, getSimMandateProgress, canCreatePracticeProject, createPracticeProjectFromMandate, getPracticeProjectsFromMandate, getSimDependencies, addSimDependency, updateSimDependency, deleteSimDependency } from '../../services/simulatorMandateService'
+import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
+
+// v1340 wave 4 follow-up (SQL v1447): practice mandate dependencies, saved row by row.
+const DEPENDENCY_SERVICE = { list: getSimDependencies, add: addSimDependency, update: updateSimDependency, remove: deleteSimDependency }
 import { getSimConstraintsByMandate } from '../../services/simMandateConstraintService'
 import ConstraintSelector from '../../components/constraints/ConstraintSelector'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
@@ -389,6 +393,13 @@ export default function SimMandateView() {
             </ul>
           </div>
         )}
+
+        <MandateDependenciesSection
+          mandateId={mandateId}
+          readOnly={['approved', 'archived'].includes(mandate.document_status)}
+          viewModeId="sim-mandate-dependencies"
+          service={DEPENDENCY_SERVICE}
+        />
       </div>
       </>
       )}

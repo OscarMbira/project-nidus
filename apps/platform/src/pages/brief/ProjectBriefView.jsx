@@ -12,6 +12,7 @@ import { platformProjectPath } from '@nidus/shared/utils/projectRouteParam.js'
 import { getBriefByProject } from '../../services/projectBriefService'
 import BriefHeader from '../../components/brief/BriefHeader'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { buildBriefExportSections, buildBriefExportRecord } from '@nidus/shared/utils/briefExportSections'
 import {
   resolveBriefCharterMode,
   briefCharterLabels,
@@ -19,27 +20,8 @@ import {
   resolveProjectWorkspaceBasePath,
 } from '@nidus/shared/utils/briefCharterTerminology.js'
 
-const BRIEF_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'brief_reference', label: 'Reference' },
-    { key: 'document_ref', label: 'Document Ref' },
-    { key: 'version_number', label: 'Version' },
-    { key: 'document_status', label: 'Status' },
-    { key: 'created_date', label: 'Created' }
-  ]},
-  { title: 'Background', fields: [{ key: 'background', label: 'Background' }] },
-  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Project Objectives' }] },
-  { title: 'Scope', fields: [
-    { key: 'project_scope', label: 'Project Scope' },
-    { key: 'scope_exclusions', label: 'Scope Exclusions' }
-  ]},
-  { title: 'Business Case', fields: [
-    { key: 'outline_business_case_summary', label: 'Outline Business Case Summary' },
-    { key: 'business_option_selected', label: 'Business Option Selected' },
-    { key: 'dis_benefits_description', label: 'Dis-benefits' }
-  ]}
-]
 import ProjectBriefForm from '../../components/brief/ProjectBriefForm'
+import { useBriefExportChildren } from '../../lib/useBriefExportChildren'
 import BriefApprovals from '../../components/brief/BriefApprovals'
 import BriefRevisionHistory from '../../components/brief/BriefRevisionHistory'
 import BriefDistribution from '../../components/brief/BriefDistribution'
@@ -56,6 +38,7 @@ export default function ProjectBriefView() {
   const basePath = resolveProjectWorkspaceBasePath(location.pathname)
   const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode, basePath)
   const [brief, setBrief] = useState(null)
+  const briefExportChildren = useBriefExportChildren(brief?.id)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -139,8 +122,8 @@ export default function ProjectBriefView() {
         </button>
         <div className="flex flex-wrap gap-2 items-center">
           <ExportRecordButtons
-            sections={BRIEF_EXPORT_SECTIONS}
-            record={brief}
+            sections={buildBriefExportSections(brief, briefExportChildren)}
+            record={buildBriefExportRecord(brief, briefExportChildren)}
             baseFilename={`${labels.singular}_${brief.brief_reference || brief.id}`}
           />
           {canEdit && (

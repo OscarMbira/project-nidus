@@ -20,6 +20,7 @@ const CATEGORY_LABELS = {
 }
 const IMPACT_LABELS = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' }
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function ConstraintDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -129,6 +130,10 @@ export default function ConstraintDetailPage() {
             <AuditTimestampPair dateLabel="Updated at" value={constraint.updated_at} />
           </AuditCard>
         </AuditDetailsPanel>
+      )}
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && constraint?.id && (
+        <RecordCustomFields projectId={constraint?.project_id} entityType="constraint" entityId={constraint?.id} screenCode="constraint_detail" />
       )}
     </div>
   )

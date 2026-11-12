@@ -14,6 +14,7 @@ import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 import SelectField from '@nidus/ui/SelectField'
+import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 import ExportRecordMenu from '@nidus/ui/ExportRecordMenu'
 import { RowActionButton } from '@nidus/ui'
 
@@ -63,7 +64,15 @@ const CLOSURE_EXPORT_SECTIONS = [
   },
   {
     title: 'Financial closure',
-    fields: [{ key: 'financial_closure_summary', label: 'Financial Closure Summary' }],
+    fields: [{ key: 'financial_closure_summary', label: 'Financial Closure Summary' },
+      { key: 'final_budget', label: 'Final Budget' },
+      { key: 'final_actual_cost', label: 'Final Actual Cost' },
+      { key: 'final_cost_variance', label: 'Final Cost Variance' },
+      { key: 'financial_accounts_closed', label: 'Financial Accounts Closed' },
+      { key: 'financial_closure_date', label: 'Financial Closure Date' },
+      { key: 'all_documentation_archived', label: 'All Documentation Archived' },
+      { key: 'documentation_archive_location', label: 'Documentation Archive Location' },
+      { key: 'documentation_retention_period', label: 'Documentation Retention Period' }],
   },
   {
     title: 'Resources & Stakeholders',
@@ -226,6 +235,21 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
     stakeholder_acceptance: closure?.stakeholder_acceptance || 'pending',
     benefits_transition_status: closure?.benefits_transition_status || 'not_started',
     checklist_completion_percentage: closure?.checklist_completion_percentage || 0,
+    // v1340 wave 4: stored columns the form did not show before
+    project_success_rating: closure?.project_success_rating ?? '',
+    benefits_realized: !!closure?.benefits_realized,
+    final_budget: closure?.final_budget ?? null,
+    final_actual_cost: closure?.final_actual_cost ?? null,
+    financial_accounts_closed: !!closure?.financial_accounts_closed,
+    financial_closure_date: closure?.financial_closure_date || '',
+    resources_released: !!closure?.resources_released,
+    resources_release_date: closure?.resources_release_date || '',
+    outstanding_resource_commitments: closure?.outstanding_resource_commitments || '',
+    all_documentation_archived: !!closure?.all_documentation_archived,
+    documentation_archive_location: closure?.documentation_archive_location || '',
+    documentation_retention_period: closure?.documentation_retention_period || '',
+    closure_document_url: closure?.closure_document_url || '',
+    special_considerations: closure?.special_considerations || '',
     final_approval_date: closure?.final_approval_date || '',
     project_board_id: closure?.project_board_id || '',
     prepared_by: closure?.prepared_by || '',
@@ -317,6 +341,23 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
         stakeholder_acceptance: formData.stakeholder_acceptance,
         benefits_transition_status: formData.benefits_transition_status,
         checklist_completion_percentage: formData.checklist_completion_percentage,
+        project_success_rating: formData.project_success_rating === '' ? null : Number(formData.project_success_rating),
+        benefits_realized: formData.benefits_realized,
+        final_budget: formData.final_budget ?? null,
+        final_actual_cost: formData.final_actual_cost ?? null,
+        final_cost_variance: formData.final_budget != null && formData.final_actual_cost != null
+          ? Number(formData.final_budget) - Number(formData.final_actual_cost)
+          : null,
+        financial_accounts_closed: formData.financial_accounts_closed,
+        financial_closure_date: formData.financial_closure_date || null,
+        resources_released: formData.resources_released,
+        resources_release_date: formData.resources_release_date || null,
+        outstanding_resource_commitments: formData.outstanding_resource_commitments || null,
+        all_documentation_archived: formData.all_documentation_archived,
+        documentation_archive_location: formData.documentation_archive_location || null,
+        documentation_retention_period: formData.documentation_retention_period || null,
+        closure_document_url: formData.closure_document_url || null,
+        special_considerations: formData.special_considerations || null,
         final_approval_date: formData.final_approval_date || null,
         project_board_id: formData.project_board_id || null,
         prepared_by: formData.prepared_by || null,
@@ -351,6 +392,7 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
     { id: 'benefits', label: 'Benefits', icon: Target },
     { id: 'financial-closure', label: 'Financial closure', icon: Target },
     { id: 'resources', label: 'Resources & Stakeholders', icon: Users },
+    { id: 'documentation', label: 'Documentation', icon: FileText },
     { id: 'prepared-by', label: 'Prepared by', icon: Users },
     { id: 'approval', label: 'Approval', icon: CheckCircle },
     { id: 'final-acceptance', label: 'Final acceptance', icon: CheckCircle }
@@ -476,6 +518,21 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
       case 'summary':
         return (
           <div className="space-y-6">
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Project Success Rating</label>
+              <select
+                value={formData.project_success_rating}
+                onChange={(e) => setFormData({ ...formData, project_success_rating: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Not rated</option>
+                <option value="1">1 – Unsuccessful</option>
+                <option value="2">2 – Partly successful</option>
+                <option value="3">3 – Successful</option>
+                <option value="4">4 – Very successful</option>
+                <option value="5">5 – Outstanding</option>
+              </select>
+            </div>
             <ClosureListField
               label="Performance Summary"
               required
@@ -523,6 +580,16 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </p>
             </div>
 
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={!!formData.benefits_realized}
+                onChange={(e) => setFormData({ ...formData, benefits_realized: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
+              />
+              Expected benefits have been realised (or their measurement is handed over)
+            </label>
+
             <ClosureListField
               label="Benefits Realization Summary"
               required
@@ -561,6 +628,54 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               placeholder="A budget, cost, or sign-off point"
               itemColumnLabel="Point"
             />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Final Budget</label>
+                <SmartAmountInput
+                  value={formData.final_budget}
+                  onChange={(final_budget) => setFormData({ ...formData, final_budget })}
+                  placeholder="e.g. 250k"
+                  min={0}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Final Actual Cost</label>
+                <SmartAmountInput
+                  value={formData.final_actual_cost}
+                  onChange={(final_actual_cost) => setFormData({ ...formData, final_actual_cost })}
+                  placeholder="e.g. 240k"
+                  min={0}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Cost Variance (budget − actual)</label>
+                <p className="px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                  {formData.final_budget != null && formData.final_actual_cost != null
+                    ? (Number(formData.final_budget) - Number(formData.final_actual_cost)).toLocaleString(undefined, { maximumFractionDigits: 2 })
+                    : '—'}
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={!!formData.financial_accounts_closed}
+                onChange={(e) => setFormData({ ...formData, financial_accounts_closed: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
+              />
+              Project cost codes and accounts are closed
+            </label>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Financial Closure Date</label>
+                <input
+                  type="date"
+                  value={formData.financial_closure_date}
+                  onChange={(e) => setFormData({ ...formData, financial_closure_date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
           </div>
         );
 
@@ -624,6 +739,37 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={!!formData.resources_released}
+                onChange={(e) => setFormData({ ...formData, resources_released: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
+              />
+              All project resources have been released
+            </label>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Resources Release Date</label>
+                <input
+                  type="date"
+                  value={formData.resources_release_date}
+                  onChange={(e) => setFormData({ ...formData, resources_release_date: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Outstanding Resource Commitments</label>
+              <textarea
+                rows={3}
+                value={formData.outstanding_resource_commitments}
+                onChange={(e) => setFormData({ ...formData, outstanding_resource_commitments: e.target.value })}
+                placeholder="People, equipment or contracts still committed after closure"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+
             <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-300 mb-2">
                 Resource Release Checklist
@@ -636,6 +782,63 @@ export default function ProjectClosureForm({ projectId, closure, onClose, onSucc
                 <li>Software licenses deprovisioned</li>
                 <li>Access rights revoked</li>
               </ul>
+            </div>
+          </div>
+        );
+
+      case 'documentation':
+        return (
+          <div className="space-y-6">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={!!formData.all_documentation_archived}
+                onChange={(e) => setFormData({ ...formData, all_documentation_archived: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-blue-600"
+              />
+              All project documentation has been archived
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Archive Location</label>
+                <input
+                  type="text"
+                  value={formData.documentation_archive_location}
+                  onChange={(e) => setFormData({ ...formData, documentation_archive_location: e.target.value })}
+                  placeholder="Where the project records are kept"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Retention Period</label>
+                <input
+                  type="text"
+                  value={formData.documentation_retention_period}
+                  onChange={(e) => setFormData({ ...formData, documentation_retention_period: e.target.value })}
+                  placeholder="e.g. 7 years"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Closure Document Link</label>
+              <input
+                type="url"
+                value={formData.closure_document_url}
+                onChange={(e) => setFormData({ ...formData, closure_document_url: e.target.value })}
+                placeholder="https://"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Special Considerations</label>
+              <textarea
+                rows={3}
+                value={formData.special_considerations}
+                onChange={(e) => setFormData({ ...formData, special_considerations: e.target.value })}
+                placeholder="Anything the operations or support teams must know after closure"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
             </div>
           </div>
         );

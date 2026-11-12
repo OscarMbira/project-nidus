@@ -8,6 +8,7 @@ import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.j
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import { platformDb } from '@nidus/supabase'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import { DetailAuditTabList, RecordAuditDetails } from '@nidus/ui'
 import { listWbsNodes, saveWbsNode, softDeleteWbsNode } from '../../services/wbsNodeService'
 import WBSTreeView from '../../components/scope/WBSTreeView'
 import WBSNodeForm from '../../components/scope/WBSNodeForm'
@@ -49,6 +50,9 @@ export default function WBSBuilder() {
   const [caFormOpen, setCaFormOpen] = useState(false)
   const [caEditId, setCaEditId] = useState(null)
   const [caForm, setCaForm] = useState(CA_EMPTY)
+  // v1340 (rule 63.1): Details / Audit details tabs on the control account form.
+  const [caRecord, setCaRecord] = useState(null)
+  const [caTab, setCaTab] = useState('details')
 
   const projectSuffix = routeKey ? `?projectId=${encodeURIComponent(routeKey)}` : ''
 
@@ -160,7 +164,7 @@ export default function WBSBuilder() {
         {canEdit && tab === 'control_accounts' && (
           <button
             type="button"
-            onClick={() => { setCaEditId(null); setCaForm(CA_EMPTY); setCaFormOpen(true) }}
+            onClick={() => { setCaEditId(null); setCaRecord(null); setCaTab('details'); setCaForm(CA_EMPTY); setCaFormOpen(true) }}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white"
           >
             Add control account
@@ -270,6 +274,8 @@ export default function WBSBuilder() {
                       <>
                         <button type="button" className="text-amber-600" onClick={() => {
                           setCaEditId(a.id)
+                          setCaRecord(a)
+                          setCaTab('details')
                           setCaForm({
                             name: a.name || '',
                             code: a.code || '',
@@ -315,6 +321,16 @@ export default function WBSBuilder() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <form onSubmit={saveCa} className="w-full max-w-md rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 space-y-3">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{caEditId ? 'Edit control account' : 'New control account'}</h2>
+            <DetailAuditTabList activeTab={caTab} onChange={setCaTab} />
+            {caTab === 'audit' ? (
+              <RecordAuditDetails
+                db={platformDb}
+                record={caRecord}
+                noun="control account"
+                identity={[{ label: 'Reference', value: caRecord?.display_id }, { label: 'Name', value: caRecord?.name }, { label: 'Code', value: caRecord?.code }]}
+                classification={[{ label: 'Status', value: caRecord?.status }, { label: 'Budget', value: caRecord?.budget_amount }, { label: 'Currency', value: caRecord?.currency_code }]}
+              />
+            ) : (<>
             <label className="block text-xs">Name
               <input required value={caForm.name} onChange={(e) => setCaForm((f) => ({ ...f, name: e.target.value }))}
                 className="mt-1 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2" />
@@ -351,6 +367,12 @@ export default function WBSBuilder() {
               <button type="button" onClick={() => setCaFormOpen(false)} className="px-3 py-2 text-sm rounded border">Cancel</button>
               <button type="submit" className="px-3 py-2 text-sm rounded bg-blue-600 text-white">Save</button>
             </div>
+            </>)}
+            {caTab === 'audit' && (
+              <div className="flex justify-end">
+                <button type="button" onClick={() => setCaFormOpen(false)} className="px-3 py-2 text-sm rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200">Close</button>
+              </div>
+            )}
           </form>
         </div>
       )}

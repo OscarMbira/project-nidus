@@ -16,6 +16,7 @@ import { platformDb } from '@nidus/supabase'
 import { getBenefit } from '../../services/benefitsService'
 import BenefitForm from '../../components/benefits/BenefitForm'
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function BenefitDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -173,6 +174,10 @@ export default function BenefitDetailPage() {
           )}
         </div>
       </div>
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && benefit?.id && (
+        <RecordCustomFields projectId={benefit?.project_id} entityType="benefit" entityId={benefit?.id} screenCode="benefit_detail" />
+      )}
     </div>
   )
 }

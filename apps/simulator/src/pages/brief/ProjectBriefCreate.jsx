@@ -13,30 +13,12 @@ import { validateCompleteness } from '../../services/briefValidationService'
 import ProjectBriefForm from '../../components/brief/ProjectBriefForm'
 import QualityCriteriaChecklist from '../../components/brief/QualityCriteriaChecklist'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { buildBriefExportSections, buildBriefExportRecord } from '@nidus/shared/utils/briefExportSections'
 import {
   resolveBriefCharterMode,
   briefCharterLabels,
   briefCharterDocPath,
 } from '@nidus/shared/utils/briefCharterTerminology.js'
-
-const BRIEF_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'brief_reference', label: 'Reference' },
-    { key: 'version_number', label: 'Version' },
-    { key: 'document_status', label: 'Status' },
-  ]},
-  { title: 'Background', fields: [{ key: 'background', label: 'Background' }] },
-  { title: 'Objectives', fields: [{ key: 'project_objectives', label: 'Project Objectives' }] },
-  { title: 'Scope', fields: [
-    { key: 'project_scope', label: 'Project Scope' },
-    { key: 'scope_exclusions', label: 'Scope Exclusions' },
-  ]},
-  { title: 'Business Case', fields: [
-    { key: 'outline_business_case_summary', label: 'Outline Business Case Summary' },
-    { key: 'business_option_selected', label: 'Business Option Selected' },
-    { key: 'dis_benefits_description', label: 'Dis-benefits' },
-  ]},
-]
 
 export default function ProjectBriefCreate() {
   const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
@@ -268,8 +250,8 @@ export default function ProjectBriefCreate() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordButtons
-              sections={BRIEF_EXPORT_SECTIONS}
-              record={formData}
+              sections={buildBriefExportSections(formData)}
+              record={buildBriefExportRecord(formData)}
               baseFilename={`${labels.singular}_${formData.brief_reference || 'Draft'}`}
             />
           </div>

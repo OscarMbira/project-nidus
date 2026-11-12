@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
-import { RowActionButton } from '@nidus/ui'
+import { RowActionButton, DetailAuditTabList, RecordAuditDetails } from '@nidus/ui'
 import SelectField from '@nidus/ui/SelectField'
 import MultiLineListInput, { parseMultiLineValue } from '@nidus/ui/MultiLineListInput'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
@@ -67,6 +67,9 @@ export default function ProjectContactsPage() {
   const [exportOpen, setExportOpen] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
+  // v1340 (rule 63.1): Details / Audit details tabs on the contact form.
+  const [editingRecord, setEditingRecord] = useState(null)
+  const [formTab, setFormTab] = useState('details')
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [roleOptions, setRoleOptions] = useState([])
@@ -136,9 +139,11 @@ export default function ProjectContactsPage() {
     )
   }, [contacts, search])
 
-  const openCreate = () => { setEditingId(null); setForm(EMPTY_FORM); setFormOpen(true) }
+  const openCreate = () => { setEditingId(null); setEditingRecord(null); setFormTab('details'); setForm(EMPTY_FORM); setFormOpen(true) }
   const openEdit = (c) => {
     setEditingId(c.id)
+    setEditingRecord(c)
+    setFormTab('details')
     setForm({
       contact_name: c.contact_name || '',
       role_title: c.role_title || '',
@@ -304,6 +309,22 @@ export default function ProjectContactsPage() {
         </div>
 
         {formOpen && (
+          <div className="mb-2">
+            <DetailAuditTabList activeTab={formTab} onChange={setFormTab} />
+          </div>
+        )}
+        {formOpen && formTab === 'audit' && (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <RecordAuditDetails
+              db={platformDb}
+              record={editingRecord}
+              noun="contact"
+              identity={[{ label: 'Name', value: editingRecord?.contact_name }, { label: 'Role / title', value: editingRecord?.role_title }, { label: 'Organisation', value: editingRecord?.organisation }]}
+              classification={[{ label: 'Contact type', value: editingRecord?.contact_type }]}
+            />
+          </div>
+        )}
+        {formOpen && formTab === 'details' && (
           <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <input placeholder="Name *" value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })}
               className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />

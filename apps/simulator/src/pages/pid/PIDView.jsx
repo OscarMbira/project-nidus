@@ -22,20 +22,13 @@ import ReportingArrangementsSection from '../../components/pid/ReportingArrangem
 import PIDExportMenu from '../../components/pid/PIDExportMenu'
 import PIDForm from '../../components/pid/PIDForm'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { buildPidExportSections, buildPidExportRecord } from '@nidus/shared/utils/pidExportSections'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel'
 import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
-
-const PID_EXPORT_SECTIONS = [
-  { title: 'Basic Information', fields: [
-    { key: 'pid_reference', label: 'Reference' },
-    { key: 'pid_title', label: 'Title' },
-    { key: 'status', label: 'Status' }
-  ]}
-]
 
 export default function PIDView() {
   const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
@@ -52,6 +45,7 @@ export default function PIDView() {
   const [activeTab, setActiveTab] = useState('overview')
   const [editing, setEditing] = useState(false)
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const pidExportChildren = { objectives, interfaces, dependencies, teamMembers, tolerances, reportingArrangements }
 
   useEffect(() => {
     if (projectLoading) return
@@ -185,8 +179,8 @@ export default function PIDView() {
           <div className="flex flex-wrap items-center gap-3">
             {pid && (
               <ExportRecordButtons
-                sections={PID_EXPORT_SECTIONS}
-                record={{ ...pid, title: pid.pid_title }}
+                sections={buildPidExportSections(pid, pidExportChildren)}
+                record={buildPidExportRecord(pid, pidExportChildren)}
                 baseFilename={`PID_${pid.pid_reference || pid.id}`}
               />
             )}

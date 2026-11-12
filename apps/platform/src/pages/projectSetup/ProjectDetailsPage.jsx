@@ -25,11 +25,11 @@ const PROJECT_DETAILS_EXPORT_SECTIONS = [
   {
     title: 'Identity',
     fields: [
-      { key: 'project_code', label: 'Project code' },
-      { key: 'project_name', label: 'Project name' },
-      { key: 'status_name', label: 'Status' },
-      { key: 'industry_name', label: 'Industries' },
-      { key: 'budget_currency', label: 'Currency' },
+      { key: 'project_code', label: 'Project code', fact: true },
+      { key: 'project_name', label: 'Project name', fact: true },
+      { key: 'status_name', label: 'Status', fact: true },
+      { key: 'industry_name', label: 'Industries', fact: true },
+      { key: 'budget_currency', label: 'Currency', fact: true },
     ],
   },
   {
@@ -46,9 +46,9 @@ const PROJECT_DETAILS_EXPORT_SECTIONS = [
   {
     title: 'Classification',
     fields: [
-      { key: 'project_classification', label: 'Classification' },
-      { key: 'delivery_methodology', label: 'Methodology' },
-      { key: 'billing_type', label: 'Billing Type' },
+      { key: 'project_classification', label: 'Classification', fact: true },
+      { key: 'delivery_methodology', label: 'Methodology', fact: true },
+      { key: 'billing_type', label: 'Billing Type', fact: true },
     ],
   },
 ]

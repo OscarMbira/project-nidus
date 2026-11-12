@@ -4,6 +4,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
+import { platformDb } from '@nidus/supabase'
+import { DetailAuditTabList, RecordAuditDetails } from '@nidus/ui'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -31,6 +33,9 @@ export default function OkrCycleForm({ sim = false }) {
   const [endDate, setEndDate] = useState('')
   const [status, setStatus] = useState('active')
   const [initialSnapshot, setInitialSnapshot] = useState(null)
+  // v1340 (rule 63.1): Details / Audit details tabs.
+  const [record, setRecord] = useState(null)
+  const [tab, setTab] = useState('details')
 
   useEffect(() => {
     let cancelled = false
@@ -42,6 +47,7 @@ export default function OkrCycleForm({ sim = false }) {
       setLoading(true)
       const record = await getCycle(cycleId, { sim })
       if (cancelled || !record) return
+      setRecord(record)
       setCycleName(record.cycle_name || '')
       setCycleCode(record.cycle_code || '')
       setPeriodType(record.period_type || 'quarter')
@@ -115,6 +121,18 @@ export default function OkrCycleForm({ sim = false }) {
 
       {error && <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm">{error}</div>}
 
+      <DetailAuditTabList activeTab={tab} onChange={setTab} />
+      {tab === 'audit' ? (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+          <RecordAuditDetails
+                db={platformDb}
+                record={record}
+                noun="OKR cycle"
+                identity={[{ label: 'Cycle name', value: record?.cycle_name }, { label: 'Start', value: record?.start_date }, { label: 'End', value: record?.end_date }]}
+                classification={[{ label: 'Status', value: record?.status }]}
+          />
+        </div>
+      ) : (<>
       <div className="space-y-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cycle name *</label>
@@ -168,6 +186,7 @@ export default function OkrCycleForm({ sim = false }) {
           Cancel
         </button>
       </div>
+      </>)}
       {modal}
     </div>
   )

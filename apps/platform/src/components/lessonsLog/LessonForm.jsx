@@ -49,6 +49,7 @@ const LESSON_TABS = [
   { value: 'root-cause', label: 'Root cause' },
   { value: 'early-warning', label: 'Early warning signs' },
   { value: 'recommendations', label: 'Recommendations' },
+  { value: 'good-practice', label: 'Good practice & follow-up' },
   { value: 'audit', label: 'Audit details' },
 ];
 
@@ -99,7 +100,16 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
     related_product_name: '',
     project_stage: '',
     tags: [],
-    lesson_date: new Date().toISOString().split('T')[0]
+    lesson_date: new Date().toISOString().split('T')[0],
+    // v1340 wave 4: stored columns the form did not show before
+    what_worked_well: '',
+    best_practices: '',
+    supporting_evidence: '',
+    follow_up_action: '',
+    follow_up_due_date: '',
+    follow_up_status: '',
+    shared_with_organization: false,
+    sharing_date: ''
   });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -136,7 +146,15 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         related_product_name: lesson.related_product_name || '',
         project_stage: lesson.project_stage || lesson.project_phase || '',
         tags: lesson.tags || [],
-        lesson_date: lesson.lesson_date || new Date().toISOString().split('T')[0]
+        lesson_date: lesson.lesson_date || new Date().toISOString().split('T')[0],
+        what_worked_well: lesson.what_worked_well || '',
+        best_practices: lesson.best_practices || '',
+        supporting_evidence: lesson.supporting_evidence || '',
+        follow_up_action: lesson.follow_up_action || '',
+        follow_up_due_date: lesson.follow_up_due_date || '',
+        follow_up_status: lesson.follow_up_status || '',
+        shared_with_organization: !!lesson.shared_with_organization,
+        sharing_date: lesson.sharing_date || ''
       });
     }
   }, [lesson]);
@@ -221,7 +239,10 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
         ...formData,
         project_id: projectId,
         event_description: formData.what_happened,
-        cause_description: formData.why_it_happened
+        cause_description: formData.why_it_happened,
+        follow_up_due_date: formData.follow_up_due_date || null,
+        follow_up_status: formData.follow_up_status || null,
+        sharing_date: formData.sharing_date || null
       };
       
       await onSave(lessonData);
@@ -450,6 +471,91 @@ export default function LessonForm({ lesson, onSave, onCancel, projectId }) {
           itemColumnLabel="Recommendation"
           error={errors.recommendations}
         />
+      )}
+
+      {formTab === 'good-practice' && (
+        <div className="space-y-4">
+          <LessonListField
+            id="what-worked-well"
+            label="What Worked Well"
+            value={formData.what_worked_well}
+            onChange={(what_worked_well) => setFormData({ ...formData, what_worked_well })}
+            placeholder="Something the project should repeat"
+            itemColumnLabel="Point"
+          />
+          <LessonListField
+            id="best-practices"
+            label="Best Practices to Share"
+            value={formData.best_practices}
+            onChange={(best_practices) => setFormData({ ...formData, best_practices })}
+            placeholder="A practice other projects should adopt"
+            itemColumnLabel="Practice"
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Supporting Evidence</label>
+            <textarea
+              rows={3}
+              value={formData.supporting_evidence}
+              onChange={(e) => setFormData({ ...formData, supporting_evidence: e.target.value })}
+              placeholder="Data, documents or examples that back up this lesson"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Action</label>
+            <textarea
+              rows={2}
+              value={formData.follow_up_action}
+              onChange={(e) => setFormData({ ...formData, follow_up_action: e.target.value })}
+              placeholder="What needs to happen so this lesson is acted on"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Due Date</label>
+              <input
+                type="date"
+                value={formData.follow_up_due_date}
+                onChange={(e) => setFormData({ ...formData, follow_up_due_date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up Status</label>
+              <select
+                value={formData.follow_up_status}
+                onChange={(e) => setFormData({ ...formData, follow_up_status: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Not set</option>
+                <option value="pending">Pending</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={formData.shared_with_organization}
+                onChange={(e) => setFormData({ ...formData, shared_with_organization: e.target.checked })}
+                className="rounded border-gray-300 dark:border-gray-600"
+              />
+              Shared with the wider organisation
+            </label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date Shared</label>
+              <input
+                type="date"
+                value={formData.sharing_date}
+                onChange={(e) => setFormData({ ...formData, sharing_date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+          </div>
+        </div>
       )}
 
       {formTab === 'details' && (<>

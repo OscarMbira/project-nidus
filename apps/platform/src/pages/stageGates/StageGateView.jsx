@@ -22,6 +22,7 @@ const field = ({ label, value }) => (
   </div>
 );
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function StageGateView() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -116,6 +117,10 @@ export default function StageGateView() {
             <AuditTimestampPair dateLabel="Last updated" value={record.updated_at} />
           </AuditCard>
         </AuditDetailsPanel>
+      )}
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && record?.id && (
+        <RecordCustomFields projectId={record?.project_id} entityType="stage_gate" entityId={record?.id} screenCode="stage_gate_detail" />
       )}
     </div>
   );

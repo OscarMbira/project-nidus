@@ -86,6 +86,7 @@ export async function createAssumption(params) {
         impact_severity: params.impactSeverity || null,
         next_review_date: params.nextReviewDate || null,
         notes: params.notes || null,
+        impact_if_invalid: params.impactIfInvalid || null,
         created_by: currentUserId,
         updated_by: currentUserId,
       })
@@ -123,6 +124,7 @@ export async function updateAssumption(assumptionId, updates) {
     if (updates.impactSeverity !== undefined) patch.impact_severity = updates.impactSeverity || null
     if (updates.nextReviewDate !== undefined) patch.next_review_date = updates.nextReviewDate || null
     if (updates.notes !== undefined) patch.notes = updates.notes
+    if (updates.impactIfInvalid !== undefined) patch.impact_if_invalid = updates.impactIfInvalid || null
     if (updates.convertedToRiskId !== undefined) patch.converted_to_risk_id = updates.convertedToRiskId
     if (updates.convertedToIssueId !== undefined) patch.converted_to_issue_id = updates.convertedToIssueId
 

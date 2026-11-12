@@ -16,6 +16,7 @@ import { getAssumption, convertAssumptionToRisk, convertAssumptionToIssue } from
 const STATUS_LABELS = { active: 'Active', validated: 'Validated', invalidated: 'Invalidated', closed: 'Closed' }
 const IMPACT_LABELS = { low: 'Low', medium: 'Medium', high: 'High', critical: 'Critical' }
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function AssumptionDetailPage() {
   const { projectId, assumptionId } = useParams()
   const navigate = useNavigate()
@@ -160,6 +161,10 @@ export default function AssumptionDetailPage() {
             <AuditTimestampPair dateLabel="Updated at" value={assumption.updated_at} />
           </AuditCard>
         </AuditDetailsPanel>
+      )}
+      {/* v1340 wave 2b: organisation-defined custom fields (Local Data Extensions) */}
+      {activeTab === 'details' && assumption?.id && (
+        <RecordCustomFields projectId={assumption?.project_id} entityType="assumption" entityId={assumption?.id} screenCode="assumption_detail" />
       )}
     </div>
   )

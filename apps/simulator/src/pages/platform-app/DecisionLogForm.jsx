@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Save, CheckCircle, Gavel } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { platformDb } from '@nidus/supabase'
-import { getDecision, createDecision, updateDecision } from '../../services/decisionLogService'
-import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
+import { getDecision, createDecision, updateDecision } from '../../services/sim/simDecisionService'
+import { usePracticeProjectParam } from '../../lib/usePracticeProjectParam'
 import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesContext'
 import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -80,7 +80,8 @@ function Field({ label, name, value, onChange, type = 'text', options, rows }) {
 
 export default function DecisionLogForm() {
   const { id } = useParams()
-  const { projectId: resolvedProjectId, routeKey } = usePlatformProjectId()
+  // v1448: practice project from ?projectId= (sim.project_decisions), not a Platform project.
+  const { projectId: resolvedProjectId, routeKey } = usePracticeProjectParam()
   const navigate = useNavigate()
   const isEdit = Boolean(id)
 
@@ -115,6 +116,7 @@ export default function DecisionLogForm() {
       setLoading(true)
       try {
         const data = await getDecision(id)
+        if (!data) throw new Error('Decision not found')
         setRecord(data)
         setForm({
           decision_title: data.decision_title || '',
@@ -162,6 +164,7 @@ export default function DecisionLogForm() {
         ...form,
         decision_date: form.decision_date || null,
         review_date: form.review_date || null,
+        updated_by: user?.id || null,
       }
       let result
       if (isEdit) {
@@ -179,7 +182,7 @@ export default function DecisionLogForm() {
       }
       setSaved(true)
       setBaseline(JSON.stringify(form))
-      const projectLink = routeKey || resolvedProjectId || ''
+      const projectLink = routeKey || resolvedProjectId || result?.project_id || record?.project_id || ''
       showSuccess({
         recordId: result.decision_reference || form.decision_title,
         operation: isEdit ? 'updated' : 'created',

@@ -56,3 +56,23 @@ export async function deleteDecision(id) {
     .eq('id', id)
   if (error) throw error
 }
+
+/**
+ * ?projectId= on the Simulator Decision Log pages names a practice project by its
+ * project_code (what PlanningProjectBar writes) or its UUID. Returns the UUID, or null.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export async function resolvePracticeProjectId(key) {
+  const value = String(key || '').trim()
+  if (!value) return null
+  if (UUID_RE.test(value)) return value
+  const { data, error } = await simDb
+    .from('practice_projects')
+    .select('id')
+    .eq('project_code', value)
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  return data?.id || null
+}

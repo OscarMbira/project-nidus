@@ -61,6 +61,14 @@ export function actionToForm(action) {
     assigned_to_user_id: action?.assigned_to_user_id || action?.assigned_to || '',
     recommended_completion_date: rawDate ? String(rawDate).slice(0, 10) : '',
     status: action?.status || action?.action_status || 'recommended',
+    // v1340 wave 4: stored columns the form did not show before
+    action_rationale: action?.action_rationale || '',
+    expected_outcome: action?.expected_outcome || '',
+    assigned_to_team: action?.assigned_to_team || '',
+    recommended_start_date: action?.recommended_start_date ? String(action.recommended_start_date).slice(0, 10) : '',
+    required_resources: action?.required_resources || '',
+    transition_to_operations: !!action?.transition_to_operations,
+    operational_owner_user_id: action?.operational_owner_user_id || '',
   };
 }
 
@@ -154,6 +162,13 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
         assigned_to_user_id: formData.assigned_to_user_id || null,
         recommended_completion_date: formData.recommended_completion_date || null,
         status: formData.status,
+        action_rationale: formData.action_rationale || null,
+        expected_outcome: formData.expected_outcome || null,
+        assigned_to_team: formData.assigned_to_team || null,
+        recommended_start_date: formData.recommended_start_date || null,
+        required_resources: formData.required_resources || null,
+        transition_to_operations: !!formData.transition_to_operations,
+        operational_owner_user_id: formData.transition_to_operations ? formData.operational_owner_user_id || null : null,
       };
 
       let saved;
@@ -314,6 +329,81 @@ export default function FollowOnActionsForm({ projectId, action, onClose, onSucc
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Assigned Team</label>
+                  <input
+                    type="text"
+                    value={formData.assigned_to_team}
+                    onChange={(e) => setFormData({ ...formData, assigned_to_team: e.target.value })}
+                    placeholder="Team or department taking the action"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Recommended Start Date</label>
+                  <input
+                    type="date"
+                    value={formData.recommended_start_date}
+                    onChange={(e) => setFormData({ ...formData, recommended_start_date: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Why This Action Is Needed</label>
+                <textarea
+                  rows={2}
+                  value={formData.action_rationale}
+                  onChange={(e) => setFormData({ ...formData, action_rationale: e.target.value })}
+                  placeholder="The reason for the action"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Expected Outcome</label>
+                <textarea
+                  rows={2}
+                  value={formData.expected_outcome}
+                  onChange={(e) => setFormData({ ...formData, expected_outcome: e.target.value })}
+                  placeholder="What will be true once the action is done"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Required Resources</label>
+                <textarea
+                  rows={2}
+                  value={formData.required_resources}
+                  onChange={(e) => setFormData({ ...formData, required_resources: e.target.value })}
+                  placeholder="People, budget or tools the action needs"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={formData.transition_to_operations}
+                    onChange={(e) => setFormData({ ...formData, transition_to_operations: e.target.checked })}
+                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-600"
+                  />
+                  Hand this action over to operations
+                </label>
+                {formData.transition_to_operations && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">Operational Owner</label>
+                    <SelectField
+                      forceSearchable
+                      options={userOptions}
+                      value={formData.operational_owner_user_id}
+                      onChange={(value) => setFormData({ ...formData, operational_owner_user_id: value })}
+                      placeholder="Select user..."
+                      aria-label="Operational Owner"
+                    />
+                  </div>
+                )}
               </div>
             </fieldset>
 

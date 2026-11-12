@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Gavel, Calendar, User, Tag, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { getDecision, deleteDecision } from '../../services/decisionLogService'
+import { getDecision, deleteDecision } from '../../services/sim/simDecisionService'
 import { RowActionButton } from '@nidus/ui'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -78,16 +78,19 @@ function Section({ title, content }) {
   )
 }
 
+import RecordCustomFields from '../../components/shared-app/RecordCustomFields'
 export default function DecisionLogDetail() {
   const { id } = useParams()
   const [searchParams] = useSearchParams()
-  const projectId = searchParams.get('projectId')
+  // v1448: the practice project comes from the URL, else from the decision itself.
+  const queryProjectId = searchParams.get('projectId')
   const navigate = useNavigate()
   const [decision, setDecision] = useState(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
   const [activeTab, setActiveTab] = useState('details')
   const [auditUserLabels, setAuditUserLabels] = useState({})
+  const projectId = queryProjectId || decision?.project_id || null
 
   useEffect(() => {
     if (activeTab !== 'audit' || !decision) return
@@ -250,6 +253,10 @@ export default function DecisionLogDetail() {
           />
         )}
       </div>
+      {/* v1448: organisation-defined custom fields (Local Data Extensions), sim schema */}
+      {activeTab === 'details' && decision?.id && (
+        <RecordCustomFields projectId={decision?.project_id} entityType="decision" entityId={decision?.id} screenCode="decision_detail" />
+      )}
     </div>
   )
 }

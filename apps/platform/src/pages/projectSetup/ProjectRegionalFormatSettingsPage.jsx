@@ -19,9 +19,10 @@ import ViewToggle from '@nidus/ui/ViewToggle'
 import TestEvidenceSettingCard from '../../components/testing/TestEvidenceSettingCard'
 import { useProjectRole } from '@nidus/shared/hooks/useProjectRole'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
+import { buildRegionalFormatExport } from '@nidus/shared/utils/regionalFormatExportSections'
 import { resolveProjectRouteKeyFromId } from '@nidus/shared/utils/projectRouteParam.js'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution.js'
-import { REGIONAL_FORMAT_DEFAULTS, REGIONAL_FORMAT_FIELD_KEYS, FIELD_LABELS } from '@nidus/shared/utils/regionalFormatConstants.js'
+import { REGIONAL_FORMAT_DEFAULTS, REGIONAL_FORMAT_FIELD_KEYS } from '@nidus/shared/utils/regionalFormatConstants.js'
 import {
   resolveRegionalFormatSettings,
   buildProjectOverridePayload,
@@ -65,28 +66,9 @@ export default function ProjectRegionalFormatSettingsPage() {
   }) !== snapshot
   useUnsavedChangesGuard(isDirty)
 
-  const exportRecord = useMemo(() => {
-    const rec = { ...form }
-    for (const key of REGIONAL_FORMAT_FIELD_KEYS) {
-      rec[`override_${key}`] = overrideFlags[key] ? 'Yes' : 'No'
-    }
-    return rec
-  }, [form, overrideFlags])
-
-  const exportSections = useMemo(
-    () => [
-      {
-        title: 'Regional & Format Settings',
-        fields: [
-          ...REGIONAL_FORMAT_EXPORT_SECTIONS[0].fields,
-          ...REGIONAL_FORMAT_FIELD_KEYS.map((key) => ({
-            key: `override_${key}`,
-            label: `Override ${FIELD_LABELS[key]}`,
-          })),
-        ],
-      },
-    ],
-    [],
+  const { sections: exportSections, record: exportRecord } = useMemo(
+    () => buildRegionalFormatExport(REGIONAL_FORMAT_EXPORT_SECTIONS[0].fields, form, overrideFlags),
+    [form, overrideFlags],
   )
 
   const load = useCallback(async () => {

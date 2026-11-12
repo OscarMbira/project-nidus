@@ -14,7 +14,7 @@ import { resolveInitiationBasePath } from '@nidus/shared/utils/initiationRouteUt
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
 import {
-  BUSINESS_CASE_EXPORT_SECTIONS,
+  buildBusinessCaseExportSections,
   buildBusinessCaseExportRecord,
   businessCaseExportFilename,
 } from '@nidus/shared/utils/businessCaseExportSections'
@@ -142,7 +142,7 @@ export default function BusinessCaseCreate() {
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:pt-1">
             <ExportRecordButtons
-              sections={BUSINESS_CASE_EXPORT_SECTIONS}
+              sections={buildBusinessCaseExportSections(form)}
               record={buildBusinessCaseExportRecord(form)}
               baseFilename={businessCaseExportFilename(form)}
             />

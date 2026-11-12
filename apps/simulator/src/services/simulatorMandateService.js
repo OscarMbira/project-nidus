@@ -417,3 +417,51 @@ export async function getSimMandateProgress(mandateId) {
     sections
   }
 }
+
+// ============================================================================
+// Practice mandate dependencies (sim.mandate_dependencies, v1447)
+// ============================================================================
+
+export async function getSimDependencies(mandateId) {
+  const { data, error } = await simDb
+    .from('mandate_dependencies')
+    .select('*')
+    .eq('mandate_id', mandateId)
+    .eq('is_deleted', false)
+    .order('display_order', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
+export async function addSimDependency(mandateId, dependencyData) {
+  const userId = await getCurrentUserId()
+  const { data, error } = await simDb
+    .from('mandate_dependencies')
+    .insert({ ...dependencyData, mandate_id: mandateId, created_by: userId, updated_by: userId })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function updateSimDependency(dependencyId, updates) {
+  const userId = await getCurrentUserId()
+  const { data, error } = await simDb
+    .from('mandate_dependencies')
+    .update({ ...updates, updated_by: userId, updated_at: new Date().toISOString() })
+    .eq('id', dependencyId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function deleteSimDependency(dependencyId) {
+  const userId = await getCurrentUserId()
+  const { error } = await simDb
+    .from('mandate_dependencies')
+    .update({ is_deleted: true, updated_by: userId, updated_at: new Date().toISOString() })
+    .eq('id', dependencyId)
+  if (error) throw error
+  return true
+}

@@ -38,6 +38,14 @@ export default function CommunicationLog({ projectId }) {
     effectiveness_rating: null,
     next_action: '',
     next_action_due_date: '',
+    // v1340 wave 4: stored columns the log did not show before
+    communication_summary: '',
+    response_required: false,
+    response_due_date: '',
+    feedback_received: '',
+    meeting_duration_minutes: '',
+    follow_up_date: '',
+    is_confidential: false,
   })
 
   useEffect(() => {
@@ -71,6 +79,13 @@ export default function CommunicationLog({ projectId }) {
       effectiveness_rating: log.effectiveness_rating ?? '',
       next_action: log.next_action || '',
       next_action_due_date: log.next_action_due_date ? log.next_action_due_date.slice(0, 10) : '',
+      communication_summary: log.communication_summary || '',
+      response_required: !!log.response_required,
+      response_due_date: log.response_due_date ? String(log.response_due_date).slice(0, 10) : '',
+      feedback_received: log.feedback_received || '',
+      meeting_duration_minutes: log.meeting_duration_minutes ?? '',
+      follow_up_date: log.follow_up_date ? String(log.follow_up_date).slice(0, 10) : '',
+      is_confidential: !!log.is_confidential,
     })
   }
 
@@ -88,6 +103,13 @@ export default function CommunicationLog({ projectId }) {
         effectiveness_rating: editForm.effectiveness_rating === '' || editForm.effectiveness_rating == null ? null : Number(editForm.effectiveness_rating),
         next_action: editForm.next_action || null,
         next_action_due_date: editForm.next_action_due_date || null,
+        communication_summary: editForm.communication_summary || null,
+        response_required: editForm.response_required,
+        response_due_date: editForm.response_required ? editForm.response_due_date || null : null,
+        feedback_received: editForm.feedback_received || null,
+        meeting_duration_minutes: editForm.meeting_duration_minutes === '' ? null : Number(editForm.meeting_duration_minutes),
+        follow_up_date: editForm.follow_up_date || null,
+        is_confidential: editForm.is_confidential,
       }, editingId)
       closeEdit()
       loadLogs()
@@ -170,9 +192,60 @@ export default function CommunicationLog({ projectId }) {
       {editingId && (
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={closeEdit} aria-hidden="true" />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl p-4">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl p-4">
             <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Edit response & effectiveness</h4>
             <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Summary</label>
+                <textarea
+                  value={editForm.communication_summary}
+                  onChange={(e) => setEditForm(f => ({ ...f, communication_summary: e.target.value }))}
+                  rows={2}
+                  placeholder="What was communicated, in a sentence or two"
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting length (minutes)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editForm.meeting_duration_minutes}
+                    onChange={(e) => setEditForm(f => ({ ...f, meeting_duration_minutes: e.target.value }))}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  />
+                </div>
+                <label className="flex items-center gap-2 mt-6">
+                  <input
+                    type="checkbox"
+                    checked={editForm.is_confidential}
+                    onChange={(e) => setEditForm(f => ({ ...f, is_confidential: e.target.checked }))}
+                    className="rounded border-gray-300 dark:border-gray-600"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Confidential</span>
+                </label>
+              </div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editForm.response_required}
+                  onChange={(e) => setEditForm(f => ({ ...f, response_required: e.target.checked }))}
+                  className="rounded border-gray-300 dark:border-gray-600"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Response required</span>
+              </label>
+              {editForm.response_required && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Response due by</label>
+                  <input
+                    type="date"
+                    value={editForm.response_due_date}
+                    onChange={(e) => setEditForm(f => ({ ...f, response_due_date: e.target.value }))}
+                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  />
+                </div>
+              )}
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -187,6 +260,15 @@ export default function CommunicationLog({ projectId }) {
                 <textarea
                   value={editForm.response_notes}
                   onChange={(e) => setEditForm(f => ({ ...f, response_notes: e.target.value }))}
+                  rows={2}
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Feedback received</label>
+                <textarea
+                  value={editForm.feedback_received}
+                  onChange={(e) => setEditForm(f => ({ ...f, feedback_received: e.target.value }))}
                   rows={2}
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 />
@@ -218,6 +300,15 @@ export default function CommunicationLog({ projectId }) {
                   type="date"
                   value={editForm.next_action_due_date}
                   onChange={(e) => setEditForm(f => ({ ...f, next_action_due_date: e.target.value }))}
+                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Follow-up date</label>
+                <input
+                  type="date"
+                  value={editForm.follow_up_date}
+                  onChange={(e) => setEditForm(f => ({ ...f, follow_up_date: e.target.value }))}
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                 />
               </div>
