@@ -287,6 +287,7 @@ Do not reproduce the detailed rules here. Instead verify the applicable rules in
 - approval justification/field locking
 - audit tabs
 - clickable dashboard summary behaviour
+- menu changes (rules 70 and 75): for any added, moved, renamed or removed menu item, confirm that the item is in the catalogue (`menu_items`, industry pack link for industry items, role grants), that the menu taxonomy line carries its placement tag, and that the placement tables in `Documentation/Consolidated_Role_Menus_Proposal.md` are updated. Do not accept a direct addition to a consolidated role menu or a separate "Industry" block.
 - RLS restrictions
 - retest requirements
 

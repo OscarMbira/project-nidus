@@ -6,6 +6,7 @@ import PracticeDashboardSwitcher from '../ui/PracticeDashboardSwitcher';
 import { BrandingProvider } from '../../../lib/BrandingContext';
 import { MenuProvider } from '../../../lib/useMenu';
 import { mainContentSidebarOffsetClass, useSidebarCollapsed } from '@nidus/shared/hooks/useSidebarCollapsed';
+import MenuSlotTabStrip from '@nidus/ui/MenuSlotTabStrip';
 
 /**
  * Generic layout for v734 role dashboards (portfolio, programme, coordinator).
@@ -32,6 +33,8 @@ export default function SimulatorRoleLayout({ children, layoutScope, backLinkCla
                 </Link>
                 <PracticeDashboardSwitcher />
               </div>
+              {/* v1341 (D23): tabs between the pages of a shared menu slot */}
+              <MenuSlotTabStrip />
               <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2 sm:pt-4">{children}</div>
             </main>
           </div>

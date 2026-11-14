@@ -92,6 +92,7 @@ import { getSidebarNestedRowPadding } from '@nidus/shared/utils/sidebarNavUtils'
 import { useOpenPlanningFindingsCount } from '@nidus/shared/hooks/useOpenPlanningFindingsCount'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
+import MenuPageSearch from '@nidus/ui/MenuPageSearch'
 import MethodologySwitcher from '@nidus/ui/MethodologySwitcher'
 
 // Icon mapping for menu items
@@ -681,6 +682,8 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
                 showOrganisation={canOpenOrganisationZone(layoutHint?.roleNames, isSimulatorContext)}
               />
             )}
+            {/* v1341 (D22): Go to page — only when the organisation's consolidated sidebar is on */}
+            {!loading && <MenuPageSearch onNavigate={() => onClose?.()} />}
             {showMethodologySwitcher && !loading && (
               <MethodologySwitcher onChange={() => refetch?.()} />
             )}

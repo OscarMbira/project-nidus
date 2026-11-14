@@ -5,7 +5,7 @@ import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { V734RoleRouteElements } from './v734RoleRoutes.jsx'
-import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor } from './lazyImports' // v1272 AI settings + report layouts
+import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
 import { SimPmoFederated, SimPmoTemplateLibraryFederated, SimPmoOrganisationalTemplatesFederated, SimPmOrganisationalTemplatesFederated, SimPmProjectTemplatesFederated, SimPmProjectDocumentsFederated, SimDocumentOversightFederated } from './SimPmoFederatedOutlet.jsx'
 import {
   LoadingFallback,
@@ -3488,6 +3488,20 @@ export function SimulatorRouteElements() {
                 {/* Assumptions Register (v963 Phase 3) — bare route shows an inline project
                     picker (AssumptionsListPage handles both cases), :projectId route is the
                     normal case linked from a practice project's own pages. */}
+                {/* v1341 (D16): practice project industry menu switch-off */}
+                <Route path="simulator/practice-projects/industry-modules" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <IndustryModulesPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 <Route path="simulator/practice-projects/assumptions" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>

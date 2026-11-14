@@ -14,6 +14,7 @@ import { BrandingProvider } from '../lib/BrandingContext'
 import { MenuProvider } from '../lib/useMenu'
 import PracticeDashboardSwitcher from './sim/ui/PracticeDashboardSwitcher'
 import { RoleScopeGate } from '@nidus/ui'
+import MenuSlotTabStrip from '@nidus/ui/MenuSlotTabStrip'
 
 const Layout = ({ children, scope: scopeProp = null }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -128,6 +129,8 @@ const Layout = ({ children, scope: scopeProp = null }) => {
           tabIndex="-1"
           className={`flex-1 min-w-0 pb-16 md:pb-0 ${!isAuthPage ? mainContentSidebarOffsetClass(collapsed) : ''} transition-[margin] duration-300 ease-in-out overflow-y-auto overflow-x-hidden h-full`}
         >
+          {/* v1341 (D23): tabs between the pages of a shared menu slot */}
+          {!isAuthPage && <MenuSlotTabStrip />}
           {isScopedPractice && (
             <div className="px-4 sm:px-6 pb-2 pt-2 flex flex-wrap items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700">
               <Link

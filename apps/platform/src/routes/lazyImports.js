@@ -1037,3 +1037,4 @@ export const LessonsReportsList = lazy(() => import('../pages/LessonsReportsList
 // Risk Register pages
 export const RiskRegisterView = lazy(() => import('../pages/RiskRegisterView'))
 
+export const IndustryModulesPage = lazy(() => import('../pages/projectSetup/IndustryModulesPage')) // v1341 D16

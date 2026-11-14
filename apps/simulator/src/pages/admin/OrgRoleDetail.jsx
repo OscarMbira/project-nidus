@@ -35,8 +35,11 @@ import {
   getRoleById,
   createOrgCustomRole,
   updateOrgCustomRole,
+  getOrgCustomRoleMenuLayout,
+  setOrgCustomRoleMenuLayout,
 } from '../../services/organisationCustomRoleService'
 import { getOrgMenuBundles, getMenuBundleById } from '../../services/organisationMenuBundleService'
+import { MENU_LAYOUT_OPTIONS } from '@nidus/config/consolidatedMenu'
 
 const MANAGE_ROLES_PATH = '/simulator/pmo/manage-roles'
 
@@ -63,6 +66,9 @@ export default function OrgRoleDetail({ forceEdit = false }) {
   const [description, setDescription] = useState('')
   const [roleLevel, setRoleLevel] = useState(4)
   const [isGovernanceOnly, setIsGovernanceOnly] = useState(false)
+  // v1341 D25: which consolidated sidebar this custom role uses.
+  const [menuLayoutKey, setMenuLayoutKey] = useState('')
+  const [originalMenuLayoutKey, setOriginalMenuLayoutKey] = useState('')
   const [roleSkills, setRoleSkills] = useState('')
 
   // Same picker (create AND edit, v914) — pick from the full grantable universe.
@@ -149,6 +155,10 @@ export default function OrgRoleDetail({ forceEdit = false }) {
     setDescription(roleRes.data.role_description || '')
     setIsGovernanceOnly(!!roleRes.data.is_governance_only)
     setRoleSkills(roleRes.data.role_skills || '')
+    getOrgCustomRoleMenuLayout(roleRes.data.id).then((key) => {
+      setMenuLayoutKey(key)
+      setOriginalMenuLayoutKey(key)
+    })
 
     const grantsRes = await getRoleMenuGrants(roleRes.data.role_name, roleRes.data.account_id ?? null)
     if (grantsRes.success) {
@@ -170,18 +180,19 @@ export default function OrgRoleDetail({ forceEdit = false }) {
         description: role?.role_description || '',
         isGovernanceOnly: !!role?.is_governance_only,
         roleSkills: role?.role_skills || '',
+        menuLayoutKey: originalMenuLayoutKey,
         menuItemIds: [...originalGrantMenuItemIds].sort(),
       }),
-    [role, originalGrantMenuItemIds],
+    [role, originalGrantMenuItemIds, originalMenuLayoutKey],
   )
   const isDirty = useMemo(() => {
     if (loading || readOnly) return false
     const currentMenuItemIds = expandSelectedMenuItemIds(selectedMenuItemIds, grantableMenuItems).sort()
     return (
-      JSON.stringify({ displayName, description, isGovernanceOnly, roleSkills, menuItemIds: currentMenuItemIds }) !==
+      JSON.stringify({ displayName, description, isGovernanceOnly, roleSkills, menuLayoutKey, menuItemIds: currentMenuItemIds }) !==
       baselineSnapshot
     )
-  }, [loading, readOnly, displayName, description, isGovernanceOnly, roleSkills, selectedMenuItemIds, grantableMenuItems, baselineSnapshot])
+  }, [loading, readOnly, displayName, description, isGovernanceOnly, roleSkills, menuLayoutKey, selectedMenuItemIds, grantableMenuItems, baselineSnapshot])
   const { confirmDiscard } = useUnsavedChangesGuard(isDirty, 'You have unsaved role changes.')
 
   const goToList = () => navigate(MANAGE_ROLES_PATH)
@@ -241,11 +252,20 @@ export default function OrgRoleDetail({ forceEdit = false }) {
         removeMenuItemIds,
         roleSkills: roleSkills.trim(),
       })
+      if (result.success && menuLayoutKey !== originalMenuLayoutKey) {
+        const layoutRes = await setOrgCustomRoleMenuLayout(role.id, menuLayoutKey)
+        if (!layoutRes.success) {
+          setSaving(false)
+          setError(layoutRes.error)
+          return
+        }
+      }
       setSaving(false)
       if (!result.success) {
         setError(result.error)
         return
       }
+      setOriginalMenuLayoutKey(menuLayoutKey)
       showSuccess({
         recordId: role.role_name,
         operation: 'updated',
@@ -265,6 +285,14 @@ export default function OrgRoleDetail({ forceEdit = false }) {
       menuItemIds,
       roleSkills: roleSkills.trim(),
     })
+    if (result.success && menuLayoutKey && result.data?.projectRoleId) {
+      const layoutRes = await setOrgCustomRoleMenuLayout(result.data.projectRoleId, menuLayoutKey)
+      if (!layoutRes.success) {
+          setSaving(false)
+          setError(layoutRes.error)
+          return
+        }
+    }
     setSaving(false)
     if (!result.success) {
       setError(result.error)
@@ -409,6 +437,25 @@ export default function OrgRoleDetail({ forceEdit = false }) {
               Oversight-only (read-only Governance Dashboard, like Board Member / Sponsor / Portfolio Manager)
             </label>
 
+            <div>
+              <label htmlFor="role-menu-layout" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Menu based on
+              </label>
+              <select
+                id="role-menu-layout"
+                value={menuLayoutKey}
+                onChange={(e) => setMenuLayoutKey(e.target.value)}
+                className="w-full sm:w-80 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Worked out from the items below</option>
+                {MENU_LAYOUT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Which role&apos;s sidebar this role uses when your organisation has the single sidebar per role turned on. The
+                sidebar items you tick below still decide what it can open.
+              </p>
+            </div>
+
             {menuBundles.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -482,6 +529,7 @@ export default function OrgRoleDetail({ forceEdit = false }) {
                 <AuditCard title="Classification" description="How this role behaves in the system.">
                   <AuditField label="Level" value={role.role_level} />
                   <AuditField label="Dashboard" value={isGovernanceOnly ? 'Governance (read-only)' : 'Operational'} />
+                  <AuditField label="Menu based on" value={MENU_LAYOUT_OPTIONS.find((o) => o.value === menuLayoutKey)?.label || 'Worked out from its items'} />
                   <AuditField label="Industry" value={role.industry_category?.name || '—'} />
                   <AuditField label="Scope" value="Organisation-wide (all projects)" />
                 </AuditCard>

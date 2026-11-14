@@ -948,3 +948,4 @@ export const LearningPathDashboard = lazy(() => import('../pages/simulator/Learn
 export const LearningModule = lazy(() => import('../pages/simulator/LearningModule'))
 export const SimulatorTMRedirect = lazy(() => import('../pages/simulator/SimulatorTMRedirect'))
 
+export const IndustryModulesPage = lazy(() => import('../pages/projectSetup/IndustryModulesPage')) // v1341 D16

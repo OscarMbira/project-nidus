@@ -16,6 +16,7 @@ import { CurrentProjectProvider } from '../lib/CurrentProjectContext'
 import HeaderProjectSelector from './pm/HeaderProjectSelector'
 import PMProjectSelector from './pm/PMProjectSelector'
 import { RoleScopeGate } from '@nidus/ui'
+import MenuSlotTabStrip from '@nidus/ui/MenuSlotTabStrip'
 import { isPmLayoutPath } from '@nidus/shared/utils/menuLayoutUtils'
 
 const Layout = ({ children, scope: scopeProp = null }) => {
@@ -137,6 +138,8 @@ const Layout = ({ children, scope: scopeProp = null }) => {
           className={`flex-1 min-w-0 pb-16 md:pb-0 ${!isAuthPage ? mainContentSidebarOffsetClass(collapsed) : ''} transition-[margin] duration-300 ease-in-out overflow-y-auto overflow-x-hidden h-full`}
         >
           {isPm && <div className="md:hidden"><PMProjectSelector /></div>}
+          {/* v1341 (D23): tabs between the pages of a shared menu slot */}
+          {!isAuthPage && <MenuSlotTabStrip />}
           <div className="w-full max-w-full">
             {isPm ? (
               <RoleScopeGate requiredScope="pm" blockedRedirectTo="/platform/dashboard" fullScreen={false}>

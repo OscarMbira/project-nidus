@@ -51,6 +51,9 @@ jobs:
       - name: Drift check unit tests
         run: node --test scripts/__tests__/check-shared-drift.test.mjs
 
+      - name: Simulator placement route check unit tests (v1341 R8)
+        run: node --test scripts/__tests__/check-sim-placement-routes.test.mjs
+
       - name: Build and test every dependent of the changed packages
         run: pnpm turbo build test --continue --filter="...[HEAD^1]"
         env:

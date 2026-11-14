@@ -116,6 +116,8 @@ PROJECT MANAGEMENT
 │   ├── Regional & Format Settings
 │   ├── Working Days & Holidays
 │   └── Environments (v1192 — target environments for test suites)
+│   └── Project Settings (v1341 — consolidated sidebar only: sub-menu holding Regional & Format, Working Days & Holidays, Timesheet Settings, Document Signatory, Environments, Risk Categories)
+│       └── Industry Modules (v1341 — switch off industry pages a project does not need; /platform/project-setup/industry-modules, Simulator /simulator/practice-projects/industry-modules)
 │
 ├── Scope & Deliverables
 │   ├── Scope Statement
@@ -1881,3 +1883,27 @@ Simulator
     ├── PMO Configuration (v1292) — /simulator/pmo/configuration
     └── AI Settings (v1272)
 ```
+
+---
+
+# 27. Consolidated role sidebar (v1341)
+
+This taxonomy stays the catalogue (what exists). Where each item appears in the consolidated
+sidebar of each role is data, not part of this tree: `public.menu_item_placements` (section,
+sub-menu parent, shared slot, order, per placement key), seeded by SQL v1450 (Project Manager:
+Core PM + Banking), v1451 (other industry packs), v1454 (Simulator), v1455 (Team Lead / Team
+Member), v1457 (Programme / Portfolio), v1458 (governance profiles) and v1459 (PMO), and edited in
+Admin › System › Menu Placements. The section list is `public.menu_sections` (v1449). See
+`Documentation/Consolidated_Role_Menus_Guide_v1341.md`.
+
+New in v1341 (catalogue rows shown only in the consolidated sidebar, `is_visible = FALSE`):
+- Project Setup › Project Settings (v1341) — sub-menu container
+- Project Setup › Project Settings › Industry Modules (v1341)
+- Simulator › Project Setup › Industry Modules (v1341) — practice projects
+- Project Setup › Management Strategies (v1463) — sub-menu: Quality, Risk, Communication, Configuration Management Strategies, Document Governance
+- Reports & Documents › Project Reports (v1463) — sub-menu: Checkpoint, Highlight, Issue, Exception, End Stage, End Project reports
+- Deliver & Test › Agile Tools (v1463) — sub-menu: Releases / Sprints, Story Map, Value Stream Map, Kaizen Board, Planning Poker, Agile Process Forms
+- Plan & Schedule › ITTO (v1463) — sub-menu: ITTO Project, ITTO Templates, ITTO Drafts
+- Risks, Changes & Governance › RAID Registers (v1463) — sub-menu: Risk, Issue, Assumptions, Constraints registers
+- Home › My Work (v1463) — sub-menu: My Tasks, My Daily Log, My Expenses, Calendar
+

@@ -17,6 +17,7 @@ export default defineConfig({
     },
     include: [
       'src/__tests__/annotateTemplateRowsByMethodology.test.js',
+      'src/__tests__/consolidatedMenu.test.js',
       'src/__tests__/menuRegistry.test.js',
       'src/__tests__/methodologyMenuUtils.test.js',
       'src/__tests__/pmoLayoutMenuExclusions.test.js',

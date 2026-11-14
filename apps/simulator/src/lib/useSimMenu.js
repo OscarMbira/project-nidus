@@ -13,6 +13,13 @@ import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import { getMenuItemIndustryPackMap } from '../services/organisationIndustryService.js'
 import { listPracticeProjectIndustries } from '../services/sim/simProjectIndustryService.js'
 import {
+  isConsolidatedMenuEnabled,
+  buildConsolidatedMenuForUser,
+  clearConsolidatedMenuSwitchCache,
+  MENU_CONTEXT_CHANGED_EVENT,
+} from '@nidus/shared/utils/consolidatedMenuData'
+import { publishConsolidatedMenu } from '@nidus/shared/hooks/useConsolidatedMenu'
+import {
   isSidebarCacheFresh,
   purgeAllSidebarMenuCaches,
   readSidebarCache,
@@ -32,6 +39,9 @@ const STATIC_SCOPE_MENUS = {
 // independent, see its header comment). Lets the synchronous cache-check fast path below apply
 // pack-grouping best-effort without awaiting a DB round trip.
 const _simPackContextByAuthUserId = new Map()
+// v1341: last consolidated practice menu per user + scope + practice project (instant repaint).
+const _simConsolidatedByKey = new Map()
+const CONSOLIDATED_SCOPES = new Set(['pm', 'pmo'])
 
 function staticConfigToMenuItems(config = []) {
   return config.map((item, index) => ({
@@ -104,7 +114,11 @@ export function useSimMenu(scope = 'pmo', enabled = true) {
           // v930 — best-effort synchronous pack-grouping from the last-resolved context for
           // this user; this fast path is deliberately synchronous, no DB round trip.
           const cachedPackContext = _simPackContextByAuthUserId.get(user.id)
-          if (transformed?.length && cachedPackContext) {
+          const cachedConsolidated = _simConsolidatedByKey.get(`${user.id}:${scope}:${currentPracticeProjectIdRef.current || ''}`)
+          if (cachedConsolidated) {
+            transformed = cachedConsolidated.items
+            publishConsolidatedMenu(cachedConsolidated.extras)
+          } else if (transformed?.length && cachedPackContext) {
             transformed = groupMenuTreeByIndustryPack(transformed, { ...cachedPackContext, layout: scope })
           }
           setMenuItems(transformed)
@@ -141,7 +155,46 @@ export function useSimMenu(scope = 'pmo', enabled = true) {
       // v930 — pack-grouped sidebar menu: wrap the finished tree into "Core Project
       // Management" + one section per enabled industry pack. getCurrentUserAccountId() is
       // sessionStorage-cached (rule 66), so this is cheap after the first resolution.
-      if (transformed?.length) {
+      let consolidatedApplied = false
+      if (transformed?.length && CONSOLIDATED_SCOPES.has(scope)) {
+        // v1341 — one consolidated practice menu per role when the organisation's switch is on.
+        try {
+          const accountId = await getCurrentUserAccountId()
+          if (accountId && await isConsolidatedMenuEnabled(accountId)) {
+            const practiceProjectId = scope === 'pm' ? (currentPracticeProjectIdRef.current || null) : null
+            const built = await buildConsolidatedMenuForUser({
+              app: 'simulator',
+              tree: transformed,
+              accountId,
+              authUserId: user.id,
+              layout: scope,
+              projectId: practiceProjectId,
+              packMap: getMenuItemIndustryPackMap(accountId, null).then((r) => (r?.success ? r.data : null)),
+            })
+            if (built.enabled && built.items.length > 0) {
+              const extras = {
+                placementKey: built.placementKey,
+                homeOnly: built.homeOnly,
+                projectId: built.projectId,
+                version: built.version,
+                slotTabs: built.slotTabs,
+                pageIndex: built.pageIndex,
+                packNames: built.packNames,
+                unplacedCount: built.unplaced.length,
+              }
+              transformed = built.items
+              consolidatedApplied = true
+              _simConsolidatedByKey.set(`${user.id}:${scope}:${practiceProjectId || ''}`, { items: built.items, extras })
+              publishConsolidatedMenu(extras)
+            }
+          }
+        } catch (consolidatedErr) {
+          console.warn('useSimMenu: consolidated menu failed, showing the current sidebar:', consolidatedErr?.message || consolidatedErr)
+        }
+      }
+      if (!consolidatedApplied) publishConsolidatedMenu(null)
+
+      if (transformed?.length && !consolidatedApplied) {
         try {
           const isProjectScopedLayout = scope === 'pm'
           const accountId = await getCurrentUserAccountId()
@@ -187,6 +240,26 @@ export function useSimMenu(scope = 'pmo', enabled = true) {
     purgeAllSidebarMenuCaches()  // remove legacy v1 keys once
     loadMenu()
   }, [loadMenu, enabled])
+
+  // v1341 (R5): practice project industries or switched-off items changed → rebuild.
+  useEffect(() => {
+    if (!enabled) return undefined
+    const onMenuContext = () => {
+      clearConsolidatedMenuSwitchCache()
+      _simConsolidatedByKey.clear()
+      loadMenu({ forceRefresh: true })
+    }
+    window.addEventListener(MENU_CONTEXT_CHANGED_EVENT, onMenuContext)
+    return () => window.removeEventListener(MENU_CONTEXT_CHANGED_EVENT, onMenuContext)
+  }, [loadMenu, enabled])
+
+  // v1341: a different practice project rebuilds the consolidated menu for that project.
+  const prevPracticeProjectRef = useRef(currentPracticeProjectId)
+  useEffect(() => {
+    if (!enabled || prevPracticeProjectRef.current === currentPracticeProjectId) return
+    prevPracticeProjectRef.current = currentPracticeProjectId
+    if (scope === 'pm') loadMenu({ forceRefresh: true })
+  }, [currentPracticeProjectId, enabled, scope, loadMenu])
 
   const refetch = useCallback(() => loadMenu({ forceRefresh: true }), [loadMenu])
 

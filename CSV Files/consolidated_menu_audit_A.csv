@@ -1,0 +1,623 @@
+check_name,placement_key,menu_code,menu_label,route_path
+A_summary,board,33,null,null
+A_summary,executive,16,null,null
+A_summary,pm,89,null,null
+A_summary,pmo_oversight,252,null,null
+A_summary,portfolio,61,null,null
+A_summary,programme,54,null,null
+A_summary,sponsor,24,null,null
+A_summary,stakeholder,12,null,null
+A_summary,team,67,null,null
+A_summary,viewer,4,null,null
+A_unplaced_granted_page,board,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,board,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,board,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,board,plat_pm_approval_chains,Approval Chains,/platform/pm/authorisation/chains
+A_unplaced_granted_page,board,plat_pm_change_log,Change Log,/platform/change
+A_unplaced_granted_page,board,plat_pm_change_requests,Change Requests,/platform/change-requests
+A_unplaced_granted_page,board,plat_pm_dependencies_reg,Dependency Register,/platform/dependencies
+A_unplaced_granted_page,board,plat_pm_external_dependencies,Dependency Parties,/platform/dependency-parties
+A_unplaced_granted_page,board,plat_pm_governance_actions,Actions,/platform/governance-actions
+A_unplaced_granted_page,board,plat_pm_issue_log,Issue Register,/pm/controls/issue-register
+A_unplaced_granted_page,board,plat_pm_planning_dependencies,Dependencies,/platform/planning/dependencies
+A_unplaced_granted_page,board,plat_pm_proc_performance,Vendor Performance,/platform/pm/procurement/performance
+A_unplaced_granted_page,board,plat_pm_proc_plan,Procurement Plan,/pm/process-templates/t/procurement-management-plan
+A_unplaced_granted_page,board,plat_pm_proc_vendor_categories,Vendor Categories,/platform/pm/procurement/vendor-categories
+A_unplaced_granted_page,board,plat_pm_proc_vendors,Vendors,/platform/pm/procurement/vendors
+A_unplaced_granted_page,board,plat_pm_pt_contacts,Contact Directory,/platform/project-contacts
+A_unplaced_granted_page,board,plat_pm_pt_members,Team Members,/platform/teams
+A_unplaced_granted_page,board,plat_pm_pt_org_structure,Team Structure,/platform/project-team/team-structure
+A_unplaced_granted_page,board,plat_pm_pt_project_roles,Project Roles & Skills,/platform/project-roles
+A_unplaced_granted_page,board,plat_pm_pt_raci,RACI,/pm/resources/raci
+A_unplaced_granted_page,board,plat_pm_risk_reg,Risk Register,/pm/controls/risk-register
+A_unplaced_granted_page,board,plat_pm_s_brief,Project Brief,/pm/initiation/project-brief
+A_unplaced_granted_page,board,plat_pm_s_business_case,Business Case,/pm/initiation/business-case
+A_unplaced_granted_page,board,plat_pm_s_charter,Project Charter,/pm/initiation/project-charter
+A_unplaced_granted_page,board,plat_pm_s_checkpoint,Checkpoint Reports,/pm/reporting/checkpoint-reports
+A_unplaced_granted_page,board,plat_pm_s_document_signatory,Document Signatory,/pm/initiation/document-signatory
+A_unplaced_granted_page,board,plat_pm_s_pid,Project Initiation Document,/pm/initiation/pid
+A_unplaced_granted_page,board,plat_pm_s_project_details,Project Details,/platform/project-details
+A_unplaced_granted_page,board,plat_pm_s_regional_format,Regional & Format Settings,/platform/project-setup/regional-format-settings
+A_unplaced_granted_page,board,plat_pm_s_timesheet_settings,Timesheet Settings,/platform/project-setup/timesheet-settings
+A_unplaced_granted_page,board,plat_pm_s_work_auth,Work Authorisations,/platform/work-authorisations
+A_unplaced_granted_page,board,plat_pm_testing_environments,Environments,/platform/testing/environments
+A_unplaced_granted_page,board,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,executive,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,executive,plat_exec_dashboard,Executive Dashboard,/platform/executive/dashboard
+A_unplaced_granted_page,executive,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,executive,plat_fin_evm,Portfolio EVM,/platform/portfolio/evm
+A_unplaced_granted_page,executive,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,executive,plat_pm_analytics,Analytics Dashboards,/platform/analytics
+A_unplaced_granted_page,executive,plat_pm_rep_library,Report Library,/platform/reports
+A_unplaced_granted_page,executive,plat_pm_rep_timesheet_overview,Timesheet Overview,/platform/reports/timesheet-overview
+A_unplaced_granted_page,executive,plat_pm_rep_work_plan_variance,Work Plan Variance,/platform/reports/work-plan-variance
+A_unplaced_granted_page,executive,plat_pm_s_benefits_rp,Benefits Review Plan,/pm/initiation/benefits-review-plan
+A_unplaced_granted_page,executive,plat_pm_s_end_project,End Project Report,/platform/projects/:projectId/closure?tab=end-report
+A_unplaced_granted_page,executive,plat_portfolio_alignment,Strategic Alignment,/platform/strategy/alignment
+A_unplaced_granted_page,executive,plat_portfolio_benefits,Benefits Pipeline,/platform/benefits
+A_unplaced_granted_page,executive,plat_portfolio_map,Portfolio Map,/pmo/strategy/portfolio-map
+A_unplaced_granted_page,executive,plat_portfolio_overview,Portfolio Overview,/platform/portfolio
+A_unplaced_granted_page,executive,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,pm,local_register_asset_infrastructure_register,Asset/Infrastructure Register,/platform/local-registers/00000000-0000-4000-8000-000000000019
+A_unplaced_granted_page,pm,local_register_bill_of_materials,Bill of Materials,/platform/local-registers/00000000-0000-4000-8000-000000000012
+A_unplaced_granted_page,pm,local_register_clinical_site_activation,Clinical Site Activation,/platform/local-registers/00000000-0000-4000-8000-000000000011
+A_unplaced_granted_page,pm,local_register_clinical_trials,Clinical Trials / Studies,/platform/local-registers/00000000-0000-4000-8000-00000000000e
+A_unplaced_granted_page,pm,local_register_commissioning,Commissioning,/platform/local-registers/00000000-0000-4000-8000-000000000003
+A_unplaced_granted_page,pm,local_register_core_banking,Core Banking,/platform/local-registers/00000000-0000-4000-8000-000000000005
+A_unplaced_granted_page,pm,local_register_curriculum_development,Curriculum Development / Rollout,/platform/local-registers/00000000-0000-4000-8000-00000000001c
+A_unplaced_granted_page,pm,local_register_cutover,Cutover,/platform/local-registers/00000000-0000-4000-8000-000000000008
+A_unplaced_granted_page,pm,local_register_data_migration,Data Migration,/platform/local-registers/00000000-0000-4000-8000-000000000002
+A_unplaced_granted_page,pm,local_register_deployments,Deployments,/platform/local-registers/00000000-0000-4000-8000-00000000000d
+A_unplaced_granted_page,pm,local_register_environmental_impact_assessments,Environmental Impact Assessments,/platform/local-registers/00000000-0000-4000-8000-00000000001b
+A_unplaced_granted_page,pm,local_register_equipment_asset_qualification,Equipment/Asset Qualification,/platform/local-registers/00000000-0000-4000-8000-000000000013
+A_unplaced_granted_page,pm,local_register_foi_requests,Freedom of Information Requests,/platform/local-registers/00000000-0000-4000-8000-000000000016
+A_unplaced_granted_page,pm,local_register_go_live,Go-Live,/platform/local-registers/00000000-0000-4000-8000-000000000009
+A_unplaced_granted_page,pm,local_register_materials,Materials,/platform/local-registers/00000000-0000-4000-8000-00000000000b
+A_unplaced_granted_page,pm,local_register_media_placements,Media Placements / Channel Scheduling,/platform/local-registers/00000000-0000-4000-8000-000000000018
+A_unplaced_granted_page,pm,local_register_outage_management,Outage Management,/platform/local-registers/00000000-0000-4000-8000-00000000001a
+A_unplaced_granted_page,pm,local_register_parameterisation,Parameterisation,/platform/local-registers/00000000-0000-4000-8000-000000000007
+A_unplaced_granted_page,pm,local_register_patient_safety_events,Patient Safety Events,/platform/local-registers/00000000-0000-4000-8000-000000000010
+A_unplaced_granted_page,pm,local_register_permits,Permits,/platform/local-registers/00000000-0000-4000-8000-000000000004
+A_unplaced_granted_page,pm,local_register_policy_legislative_milestones,Policy/Legislative Milestones,/platform/local-registers/00000000-0000-4000-8000-000000000017
+A_unplaced_granted_page,pm,local_register_process_validation,Process Validation,/platform/local-registers/00000000-0000-4000-8000-000000000014
+A_unplaced_granted_page,pm,local_register_product_configuration,Product Configuration,/platform/local-registers/00000000-0000-4000-8000-000000000006
+A_unplaced_granted_page,pm,local_register_readiness_checklist,Readiness Checklist,/platform/local-registers/00000000-0000-4000-8000-000000000001
+A_unplaced_granted_page,pm,local_register_regulatory_submissions,Regulatory Submissions,/platform/local-registers/00000000-0000-4000-8000-00000000000f
+A_unplaced_granted_page,pm,local_register_releases,Releases,/platform/local-registers/00000000-0000-4000-8000-00000000000c
+A_unplaced_granted_page,pm,local_register_safety_incidents,Safety Incidents,/platform/local-registers/00000000-0000-4000-8000-000000000015
+A_unplaced_granted_page,pm,local_registers_index,Local Registers,/platform/local-registers
+A_unplaced_granted_page,pm,local_register_sites,Sites,/platform/local-registers/00000000-0000-4000-8000-00000000000a
+A_unplaced_granted_page,pm,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,pm,plat_a_lean_metrics,Lean Metrics,/platform/lean-metrics
+A_unplaced_granted_page,pm,plat_all_projects,All Projects,/platform/projects
+A_unplaced_granted_page,pm,plat_archived_projects,Archived Projects,/platform/projects/archived
+A_unplaced_granted_page,pm,plat_a_releases,Releases,/platform/releases
+A_unplaced_granted_page,pm,plat_a_sprint_metrics,Sprint Metrics,/platform/sprint-metrics
+A_unplaced_granted_page,pm,plat_a_story_maps,Story Maps,/platform/story-map
+A_unplaced_granted_page,pm,plat_create_project,Create Project / Quick Create,/platform/projects/create
+A_unplaced_granted_page,pm,plat_daily_log_pmo,My Daily Log,/platform/daily-log/my-entries
+A_unplaced_granted_page,pm,plat_dashboard_pmo,Dashboard,/platform/dashboard
+A_unplaced_granted_page,pm,plat_exec_dashboard,Executive Dashboard,/platform/executive/dashboard
+A_unplaced_granted_page,pm,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,pm,plat_fin_cost_actuals,Cost Actuals,/platform/cost-actuals
+A_unplaced_granted_page,pm,plat_fin_project_evm,Project EVM,/platform/projects/evm
+A_unplaced_granted_page,pm,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,pm,plat_fin_thresholds,Expense Thresholds,/platform/expense-thresholds
+A_unplaced_granted_page,pm,platform_timesheet_approval_settings,Timesheet Approval Settings,/platform/timesheets/settings
+A_unplaced_granted_page,pm,plat_my_projects,My Projects,/platform/projects
+A_unplaced_granted_page,pm,plat_onhold_projects,On Hold / Drafts,/platform/projects/on-hold
+A_unplaced_granted_page,pm,plat_portfolio_alignment,Strategic Alignment,/platform/strategy/alignment
+A_unplaced_granted_page,pm,plat_portfolio_benefits,Benefits Pipeline,/platform/benefits
+A_unplaced_granted_page,pm,plat_portfolio_collisions,Portfolio Collisions,/pmo/planning/collisions
+A_unplaced_granted_page,pm,plat_portfolio_dependencies,Portfolio Dependencies,/platform/portfolio/dependencies
+A_unplaced_granted_page,pm,plat_portfolio_map,Portfolio Map,/pmo/strategy/portfolio-map
+A_unplaced_granted_page,pm,plat_portfolio_overview,Portfolio Overview,/platform/portfolio
+A_unplaced_granted_page,pm,plat_programme_benefits,Benefits Management,/platform/programme/benefits
+A_unplaced_granted_page,pm,plat_programme_management,Programme Management,/platform/programme
+A_unplaced_granted_page,pm,plat_project_dashboard,Project Dashboard,/platform/dashboard
+A_unplaced_granted_page,pm,plat_releases_pmo,Releases,/platform/releases
+A_unplaced_granted_page,pm,plat_story_map_pmo,Story Map,/platform/story-map
+A_unplaced_granted_page,pm,plat_unified_approvals_register,Approvals Register,/pmo/approvals/register
+A_unplaced_granted_page,pm,plat_xf_automation,Automation,/platform/automation
+A_unplaced_granted_page,pm,plat_xf_collaboration,Collaboration,/pmo/collaboration/whiteboard
+A_unplaced_granted_page,pm,plat_xf_dashboards,Dashboards & Analytics,/platform/analytics
+A_unplaced_granted_page,pm,plat_xf_integrations,Integrations,/platform/integrations
+A_unplaced_granted_page,pm,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,pm,plat_xf_procurement,Procurement & Contracts,/platform/procurement
+A_unplaced_granted_page,pm,plat_xf_project_settings,Project Settings,/platform/project-settings
+A_unplaced_granted_page,pm,plat_xf_resources_hub,Resources Hub,/platform/resources/directory
+A_unplaced_granted_page,pm,pmo_communication_information_options,Communication formats,/platform/stakeholders/communication-options
+A_unplaced_granted_page,pm,pmo-people-manage-menu-bundles,Manage Menu Bundles,/platform/admin/manage-menu-bundles
+A_unplaced_granted_page,pm,pmo-people-manage-roles,Manage Roles,/platform/admin/manage-roles
+A_unplaced_granted_page,pm,pmo-people-organisation-industries,Industries & Capabilities,/platform/admin/organisation-industries
+A_unplaced_granted_page,pm,pmo_risk_categories,Risk Categories,/platform/pmo-admin/risk-categories
+A_unplaced_granted_page,pm,sim_governance_actions_register,Governance Actions Register,/simulator/pmo/governance-actions/register
+A_unplaced_granted_page,pm,sim-pmo-assignment-roles,Assignment Roles,/simulator/pmo/assignment-roles
+A_unplaced_granted_page,pm,sim-pmo-manage-menu-bundles,Manage Menu Bundles,/simulator/pmo/manage-menu-bundles
+A_unplaced_granted_page,pm,sim-pmo-manage-roles,Manage Roles,/simulator/pmo/manage-roles
+A_unplaced_granted_page,pm,sim-pmo-organisation-industries,Industries & Capabilities,/simulator/pmo/organisation-industries
+A_unplaced_granted_page,pm,sim-pmo-project-timesheet-settings,Timesheet Settings (Project Override),/simulator/project-setup/timesheet-settings
+A_unplaced_granted_page,pm,sim-pmo-role-assignment,Role Assignment,/simulator/pmo/role-assignment
+A_unplaced_granted_page,pm,sim_pm_project_documents,Project Documents,/simulator/pm/documents/project
+A_unplaced_granted_page,pm,sim_pm_s_document_signatory,Document Signatory,/simulator/pm/initiation/document-signatory
+A_unplaced_granted_page,pm,sim_tpl_library,Template Library,/simulator/pmo/template-library
+A_unplaced_granted_page,pm,sim_tpl_library_forms,Forms,/simulator/pmo/template-library?domainGroup=forms
+A_unplaced_granted_page,pm,sim_tpl_library_templates,Templates,/simulator/pmo/template-library?domainGroup=templates
+A_unplaced_granted_page,pm,sim_tpl_organisational_forms,Forms,/simulator/pmo/organisational-templates?domainGroup=forms
+A_unplaced_granted_page,pm,sim_tpl_organisational_templates,Templates,/simulator/pmo/organisational-templates?domainGroup=templates
+A_unplaced_granted_page,pm,sim_tpl_signatory_requirements,Document Signatory,/simulator/pmo/organisational-templates/signatory-requirements
+A_unplaced_granted_page,pm,sim_unified_approvals_register,Approvals Register,/simulator/pmo/approvals/register
+A_unplaced_granted_page,pmo_oversight,local_register_asset_infrastructure_register,Asset/Infrastructure Register,/platform/local-registers/00000000-0000-4000-8000-000000000019
+A_unplaced_granted_page,pmo_oversight,local_register_bill_of_materials,Bill of Materials,/platform/local-registers/00000000-0000-4000-8000-000000000012
+A_unplaced_granted_page,pmo_oversight,local_register_clinical_site_activation,Clinical Site Activation,/platform/local-registers/00000000-0000-4000-8000-000000000011
+A_unplaced_granted_page,pmo_oversight,local_register_clinical_trials,Clinical Trials / Studies,/platform/local-registers/00000000-0000-4000-8000-00000000000e
+A_unplaced_granted_page,pmo_oversight,local_register_commissioning,Commissioning,/platform/local-registers/00000000-0000-4000-8000-000000000003
+A_unplaced_granted_page,pmo_oversight,local_register_core_banking,Core Banking,/platform/local-registers/00000000-0000-4000-8000-000000000005
+A_unplaced_granted_page,pmo_oversight,local_register_curriculum_development,Curriculum Development / Rollout,/platform/local-registers/00000000-0000-4000-8000-00000000001c
+A_unplaced_granted_page,pmo_oversight,local_register_cutover,Cutover,/platform/local-registers/00000000-0000-4000-8000-000000000008
+A_unplaced_granted_page,pmo_oversight,local_register_data_migration,Data Migration,/platform/local-registers/00000000-0000-4000-8000-000000000002
+A_unplaced_granted_page,pmo_oversight,local_register_deployments,Deployments,/platform/local-registers/00000000-0000-4000-8000-00000000000d
+A_unplaced_granted_page,pmo_oversight,local_register_environmental_impact_assessments,Environmental Impact Assessments,/platform/local-registers/00000000-0000-4000-8000-00000000001b
+A_unplaced_granted_page,pmo_oversight,local_register_equipment_asset_qualification,Equipment/Asset Qualification,/platform/local-registers/00000000-0000-4000-8000-000000000013
+A_unplaced_granted_page,pmo_oversight,local_register_foi_requests,Freedom of Information Requests,/platform/local-registers/00000000-0000-4000-8000-000000000016
+A_unplaced_granted_page,pmo_oversight,local_register_go_live,Go-Live,/platform/local-registers/00000000-0000-4000-8000-000000000009
+A_unplaced_granted_page,pmo_oversight,local_register_materials,Materials,/platform/local-registers/00000000-0000-4000-8000-00000000000b
+A_unplaced_granted_page,pmo_oversight,local_register_media_placements,Media Placements / Channel Scheduling,/platform/local-registers/00000000-0000-4000-8000-000000000018
+A_unplaced_granted_page,pmo_oversight,local_register_outage_management,Outage Management,/platform/local-registers/00000000-0000-4000-8000-00000000001a
+A_unplaced_granted_page,pmo_oversight,local_register_parameterisation,Parameterisation,/platform/local-registers/00000000-0000-4000-8000-000000000007
+A_unplaced_granted_page,pmo_oversight,local_register_patient_safety_events,Patient Safety Events,/platform/local-registers/00000000-0000-4000-8000-000000000010
+A_unplaced_granted_page,pmo_oversight,local_register_permits,Permits,/platform/local-registers/00000000-0000-4000-8000-000000000004
+A_unplaced_granted_page,pmo_oversight,local_register_policy_legislative_milestones,Policy/Legislative Milestones,/platform/local-registers/00000000-0000-4000-8000-000000000017
+A_unplaced_granted_page,pmo_oversight,local_register_process_validation,Process Validation,/platform/local-registers/00000000-0000-4000-8000-000000000014
+A_unplaced_granted_page,pmo_oversight,local_register_product_configuration,Product Configuration,/platform/local-registers/00000000-0000-4000-8000-000000000006
+A_unplaced_granted_page,pmo_oversight,local_register_readiness_checklist,Readiness Checklist,/platform/local-registers/00000000-0000-4000-8000-000000000001
+A_unplaced_granted_page,pmo_oversight,local_register_regulatory_submissions,Regulatory Submissions,/platform/local-registers/00000000-0000-4000-8000-00000000000f
+A_unplaced_granted_page,pmo_oversight,local_register_releases,Releases,/platform/local-registers/00000000-0000-4000-8000-00000000000c
+A_unplaced_granted_page,pmo_oversight,local_register_safety_incidents,Safety Incidents,/platform/local-registers/00000000-0000-4000-8000-000000000015
+A_unplaced_granted_page,pmo_oversight,local_registers_index,Local Registers,/platform/local-registers
+A_unplaced_granted_page,pmo_oversight,local_register_sites,Sites,/platform/local-registers/00000000-0000-4000-8000-00000000000a
+A_unplaced_granted_page,pmo_oversight,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,pmo_oversight,plat_a_lean_metrics,Lean Metrics,/platform/lean-metrics
+A_unplaced_granted_page,pmo_oversight,plat_all_projects,All Projects,/platform/projects
+A_unplaced_granted_page,pmo_oversight,plat_archived_projects,Archived Projects,/platform/projects/archived
+A_unplaced_granted_page,pmo_oversight,plat_a_releases,Releases,/platform/releases
+A_unplaced_granted_page,pmo_oversight,plat_a_sprint_metrics,Sprint Metrics,/platform/sprint-metrics
+A_unplaced_granted_page,pmo_oversight,plat_a_story_maps,Story Maps,/platform/story-map
+A_unplaced_granted_page,pmo_oversight,plat_collab_whiteboard,Whiteboard,/pmo/collaboration/whiteboard
+A_unplaced_granted_page,pmo_oversight,plat_create_project,Create Project / Quick Create,/platform/projects/create
+A_unplaced_granted_page,pmo_oversight,plat_daily_log_pmo,My Daily Log,/platform/daily-log/my-entries
+A_unplaced_granted_page,pmo_oversight,plat_dashboard_pmo,Dashboard,/platform/dashboard
+A_unplaced_granted_page,pmo_oversight,plat_exec_dashboard,Executive Dashboard,/platform/executive/dashboard
+A_unplaced_granted_page,pmo_oversight,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,pmo_oversight,plat_fin_cost_actuals,Cost Actuals,/platform/cost-actuals
+A_unplaced_granted_page,pmo_oversight,plat_fin_evm,Portfolio EVM,/platform/portfolio/evm
+A_unplaced_granted_page,pmo_oversight,plat_fin_programme_evm,Programme EVM,/platform/programme/evm
+A_unplaced_granted_page,pmo_oversight,plat_fin_project_evm,Project EVM,/platform/projects/evm
+A_unplaced_granted_page,pmo_oversight,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,pmo_oversight,plat_fin_thresholds,Expense Thresholds,/platform/expense-thresholds
+A_unplaced_granted_page,pmo_oversight,platform_timesheet_approval_settings,Timesheet Approval Settings,/platform/timesheets/settings
+A_unplaced_granted_page,pmo_oversight,plat_know_add_opa,Add OPA,/platform/opa/new
+A_unplaced_granted_page,pmo_oversight,plat_know_assets,Process Assets,/platform/opa
+A_unplaced_granted_page,pmo_oversight,plat_know_hub,Org Knowledge Hub,/platform/org-knowledge
+A_unplaced_granted_page,pmo_oversight,plat_know_opa_bulk,OPA Bulk Upload,/platform/opa/bulk-upload
+A_unplaced_granted_page,pmo_oversight,plat_know_opa_drafts,OPA Drafts,/platform/opa/on-hold
+A_unplaced_granted_page,pmo_oversight,plat_lc_auth_queue,Authorisation Queue,/pmo/authorisation/queue
+A_unplaced_granted_page,pmo_oversight,plat_lc_chains,Approval Chains,/pmo/authorisation/chains
+A_unplaced_granted_page,pmo_oversight,plat_lc_configure,Configure Rules,/pmo/authorisation/configure
+A_unplaced_granted_page,pmo_oversight,plat_lc_dashboard,Lifecycle Dashboard,/pmo/authorisation/dashboard
+A_unplaced_granted_page,pmo_oversight,plat_lc_retention,Archive Retention,/pmo/authorisation/archive-retention
+A_unplaced_granted_page,pmo_oversight,plat_lc_vault,Archive Vault,/pmo/authorisation/archive
+A_unplaced_granted_page,pmo_oversight,plat_my_projects,My Projects,/platform/projects
+A_unplaced_granted_page,pmo_oversight,plat_onhold_projects,On Hold / Drafts,/platform/projects/on-hold
+A_unplaced_granted_page,pmo_oversight,plat_oversight_delay,Delay Register / Templates,/platform/delays
+A_unplaced_granted_page,pmo_oversight,plat_oversight_issue,Issue Register,/pmo/oversight/issue-register
+A_unplaced_granted_page,pmo_oversight,plat_oversight_lessons,Lessons Log,/pmo/oversight/lessons-log
+A_unplaced_granted_page,pmo_oversight,plat_oversight_quality,Quality Register,/pmo/oversight/quality-register
+A_unplaced_granted_page,pmo_oversight,plat_oversight_risk,Risk Register,/pmo/oversight/risk-register
+A_unplaced_granted_page,pmo_oversight,plat_oversight_schedule,Schedule Oversight,/pmo/oversight/schedules
+A_unplaced_granted_page,pmo_oversight,plat_oversight_scope,Scope Oversight,/pmo/oversight/scope
+A_unplaced_granted_page,pmo_oversight,plat_people_stakeholders,Stakeholders,/platform/stakeholders/register
+A_unplaced_granted_page,pmo_oversight,plat_pm_ai,Ask Nidus,/platform/ai
+A_unplaced_granted_page,pmo_oversight,plat_pm_a_kaizen,Kaizen Board,/platform/projects/:projectId/lean/kaizen
+A_unplaced_granted_page,pmo_oversight,plat_pm_a_planning_poker,Planning Poker,/pm/planning/planning-poker
+A_unplaced_granted_page,pmo_oversight,plat_pm_a_process_forms,Agile Process Forms,/pm/process-templates
+A_unplaced_granted_page,pmo_oversight,plat_pm_a_releases,Releases / Sprints,/platform/projects/:projectId/scrum/releases
+A_unplaced_granted_page,pmo_oversight,plat_pm_a_story_map,Story Map,/platform/projects/:projectId/scrum/story-map
+A_unplaced_granted_page,pmo_oversight,plat_pm_a_vsm,Value Stream Map,/platform/projects/:projectId/lean/value-stream-map
+A_unplaced_granted_page,pmo_oversight,plat_pm_calendar,Calendar,/platform/calendar
+A_unplaced_granted_page,pmo_oversight,plat_pm_dashboard,Dashboard,/platform/dashboard
+A_unplaced_granted_page,pmo_oversight,plat_pm_p_itto_drafts,ITTO Drafts,/platform/itto/drafts
+A_unplaced_granted_page,pmo_oversight,plat_pm_p_itto_project,ITTO Project,/platform/itto/project
+A_unplaced_granted_page,pmo_oversight,plat_pm_p_itto_templates,ITTO Templates,/platform/itto/templates
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_benefits_rp,Benefits Review Plan,/pm/initiation/benefits-review-plan
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_checkpoint,Checkpoint Reports,/pm/reporting/checkpoint-reports
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_cms,Communication Mgmt Strategy,/pm/governance/communication-strategy
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_conf_ms,Configuration Mgmt Strategy,/pm/governance/configuration-strategy
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_doc_gov,Document Governance,/platform/document-governance
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_end_project,End Project Report,/platform/projects/:projectId/closure?tab=end-report
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_end_stage,End Stage Reports,/pm/reporting/end-stage-reports
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_exception,Exception Reports,/pm/reporting/exception-reports
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_highlight,Highlight Reports,/pm/reporting/highlight-reports
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_issue_rep,Issue Reports,/pm/reporting/issue-reports
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_pid,Project Initiation Document,/pm/initiation/pid
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_policies,Policies & Compliance,/platform/local-registers/00000000-0000-4000-9100-000000000001
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_ppd,Project Product Description,/platform/ppd
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_prod_desc,Product Descriptions,/platform/projects/:projectId/product-descriptions
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_qms,Quality Mgmt Strategy,/pm/governance/quality-strategy
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_rms,Risk Mgmt Strategy,/pm/governance/risk-strategy
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_stage_gates,Stage Gate Reviews,/platform/stage-gates
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_work_auth,Work Authorisations,/platform/work-authorisations
+A_unplaced_granted_page,pmo_oversight,plat_pm_s_work_packages,Work Packages,/pm/delivery/work-packages
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_alignment,Strategic Alignment,/platform/strategy/alignment
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_benefits,Benefits Pipeline,/platform/benefits
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_collisions,Portfolio Collisions,/pmo/planning/collisions
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_dependencies,Portfolio Dependencies,/platform/portfolio/dependencies
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_document_oversight,Document Oversight,/platform/portfolio/document-oversight
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_map,Portfolio Map,/pmo/strategy/portfolio-map
+A_unplaced_granted_page,pmo_oversight,plat_portfolio_overview,Portfolio Overview,/platform/portfolio
+A_unplaced_granted_page,pmo_oversight,plat_proc_drafts,RFP Drafts,/pmo/rfp/drafts
+A_unplaced_granted_page,pmo_oversight,plat_proc_load_rfp,Load RFP,/pmo/rfp/create
+A_unplaced_granted_page,pmo_oversight,plat_proc_rfp,RFP Register,/pmo/procurement/rfp
+A_unplaced_granted_page,pmo_oversight,plat_programme_benefits,Benefits Management,/platform/programme/benefits
+A_unplaced_granted_page,pmo_oversight,plat_programme_document_oversight,Document Oversight,/platform/programme/document-oversight
+A_unplaced_granted_page,pmo_oversight,plat_programme_management,Programme Management,/platform/programme
+A_unplaced_granted_page,pmo_oversight,plat_project_dashboard,Project Dashboard,/platform/dashboard
+A_unplaced_granted_page,pmo_oversight,plat_releases_pmo,Releases,/platform/releases
+A_unplaced_granted_page,pmo_oversight,plat_rep_agile_metrics,Agile Metrics Hub,/platform/sprint-metrics
+A_unplaced_granted_page,pmo_oversight,plat_rep_analytics,Analytics Dashboards,/platform/analytics
+A_unplaced_granted_page,pmo_oversight,plat_rep_builder,Dashboard Builder,/platform/report-builder
+A_unplaced_granted_page,pmo_oversight,plat_rep_end_project,End Project Reports,/platform/structured/end-project-report
+A_unplaced_granted_page,pmo_oversight,plat_rep_end_stage,End Stage Reports,/pm/reporting/end-stage
+A_unplaced_granted_page,pmo_oversight,plat_rep_exception,Exception Reports,/pm/reporting/exception
+A_unplaced_granted_page,pmo_oversight,plat_rep_highlight,Highlight Reports,/pm/reporting/highlight
+A_unplaced_granted_page,pmo_oversight,plat_rep_lessons,Lessons Reports,/platform/reports
+A_unplaced_granted_page,pmo_oversight,plat_rep_library,Report Library,/platform/reports
+A_unplaced_granted_page,pmo_oversight,plat_rep_scheduled,Scheduled Reports,/platform/scheduled-reports
+A_unplaced_granted_page,pmo_oversight,plat_story_map_pmo,Story Map,/platform/story-map
+A_unplaced_granted_page,pmo_oversight,plat_tl_all_members,All Team Members,/platform/teams
+A_unplaced_granted_page,pmo_oversight,plat_tl_assignments,Team Assignments,/pmo-admin/manager-assignments
+A_unplaced_granted_page,pmo_oversight,plat_tl_checkpoint,Checkpoint Reports,/platform/structured/checkpoint-reports
+A_unplaced_granted_page,pmo_oversight,plat_tl_daily_log,Daily Log (team),/platform/daily-log/my-entries
+A_unplaced_granted_page,pmo_oversight,plat_tl_prod_desc,Product Descriptions,/platform/product-descriptions
+A_unplaced_granted_page,pmo_oversight,plat_tl_team_reports,Team Reports,/platform/reports
+A_unplaced_granted_page,pmo_oversight,plat_tl_workstream_plans,Workstream Plans,/platform/workstream-plans
+A_unplaced_granted_page,pmo_oversight,plat_tm_daily_log,My Daily Log,/platform/daily-log/my-entries
+A_unplaced_granted_page,pmo_oversight,plat_tm_dashboard,Dashboard,/platform/dashboard
+A_unplaced_granted_page,pmo_oversight,plat_tm_lesson_actions,My Lesson Actions,/platform/lessons/my-actions
+A_unplaced_granted_page,pmo_oversight,plat_tm_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,pmo_oversight,plat_tm_okr_contrib,My OKR Contributions,/pmo/okr/objectives
+A_unplaced_granted_page,pmo_oversight,plat_tm_pending_appr,Pending My Approval,/pmo/authorisation/queue
+A_unplaced_granted_page,pmo_oversight,plat_tm_prod_desc,My Product Descriptions (assigned),/platform/product-descriptions
+A_unplaced_granted_page,pmo_oversight,plat_tm_sprint_tasks,My Sprint Tasks,/platform/sprint-tasks
+A_unplaced_granted_page,pmo_oversight,plat_tm_story_map_ro,Story Map (read),/platform/story-map
+A_unplaced_granted_page,pmo_oversight,plat_tm_submitted,My Submitted Records,/pm/authorisation/submitted
+A_unplaced_granted_page,pmo_oversight,plat_tm_task_board,Task Board,/platform/tasks/board
+A_unplaced_granted_page,pmo_oversight,plat_tm_task_list,Task List,/platform/tasks
+A_unplaced_granted_page,pmo_oversight,plat_tm_team_board,Team Board,/platform/team-board
+A_unplaced_granted_page,pmo_oversight,plat_tm_team_members,Team Members,/platform/teams
+A_unplaced_granted_page,pmo_oversight,plat_tm_workload,Workload Heatmap,/platform/resources/capacity
+A_unplaced_granted_page,pmo_oversight,plat_unified_approvals_register,Approvals Register,/pmo/approvals/register
+A_unplaced_granted_page,pmo_oversight,plat_xf_automation,Automation,/platform/automation
+A_unplaced_granted_page,pmo_oversight,plat_xf_collaboration,Collaboration,/pmo/collaboration/whiteboard
+A_unplaced_granted_page,pmo_oversight,plat_xf_dashboards,Dashboards & Analytics,/platform/analytics
+A_unplaced_granted_page,pmo_oversight,plat_xf_integrations,Integrations,/platform/integrations
+A_unplaced_granted_page,pmo_oversight,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,pmo_oversight,plat_xf_procurement,Procurement & Contracts,/platform/procurement
+A_unplaced_granted_page,pmo_oversight,plat_xf_project_settings,Project Settings,/platform/project-settings
+A_unplaced_granted_page,pmo_oversight,plat_xf_resources_hub,Resources Hub,/platform/resources/directory
+A_unplaced_granted_page,pmo_oversight,pmo-admin-branding-identity,Branding & Identity,/platform/organisation/branding
+A_unplaced_granted_page,pmo_oversight,pmo-admin-budget-categories,Budget Categories,/platform/pmo-admin/budget-categories
+A_unplaced_granted_page,pmo_oversight,pmo-admin-form-templates,Form Templates,/platform/admin/form-templates
+A_unplaced_granted_page,pmo_oversight,pmo-admin-funding-sources,Funding Sources,/platform/pmo-admin/funding-sources
+A_unplaced_granted_page,pmo_oversight,pmo-admin-integrations,Integrations,/pmo/admin/integrations
+A_unplaced_granted_page,pmo_oversight,pmo-admin-local-data-extensions,Local Data Extensions,/app/local-data-extensions
+A_unplaced_granted_page,pmo_oversight,pmo_admin_local_registers,Manage Local Registers,/platform/pmo-admin/local-registers
+A_unplaced_granted_page,pmo_oversight,pmo-admin-org-settings,Organisation Settings,/platform/pmo-admin/settings
+A_unplaced_granted_page,pmo_oversight,pmo-admin-project-statuses,Project Statuses,/platform/pmo-admin/project-statuses
+A_unplaced_granted_page,pmo_oversight,pmo-admin-project-types,Project Types,/platform/pmo-admin/project-types
+A_unplaced_granted_page,pmo_oversight,pmo-admin-role-menu-access,Role Menu Access,/platform/pmo/role-menu-access
+A_unplaced_granted_page,pmo_oversight,pmo-admin-timesheet-overtime-types,Timesheet Overtime Types,/platform/pmo-admin/timesheet-overtime-types
+A_unplaced_granted_page,pmo_oversight,pmo-admin-timesheet-review-reasons,Timesheet Review Reasons,/platform/pmo-admin/timesheet-review-reasons
+A_unplaced_granted_page,pmo_oversight,pmo-admin-timesheet-settings,Timesheet Settings,/platform/pmo-admin/timesheet-settings
+A_unplaced_granted_page,pmo_oversight,pmo-admin-timesheet-work-categories,Timesheet Work Categories,/platform/pmo-admin/timesheet-work-categories
+A_unplaced_granted_page,pmo_oversight,pmo-admin-users,User Management,/platform/pmo-admin/users
+A_unplaced_granted_page,pmo_oversight,pmo_approval_chains,Approval Chain Templates,/platform/pmo-admin/approval-chains
+A_unplaced_granted_page,pmo_oversight,pmo-comms-direct,Direct Messages,/platform/comms/direct
+A_unplaced_granted_page,pmo_oversight,pmo-comms-messages,Messages,/platform/comms/messages
+A_unplaced_granted_page,pmo_oversight,pmo-comms-pending-ai,Pending AI Reviews,/platform/comms/pending-review
+A_unplaced_granted_page,pmo_oversight,pmo_communication_information_options,Communication formats,/platform/stakeholders/communication-options
+A_unplaced_granted_page,pmo_oversight,pmo_configuration_home,PMO Configuration,/platform/pmo-admin/configuration
+A_unplaced_granted_page,pmo_oversight,pmo-email-invitation-expiry,Invitation Expiry,/platform/admin/invitation-settings
+A_unplaced_granted_page,pmo_oversight,pmo-email-invitation-templates,Invitation Templates,/app/settings/invitation-templates
+A_unplaced_granted_page,pmo_oversight,pmo-email-sender-profiles,Sender Profiles,/platform/admin/email-sender-profiles
+A_unplaced_granted_page,pmo_oversight,pmo-email-settings,Email Settings,/platform/admin/email-settings
+A_unplaced_granted_page,pmo_oversight,pmo-notification-preferences,Notification Preferences,/platform/settings/notifications
+A_unplaced_granted_page,pmo_oversight,pmo_organisation_authorities,Authorities,/platform/pmo-admin/authorities
+A_unplaced_granted_page,pmo_oversight,pmo-people-add-users,Add Users,/platform/project-members
+A_unplaced_granted_page,pmo_oversight,pmo-people-appointment-tracker,Appointment Tracker,/platform/pmo-admin/appointments
+A_unplaced_granted_page,pmo_oversight,pmo-people-assignment-settings,Assignment Settings,/platform/pmo-admin/manager-assignment-settings
+A_unplaced_granted_page,pmo_oversight,pmo-people-assign-roles,Assign Roles,/platform/admin/assign-roles-to-projects
+A_unplaced_granted_page,pmo_oversight,pmo-people-invitation-tracker,Invitation Tracker,/platform/admin/invitation-tracker
+A_unplaced_granted_page,pmo_oversight,pmo-people-manage-menu-bundles,Manage Menu Bundles,/platform/admin/manage-menu-bundles
+A_unplaced_granted_page,pmo_oversight,pmo-people-manager-assignments,Manager Assignments,/platform/pmo-admin/manager-assignments
+A_unplaced_granted_page,pmo_oversight,pmo-people-manage-roles,Manage Roles,/platform/admin/manage-roles
+A_unplaced_granted_page,pmo_oversight,pmo-people-organisation-industries,Industries & Capabilities,/platform/admin/organisation-industries
+A_unplaced_granted_page,pmo_oversight,pmo-people-resource-directory,Resource Directory,/platform/teams/directory
+A_unplaced_granted_page,pmo_oversight,pmo-people-send-invites,Send Invitations,/platform/admin/send-role-invites
+A_unplaced_granted_page,pmo_oversight,pmo-people-team-capacity,Team Capacity,/platform/teams/capacity
+A_unplaced_granted_page,pmo_oversight,pmo_project_classifications,Project Classifications,/platform/pmo-admin/project-classifications
+A_unplaced_granted_page,pmo_oversight,pmo_regional_format_settings,Regional & Format Settings,/platform/pmo-admin/regional-format-settings
+A_unplaced_granted_page,pmo_oversight,pmo_risk_categories,Risk Categories,/platform/pmo-admin/risk-categories
+A_unplaced_granted_page,pmo_oversight,pmo_roles_responsibilities,Roles & Responsibilities,/platform/pmo-admin/roles-responsibilities
+A_unplaced_granted_page,pmo_oversight,pmo-workflows-brief-approvals,Project Brief Approvals,/platform/briefs/approvals
+A_unplaced_granted_page,pmo_oversight,pmo-workflows-mandate-approvals,Mandate Approvals,/platform/mandates/approvals
+A_unplaced_granted_page,pmo_oversight,sim_governance_actions_register,Governance Actions Register,/simulator/pmo/governance-actions/register
+A_unplaced_granted_page,pmo_oversight,sim_pm_comms_channels,Channel Messages,/simulator/comms/messages
+A_unplaced_granted_page,pmo_oversight,sim_pm_comms_direct,Direct Messages,/simulator/comms/direct
+A_unplaced_granted_page,pmo_oversight,sim_pm_comms_hub,Comms Hub,/simulator/comms
+A_unplaced_granted_page,pmo_oversight,sim_pm_comms_meetings,Meetings,/simulator/comms/meetings
+A_unplaced_granted_page,pmo_oversight,sim_pm_comms_pending_review,Pending AI Reviews,/simulator/comms/pending-review
+A_unplaced_granted_page,pmo_oversight,sim_pm_comms_summaries,Meeting Summaries,/simulator/comms/meetings/summaries
+A_unplaced_granted_page,pmo_oversight,sim_pmo_admin_configuration,PMO Configuration,/simulator/pmo/configuration
+A_unplaced_granted_page,pmo_oversight,sim-pmo-assignment-roles,Assignment Roles,/simulator/pmo/assignment-roles
+A_unplaced_granted_page,pmo_oversight,sim-pmo-budget-categories,Budget Categories,/simulator/pmo/budget-categories
+A_unplaced_granted_page,pmo_oversight,sim_pmo_document_oversight,Document Oversight,/simulator/pmo/document-oversight/pmo
+A_unplaced_granted_page,pmo_oversight,sim_pmo_field_templates,Field Templates,/simulator/pmo/field-templates
+A_unplaced_granted_page,pmo_oversight,sim-pmo-funding-sources,Funding Sources,/simulator/pmo/funding-sources
+A_unplaced_granted_page,pmo_oversight,sim-pmo-manage-menu-bundles,Manage Menu Bundles,/simulator/pmo/manage-menu-bundles
+A_unplaced_granted_page,pmo_oversight,sim-pmo-manage-roles,Manage Roles,/simulator/pmo/manage-roles
+A_unplaced_granted_page,pmo_oversight,sim-pmo-organisation-industries,Industries & Capabilities,/simulator/pmo/organisation-industries
+A_unplaced_granted_page,pmo_oversight,sim_pmo_p_new_form_template,New Template,/simulator/pmo/forms/new
+A_unplaced_granted_page,pmo_oversight,sim-pmo-portfolio-categories,Portfolio Categories,/simulator/pmo/portfolio-categories
+A_unplaced_granted_page,pmo_oversight,sim_pmo_portfolio_document_oversight,Document Oversight,/simulator/pmo/document-oversight/portfolio
+A_unplaced_granted_page,pmo_oversight,sim_pmo_programme_document_oversight,Document Oversight,/simulator/pmo/document-oversight/programme
+A_unplaced_granted_page,pmo_oversight,sim-pmo-project-statuses,Project Statuses,/simulator/pmo/project-statuses
+A_unplaced_granted_page,pmo_oversight,sim-pmo-project-timesheet-settings,Timesheet Settings (Project Override),/simulator/project-setup/timesheet-settings
+A_unplaced_granted_page,pmo_oversight,sim-pmo-project-types,Project Types,/simulator/pmo/project-types
+A_unplaced_granted_page,pmo_oversight,sim-pmo-role-assignment,Role Assignment,/simulator/pmo/role-assignment
+A_unplaced_granted_page,pmo_oversight,sim-pmo-timesheet-overtime-types,Timesheet Overtime Types,/simulator/pmo/timesheet-overtime-types
+A_unplaced_granted_page,pmo_oversight,sim-pmo-timesheet-review-reasons,Timesheet Review Reasons,/simulator/pmo/timesheet-review-reasons
+A_unplaced_granted_page,pmo_oversight,sim-pmo-timesheet-work-categories,Timesheet Work Categories,/simulator/pmo/timesheet-work-categories
+A_unplaced_granted_page,pmo_oversight,sim_pm_project_documents,Project Documents,/simulator/pm/documents/project
+A_unplaced_granted_page,pmo_oversight,sim_pm_project_templates_forms,Forms,/simulator/pm/templates/project?domainGroup=forms
+A_unplaced_granted_page,pmo_oversight,sim_pm_project_templates_templates,Templates,/simulator/pm/templates/project?domainGroup=templates
+A_unplaced_granted_page,pmo_oversight,sim_pm_stkh_comm_options,Communication formats,/simulator/stakeholders/communication-options
+A_unplaced_granted_page,pmo_oversight,sim_tpl_library,Template Library,/simulator/pmo/template-library
+A_unplaced_granted_page,pmo_oversight,sim_tpl_library_forms,Forms,/simulator/pmo/template-library?domainGroup=forms
+A_unplaced_granted_page,pmo_oversight,sim_tpl_library_templates,Templates,/simulator/pmo/template-library?domainGroup=templates
+A_unplaced_granted_page,pmo_oversight,sim_tpl_organisational,Organisational Templates,/simulator/pmo/organisational-templates
+A_unplaced_granted_page,pmo_oversight,sim_tpl_organisational_forms,Forms,/simulator/pmo/organisational-templates?domainGroup=forms
+A_unplaced_granted_page,pmo_oversight,sim_tpl_organisational_templates,Templates,/simulator/pmo/organisational-templates?domainGroup=templates
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_portfolio_agile,Agile,/simulator/pmo/organisational-templates?tier=portfolio&domain=portfolio_template&methodology=agile
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_portfolio_standards_based,Standards-Based,/simulator/pmo/organisational-templates?tier=portfolio&domain=portfolio_template&methodology=standards_based
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_portfolio_structured,Structured,/simulator/pmo/organisational-templates?tier=portfolio&domain=portfolio_template&methodology=structured
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_programme_agile,Agile,/simulator/pmo/organisational-templates?tier=programme&domain=programme_template&methodology=agile
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_programme_standards_based,Standards-Based,/simulator/pmo/organisational-templates?tier=programme&domain=programme_template&methodology=standards_based
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_programme_structured,Structured,/simulator/pmo/organisational-templates?tier=programme&domain=programme_template&methodology=structured
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_project_agile,Agile,/simulator/pmo/organisational-templates?tier=project&domain=project_template&methodology=agile
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_project_standards_based,Standards-Based,/simulator/pmo/organisational-templates?tier=project&domain=project_template&methodology=standards_based
+A_unplaced_granted_page,pmo_oversight,sim_tpl_org_project_structured,Structured,/simulator/pmo/organisational-templates?tier=project&domain=project_template&methodology=structured
+A_unplaced_granted_page,pmo_oversight,sim_tpl_signatory_requirements,Document Signatory,/simulator/pmo/organisational-templates/signatory-requirements
+A_unplaced_granted_page,pmo_oversight,sim_unified_approvals_register,Approvals Register,/simulator/pmo/approvals/register
+A_unplaced_granted_page,portfolio,local_register_asset_infrastructure_register,Asset/Infrastructure Register,/platform/local-registers/00000000-0000-4000-8000-000000000019
+A_unplaced_granted_page,portfolio,local_register_bill_of_materials,Bill of Materials,/platform/local-registers/00000000-0000-4000-8000-000000000012
+A_unplaced_granted_page,portfolio,local_register_clinical_site_activation,Clinical Site Activation,/platform/local-registers/00000000-0000-4000-8000-000000000011
+A_unplaced_granted_page,portfolio,local_register_clinical_trials,Clinical Trials / Studies,/platform/local-registers/00000000-0000-4000-8000-00000000000e
+A_unplaced_granted_page,portfolio,local_register_commissioning,Commissioning,/platform/local-registers/00000000-0000-4000-8000-000000000003
+A_unplaced_granted_page,portfolio,local_register_core_banking,Core Banking,/platform/local-registers/00000000-0000-4000-8000-000000000005
+A_unplaced_granted_page,portfolio,local_register_curriculum_development,Curriculum Development / Rollout,/platform/local-registers/00000000-0000-4000-8000-00000000001c
+A_unplaced_granted_page,portfolio,local_register_cutover,Cutover,/platform/local-registers/00000000-0000-4000-8000-000000000008
+A_unplaced_granted_page,portfolio,local_register_data_migration,Data Migration,/platform/local-registers/00000000-0000-4000-8000-000000000002
+A_unplaced_granted_page,portfolio,local_register_deployments,Deployments,/platform/local-registers/00000000-0000-4000-8000-00000000000d
+A_unplaced_granted_page,portfolio,local_register_environmental_impact_assessments,Environmental Impact Assessments,/platform/local-registers/00000000-0000-4000-8000-00000000001b
+A_unplaced_granted_page,portfolio,local_register_equipment_asset_qualification,Equipment/Asset Qualification,/platform/local-registers/00000000-0000-4000-8000-000000000013
+A_unplaced_granted_page,portfolio,local_register_foi_requests,Freedom of Information Requests,/platform/local-registers/00000000-0000-4000-8000-000000000016
+A_unplaced_granted_page,portfolio,local_register_go_live,Go-Live,/platform/local-registers/00000000-0000-4000-8000-000000000009
+A_unplaced_granted_page,portfolio,local_register_materials,Materials,/platform/local-registers/00000000-0000-4000-8000-00000000000b
+A_unplaced_granted_page,portfolio,local_register_media_placements,Media Placements / Channel Scheduling,/platform/local-registers/00000000-0000-4000-8000-000000000018
+A_unplaced_granted_page,portfolio,local_register_outage_management,Outage Management,/platform/local-registers/00000000-0000-4000-8000-00000000001a
+A_unplaced_granted_page,portfolio,local_register_parameterisation,Parameterisation,/platform/local-registers/00000000-0000-4000-8000-000000000007
+A_unplaced_granted_page,portfolio,local_register_patient_safety_events,Patient Safety Events,/platform/local-registers/00000000-0000-4000-8000-000000000010
+A_unplaced_granted_page,portfolio,local_register_permits,Permits,/platform/local-registers/00000000-0000-4000-8000-000000000004
+A_unplaced_granted_page,portfolio,local_register_policy_legislative_milestones,Policy/Legislative Milestones,/platform/local-registers/00000000-0000-4000-8000-000000000017
+A_unplaced_granted_page,portfolio,local_register_process_validation,Process Validation,/platform/local-registers/00000000-0000-4000-8000-000000000014
+A_unplaced_granted_page,portfolio,local_register_product_configuration,Product Configuration,/platform/local-registers/00000000-0000-4000-8000-000000000006
+A_unplaced_granted_page,portfolio,local_register_readiness_checklist,Readiness Checklist,/platform/local-registers/00000000-0000-4000-8000-000000000001
+A_unplaced_granted_page,portfolio,local_register_regulatory_submissions,Regulatory Submissions,/platform/local-registers/00000000-0000-4000-8000-00000000000f
+A_unplaced_granted_page,portfolio,local_register_releases,Releases,/platform/local-registers/00000000-0000-4000-8000-00000000000c
+A_unplaced_granted_page,portfolio,local_register_safety_incidents,Safety Incidents,/platform/local-registers/00000000-0000-4000-8000-000000000015
+A_unplaced_granted_page,portfolio,local_registers_index,Local Registers,/platform/local-registers
+A_unplaced_granted_page,portfolio,local_register_sites,Sites,/platform/local-registers/00000000-0000-4000-8000-00000000000a
+A_unplaced_granted_page,portfolio,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,portfolio,plat_a_sprint_metrics,Sprint Metrics,/platform/sprint-metrics
+A_unplaced_granted_page,portfolio,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,portfolio,plat_fin_evm,Portfolio EVM,/platform/portfolio/evm
+A_unplaced_granted_page,portfolio,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,portfolio,platform_timesheet_approval_settings,Timesheet Approval Settings,/platform/timesheets/settings
+A_unplaced_granted_page,portfolio,plat_programme_benefits,Benefits Management,/platform/programme/benefits
+A_unplaced_granted_page,portfolio,plat_programme_management,Programme Management,/platform/programme
+A_unplaced_granted_page,portfolio,plat_rep_analytics,Analytics Dashboards,/platform/analytics
+A_unplaced_granted_page,portfolio,plat_rep_builder,Dashboard Builder,/platform/report-builder
+A_unplaced_granted_page,portfolio,plat_rep_scheduled,Scheduled Reports,/platform/scheduled-reports
+A_unplaced_granted_page,portfolio,plat_unified_approvals_register,Approvals Register,/pmo/approvals/register
+A_unplaced_granted_page,portfolio,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,portfolio,pmo-people-manage-menu-bundles,Manage Menu Bundles,/platform/admin/manage-menu-bundles
+A_unplaced_granted_page,portfolio,pmo-people-manage-roles,Manage Roles,/platform/admin/manage-roles
+A_unplaced_granted_page,portfolio,pmo-people-organisation-industries,Industries & Capabilities,/platform/admin/organisation-industries
+A_unplaced_granted_page,portfolio,sim_governance_actions_register,Governance Actions Register,/simulator/pmo/governance-actions/register
+A_unplaced_granted_page,portfolio,sim-pmo-assignment-roles,Assignment Roles,/simulator/pmo/assignment-roles
+A_unplaced_granted_page,portfolio,sim-pmo-manage-menu-bundles,Manage Menu Bundles,/simulator/pmo/manage-menu-bundles
+A_unplaced_granted_page,portfolio,sim-pmo-manage-roles,Manage Roles,/simulator/pmo/manage-roles
+A_unplaced_granted_page,portfolio,sim-pmo-organisation-industries,Industries & Capabilities,/simulator/pmo/organisation-industries
+A_unplaced_granted_page,portfolio,sim_pmo_portfolio_document_oversight,Document Oversight,/simulator/pmo/document-oversight/portfolio
+A_unplaced_granted_page,portfolio,sim-pmo-project-timesheet-settings,Timesheet Settings (Project Override),/simulator/project-setup/timesheet-settings
+A_unplaced_granted_page,portfolio,sim-pmo-role-assignment,Role Assignment,/simulator/pmo/role-assignment
+A_unplaced_granted_page,portfolio,sim_pm_project_documents,Project Documents,/simulator/pm/documents/project
+A_unplaced_granted_page,portfolio,sim_tpl_library,Template Library,/simulator/pmo/template-library
+A_unplaced_granted_page,portfolio,sim_tpl_library_forms,Forms,/simulator/pmo/template-library?domainGroup=forms
+A_unplaced_granted_page,portfolio,sim_tpl_library_templates,Templates,/simulator/pmo/template-library?domainGroup=templates
+A_unplaced_granted_page,portfolio,sim_tpl_organisational_forms,Forms,/simulator/pmo/organisational-templates?domainGroup=forms
+A_unplaced_granted_page,portfolio,sim_tpl_organisational_templates,Templates,/simulator/pmo/organisational-templates?domainGroup=templates
+A_unplaced_granted_page,portfolio,sim_tpl_signatory_requirements,Document Signatory,/simulator/pmo/organisational-templates/signatory-requirements
+A_unplaced_granted_page,portfolio,sim_unified_approvals_register,Approvals Register,/simulator/pmo/approvals/register
+A_unplaced_granted_page,programme,local_register_asset_infrastructure_register,Asset/Infrastructure Register,/platform/local-registers/00000000-0000-4000-8000-000000000019
+A_unplaced_granted_page,programme,local_register_bill_of_materials,Bill of Materials,/platform/local-registers/00000000-0000-4000-8000-000000000012
+A_unplaced_granted_page,programme,local_register_clinical_site_activation,Clinical Site Activation,/platform/local-registers/00000000-0000-4000-8000-000000000011
+A_unplaced_granted_page,programme,local_register_clinical_trials,Clinical Trials / Studies,/platform/local-registers/00000000-0000-4000-8000-00000000000e
+A_unplaced_granted_page,programme,local_register_commissioning,Commissioning,/platform/local-registers/00000000-0000-4000-8000-000000000003
+A_unplaced_granted_page,programme,local_register_core_banking,Core Banking,/platform/local-registers/00000000-0000-4000-8000-000000000005
+A_unplaced_granted_page,programme,local_register_curriculum_development,Curriculum Development / Rollout,/platform/local-registers/00000000-0000-4000-8000-00000000001c
+A_unplaced_granted_page,programme,local_register_cutover,Cutover,/platform/local-registers/00000000-0000-4000-8000-000000000008
+A_unplaced_granted_page,programme,local_register_data_migration,Data Migration,/platform/local-registers/00000000-0000-4000-8000-000000000002
+A_unplaced_granted_page,programme,local_register_deployments,Deployments,/platform/local-registers/00000000-0000-4000-8000-00000000000d
+A_unplaced_granted_page,programme,local_register_environmental_impact_assessments,Environmental Impact Assessments,/platform/local-registers/00000000-0000-4000-8000-00000000001b
+A_unplaced_granted_page,programme,local_register_equipment_asset_qualification,Equipment/Asset Qualification,/platform/local-registers/00000000-0000-4000-8000-000000000013
+A_unplaced_granted_page,programme,local_register_foi_requests,Freedom of Information Requests,/platform/local-registers/00000000-0000-4000-8000-000000000016
+A_unplaced_granted_page,programme,local_register_go_live,Go-Live,/platform/local-registers/00000000-0000-4000-8000-000000000009
+A_unplaced_granted_page,programme,local_register_materials,Materials,/platform/local-registers/00000000-0000-4000-8000-00000000000b
+A_unplaced_granted_page,programme,local_register_media_placements,Media Placements / Channel Scheduling,/platform/local-registers/00000000-0000-4000-8000-000000000018
+A_unplaced_granted_page,programme,local_register_outage_management,Outage Management,/platform/local-registers/00000000-0000-4000-8000-00000000001a
+A_unplaced_granted_page,programme,local_register_parameterisation,Parameterisation,/platform/local-registers/00000000-0000-4000-8000-000000000007
+A_unplaced_granted_page,programme,local_register_patient_safety_events,Patient Safety Events,/platform/local-registers/00000000-0000-4000-8000-000000000010
+A_unplaced_granted_page,programme,local_register_permits,Permits,/platform/local-registers/00000000-0000-4000-8000-000000000004
+A_unplaced_granted_page,programme,local_register_policy_legislative_milestones,Policy/Legislative Milestones,/platform/local-registers/00000000-0000-4000-8000-000000000017
+A_unplaced_granted_page,programme,local_register_process_validation,Process Validation,/platform/local-registers/00000000-0000-4000-8000-000000000014
+A_unplaced_granted_page,programme,local_register_product_configuration,Product Configuration,/platform/local-registers/00000000-0000-4000-8000-000000000006
+A_unplaced_granted_page,programme,local_register_readiness_checklist,Readiness Checklist,/platform/local-registers/00000000-0000-4000-8000-000000000001
+A_unplaced_granted_page,programme,local_register_regulatory_submissions,Regulatory Submissions,/platform/local-registers/00000000-0000-4000-8000-00000000000f
+A_unplaced_granted_page,programme,local_register_releases,Releases,/platform/local-registers/00000000-0000-4000-8000-00000000000c
+A_unplaced_granted_page,programme,local_register_safety_incidents,Safety Incidents,/platform/local-registers/00000000-0000-4000-8000-000000000015
+A_unplaced_granted_page,programme,local_registers_index,Local Registers,/platform/local-registers
+A_unplaced_granted_page,programme,local_register_sites,Sites,/platform/local-registers/00000000-0000-4000-8000-00000000000a
+A_unplaced_granted_page,programme,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,programme,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,programme,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,programme,platform_timesheet_approval_settings,Timesheet Approval Settings,/platform/timesheets/settings
+A_unplaced_granted_page,programme,plat_unified_approvals_register,Approvals Register,/pmo/approvals/register
+A_unplaced_granted_page,programme,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,programme,pmo-people-manage-menu-bundles,Manage Menu Bundles,/platform/admin/manage-menu-bundles
+A_unplaced_granted_page,programme,pmo-people-manage-roles,Manage Roles,/platform/admin/manage-roles
+A_unplaced_granted_page,programme,pmo-people-organisation-industries,Industries & Capabilities,/platform/admin/organisation-industries
+A_unplaced_granted_page,programme,sim_governance_actions_register,Governance Actions Register,/simulator/pmo/governance-actions/register
+A_unplaced_granted_page,programme,sim-pmo-assignment-roles,Assignment Roles,/simulator/pmo/assignment-roles
+A_unplaced_granted_page,programme,sim-pmo-manage-menu-bundles,Manage Menu Bundles,/simulator/pmo/manage-menu-bundles
+A_unplaced_granted_page,programme,sim-pmo-manage-roles,Manage Roles,/simulator/pmo/manage-roles
+A_unplaced_granted_page,programme,sim-pmo-organisation-industries,Industries & Capabilities,/simulator/pmo/organisation-industries
+A_unplaced_granted_page,programme,sim_pmo_programme_document_oversight,Document Oversight,/simulator/pmo/document-oversight/programme
+A_unplaced_granted_page,programme,sim-pmo-project-timesheet-settings,Timesheet Settings (Project Override),/simulator/project-setup/timesheet-settings
+A_unplaced_granted_page,programme,sim-pmo-role-assignment,Role Assignment,/simulator/pmo/role-assignment
+A_unplaced_granted_page,programme,sim_pm_project_documents,Project Documents,/simulator/pm/documents/project
+A_unplaced_granted_page,programme,sim_tpl_library,Template Library,/simulator/pmo/template-library
+A_unplaced_granted_page,programme,sim_tpl_library_forms,Forms,/simulator/pmo/template-library?domainGroup=forms
+A_unplaced_granted_page,programme,sim_tpl_library_templates,Templates,/simulator/pmo/template-library?domainGroup=templates
+A_unplaced_granted_page,programme,sim_tpl_organisational_forms,Forms,/simulator/pmo/organisational-templates?domainGroup=forms
+A_unplaced_granted_page,programme,sim_tpl_organisational_templates,Templates,/simulator/pmo/organisational-templates?domainGroup=templates
+A_unplaced_granted_page,programme,sim_tpl_signatory_requirements,Document Signatory,/simulator/pmo/organisational-templates/signatory-requirements
+A_unplaced_granted_page,programme,sim_unified_approvals_register,Approvals Register,/simulator/pmo/approvals/register
+A_unplaced_granted_page,sponsor,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,sponsor,plat_fin_approvals,Expense Approvals,/platform/expenses/approvals
+A_unplaced_granted_page,sponsor,plat_fin_evm,Portfolio EVM,/platform/portfolio/evm
+A_unplaced_granted_page,sponsor,plat_fin_reports,Financial Reports,/platform/financial-reports
+A_unplaced_granted_page,sponsor,plat_pm_approval_chains,Approval Chains,/platform/pm/authorisation/chains
+A_unplaced_granted_page,sponsor,plat_pm_governance_actions,Actions,/platform/governance-actions
+A_unplaced_granted_page,sponsor,plat_pm_gov_stage_gates,Stage Gates,/platform/stage-gates
+A_unplaced_granted_page,sponsor,plat_pm_proc_performance,Vendor Performance,/platform/pm/procurement/performance
+A_unplaced_granted_page,sponsor,plat_pm_proc_plan,Procurement Plan,/pm/process-templates/t/procurement-management-plan
+A_unplaced_granted_page,sponsor,plat_pm_proc_vendor_categories,Vendor Categories,/platform/pm/procurement/vendor-categories
+A_unplaced_granted_page,sponsor,plat_pm_proc_vendors,Vendors,/platform/pm/procurement/vendors
+A_unplaced_granted_page,sponsor,plat_pm_rep_library,Report Library,/platform/reports
+A_unplaced_granted_page,sponsor,plat_pm_rep_timesheet_overview,Timesheet Overview,/platform/reports/timesheet-overview
+A_unplaced_granted_page,sponsor,plat_pm_rep_work_plan_variance,Work Plan Variance,/platform/reports/work-plan-variance
+A_unplaced_granted_page,sponsor,plat_pm_s_benefits_rp,Benefits Review Plan,/pm/initiation/benefits-review-plan
+A_unplaced_granted_page,sponsor,plat_pm_s_decision_log,Decision Log,/platform/governance/decisions
+A_unplaced_granted_page,sponsor,plat_pm_s_end_project,End Project Report,/platform/projects/:projectId/closure?tab=end-report
+A_unplaced_granted_page,sponsor,plat_pm_s_end_stage,End Stage Reports,/pm/reporting/end-stage-reports
+A_unplaced_granted_page,sponsor,plat_pm_s_exception,Exception Reports,/pm/reporting/exception-reports
+A_unplaced_granted_page,sponsor,plat_pm_s_pid,Project Initiation Document,/pm/initiation/pid
+A_unplaced_granted_page,sponsor,plat_pm_s_stage_gates,Stage Gate Reviews,/platform/stage-gates
+A_unplaced_granted_page,sponsor,plat_pm_submitted,My Submitted Records,/platform/pm/authorisation/submitted
+A_unplaced_granted_page,sponsor,plat_pm_s_work_auth,Work Authorisations,/platform/work-authorisations
+A_unplaced_granted_page,sponsor,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,stakeholder,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,stakeholder,plat_pm_gov_stage_gates,Stage Gates,/platform/stage-gates
+A_unplaced_granted_page,stakeholder,plat_pm_proc_performance,Vendor Performance,/platform/pm/procurement/performance
+A_unplaced_granted_page,stakeholder,plat_pm_proc_plan,Procurement Plan,/pm/process-templates/t/procurement-management-plan
+A_unplaced_granted_page,stakeholder,plat_pm_proc_vendor_categories,Vendor Categories,/platform/pm/procurement/vendor-categories
+A_unplaced_granted_page,stakeholder,plat_pm_proc_vendors,Vendors,/platform/pm/procurement/vendors
+A_unplaced_granted_page,stakeholder,plat_pm_s_benefits_rp,Benefits Review Plan,/pm/initiation/benefits-review-plan
+A_unplaced_granted_page,stakeholder,plat_pm_s_brief,Project Brief,/pm/initiation/project-brief
+A_unplaced_granted_page,stakeholder,plat_pm_s_end_project,End Project Report,/platform/projects/:projectId/closure?tab=end-report
+A_unplaced_granted_page,stakeholder,plat_pm_s_highlight,Highlight Reports,/pm/reporting/highlight-reports
+A_unplaced_granted_page,stakeholder,plat_tm_meetings,Meetings,/platform/comms/meetings
+A_unplaced_granted_page,stakeholder,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,team,local_register_asset_infrastructure_register,Asset/Infrastructure Register,/platform/local-registers/00000000-0000-4000-8000-000000000019
+A_unplaced_granted_page,team,local_register_bill_of_materials,Bill of Materials,/platform/local-registers/00000000-0000-4000-8000-000000000012
+A_unplaced_granted_page,team,local_register_clinical_site_activation,Clinical Site Activation,/platform/local-registers/00000000-0000-4000-8000-000000000011
+A_unplaced_granted_page,team,local_register_clinical_trials,Clinical Trials / Studies,/platform/local-registers/00000000-0000-4000-8000-00000000000e
+A_unplaced_granted_page,team,local_register_commissioning,Commissioning,/platform/local-registers/00000000-0000-4000-8000-000000000003
+A_unplaced_granted_page,team,local_register_core_banking,Core Banking,/platform/local-registers/00000000-0000-4000-8000-000000000005
+A_unplaced_granted_page,team,local_register_curriculum_development,Curriculum Development / Rollout,/platform/local-registers/00000000-0000-4000-8000-00000000001c
+A_unplaced_granted_page,team,local_register_cutover,Cutover,/platform/local-registers/00000000-0000-4000-8000-000000000008
+A_unplaced_granted_page,team,local_register_data_migration,Data Migration,/platform/local-registers/00000000-0000-4000-8000-000000000002
+A_unplaced_granted_page,team,local_register_deployments,Deployments,/platform/local-registers/00000000-0000-4000-8000-00000000000d
+A_unplaced_granted_page,team,local_register_environmental_impact_assessments,Environmental Impact Assessments,/platform/local-registers/00000000-0000-4000-8000-00000000001b
+A_unplaced_granted_page,team,local_register_equipment_asset_qualification,Equipment/Asset Qualification,/platform/local-registers/00000000-0000-4000-8000-000000000013
+A_unplaced_granted_page,team,local_register_foi_requests,Freedom of Information Requests,/platform/local-registers/00000000-0000-4000-8000-000000000016
+A_unplaced_granted_page,team,local_register_go_live,Go-Live,/platform/local-registers/00000000-0000-4000-8000-000000000009
+A_unplaced_granted_page,team,local_register_materials,Materials,/platform/local-registers/00000000-0000-4000-8000-00000000000b
+A_unplaced_granted_page,team,local_register_media_placements,Media Placements / Channel Scheduling,/platform/local-registers/00000000-0000-4000-8000-000000000018
+A_unplaced_granted_page,team,local_register_outage_management,Outage Management,/platform/local-registers/00000000-0000-4000-8000-00000000001a
+A_unplaced_granted_page,team,local_register_parameterisation,Parameterisation,/platform/local-registers/00000000-0000-4000-8000-000000000007
+A_unplaced_granted_page,team,local_register_patient_safety_events,Patient Safety Events,/platform/local-registers/00000000-0000-4000-8000-000000000010
+A_unplaced_granted_page,team,local_register_permits,Permits,/platform/local-registers/00000000-0000-4000-8000-000000000004
+A_unplaced_granted_page,team,local_register_policy_legislative_milestones,Policy/Legislative Milestones,/platform/local-registers/00000000-0000-4000-8000-000000000017
+A_unplaced_granted_page,team,local_register_process_validation,Process Validation,/platform/local-registers/00000000-0000-4000-8000-000000000014
+A_unplaced_granted_page,team,local_register_product_configuration,Product Configuration,/platform/local-registers/00000000-0000-4000-8000-000000000006
+A_unplaced_granted_page,team,local_register_readiness_checklist,Readiness Checklist,/platform/local-registers/00000000-0000-4000-8000-000000000001
+A_unplaced_granted_page,team,local_register_regulatory_submissions,Regulatory Submissions,/platform/local-registers/00000000-0000-4000-8000-00000000000f
+A_unplaced_granted_page,team,local_register_releases,Releases,/platform/local-registers/00000000-0000-4000-8000-00000000000c
+A_unplaced_granted_page,team,local_register_safety_incidents,Safety Incidents,/platform/local-registers/00000000-0000-4000-8000-000000000015
+A_unplaced_granted_page,team,local_registers_index,Local Registers,/platform/local-registers
+A_unplaced_granted_page,team,local_register_sites,Sites,/platform/local-registers/00000000-0000-4000-8000-00000000000a
+A_unplaced_granted_page,team,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,team,plat_tl_all_members,All Team Members,/platform/teams
+A_unplaced_granted_page,team,plat_tl_assignments,Team Assignments,/pmo-admin/manager-assignments
+A_unplaced_granted_page,team,plat_tl_checkpoint,Checkpoint Reports,/platform/structured/checkpoint-reports
+A_unplaced_granted_page,team,plat_tl_daily_log,Daily Log (team),/platform/daily-log/my-entries
+A_unplaced_granted_page,team,plat_tl_prod_desc,Product Descriptions,/platform/product-descriptions
+A_unplaced_granted_page,team,plat_tl_team_reports,Team Reports,/platform/reports
+A_unplaced_granted_page,team,plat_tl_workstream_plans,Workstream Plans,/platform/workstream-plans
+A_unplaced_granted_page,team,plat_tm_daily_log,My Daily Log,/platform/daily-log/my-entries
+A_unplaced_granted_page,team,plat_tm_dashboard,Dashboard,/platform/dashboard
+A_unplaced_granted_page,team,plat_tm_lesson_actions,My Lesson Actions,/platform/lessons/my-actions
+A_unplaced_granted_page,team,plat_tm_notif_prefs,Notification Preferences,/platform/notification-preferences
+A_unplaced_granted_page,team,plat_tm_okr_contrib,My OKR Contributions,/pmo/okr/objectives
+A_unplaced_granted_page,team,plat_tm_pending_appr,Pending My Approval,/pmo/authorisation/queue
+A_unplaced_granted_page,team,plat_tm_prod_desc,My Product Descriptions (assigned),/platform/product-descriptions
+A_unplaced_granted_page,team,plat_tm_sprint_tasks,My Sprint Tasks,/platform/sprint-tasks
+A_unplaced_granted_page,team,plat_tm_story_map_ro,Story Map (read),/platform/story-map
+A_unplaced_granted_page,team,plat_tm_submitted,My Submitted Records,/pm/authorisation/submitted
+A_unplaced_granted_page,team,plat_tm_task_board,Task Board,/platform/tasks/board
+A_unplaced_granted_page,team,plat_tm_task_list,Task List,/platform/tasks
+A_unplaced_granted_page,team,plat_tm_team_board,Team Board,/platform/team-board
+A_unplaced_granted_page,team,plat_tm_team_members,Team Members,/platform/teams
+A_unplaced_granted_page,team,plat_tm_workload,Workload Heatmap,/platform/resources/capacity
+A_unplaced_granted_page,team,plat_unified_approvals_register,Approvals Register,/pmo/approvals/register
+A_unplaced_granted_page,team,pmo_communication_information_options,Communication formats,/platform/stakeholders/communication-options
+A_unplaced_granted_page,team,pmo-people-manage-menu-bundles,Manage Menu Bundles,/platform/admin/manage-menu-bundles
+A_unplaced_granted_page,team,pmo-people-manage-roles,Manage Roles,/platform/admin/manage-roles
+A_unplaced_granted_page,team,pmo-people-organisation-industries,Industries & Capabilities,/platform/admin/organisation-industries
+A_unplaced_granted_page,team,pmo_risk_categories,Risk Categories,/platform/pmo-admin/risk-categories
+A_unplaced_granted_page,team,sim_governance_actions_register,Governance Actions Register,/simulator/pmo/governance-actions/register
+A_unplaced_granted_page,team,sim-pmo-assignment-roles,Assignment Roles,/simulator/pmo/assignment-roles
+A_unplaced_granted_page,team,sim-pmo-manage-menu-bundles,Manage Menu Bundles,/simulator/pmo/manage-menu-bundles
+A_unplaced_granted_page,team,sim-pmo-manage-roles,Manage Roles,/simulator/pmo/manage-roles
+A_unplaced_granted_page,team,sim-pmo-organisation-industries,Industries & Capabilities,/simulator/pmo/organisation-industries
+A_unplaced_granted_page,team,sim-pmo-project-timesheet-settings,Timesheet Settings (Project Override),/simulator/project-setup/timesheet-settings
+A_unplaced_granted_page,team,sim-pmo-role-assignment,Role Assignment,/simulator/pmo/role-assignment
+A_unplaced_granted_page,team,sim_pm_s_document_signatory,Document Signatory,/simulator/pm/initiation/document-signatory
+A_unplaced_granted_page,team,sim_unified_approvals_register,Approvals Register,/simulator/pmo/approvals/register
+A_unplaced_granted_page,viewer,my_expenses,My Expenses,/platform/expenses/my
+A_unplaced_granted_page,viewer,plat_pm_rep_timesheet_overview,Timesheet Overview,/platform/reports/timesheet-overview
+A_unplaced_granted_page,viewer,plat_pm_rep_work_plan_variance,Work Plan Variance,/platform/reports/work-plan-variance
+A_unplaced_granted_page,viewer,plat_xf_notif_prefs,Notification Preferences,/platform/notification-preferences

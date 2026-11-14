@@ -209,7 +209,9 @@
 // (was 74), and the PMO sidebar drops the empty Executive Overview wrapper (v1000 port).
 // 133->134 (2026-10-20): v1292 adds Simulator PMO Admin → PMO Configuration and gives Account
 // Owners the Platform PMO Configuration link.
-const SIDEBAR_CACHE_VERSION = 134
+// 134->135 (2026-11-13): v1341 consolidated role menus — cached entries now carry the
+// consolidated menu (sections, slot tabs, page index) when the organisation's switch is on.
+const SIDEBAR_CACHE_VERSION = 135
 const SIDEBAR_CACHE_TTL_MS  = 10 * 60 * 1000   // 10 minutes — fresh window
 const SIDEBAR_CACHE_KEY     = (uid, layoutScope) => `nidus_sidebar_v7_${uid}_${layoutScope}`
 

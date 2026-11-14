@@ -758,6 +758,37 @@ export async function fillOrgCustomRoleSkillsIfBlank(projectRoleId, roleSkills) 
   }
 }
 
+/**
+ * v1341 D25: the custom role's "Menu based on" layout (consolidated sidebar). Returns '' when
+ * none is set or before SQL v1456 adds the column.
+ * @param {string} projectRoleId
+ */
+export async function getOrgCustomRoleMenuLayout(projectRoleId) {
+  if (!projectRoleId) return ''
+  const { data, error } = await supabase.from('project_roles').select('menu_layout_key').eq('id', projectRoleId).maybeSingle()
+  if (error) return ''
+  return data?.menu_layout_key || ''
+}
+
+/**
+ * v1341 D25: set the custom role's "Menu based on" layout (same permission as editing the role).
+ * @param {string} projectRoleId
+ * @param {string|null} menuLayoutKey
+ */
+export async function setOrgCustomRoleMenuLayout(projectRoleId, menuLayoutKey) {
+  try {
+    const { error } = await supabase.rpc('set_org_custom_role_menu_layout', {
+      p_project_role_id: projectRoleId,
+      p_menu_layout_key: menuLayoutKey || null,
+    })
+    if (error) throw error
+    return { success: true, error: null }
+  } catch (error) {
+    console.error('setOrgCustomRoleMenuLayout:', error)
+    return { success: false, error: error.message || 'Failed to save the menu layout' }
+  }
+}
+
 export default {
   getManageRolesAccess,
   getCloneSourceRoles,
@@ -775,4 +806,6 @@ export default {
   isSystemAdmin,
   updateBuiltinRole,
   fillOrgCustomRoleSkillsIfBlank,
+  getOrgCustomRoleMenuLayout,
+  setOrgCustomRoleMenuLayout,
 }

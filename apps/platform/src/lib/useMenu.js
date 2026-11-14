@@ -3,6 +3,12 @@ import { useLocation } from 'react-router-dom'
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId'
 import { platformDb } from '../services/supabaseClient'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
+import {
+  clearConsolidatedMenuSwitchCache,
+  MENU_CONTEXT_CHANGED_EVENT,
+} from '@nidus/shared/utils/consolidatedMenuData'
+import { applyConsolidatedMenuStep } from '@nidus/shared/utils/consolidatedMenuStep'
+import { publishConsolidatedMenu } from '@nidus/shared/hooks/useConsolidatedMenu'
 import { applySimulatorRegistryFallback } from '@nidus/config/menuRegistryUtils'
 import { applySimulatorMenuTransform } from '@nidus/shared/utils/simulatorMenuTransform'
 import { stripVirtualMenuItems } from '@nidus/config/menuDbOnlyUtils'
@@ -955,12 +961,33 @@ function useMenuProvider(layoutScopeProp = null) {
     // persisted: the sidebar cache would otherwise serve it back on every reload until its TTL
     // expires, and the regroup effect only repairs the in-memory copy.
     let industryGroupingIncomplete = false
+    let consolidated = null
     if (finalItems.length > 0) {
       try {
         const isProjectScopedLayout = layoutScope === 'pm' || layoutScope === 'tm'
         const accountId = await getCurrentUserAccountId()
         if (!accountId) industryGroupingIncomplete = true
-        if (accountId) {
+        // v1341 — one consolidated menu per role when the organisation's switch is on (D11 / D20).
+        // With the switch off the step returns null and the sidebar is exactly as before.
+        const step = await applyConsolidatedMenuStep({
+          app: 'platform',
+          finalItems,
+          hierarchy,
+          fetchedHint,
+          accountId,
+          userId,
+          layoutScope,
+          projectId: currentProjectIdRef.current || null,
+          projectLoading: currentProjectIdLoadingRef.current,
+          buildPresentation: buildSidebarPresentation,
+          getPackMap: (acc) => getMenuItemIndustryPackMap(acc, null).then((r) => (r?.success ? r.data : null)),
+        })
+        if (step) {
+          finalItems = step.items
+          consolidated = step.consolidated
+          if (step.incomplete) industryGroupingIncomplete = true
+        }
+        if (accountId && !consolidated) {
           // pm/tm: when the open project has industries, show only those packs.
           // When it has none, pass null so the organisation's account_industries rows
           // supply the sections. An empty restrict list hides every pack.
@@ -995,20 +1022,23 @@ function useMenuProvider(layoutScopeProp = null) {
       }
     }
 
+    // The consolidated extras (slot tab strips, Go to page index) travel with the layout hint.
+    const { consolidated: _previousConsolidated, ...baseHint } = fetchedHint || {}
+    const hint = fetchedHint ? (consolidated ? { ...baseHint, consolidated } : baseHint) : fetchedHint
     const stateKey = menuStateKey(userId, layoutScope)
     const mod = getModuleState(stateKey)
     mod.menuItems    = finalItems
     mod.rawHierarchy = hierarchy
-    mod.layoutHint   = fetchedHint
+    mod.layoutHint   = hint
     mod.hasLoaded    = true
     mod.userId       = userId
     mod.layoutScope  = layoutScope
     moduleKeyRef.current = stateKey
     setMenuItems(finalItems)
-    setLayoutHint(fetchedHint)
+    setLayoutHint(hint)
     hasLoadedRef.current = true
     if (!industryGroupingIncomplete) {
-      writeSidebarCache(userId, layoutScope, { items: finalItems, rawHierarchy: hierarchy, layoutHint: fetchedHint })
+      writeSidebarCache(userId, layoutScope, { items: finalItems, rawHierarchy: hierarchy, layoutHint: hint })
     }
   }
 
@@ -1249,6 +1279,21 @@ function useMenuProvider(layoutScopeProp = null) {
     const onPref = () => loadMenu({ forceRefresh: true })
     window.addEventListener('nidus-methodology-pref-changed', onPref)
     return () => window.removeEventListener('nidus-methodology-pref-changed', onPref)
+  }, [])
+
+  // v1341: slot tab strips and the Go to page index follow the active layout hint.
+  useEffect(() => {
+    publishConsolidatedMenu(layoutHint?.consolidated || null)
+  }, [layoutHint])
+
+  // v1341 (R5): a project's industries or switched-off items changed → rebuild the sidebar.
+  useEffect(() => {
+    const onMenuContext = () => {
+      clearConsolidatedMenuSwitchCache()
+      loadMenu({ forceRefresh: true })
+    }
+    window.addEventListener(MENU_CONTEXT_CHANGED_EVENT, onMenuContext)
+    return () => window.removeEventListener(MENU_CONTEXT_CHANGED_EVENT, onMenuContext)
   }, [])
 
   // Re-group the sidebar's industry pack section(s) when the user switches to a different

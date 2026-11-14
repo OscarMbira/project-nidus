@@ -8,6 +8,12 @@
 >
 > **Revision 2 (owner feedback):** **Project Setup is kept as one section** (Section 2) so the first-time setup journey stays in one place. Delivery-time governance (Stage Gates, Meetings, Compliance) moved to Section 6. Benefits tracking moved to Section 8. The footer no longer holds Project Settings.
 >
+> **Decisions settled in `projectprd/v1341_consolidated_role_menus_PRD.md` (2026-11-13). Where they differ from this document, the PRD wins:**
+> - **D11:** all roles move at once, behind one switch per organisation (D20), not one role at a time.
+> - **D13 / D13b:** Project Team, Governance Setup and Project Settings stay as **sub-menus** inside Project Setup, not tabbed pages. Project Settings holds Regional & Format, Working Days & Holidays, Timesheet Settings, Document Signatory, Environments, Custom Fields and Industry Modules.
+> - **D17:** no limit on industries per project.
+> - **D18:** a project with no industry shows core items only.
+>
 > **Revision 3 (owner feedback):** Added **composite projects**, meaning one project tagged with several industries (e.g. a Core Banking System replacement = Banking + IT). See §6.3a for the worked example, §8.1 for the rules, and decisions D15–D17.
 
 ---

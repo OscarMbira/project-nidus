@@ -5,6 +5,7 @@ import { getAllPortfolioProjects } from '../../services/portfolioService'
 import { platformDb } from '@nidus/supabase'
 import PmoDashboardInsightsSection from '../../components/app/dashboard/PmoDashboardInsightsSection'
 import { DashboardStatCard } from '@nidus/ui'
+import IndustryProjectsFilter from '@nidus/ui/IndustryProjectsFilter'
 import { TableRowNumberHeader, TableRowNumberCell } from '@nidus/ui/Table'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 
@@ -20,7 +21,7 @@ function KpiCard({ label, value, icon: Icon, onClick }) {
 }
 
 function healthBadge(score) {
-  if (score == null) return <span className="text-gray-500 text-xs">N/A</span>
+  if (score == null) return <span className="text-gray-500 dark:text-gray-400 text-xs">N/A</span>
   const pct = Math.round(score)
   const colour = pct >= 70 ? 'bg-green-600' : pct >= 40 ? 'bg-yellow-600' : 'bg-red-600'
   return (
@@ -30,12 +31,12 @@ function healthBadge(score) {
 
 function statusBadge(status) {
   const map = {
-    active: 'bg-green-700 text-green-100',
-    inactive: 'bg-gray-600 text-gray-200',
-    planning: 'bg-blue-700 text-blue-100',
-    closed: 'bg-red-700 text-red-100',
+    active: 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100',
+    inactive: 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-200',
+    planning: 'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100',
+    closed: 'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100',
   }
-  const cls = map[status] || 'bg-gray-600 text-gray-200'
+  const cls = map[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-200'
   return <span className={`${cls} text-xs px-2 py-0.5 rounded-full capitalize`}>{status || '—'}</span>
 }
 
@@ -106,7 +107,7 @@ export default function PortfolioDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center gap-3 p-4 bg-red-900/30 border border-red-700 rounded-lg text-red-300">
+      <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg text-red-700 dark:text-red-300">
         <AlertCircle className="w-5 h-5 shrink-0" />
         <span>{error}</span>
         <button onClick={load} className="ml-auto text-sm underline">Retry</button>
@@ -118,14 +119,14 @@ export default function PortfolioDashboard() {
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white dark:text-white light:text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Portfolio Dashboard
           </h1>
-          <p className="text-gray-400 text-sm mt-1">Executive overview across all portfolios</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Executive overview across all portfolios</p>
         </div>
         <button
           onClick={load}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white text-sm rounded-lg transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -145,29 +146,34 @@ export default function PortfolioDashboard() {
         <PmoDashboardInsightsSection organizationId={organizationId} />
       )}
 
+      {/* v1341 (D3): industry view of the organisation's projects */}
+      {organizationId && (
+        <IndustryProjectsFilter accountId={organizationId} projectHref={(p) => `/platform/projects/${p.project_code || p.id}`} />
+      )}
+
       {/* Portfolio Health Table */}
-      <div className="bg-gray-800 dark:bg-gray-800 light:bg-white border border-gray-700 dark:border-gray-700 light:border-gray-200 rounded-lg overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-700 flex items-center justify-between gap-3 flex-wrap">
-          <h2 className="text-white dark:text-white light:text-gray-900 font-semibold">Portfolio Health Overview</h2>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-gray-900 dark:text-white font-semibold">Portfolio Health Overview</h2>
           {activeOnly && (
             <div className="flex items-center gap-2 text-sm">
-              <span className="px-2 py-1 rounded bg-gray-700 text-gray-200">Active only</span>
-              <button type="button" onClick={() => setActiveOnly(false)} className="text-blue-400 hover:underline">
+              <span className="px-2 py-1 rounded bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">Active only</span>
+              <button type="button" onClick={() => setActiveOnly(false)} className="text-blue-600 dark:text-blue-400 hover:underline">
                 Clear
               </button>
             </div>
           )}
         </div>
         {displayPortfolios.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">No portfolios found.</div>
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">No portfolios found.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-750 border-b border-gray-700">
+                <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                 <TableRowNumberHeader className="!normal-case" />
                   {['Name', 'Code', 'Status', 'Projects', 'Budget', 'Health', 'Owner'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-gray-400 font-medium">{h}</th>
+                    <th key={h} className="text-left px-4 py-3 text-gray-500 dark:text-gray-400 font-medium">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -175,16 +181,16 @@ export default function PortfolioDashboard() {
                 {displayPortfolios.map((p, i) => (
                   <tr
                     key={p.id}
-                    className={`border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-700/10'}`}
+                    className={`border-b border-gray-200 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-gray-700/10'}`}
                   >
                     <TableRowNumberCell number={getDisplayRowNumber(i)} />
-                    <td className="px-4 py-3 text-white font-medium">{p.portfolio_name}</td>
-                    <td className="px-4 py-3 text-gray-300 font-mono text-xs">{p.portfolio_code}</td>
+                    <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{p.portfolio_name}</td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-mono text-xs">{p.portfolio_code}</td>
                     <td className="px-4 py-3">{statusBadge(p.portfolio_status)}</td>
-                    <td className="px-4 py-3 text-gray-300">{projectCount}</td>
-                    <td className="px-4 py-3 text-gray-300">{fmt(p.total_budget || 0)}</td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{projectCount}</td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{fmt(p.total_budget || 0)}</td>
                     <td className="px-4 py-3">{healthBadge(p.overall_health_score)}</td>
-                    <td className="px-4 py-3 text-gray-300">{p.portfolio_owner?.full_name || '—'}</td>
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">{p.portfolio_owner?.full_name || '—'}</td>
                   </tr>
                 ))}
               </tbody>

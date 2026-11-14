@@ -6,7 +6,7 @@ import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../mod
 import { RecordLifecycleRouteElements, RecordLifecyclePlatformNestedRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
 import { PmoFederated } from './PmoFederatedOutlet.jsx'
-import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor } from './lazyImports' // v1272 AI settings + report layouts
+import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
 import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
@@ -2827,6 +2827,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectRegionalFormatSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1341 (D16): per-project industry menu switch-off */}
+                              <Route path="project-setup/industry-modules" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <IndustryModulesPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

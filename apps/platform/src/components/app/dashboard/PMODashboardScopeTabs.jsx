@@ -8,6 +8,7 @@ import { useSearchParams } from 'react-router-dom'
 import { LayoutGrid, Briefcase, Layers, FolderKanban, Bell, Scale } from 'lucide-react'
 import { normalizeDashboardTab } from '@nidus/shared/utils/pmoDashboardTabs'
 import PMOScopeQuickActions from './PMOScopeQuickActions'
+import IndustryProjectsFilter from '@nidus/ui/IndustryProjectsFilter'
 
 const PMOScopeOverviewMetrics = lazy(() => import('./PMOScopeOverviewMetrics'))
 const PmoDashboardInsightsSection = lazy(() => import('./PmoDashboardInsightsSection'))
@@ -122,6 +123,12 @@ export default function PMODashboardScopeTabs({
               scope={tab}
             />
           </Suspense>
+          {/* v1341 (D3): industry view of the organisation's projects */}
+          {tab === 'projects' && (
+            <div className="mt-8">
+              <IndustryProjectsFilter accountId={organizationId} projectHref={(p) => `/platform/projects/${p.project_code || p.id}`} />
+            </div>
+          )}
           <div className="mt-8">
             <Suspense fallback={<ScopeTabFallback />}>
               <PmoDashboardInsightsSection organizationId={organizationId} />
