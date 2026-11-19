@@ -10,6 +10,7 @@ import { platformDb } from './supabase/supabaseClient';
 const TABLE_BY_DECISION = {
   approved: 'timesheet_entry_approve_reasons',
   rejected: 'timesheet_entry_reject_reasons',
+  flagged: 'timesheet_entry_flag_reasons', // v1343 — advisory flags (SQL v1473)
 };
 
 function tableFor(decision) {

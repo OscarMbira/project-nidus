@@ -96,6 +96,13 @@ export default function LocalRegisterListPage() {
       setLoading(true)
       const registerResult = await getRegisterDefinition(registerId)
       if (cancelled) return
+      // A retired register (v1342, e.g. the old Banking / IT Environments) opens the register its
+      // records moved to; the new page self-corrects the id to the friendly key.
+      if (registerResult.data?.moved_to_register_id) {
+        const qs = searchParams.toString()
+        navigate(`/platform/local-registers/${registerResult.data.moved_to_register_id}${qs ? `?${qs}` : ''}`, { replace: true })
+        return
+      }
       setRegister(registerResult.data)
 
       const isSystemDefined = registerResult.data?.is_system_defined

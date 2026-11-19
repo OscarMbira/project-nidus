@@ -7,6 +7,7 @@ import { simDb, platformDb } from '../supabase/supabaseClient'
 const ASSIGNABLE_ROLE_NAMES = [
   'team_manager',
   'team_member',
+  'project_administrator', // v1343 (D12) — Support menu on the practice project
   'project_assurance',
   'quality_assurance',
   'change_authority',

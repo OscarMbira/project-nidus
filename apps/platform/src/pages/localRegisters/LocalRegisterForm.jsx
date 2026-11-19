@@ -16,11 +16,13 @@ import { useUnsavedChangesGuard } from '@nidus/shared/context/UnsavedChangesCont
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
 import {
   groupRegisterFields,
+  registerForProjectIndustries,
   buildRegisterTabs,
   DETAILS_TAB,
   AUDIT_TAB,
   CUSTOM_FIELDS_TAB,
 } from '@nidus/shared/utils/registerFieldGroups'
+import { useRegisterProjectIndustries } from '@nidus/shared/hooks/useRegisterProjectIndustries'
 import LocalRegisterAuditPanel from './LocalRegisterAuditPanel'
 import RegisterFieldInput from '@nidus/ui/RegisterFieldInput'
 import RegisterCustomFieldsHeader from '@nidus/ui/RegisterCustomFieldsHeader'
@@ -73,7 +75,7 @@ export default function LocalRegisterForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [sequenceCheck, setSequenceCheck] = useState(null)
-  const [register, setRegister] = useState(null)
+  const [loadedRegister, setRegister] = useState(null)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState('')
@@ -86,12 +88,26 @@ export default function LocalRegisterForm() {
   const [template, setTemplate] = useState(null)
   const [saveError, setSaveError] = useState('')
 
+  // Industry-only fields (v1342) follow the record's project industries; templates show them all.
+  const industryProjectId = savedRecord?.record_project_id || (queryScopeLevel === 'project' ? queryScopeEntityId : '') || contextProjectId || null
+  const { names: projectIndustryNames } = useRegisterProjectIndustries(isTemplate ? null : industryProjectId)
+  const register = useMemo(
+    () => (isTemplate ? loadedRegister : registerForProjectIndustries(loadedRegister, projectIndustryNames)),
+    [isTemplate, loadedRegister, projectIndustryNames],
+  )
+
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       setLoading(true)
       const registerResult = await getRegisterDefinition(registerId)
       if (cancelled) return
+      // Retired register (v1342): records moved, so open the same record in the new register.
+      if (registerResult.data?.moved_to_register_id && !isTemplate) {
+        const moved = registerResult.data.moved_to_register_id
+        navigate(recordId ? `/platform/local-registers/${moved}/${recordId}/edit` : `/platform/local-registers/${moved}/new`, { replace: true })
+        return
+      }
       setRegister(registerResult.data)
       const defaultStatus = registerResult.data?.status_workflow?.[0]?.key || ''
 

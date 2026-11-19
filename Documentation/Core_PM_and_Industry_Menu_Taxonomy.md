@@ -1906,4 +1906,12 @@ New in v1341 (catalogue rows shown only in the consolidated sidebar, `is_visible
 - Plan & Schedule › ITTO (v1463) — sub-menu: ITTO Project, ITTO Templates, ITTO Drafts
 - Risks, Changes & Governance › RAID Registers (v1463) — sub-menu: Risk, Issue, Assumptions, Constraints registers
 - Home › My Work (v1463) — sub-menu: My Tasks, My Daily Log, My Expenses, Calendar
+- Banking & Financial Services › Core Banking › Environments (v1464) → §2 Project Setup › Project Settings, beside Environments (full form: hosting model, IP address, cloud setup)
+- Project Setup › Project Settings › Environments (v1466) — one entry, shared slot: Environments · Banking & Financial Services · Information Technology tabs on industry projects
+- Project Setup › Project Settings › Environments (v1342, SQL v1467–v1469) → §2 Project Setup › Project Settings — one Environments register for every project (common form + Banking tab on Banking projects); replaces the core test-environments page and the Banking / IT Environments registers (retired, switched off); no tab strip
+- Home › My Approvals (v1343, SQL v1476) → §1 Home — tabs: Timesheet flags · Document reviews; every role with My Tasks (Platform `/platform/my-approvals`, Simulator `/simulator/practice-projects/my-approvals`)
+- Home › My Work › Meeting Follow-ups (v1343) → §1 Home › My Work — tab beside My Tasks (slot `my_work_items`); meeting action items assigned to me
+- Risks, Changes & Governance › Governance › Approvals History (v1343) → §6 — tab beside Stage Gates and Meetings (slot `governance`); decided authorisation requests, read-only
+- Home › Communications › Messages (v1343 tabs) → §1 Home — Comms Hub · Channels · Direct · Meeting Summaries as one entry with tabs (slot `messages`)
+- Role menu: Project Administrator — placement key `support` (v1343, SQL v1471): the Project Manager's placements minus authority pages, plus Team Timesheets / My Timesheets (proposal §6.7a)
 

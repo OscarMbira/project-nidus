@@ -9,6 +9,8 @@ import {
   resolveMenuLayoutScope,
   shouldUsePmLayoutShell,
   isPmoOnlyPlatformPath,
+  PM_LAYOUT_ROLES,
+  resolvePrimaryLayoutScopeFromRoles,
 } from '../menuLayoutUtils'
 
 describe('inferLayoutScopeFromPathname', () => {
@@ -112,5 +114,13 @@ describe('resolveMenuLayoutScope', () => {
     cacheUserMenuRoles('user-1', ['pmo_admin'])
     expect(resolveMenuLayoutScope(null, '/platform/projects/all')).toBe('pmo')
     expect(shouldUsePmLayoutShell('/platform/projects/ADMSEED-PRJ-01')).toBe(false)
+  })
+})
+
+describe('Project Administrator layout (v1343, PRD A9)', () => {
+  it('a Project Administrator gets the PM shell, not the PMO shell', () => {
+    expect(PM_LAYOUT_ROLES.has('project_administrator')).toBe(true)
+    expect(resolvePrimaryLayoutScopeFromRoles(['project_administrator'])).toBe('pm')
+    expect(resolvePrimaryLayoutScopeFromRoles(['Project Administrator'])).toBe('pm')
   })
 })

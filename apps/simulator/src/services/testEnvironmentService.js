@@ -1,25 +1,32 @@
 import { platformDb } from './supabase/supabaseClient'
+import {
+  CORE_ENVIRONMENTS_REGISTER_ID,
+  DECOMMISSIONED_STATUS,
+  ENVIRONMENT_RECORD_COLUMNS,
+  environmentFromRecord,
+  sortEnvironments,
+} from '@nidus/shared/utils/environmentRegister'
 
-function sortEnvironments(rows) {
-  return [...(rows || [])].sort((a, b) => {
-    const byName = String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' })
-    if (byName) return byName
-    return String(a.created_at || '').localeCompare(String(b.created_at || ''))
-  })
-}
-
+/**
+ * v1342: environments live in the Environments register (core_environments, SQL v1467 / v1468),
+ * same ids as the old test_environments rows, so test suites' environment_ids still resolve.
+ * Returns the same { id, project_id, name, description, is_active, … } shape as before.
+ * activeOnly leaves out Decommissioned environments.
+ */
 export async function getTestEnvironments(projectId, { activeOnly = false } = {}) {
   if (!projectId) return []
   let query = platformDb
-    .from('test_environments')
-    .select('id, project_id, name, description, is_active, created_at, updated_at, created_by, updated_by')
-    .eq('project_id', projectId)
+    .from('local_register_records')
+    .select(ENVIRONMENT_RECORD_COLUMNS)
+    .eq('register_id', CORE_ENVIRONMENTS_REGISTER_ID)
+    .eq('record_project_id', projectId)
     .eq('is_deleted', false)
-    .order('name', { ascending: true })
-  if (activeOnly) query = query.eq('is_active', true)
+  if (activeOnly) query = query.neq('status', DECOMMISSIONED_STATUS)
   const { data, error } = await query
   if (error) throw error
-  return sortEnvironments((data || []).filter((row) => String(row.project_id) === String(projectId)))
+  return sortEnvironments((data || [])
+    .filter((row) => String(row.record_project_id) === String(projectId))
+    .map((row) => environmentFromRecord(row, 'project_id')))
 }
 
 export async function getTestEnvironment(projectId, key) {

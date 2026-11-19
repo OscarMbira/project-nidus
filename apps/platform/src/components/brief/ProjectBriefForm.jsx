@@ -27,6 +27,8 @@ import TeamStructureSection from './TeamStructureSection'
 import RoleDescriptionsSection from './RoleDescriptionsSection'
 import ReferencesSection from './ReferencesSection'
 import BriefCompletionProgress from './BriefCompletionProgress'
+import ProjectMilestonesSummary from '@nidus/ui/ProjectMilestonesSummary'
+import { listMilestones } from '../../services/milestoneService'
 
 /** Canonical Project Brief sections — matches the approved brief outline. */
 const BRIEF_CONTENT_TABS = [
@@ -39,6 +41,7 @@ const BRIEF_CONTENT_TABS = [
   { id: 'business-case', label: 'Outline business case' },
   { id: 'products', label: 'Product description' },
   { id: 'approach', label: 'Project approach' },
+  { id: 'milestones', label: 'Milestones' }, // v1344 A5: from the Milestones register
   { id: 'team', label: 'Team structure' },
   { id: 'roles', label: 'Role descriptions' },
   { id: 'references', label: 'References' },
@@ -97,6 +100,14 @@ export default function ProjectBriefForm({
         )
       case 'approach':
         return <ProjectApproachSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
+      case 'milestones':
+        return (
+          <ProjectMilestonesSummary
+            projectId={formData.project_id || null}
+            loadMilestones={listMilestones}
+            manageHref={formData.project_id ? `/platform/milestones?projectId=${formData.project_id}` : null}
+          />
+        )
       case 'team':
         return <TeamStructureSection formData={formData} onChange={onChange} errors={errors} readOnly={readOnly} />
       case 'roles':

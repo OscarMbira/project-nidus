@@ -37,6 +37,10 @@ export const MANDATE_EXPORT_SECTIONS = [
   ]},
   { title: '12. Customers, Users and Stakeholders', fields: [{ key: 'stakeholders_summary', label: 'Customers, Users and Stakeholders' }] },
   { title: '13. Dependencies', fields: [{ key: 'dependencies_summary', label: 'Dependencies' }] },
+  // v1344: assumptions, known risks and key deliverables
+  { title: '14. Assumptions', fields: [{ key: 'assumptions', label: 'Assumptions' }] },
+  { title: '15. Known Risks and Issues', fields: [{ key: 'outline_risks', label: 'Known Risks and Issues' }] },
+  { title: '16. Key Deliverables', fields: [{ key: 'deliverables_summary', label: 'Key Deliverables' }] },
 ]
 
 const OPERAND_SYMBOLS = { '=': '=', '<': '<', '<=': '≤', '>': '>', '>=': '≥' }
@@ -98,18 +102,31 @@ function dependenciesTable(dependencies = []) {
   )
 }
 
+function deliverablesTable(deliverables = []) {
+  return compactTable(
+    ['Deliverable', 'Timeframe', 'In scope', 'Major'],
+    deliverables.map((d) => [
+      d.deliverable_name || 'Deliverable',
+      d.estimated_completion,
+      d.is_in_scope === false ? 'No' : 'Yes',
+      d.is_major_deliverable === false ? 'No' : 'Yes',
+    ]),
+  )
+}
+
 function childTables(children = {}) {
   return {
     constraints: constraintsTable(children.constraints),
     documents: documentsTable(children.documents),
     stakeholders: stakeholdersTable(children.stakeholders),
     dependencies: dependenciesTable(children.dependencies),
+    deliverables: deliverablesTable(children.deliverables),
   }
 }
 
 /**
  * @param {object} mandate
- * @param {{ constraints?: object[], documents?: object[], stakeholders?: object[], dependencies?: object[] }} [children]
+ * @param {{ constraints?: object[], documents?: object[], stakeholders?: object[], dependencies?: object[], deliverables?: object[] }} [children]
  */
 export function buildMandateExportSections(_mandate = {}, children = {}) {
   const t = childTables(children)
@@ -118,6 +135,7 @@ export function buildMandateExportSections(_mandate = {}, children = {}) {
     associated_documents_summary: { table: t.documents },
     stakeholders_summary: { table: t.stakeholders },
     dependencies_summary: { table: t.dependencies },
+    deliverables_summary: { table: t.deliverables },
   })
 }
 
@@ -137,5 +155,8 @@ export function buildMandateExportRecord(mandate = {}, children = {}) {
     associated_documents_summary: tableLines(t.documents),
     stakeholders_summary: tableLines(t.stakeholders),
     dependencies_summary: tableLines(t.dependencies),
+    assumptions: listText(mandate.assumptions),
+    outline_risks: listText(mandate.outline_risks),
+    deliverables_summary: tableLines(t.deliverables),
   }
 }

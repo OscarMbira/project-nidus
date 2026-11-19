@@ -1,25 +1,32 @@
 import { simDb } from '../supabase/supabaseClient'
+import {
+  CORE_ENVIRONMENTS_REGISTER_ID,
+  DECOMMISSIONED_STATUS,
+  ENVIRONMENT_RECORD_COLUMNS,
+  environmentFromRecord,
+  sortEnvironments,
+} from '@nidus/shared/utils/environmentRegister'
 
-function sortEnvironments(rows) {
-  return [...(rows || [])].sort((a, b) => {
-    const byName = String(a.name || '').localeCompare(String(b.name || ''), undefined, { sensitivity: 'base' })
-    if (byName) return byName
-    return String(a.created_at || '').localeCompare(String(b.created_at || ''))
-  })
-}
-
+/**
+ * v1342: practice environments live in the Environments register (core_environments, system
+ * register, SQL v1467 / v1468), same ids as the old practice_test_environments rows.
+ * Returns the same { id, practice_project_id, name, … } shape. activeOnly leaves out Decommissioned.
+ */
 export async function getPracticeTestEnvironments(practiceProjectId, { activeOnly = false } = {}) {
   if (!practiceProjectId) return []
   let query = simDb
-    .from('practice_test_environments')
-    .select('id, practice_project_id, name, description, is_active, created_at, updated_at, created_by, updated_by')
-    .eq('practice_project_id', practiceProjectId)
+    .from('local_register_records')
+    .select(ENVIRONMENT_RECORD_COLUMNS)
+    .eq('register_id', CORE_ENVIRONMENTS_REGISTER_ID)
+    .eq('is_system_register', true)
+    .eq('record_project_id', practiceProjectId)
     .eq('is_deleted', false)
-    .order('name', { ascending: true })
-  if (activeOnly) query = query.eq('is_active', true)
+  if (activeOnly) query = query.neq('status', DECOMMISSIONED_STATUS)
   const { data, error } = await query
   if (error) throw error
-  return sortEnvironments((data || []).filter((row) => String(row.practice_project_id) === String(practiceProjectId)))
+  return sortEnvironments((data || [])
+    .filter((row) => String(row.record_project_id) === String(practiceProjectId))
+    .map((row) => environmentFromRecord(row, 'practice_project_id')))
 }
 
 export async function getPracticeTestEnvironment(practiceProjectId, key) {

@@ -31,6 +31,32 @@ export function isFieldVisible(field, values) {
 }
 
 /**
+ * Industry-only fields (v1342): a field may carry visible_when = { project_industry: ['<industry
+ * category name>', …] }. It is kept only when the record's project has one of those industries
+ * (names compare case-insensitively). With no project industries known, such fields are left out.
+ * Apply once to the register definition where it is loaded (form, record page), so the tabs,
+ * exports, document and placeholders built from that definition all follow it. Stored values of
+ * left-out fields are kept, just not shown.
+ * @param {object[]} fields
+ * @param {string[] | null | undefined} projectIndustryNames
+ */
+export function filterFieldsForProjectIndustries(fields, projectIndustryNames) {
+  const have = new Set((projectIndustryNames || []).map((n) => String(n || '').trim().toLowerCase()).filter(Boolean))
+  return (fields || []).filter((field) => {
+    const wanted = field?.visible_when?.project_industry
+    if (!Array.isArray(wanted) || wanted.length === 0) return true
+    return wanted.some((n) => have.has(String(n || '').trim().toLowerCase()))
+  })
+}
+
+/** The register with its industry-only fields filtered for the project (see above). */
+export function registerForProjectIndustries(register, projectIndustryNames) {
+  if (!register || !Array.isArray(register.fields)) return register
+  const fields = filterFieldsForProjectIndustries(register.fields, projectIndustryNames)
+  return fields.length === register.fields.length ? register : { ...register, fields }
+}
+
+/**
  * @param {Array<{ field_group?: string | null }>} fields
  * @param {Record<string, unknown>} [values]  record field_values — when given, conditional fields are applied
  * @returns {{ detailsFields: object[], groups: { value: string, label: string, fields: object[] }[] }}

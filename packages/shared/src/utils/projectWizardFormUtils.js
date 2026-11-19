@@ -10,6 +10,23 @@ export function formatProjectDate(value) {
   }
 }
 
+/** Newline-joined text from DB text or a legacy JSON array (project_objectives). */
+export function toMultilineText(value) {
+  if (value == null || value === '') return ''
+  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean).join('\n')
+  const raw = String(value)
+  const trimmed = raw.trim()
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean).join('\n')
+    } catch {
+      /* keep as plain text */
+    }
+  }
+  return raw
+}
+
 /**
  * PostgREST may return a nested one-to-many row as a single object instead of a one-element array.
  * Always treat as an array before .find / .map.
@@ -76,6 +93,11 @@ export function getEmptyWizardFormData() {
     required_approvals: '',
     success_criteria: '',
     project_classification: '',
+    // v1344 (A1 / A2): fields that used to be edited only on Project Details, plus Priority and PM
+    project_objectives: '',
+    billing_type: '',
+    priority: '',
+    project_manager_user_id: '',
   }
 }
 
@@ -153,6 +175,10 @@ export function mapDbProjectToWizardForm(projectRow, methodologyId, budgetCatego
     required_approvals: d.required_approvals || '',
     success_criteria: d.success_criteria || '',
     project_classification: d.project_classification || '',
+    project_objectives: toMultilineText(d.project_objectives),
+    billing_type: d.billing_type || '',
+    priority: d.priority || '',
+    project_manager_user_id: d.project_manager_user_id || '',
   }
 }
 
@@ -269,6 +295,11 @@ export function wizardFormToProjectUpdatePayload(formData, userId) {
     required_approvals: formData.required_approvals || null,
     success_criteria: formData.success_criteria || null,
     project_classification: formData.project_classification || null,
+    project_objectives: formData.project_objectives || null,
+    billing_type: formData.billing_type || null,
+    ...(formData.priority ? { priority: formData.priority } : {}),
+    // Only sent when set; a change is checked in the database (v1480: organisation admins only).
+    ...(formData.project_manager_user_id ? { project_manager_user_id: formData.project_manager_user_id } : {}),
     ...(userId ? { updated_by: userId } : {}),
   }
 }

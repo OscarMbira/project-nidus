@@ -2,11 +2,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // In-memory Supabase stand-in: select / eq / in / not-is-null / order / limit / range / maybeSingle.
 const tables = { public: {}, sim: {} }
-function query(rows) {
+// Real column lists for tables whose select lists matter: an unknown column fails like PostgREST.
+const COLUMNS = {
+  project_industries: ['id', 'project_id', 'industry_category_id', 'is_primary', 'added_at', 'added_by'],
+  practice_project_industries: ['id', 'practice_project_id', 'industry_category_id', 'is_primary', 'added_at', 'added_by'],
+}
+function query(rows, name) {
   let list = [...rows]
   let failWith = null
   const q = {
-    select: () => q,
+    select: (cols) => {
+      const known = COLUMNS[name]
+      const bad = known && String(cols || '*').split(',').map((c) => c.trim()).find((c) => c !== '*' && !known.includes(c))
+      if (bad) failWith = { message: `column ${name}.${bad} does not exist` }
+      return q
+    },
     eq: (col, val) => { list = list.filter((r) => r[col] === val); return q },
     in: (col, vals) => { list = list.filter((r) => vals.includes(r[col])); return q },
     not: (col, op, val) => { if (op === 'is' && val === null) list = list.filter((r) => r[col] != null); return q },
@@ -24,7 +34,7 @@ function db(schema) {
     from: (name) => {
       const rows = tables[schema][name]
       if (rows === undefined) return query([])._fail({ message: `relation ${name} does not exist` })
-      return query(rows)
+      return query(rows, name)
     },
   }
 }
@@ -174,5 +184,51 @@ describe('consolidated-only catalogue rows (hidden in today’s sidebar)', () =>
     const setup = res.items.find((s) => s.section_code === 'project_setup')
     const settings = setup.children.find((n) => n.menu_label === 'Project Settings')
     expect(settings.children.map((c) => c.menu_label)).toEqual(['Regional & Format Settings'])
+  })
+})
+
+describe('slot tabs for registers (rule 16.3 addresses)', () => {
+  it('gives a register tab its register-key address so the tab strip finds the page', async () => {
+    const reg = '00000000-0000-4000-9001-00000000000a'
+    const tree = [
+      ...TREE,
+      node('m6', 'plat_pm_testing_environments', 'Environments', '/platform/testing/environments'),
+      node('m7', 'fin_reg_env', 'Environments', `/platform/local-registers/${reg}`),
+    ]
+    tables.public.menu_slots.push({ app: 'platform', slot_key: 'environments', label: 'Environments', section_code: 'project_setup', sort_order: 95, is_active: true })
+    tables.public.menu_item_placements.push(
+      { menu_item_id: 'm6', placement_key: 'pm', section_code: 'project_setup', slot_key: 'environments', sort_order: 50, is_active: true },
+      { menu_item_id: 'm7', placement_key: 'pm', section_code: 'project_setup', slot_key: 'environments', sort_order: 52, is_active: true },
+    )
+    tables.public.local_registers = [{ id: reg, register_key: 'fin_core_banking_environments' }]
+    const res = await buildConsolidatedMenuForUser({
+      app: 'platform', tree, accountId: 'acc-on', authUserId: 'auth-1', layout: 'pm', projectId: 'prj-1',
+      packMap: Promise.resolve({ ...PACK_MAP, menuCodeToPack: new Map([...PACK_MAP.menuCodeToPack, ['fin_reg_env', 'pack-fin']]) }),
+    })
+    const strip = res.slotTabs.find((s) => s.slotKey === 'environments')
+    expect(strip.tabs.map((t) => t.label)).toEqual(['Environments', 'Banking & Financial Services'])
+    expect(strip.tabs[1].aliases).toEqual(['/platform/local-registers/fin_core_banking_environments'])
+  })
+})
+
+describe('Simulator practice project role (v1343 D12)', () => {
+  it('a practice-project Project Administrator gets the Support menu on that project', async () => {
+    tables.sim = {
+      practice_project_memberships: [
+        { practice_project_id: 'pp1', user_id: 'auth-1', role_name: 'project_administrator', is_active: true },
+      ],
+    }
+    const res = await buildConsolidatedMenuForUser({
+      app: 'simulator', tree: TREE, accountId: 'acc-on', authUserId: 'auth-1', layout: 'pm', projectId: 'pp1', packMap: Promise.resolve(PACK_MAP),
+    })
+    expect(res.placementKey).toBe('support')
+  })
+
+  it('the Platform ignores practice memberships', async () => {
+    tables.sim = { practice_project_memberships: [{ practice_project_id: 'prj-1', user_id: 'auth-1', role_name: 'project_administrator', is_active: true }] }
+    const res = await buildConsolidatedMenuForUser({
+      app: 'platform', tree: TREE, accountId: 'acc-on', authUserId: 'auth-1', layout: 'pm', projectId: 'prj-1', packMap: Promise.resolve(PACK_MAP),
+    })
+    expect(res.placementKey).toBe('pm')
   })
 })

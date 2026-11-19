@@ -2,11 +2,14 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, FileText, FileIcon, Users, CheckCircle, XCircle, Clock } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
-import { getMandateViewData, getDependencies, addDependency, updateDependency, deleteDependency } from '../../services/projectMandateService'
+import { getMandateViewData, getDependencies, addDependency, updateDependency, deleteDependency, getDeliverables, addDeliverable, updateDeliverable, deleteDeliverable } from '../../services/projectMandateService'
 import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
+import MandateDeliverablesSection from '@nidus/ui/MandateDeliverablesSection'
+import { MandateAssumptionsRisksView } from '@nidus/ui/MandateFieldTabs'
 
 // v1340 wave 4 follow-up (SQL v1447): read-only here; edited on the mandate edit page.
 const DEPENDENCY_SERVICE = { list: getDependencies, add: addDependency, update: updateDependency, remove: deleteDependency }
+const DELIVERABLE_SERVICE = { list: getDeliverables, add: addDeliverable, update: updateDeliverable, remove: deleteDeliverable }
 import { submitForApproval, confirmMandateWithoutFormalApproval } from '../../services/mandateWorkflowService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
 import ConstraintListItem from '../../components/constraints/ConstraintListItem'
@@ -584,6 +587,9 @@ export default function ProjectMandateView() {
           </div>
         </div>
 
+        {/* v1344: assumptions, known risks and key deliverables */}
+        <MandateAssumptionsRisksView mandate={mandate} />
+        <MandateDeliverablesSection mandateId={mandate.id} readOnly viewModeId="mandate-deliverables-view" service={DELIVERABLE_SERVICE} />
         <MandateDependenciesSection mandateId={mandate.id} readOnly viewModeId="mandate-dependencies-view" service={DEPENDENCY_SERVICE} onRowsChange={setDependencies} />
 
         {/* Project Link */}

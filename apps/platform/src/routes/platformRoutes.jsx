@@ -1,12 +1,13 @@
 /** Platform routes — extracted from App.jsx (v729 Option B) */
 import { Route, Navigate, Routes, Outlet } from 'react-router-dom'
+import EnvironmentsRegisterRedirect from '@nidus/ui/EnvironmentsRegisterRedirect'
 import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements, PmisGapPlatformNestedRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements, RecordLifecyclePlatformNestedRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { PmPlanningFederated, PmoPlanningFederated } from './PlanningFederatedOutlet.jsx'
 import { PmoFederated } from './PmoFederatedOutlet.jsx'
-import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
+import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage, MyApprovalsPage, MeetingFollowUpsPage, ApprovalsHistoryPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
 import {
   LoadingFallback,
   LoadingFallbackWithTimeout,
@@ -194,8 +195,6 @@ import {
   TestSuites,
   TestSuiteDetail,
   TestSuiteFormPage,
-  TestEnvironments,
-  TestEnvironmentFormPage,
   TestCases,
   TestCaseCreate,
   TestCaseDetail,
@@ -2255,34 +2254,14 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
-                              <Route path="testing/environments/new" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <TestEnvironmentFormPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="testing/environments/:environmentKey/edit" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <TestEnvironmentFormPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="testing/environments/:environmentKey" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <TestEnvironmentFormPage />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              <Route path="testing/environments" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <TestEnvironments />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
+                              {/* v1342: one Environments register — old addresses redirect (D8) */}
+                              <Route path="testing/environments/new" element={<EnvironmentsRegisterRedirect app="platform" mode="new" />} />
+                              {/* v1342: one Environments register — old addresses redirect (D8) */}
+                              <Route path="testing/environments/:environmentKey/edit" element={<EnvironmentsRegisterRedirect app="platform" mode="edit" />} />
+                              {/* v1342: one Environments register — old addresses redirect (D8) */}
+                              <Route path="testing/environments/:environmentKey" element={<EnvironmentsRegisterRedirect app="platform" mode="view" />} />
+                              {/* v1342: one Environments register — old addresses redirect (D8) */}
+                              <Route path="testing/environments" element={<EnvironmentsRegisterRedirect app="platform" mode="view" />} />
                               <Route path="testing/evidence" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -2827,6 +2806,28 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectRegionalFormatSettingsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1343 (PRD A4): new project work pages */}
+                              <Route path="my-approvals" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MyApprovalsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="meeting-follow-ups" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MeetingFollowUpsPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              <Route path="approvals-history" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <ApprovalsHistoryPage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -3487,6 +3488,14 @@ export function PlatformRouteElements() {
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
+                              {/* Static approval path before :mandateId segments (v1477) */}
+                              <Route path="mandates/approvals" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <MandateApprovalDashboard />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
                               <Route path="mandates/:mandateId/view" element={
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
@@ -3513,14 +3522,6 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <ProjectMandateView />
-                                  </ProtectedRoute>
-                                </Suspense>
-                              } />
-                              {/* Approval routes */}
-                              <Route path="mandates/approvals" element={
-                                <Suspense fallback={<LoadingFallback />}>
-                                  <ProtectedRoute>
-                                    <MandateApprovalDashboard />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />

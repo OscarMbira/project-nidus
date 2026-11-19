@@ -78,6 +78,10 @@ Sidebar depth rule: **Level 1 = section, Level 2 = page, Level 3 = (rare) sub-pa
 | Regional & Format, Working Days & Holidays, Timesheet Settings, Document Signatory, Environments, Custom Fields | 2 Project Setup → Project Settings | One page, tabs |
 | Scope & Deliverables (Scope Statement, PBS, WBS, Deliverable Register) | 3 Scope & Requirements | |
 | Requirements register (v1338, core table) | 3 Scope & Requirements → Requirements | Category filters as tabs |
+| My Approvals (v1343) | 1 Home → My Approvals | Tabs: Timesheet flags · Document reviews. Every role with My Tasks |
+| Meeting Follow-ups (v1343) | 1 Home → My Work | Tab beside My Tasks (slot `my_work_items`) |
+| Approvals History (v1343) | 6 Risks, Changes & Governance → Governance | Tab beside Stage Gates and Meetings (slot `governance`); read-only |
+| Messages: Comms Hub, Channels, Direct, Meeting Summaries (v1343 tabs) | 1 Home → Communications → Messages | One entry with tabs (slot `messages`) |
 | Planning (Schedule, Milestones, Dependencies, Baselines, Assumptions, Scenarios) | 4 Plan & Schedule | Calendar *settings* are in Project Settings |
 | RAID → Dependencies | 4 Plan & Schedule → Dependencies | One home; the RAID Log shows them as a tab |
 | Quality (plan, reviews, acceptance, non-conformance, configuration items) | 5 Deliver & Test → Quality | |
@@ -165,6 +169,7 @@ Sidebar depth rule: **Level 1 = section, Level 2 = page, Level 3 = (rare) sub-pa
 | Portfolio Manager (`portfolio_manager`) | pm | §6.5 |
 | Team Manager (`team_manager`), Team Lead (`team_lead`) | pm / tm | §6.6 (one team-scoped menu; see decision D7) |
 | Team Member (`team_member`) | tm | §6.7 |
+| Project Administrator (`project_administrator`) — added v1343 | pm (placement key `support`) | §6.7a |
 | PMO Admin, Account Owner, Org Admin (`pmo_admin`, `account_owner`, `org_admin`) | pmo | §6.8 |
 | Executive, Sponsor, Board Member, Project Assurance, Quality Assurance, Change Authority, Stakeholder, Viewer | pm + profile | §6.9 |
 
@@ -786,6 +791,49 @@ TEAM MEMBER
 └── Footer: Documents · Reports (mine)
 ```
 
+### 6.7a Project Administrator (Support) — v1343
+
+*The Project Manager's assistant on one project. Placement key `support`: the Project Manager's
+placements minus the authority pages; compact (only placed pages show). (V) = view-only hint in the
+sidebar; (E) = maintain. No formal timesheet Approve, no governed Approve / Reject, no Governance
+Setup redesign, no Regional & Format / Industry Modules switch-off, no budget or procurement
+sign-off. PRD `projectprd/v1343_project_administrator_support_role_PRD.md`.*
+
+```text
+PROJECT ADMINISTRATOR  (Support)
+│
+├── 1. Home
+│   ├── My Dashboard
+│   ├── My Work                 tabs: My Tasks · Meeting Follow-ups  (+ Daily Log, Expenses, Calendar)
+│   ├── My Approvals            tabs: Timesheet flags · Document reviews
+│   ├── Communications          Messages tabs: Comms Hub · Channels · Direct · Meeting Summaries
+│   └── Ask Nidus
+│
+├── 2. Project Setup
+│   ├── Project Details (V) · Mandate / Brief / Business Case / PID / BRP (V)
+│   ├── Project Team (E)        invite / remove up to level 7, no governance roles
+│   ├── Governance Setup (V)
+│   └── Project Settings        Working Days & Holidays (V) · Timesheet Settings (V) ·
+│                               Document Signatory (V) · Environments (V)
+│
+├── 3. Scope & Requirements     Scope Statement (V) · Requirements (E) · Products & Deliverables (E) · WBS (E)
+├── 4. Plan & Schedule          Schedule · Milestones · Dependencies · Delays · Assumptions (E) · Scenarios (V)
+├── 5. Deliver & Test           Tasks & Board · Quality · Testing · Defects (E) · ◆ industry pages
+├── 6. Risks, Changes & Gov.    RAID (E) · Change Requests (raise / track) · Decisions · Actions (E) ·
+│                               Governance tabs: Stage Gates (V) · Meetings (E) · Approvals History (V) ·
+│                               Compliance (V) · Lessons (E)
+├── 7. Stakeholders & Adoption  Stakeholders · Communication Plan (E) · ◆ Business Change / Training
+├── 8. Readiness, Benefits & Close  ◆ Readiness / Cutover / Go-Live (E) · Benefits (V) · Project Closure (E)
+├── 9. Money & Resources        Team Timesheets (read, Send reminder, Flag) · My Timesheets ·
+│                               Budget & Costs (V) · Resources (E) · Procurement (V)
+│
+└── Footer: Reports (E) · Documents (E)
+```
+
+Left out (v1471): All Projects, Create Project, Archives, Pending Approval queue, Approval Chains,
+Regional & Format, Risk Categories, Manage Roles, Industry Modules, Work Authorisation, Expense
+Approvals, ITTO templates / drafts, template administration.
+
 ### 6.8 PMO Admin / Account Owner / Org Admin
 
 *Two zones, as today: **Oversight** (across all projects) and **Organisation** (setup). The methodology track headers ([S] / [P] / [A]) leave the sidebar; methodology stays in the switcher (decision D9).*
@@ -899,6 +947,7 @@ F = full, T = team-scoped, A = approve / decide, V = view, R = roll-up, — = hi
 | Portfolio Manager | F | F (portfolio) | F (intake) | R | R | R | V | F (benefits) | F (portfolio) | F |
 | Team Manager / Lead | F | V / T | T | T | T | T | T | T | T / A | T |
 | Team Member | F (mine) | V (directory) | — | — | Mine | Raise / mine | — | Assigned | Mine (timesheets) | Mine |
+| Project Administrator (v1343) | F | V (+ team invite ≤ 7) | F / V | F | F | F (no approve) | F | F / V | Timesheets read + remind + flag; V (budget) | F |
 | PMO Admin / Account Owner | F | F (projects list) | — | — | — | R | — | R | R | F |
 | Executive | F | V | — | — | — | V / A | — | V | V | V |
 | Sponsor | F | A | — | — | — | — | V | V | V | V |

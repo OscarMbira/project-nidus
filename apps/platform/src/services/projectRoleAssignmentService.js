@@ -283,6 +283,7 @@ export async function getPmoMembershipAssignableRoles() {
 const PROJECT_MANAGER_INVITE_ROLE_NAMES = new Set([
   'team_manager',
   'team_member',
+  'project_administrator', // v1343
   'project_assurance',
   'quality_assurance',
   'change_authority',

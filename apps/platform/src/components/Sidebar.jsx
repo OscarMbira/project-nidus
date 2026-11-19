@@ -93,6 +93,7 @@ import { useOpenPlanningFindingsCount } from '@nidus/shared/hooks/useOpenPlannin
 import { usePlatformProjectId } from '@nidus/shared/hooks/usePlatformProjectId.js'
 import { SidebarNavTier, SidebarNavNestedRow } from '@nidus/ui'
 import MenuPageSearch from '@nidus/ui/MenuPageSearch'
+import { useSidebarScrollMemory, readSidebarExpanded, saveSidebarExpanded } from '@nidus/shared/hooks/useSidebarScrollMemory'
 import MethodologySwitcher from '@nidus/ui/MethodologySwitcher'
 
 // Icon mapping for menu items
@@ -438,6 +439,7 @@ function SidebarMenuItem({
             onClick={handleClick}
             className={itemClassName}
             style={{ ...activeStyle, ...textStyle }}
+            aria-current={isActive ? 'page' : undefined}
           >
             <Icon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0 text-current opacity-90" />
             <span className={`flex-1 ${menuItem.canUse === false ? 'opacity-75' : ''}`}>{menuItem.menu_label}</span>
@@ -523,7 +525,10 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
   const location = useLocation()
   const [loggingOut, setLoggingOut] = useState(false)
   const [organisationName, setOrganisationName] = useState('')
-  const [expandedMenuId, setExpandedMenuId] = useState(null)
+  // Each page mounts its own layout, so this Sidebar is created fresh on every click: remember the
+  // open group and the scroll position per sidebar so the menu stays where the user left it.
+  const sidebarScopeKey = `${simulatorScope || ((location.pathname || '').startsWith('/simulator') ? 'sim' : 'plat')}:${(location.pathname || '').split('/').includes('pmo') ? 'pmo' : 'main'}`
+  const [expandedMenuId, setExpandedMenuId] = useState(() => readSidebarExpanded(sidebarScopeKey))
   const lastAutoExpandPathRef = useRef('')
   const planningOpenFindingsCount = useOpenPlanningFindingsCount(!simulatorScope && !location.pathname.startsWith('/simulator'))
   const isSimulatorContext = !!simulatorScope || (location.pathname || '').startsWith('/simulator')
@@ -597,6 +602,9 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
       }),
     [prunedMenuItems, location.pathname, location.search, layoutHint?.layout, expandedMenuId]
   )
+
+  useEffect(() => { saveSidebarExpanded(sidebarScopeKey, expandedMenuId) }, [sidebarScopeKey, expandedMenuId])
+  const navScrollRef = useSidebarScrollMemory(sidebarScopeKey, !loading && prunedMenuItems.length > 0, expandedMenuId)
 
   const handleToggleExpand = (id) => {
     setExpandedMenuId((prev) => (prev === id ? null : id))
@@ -674,7 +682,7 @@ export default function Sidebar({ isOpen, onClose, simulatorScope = null }) {
           {/* Menu Items */}
           {/* overflow-x-hidden: avoid a permanent bottom horizontal scrollbar when the
               vertical bar appears (Windows classic scrollbars shrink width → 1px overflow). */}
-          <nav className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden py-4 px-3">
+          <nav ref={navScrollRef} className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden py-4 px-3">
             {activeZone && (
               <ZoneTabs
                 activeZone={activeZone}

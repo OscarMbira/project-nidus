@@ -1,11 +1,12 @@
 /** Simulator routes — extracted from App.jsx (v729 Option B) */
 import { Route, Navigate } from 'react-router-dom'
+import EnvironmentsRegisterRedirect from '@nidus/ui/EnvironmentsRegisterRedirect'
 import { Suspense } from 'react'
 import AppToPlatformRedirect from '../components/AppToPlatformRedirect'
 import { PmisGapRouteElements } from '../modules/pmis-gaps/routes/PmisGapRoutes.jsx'
 import { RecordLifecycleRouteElements } from '../modules/record-lifecycle/routes/RecordLifecycleRoutes.jsx'
 import { V734RoleRouteElements } from './v734RoleRoutes.jsx'
-import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
+import { AiSettingsPage, ReportLayoutsPage, ReportLayoutEditor, IndustryModulesPage, MyApprovalsPage, MeetingFollowUpsPage, ApprovalsHistoryPage } from './lazyImports' // v1272 AI settings + report layouts; v1341 Industry Modules
 import { SimPmoFederated, SimPmoTemplateLibraryFederated, SimPmoOrganisationalTemplatesFederated, SimPmOrganisationalTemplatesFederated, SimPmProjectTemplatesFederated, SimPmProjectDocumentsFederated, SimDocumentOversightFederated } from './SimPmoFederatedOutlet.jsx'
 import {
   LoadingFallback,
@@ -194,8 +195,6 @@ import {
   DefectDashboardPage,
   SimTestDashboard,
   SimTestSuites,
-  SimTestEnvironments,
-  SimTestEnvironmentFormPage,
   SimTestSuiteDetail,
   SimTestCases,
   SimTestCaseCreate,
@@ -2211,6 +2210,20 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
+                {/* v1344: practice mandate edit (the view links here; was not mounted) */}
+                <Route path="simulator/mandates/:mandateId/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <SimMandateEdit />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
       
                 {/* Practice Projects Routes */}
                 <Route path="simulator/practice-projects" element={
@@ -3488,6 +3501,46 @@ export function SimulatorRouteElements() {
                 {/* Assumptions Register (v963 Phase 3) — bare route shows an inline project
                     picker (AssumptionsListPage handles both cases), :projectId route is the
                     normal case linked from a practice project's own pages. */}
+                {/* v1343 (PRD A4): new practice project work pages */}
+                <Route path="simulator/practice-projects/my-approvals" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MyApprovalsPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/meeting-follow-ups" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <MeetingFollowUpsPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-projects/approvals-history" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <ApprovalsHistoryPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
                 {/* v1341 (D16): practice project industry menu switch-off */}
                 <Route path="simulator/practice-projects/industry-modules" element={
                   <Suspense fallback={<LoadingFallback />}>
@@ -4864,58 +4917,14 @@ export function SimulatorRouteElements() {
                     </ThemeProvider>
                   </Suspense>
                 } />
-                <Route path="simulator/practice-testing/environments/new" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimTestEnvironmentFormPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-testing/environments/:environmentKey/edit" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimTestEnvironmentFormPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-testing/environments/:environmentKey" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimTestEnvironmentFormPage />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
-                <Route path="simulator/practice-testing/environments" element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ThemeProvider>
-                      <ToastProvider>
-                        <ProtectedRoute requiredPlatform="simulator">
-                          <Layout>
-                            <SimTestEnvironments />
-                          </Layout>
-                        </ProtectedRoute>
-                      </ToastProvider>
-                    </ThemeProvider>
-                  </Suspense>
-                } />
+                {/* v1342: one Environments register — old addresses redirect (D8) */}
+                <Route path="simulator/practice-testing/environments/new" element={<EnvironmentsRegisterRedirect app="simulator" mode="new" />} />
+                {/* v1342: one Environments register — old addresses redirect (D8) */}
+                <Route path="simulator/practice-testing/environments/:environmentKey/edit" element={<EnvironmentsRegisterRedirect app="simulator" mode="edit" />} />
+                {/* v1342: one Environments register — old addresses redirect (D8) */}
+                <Route path="simulator/practice-testing/environments/:environmentKey" element={<EnvironmentsRegisterRedirect app="simulator" mode="view" />} />
+                {/* v1342: one Environments register — old addresses redirect (D8) */}
+                <Route path="simulator/practice-testing/environments" element={<EnvironmentsRegisterRedirect app="simulator" mode="view" />} />
                 <Route path="simulator/practice-testing/suites/:suiteId" element={
                   <Suspense fallback={<LoadingFallback />}>
                     <ThemeProvider>

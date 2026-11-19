@@ -13,6 +13,9 @@ import { getStakeholders, saveStakeholder } from '../services/stakeholderService
 import { listMilestones, createMilestone } from '../services/milestoneService'
 import { getOrgIndustryOptions } from '../services/organisationIndustryService.js'
 import { listProjectIndustries, replaceProjectIndustries } from '../services/projectIndustryService.js'
+import { clearRegisterProjectIndustries } from '@nidus/shared/hooks/useRegisterProjectIndustries'
+import { listProjectAttributeOptions } from '@nidus/shared/services/projectAttributeOptionsService'
+import { isPmoAdmin, getOrganisationUsers } from '../services/organisationRoleService'
 import {
   getEmptyWizardFormData,
   mapDbProjectToWizardForm,
@@ -68,11 +71,55 @@ export default function ProjectsEdit() {
   const navigate = useNavigate()
   const toast = useToastContext()
   const [project, setProject] = useState(null)
-  const [activeTab, setActiveTab] = useState('details')
+  // v1344 (A1): Project Details' Edit buttons open the wizard on a tab (?tab=…)
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('tab') || 'details'
+    } catch {
+      return 'details'
+    }
+  })
+  // v1344 (A2): option lists (SQL v1480) and the Project Manager field (PMO / org admins change it)
+  const [attributeOptions, setAttributeOptions] = useState({ priority: [], billing_type: [], classification: [] })
+  const [pmControl, setPmControl] = useState({ canChange: false, options: [], currentName: '' })
   const [formData, setFormData] = useState(() => getEmptyWizardFormData())
   const formDataRef = useRef(formData)
   formDataRef.current = formData
   const saveFailsafeRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+    listProjectAttributeOptions(platformDb)
+      .then((o) => { if (!cancelled) setAttributeOptions(o) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  const projectManagerUserId = project?.project_manager_user_id || null
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      const [{ data: sessionData }, current] = await Promise.all([
+        platformDb.auth.getSession(),
+        projectManagerUserId
+          ? platformDb.from('users').select('full_name, email').eq('id', projectManagerUserId).maybeSingle().then((r) => r.data)
+          : Promise.resolve(null),
+      ])
+      const currentName = current ? current.full_name || current.email || '' : ''
+      const authId = sessionData?.session?.user?.id
+      const admin = authId ? await isPmoAdmin(authId) : false
+      let options = []
+      if (admin) {
+        const res = await getOrganisationUsers(authId, true)
+        options = (res.data || [])
+          .filter((u) => u.id && Array.isArray(u.roles) && u.is_active !== false)
+          .map((u) => ({ value: u.id, label: u.full_name ? `${u.full_name}${u.email ? ` (${u.email})` : ''}` : u.email }))
+          .sort((a, b) => String(a.label).localeCompare(String(b.label)))
+      }
+      if (!cancelled) setPmControl({ canChange: admin, options, currentName })
+    })().catch(() => {})
+    return () => { cancelled = true }
+  }, [projectManagerUserId])
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
@@ -481,6 +528,7 @@ export default function ProjectsEdit() {
         appUserRow.id,
       )
       if (!industriesRes.success) console.error('Failed to save project industries:', industriesRes.error)
+      clearRegisterProjectIndustries() // v1342: register forms re-read the project's industries
 
       const cats = fd.budget_categories || []
       const toSave = cats
@@ -767,6 +815,8 @@ export default function ProjectsEdit() {
           projectTypeOptions={projectTypeOptions}
           statusOptions={statusOptions}
           industryOptions={industryOptions}
+          attributeOptions={attributeOptions}
+          projectManager={pmControl}
           selectedIndustryIds={selectedIndustryIds}
           primaryIndustryId={primaryIndustryId}
           onToggleIndustry={handleToggleIndustry}

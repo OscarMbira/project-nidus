@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildConsolidatedMenu, resolvePlacementKey, flattenConsolidatedPages, findSlotTabsForRoute, searchConsolidatedPages } from '../consolidatedMenu.js'
+import { buildConsolidatedMenu, resolvePlacementKey, flattenConsolidatedPages, findSlotTabsForRoute, searchConsolidatedPages, MENU_LAYOUT_OPTIONS, COMPACT_PLACEMENT_KEYS } from '../consolidatedMenu.js'
 
 // ── Fixtures ────────────────────────────────────────────────────────────────
 const SECTIONS = [
@@ -352,5 +352,103 @@ describe('compact menus (Team Member, governance profiles)', () => {
     const compact = buildConsolidatedMenu({ ...args, useDefaults: false })
     expect(allCodes(compact.items)).toContain('plat_pm_pt_contacts')
     expect(allCodes(compact.items)).not.toContain('plat_pm_s_mandate')
+  })
+})
+
+describe('slot inside a sub-menu (Project Settings › Environments)', () => {
+  const tree = [
+    node('plat_pm_project_settings', 'Project Settings', null),
+    node('plat_pm_s_regional_format', 'Regional & Format Settings', '/platform/project-setup/regional-format-settings'),
+    node('plat_pm_testing_environments', 'Environments', '/platform/testing/environments'),
+    node('fin_cat_core_banking', 'Core Banking', null, [
+      node('fin_reg_fin_core_banking_environments', 'Environments', '/platform/local-registers/fin_core_banking_environments'),
+      node('fin_reg_products', 'Products', '/platform/local-registers/fin-products'),
+    ]),
+    node('ict_cat_environments', 'Environments', null, [
+      node('ict_reg_ict_environments', 'Environments', '/platform/local-registers/ict_environments'),
+    ]),
+  ]
+  const packOf = new Map([
+    ['fin_reg_fin_core_banking_environments', 'pack-fin'], ['fin_reg_products', 'pack-fin'], ['ict_reg_ict_environments', 'pack-ict'],
+  ])
+  const ps = 'plat_pm_project_settings'
+  const placements = [
+    P(ps, 'project_setup', 90),
+    P('plat_pm_s_regional_format', 'project_setup', 10, { parent_code: ps }),
+    P('plat_pm_testing_environments', 'project_setup', 50, { parent_code: ps, slot_key: 'environments' }),
+    P('fin_reg_fin_core_banking_environments', 'project_setup', 52, { parent_code: ps, slot_key: 'environments' }),
+    P('ict_reg_ict_environments', 'project_setup', 55, { parent_code: ps, slot_key: 'environments' }),
+    P('fin_cat_core_banking', 'scope_requirements', 50),
+  ]
+  const run = (allowedPackIds) => buildConsolidatedMenu({
+    tree, sections: SECTIONS, placements, packOfCode: packOf, allowedPackIds,
+    slots: [{ slot_key: 'environments', label: 'Environments', section_code: 'project_setup', sort_order: 95 }],
+    packLabels: new Map([['pack-fin', 'Banking & Financial Services'], ['pack-ict', 'Information Technology']]),
+  })
+
+  it('Banking + IT project: one Environments entry under Project Settings, tabs named by industry', () => {
+    const res = run(['pack-fin', 'pack-ict'])
+    const settings = section(res, 'project_setup').children.find((n) => n.menu_code === ps)
+    expect(labels(settings.children)).toEqual(['Regional & Format Settings', 'Environments'])
+    expect(settings.children[1].route_path).toBe('/platform/testing/environments')
+    expect(labels(section(res, 'project_setup').children)).not.toContain('Environments')
+    const strip = res.slotTabs.find((s) => s.slotKey === 'environments')
+    expect(strip.tabs.map((t) => t.label)).toEqual(['Environments', 'Banking & Financial Services', 'Information Technology'])
+    // Core Banking keeps its other registers and loses Environments.
+    const banking = section(res, 'scope_requirements').children.find((n) => n.menu_code === 'fin_cat_core_banking')
+    expect(labels(banking.children)).toEqual(['Products'])
+  })
+
+  it('project with no industry: the core page alone, under Project Settings, no tab strip', () => {
+    const res = run([])
+    const settings = section(res, 'project_setup').children.find((n) => n.menu_code === ps)
+    expect(settings.children.map((n) => n.menu_code)).toEqual(['plat_pm_s_regional_format', 'plat_pm_testing_environments'])
+    expect(res.slotTabs).toHaveLength(0)
+  })
+})
+
+describe('findSlotTabsForRoute with register-key aliases', () => {
+  it('finds a register tab by its key address (rule 16.3) as well as its id route', () => {
+    const strips = [{ slotKey: 'environments', label: 'Environments', tabs: [
+      { code: 'core', label: 'Environments', route: '/platform/testing/environments' },
+      { code: 'ict', label: 'Information Technology', route: '/platform/local-registers/00000000-0000-4000-9003-000000000012', aliases: ['/platform/local-registers/ict_environments'] },
+    ] }]
+    const hit = findSlotTabsForRoute(strips, '/platform/local-registers/ict_environments')
+    expect(hit.activeRoute).toBe('/platform/local-registers/00000000-0000-4000-9003-000000000012')
+    expect(findSlotTabsForRoute(strips, '/platform/local-registers/ict_environments/ENV-0001').slotKey).toBe('environments')
+    expect(findSlotTabsForRoute(strips, '/platform/local-registers/other_register')).toBeNull()
+  })
+})
+
+describe('Project Administrator — Support menu (v1343)', () => {
+  it('maps project_administrator to the support key, Home only with no project open', () => {
+    expect(resolvePlacementKey({ layout: 'pm', roles: [{ role_name: 'project_administrator' }], projectOpen: true }))
+      .toEqual({ key: 'support', homeOnly: false })
+    expect(resolvePlacementKey({ layout: 'pm', roles: [{ role_name: 'Project Administrator' }], projectOpen: false }))
+      .toEqual({ key: 'support', homeOnly: true })
+  })
+
+  it('Team Manager wins over Project Administrator; Project Manager wins over both (A5)', () => {
+    expect(resolvePlacementKey({ layout: 'pm', roles: [{ role_name: 'project_administrator' }, { role_name: 'team_manager' }], projectOpen: true }).key).toBe('team')
+    expect(resolvePlacementKey({ layout: 'pm', roles: [{ role_name: 'project_administrator' }, { role_name: 'project_manager' }], projectOpen: true }).key).toBe('pm')
+    expect(resolvePlacementKey({ layout: 'pm', roles: [{ role_name: 'project_administrator' }, { role_name: 'team_member' }], projectOpen: true }).key).toBe('support')
+  })
+
+  it('a custom role can be based on the Support layout', () => {
+    expect(MENU_LAYOUT_OPTIONS.map((o) => o.value)).toContain('support')
+    expect(resolvePlacementKey({ layout: 'pm', roles: [{ role_name: 'my_coordinator', menu_layout_key: 'support' }], projectOpen: true }).key).toBe('support')
+  })
+
+  it('Support is compact: a granted page with no placement does not fall back to a default section', () => {
+    expect(COMPACT_PLACEMENT_KEYS.has('support')).toBe(true)
+    const res = buildConsolidatedMenu({
+      tree: [node('plat_pm_risk_reg', 'Risk Register', '/pm/controls/risk-register'), node('plat_pm_budget', 'Budget', '/platform/budget')],
+      sections: SECTIONS,
+      placements: [P('plat_pm_risk_reg', 'risks_governance', 10)],
+      defaultSectionByCode: new Map([['plat_pm_budget', 'risks_governance']]),
+      useDefaults: !COMPACT_PLACEMENT_KEYS.has('support'),
+    })
+    expect(allCodes(res.items)).toContain('plat_pm_risk_reg')
+    expect(allCodes(res.items)).not.toContain('plat_pm_budget')
   })
 })

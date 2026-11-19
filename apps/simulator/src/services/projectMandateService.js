@@ -372,7 +372,10 @@ export async function updateMandate(mandateId, updates, options = {}) {
   }
 
   // Extract fields stored in separate tables
-  const { associated_documents, stakeholders, constraints, ...mainMandateData } = updates
+  const { associated_documents, stakeholders, constraints, ...otherFields } = updates
+  // v1344: the edit form sends constraints as list text (JSON array) — that is the
+  // project_mandates.constraints column and must be saved; other shapes are left out as before.
+  const mainMandateData = typeof constraints === 'string' ? { ...otherFields, constraints } : otherFields
 
   const updateData = {
     ...mainMandateData,

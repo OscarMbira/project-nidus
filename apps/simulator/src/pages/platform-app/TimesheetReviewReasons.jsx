@@ -34,6 +34,7 @@ const DEFAULT_FORM = {
 const DECISIONS = [
   { value: 'approved', label: 'Approve reasons' },
   { value: 'rejected', label: 'Reject reasons' },
+  { value: 'flagged', label: 'Flag reasons' }, // v1343
 ];
 
 export default function TimesheetReviewReasons() {

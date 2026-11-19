@@ -18,6 +18,9 @@ export const PM_LAYOUT_ROLES = new Set([
   'pm_programme_manager',
   'pm_portfolio_manager',
   'pm_team_manager',
+  // v1343: Project Administrator works inside one project — PM shell (Support menu when consolidated).
+  'project_administrator',
+  'pm_project_administrator',
   'executive',
   'project_sponsor',
   'project_board_member',

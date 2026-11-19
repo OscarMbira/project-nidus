@@ -1038,3 +1038,7 @@ export const LessonsReportsList = lazy(() => import('../pages/LessonsReportsList
 export const RiskRegisterView = lazy(() => import('../pages/RiskRegisterView'))
 
 export const IndustryModulesPage = lazy(() => import('../pages/projectSetup/IndustryModulesPage')) // v1341 D16
+// v1343 (PRD A4): My Approvals, Meeting Follow-ups, Approvals History — shared pages in @nidus/ui
+export const MyApprovalsPage = lazy(() => import('@nidus/ui/projectAdmin/ProjectWorkPages').then((m) => ({ default: m.MyApprovalsPage })))
+export const MeetingFollowUpsPage = lazy(() => import('@nidus/ui/projectAdmin/ProjectWorkPages').then((m) => ({ default: m.MeetingFollowUpsPage })))
+export const ApprovalsHistoryPage = lazy(() => import('@nidus/ui/projectAdmin/ProjectWorkPages').then((m) => ({ default: m.ApprovalsHistoryPage })))

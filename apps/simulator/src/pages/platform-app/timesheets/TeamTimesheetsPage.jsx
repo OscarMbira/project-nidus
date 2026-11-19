@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Search, Download, Users, Clock, AlertTriangle, Gauge, CalendarRange } from 'lucide-react'
+import { Search, Download, Users, Clock, AlertTriangle, Gauge, CalendarRange, Flag, BellRing } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
-import { getTeamTimesheets, approveTimesheetEntry, rejectTimesheetEntry, computeTimesheetExceptions, computeUtilisation } from '../../../services/timesheetService'
+import { getTeamTimesheets, approveTimesheetEntry, rejectTimesheetEntry, computeTimesheetExceptions, computeUtilisation, sendTimesheetReminders } from '../../../services/timesheetService'
 import { getReviewReasons } from '../../../services/timesheetReasonCatalogService'
 import { resolveTimesheetSettings } from '../../../services/timesheetSettingsService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
@@ -15,6 +15,17 @@ import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 import TimesheetReviewPanel from '../../../components/timesheets/TimesheetReviewPanel'
 import TeamWeeklyTimesheetGrid from '../../../components/timesheets/TeamWeeklyTimesheetGrid'
 import TeamWorkPlanGrid from '../../../components/timesheets/TeamWorkPlanGrid'
+import TimesheetFlagDialog from '@nidus/ui/TimesheetFlagDialog'
+import TimesheetReminderDialog from '@nidus/ui/TimesheetReminderDialog'
+import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
+import {
+  getTimesheetCapabilities,
+  listOpenFlagsForEntries,
+  raiseTimesheetFlag,
+  withdrawTimesheetFlag,
+  loadReminderCandidates,
+  lastWeekPeriod,
+} from '@nidus/shared/services/timesheetFlagService'
 
 const STATUS_COLORS = {
   draft:     'bg-gray-100 text-gray-700 border-gray-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600',
@@ -62,6 +73,20 @@ export default function TeamTimesheetsPage() {
   const [reviewingId, setReviewingId] = useState(null)
   const [processing, setProcessing] = useState(null)
 
+  // v1343 — who may decide / flag / remind on this project, open flags, flag reasons, reminders
+  const [caps, setCaps] = useState({ userId: null, canDecide: false, canFlag: false, canRemind: false })
+  const [flagsByEntry, setFlagsByEntry] = useState(new Map())
+  const [flagReasons, setFlagReasons] = useState([])
+  const [flagEntry, setFlagEntry] = useState(null)
+  const [flagSaving, setFlagSaving] = useState(false)
+  const [reminderOpen, setReminderOpen] = useState(false)
+  const [reminderPeriod, setReminderPeriod] = useState(() => lastWeekPeriod())
+  const [reminderCandidates, setReminderCandidates] = useState([])
+  const [reminderLoading, setReminderLoading] = useState(false)
+  const [reminderSending, setReminderSending] = useState(false)
+  const [reminderError, setReminderError] = useState('')
+  const { showSuccess, modal: successModal } = useSuccessModal()
+
   // v1173 — resolved org/project overtime thresholds, for the Exceptions tab
   const [timesheetSettings, setTimesheetSettings] = useState(null)
 
@@ -82,7 +107,101 @@ export default function TeamTimesheetsPage() {
   useEffect(() => {
     getReviewReasons('approved').then((r) => setApproveReasons(r.data || []))
     getReviewReasons('rejected').then((r) => setRejectReasons(r.data || []))
+    getReviewReasons('flagged').then((r) => setFlagReasons(r.data || []))
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    getTimesheetCapabilities(projectId)
+      .then((c) => { if (!cancelled) setCaps(c) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [projectId])
+
+  // Open flags for the entries on screen (advisory badges for the approver)
+  const loadFlags = async (entries) => {
+    try {
+      setFlagsByEntry(await listOpenFlagsForEntries((entries || []).map((e) => e.id)))
+    } catch {
+      setFlagsByEntry(new Map())
+    }
+  }
+
+  const flagReasonName = useMemo(() => new Map(flagReasons.map((r) => [r.id, r.name])), [flagReasons])
+
+  const handleRaiseFlag = async (reasonIds, note) => {
+    if (!flagEntry) return
+    setFlagSaving(true)
+    try {
+      await raiseTimesheetFlag({ entryId: flagEntry.id, reasonIds, note, raisedBy: caps.userId })
+      setFlagEntry(null)
+      await loadFlags(rows)
+      toast.success('Entry flagged for the approver')
+    } catch (e) {
+      toast.error(e?.message || 'Could not flag the entry')
+    } finally {
+      setFlagSaving(false)
+    }
+  }
+
+  const handleWithdrawFlag = async (flagId) => {
+    try {
+      await withdrawTimesheetFlag(flagId)
+      await loadFlags(rows)
+      toast.success('Flag withdrawn')
+    } catch (e) {
+      toast.error(e?.message || 'Could not withdraw the flag')
+    }
+  }
+
+  const loadReminderList = async (period) => {
+    setReminderLoading(true)
+    setReminderError('')
+    try {
+      setReminderCandidates(await loadReminderCandidates(projectId, period))
+    } catch (e) {
+      setReminderCandidates([])
+      setReminderError(e?.message || 'Could not check who still needs to log time')
+    } finally {
+      setReminderLoading(false)
+    }
+  }
+
+  const openReminder = () => {
+    setReminderOpen(true)
+    loadReminderList(reminderPeriod)
+  }
+
+  const changeReminderPeriod = (period) => {
+    setReminderPeriod(period)
+    if (period.periodStart && period.periodEnd && period.periodStart <= period.periodEnd) loadReminderList(period)
+  }
+
+  const handleSendReminders = async (selected) => {
+    setReminderSending(true)
+    setReminderError('')
+    try {
+      const result = await sendTimesheetReminders({
+        projectId,
+        projectLabel: routeKey || 'the project',
+        ...reminderPeriod,
+        recipients: selected,
+        sentBy: caps.userId,
+      })
+      setReminderOpen(false)
+      showSuccess({
+        recordId: result.reminderId ? `${result.sent} sent` : '—',
+        operation: 'created',
+        message: result.failed.length
+          ? `Reminder sent to ${result.sent}. Not sent to: ${result.failed.join(', ')}.`
+          : `Timesheet reminder sent to ${result.sent} ${result.sent === 1 ? 'person' : 'people'} for ${reminderPeriod.periodStart} to ${reminderPeriod.periodEnd}.`,
+      })
+    } catch (e) {
+      setReminderError(e?.message || 'Could not send the reminder')
+    } finally {
+      setReminderSending(false)
+    }
+  }
 
   const load = async () => {
     if (!projectId) return
@@ -90,6 +209,7 @@ export default function TeamTimesheetsPage() {
     try {
       const data = await getTeamTimesheets(projectId, { status: statusFilter || undefined })
       setRows(data)
+      loadFlags(data)
     } catch (e) {
       toast.error(e?.message || 'Failed to load team timesheets')
     } finally {
@@ -177,6 +297,8 @@ export default function TeamTimesheetsPage() {
       await fn(id, reviewerId, reasonIds, notes)
       setRows(r => r.map(x => x.id === id ? { ...x, status: decision, review_notes: notes } : x))
       setAllRows(r => r.map(x => x.id === id ? { ...x, status: decision, review_notes: notes } : x))
+      // The database resolves the entry's open flags with the decision (SQL v1473).
+      setFlagsByEntry(m => { const n = new Map(m); n.delete(id); return n })
       toast.success(`Entry ${decision}`)
       resetReview()
     } catch (e) {
@@ -205,6 +327,12 @@ export default function TeamTimesheetsPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {caps.canRemind && (
+              <button type="button" onClick={openReminder}
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-300 dark:border-slate-600 px-3 py-1.5 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800">
+                <BellRing className="h-4 w-4" /> Send reminder
+              </button>
+            )}
             <button type="button" onClick={() => exportListToCSV(EXPORT_COLS, filtered, `team-timesheets-${routeKey}`)}
               className="inline-flex items-center gap-1 rounded-lg border border-gray-300 dark:border-slate-600 px-3 py-1.5 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800">
               <Download className="h-4 w-4" /> Export CSV
@@ -403,12 +531,31 @@ export default function TeamTimesheetsPage() {
                         ) : e.work_category}
                       </td>
                       <td className="px-4 py-3 text-gray-500 dark:text-slate-400 max-w-xs truncate">{e.description || '—'}</td>
-                      <td className="px-4 py-3"><StatusBadge status={e.status} /></td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={e.status} />
+                        {(flagsByEntry.get(e.id) || []).map((fl) => (
+                          <span key={fl.id}
+                            title={[(fl.reason_ids || []).map((id) => flagReasonName.get(id)).filter(Boolean).join(', '), fl.note].filter(Boolean).join(' — ')}
+                            className="ml-1 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                            <Flag className="h-3 w-3" /> Flagged
+                          </span>
+                        ))}
+                      </td>
                       <td className="px-4 py-3 text-right">
-                        {e.status === 'submitted' && reviewingId !== e.id && (
+                        {caps.canDecide && e.status === 'submitted' && reviewingId !== e.id && (
                           <button type="button" onClick={() => startReview(e.id)}
                             className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-xs">Review</button>
                         )}
+                        {caps.canFlag && ['draft', 'submitted'].includes(e.status) && (() => {
+                          const mine = (flagsByEntry.get(e.id) || []).find((fl) => fl.raised_by === caps.userId)
+                          return mine ? (
+                            <button type="button" onClick={() => handleWithdrawFlag(mine.id)}
+                              className="ml-3 text-amber-700 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200 text-xs">Withdraw flag</button>
+                          ) : (
+                            <button type="button" onClick={() => setFlagEntry(e)}
+                              className="ml-3 text-amber-700 hover:text-amber-800 dark:text-amber-300 dark:hover:text-amber-200 text-xs">Flag</button>
+                          )
+                        })()}
                       </td>
                     </tr>
                     {reviewingId === e.id && (
@@ -440,13 +587,35 @@ export default function TeamTimesheetsPage() {
             approveReasons={approveReasons}
             rejectReasons={rejectReasons}
             processing={processing}
-            onConfirmDecision={handleConfirmDecision}
+            onConfirmDecision={caps.canDecide ? handleConfirmDecision : undefined}
           />
         )}
 
         {tab === 'work_plan' && (
           <TeamWorkPlanGrid projectId={projectId} />
         )}
+
+        <TimesheetFlagDialog
+          open={!!flagEntry}
+          entryLabel={flagEntry ? `${formatDate(flagEntry.entry_date)} · ${flagEntry.hours_worked}h` : ''}
+          reasons={flagReasons}
+          saving={flagSaving}
+          onSubmit={handleRaiseFlag}
+          onClose={() => setFlagEntry(null)}
+        />
+        <TimesheetReminderDialog
+          open={reminderOpen}
+          periodStart={reminderPeriod.periodStart}
+          periodEnd={reminderPeriod.periodEnd}
+          onPeriodChange={changeReminderPeriod}
+          candidates={reminderCandidates}
+          loading={reminderLoading}
+          sending={reminderSending}
+          error={reminderError}
+          onSend={handleSendReminders}
+          onClose={() => setReminderOpen(false)}
+        />
+        {successModal}
       </div>
     </div>
   )

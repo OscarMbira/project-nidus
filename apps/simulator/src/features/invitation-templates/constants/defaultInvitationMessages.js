@@ -20,6 +20,7 @@ export const INVITATION_TEMPLATE_ROLE_NAMES = [
   'project_assurance',
   'quality_assurance',
   'change_authority',
+  'project_administrator',
   'team_member',
   'pmo_admin',
 ]
@@ -112,6 +113,13 @@ export const DEFAULT_INVITATION_MESSAGES_BY_ROLE = {
     subject_line: '',
     message_body: buildStandardInvitationBody(
       'You will review and approve changes to project scope, schedule, and budget within defined tolerances. We appreciate your participation.',
+    ),
+  },
+  project_administrator: {
+    template_label: 'Project Administrator',
+    subject_line: '',
+    message_body: buildStandardInvitationBody(
+      'You will support the Project Manager with meetings, actions, reports, documents, timesheet follow-up and keeping the schedule and RAID log up to date. Welcome to the team.',
     ),
   },
   team_member: {

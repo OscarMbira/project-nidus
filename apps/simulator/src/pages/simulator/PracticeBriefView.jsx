@@ -16,6 +16,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import ProjectMilestonesSummary from '@nidus/ui/ProjectMilestonesSummary'
+import { listMilestones } from '../../services/milestoneService'
 
 const PRACTICE_BRIEF_VIEW_SECTIONS = [
   { title: 'Brief', fields: [
@@ -106,18 +108,37 @@ export default function PracticeBriefView() {
           </AuditCard>
         </AuditDetailsPanel>
       ) : (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
-        <div>
-          <h3 className="font-medium mb-2">Description</h3>
-          <p className="text-gray-600 dark:text-gray-400">{brief.brief_description || 'No description'}</p>
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+          {/* v1344 slice 3: every practice brief field, then the project's milestones */}
+          {[
+            ['Description', brief.brief_description],
+            ['Project Definition', brief.project_definition],
+            ['Objectives', Array.isArray(brief.project_objectives) ? brief.project_objectives : null],
+            ['In Scope', brief.project_scope],
+            ['Out of Scope', brief.out_of_scope],
+            ['Project Approach', brief.project_approach],
+            ['Quality Approach', brief.quality_approach],
+            ['Risk Approach', brief.risk_approach],
+            ['Target Dates', [brief.target_start_date, brief.target_end_date].filter(Boolean).join(' to ')],
+          ].map(([title, value]) => (
+            <div key={title}>
+              <h3 className="font-medium mb-1 text-gray-900 dark:text-white">{title}</h3>
+              {Array.isArray(value) ? (
+                value.length ? <ol className="list-decimal pl-5 text-gray-600 dark:text-gray-400">{value.map((v, i) => <li key={i}>{v}</li>)}</ol>
+                  : <p className="text-gray-500 dark:text-gray-400">Not set</p>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{value || 'Not set'}</p>
+              )}
+            </div>
+          ))}
         </div>
-        <div>
-          <h3 className="font-medium mb-2">Project Definition</h3>
-          <p className="text-gray-600 dark:text-gray-400">{brief.project_definition || 'N/A'}</p>
-        </div>
-        <div>
-          <h3 className="font-medium mb-2">Project Scope</h3>
-          <p className="text-gray-600 dark:text-gray-400">{brief.project_scope || 'N/A'}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <ProjectMilestonesSummary
+            projectId={brief.practice_project_id || null}
+            loadMilestones={listMilestones}
+            manageHref={brief.practice_project_id ? `/simulator/practice-projects/${brief.practice_project_id}/milestones` : null}
+          />
         </div>
       </div>
       )}

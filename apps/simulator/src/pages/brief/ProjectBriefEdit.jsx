@@ -31,7 +31,7 @@ export default function ProjectBriefEdit() {
   const labels = briefCharterLabels(mode)
   const docPath = (action) => briefCharterDocPath(routeKey || projectId, action, mode)
   const [brief, setBrief] = useState(null)
-  const briefExportChildren = useBriefExportChildren(brief?.id)
+  const briefExportChildren = useBriefExportChildren(brief?.id, brief?.project_id)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState({})

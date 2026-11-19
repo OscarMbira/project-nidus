@@ -12,8 +12,17 @@ import {
   parseMeasurementTimingLinks,
 } from '@nidus/shared/utils/measurementTimingUtils';
 import { parseScopeItemsWithOwners } from '@nidus/shared/utils/scopeItemsWithOwnersUtils';
+import { useState } from 'react';
+import DetailAuditTabList from '@nidus/ui/DetailAuditTabList';
+import AuditDetailsPanel from '@nidus/ui/AuditDetailsPanel';
+import AuditCard from '@nidus/ui/AuditCard';
+import AuditField from '@nidus/ui/AuditField';
+import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
+import { humanizeAuditToken } from '@nidus/shared/utils/auditDisplayUtils';
 
 export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onApprove, onDistribute, onPrint }) {
+  // v1344 slice 6 (rule 63.1): Details + Audit details tabs on the view
+  const [activeTab, setActiveTab] = useState('details');
   if (!plan) {
     return (
       <div className="text-center py-12">
@@ -103,7 +112,32 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
         </div>
       </div>
 
-      {/* Content Sections */}
+      <div className="px-6 pt-4 border-b border-gray-200 dark:border-gray-700">
+        <DetailAuditTabList activeTab={activeTab} onChange={setActiveTab} ariaLabel="Benefits review plan sections" />
+      </div>
+
+      {activeTab === 'audit' ? (
+        <div className="p-6">
+          <AuditDetailsPanel description="Who created or changed this benefits review plan, and how it is classified.">
+            <AuditCard title="Identity" description="How this plan is labelled and tracked.">
+              <AuditField label="Title" value={plan.plan_title} />
+              <AuditField label="Reference" value={plan.document_ref || plan.display_id || null} />
+              <AuditField label="Version" value={plan.version_number} />
+            </AuditCard>
+            <AuditCard title="Classification" description="Where this plan sits.">
+              <AuditField label="Status" value={humanizeAuditToken(plan.status)} />
+              <AuditField label="Project" value={plan.project?.project_name || null} />
+              <AuditField label="Owner" value={plan.owner?.full_name || plan.owner?.email || null} />
+            </AuditCard>
+            <AuditCard title="Record history" description="When this plan was created and last changed.">
+              <AuditField label="Author" value={plan.author?.full_name || plan.author?.email || null} />
+              <AuditTimestampPair dateLabel="Created at" value={plan.created_at} />
+              <AuditTimestampPair dateLabel="Last updated" value={plan.updated_at} />
+            </AuditCard>
+          </AuditDetailsPanel>
+        </div>
+      ) : (
+      /* Content Sections */
       <div className="p-6 space-y-8">
         {/* 3. Scope */}
         {(plan.scope_description || plan.benefits_coverage_notes) && (
@@ -299,6 +333,7 @@ export default function BenefitsReviewPlanView({ plan, onEdit, onExport, onAppro
           </section>
         )}
       </div>
+      )}
 
       {/* Action Buttons */}
       {(onEdit || onExport || onApprove || onDistribute) && (

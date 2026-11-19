@@ -74,6 +74,16 @@ describe('mandate export', () => {
   })
 })
 
+describe('PID plan summaries (v1344)', () => {
+  it('exports text, a {summary} object, and drops the empty {} default', () => {
+    expect(buildPidExportRecord({ project_plan_summary: 'Three stages', stage_plan_summary: {} })).toMatchObject({
+      project_plan_summary: 'Three stages',
+      stage_plan_summary: '',
+    })
+    expect(buildPidExportRecord({ project_plan_summary: { summary: 'Pilot first' } }).project_plan_summary).toBe('Pilot first')
+  })
+})
+
 describe('brief export', () => {
   const brief = {
     brief_reference: 'PBG-1',
@@ -110,6 +120,20 @@ describe('brief export', () => {
     expect(record.solution_type_label).toBe('Hybrid')
     expect(record.lessons_learned_reviewed_label).toBe('Yes')
     expect(fieldOf(buildBriefExportSections(brief), 'solution_type_label').fact).toBe(true)
+  })
+
+  it('adds the project milestones as a table (v1344)', () => {
+    const milestones = [
+      { milestone_name: 'Pilot live', target_date: '2027-03-01', status: 'in_progress' },
+      { milestone_name: 'All regions live', target_date: '2027-07-01', status: 'planned' },
+    ]
+    expect(fieldOf(buildBriefExportSections(brief, { milestones }), 'milestones_summary').table).toEqual({
+      headers: ['Milestone', 'Target Date', 'Status'],
+      rows: [['Pilot live', '2027-03-01', 'In progress'], ['All regions live', '2027-07-01', 'Planned']],
+    })
+    expect(buildBriefExportRecord(brief, { milestones }).milestones_summary).toBe(
+      'Pilot live – 2027-03-01 – In progress\nAll regions live – 2027-07-01 – Planned')
+    expect(fieldOf(buildBriefExportSections(brief), 'milestones_summary').table).toBeUndefined()
   })
 })
 

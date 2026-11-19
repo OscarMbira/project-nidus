@@ -160,6 +160,12 @@ export function buildPidExportSections(_pid = {}, children = {}) {
   })
 }
 
+/** v1344: plan summaries are JSONB — text saved by the form, or the column default {} / {summary}. */
+function planSummaryText(v) {
+  if (typeof v === 'string') return v
+  return v && typeof v.summary === 'string' ? v.summary : ''
+}
+
 export function buildPidExportRecord(pid = {}, children = {}) {
   const t = childTables(children)
   const record = { ...pid, title: pid.pid_title }
@@ -172,5 +178,7 @@ export function buildPidExportRecord(pid = {}, children = {}) {
     team_summary: tableLines(t.team),
     tolerances_summary: tableLines(t.tolerances),
     reporting_summary: tableLines(t.reporting),
+    project_plan_summary: planSummaryText(pid.project_plan_summary),
+    stage_plan_summary: planSummaryText(pid.stage_plan_summary),
   }
 }

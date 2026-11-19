@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { groupRegisterFields, buildRegisterTabs, isFieldVisible, DETAILS_TAB, AUDIT_TAB, CUSTOM_FIELDS_TAB } from '../registerFieldGroups'
+import { groupRegisterFields, buildRegisterTabs, isFieldVisible, filterFieldsForProjectIndustries, registerForProjectIndustries, DETAILS_TAB, AUDIT_TAB, CUSTOM_FIELDS_TAB } from '../registerFieldGroups'
 
 describe('groupRegisterFields', () => {
   it('puts ungrouped fields on the Details tab and keeps their order', () => {
@@ -82,5 +82,45 @@ describe('conditional fields (visible_when, v1346)', () => {
 
   it('shows every field when no values are given (register definition views)', () => {
     expect(groupRegisterFields(fields).groups.map((g) => g.label)).toEqual(['Cloud Setup', 'Infrastructure', 'Connection Details'])
+  })
+})
+
+describe('industry-only fields (visible_when.project_industry, v1342)', () => {
+  const FIELDS = [
+    { field_key: 'environment_type', field_group: null },
+    { field_key: 'cloud_provider', field_group: 'Cloud Setup', visible_when: { field: 'hosting_model', in: ['cloud', 'hybrid'] } },
+    { field_key: 'banking_component', field_group: 'Banking', visible_when: { project_industry: ['Banking & Financial Services'] } },
+    { field_key: 'site_permit', field_group: 'Construction', visible_when: { project_industry: ['Construction & Engineering'] } },
+  ]
+  const keys = (fields) => fields.map((f) => f.field_key)
+
+  it('keeps industry fields only for a project with that industry (names ignore case)', () => {
+    expect(keys(filterFieldsForProjectIndustries(FIELDS, ['banking & financial services'])))
+      .toEqual(['environment_type', 'cloud_provider', 'banking_component'])
+  })
+
+  it('composite project gets each of its industries', () => {
+    expect(keys(filterFieldsForProjectIndustries(FIELDS, ['Banking & Financial Services', 'Construction & Engineering'])))
+      .toEqual(['environment_type', 'cloud_provider', 'banking_component', 'site_permit'])
+  })
+
+  it('other industry or no industry: the common fields only', () => {
+    const common = ['environment_type', 'cloud_provider']
+    expect(keys(filterFieldsForProjectIndustries(FIELDS, ['Healthcare']))).toEqual(common)
+    expect(keys(filterFieldsForProjectIndustries(FIELDS, []))).toEqual(common)
+    expect(keys(filterFieldsForProjectIndustries(FIELDS, null))).toEqual(common)
+  })
+
+  it('a tab whose fields are all industry-only disappears, and value conditions still apply', () => {
+    const reg = registerForProjectIndustries({ fields: FIELDS }, ['Healthcare'])
+    const { groups } = groupRegisterFields(reg.fields, { hosting_model: 'on_premise' })
+    expect(groups.map((g) => g.label)).toEqual([])
+    const banking = registerForProjectIndustries({ fields: FIELDS }, ['Banking & Financial Services'])
+    expect(groupRegisterFields(banking.fields, { hosting_model: 'cloud' }).groups.map((g) => g.label)).toEqual(['Cloud Setup', 'Banking'])
+  })
+
+  it('returns the same register object when nothing is filtered', () => {
+    const reg = { fields: [FIELDS[0], FIELDS[1]] }
+    expect(registerForProjectIndustries(reg, [])).toBe(reg)
   })
 })

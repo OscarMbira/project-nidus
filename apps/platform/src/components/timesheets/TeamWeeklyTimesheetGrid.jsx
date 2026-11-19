@@ -187,7 +187,7 @@ export default function TeamWeeklyTimesheetGrid({ projectId, entries, loading, a
                         <td className="px-3 py-2 text-gray-500 dark:text-slate-400 text-xs">{row.isOvertime ? '—' : (category?.name || row.categoryCode)}</td>
                         {weekDates.map((date) => {
                           const entry = row.cellsByDate[date]
-                          const clickable = entry?.status === 'submitted'
+                          const clickable = entry?.status === 'submitted' && typeof onConfirmDecision === 'function' // v1343: deciders only
                           return (
                             <td key={date}
                               className={`px-2 py-2 text-center text-gray-700 dark:text-slate-300 ${STATUS_CELL_CLASSES[entry?.status] || ''}`}

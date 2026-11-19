@@ -54,8 +54,17 @@ function ProjectWizardPanels({
   onAddMilestone,
   onRemoveMilestone,
   addingMilestone = false,
+  // v1344 (A1 / A2): option lists from project_attribute_options (SQL v1480) and the PM field
+  attributeOptions = { priority: [], billing_type: [], classification: [] },
+  projectManager = { canChange: false, options: [], currentName: '' },
 }) {
   const isView = mode === 'view'
+  // A stored value missing from the list still shows (e.g. a retired option).
+  const withCurrent = (opts, value) =>
+    value && !(opts || []).some((o) => o.value === value) ? [...(opts || []), { value, label: value }] : (opts || [])
+  const classificationOptions = withCurrent(attributeOptions.classification, formData.project_classification)
+  const billingOptions = withCurrent(attributeOptions.billing_type, formData.billing_type)
+  const priorityOptions = withCurrent(attributeOptions.priority, formData.priority)
 
   return (
     <>
@@ -246,14 +255,95 @@ function ProjectWizardPanels({
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               >
                 <option value="">Select a classification</option>
-                <option value="strategic">Strategic</option>
-                <option value="tactical">Tactical</option>
-                <option value="operational">Operational</option>
+                {classificationOptions.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
               </select>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 How central this project is to organisational strategy versus routine delivery.
               </p>
             </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Objectives
+              </label>
+              <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
+                What the project will achieve. Add one objective per line.
+              </p>
+              <MultiLineListInput
+                id="project_objectives_input"
+                value={formData.project_objectives}
+                onChange={(v) => handleChange({ target: { name: 'project_objectives', value: v } })}
+                placeholder="e.g. Migrate all retail accounts with zero data loss"
+                ariaLabelPrefix="objective"
+                disabled={isView}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <label htmlFor="priority" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Priority
+                </label>
+                <select
+                  id="priority"
+                  value={formData.priority}
+                  onChange={(e) => handleChange({ target: { name: 'priority', value: e.target.value } })}
+                  disabled={isView}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Not set</option>
+                  {priorityOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="billing_type" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Billing Type
+                </label>
+                <select
+                  id="billing_type"
+                  value={formData.billing_type}
+                  onChange={(e) => handleChange({ target: { name: 'billing_type', value: e.target.value } })}
+                  disabled={isView}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="">Not set</option>
+                  {billingOptions.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Time &amp; Material projects get a Planned vs Actual comparison on the Work Plan tab.
+                </p>
+              </div>
+            </div>
+
+            {mode !== 'create' && (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Project Manager
+                </label>
+                {projectManager.canChange && !isView ? (
+                  <SearchableSelect
+                    options={projectManager.options}
+                    value={formData.project_manager_user_id}
+                    onChange={(v) => handleChange({ target: { name: 'project_manager_user_id', value: v } })}
+                    placeholder="Select the Project Manager"
+                    searchPlaceholder="Search people..."
+                  />
+                ) : (
+                  <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
+                    {projectManager.currentName || 'Not set'}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  The Project Manager has full rights on this project. Only a PMO Admin can change it.
+                </p>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>

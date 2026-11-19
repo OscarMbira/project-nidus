@@ -15,6 +15,9 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
+/** v1344: plan summaries are JSONB — text saved by the form, or the column default {} / {summary} from older rows. */
+const planSummaryText = (v) => (typeof v === 'string' ? v : (v && typeof v.summary === 'string' ? v.summary : ''))
+
 const FORM_STEPS = [
   { id: 'overview', label: 'Overview', icon: FileText, description: 'Basic information and background' },
   { id: 'definition', label: 'Project Definition', icon: Target, description: 'Definition, scope, and exclusions' },
@@ -67,6 +70,14 @@ export default function PIDForm({
     procurement_approach: '',
     change_control_approach: '',
     control_mechanisms: '',
+    // v1344 slice 5: existing PID columns now on the form
+    project_approach: '',
+    quality_approach: '',
+    risk_approach: '',
+    communication_approach: '',
+    monitoring_and_control: '',
+    project_plan_summary: '',
+    stage_plan_summary: '',
     stage_boundary_reviews: '',
     timeline_summary: '',
     budget_summary: '',
@@ -106,6 +117,13 @@ export default function PIDForm({
         procurement_approach: pid.procurement_approach || '',
         change_control_approach: pid.change_control_approach || '',
         control_mechanisms: pid.control_mechanisms || '',
+        project_approach: pid.project_approach || '',
+        quality_approach: pid.quality_approach || '',
+        risk_approach: pid.risk_approach || '',
+        communication_approach: pid.communication_approach || '',
+        monitoring_and_control: pid.monitoring_and_control || '',
+        project_plan_summary: planSummaryText(pid.project_plan_summary),
+        stage_plan_summary: planSummaryText(pid.stage_plan_summary),
         stage_boundary_reviews: pid.stage_boundary_reviews || '',
         timeline_summary: pid.timeline_summary || '',
         budget_summary: pid.budget_summary || '',
@@ -516,6 +534,58 @@ export default function PIDForm({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Project Approach
+              </label>
+              <textarea
+                value={formData.project_approach}
+                onChange={(e) => handleChange('project_approach', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="How the project will be delivered (e.g. build in-house, buy and configure, phased rollout)..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Quality Approach
+              </label>
+              <textarea
+                value={formData.quality_approach}
+                onChange={(e) => handleChange('quality_approach', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="How quality will be planned, controlled and assured..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Risk Approach
+              </label>
+              <textarea
+                value={formData.risk_approach}
+                onChange={(e) => handleChange('risk_approach', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="How risks will be identified, assessed and managed..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Communication Approach
+              </label>
+              <textarea
+                value={formData.communication_approach}
+                onChange={(e) => handleChange('communication_approach', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="Who is told what, when and how..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Change Control Approach
               </label>
               <textarea
@@ -589,6 +659,19 @@ export default function PIDForm({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Monitoring and Control
+              </label>
+              <textarea
+                value={formData.monitoring_and_control}
+                onChange={(e) => handleChange('monitoring_and_control', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="How progress is monitored: checkpoints, highlight reports, tolerances, escalation..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Stage Boundary Reviews
               </label>
               <textarea
@@ -626,6 +709,32 @@ export default function PIDForm({
                 rows={5}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Provide a summary of the project timeline, key milestones, and dates..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Project Plan Summary
+              </label>
+              <textarea
+                value={formData.project_plan_summary}
+                onChange={(e) => handleChange('project_plan_summary', e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="Stages, major products and the overall schedule..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Current Stage Plan Summary
+              </label>
+              <textarea
+                value={formData.stage_plan_summary}
+                onChange={(e) => handleChange('stage_plan_summary', e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="What the current stage will deliver and when..."
               />
             </div>
 

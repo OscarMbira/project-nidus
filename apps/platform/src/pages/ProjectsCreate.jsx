@@ -33,6 +33,7 @@ import { saveStakeholder } from '../services/stakeholderService'
 import { createMilestone } from '../services/milestoneService'
 import { getOrgIndustryOptions } from '../services/organisationIndustryService.js'
 import { replaceProjectIndustries } from '../services/projectIndustryService.js'
+import { listProjectAttributeOptions } from '@nidus/shared/services/projectAttributeOptionsService'
 
 // Removed skeleton loader for faster initial render
 
@@ -211,8 +212,22 @@ export default function ProjectsCreate() {
     document_repository_url: '',
 
     success_criteria: '',
-    project_classification: ''
+    project_classification: '',
+    // v1344: also on the wizard's Project Details tab
+    project_objectives: '',
+    billing_type: '',
+    priority: ''
   })
+
+  // v1344: option lists for Priority / Billing Type / Classification (SQL v1480)
+  const [attributeOptions, setAttributeOptions] = useState({ priority: [], billing_type: [], classification: [] })
+  useEffect(() => {
+    let cancelled = false
+    listProjectAttributeOptions(supabase)
+      .then((o) => { if (!cancelled) setAttributeOptions(o) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   const [projectTypes, setProjectTypes] = useState([])
   const [projectStatuses, setProjectStatuses] = useState([])
@@ -752,7 +767,10 @@ export default function ProjectsCreate() {
 
           // Project Details — Success Criteria / Classification
           success_criteria: formData.success_criteria || null,
-          project_classification: formData.project_classification || null
+          project_classification: formData.project_classification || null,
+          project_objectives: formData.project_objectives || null,
+          billing_type: formData.billing_type || null,
+          ...(formData.priority ? { priority: formData.priority } : {})
       }
 
       // Execute insert or update based on whether project exists
@@ -1270,6 +1288,7 @@ export default function ProjectsCreate() {
           projectTypeOptions={projectTypeOptions}
           statusOptions={statusOptions}
           industryOptions={industryOptions}
+          attributeOptions={attributeOptions}
           selectedIndustryIds={selectedIndustryIds}
           primaryIndustryId={primaryIndustryId}
           onToggleIndustry={handleToggleIndustry}

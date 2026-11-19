@@ -1317,18 +1317,11 @@ export async function updatePlatformProjectMemberRole(memberRowId, newProjectRol
 export async function removePlatformProjectMember(memberRowId) {
   try {
     if (typeof memberRowId === 'string' && memberRowId.startsWith('ur-')) {
+      // v1343 / SQL v1472: the database checks who may remove and which role.
       const userRoleId = memberRowId.slice(3)
-      const { error } = await appDb
-        .from('user_roles')
-        .update({
-          is_active: false,
-          is_deleted: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userRoleId)
-
+      const { data, error } = await appDb.rpc('remove_project_member', { p_user_role_id: userRoleId })
       if (error) throw error
-      return { success: true, data: null, error: null }
+      return { success: true, data, error: null }
     }
     return removeMemberFromProject(memberRowId)
   } catch (error) {
@@ -1385,16 +1378,9 @@ export async function updateMemberRole(membershipId, newProjectRoleId) {
  */
 export async function removeMemberFromProject(membershipId) {
   try {
-    const { data, error } = await appDb
-      .from('project_memberships')
-      .update({
-        is_active: false,
-        invitation_status: 'cancelled',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', membershipId)
-      .select()
-      .single()
+    // v1343 / SQL v1472: the database checks who may remove and which role (a Project
+    // Administrator cannot remove a Team Manager, Project Manager or governance role).
+    const { data, error } = await appDb.rpc('remove_project_member', { p_membership_id: membershipId })
 
     if (error) throw error
 

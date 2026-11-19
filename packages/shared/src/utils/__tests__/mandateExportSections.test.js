@@ -25,3 +25,18 @@ describe('mandate export — dependencies (v1447)', () => {
     expect(record.dependencies_summary).toBe('')
   })
 })
+
+describe('mandate export — v1344 fields', () => {
+  it('exports assumptions, known risks and key deliverables', async () => {
+    const { buildMandateExportRecord, buildMandateExportSections } = await import('../mandateExportSections')
+    const rec = buildMandateExportRecord(
+      { assumptions: '["A1","A2"]', outline_risks: '["R1"]' },
+      { deliverables: [{ deliverable_name: 'Portal', estimated_completion: 'Q2', is_in_scope: true, is_major_deliverable: false }] },
+    )
+    expect(rec.assumptions).toContain('A1')
+    expect(rec.outline_risks).toContain('R1')
+    expect(rec.deliverables_summary).toContain('Portal')
+    const sections = buildMandateExportSections({}, { deliverables: [{ deliverable_name: 'Portal' }] })
+    expect(sections.map((s) => s.title)).toEqual(expect.arrayContaining(['14. Assumptions', '15. Known Risks and Issues', '16. Key Deliverables']))
+  })
+})

@@ -176,11 +176,13 @@ export async function loadProjectMenuContext(app, projectId) {
     }
   }
   const [indRes, offRes, projRes] = await Promise.all([
-    platformDb.from('project_industries').select('industry_category_id, is_primary, created_at').eq('project_id', projectId),
+    // project_industries has added_at (v1112), not created_at — a wrong column fails the query
+    // and silently drops a composite project's secondary industries.
+    platformDb.from('project_industries').select('industry_category_id, is_primary, added_at').eq('project_id', projectId),
     platformDb.from('project_disabled_menu_items').select('menu_item_id').eq('project_id', projectId),
     platformDb.from('projects').select('industry_category_id').eq('id', projectId).maybeSingle(),
   ])
-  let industries = orderIndustries(indRes.error ? [] : (indRes.data || []), 'created_at')
+  let industries = orderIndustries(indRes.error ? [] : (indRes.data || []), 'added_at')
   if (industries.length === 0 && projRes.data?.industry_category_id) {
     industries = [{ industry_category_id: projRes.data.industry_category_id, is_primary: true }]
   }
@@ -220,6 +222,55 @@ export async function loadUserMenuRoles(authUserId) {
     .filter((r) => r.role_name)
 }
 
+const REGISTER_ROUTE = /^\/(platform|simulator)\/local-registers\/([0-9a-f-]{36})$/i
+
+/**
+ * Register menu routes carry the register id, but the register page rewrites its address to the
+ * register key (rule 16.3). Give those tabs the key address too, so the slot tab strip still finds
+ * the page (findSlotTabsForRoute checks `aliases`). One small query, only when a slot has registers.
+ */
+async function withRegisterKeyAliases(app, slotTabs = []) {
+  const ids = new Set()
+  for (const strip of slotTabs) for (const t of strip.tabs || []) {
+    const m = REGISTER_ROUTE.exec(String(t.route || '').split('?')[0])
+    if (m) ids.add(m[2].toLowerCase())
+  }
+  if (ids.size === 0) return slotTabs
+  try {
+    const client = app === 'simulator' ? simDb : platformDb
+    const { data, error } = await client.from('local_registers').select('id, register_key').in('id', [...ids])
+    if (error || !data) return slotTabs
+    const keyById = new Map(data.filter((r) => r.register_key).map((r) => [String(r.id).toLowerCase(), r.register_key]))
+    return slotTabs.map((strip) => ({
+      ...strip,
+      tabs: (strip.tabs || []).map((t) => {
+        const m = REGISTER_ROUTE.exec(String(t.route || '').split('?')[0])
+        const key = m && keyById.get(m[2].toLowerCase())
+        return key ? { ...t, aliases: [`/${m[1]}/local-registers/${key}`] } : t
+      }),
+    }))
+  } catch {
+    return slotTabs
+  }
+}
+
+/**
+ * v1343 (D12): the user's role on an open Simulator practice project
+ * (sim.practice_project_memberships stores the auth user id and a role name).
+ * @returns {Promise<Array<{ role_name: string, project_id: string }>>}
+ */
+export async function loadPracticeProjectRoles(practiceProjectId, authUserId) {
+  if (!practiceProjectId || !authUserId) return []
+  const { data, error } = await simDb
+    .from('practice_project_memberships')
+    .select('role_name')
+    .eq('practice_project_id', practiceProjectId)
+    .eq('user_id', authUserId)
+    .eq('is_active', true)
+  if (error) return []
+  return (data || []).filter((r) => r.role_name).map((r) => ({ role_name: r.role_name, project_id: practiceProjectId }))
+}
+
 function collectIds(nodes, idToCode) {
   for (const n of nodes || []) {
     if (n?.id && n?.menu_code) idToCode.set(n.id, n.menu_code)
@@ -245,12 +296,16 @@ function collectIds(nodes, idToCode) {
  */
 export async function buildConsolidatedMenuForUser({ app, tree, accountId, authUserId, layout, projectId, packMap }) {
   if (!accountId || !Array.isArray(tree) || tree.length === 0) return { enabled: false }
-  const [version, projectCtx, roles, packMapResolved] = await Promise.all([
+  const [version, projectCtx, platformRoles, practiceRoles, packMapResolved] = await Promise.all([
     loadPlacementVersion(),
     loadProjectMenuContext(app, projectId).catch(() => ({ industries: [], disabledItemIds: [] })),
     loadUserMenuRoles(authUserId).catch(() => []),
+    app === 'simulator' ? loadPracticeProjectRoles(projectId, authUserId).catch(() => []) : [],
     Promise.resolve(packMap).catch(() => null),
   ])
+  // v1343 (D12): a practice project's own membership role (e.g. Project Administrator) counts
+  // as the role on the open project (D26), so practice members get the matching menu.
+  const roles = [...practiceRoles, ...platformRoles]
 
   const { key, homeOnly } = resolvePlacementKey({ layout, roles, projectId, projectOpen: !!projectId })
   const bundle = await loadPlacementBundle(app, key, version)
@@ -294,6 +349,7 @@ export async function buildConsolidatedMenuForUser({ app, tree, accountId, authU
     disabledCodes,
     homeOnly,
     useDefaults: !COMPACT_PLACEMENT_KEYS.has(key),
+    packLabels: new Map(packSections.map((s) => [s.packId, s.packName])),
   })
 
   return {
@@ -303,7 +359,7 @@ export async function buildConsolidatedMenuForUser({ app, tree, accountId, authU
     projectId: projectId || null,
     version,
     items: result.items,
-    slotTabs: result.slotTabs,
+    slotTabs: await withRegisterKeyAliases(app, result.slotTabs),
     pageIndex: result.pageIndex,
     unplaced: result.unplaced,
     packNames: packSections.map((s) => [s.packId, s.packName]),

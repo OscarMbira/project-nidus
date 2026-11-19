@@ -30,6 +30,9 @@ import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
 
+/** v1344: plan summaries are JSONB — text saved by the form, or the column default {} / {summary} from older rows. */
+const planSummaryText = (v) => (typeof v === 'string' ? v : (v && typeof v.summary === 'string' ? v.summary : ''))
+
 export default function PIDView() {
   const { projectId, routeKey, loading: projectLoading } = usePlatformProjectId()
   const navigate = useNavigate()
@@ -487,11 +490,25 @@ export default function PIDView() {
               />
             )}
 
-            {(activeTab === 'controls' || activeTab === 'plans') && (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <p>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} section - Implementation in progress...</p>
-              </div>
-            )}
+            {/* v1344 slice 5: Controls and Plans show their fields (were placeholders) */}
+            {(activeTab === 'controls' || activeTab === 'plans') && (() => {
+              const fields = activeTab === 'controls'
+                ? [['Control Mechanisms', pid.control_mechanisms], ['Monitoring and Control', pid.monitoring_and_control], ['Stage Boundary Reviews', pid.stage_boundary_reviews]]
+                : [['Timeline Summary', pid.timeline_summary], ['Project Plan Summary', planSummaryText(pid.project_plan_summary)], ['Current Stage Plan Summary', planSummaryText(pid.stage_plan_summary)], ['Budget Summary', pid.budget_summary]]
+              const filled = fields.filter(([, v]) => v && String(v).trim())
+              return filled.length === 0 ? (
+                <p className="py-8 text-center text-gray-500 dark:text-gray-400">Nothing recorded yet. Use Edit to add this section.</p>
+              ) : (
+                <div className="space-y-6">
+                  {filled.map(([label, value]) => (
+                    <div key={label}>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{label}</h3>
+                      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
           </div>
         </div>
       )}

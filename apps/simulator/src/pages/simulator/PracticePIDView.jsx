@@ -106,19 +106,31 @@ export default function PracticePIDView() {
           </AuditCard>
         </AuditDetailsPanel>
       ) : (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
-        <div>
-          <h3 className="font-medium mb-2">Description</h3>
-          <p className="text-gray-600 dark:text-gray-400">{pid.pid_description || 'No description'}</p>
-        </div>
-        <div>
-          <h3 className="font-medium mb-2">Project Definition</h3>
-          <p className="text-gray-600 dark:text-gray-400">{pid.project_definition || 'N/A'}</p>
-        </div>
-        <div>
-          <h3 className="font-medium mb-2">Project Scope</h3>
-          <p className="text-gray-600 dark:text-gray-400">{pid.project_scope || 'N/A'}</p>
-        </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+        {/* v1344 slice 5: every PID section that has content (was description, definition, scope only) */}
+        {[
+          ['Description', pid.pid_description],
+          ['Project Definition', pid.project_definition],
+          ['Objectives', Array.isArray(pid.project_objectives) ? pid.project_objectives.join('\n') : pid.project_objectives],
+          ['Project Scope', pid.project_scope],
+          ['Exclusions', pid.exclusions],
+          ['Interfaces', pid.interfaces],
+          ['Project Approach', pid.project_approach],
+          ['Quality Approach', pid.quality_approach],
+          ['Risk Approach', pid.risk_approach],
+          ['Change Control Approach', pid.change_control_approach],
+          ['Communication Approach', pid.communication_approach],
+          ['Tolerances', typeof pid.tolerance_levels === 'object' && pid.tolerance_levels ? JSON.stringify(pid.tolerance_levels) : pid.tolerance_levels],
+          ['Reporting Arrangements', pid.reporting_arrangements],
+          ['Monitoring and Control', pid.monitoring_and_control],
+          ['Project Plan Summary', pid.project_plan_summary],
+          ['Current Stage Plan Summary', pid.stage_plan_summary],
+        ].filter(([, v]) => v && String(v).trim()).map(([title, value]) => (
+          <div key={title}>
+            <h3 className="font-medium mb-1 text-gray-900 dark:text-white">{title}</h3>
+            <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{value}</p>
+          </div>
+        ))}
       </div>
       )}
     </div>

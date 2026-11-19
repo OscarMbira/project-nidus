@@ -4,6 +4,7 @@ import { ArrowLeft, GraduationCap, Award, Rocket } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getSimMandateById, getSimDeliverables, getSimStakeholders, getSimMandateProgress, canCreatePracticeProject, createPracticeProjectFromMandate, getPracticeProjectsFromMandate, getSimDependencies, addSimDependency, updateSimDependency, deleteSimDependency } from '../../services/simulatorMandateService'
 import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
+import { MandateAssumptionsRisksView } from '@nidus/ui/MandateFieldTabs'
 
 // v1340 wave 4 follow-up (SQL v1447): practice mandate dependencies, saved row by row.
 const DEPENDENCY_SERVICE = { list: getSimDependencies, add: addSimDependency, update: updateSimDependency, remove: deleteSimDependency }
@@ -393,6 +394,9 @@ export default function SimMandateView() {
             </ul>
           </div>
         )}
+
+        {/* v1344: assumptions and known risks */}
+        <MandateAssumptionsRisksView mandate={mandate} />
 
         <MandateDependenciesSection
           mandateId={mandateId}

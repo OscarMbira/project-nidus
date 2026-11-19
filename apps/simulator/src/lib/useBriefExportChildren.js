@@ -3,11 +3,12 @@ import { getTolerances } from '../services/briefTolerancesService'
 import { getProducts } from '../services/briefProductService'
 import { getRoles } from '../services/briefRolesService'
 import { getReferences } from '../services/briefReferencesService'
+import { listMilestones } from '../services/milestoneService'
 
-const EMPTY = { tolerances: [], products: [], roles: [], references: [] }
+const EMPTY = { tolerances: [], products: [], roles: [], references: [], milestones: [] }
 
-/** A brief's tolerance, product, role and reference rows for its record export tables. */
-export function useBriefExportChildren(briefId) {
+/** A brief's tolerance, product, role and reference rows, plus the project's milestones (v1344), for its record export tables. */
+export function useBriefExportChildren(briefId, projectId = null) {
   const [children, setChildren] = useState(EMPTY)
 
   useEffect(() => {
@@ -19,13 +20,14 @@ export function useBriefExportChildren(briefId) {
       safe(getProducts(briefId)),
       safe(getRoles(briefId)),
       safe(getReferences(briefId)),
-    ]).then(([tolerances, products, roles, references]) => {
-      if (!cancelled) setChildren({ tolerances, products, roles, references })
+      projectId ? listMilestones(projectId).then((r) => r?.data || []).catch(() => []) : Promise.resolve([]),
+    ]).then(([tolerances, products, roles, references, milestones]) => {
+      if (!cancelled) setChildren({ tolerances, products, roles, references, milestones })
     })
     return () => {
       cancelled = true
     }
-  }, [briefId])
+  }, [briefId, projectId])
 
   return briefId ? children : EMPTY
 }

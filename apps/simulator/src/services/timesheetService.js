@@ -1,6 +1,7 @@
 import { platformDb } from './supabase/supabaseClient'
 import { createNotification } from '@nidus/shared/utils/notificationUtils'
 import { sendEmail } from './emailIntegrationService'
+import { logTimesheetReminder } from '@nidus/shared/services/timesheetFlagService'
 
 const SELECT = '*'
 
@@ -372,4 +373,44 @@ export function computeUtilisation(entries = [], period) {
     standardHours,
     utilisationPct: standardHours > 0 ? Math.round((hoursLogged / standardHours) * 100) : 0,
   }
+}
+
+/**
+ * v1343 (PRD A2): manual timesheet reminder — in-app notification + email to each recipient,
+ * then one log row (timesheet_reminders). Recipients come from loadReminderCandidates()
+ * (@nidus/shared/services/timesheetFlagService), possibly narrowed by the sender.
+ * @returns {Promise<{ sent: number, failed: string[], reminderId: string|null }>}
+ */
+export async function sendTimesheetReminders({ projectId, projectLabel = 'the project', periodStart, periodEnd, recipients = [], sentBy }) {
+  if (!projectId || !sentBy) throw new Error('Project and sender are required')
+  if (!recipients.length) throw new Error('Choose at least one person to remind')
+  const period = `${formatEntryDateForMessage(periodStart)} – ${formatEntryDateForMessage(periodEnd)}`
+  const failed = []
+  for (const r of recipients) {
+    const message = r.state === 'draft'
+      ? `You have ${r.draftCount} draft time ${r.draftCount === 1 ? 'entry' : 'entries'} for ${period} on ${projectLabel}. Please check and submit ${r.draftCount === 1 ? 'it' : 'them'}.`
+      : `No time has been logged for ${period} on ${projectLabel}. Please enter and submit your timesheet.`
+    try {
+      await createNotification({
+        userId: r.userId,
+        type: 'info',
+        title: 'Timesheet reminder',
+        message,
+        entityType: 'timesheet_reminders',
+        projectId,
+        deliveryMethod: 'both',
+      })
+      if (r.email) {
+        await sendEmail(r.email, 'Timesheet reminder', `<p>Hi ${r.name || ''},</p><p>${message}</p>`)
+      }
+    } catch (e) {
+      console.error('sendTimesheetReminders:', e)
+      failed.push(r.name || r.userId)
+    }
+  }
+  const sentIds = recipients.filter((r) => !failed.includes(r.name || r.userId)).map((r) => r.userId)
+  const log = sentIds.length
+    ? await logTimesheetReminder({ projectId, periodStart, periodEnd, sentBy, recipientIds: sentIds })
+    : null
+  return { sent: sentIds.length, failed, reminderId: log?.id || null }
 }

@@ -64,6 +64,7 @@ export const BRIEF_EXPORT_SECTIONS = [
   ]},
   { title: 'Team Structure', fields: [{ key: 'team_structure_description', label: 'Team Structure' }] },
   { title: 'Role Descriptions', fields: [{ key: 'roles_summary', label: 'Role Descriptions' }] },
+  { title: 'Milestones', fields: [{ key: 'milestones_summary', label: 'Milestones' }] },
   { title: 'References', fields: [
     { key: 'lessons_learned_reviewed_label', label: 'Lessons Reviewed', fact: true },
     { key: 'lessons_review_summary', label: 'Lessons Review Summary' },
@@ -136,12 +137,21 @@ function referencesTable(references = []) {
   )
 }
 
+/** v1344: the project's Milestones register rows (the brief's Milestones tab). */
+function milestonesTable(milestones = []) {
+  return compactTable(
+    ['Milestone', 'Target Date', 'Forecast Date', 'Status'],
+    milestones.map((m) => [m.milestone_name || 'Milestone', m.target_date, m.forecast_date, humanizeToken(m.status)]),
+  )
+}
+
 function childTables(brief, children = {}) {
   return {
     tolerances: tolerancesTable(brief, children.tolerances || []),
     products: productsTable(children.products),
     roles: rolesTable(children.roles),
     references: referencesTable(children.references),
+    milestones: milestonesTable(children.milestones),
   }
 }
 
@@ -156,6 +166,7 @@ export function buildBriefExportSections(brief = {}, children = {}) {
     products_summary: { table: t.products },
     roles_summary: { table: t.roles },
     references_summary: { table: t.references },
+    milestones_summary: { table: t.milestones },
   })
 }
 
@@ -173,6 +184,7 @@ export function buildBriefExportRecord(brief = {}, children = {}) {
     lessons_learned_reviewed_label: yesNo(brief.lessons_learned_reviewed),
     products_summary: tableLines(t.products),
     roles_summary: tableLines(t.roles),
+    milestones_summary: tableLines(t.milestones),
     references_summary: tableLines(t.references),
   }
 }

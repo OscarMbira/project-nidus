@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Info, Plus, Trash2, X } from 'lucide-react'
-
+import { platformDb } from '@nidus/supabase'
+import { listDeliveryMethodologyOptions } from '@nidus/shared/services/deliveryMethodologyOptionsService.js'
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 function parseLines(value) {
   if (!value || typeof value !== 'string') return []
@@ -26,6 +27,20 @@ export default function LifecycleControlsSection({
   const [newQuality, setNewQuality] = useState('')
   const [newRisk, setNewRisk] = useState('')
   const [newBenefits, setNewBenefits] = useState('')
+  const [methodologyOptions, setMethodologyOptions] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const rows = await listDeliveryMethodologyOptions(platformDb, { includeLegacy: true })
+        if (!cancelled) setMethodologyOptions(rows)
+      } catch {
+        if (!cancelled) setMethodologyOptions([])
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   const timeLines = parseLines(formData.tolerance_time_days)
   const costLines = parseLines(formData.tolerance_cost_percentage)
@@ -62,14 +77,9 @@ export default function LifecycleControlsSection({
               }`}
             >
               <option value="">Select Methodology...</option>
-              <option value="hybrid">Hybrid (all tracks)</option>
-              <option value="structured">Structured / Traditional</option>
-              <option value="standards_based">Standards-Based Process Groups</option>
-              <option value="agile">Agile & Lean</option>
-              <option value="Structured">Structured (legacy)</option>
-              <option value="Agile">Agile (legacy)</option>
-              <option value="Hybrid">Hybrid (legacy)</option>
-              <option value="Waterfall">Waterfall (legacy)</option>
+              {methodologyOptions.map((opt) => (
+                <option key={opt.code} value={opt.code}>{opt.label}</option>
+              ))}
             </select>
             {errors.delivery_methodology && (
               <p className="mt-1 text-sm text-red-600">{errors.delivery_methodology}</p>

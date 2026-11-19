@@ -9,7 +9,10 @@
  *   D2 / D3 / D18  industry items show only for the open project's packs (`allowedPackIds`);
  *                  no project or no industry → core only
  *   D4 / D23       shared slots: one entry; leaf members get a tab strip (`slotTabs`),
- *                  group members merge into one sub-menu
+ *                  group members merge into one sub-menu. When every member is placed under the
+ *                  same parent, the slot entry sits in that sub-menu (e.g. Project Settings ›
+ *                  Environments). Tabs that share a name use their industry's name
+ *                  (`packLabels`), so "Environments" ×3 reads Environments · Banking … · IT ….
  *   D13 / D13b     Level 3 sub-menus: placed parents carry their children; `parent_code` nests
  *   D14            a section above `sectionLimit` entries groups its industry entries
  *   D15            members ordered core first, then by `allowedPackIds` order (primary first)
@@ -30,13 +33,13 @@ const DERIVED_SORT = 10000
 
 /** Placement keys from widest to narrowest (D26: several roles → widest key). */
 export const PLACEMENT_KEY_ORDER = [
-  'pmo_oversight', 'pmo_organisation', 'portfolio', 'programme', 'pm', 'team', 'team_member',
+  'pmo_oversight', 'pmo_organisation', 'portfolio', 'programme', 'pm', 'team', 'support', 'team_member',
   'change_authority', 'board', 'assurance', 'qa', 'sponsor', 'executive', 'stakeholder', 'viewer',
 ]
 
 /** Keys whose menu is about one project: with no project open they show Home only (D27). */
 export const PROJECT_PLACEMENT_KEYS = new Set([
-  'pm', 'team', 'team_member', 'change_authority', 'board', 'assurance', 'qa', 'sponsor',
+  'pm', 'team', 'team_member', 'support', 'change_authority', 'board', 'assurance', 'qa', 'sponsor',
   'executive', 'stakeholder', 'viewer',
 ])
 
@@ -49,6 +52,7 @@ export const MENU_LAYOUT_OPTIONS = [
   { value: 'pm', label: 'Project Manager' },
   { value: 'team', label: 'Team Lead / Team Manager' },
   { value: 'team_member', label: 'Team Member' },
+  { value: 'support', label: 'Project Administrator (Support)' },
   { value: 'programme', label: 'Programme Manager' },
   { value: 'portfolio', label: 'Portfolio Manager' },
   { value: 'executive', label: 'Executive' },
@@ -63,7 +67,7 @@ export const MENU_LAYOUT_OPTIONS = [
 
 /** Keys with a deliberately small menu: no default-section fallback (only placed items show). */
 export const COMPACT_PLACEMENT_KEYS = new Set([
-  'team_member', 'executive', 'sponsor', 'board', 'assurance', 'qa', 'change_authority', 'stakeholder', 'viewer',
+  'team_member', 'support', 'executive', 'sponsor', 'board', 'assurance', 'qa', 'change_authority', 'stakeholder', 'viewer',
 ])
 
 /** Built-in role name → placement key. Custom roles use `menu_layout_key` (D25). */
@@ -75,6 +79,7 @@ export const ROLE_PLACEMENT_KEYS = {
   portfolio_manager: 'portfolio', pm_portfolio_manager: 'portfolio',
   team_manager: 'team', pm_team_manager: 'team', team_lead: 'team',
   team_member: 'team_member',
+  project_administrator: 'support', pm_project_administrator: 'support',
   executive: 'executive', project_sponsor: 'sponsor', project_board_member: 'board',
   project_assurance: 'assurance', quality_assurance: 'qa', change_authority: 'change_authority',
   stakeholder: 'stakeholder', viewer: 'viewer',
@@ -157,6 +162,7 @@ export function buildConsolidatedMenu({
   homeOnly = false,
   sectionLimit = 12,
   useDefaults = true,
+  packLabels = new Map(),
 } = {}) {
   const { byCode: placementByCode, excluded } = indexPlacements(placements, includeOrganisationScope)
   const projectAllowed = new Set(allowedPackIds || [])
@@ -218,9 +224,13 @@ export function buildConsolidatedMenu({
   }
 
   // 3. Level 3: nest items under their placed parent (D13 / D13b); missing parent → section.
+  //    Slot members stay out: their slot entry is nested in step 4.
+  const slotByKey = new Map((slots || []).filter((s) => s?.is_active !== false).map((s) => [s.slot_key, s]))
+  const inSlot = (rec) => !!rec.pl.slot_key && slotByKey.has(rec.pl.slot_key)
+  const slotParentCodes = new Set([...built.values()].filter(inSlot).map((r) => r.pl.parent_code).filter(Boolean))
   for (const [code, rec] of [...built]) {
     const parentCode = rec.pl.parent_code
-    if (!parentCode) continue
+    if (!parentCode || inSlot(rec)) continue
     const parent = built.get(parentCode)
     if (!parent || parent === rec) continue
     parent.node.children = [...parent.node.children, { ...rec.node, _sort: rec.pl.sort_order ?? 0 }]
@@ -230,11 +240,10 @@ export function buildConsolidatedMenu({
     rec.node.children = [...rec.node.children].sort((a, b) => (a._sort ?? 0) - (b._sort ?? 0))
   }
   for (const [code, rec] of [...built]) {
-    if (!rec.node.route_path && rec.node.children.length === 0) built.delete(code)
+    if (!rec.node.route_path && rec.node.children.length === 0 && !slotParentCodes.has(code)) built.delete(code)
   }
 
   // 4. Shared slots (D4 / D23).
-  const slotByKey = new Map((slots || []).filter((s) => s?.is_active !== false).map((s) => [s.slot_key, s]))
   const sectionEntries = new Map() // section_code → [{ node, sort }]
   const pushEntry = (sectionCode, node, sort) => {
     if (!sectionEntries.has(sectionCode)) sectionEntries.set(sectionCode, [])
@@ -243,12 +252,29 @@ export function buildConsolidatedMenu({
   const slotMembers = new Map()
   for (const rec of built.values()) {
     const key = rec.pl.slot_key
-    if (key && slotByKey.has(key)) {
+    if (inSlot(rec)) {
       if (!slotMembers.has(key)) slotMembers.set(key, [])
       slotMembers.get(key).push(rec)
-    } else {
+    } else if (!rec.pl.parent_code || !built.has(rec.pl.parent_code)) {
       pushEntry(rec.pl.section_code, rec.node, rec.pl.sort_order)
     }
+  }
+  // A slot whose members share a placed parent goes in that parent's sub-menu; otherwise in its section.
+  const placeSlotEntry = (slot, members, node, sort) => {
+    const parentCode = members[0].pl.parent_code
+    const parent = parentCode && members.every((m) => m.pl.parent_code === parentCode) ? built.get(parentCode) : null
+    if (parent && !members.includes(parent)) {
+      parent.node.children = [...parent.node.children, { ...node, _sort: sort }]
+        .sort((a, b) => (a._sort ?? 0) - (b._sort ?? 0))
+      return
+    }
+    pushEntry(slot.section_code, node, slot.sort_order)
+  }
+  const tabLabel = (m, labelCount) => {
+    const label = m.node.menu_label
+    if ((labelCount.get(label) || 0) < 2) return label
+    const pack = packOfNode(m.node, packOfCode)
+    return (pack && packLabels.get(pack)) || label
   }
   const slotTabs = []
   const memberRank = (rec) => {
@@ -259,15 +285,18 @@ export function buildConsolidatedMenu({
     const slot = slotByKey.get(key)
     const ordered = [...members].sort((a, b) =>
       memberRank(a) - memberRank(b) || (a.pl.sort_order ?? 0) - (b.pl.sort_order ?? 0))
+    const memberSort = Math.min(...ordered.map((m) => m.pl.sort_order ?? 0))
     if (ordered.length === 1) {
-      pushEntry(slot.section_code, ordered[0].node, slot.sort_order)
+      placeSlotEntry(slot, ordered, ordered[0].node, memberSort)
       continue
     }
     const allLeaves = ordered.every((m) => m.node.route_path && m.node.children.length === 0)
     if (allLeaves) {
-      const tabs = ordered.map((m) => ({ code: m.node.menu_code, label: m.node.menu_label, route: m.node.route_path }))
+      const labelCount = new Map()
+      for (const m of ordered) labelCount.set(m.node.menu_label, (labelCount.get(m.node.menu_label) || 0) + 1)
+      const tabs = ordered.map((m) => ({ code: m.node.menu_code, label: tabLabel(m, labelCount), route: m.node.route_path }))
       slotTabs.push({ slotKey: key, label: slot.label, tabs })
-      pushEntry(slot.section_code, {
+      placeSlotEntry(slot, ordered, {
         menu_code: `${SLOT_CODE_PREFIX}${key}`,
         menu_label: slot.label,
         menu_icon: ordered[0].node.menu_icon,
@@ -275,17 +304,17 @@ export function buildConsolidatedMenu({
         children: [],
         slotKey: key,
         slotTabs: tabs,
-      }, slot.sort_order)
+      }, memberSort)
     } else {
       const children = ordered.flatMap((m) => (m.node.children.length > 0 ? m.node.children : [m.node]))
-      pushEntry(slot.section_code, {
+      placeSlotEntry(slot, ordered, {
         menu_code: `${SLOT_CODE_PREFIX}${key}`,
         menu_label: slot.label,
         menu_icon: ordered[0].node.menu_icon,
         route_path: null,
         children,
         slotKey: key,
-      }, slot.sort_order)
+      }, memberSort)
     }
   }
 
@@ -385,7 +414,8 @@ export function findSlotTabsForRoute(slotTabs = [], pathname = '') {
   const path = String(pathname || '').split('?')[0].replace(/\/+$/, '')
   if (!path) return null
   for (const strip of slotTabs || []) {
-    const hit = (strip.tabs || []).find((t) => routeMatches(t.route, path))
+    const hit = (strip.tabs || []).find((t) =>
+      routeMatches(t.route, path) || (t.aliases || []).some((alias) => routeMatches(alias, path)))
     if (hit) return { ...strip, activeRoute: hit.route }
   }
   return null

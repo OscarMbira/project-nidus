@@ -2,7 +2,7 @@
  * Local Register Engine — generic detail/view page (v931), with the mandatory Details/Audit
  * tab pair per CLAUDE.md rule 63.1 (this is a record-CRUD form like any other register).
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Pencil, ShieldCheck, Lock, LayoutTemplate } from 'lucide-react'
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons'
@@ -36,6 +36,7 @@ import { coreLinkedSourceConfig } from '@nidus/shared/utils/coreLinkedSource'
 import { isLikelyDatabaseUuid } from '@nidus/shared/utils/isUuid'
 import {
   groupRegisterFields,
+  registerForProjectIndustries,
   buildRegisterTabs,
   DETAILS_TAB,
   AUDIT_TAB,
@@ -43,6 +44,7 @@ import {
   SIGNOFF_TAB,
   ATTACHMENTS_TAB,
 } from '@nidus/shared/utils/registerFieldGroups'
+import { useRegisterProjectIndustries } from '@nidus/shared/hooks/useRegisterProjectIndustries'
 import RegisterCustomFieldsHeader from '@nidus/ui/RegisterCustomFieldsHeader'
 import { useRegisterCustomFields } from '../../lib/useRegisterCustomFields'
 import { useRegionalFormatSettings } from '@nidus/shared/hooks/useRegionalFormatSettings'
@@ -80,8 +82,14 @@ export default function LocalRegisterDetailPage() {
   const toast = useToast()
 
   const [loading, setLoading] = useState(true)
-  const [register, setRegister] = useState(null)
+  const [loadedRegister, setRegister] = useState(null)
   const [record, setRecord] = useState(null)
+  // Industry-only fields (v1342) follow the record's project industries — view, exports and document.
+  const { names: projectIndustryNames } = useRegisterProjectIndustries(record?.record_project_id || null)
+  const register = useMemo(
+    () => registerForProjectIndustries(loadedRegister, projectIndustryNames),
+    [loadedRegister, projectIndustryNames],
+  )
   const [submitModalOpen, setSubmitModalOpen] = useState(false)
   const [approvalChain, setApprovalChain] = useState([])
   const [submitting, setSubmitting] = useState(false)
@@ -164,6 +172,11 @@ export default function LocalRegisterDetailPage() {
         getRecord(recordId),
       ])
       if (cancelled) return
+      // Retired register (v1342): the record moved with the same id — open it in the new register.
+      if (registerResult.data?.moved_to_register_id) {
+        navigate(`/platform/local-registers/${registerResult.data.moved_to_register_id}/${recordId}`, { replace: true })
+        return
+      }
       setRegister(registerResult.data)
       setRecord(recordResult.data)
 

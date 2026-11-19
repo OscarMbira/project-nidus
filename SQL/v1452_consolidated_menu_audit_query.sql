@@ -20,7 +20,7 @@ WITH RECURSIVE role_keys(role_name, placement_key) AS (
   VALUES
     ('project_manager', 'pm'), ('pm_project_manager', 'pm'),
     ('team_manager', 'team'), ('pm_team_manager', 'team'), ('team_lead', 'team'),
-    ('team_member', 'team_member'),
+    ('team_member', 'team_member'), ('project_administrator', 'support'),
     ('programme_manager', 'programme'), ('portfolio_manager', 'portfolio'),
     ('pmo_admin', 'pmo_oversight'), ('account_owner', 'pmo_oversight'), ('org_admin', 'pmo_oversight'),
     ('executive', 'executive'), ('project_sponsor', 'sponsor'), ('project_board_member', 'board'),
@@ -52,7 +52,7 @@ covered AS (
   -- does not count for them (engine useDefaults = false).
   WHERE pl.id IS NOT NULL
      OR (n.default_section_code IS NOT NULL
-         AND c.placement_key NOT IN ('team_member', 'executive', 'sponsor', 'board', 'assurance', 'qa',
+         AND c.placement_key NOT IN ('team_member', 'support', 'executive', 'sponsor', 'board', 'assurance', 'qa',
                                      'change_authority', 'stakeholder', 'viewer'))
 ),
 gaps AS (
@@ -66,7 +66,7 @@ gaps AS (
     -- Story 23: compact menus (Team Member, governance profiles) leave industry pages out unless
     -- placed for them on purpose — not a gap.
     AND NOT (
-      g.placement_key IN ('team_member', 'executive', 'sponsor', 'board', 'assurance', 'qa',
+      g.placement_key IN ('team_member', 'support', 'executive', 'sponsor', 'board', 'assurance', 'qa',
                           'change_authority', 'stakeholder', 'viewer')
       AND EXISTS (SELECT 1 FROM public.industry_pack_menu_items ipmi WHERE ipmi.menu_item_id = mi.id)
     )
