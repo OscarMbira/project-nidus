@@ -14,6 +14,7 @@ import { getDisBenefitsForPlan } from '../services/disBenefitsService';
 import { getRevisionHistory, getApprovals, getDistributionList } from '../services/benefitsReviewPlanService';
 import BenefitsReviewPlanView from '../components/benefits/BenefitsReviewPlanView';
 import BenefitsReviewPlanForm from '../components/benefits/BenefitsReviewPlanForm';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext';
 import BenefitsReviewPlanHistory from '../components/benefits/BenefitsReviewPlanHistory';
 import BenefitsReviewPlanApprovals from '../components/benefits/BenefitsReviewPlanApprovals';
 import BenefitsReviewPlanDistribution from '../components/benefits/BenefitsReviewPlanDistribution';
@@ -24,6 +25,45 @@ import DisBenefitsSection from '../components/benefits/DisBenefitsSection';
 import { exportBenefitsReviewPlanToPDF, printBenefitsReviewPlan } from '@nidus/shared/utils/benefitsReviewPlanExport';
 import ExportRecordButtons from '@nidus/ui/ExportRecordButtons';
 import { buildBenefitsReviewPlanExportSections, buildBenefitsReviewPlanExportRecord } from '@nidus/shared/utils/benefitsReviewPlanExportSections';
+
+// v1345 slice 3: help keys for the benefits review plan form and its sections (public.<table>.<column>).
+const BRP_HELP_KEYS = [
+  ...[
+    'plan_title', 'document_ref', 'version_number', 'release', 'plan_date', 'author_user_id', 'owner_user_id',
+    'client', 'project_id', 'programme_id', 'status', 'accountability_description',
+    'estimated_review_effort_hours', 'estimated_review_cost', 'review_cost_currency',
+    'baseline_measures_description', 'baseline_recording_date', 'baseline_source',
+    'performance_review_approach', 'performance_review_frequency', 'dis_benefits_included',
+    'benefits_coverage_notes', 'measurement_approach', 'resources_description', 'performance_review_criteria',
+    'dis_benefits_description',
+  ].map((name) => `public.benefits_review_plans.${name}`),
+  ...[
+    'recipient_user_id', 'recipient_name', 'recipient_title', 'recipient_email', 'distribution_method',
+  ].map((name) => `public.benefits_review_plan_distribution.${name}`),
+  ...[
+    'revision_date', 'revision_number', 'summary_of_changes', 'changes_marked',
+  ].map((name) => `public.benefits_review_plan_revisions.${name}`),
+  ...[
+    'benefit_id', 'measurement_frequency', 'priority', 'accountable_user_id', 'next_review_date',
+    'measurement_timing_reason',
+  ].map((name) => `public.benefits_review_plan_benefits.${name}`),
+  ...[
+    'resource_type', 'resource_name', 'assigned_user_id', 'availability_confirmed', 'skill_required',
+    'skill_level', 'estimated_effort_hours', 'estimated_cost', 'cost_currency', 'required_from_date',
+    'required_to_date', 'resource_description', 'notes',
+  ].map((name) => `public.benefits_review_plan_resources.${name}`),
+  ...[
+    'review_name', 'review_type', 'benefit_id', 'planned_date', 'forecast_date', 'review_duration_hours',
+    'reviewer_user_id', 'is_virtual', 'meeting_link', 'review_location', 'review_description',
+    'outcome_summary', 'findings', 'recommendations', 'action_items', 'review_report_url',
+  ].map((name) => `public.benefits_review_schedule.${name}`),
+  ...[
+    'dis_benefit_code', 'dis_benefit_name', 'dis_benefit_category', 'impact_severity', 'impact_probability',
+    'status', 'mitigation_owner_user_id', 'mitigation_status', 'measurable', 'measurement_unit',
+    'baseline_value', 'dis_benefit_description', 'impact_description', 'mitigation_approach',
+  ].map((name) => `public.dis_benefits.${name}`),
+]
+
 
 export default function BenefitsReviewPlan() {
   const { projectId, routeKey, loading: projectIdLoading, error: projectIdError } = usePlatformProjectId();
@@ -257,6 +297,7 @@ export default function BenefitsReviewPlan() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <FieldHelpScope helpKeys={BRP_HELP_KEYS}>
       {/* Header */}
       <div className="mb-6">
         <button
@@ -408,6 +449,7 @@ export default function BenefitsReviewPlan() {
           )}
         </div>
       )}
+      </FieldHelpScope>
     </div>
   );
 }

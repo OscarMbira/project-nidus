@@ -27,6 +27,7 @@ import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './Tab
 import RowActionButton from './RowActionButton.jsx'
 import RowNumberBadge from './RowNumberBadge.jsx'
 import ViewToggle from './ViewToggle.jsx'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 // Values match the CHECK constraints on mandate_dependencies (v160 / v1447).
 const TYPES = [
@@ -65,7 +66,7 @@ const shortName = (text) => {
   return t.length > 40 ? `${t.slice(0, 40)}…` : t || 'Dependency'
 }
 
-export default function MandateDependenciesSection({ mandateId, readOnly = false, viewModeId, service, onRowsChange }) {
+export default function MandateDependenciesSection({ mandateId, readOnly = false, viewModeId, service, helpSchema = 'public', onRowsChange }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -172,7 +173,7 @@ export default function MandateDependenciesSection({ mandateId, readOnly = false
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dependencies</h2>
+          <FieldLabelWithHelp as="h2" helpKey={`${helpSchema}.project_mandates.dependencies`} className="text-lg font-semibold text-gray-900 dark:text-white">Dependencies</FieldLabelWithHelp>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Other work this project relies on, or that relies on it, and whether it matters during the project, after it, or both.
           </p>
@@ -197,9 +198,9 @@ export default function MandateDependenciesSection({ mandateId, readOnly = false
       {editing !== null && (
         <div className="mb-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4 space-y-3">
           <div>
-            <label htmlFor="mandate-dependency-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_dependencies.dependency_description`} htmlFor="mandate-dependency-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
               Dependency <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               id="mandate-dependency-description"
               rows={2}
@@ -211,14 +212,14 @@ export default function MandateDependenciesSection({ mandateId, readOnly = false
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="mandate-dependency-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+              <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_dependencies.dependency_type`} htmlFor="mandate-dependency-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" options={TYPES}>Type</FieldLabelWithHelp>
               <select id="mandate-dependency-type" className={inputClass} value={draft.dependency_type}
                 onChange={(e) => setDraft((d) => ({ ...d, dependency_type: e.target.value }))}>
                 {TYPES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
-              <label htmlFor="mandate-dependency-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_dependencies.dependency_status`} htmlFor="mandate-dependency-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" options={STATUSES}>Status</FieldLabelWithHelp>
               <select id="mandate-dependency-status" className={inputClass} value={draft.dependency_status}
                 onChange={(e) => setDraft((d) => ({ ...d, dependency_status: e.target.value }))}>
                 {STATUSES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -226,16 +227,16 @@ export default function MandateDependenciesSection({ mandateId, readOnly = false
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_dependencies.impact_during_project`} className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={draft.impact_during_project}
                 onChange={(e) => setDraft((d) => ({ ...d, impact_during_project: e.target.checked }))} />
               Affects the project while it runs
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_dependencies.impact_after_implementation`} className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={draft.impact_after_implementation}
                 onChange={(e) => setDraft((d) => ({ ...d, impact_after_implementation: e.target.checked }))} />
               Continues after implementation
-            </label>
+            </FieldLabelWithHelp>
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={cancel}

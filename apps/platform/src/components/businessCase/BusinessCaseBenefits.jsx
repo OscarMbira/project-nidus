@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Trash2, Target } from 'lucide-react'
 import { addBenefit, deleteBenefit } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
@@ -34,7 +36,7 @@ const emptyBenefit = () => ({
   realization_timing: '',
 })
 
-export default function BusinessCaseBenefits({ caseId, benefits = [], readOnly = false, onRefresh }) {
+function BusinessCaseBenefitsBody({ caseId, benefits = [], readOnly = false, onRefresh }) {
   const toast = useToastContext()
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -133,39 +135,39 @@ export default function BusinessCaseBenefits({ caseId, benefits = [], readOnly =
             <h4 className="text-sm font-semibold text-green-700 dark:text-green-300 mb-3">New Benefit</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Benefit Description *</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.benefit_description" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>Benefit Description *</FieldLabelWithHelp>
                 <textarea rows={2} {...field('benefit_description')} placeholder="Describe the expected benefit..."
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Benefit Type</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.benefit_type" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Benefit Type</FieldLabelWithHelp>
                 <select {...field('benefit_type')}
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                   {BENEFIT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Benefit Owner</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.benefit_owner" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>Benefit Owner</FieldLabelWithHelp>
                 <input type="text" {...field('benefit_owner')} placeholder="Who is responsible for this benefit?"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target Value</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.target_value" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target Value</FieldLabelWithHelp>
                 <input type="text" {...field('target_value')} placeholder="e.g. 20% reduction, $500K saved"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.target_date" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</FieldLabelWithHelp>
                 <input type="date" {...field('target_date')}
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Measurement Method</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.measurement_method" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Measurement Method</FieldLabelWithHelp>
                 <input type="text" {...field('measurement_method')} placeholder="How will this benefit be measured?"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Realisation Timing</label>
+                <FieldLabelWithHelp helpKey="public.business_case_benefits.realization_timing" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Realisation Timing</FieldLabelWithHelp>
                 <input type="text" {...field('realization_timing')} placeholder="e.g. During project, 6 months post-completion"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
@@ -184,5 +186,19 @@ export default function BusinessCaseBenefits({ caseId, benefits = [], readOnly =
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 3: field help for this component (public.business_case_benefits.<column>). The component carries its
+// own scope so every page that renders it shows the help.
+const HELP_KEYS = [
+  'benefit_description', 'benefit_type', 'benefit_owner', 'target_value', 'target_date', 'measurement_method', 'realization_timing',
+].map((name) => `public.business_case_benefits.${name}`)
+
+export default function BusinessCaseBenefits(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessCaseBenefitsBody {...props} />
+    </FieldHelpScope>
   )
 }

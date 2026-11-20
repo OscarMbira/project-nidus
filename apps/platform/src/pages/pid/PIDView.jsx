@@ -29,6 +29,37 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+
+// v1345 slice 3: help keys for the PID form and its sections (public.<table>.<column>).
+const PID_HELP_KEYS = [
+  ...[
+    'pid_title', 'pid_description', 'project_background', 'project_justification', 'version_number', 'release',
+    'document_ref', 'project_definition', 'project_scope', 'exclusions', 'dependencies', 'success_criteria',
+    'project_outcomes', 'expected_benefits', 'development_approach', 'configuration_management_approach',
+    'procurement_approach', 'project_approach', 'quality_approach', 'risk_approach', 'communication_approach',
+    'change_control_approach', 'control_mechanisms', 'monitoring_and_control', 'stage_boundary_reviews',
+    'timeline_summary', 'project_plan_summary', 'stage_plan_summary', 'budget_summary',
+  ].map((name) => `public.project_initiation_documents.${name}`),
+  ...[
+    'objective_title', 'objective_description', 'objective_category', 'priority', 'success_criteria',
+    'measurement_method', 'target_value',
+  ].map((name) => `public.pid_objectives.${name}`),
+  ...[
+    'dependency_type', 'dependency_status', 'dependency_name', 'dependency_description', 'dependency_owner',
+    'expected_date', 'dependency_impact', 'mitigation_plan',
+  ].map((name) => `public.pid_dependencies.${name}`),
+  ...[
+    'report_type', 'report_format', 'report_frequency', 'report_owner', 'report_recipients', 'report_template',
+    'report_description',
+  ].map((name) => `public.pid_reporting_arrangements.${name}`),
+  ...[
+    'role_name', 'role_type', 'role_description', 'assigned_user_id', 'assigned_user_name', 'responsibilities',
+    'authority_level',
+  ].map((name) => `public.pid_team_structure.${name}`),
+  ...['interface_name', 'interface_type', 'external_entity', 'description'].map((name) => `public.pid_interfaces.${name}`),
+  ...['tolerance_type', 'baseline_value', 'upper_tolerance', 'lower_tolerance', 'description'].map((name) => `public.pid_tolerances.${name}`),
+]
 
 /** v1344: plan summaries are JSONB — text saved by the form, or the column default {} / {summary} from older rows. */
 const planSummaryText = (v) => (typeof v === 'string' ? v : (v && typeof v.summary === 'string' ? v.summary : ''))
@@ -162,6 +193,7 @@ export default function PIDView() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <FieldHelpScope helpKeys={PID_HELP_KEYS}>
       <button
         onClick={() => navigate(-1)}
         className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4 flex items-center gap-2"
@@ -512,6 +544,7 @@ export default function PIDView() {
           </div>
         </div>
       )}
+      </FieldHelpScope>
     </div>
   )
 }

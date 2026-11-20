@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addObjective, updateObjective } from '../../services/pidObjectivesService'
 import { platformDb } from '@nidus/supabase'
@@ -150,9 +151,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
       ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_objectives.objective_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Objective Title <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="objective_title"
@@ -168,9 +169,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_objectives.objective_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Objective Description <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="objective_description"
             value={formData.objective_description}
@@ -188,9 +189,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.pid_objectives.objective_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Category
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="objective_category"
               value={formData.objective_category}
@@ -207,9 +208,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.pid_objectives.priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Priority
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="priority"
               value={formData.priority}
@@ -225,9 +226,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_objectives.success_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Success Criteria
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="success_criteria"
             value={formData.success_criteria}
@@ -239,9 +240,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_objectives.measurement_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Measurement Method
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="measurement_method"
             value={formData.measurement_method}
@@ -253,9 +254,9 @@ export default function ObjectiveForm({ pidId, objective = null, mode = 'create'
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_objectives.target_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Target Value
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="target_value"

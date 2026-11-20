@@ -140,8 +140,12 @@ function main(argv) {
   const sqlTexts = fs.readdirSync(sqlDir).filter((f) => f.endsWith('.sql'))
     .map((f) => fs.readFileSync(path.join(sqlDir, f), 'utf8'))
     .filter((t) => t.includes('field_help'))
-  const MODULE_PREFIX = { stakeholders: ['public.stakeholders.', 'sim.practice_stakeholder_register.'] }
-  const prefixes = moduleArg ? (MODULE_PREFIX[moduleArg] || [`${moduleArg}.`]) : null
+  const MODULE_PREFIX = {
+    stakeholders: ['public.stakeholders.', 'sim.practice_stakeholder_register.'],
+    project_wizard: ['public.projects.', 'sim.practice_projects.'],
+  }
+  // --module a,b checks several adopted modules at once.
+  const prefixes = moduleArg ? moduleArg.split(',').flatMap((m) => MODULE_PREFIX[m] || [`${m}.`]) : null
   const result = analyse({ files, sqlTexts, moduleKeysFilter: prefixes ? (k) => prefixes.some((p) => k.startsWith(p)) : null })
   let registerFail = false
   if (argv.includes('--registers')) {

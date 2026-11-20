@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X } from 'lucide-react'
 import { addDependency, updateDependency } from '../../services/pidDependenciesService'
 import { platformDb } from '@nidus/supabase'
@@ -141,7 +142,7 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
       ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.pid_dependencies.dependency_type" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Type</span>
             <select
               value={form.dependency_type}
@@ -154,8 +155,8 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
                 </option>
               ))}
             </select>
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.pid_dependencies.dependency_status" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Status</span>
             <select
               value={form.dependency_status}
@@ -168,9 +169,9 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
                 </option>
               ))}
             </select>
-          </label>
+          </FieldLabelWithHelp>
         </div>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.pid_dependencies.dependency_name" className="block" required>
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Name *</span>
           <input
             value={form.dependency_name}
@@ -178,8 +179,8 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
             required
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.pid_dependencies.dependency_description" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Description</span>
           <textarea
             value={form.dependency_description}
@@ -187,17 +188,17 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
             rows={3}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
           />
-        </label>
+        </FieldLabelWithHelp>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.pid_dependencies.dependency_owner" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Owner</span>
             <input
               value={form.dependency_owner}
               onChange={(e) => set('dependency_owner', e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
             />
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.pid_dependencies.expected_date" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Expected date</span>
             <input
               type="date"
@@ -205,9 +206,9 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
               onChange={(e) => set('expected_date', e.target.value)}
               className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
             />
-          </label>
+          </FieldLabelWithHelp>
         </div>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.pid_dependencies.dependency_impact" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Impact</span>
           <textarea
             value={form.dependency_impact}
@@ -215,8 +216,8 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
             rows={2}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.pid_dependencies.mitigation_plan" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Mitigation</span>
           <textarea
             value={form.mitigation_plan}
@@ -224,7 +225,7 @@ export default function DependencyForm({ pidId, dependency, mode = 'create', onS
             rows={2}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
           />
-        </label>
+        </FieldLabelWithHelp>
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"

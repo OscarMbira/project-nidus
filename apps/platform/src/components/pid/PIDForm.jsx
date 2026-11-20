@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { FileText, Target, Settings, Users, Gauge, BarChart3, CheckCircle, ArrowRight, ArrowLeft, X, Save, Link as LinkIcon } from 'lucide-react'
 import { createPID, updatePID } from '../../services/projectInitiationDocumentService'
 import { HoldButton } from '../shared-app/HoldButton'
@@ -252,9 +253,9 @@ export default function PIDForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.pid_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 PID Title <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.pid_title}
@@ -268,9 +269,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.pid_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 PID Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.pid_description}
                 onChange={(e) => handleChange('pid_description', e.target.value)}
@@ -281,9 +282,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_background" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Project Background
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_background}
                 onChange={(e) => handleChange('project_background', e.target.value)}
@@ -294,9 +295,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_justification" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Project Justification
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_justification}
                 onChange={(e) => handleChange('project_justification', e.target.value)}
@@ -308,9 +309,9 @@ export default function PIDForm({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.project_initiation_documents.version_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Version Number
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.version_number}
@@ -321,9 +322,9 @@ export default function PIDForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.project_initiation_documents.release" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Release
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.release}
@@ -334,9 +335,9 @@ export default function PIDForm({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.project_initiation_documents.document_ref" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Document Reference
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.document_ref}
@@ -385,9 +386,9 @@ export default function PIDForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_definition" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 Project Definition <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_definition}
                 onChange={(e) => handleChange('project_definition', e.target.value)}
@@ -402,9 +403,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                 Project Scope <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_scope}
                 onChange={(e) => handleChange('project_scope', e.target.value)}
@@ -419,9 +420,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.exclusions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Exclusions
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.exclusions}
                 onChange={(e) => handleChange('exclusions', e.target.value)}
@@ -432,9 +433,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.dependencies" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Dependencies
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.dependencies}
                 onChange={(e) => handleChange('dependencies', e.target.value)}
@@ -445,9 +446,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.success_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Success Criteria
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.success_criteria}
                 onChange={(e) => handleChange('success_criteria', e.target.value)}
@@ -458,9 +459,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_outcomes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Project Outcomes
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_outcomes}
                 onChange={(e) => handleChange('project_outcomes', e.target.value)}
@@ -471,9 +472,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.expected_benefits" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Expected Benefits
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.expected_benefits}
                 onChange={(e) => handleChange('expected_benefits', e.target.value)}
@@ -489,9 +490,9 @@ export default function PIDForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.development_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Development Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.development_approach}
                 onChange={(e) => handleChange('development_approach', e.target.value)}
@@ -502,9 +503,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.configuration_management_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Configuration Management Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.configuration_management_approach}
                 onChange={(e) => handleChange('configuration_management_approach', e.target.value)}
@@ -520,9 +521,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.procurement_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Procurement Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.procurement_approach}
                 onChange={(e) => handleChange('procurement_approach', e.target.value)}
@@ -533,9 +534,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Project Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_approach}
                 onChange={(e) => handleChange('project_approach', e.target.value)}
@@ -546,9 +547,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.quality_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Quality Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.quality_approach}
                 onChange={(e) => handleChange('quality_approach', e.target.value)}
@@ -559,9 +560,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.risk_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Risk Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.risk_approach}
                 onChange={(e) => handleChange('risk_approach', e.target.value)}
@@ -572,9 +573,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.communication_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Communication Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.communication_approach}
                 onChange={(e) => handleChange('communication_approach', e.target.value)}
@@ -585,9 +586,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.change_control_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Change Control Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.change_control_approach}
                 onChange={(e) => handleChange('change_control_approach', e.target.value)}
@@ -645,9 +646,9 @@ export default function PIDForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.control_mechanisms" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Control Mechanisms
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.control_mechanisms}
                 onChange={(e) => handleChange('control_mechanisms', e.target.value)}
@@ -658,9 +659,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.monitoring_and_control" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Monitoring and Control
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.monitoring_and_control}
                 onChange={(e) => handleChange('monitoring_and_control', e.target.value)}
@@ -671,9 +672,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.stage_boundary_reviews" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Stage Boundary Reviews
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.stage_boundary_reviews}
                 onChange={(e) => handleChange('stage_boundary_reviews', e.target.value)}
@@ -700,9 +701,9 @@ export default function PIDForm({
         return (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.timeline_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Timeline Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.timeline_summary}
                 onChange={(e) => handleChange('timeline_summary', e.target.value)}
@@ -713,9 +714,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.project_plan_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Project Plan Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.project_plan_summary}
                 onChange={(e) => handleChange('project_plan_summary', e.target.value)}
@@ -726,9 +727,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.stage_plan_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Current Stage Plan Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.stage_plan_summary}
                 onChange={(e) => handleChange('stage_plan_summary', e.target.value)}
@@ -739,9 +740,9 @@ export default function PIDForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <FieldLabelWithHelp helpKey="public.project_initiation_documents.budget_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Budget Summary
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={formData.budget_summary}
                 onChange={(e) => handleChange('budget_summary', e.target.value)}

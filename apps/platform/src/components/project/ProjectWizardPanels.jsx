@@ -1,4 +1,6 @@
 import { memo } from 'react'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import SearchableSelect from '@nidus/ui/SearchableSelect'
 import GovernanceSection from './GovernanceSection'
 import BusinessJustificationSection from './BusinessJustificationSection'
@@ -14,6 +16,22 @@ import MilestoneQuickCaptureSection from './MilestoneQuickCaptureSection'
 import { Briefcase, Network } from 'lucide-react'
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
+/** v1345 slice 3: help keys for every wizard field (public.projects.<column>; list steps use their heading). */
+const PROJECT_WIZARD_HELP_KEYS = [
+  'project_code', 'project_name', 'project_description', 'project_type_id', 'project_status_id', 'industries',
+  'success_criteria', 'project_classification', 'project_objectives', 'priority', 'billing_type', 'project_manager_user_id',
+  'start_date', 'end_date', 'executive_name', 'board_required', 'funding_authority_name', 'approving_authority_name',
+  'benefit_owner_name', 'business_objective', 'strategic_alignment', 'expected_benefits_summary',
+  'delivery_methodology', 'lifecycle_template', 'stage_model', 'stage_gate_enforcement', 'tolerance_time_days',
+  'tolerance_benefits_description', 'tolerance_cost_percentage', 'tolerance_scope_description', 'tolerance_quality_description',
+  'tolerance_risk_description', 'budget_currency', 'budget_type', 'budget_categories', 'budget_approval_status',
+  'initial_risk_rating', 'complexity_rating', 'delivery_complexity', 'regulatory_impact', 'data_sensitivity',
+  'estimated_effort', 'external_vendors_required', 'key_skills_required', 'portfolio_id', 'programme_id',
+  'project_constraints', 'project_assumptions', 'key_deliverables', 'wizard_stakeholders', 'wizard_milestones', 'required_approvals',
+  'mandate_status', 'business_case_status', 'brief_status', 'pid_status', 'benefits_review_plan_status',
+  'funding_approval_status', 'rfp_reference', 'document_repository_url',
+].map((name) => `public.projects.${name}`)
+
 /**
  * Shared 12-step body for Create / Edit / View project wizard.
  * @param {'create'|'edit'|'view'} mode — view: read-only fields + summary-only portfolio/programme
@@ -67,7 +85,7 @@ function ProjectWizardPanels({
   const priorityOptions = withCurrent(attributeOptions.priority, formData.priority)
 
   return (
-    <>
+    <FieldHelpScope helpKeys={PROJECT_WIZARD_HELP_KEYS}>
       {activeTab === 'details' && (
         <div className="space-y-6">
           <div className="mb-4">
@@ -80,9 +98,9 @@ function ProjectWizardPanels({
           <fieldset disabled={isView} className="min-w-0 space-y-6 border-0 p-0">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="project_code" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.project_code" htmlFor="project_code" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Project Code (Optional)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   id="project_code"
@@ -96,9 +114,9 @@ function ProjectWizardPanels({
                 />
               </div>
               <div>
-                <label htmlFor="project_name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.project_name" htmlFor="project_name" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Project Name <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   id="project_name"
@@ -119,9 +137,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label htmlFor="project_description" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.projects.project_description" htmlFor="project_description" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Project Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 id="project_description"
                 name="project_description"
@@ -136,9 +154,9 @@ function ProjectWizardPanels({
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.project_type_id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   Project Type <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={projectTypeOptions}
                   value={formData.project_type_id}
@@ -154,9 +172,9 @@ function ProjectWizardPanels({
                 )}
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.project_status_id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" required>
                   {mode === 'create' ? 'Initial Status' : 'Status'} <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={statusOptions}
                   value={formData.project_status_id}
@@ -174,9 +192,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.projects.industries" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Industry / Sector
-              </label>
+              </FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 Which of your organisation's industries this project spans — tick as many as apply
                 (e.g. a software delivery project for a banking client is both). Mark one as
@@ -228,9 +246,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.projects.success_criteria" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Success Criteria
-              </label>
+              </FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 How success will be measured for this project. Add one per line.
               </p>
@@ -245,9 +263,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.projects.project_classification" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Classification
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.project_classification}
                 onChange={(e) => handleChange({ target: { name: 'project_classification', value: e.target.value } })}
@@ -265,9 +283,9 @@ function ProjectWizardPanels({
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <FieldLabelWithHelp helpKey="public.projects.project_objectives" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Objectives
-              </label>
+              </FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 What the project will achieve. Add one objective per line.
               </p>
@@ -283,9 +301,9 @@ function ProjectWizardPanels({
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="priority" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.priority" htmlFor="priority" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Priority
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   id="priority"
                   value={formData.priority}
@@ -300,9 +318,9 @@ function ProjectWizardPanels({
                 </select>
               </div>
               <div>
-                <label htmlFor="billing_type" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.billing_type" htmlFor="billing_type" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Billing Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   id="billing_type"
                   value={formData.billing_type}
@@ -323,9 +341,9 @@ function ProjectWizardPanels({
 
             {mode !== 'create' && (
               <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.project_manager_user_id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300" listOptions={false}>
                   Project Manager
-                </label>
+                </FieldLabelWithHelp>
                 {projectManager.canChange && !isView ? (
                   <SearchableSelect
                     options={projectManager.options}
@@ -347,9 +365,9 @@ function ProjectWizardPanels({
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label htmlFor="start_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.start_date" htmlFor="start_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Start Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   id="start_date"
@@ -361,9 +379,9 @@ function ProjectWizardPanels({
                 />
               </div>
               <div>
-                <label htmlFor="end_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.projects.end_date" htmlFor="end_date" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                   End Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   id="end_date"
@@ -632,7 +650,7 @@ function ProjectWizardPanels({
       {activeTab === 'constraints' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Constraints</h2>
+            <FieldLabelWithHelp as="h2" helpKey="public.projects.project_constraints" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Constraints</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Known limitations on how this project can be delivered — schedule, budget, resourcing, technical, or regulatory. Add one per line.
             </p>
@@ -651,7 +669,7 @@ function ProjectWizardPanels({
       {activeTab === 'assumptions' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Assumptions</h2>
+            <FieldLabelWithHelp as="h2" helpKey="public.projects.project_assumptions" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Assumptions</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Planning assumptions being made about this project — things believed to be true but not yet confirmed. Add one per line.
             </p>
@@ -670,7 +688,7 @@ function ProjectWizardPanels({
       {activeTab === 'deliverables' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Deliverables</h2>
+            <FieldLabelWithHelp as="h2" helpKey="public.projects.key_deliverables" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Deliverables</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               The key outputs this project will produce. Add one per line.
             </p>
@@ -689,7 +707,7 @@ function ProjectWizardPanels({
       {activeTab === 'stakeholders' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Stakeholders</h2>
+            <FieldLabelWithHelp as="h2" helpKey="public.projects.wizard_stakeholders" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Stakeholders</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Capture the stakeholders identified for this project now, before roles are assigned — kept as audit information. Assigned roles can inherit these or add their own later.
             </p>
@@ -707,7 +725,7 @@ function ProjectWizardPanels({
       {activeTab === 'milestones' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Main Milestones</h2>
+            <FieldLabelWithHelp as="h2" helpKey="public.projects.wizard_milestones" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Main Milestones</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Capture the main milestones identified for this project now, before roles are assigned — kept as audit information. Assigned roles can inherit these or add their own later.
             </p>
@@ -725,7 +743,7 @@ function ProjectWizardPanels({
       {activeTab === 'approvals' && (
         <div className="space-y-6">
           <div className="mb-4">
-            <h2 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Approvals</h2>
+            <FieldLabelWithHelp as="h2" helpKey="public.projects.required_approvals" className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">Approvals</FieldLabelWithHelp>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Required approvals or sign-offs for this project — who or which body needs to approve, and for what. Add one per line.
             </p>
@@ -740,7 +758,7 @@ function ProjectWizardPanels({
           />
         </div>
       )}
-    </>
+    </FieldHelpScope>
   )
 }
 

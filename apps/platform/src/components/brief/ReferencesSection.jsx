@@ -3,6 +3,7 @@
  * Section 9: Links to associated documents
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 import { getReferences, addReference, deleteReference } from '../../services/briefReferencesService'
 import { Plus, Trash2, ExternalLink } from 'lucide-react'
@@ -114,9 +115,9 @@ export default function ReferencesSection({ briefId, readOnly = false }) {
         <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_references.reference_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Reference Type <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.reference_type}
                 onChange={(e) => setFormData({ ...formData, reference_type: e.target.value })}
@@ -129,9 +130,9 @@ export default function ReferencesSection({ briefId, readOnly = false }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_references.reference_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Reference Title <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.reference_title}
@@ -142,9 +143,9 @@ export default function ReferencesSection({ briefId, readOnly = false }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.brief_references.reference_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Description
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.reference_description}
               onChange={(e) => setFormData({ ...formData, reference_description: e.target.value })}
@@ -153,9 +154,9 @@ export default function ReferencesSection({ briefId, readOnly = false }) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.brief_references.reference_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               URL
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="url"
               value={formData.reference_url}

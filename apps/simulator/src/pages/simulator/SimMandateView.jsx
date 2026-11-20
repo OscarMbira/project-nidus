@@ -4,7 +4,9 @@ import { ArrowLeft, GraduationCap, Award, Rocket } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
 import { getSimMandateById, getSimDeliverables, getSimStakeholders, getSimMandateProgress, canCreatePracticeProject, createPracticeProjectFromMandate, getPracticeProjectsFromMandate, getSimDependencies, addSimDependency, updateSimDependency, deleteSimDependency } from '../../services/simulatorMandateService'
 import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
-import { MandateAssumptionsRisksView } from '@nidus/ui/MandateFieldTabs'
+import { MandateAssumptionsRisksView, mandateHelpKeys } from '@nidus/ui/MandateFieldTabs'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 // v1340 wave 4 follow-up (SQL v1447): practice mandate dependencies, saved row by row.
 const DEPENDENCY_SERVICE = { list: getSimDependencies, add: addSimDependency, update: updateSimDependency, remove: deleteSimDependency }
@@ -134,6 +136,7 @@ export default function SimMandateView() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <FieldHelpScope helpKeys={mandateHelpKeys('sim')}>
       <div className="mb-6">
         <button
           onClick={() => navigate(-1)}
@@ -291,7 +294,7 @@ export default function SimMandateView() {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Reference</dt>
+              <FieldLabelWithHelp as="dt" helpKey="sim.project_mandates.mandate_reference" className="text-sm font-medium text-gray-500 dark:text-gray-400">Reference</FieldLabelWithHelp>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.mandate_reference}</dd>
             </div>
             <div>
@@ -307,20 +310,20 @@ export default function SimMandateView() {
 
         {/* Section 1: Purpose */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.purpose" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</FieldLabelWithHelp>
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{mandate.purpose}</p>
         </div>
 
         {/* Section 3: Background */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.background" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</FieldLabelWithHelp>
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{mandate.background}</p>
         </div>
 
         {/* Section 4: Project Objectives */}
         {mandate.project_objectives && (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.project_objectives" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</FieldLabelWithHelp>
             {(() => {
               try {
                 const objectives = JSON.parse(mandate.project_objectives)
@@ -341,7 +344,7 @@ export default function SimMandateView() {
 
         {/* Section 6: Constraints */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">6. Constraints</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.constraints" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">6. Constraints</FieldLabelWithHelp>
           {constraints.length > 0 ? (
             <ConstraintSelector
               mandateId={mandateId}
@@ -357,14 +360,14 @@ export default function SimMandateView() {
 
         {/* Section 9: Outline Business Case */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.outline_business_case" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</FieldLabelWithHelp>
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{mandate.outline_business_case}</p>
         </div>
 
         {/* Deliverables */}
         {deliverables.length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Deliverables</h2>
+            <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.key_deliverables" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Deliverables</FieldLabelWithHelp>
             <ul className="space-y-2">
               {deliverables.map((deliverable, index) => (
                 <li key={deliverable.id} className="text-gray-700 dark:text-gray-300">
@@ -396,9 +399,9 @@ export default function SimMandateView() {
         )}
 
         {/* v1344: assumptions and known risks */}
-        <MandateAssumptionsRisksView mandate={mandate} />
+        <MandateAssumptionsRisksView mandate={mandate} helpSchema="sim" />
 
-        <MandateDependenciesSection
+        <MandateDependenciesSection helpSchema="sim"
           mandateId={mandateId}
           readOnly={['approved', 'archived'].includes(mandate.document_status)}
           viewModeId="sim-mandate-dependencies"
@@ -407,6 +410,7 @@ export default function SimMandateView() {
       </div>
       </>
       )}
+      </FieldHelpScope>
     </div>
   )
 }

@@ -3,6 +3,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { FileText, Plus } from 'lucide-react'
 import { RowActionButton } from '@nidus/ui'
@@ -92,13 +94,14 @@ export default function PracticeBenefitsReviewPlan() {
           </button>
         </div>
       ) : editing ? (
+        <FieldHelpScope helpKeys={['plan_title', 'scope_description', 'measurement_approach'].map((name) => `sim.practice_benefits_review_plans.${name}`)}>
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Plan Title *</label>
+            <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.plan_title" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" required>Plan Title *</FieldLabelWithHelp>
             <input type="text" required value={formData.plan_title} onChange={(e) => setFormData({ ...formData, plan_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Scope Description</label>
+            <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.scope_description" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Scope Description</FieldLabelWithHelp>
             <textarea value={formData.scope_description} onChange={(e) => setFormData({ ...formData, scope_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
           </div>
           <div className="flex justify-end gap-4">
@@ -106,6 +109,7 @@ export default function PracticeBenefitsReviewPlan() {
             <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Saving...' : 'Save'}</button>
           </div>
         </form>
+        </FieldHelpScope>
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-4">
           <div>

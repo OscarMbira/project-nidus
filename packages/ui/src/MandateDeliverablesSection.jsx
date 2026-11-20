@@ -26,6 +26,7 @@ import { TableHeaderCell, TableRowNumberHeader, TableRowNumberCell } from './Tab
 import RowActionButton from './RowActionButton.jsx'
 import RowNumberBadge from './RowNumberBadge.jsx'
 import ViewToggle from './ViewToggle.jsx'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 
 const yesNo = (v) => (v ? 'Yes' : 'No')
 const EMPTY = { deliverable_name: '', deliverable_description: '', estimated_completion: '', is_in_scope: true, is_major_deliverable: true }
@@ -41,7 +42,7 @@ const shortName = (text) => {
   return t.length > 40 ? `${t.slice(0, 40)}…` : t || 'Deliverable'
 }
 
-export default function MandateDeliverablesSection({ mandateId, readOnly = false, viewModeId, service }) {
+export default function MandateDeliverablesSection({ mandateId, readOnly = false, viewModeId, service, helpSchema = 'public' }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -154,7 +155,7 @@ export default function MandateDeliverablesSection({ mandateId, readOnly = false
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Key deliverables</h2>
+          <FieldLabelWithHelp as="h2" helpKey={`${helpSchema}.project_mandates.key_deliverables`} className="text-lg font-semibold text-gray-900 dark:text-white">Key deliverables</FieldLabelWithHelp>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             The main things the project is expected to produce, and anything explicitly out of scope.
           </p>
@@ -173,32 +174,32 @@ export default function MandateDeliverablesSection({ mandateId, readOnly = false
       {editing !== null && (
         <div className="mb-4 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 p-4 space-y-3">
           <div>
-            <label htmlFor="mandate-deliverable-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_deliverables.deliverable_name`} htmlFor="mandate-deliverable-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
               Deliverable <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <input id="mandate-deliverable-name" className={inputClass} value={draft.deliverable_name} maxLength={200}
               onChange={(e) => setDraft((d) => ({ ...d, deliverable_name: e.target.value }))}
               placeholder="e.g. New customer onboarding journey" />
           </div>
           <div>
-            <label htmlFor="mandate-deliverable-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_deliverables.deliverable_description`} htmlFor="mandate-deliverable-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</FieldLabelWithHelp>
             <textarea id="mandate-deliverable-description" rows={2} className={inputClass} value={draft.deliverable_description}
               onChange={(e) => setDraft((d) => ({ ...d, deliverable_description: e.target.value }))} />
           </div>
           <div>
-            <label htmlFor="mandate-deliverable-when" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rough timeframe</label>
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_deliverables.estimated_completion`} htmlFor="mandate-deliverable-when" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rough timeframe</FieldLabelWithHelp>
             <input id="mandate-deliverable-when" className={inputClass} value={draft.estimated_completion} maxLength={100}
               onChange={(e) => setDraft((d) => ({ ...d, estimated_completion: e.target.value }))} placeholder="e.g. Q3 2027" />
           </div>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_deliverables.is_in_scope`} className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={draft.is_in_scope} onChange={(e) => setDraft((d) => ({ ...d, is_in_scope: e.target.checked }))} />
               In scope
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            </FieldLabelWithHelp>
+            <FieldLabelWithHelp helpKey={`${helpSchema}.mandate_deliverables.is_major_deliverable`} className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
               <input type="checkbox" checked={draft.is_major_deliverable} onChange={(e) => setDraft((d) => ({ ...d, is_major_deliverable: e.target.checked }))} />
               Major deliverable
-            </label>
+            </FieldLabelWithHelp>
           </div>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={cancel}

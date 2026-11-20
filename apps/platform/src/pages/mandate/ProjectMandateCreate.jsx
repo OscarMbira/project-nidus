@@ -3,6 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { createMandate } from '../../services/projectMandateService'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import { mandateHelpKeys } from '@nidus/ui/MandateFieldTabs'
 import { HoldButton } from '../../components/shared-app/HoldButton'
 import { AutoSaveIndicator } from '@nidus/ui/AutoSaveIndicator'
 import { useDraftQueue } from '../../lib/useDraftQueue'
@@ -237,14 +240,15 @@ function ProjectMandateCreate() {
       )}
 
       {activeTab === 'details' && (
+        <FieldHelpScope helpKeys={mandateHelpKeys('public')}>
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div>
-                <label htmlFor="mandate_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_mandates.mandate_reference" htmlFor="mandate_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mandate Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="mandate_reference"
                   type="text"
@@ -260,9 +264,9 @@ function ProjectMandateCreate() {
                 </p>
               </div>
               <div>
-                <label htmlFor="mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_mandates.mandate_title" htmlFor="mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Mandate Title <span className="text-red-500">*</span>
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="mandate_title"
                   type="text"
@@ -279,9 +283,9 @@ function ProjectMandateCreate() {
                 )}
               </div>
               <div>
-                <label htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_mandates.project_code" htmlFor="project_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project Code
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="project_code"
                   type="text"
@@ -296,9 +300,9 @@ function ProjectMandateCreate() {
                 </p>
               </div>
               <div>
-                <label htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.project_mandates.project_name" htmlFor="project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project Name
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   id="project_name"
                   type="text"
@@ -321,7 +325,7 @@ function ProjectMandateCreate() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Scope */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Scope</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.scope" className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Scope</FieldLabelWithHelp>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Outline of what the project is about and what it will deliver. One point per line.
               </p>
@@ -330,7 +334,7 @@ function ProjectMandateCreate() {
                 id="mandate_scope"
                 value={toMultiline(formData.scope)}
                 onChange={(v) => setListField('scope', v)}
-                placeholder="e.g. Replace legacy core banking with Temenos T24 for retail deposits"
+                placeholder="e.g. Replace the legacy core banking system for retail deposits"
                 ariaLabelPrefix="scope point"
                 itemColumnLabel="Scope point"
               />
@@ -347,9 +351,9 @@ function ProjectMandateCreate() {
               </p>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="proposed_executive_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_mandates.proposed_executive_name" htmlFor="proposed_executive_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Executive
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     id="proposed_executive_name"
                     type="text"
@@ -361,9 +365,9 @@ function ProjectMandateCreate() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="proposed_pm_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.project_mandates.proposed_pm_name" htmlFor="proposed_pm_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Project Manager
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     id="proposed_pm_name"
                     type="text"
@@ -382,7 +386,7 @@ function ProjectMandateCreate() {
 
             {/* Objectives */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Objectives</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.project_objectives" className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Objectives</FieldLabelWithHelp>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 What the project is expected to achieve (savings, faster service, and so on). One per line.
               </p>
@@ -402,7 +406,7 @@ function ProjectMandateCreate() {
 
             {/* Key constraints */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Key constraints</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.constraints" className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">Key constraints</FieldLabelWithHelp>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Limits such as an absolute delivery date, maximum budget, or required integrations. One per line.
               </p>
@@ -447,6 +451,7 @@ function ProjectMandateCreate() {
             </button>
           </div>
         </form>
+        </FieldHelpScope>
       )}
     </div>
   )

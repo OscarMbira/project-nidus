@@ -3,6 +3,7 @@
  * Quality expectations and acceptance criteria — multi-line list fields (rule 67).
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function ProductQualitySection({ formData, onChange, errors = {}, readOnly = false }) {
@@ -22,9 +23,9 @@ export default function ProductQualitySection({ formData, onChange, errors = {},
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.customer_quality_expectations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Customer quality expectations
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-quality-customer"
           id="brief_customer_quality_expectations"
@@ -38,9 +39,9 @@ export default function ProductQualitySection({ formData, onChange, errors = {},
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.user_acceptance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           User acceptance criteria
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-quality-uac"
           id="brief_user_acceptance_criteria"
@@ -54,9 +55,9 @@ export default function ProductQualitySection({ formData, onChange, errors = {},
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.operations_maintenance_criteria" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Operations & maintenance criteria
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-quality-ops"
           id="brief_operations_maintenance_criteria"

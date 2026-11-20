@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X } from 'lucide-react'
 import {
   addReportingArrangement,
@@ -174,7 +175,7 @@ export default function ReportingArrangementForm({
       ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="block">
+          <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_type" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Report type</span>
             <select
               value={form.report_type}
@@ -187,8 +188,8 @@ export default function ReportingArrangementForm({
                 </option>
               ))}
             </select>
-          </label>
-          <label className="block">
+          </FieldLabelWithHelp>
+          <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_format" className="block">
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Format</span>
             <select
               value={form.report_format}
@@ -201,17 +202,17 @@ export default function ReportingArrangementForm({
                 </option>
               ))}
             </select>
-          </label>
+          </FieldLabelWithHelp>
         </div>
-        <label className="block">
+        <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_frequency" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Frequency</span>
           <input
             value={form.report_frequency}
             onChange={(e) => set('report_frequency', e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_owner" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Report owner</span>
           <select
             value={form.report_owner}
@@ -225,8 +226,8 @@ export default function ReportingArrangementForm({
               </option>
             ))}
           </select>
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_recipients" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Recipients</span>
           <textarea
             value={form.report_recipients}
@@ -235,16 +236,16 @@ export default function ReportingArrangementForm({
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
             placeholder="Names or distribution list"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_template" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Template</span>
           <input
             value={form.report_template}
             onChange={(e) => set('report_template', e.target.value)}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
           />
-        </label>
-        <label className="block">
+        </FieldLabelWithHelp>
+        <FieldLabelWithHelp helpKey="public.pid_reporting_arrangements.report_description" className="block">
           <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Description</span>
           <textarea
             value={form.report_description}
@@ -252,7 +253,7 @@ export default function ReportingArrangementForm({
             rows={3}
             className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
           />
-        </label>
+        </FieldLabelWithHelp>
         <div className="flex justify-end gap-2 pt-2">
           <button
             type="button"

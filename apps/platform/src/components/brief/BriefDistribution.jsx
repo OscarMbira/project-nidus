@@ -3,6 +3,7 @@
  * Distribution list management
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 import { Plus, Trash2, Mail, CheckCircle, Clock } from 'lucide-react'
@@ -164,9 +165,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
         <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_distribution.recipient_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                 Recipient
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.recipient_id || ''}
                 onChange={(e) => {
@@ -188,9 +189,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_distribution.recipient_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Or Enter External Name
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.recipient_name}
@@ -202,9 +203,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_distribution.recipient_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Title
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.recipient_title}
@@ -213,9 +214,9 @@ export default function BriefDistribution({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_distribution.version_distributed" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Version Distributed
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.version_distributed}

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { AlertTriangle, Plus, Edit2, Trash2, TrendingDown, Shield, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { getDisBenefitsForPlan, saveDisBenefit, deleteDisBenefit, updateMitigationStatus } from '../../services/disBenefitsService';
 import { platformDb } from '../../services/supabaseClient';
@@ -239,9 +240,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
           <form onSubmit={handleSaveDisBenefit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.dis_benefit_code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Dis-benefit Code *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={disBenefitData.dis_benefit_code}
@@ -253,9 +254,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.dis_benefit_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Dis-benefit Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={disBenefitData.dis_benefit_name}
@@ -266,9 +267,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.dis_benefit_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={disBenefitData.dis_benefit_category}
                   onChange={(e) => setDisBenefitData({ ...disBenefitData, dis_benefit_category: e.target.value })}
@@ -286,9 +287,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.impact_severity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Impact Severity
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={disBenefitData.impact_severity}
                   onChange={(e) => setDisBenefitData({ ...disBenefitData, impact_severity: e.target.value })}
@@ -303,9 +304,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.impact_probability" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Impact Probability (%)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={disBenefitData.impact_probability || ''}
@@ -318,9 +319,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={disBenefitData.status}
                   onChange={(e) => setDisBenefitData({ ...disBenefitData, status: e.target.value })}
@@ -334,9 +335,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.mitigation_owner_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Mitigation Owner
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={disBenefitData.mitigation_owner_user_id}
                   onChange={(e) => setDisBenefitData({ ...disBenefitData, mitigation_owner_user_id: e.target.value })}
@@ -352,9 +353,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.mitigation_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Mitigation Status
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={disBenefitData.mitigation_status}
                   onChange={(e) => setDisBenefitData({ ...disBenefitData, mitigation_status: e.target.value })}
@@ -375,17 +376,17 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
                   onChange={(e) => setDisBenefitData({ ...disBenefitData, measurable: e.target.checked })}
                   className="w-5 h-5 text-blue-600 rounded border-gray-300"
                 />
-                <label className="text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.dis_benefits.measurable" className="text-sm text-gray-700 dark:text-gray-300">
                   Measurable
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               {disBenefitData.measurable && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.dis_benefits.measurement_unit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Measurement Unit
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="text"
                       value={disBenefitData.measurement_unit}
@@ -395,9 +396,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <FieldLabelWithHelp helpKey="public.dis_benefits.baseline_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Baseline Value
-                    </label>
+                    </FieldLabelWithHelp>
                     <input
                       type="number"
                       value={disBenefitData.baseline_value || ''}
@@ -411,9 +412,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.dis_benefits.dis_benefit_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Dis-benefit Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={disBenefitData.dis_benefit_description}
                 onChange={(e) => setDisBenefitData({ ...disBenefitData, dis_benefit_description: e.target.value })}
@@ -423,9 +424,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.dis_benefits.impact_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Impact Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={disBenefitData.impact_description}
                 onChange={(e) => setDisBenefitData({ ...disBenefitData, impact_description: e.target.value })}
@@ -435,9 +436,9 @@ export default function DisBenefitsSection({ planId, projectId, onUpdate }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.dis_benefits.mitigation_approach" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Mitigation Approach
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={disBenefitData.mitigation_approach}
                 onChange={(e) => setDisBenefitData({ ...disBenefitData, mitigation_approach: e.target.value })}

@@ -3,6 +3,7 @@
  * Time, cost, quality, scope, risk, benefit tolerances
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 import { getTolerances, addTolerance, updateTolerance, deleteTolerance } from '../../services/briefTolerancesService'
 import { Plus, Trash2, Edit2 } from 'lucide-react'
@@ -135,9 +136,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
         <form onSubmit={handleSubmit} className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_tolerances.tolerance_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Tolerance Type <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 value={formData.tolerance_type}
                 onChange={(e) => setFormData({ ...formData, tolerance_type: e.target.value })}
@@ -150,9 +151,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_tolerances.escalation_required" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Escalation Required
-              </label>
+              </FieldLabelWithHelp>
               <label className="flex items-center">
                 <input
                   type="checkbox"
@@ -165,9 +166,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.brief_tolerances.tolerance_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Description <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.tolerance_description}
               onChange={(e) => setFormData({ ...formData, tolerance_description: e.target.value })}
@@ -178,9 +179,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_tolerances.lower_limit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Lower Limit
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.lower_limit}
@@ -190,9 +191,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_tolerances.upper_limit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Upper Limit
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.upper_limit}
@@ -202,9 +203,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.brief_tolerances.absolute_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Absolute Value
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.absolute_value}
@@ -215,9 +216,9 @@ export default function TolerancesSection({ briefId, readOnly = false }) {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.brief_tolerances.notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Notes
-            </label>
+            </FieldLabelWithHelp>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}

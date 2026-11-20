@@ -29,6 +29,39 @@ import ReferencesSection from './ReferencesSection'
 import BriefCompletionProgress from './BriefCompletionProgress'
 import ProjectMilestonesSummary from '@nidus/ui/ProjectMilestonesSummary'
 import { listMilestones } from '../../services/milestoneService'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+
+// v1345 slice 3: help keys for every brief section (public.<table>.<column>).
+const BRIEF_HELP_KEYS = [
+  ...[
+    'brief_reference', 'version_number', 'document_ref', 'release', 'created_date', 'author_id', 'owner_id',
+    'client_id', 'background', 'project_objectives', 'desired_outcomes', 'project_scope', 'scope_exclusions',
+    'constraints', 'assumptions', 'users_and_interested_parties', 'interfaces',
+    'outline_business_case_summary', 'business_option_selected', 'dis_benefits_included',
+    'dis_benefits_description', 'customer_quality_expectations', 'user_acceptance_criteria',
+    'operations_maintenance_criteria', 'project_approach_description', 'solution_type', 'delivery_approach',
+    'development_approach', 'operational_environment', 'approach_justification', 'team_structure_description',
+  ].map((name) => `public.project_briefs.${name}`),
+  ...[
+    'tolerance_type', 'escalation_required', 'tolerance_description', 'lower_limit', 'upper_limit',
+    'absolute_value', 'notes',
+  ].map((name) => `public.brief_tolerances.${name}`),
+  ...[
+    'product_name', 'is_main_product', 'product_description', 'purpose', 'composition', 'derivation',
+    'quality_criteria', 'quality_tolerance', 'quality_method', 'format_presentation',
+  ].map((name) => `public.brief_product_descriptions.${name}`),
+  ...[
+    'role_name', 'role_category', 'role_description', 'key_responsibilities', 'authority_level',
+    'reporting_to', 'required_skills', 'required_experience', 'time_commitment', 'assigned_to_user_id',
+    'is_mandatory',
+  ].map((name) => `public.brief_role_descriptions.${name}`),
+  ...[
+    'reference_type', 'reference_title', 'reference_description', 'reference_url',
+  ].map((name) => `public.brief_references.${name}`),
+  ...[
+    'recipient_id', 'recipient_name', 'recipient_title', 'version_distributed',
+  ].map((name) => `public.brief_distribution.${name}`),
+]
 
 /** Canonical Project Brief sections — matches the approved brief outline. */
 const BRIEF_CONTENT_TABS = [
@@ -159,7 +192,7 @@ export default function ProjectBriefForm({
         </div>
 
         <div className="p-6">
-          {renderTabContent()}
+          <FieldHelpScope helpKeys={BRIEF_HELP_KEYS}>{renderTabContent()}</FieldHelpScope>
         </div>
       </div>
 

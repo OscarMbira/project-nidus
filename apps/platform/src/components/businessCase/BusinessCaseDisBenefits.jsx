@@ -4,6 +4,8 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Plus, Trash2, AlertTriangle } from 'lucide-react'
 import { addDisBenefit, deleteDisBenefit } from '../../services/businessCaseService'
 import { useToastContext } from '@nidus/shared/context/ToastContext'
@@ -22,7 +24,7 @@ const empty = () => ({
   affected_stakeholders: '',
 })
 
-export default function BusinessCaseDisBenefits({ caseId, disBenefits = [], readOnly = false, onRefresh }) {
+function BusinessCaseDisBenefitsBody({ caseId, disBenefits = [], readOnly = false, onRefresh }) {
   const toast = useToastContext()
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -121,12 +123,12 @@ export default function BusinessCaseDisBenefits({ caseId, disBenefits = [], read
             <h4 className="text-sm font-semibold text-orange-700 dark:text-orange-300 mb-3">New Dis-benefit</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Dis-benefit Description *</label>
+                <FieldLabelWithHelp helpKey="public.business_case_dis_benefits.dis_benefit_description" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1" required>Dis-benefit Description *</FieldLabelWithHelp>
                 <textarea rows={2} {...field('dis_benefit_description')} placeholder="Describe the negative consequence..."
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</label>
+                <FieldLabelWithHelp helpKey="public.business_case_dis_benefits.severity" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Severity</FieldLabelWithHelp>
                 <select {...field('severity')}
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                   <option value="low">Low</option>
@@ -135,17 +137,17 @@ export default function BusinessCaseDisBenefits({ caseId, disBenefits = [], read
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Affected Stakeholders</label>
+                <FieldLabelWithHelp helpKey="public.business_case_dis_benefits.affected_stakeholders" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Affected Stakeholders</FieldLabelWithHelp>
                 <input type="text" {...field('affected_stakeholders')} placeholder="Who is impacted?"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Impact Description</label>
+                <FieldLabelWithHelp helpKey="public.business_case_dis_benefits.impact_description" className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Impact Description</FieldLabelWithHelp>
                 <textarea rows={2} {...field('impact_description')} placeholder="How will stakeholders be impacted?"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-green-600 dark:text-green-400 mb-1">Mitigation</label>
+                <FieldLabelWithHelp helpKey="public.business_case_dis_benefits.mitigation" className="block text-xs font-medium text-green-600 dark:text-green-400 mb-1">Mitigation</FieldLabelWithHelp>
                 <textarea rows={2} {...field('mitigation')} placeholder="How will this dis-benefit be managed?"
                   className="w-full px-2 py-1.5 text-sm rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
@@ -164,5 +166,19 @@ export default function BusinessCaseDisBenefits({ caseId, disBenefits = [], read
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 3: field help for this component (public.business_case_dis_benefits.<column>). The component carries its
+// own scope so every page that renders it shows the help.
+const HELP_KEYS = [
+  'dis_benefit_description', 'severity', 'affected_stakeholders', 'impact_description', 'mitigation',
+].map((name) => `public.business_case_dis_benefits.${name}`)
+
+export default function BusinessCaseDisBenefits(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessCaseDisBenefitsBody {...props} />
+    </FieldHelpScope>
   )
 }

@@ -20,6 +20,16 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import { practicePidToForm, practicePidFormToUpdate } from '@nidus/shared/utils/practicePidForm'
 import { simDb } from '@nidus/supabase'
 import { getPracticePIDById, updatePracticePID } from '../../services/sim/practicePIDService'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+
+// v1345 slice 3: Simulator practice PID keys (most alias to the Platform PID help).
+const PRACTICE_PID_HELP_KEYS = [
+  'pid_title', 'pid_description', 'project_definition', 'project_objectives', 'project_scope', 'exclusions', 'interfaces',
+  'project_approach', 'quality_approach', 'risk_approach', 'change_control_approach', 'communication_approach',
+  'tolerance_time', 'tolerance_cost', 'tolerance_scope', 'tolerance_quality', 'reporting_arrangements',
+  'monitoring_and_control', 'project_plan_summary', 'stage_plan_summary',
+].map((name) => `sim.practice_project_initiation_documents.${name}`)
 
 const TABS = [
   { value: 'definition', label: 'Definition' },
@@ -35,7 +45,7 @@ const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 m
 function TextArea({ name, label, value, onChange, rows = 4, hint }) {
   return (
     <div>
-      <label htmlFor={`pid-${name}`} className={labelClass}>{label}</label>
+      <FieldLabelWithHelp helpKey={`sim.practice_project_initiation_documents.${name}`} htmlFor={`pid-${name}`} className={labelClass}>{label}</FieldLabelWithHelp>
       <textarea id={`pid-${name}`} name={name} value={value} onChange={onChange} rows={rows} className={inputClass} />
       {hint && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{hint}</p>}
     </div>
@@ -177,26 +187,27 @@ export default function PracticePIDEdit() {
           </AuditCard>
         </AuditDetailsPanel>
       ) : (
+        <FieldHelpScope helpKeys={PRACTICE_PID_HELP_KEYS}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <fieldset disabled={locked} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-5">
             {activeTab === 'definition' && (
               <>
                 <div>
-                  <label htmlFor="pid-pid_title" className={labelClass}>PID title *</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_project_initiation_documents.pid_title" htmlFor="pid-pid_title" className={labelClass} required>PID title *</FieldLabelWithHelp>
                   <input id="pid-pid_title" name="pid_title" type="text" value={form.pid_title} onChange={handleChange} className={inputClass} />
                   {titleError && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{titleError}</p>}
                 </div>
                 <TextArea name="pid_description" label="Description" value={form.pid_description} onChange={handleChange} rows={3} />
                 <TextArea name="project_definition" label="Project definition" value={form.project_definition} onChange={handleChange} />
                 <div>
-                  <span className={labelClass}>Objectives</span>
+                  <FieldLabelWithHelp as="span" helpKey="sim.practice_project_initiation_documents.project_objectives" className={labelClass}>Objectives</FieldLabelWithHelp>
                   <MultiLineListInput viewModeId="sim-practice-pid-objectives" id="pid-objectives" value={form.project_objectives}
                     onChange={(v) => setField('project_objectives', v)} itemColumnLabel="Objective" placeholder="Add an objective" disabled={locked} />
                 </div>
                 <TextArea name="project_scope" label="Scope" value={form.project_scope} onChange={handleChange} />
                 <TextArea name="exclusions" label="Exclusions" value={form.exclusions} onChange={handleChange} rows={3} />
                 <div>
-                  <span className={labelClass}>Interfaces</span>
+                  <FieldLabelWithHelp as="span" helpKey="sim.practice_project_initiation_documents.interfaces" className={labelClass}>Interfaces</FieldLabelWithHelp>
                   <MultiLineListInput viewModeId="sim-practice-pid-interfaces" id="pid-interfaces" value={form.interfaces}
                     onChange={(v) => setField('interfaces', v)} itemColumnLabel="Interface" placeholder="Add an interface" disabled={locked} />
                 </div>
@@ -218,7 +229,7 @@ export default function PracticePIDEdit() {
                     ['tolerance_scope', 'Scope tolerance', 'e.g. Training pack may be simplified'], ['tolerance_quality', 'Quality tolerance', 'e.g. 95% complete records']]
                     .map(([name, label, placeholder]) => (
                       <div key={name}>
-                        <label htmlFor={`pid-${name}`} className={labelClass}>{label}</label>
+                        <FieldLabelWithHelp helpKey={`sim.practice_project_initiation_documents.${name}`} htmlFor={`pid-${name}`} className={labelClass}>{label}</FieldLabelWithHelp>
                         <input id={`pid-${name}`} name={name} type="text" value={form[name]} onChange={handleChange} placeholder={placeholder} className={inputClass} />
                       </div>
                     ))}
@@ -251,6 +262,7 @@ export default function PracticePIDEdit() {
             </button>
           </div>
         </form>
+        </FieldHelpScope>
       )}
       {modal}
     </div>

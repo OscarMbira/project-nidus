@@ -199,8 +199,9 @@ function SimMandateEdit() {
             onChange={handleChange}
             onListChange={setListField}
             viewModePrefix="sim-mandate-edit"
-            deliverables={<MandateDeliverablesSection mandateId={mandateId} viewModeId="sim-mandate-deliverables-edit" service={DELIVERABLE_SERVICE} />}
-            dependencies={<MandateDependenciesSection mandateId={mandateId} viewModeId="sim-mandate-dependencies-edit" service={DEPENDENCY_SERVICE} />}
+            helpSchema="sim"
+            deliverables={<MandateDeliverablesSection mandateId={mandateId} viewModeId="sim-mandate-deliverables-edit" service={DELIVERABLE_SERVICE} helpSchema="sim" />}
+            dependencies={<MandateDependenciesSection mandateId={mandateId} viewModeId="sim-mandate-dependencies-edit" service={DEPENDENCY_SERVICE} helpSchema="sim" />}
           />
           {activeTab !== 'deliverables' && (
             <div className="flex justify-end gap-3">

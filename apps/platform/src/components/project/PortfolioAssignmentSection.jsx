@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Briefcase, X, Search } from 'lucide-react'
 import { getPortfolioList } from '../../services/portfolioService'
 import { useAssignmentDropdownPlacement } from '@nidus/shared/hooks/useAssignmentDropdownPlacement'
@@ -98,7 +99,7 @@ export default function PortfolioAssignmentSection({ portfolioId, onChange, sele
   return (
     <div className="space-y-6">
       <div className="mb-4">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Portfolio Assignment</h2>
+        <FieldLabelWithHelp as="h2" helpKey="public.projects.portfolio_id" className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Portfolio Assignment</FieldLabelWithHelp>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Optionally link this project to an existing portfolio. Leave blank if not applicable.
         </p>

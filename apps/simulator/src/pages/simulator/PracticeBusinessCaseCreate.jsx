@@ -8,6 +8,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, ChevronLeft } from 'lucide-react'
 import { createPracticeBusinessCase } from '../../services/sim/practiceBusinessCaseService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 const SECTIONS = [
   { id: 'summary', label: 'Executive Summary' },
@@ -44,6 +46,11 @@ const INITIAL_FORM = {
 
 const inputCls = 'w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'
+
+// v1345 slice 3: Simulator practice business case keys (several alias to the Platform business case help).
+const PRACTICE_BUSINESS_CASE_HELP_KEYS = [
+  'case_title', 'case_description', 'lifecycle_stage', 'business_justification', 'recommended_option', 'option_justification', 'target_start_date', 'target_end_date', 'estimated_cost', 'estimated_benefits', 'net_present_value', 'return_on_investment', 'payback_period_months', 'expected_costs', 'expected_risks', 'expected_benefits', 'option_is_recommended',
+].map((name) => `sim.practice_business_cases.${name}`)
 
 export default function PracticeBusinessCaseCreate() {
   const navigate = useNavigate()
@@ -105,6 +112,7 @@ export default function PracticeBusinessCaseCreate() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <FieldHelpScope helpKeys={PRACTICE_BUSINESS_CASE_HELP_KEYS}>
       <button
         onClick={() => navigate(backPath)}
         className="mb-4 inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -155,7 +163,7 @@ export default function PracticeBusinessCaseCreate() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Executive Summary</h2>
             <div>
-              <label className={labelCls}>Case Title <span className="text-red-500">*</span></label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.case_title" className={labelCls} required>Case Title <span className="text-red-500">*</span></FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.case_title}
@@ -165,7 +173,7 @@ export default function PracticeBusinessCaseCreate() {
               />
             </div>
             <div>
-              <label className={labelCls}>Executive Summary</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.case_description" className={labelCls}>Executive Summary</FieldLabelWithHelp>
               <textarea
                 value={formData.case_description}
                 onChange={e => set('case_description', e.target.value)}
@@ -182,7 +190,7 @@ export default function PracticeBusinessCaseCreate() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reasons</h2>
             <div>
-              <label className={labelCls}>Business Justification</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.business_justification" className={labelCls}>Business Justification</FieldLabelWithHelp>
               <textarea
                 value={formData.business_justification}
                 onChange={e => set('business_justification', e.target.value)}
@@ -217,7 +225,7 @@ export default function PracticeBusinessCaseCreate() {
                 className={inputCls}
               />
               <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.option_is_recommended" className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <input
                     type="checkbox"
                     checked={newOption.is_recommended}
@@ -225,7 +233,7 @@ export default function PracticeBusinessCaseCreate() {
                     className="rounded"
                   />
                   Mark as Recommended
-                </label>
+                </FieldLabelWithHelp>
                 <button
                   type="button"
                   onClick={addOption}
@@ -263,7 +271,7 @@ export default function PracticeBusinessCaseCreate() {
             )}
 
             <div>
-              <label className={labelCls}>Recommended Option</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.recommended_option" className={labelCls}>Recommended Option</FieldLabelWithHelp>
               <input
                 type="text"
                 value={formData.recommended_option}
@@ -273,7 +281,7 @@ export default function PracticeBusinessCaseCreate() {
               />
             </div>
             <div>
-              <label className={labelCls}>Justification for Recommendation</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.option_justification" className={labelCls}>Justification for Recommendation</FieldLabelWithHelp>
               <textarea
                 value={formData.option_justification}
                 onChange={e => set('option_justification', e.target.value)}
@@ -291,7 +299,7 @@ export default function PracticeBusinessCaseCreate() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Timescale</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Target Start Date</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.target_start_date" className={labelCls}>Target Start Date</FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.target_start_date}
@@ -300,7 +308,7 @@ export default function PracticeBusinessCaseCreate() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Target End Date</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.target_end_date" className={labelCls}>Target End Date</FieldLabelWithHelp>
                 <input
                   type="date"
                   value={formData.target_end_date}
@@ -318,7 +326,7 @@ export default function PracticeBusinessCaseCreate() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Costs & Investment</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Estimated Cost</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.estimated_cost" className={labelCls} isAmount>Estimated Cost</FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.estimated_cost}
@@ -330,7 +338,7 @@ export default function PracticeBusinessCaseCreate() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Estimated Benefits</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.estimated_benefits" className={labelCls} isAmount>Estimated Benefits</FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.estimated_benefits}
@@ -342,7 +350,7 @@ export default function PracticeBusinessCaseCreate() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Net Present Value (NPV)</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.net_present_value" className={labelCls} isAmount>Net Present Value (NPV)</FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.net_present_value}
@@ -353,7 +361,7 @@ export default function PracticeBusinessCaseCreate() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Return on Investment (%)</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.return_on_investment" className={labelCls}>Return on Investment (%)</FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.return_on_investment}
@@ -364,7 +372,7 @@ export default function PracticeBusinessCaseCreate() {
                 />
               </div>
               <div>
-                <label className={labelCls}>Payback Period (months)</label>
+                <FieldLabelWithHelp helpKey="sim.practice_business_cases.payback_period_months" className={labelCls}>Payback Period (months)</FieldLabelWithHelp>
                 <input
                   type="number"
                   value={formData.payback_period_months}
@@ -377,7 +385,7 @@ export default function PracticeBusinessCaseCreate() {
               </div>
             </div>
             <div>
-              <label className={labelCls}>Cost Notes</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.expected_costs" className={labelCls}>Cost Notes</FieldLabelWithHelp>
               <textarea
                 value={formData.expected_costs}
                 onChange={e => set('expected_costs', e.target.value)}
@@ -394,7 +402,7 @@ export default function PracticeBusinessCaseCreate() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Major Risks</h2>
             <div>
-              <label className={labelCls}>Expected Risks</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.expected_risks" className={labelCls}>Expected Risks</FieldLabelWithHelp>
               <textarea
                 value={formData.expected_risks}
                 onChange={e => set('expected_risks', e.target.value)}
@@ -404,7 +412,7 @@ export default function PracticeBusinessCaseCreate() {
               />
             </div>
             <div>
-              <label className={labelCls}>Expected Benefits</label>
+              <FieldLabelWithHelp helpKey="sim.practice_business_cases.expected_benefits" className={labelCls}>Expected Benefits</FieldLabelWithHelp>
               <textarea
                 value={formData.expected_benefits}
                 onChange={e => set('expected_benefits', e.target.value)}
@@ -460,6 +468,7 @@ export default function PracticeBusinessCaseCreate() {
       </div>
       </>
       )}
+      </FieldHelpScope>
     </div>
   )
 }

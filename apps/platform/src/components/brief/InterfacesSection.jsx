@@ -3,6 +3,7 @@
  * Links to other projects/programmes/systems — multi-line list (rule 67).
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function InterfacesSection({ formData, onChange, errors = {}, readOnly = false }) {
@@ -22,9 +23,9 @@ export default function InterfacesSection({ formData, onChange, errors = {}, rea
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.interfaces" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Project interfaces
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-project-interfaces"
           id="brief_interfaces"

@@ -5,7 +5,9 @@ import { RowActionButton } from '@nidus/ui'
 import { getMandateViewData, getDependencies, addDependency, updateDependency, deleteDependency, getDeliverables, addDeliverable, updateDeliverable, deleteDeliverable } from '../../services/projectMandateService'
 import MandateDependenciesSection from '@nidus/ui/MandateDependenciesSection'
 import MandateDeliverablesSection from '@nidus/ui/MandateDeliverablesSection'
-import { MandateAssumptionsRisksView } from '@nidus/ui/MandateFieldTabs'
+import { MandateAssumptionsRisksView, mandateHelpKeys } from '@nidus/ui/MandateFieldTabs'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 // v1340 wave 4 follow-up (SQL v1447): read-only here; edited on the mandate edit page.
 const DEPENDENCY_SERVICE = { list: getDependencies, add: addDependency, update: updateDependency, remove: deleteDependency }
@@ -263,6 +265,7 @@ export default function ProjectMandateView() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <FieldHelpScope helpKeys={mandateHelpKeys('public')}>
       {/* Submit for Approval Confirmation Modal */}
       {showSubmitModal && (
         <MandateSubmitModal
@@ -378,7 +381,7 @@ export default function ProjectMandateView() {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Reference</dt>
+              <FieldLabelWithHelp as="dt" helpKey="public.project_mandates.mandate_reference" className="text-sm font-medium text-gray-500 dark:text-gray-400">Reference</FieldLabelWithHelp>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.mandate_reference}</dd>
             </div>
             <div>
@@ -406,28 +409,28 @@ export default function ProjectMandateView() {
           <div className="space-y-6">
             {/* Section 1: Purpose */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.purpose" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</FieldLabelWithHelp>
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{mandate.purpose}</p>
             </div>
 
             {/* Section 2: Authority */}
             {mandate.authority_responsible && (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">2. Authority</h2>
+                <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.authority_responsible" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">2. Authority</FieldLabelWithHelp>
                 {renderListOrText(parsedSections.authority, mandate.authority_responsible)}
               </div>
             )}
 
             {/* Section 3: Background */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.background" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</FieldLabelWithHelp>
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{mandate.background}</p>
             </div>
 
             {/* Section 4: Project Objectives */}
             {mandate.project_objectives && (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</h2>
+                <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.project_objectives" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</FieldLabelWithHelp>
                 {renderListOrText(parsedSections.objectives, mandate.project_objectives)}
               </div>
             )}
@@ -435,16 +438,16 @@ export default function ProjectMandateView() {
             {/* Section 5: Scope */}
             {(mandate.scope || mandate.scope_exclusions) && (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">5. Scope</h2>
+                <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.scope" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">5. Scope</FieldLabelWithHelp>
                 {mandate.scope && (
                   <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">In-Scope Deliverables</h3>
+                    <FieldLabelWithHelp as="h3" helpKey="public.project_mandates.key_deliverables" className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">In-Scope Deliverables</FieldLabelWithHelp>
                     {renderListOrText(parsedSections.scope, mandate.scope)}
                   </div>
                 )}
                 {mandate.scope_exclusions && (
                   <div>
-                    <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Out-of-Scope Exclusions</h3>
+                    <FieldLabelWithHelp as="h3" helpKey="public.project_mandates.scope_exclusions" className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Out-of-Scope Exclusions</FieldLabelWithHelp>
                     {renderListOrText(parsedSections.scopeExclusions, mandate.scope_exclusions)}
                   </div>
                 )}
@@ -453,7 +456,7 @@ export default function ProjectMandateView() {
 
             {/* Section 6: Constraints */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">6. Constraints</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.constraints" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">6. Constraints</FieldLabelWithHelp>
               {constraints.length > 0 ? (
                 <div className="space-y-2">
                   {constraints.map((c, index) => (
@@ -471,7 +474,7 @@ export default function ProjectMandateView() {
             {/* Section 7: Interfaces */}
             {mandate.interfaces && (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">7. Interfaces</h2>
+                <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.interfaces" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">7. Interfaces</FieldLabelWithHelp>
                 {renderListOrText(parsedSections.interfaces, mandate.interfaces)}
               </div>
             )}
@@ -479,14 +482,14 @@ export default function ProjectMandateView() {
             {/* Section 8: Quality Expectations */}
             {mandate.quality_expectations && (
               <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">8. Quality Expectations</h2>
+                <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.quality_expectations" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">8. Quality Expectations</FieldLabelWithHelp>
                 {renderListOrText(parsedSections.qualityExpectations, mandate.quality_expectations)}
               </div>
             )}
 
             {/* Section 9: Outline Business Case */}
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</h2>
+              <FieldLabelWithHelp as="h2" helpKey="public.project_mandates.outline_business_case" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</FieldLabelWithHelp>
               <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{mandate.outline_business_case}</p>
             </div>
 
@@ -529,13 +532,13 @@ export default function ProjectMandateView() {
                 <dl className="space-y-2">
                   {mandate.proposed_executive_name && (
                     <div>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Proposed Executive</dt>
+                      <FieldLabelWithHelp as="dt" helpKey="public.project_mandates.proposed_executive_name" className="text-sm font-medium text-gray-500 dark:text-gray-400">Proposed Executive</FieldLabelWithHelp>
                       <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.proposed_executive_name}</dd>
                     </div>
                   )}
                   {mandate.proposed_pm_name && (
                     <div>
-                      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Proposed Project Manager</dt>
+                      <FieldLabelWithHelp as="dt" helpKey="public.project_mandates.proposed_pm_name" className="text-sm font-medium text-gray-500 dark:text-gray-400">Proposed Project Manager</FieldLabelWithHelp>
                       <dd className="mt-1 text-sm text-gray-900 dark:text-white">{mandate.proposed_pm_name}</dd>
                     </div>
                   )}
@@ -665,6 +668,7 @@ export default function ProjectMandateView() {
         )}
       </div>
       )}
+      </FieldHelpScope>
     </div>
   )
 }

@@ -3,10 +3,17 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticeBrief } from '../../services/sim/practiceBriefService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+
+// v1345 slice 3: Simulator practice brief keys (some alias to the Platform brief help).
+const PRACTICE_BRIEF_HELP_KEYS = [
+  'brief_title', 'brief_description', 'project_definition', 'project_objectives', 'project_scope', 'out_of_scope', 'project_approach', 'quality_approach', 'risk_approach', 'target_start_date', 'target_end_date',
+].map((name) => `sim.practice_project_briefs.${name}`)
 
 export default function PracticeBriefCreate() {
   const navigate = useNavigate()
@@ -51,13 +58,14 @@ export default function PracticeBriefCreate() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this brief is saved.</p>
         </div>
       ) : (
+      <FieldHelpScope helpKeys={PRACTICE_BRIEF_HELP_KEYS}>
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">Brief Title *</label>
+          <FieldLabelWithHelp helpKey="sim.practice_project_briefs.brief_title" className="block text-sm font-medium mb-2" required>Brief Title *</FieldLabelWithHelp>
           <input type="text" required value={formData.brief_title} onChange={(e) => setFormData({ ...formData, brief_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
+          <FieldLabelWithHelp helpKey="sim.practice_project_briefs.brief_description" className="block text-sm font-medium mb-2">Description</FieldLabelWithHelp>
           <textarea value={formData.brief_description} onChange={(e) => setFormData({ ...formData, brief_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
         </div>
         <div className="flex justify-end gap-4">
@@ -65,6 +73,7 @@ export default function PracticeBriefCreate() {
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Creating...' : 'Create Brief'}</button>
         </div>
       </form>
+      </FieldHelpScope>
       )}
     </div>
   )

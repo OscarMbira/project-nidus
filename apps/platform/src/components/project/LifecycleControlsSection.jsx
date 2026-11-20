@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Info, Plus, Trash2, X } from 'lucide-react'
 import { platformDb } from '@nidus/supabase'
 import { listDeliveryMethodologyOptions } from '@nidus/shared/services/deliveryMethodologyOptionsService.js'
@@ -64,9 +65,9 @@ export default function LifecycleControlsSection({
           <>
           {/* Delivery Methodology */}
           <div>
-            <label htmlFor="delivery_methodology" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.delivery_methodology" htmlFor="delivery_methodology" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Delivery Methodology <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="delivery_methodology"
               name="delivery_methodology"
@@ -92,9 +93,9 @@ export default function LifecycleControlsSection({
 
           {/* Lifecycle Template */}
           <div>
-            <label htmlFor="lifecycle_template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.lifecycle_template" htmlFor="lifecycle_template" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Lifecycle Template <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="lifecycle_template"
               name="lifecycle_template"
@@ -125,9 +126,9 @@ export default function LifecycleControlsSection({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Stage Model */}
             <div>
-              <label htmlFor="stage_model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.projects.stage_model" htmlFor="stage_model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Stage Model <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="stage_model"
                 name="stage_model"
@@ -152,9 +153,9 @@ export default function LifecycleControlsSection({
 
             {/* Stage Gate Enforcement */}
             <div>
-              <label htmlFor="stage_gate_enforcement" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.projects.stage_gate_enforcement" htmlFor="stage_gate_enforcement" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Stage Gate Enforcement <span className="text-red-500">*</span>
-              </label>
+              </FieldLabelWithHelp>
               <select
                 id="stage_gate_enforcement"
                 name="stage_gate_enforcement"
@@ -191,9 +192,9 @@ export default function LifecycleControlsSection({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Time Tolerance — multiple values */}
               <div>
-                <label htmlFor="tolerance_time_days_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.tolerance_time_days" htmlFor="tolerance_time_days_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Time Tolerance (Days)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {timeLines.length > 0 && (
                     <ul className="space-y-2">
@@ -223,9 +224,9 @@ export default function LifecycleControlsSection({
 
               {/* Benefits Tolerance — multiple values */}
               <div>
-                <label htmlFor="tolerance_benefits_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.tolerance_benefits_description" htmlFor="tolerance_benefits_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Benefits Tolerance (Description)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {benefitsLines.length > 0 && (
                     <ul className="space-y-2">
@@ -257,9 +258,9 @@ export default function LifecycleControlsSection({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Cost Tolerance — multiple values */}
               <div>
-                <label htmlFor="tolerance_cost_percentage_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.tolerance_cost_percentage" htmlFor="tolerance_cost_percentage_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Cost Tolerance (%)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {costLines.length > 0 && (
                     <ul className="space-y-2">
@@ -289,9 +290,9 @@ export default function LifecycleControlsSection({
 
               {/* Scope Tolerance — multiple values */}
               <div>
-                <label htmlFor="tolerance_scope_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.tolerance_scope_description" htmlFor="tolerance_scope_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Scope Tolerance (Description)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {scopeLines.length > 0 && (
                     <ul className="space-y-2">
@@ -323,9 +324,9 @@ export default function LifecycleControlsSection({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Quality Tolerance — multiple values */}
               <div>
-                <label htmlFor="tolerance_quality_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.tolerance_quality_description" htmlFor="tolerance_quality_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Quality Tolerance (Description)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {qualityLines.length > 0 && (
                     <ul className="space-y-2">
@@ -355,9 +356,9 @@ export default function LifecycleControlsSection({
 
               {/* Risk Tolerance — multiple values */}
               <div>
-                <label htmlFor="tolerance_risk_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.projects.tolerance_risk_description" htmlFor="tolerance_risk_input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Risk Tolerance (Description)
-                </label>
+                </FieldLabelWithHelp>
                 <div className="space-y-2">
                   {riskLines.length > 0 && (
                     <ul className="space-y-2">

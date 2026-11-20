@@ -3,6 +3,7 @@
  * Reference, author, owner, client, dates
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../services/supabaseClient'
 
@@ -72,9 +73,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Brief Reference */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_briefs.brief_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Brief Reference <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white font-mono">{formData.brief_reference || 'Auto-generated'}</p>
           ) : (
@@ -96,9 +97,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
         {/* Version Number */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_briefs.version_number" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Version Number
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">{formData.version_number || '1.0'}</p>
           ) : (
@@ -114,9 +115,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
         {/* Document Reference */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_briefs.document_ref" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Document Reference
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">{formData.document_ref || 'N/A'}</p>
           ) : (
@@ -133,9 +134,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
         {/* Release */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_briefs.release" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Release
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">{formData.release || 'N/A'}</p>
           ) : (
@@ -152,9 +153,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
         {/* Created Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.project_briefs.created_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Created Date
-          </label>
+          </FieldLabelWithHelp>
           {readOnly ? (
             <p className="text-gray-900 dark:text-white">{formData.created_date || 'N/A'}</p>
           ) : (
@@ -185,9 +186,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Author */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_briefs.author_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Author
-            </label>
+            </FieldLabelWithHelp>
             {readOnly ? (
               <p className="text-gray-900 dark:text-white">
                 {formData.author_name || (formData.author_id ? 'User ID: ' + formData.author_id : 'N/A')}
@@ -222,9 +223,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
           {/* Owner */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_briefs.owner_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Owner
-            </label>
+            </FieldLabelWithHelp>
             {readOnly ? (
               <p className="text-gray-900 dark:text-white">
                 {formData.owner_name || (formData.owner_id ? 'User ID: ' + formData.owner_id : 'N/A')}
@@ -259,9 +260,9 @@ export default function BriefMetadataSection({ formData, onChange, errors = {}, 
 
           {/* Client */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.project_briefs.client_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
               Client
-            </label>
+            </FieldLabelWithHelp>
             {readOnly ? (
               <p className="text-gray-900 dark:text-white">
                 {formData.client_name || (formData.client_id ? 'User ID: ' + formData.client_id : 'N/A')}

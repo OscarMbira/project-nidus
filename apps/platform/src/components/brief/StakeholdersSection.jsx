@@ -3,6 +3,7 @@
  * Users and interested parties — multi-line list (rule 67).
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function StakeholdersSection({ formData, onChange, errors = {}, readOnly = false }) {
@@ -23,9 +24,9 @@ export default function StakeholdersSection({ formData, onChange, errors = {}, r
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.users_and_interested_parties" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Stakeholders
-        </label>
+        </FieldLabelWithHelp>
         <MultiLineListInput
           viewModeId="brief-interested-parties"
           id="brief_users_and_interested_parties"

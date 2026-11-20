@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Calendar, Plus, Edit2, Trash2, CheckCircle, Clock, AlertTriangle, User, MapPin, Video, FileText } from 'lucide-react';
 import { getReviewSchedule, scheduleReview, updateReview, completeReview, getUpcomingReviews, getOverdueReviews } from '../../services/benefitsReviewPlanService';
 import { platformDb } from '../../services/supabaseClient';
@@ -280,9 +281,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
           <form onSubmit={handleScheduleReview} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.review_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Review Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={reviewData.review_name}
@@ -294,9 +295,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.review_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Review Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={reviewData.review_type}
                   onChange={(e) => setReviewData({ ...reviewData, review_type: e.target.value })}
@@ -311,9 +312,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.benefit_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Benefit (Optional - leave blank for all benefits)
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={reviewData.benefit_id}
                   onChange={(e) => setReviewData({ ...reviewData, benefit_id: e.target.value })}
@@ -329,9 +330,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.planned_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                   Planned Date *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={reviewData.planned_date}
@@ -342,9 +343,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.forecast_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Forecast Date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
                   value={reviewData.forecast_date}
@@ -354,9 +355,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.review_duration_hours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Duration (Hours)
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
                   value={reviewData.review_duration_hours || ''}
@@ -367,9 +368,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.reviewer_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" listOptions={false}>
                   Reviewer
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={reviewData.reviewer_user_id}
                   onChange={(e) => setReviewData({ ...reviewData, reviewer_user_id: e.target.value })}
@@ -391,16 +392,16 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
                   onChange={(e) => setReviewData({ ...reviewData, is_virtual: e.target.checked })}
                   className="w-5 h-5 text-blue-600 rounded border-gray-300"
                 />
-                <label className="text-sm text-gray-700 dark:text-gray-300">
+                <FieldLabelWithHelp helpKey="public.benefits_review_schedule.is_virtual" className="text-sm text-gray-700 dark:text-gray-300">
                   Virtual/Remote Review
-                </label>
+                </FieldLabelWithHelp>
               </div>
 
               {reviewData.is_virtual && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.benefits_review_schedule.meeting_link" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Meeting Link
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={reviewData.meeting_link}
@@ -413,9 +414,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
 
               {!reviewData.is_virtual && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FieldLabelWithHelp helpKey="public.benefits_review_schedule.review_location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Review Location
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={reviewData.review_location}
@@ -428,9 +429,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_schedule.review_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Review Description
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={reviewData.review_description}
                 onChange={(e) => setReviewData({ ...reviewData, review_description: e.target.value })}
@@ -470,9 +471,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
           </h4>
           <form onSubmit={handleCompleteReview} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_schedule.outcome_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
                 Outcome Summary *
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={completionData.outcome_summary}
                 onChange={(e) => setCompletionData({ ...completionData, outcome_summary: e.target.value })}
@@ -483,9 +484,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_schedule.findings" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Findings
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={completionData.findings}
                 onChange={(e) => setCompletionData({ ...completionData, findings: e.target.value })}
@@ -495,9 +496,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_schedule.recommendations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Recommendations
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={completionData.recommendations}
                 onChange={(e) => setCompletionData({ ...completionData, recommendations: e.target.value })}
@@ -507,9 +508,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_schedule.action_items" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Action Items
-              </label>
+              </FieldLabelWithHelp>
               <textarea
                 value={completionData.action_items}
                 onChange={(e) => setCompletionData({ ...completionData, action_items: e.target.value })}
@@ -519,9 +520,9 @@ export default function BenefitsReviewSchedule({ planId, projectId, onUpdate }) 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <FieldLabelWithHelp helpKey="public.benefits_review_schedule.review_report_url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Review Report URL
-              </label>
+              </FieldLabelWithHelp>
               <input
                 type="url"
                 value={completionData.review_report_url}

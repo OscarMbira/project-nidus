@@ -5,6 +5,8 @@
  */
 
 import { useEffect, useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { Info, Plus, Trash2 } from 'lucide-react'
 import SmartAmountInput from '@nidus/ui/SmartAmountInput'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
@@ -31,7 +33,7 @@ function currencyPrefix(code) {
   return '$'
 }
 
-export default function BusinessCaseFinancials({ data = {}, readOnly = false, onChange }) {
+function BusinessCaseFinancialsBody({ data = {}, readOnly = false, onChange }) {
   const [budgetCategoryOptions, setBudgetCategoryOptions] = useState([])
   const [fundingSources, setFundingSources] = useState([])
 
@@ -152,7 +154,7 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Currency</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.budget_currency" className={labelClass}>Currency</FieldLabelWithHelp>
             <select {...field('budget_currency')} className={inputClass}>
               <option value="USD">USD ($)</option>
               <option value="EUR">EUR (€)</option>
@@ -162,7 +164,7 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
             </select>
           </div>
           <div>
-            <label className={labelClass}>Budget Type</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.budget_type" className={labelClass}>Budget Type</FieldLabelWithHelp>
             <select {...field('budget_type')} className={inputClass}>
               <option value="">Select Budget Type...</option>
               <option value="capex">CapEx (Capital Expenditure)</option>
@@ -178,9 +180,9 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.business_cases.budget_categories" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Budget Categories
-            </label>
+            </FieldLabelWithHelp>
             <button
               type="button"
               onClick={addCategory}
@@ -262,7 +264,7 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
         </div>
 
         <div>
-          <label className={labelClass}>Budget Approval Status</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.budget_approval_status" className={labelClass}>Budget Approval Status</FieldLabelWithHelp>
           <select {...field('budget_approval_status')} className={inputClass}>
             <option value="">Select Approval Status...</option>
             <option value="pending">Pending Approval</option>
@@ -274,7 +276,7 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
 
       <div className="border-t border-gray-200 dark:border-gray-700 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label className={labelClass}>Cost Assumptions</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.cost_assumptions" className={labelClass}>Cost Assumptions</FieldLabelWithHelp>
           <MultiLineListInput
             viewModeId="bc-cost-assumptions"
             id="bc_cost_assumptions"
@@ -293,7 +295,7 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
         </div>
 
         <div>
-          <label className={labelClass}>Net Present Value (NPV) ($)</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.npv" className={labelClass} isAmount>Net Present Value (NPV) ($)</FieldLabelWithHelp>
           <SmartAmountInput
             {...amountField('npv')}
             placeholder="Calculated NPV"
@@ -301,27 +303,41 @@ export default function BusinessCaseFinancials({ data = {}, readOnly = false, on
           />
         </div>
         <div>
-          <label className={labelClass}>Return on Investment (ROI %)</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.roi_percentage" className={labelClass}>Return on Investment (ROI %)</FieldLabelWithHelp>
           <input type="number" step="0.01" {...field('roi_percentage')} placeholder="e.g. 25.5"
             className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Payback Period (months)</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.payback_period_months" className={labelClass}>Payback Period (months)</FieldLabelWithHelp>
           <input type="number" min="0" {...field('payback_period_months')} placeholder="e.g. 18"
             className={inputClass} />
         </div>
         <div>
-          <label className={labelClass}>Discount Rate (%)</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.discount_rate" className={labelClass}>Discount Rate (%)</FieldLabelWithHelp>
           <input type="number" step="0.01" {...field('discount_rate')} placeholder="e.g. 5.0"
             className={inputClass} />
         </div>
         <div className="sm:col-span-2">
-          <label className={labelClass}>Investment Appraisal Notes</label>
+          <FieldLabelWithHelp helpKey="public.business_cases.investment_appraisal_notes" className={labelClass}>Investment Appraisal Notes</FieldLabelWithHelp>
           <textarea rows={3} {...field('investment_appraisal_notes')}
             placeholder="Additional notes on the investment appraisal methodology and assumptions..."
             className={inputClass} />
         </div>
       </div>
     </div>
+  )
+}
+
+// v1345 slice 3: field help for this component (public.business_cases.<column>). The component carries its
+// own scope so every page that renders it shows the help.
+const HELP_KEYS = [
+  'budget_currency', 'budget_type', 'budget_categories', 'budget_approval_status', 'cost_assumptions', 'npv', 'roi_percentage', 'payback_period_months', 'discount_rate', 'investment_appraisal_notes',
+].map((name) => `public.business_cases.${name}`)
+
+export default function BusinessCaseFinancials(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessCaseFinancialsBody {...props} />
+    </FieldHelpScope>
   )
 }

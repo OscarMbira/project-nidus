@@ -11,6 +11,13 @@ import { replacePracticeProjectIndustries } from '../../services/sim/simProjectI
 import { getOrgIndustryOptions } from '../../services/organisationIndustryService'
 import { getCurrentUserAccountId } from '@nidus/shared/utils/accountResolution'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+
+// v1345 slice 3: Simulator keys, mapped to the Platform project help by public.field_help_aliases.
+const PRACTICE_PROJECT_HELP_KEYS = [
+  'project_name', 'project_description', 'project_type_id', 'status_id', 'planned_start_date', 'planned_end_date', 'industries',
+].map((name) => `sim.practice_projects.${name}`)
 
 import { getDisplayRowNumber } from '@nidus/shared/utils/tableRowNumberUtils'
 export default function PracticeProjectCreate() {
@@ -117,10 +124,11 @@ export default function PracticeProjectCreate() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this project is saved.</p>
         </div>
       ) : (
+      <FieldHelpScope helpKeys={PRACTICE_PROJECT_HELP_KEYS}>
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Name *</label>
+            <FieldLabelWithHelp helpKey="sim.practice_projects.project_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>Project Name <span className="text-red-500">*</span></FieldLabelWithHelp>
             <input
               type="text"
               required
@@ -131,7 +139,7 @@ export default function PracticeProjectCreate() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+            <FieldLabelWithHelp helpKey="sim.practice_projects.project_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</FieldLabelWithHelp>
             <textarea
               value={formData.project_description}
               onChange={(e) => setFormData({ ...formData, project_description: e.target.value })}
@@ -142,7 +150,7 @@ export default function PracticeProjectCreate() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Type</label>
+              <FieldLabelWithHelp helpKey="sim.practice_projects.project_type_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Type</FieldLabelWithHelp>
               <select
                 value={formData.project_type_id}
                 onChange={(e) => setFormData({ ...formData, project_type_id: e.target.value })}
@@ -156,7 +164,7 @@ export default function PracticeProjectCreate() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+              <FieldLabelWithHelp helpKey="sim.practice_projects.status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</FieldLabelWithHelp>
               <select
                 value={formData.status_id}
                 onChange={(e) => setFormData({ ...formData, status_id: e.target.value })}
@@ -172,7 +180,7 @@ export default function PracticeProjectCreate() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+              <FieldLabelWithHelp helpKey="sim.practice_projects.planned_start_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.planned_start_date}
@@ -182,7 +190,7 @@ export default function PracticeProjectCreate() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+              <FieldLabelWithHelp helpKey="sim.practice_projects.planned_end_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</FieldLabelWithHelp>
               <input
                 type="date"
                 value={formData.planned_end_date}
@@ -193,7 +201,7 @@ export default function PracticeProjectCreate() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industries</label>
+            <FieldLabelWithHelp helpKey="sim.practice_projects.industries" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industries</FieldLabelWithHelp>
             {industryOptions.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">No industries configured for this organisation.</p>
             ) : (
@@ -250,6 +258,7 @@ export default function PracticeProjectCreate() {
           </button>
         </div>
       </form>
+      </FieldHelpScope>
       )}
     </div>
   )

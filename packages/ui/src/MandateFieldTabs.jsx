@@ -17,9 +17,31 @@
  *   deliverables?: React.ReactNode,     the page's MandateDeliverablesSection
  *   dependencies?: React.ReactNode,     the page's MandateDependenciesSection
  *   viewModePrefix: string,
+ *   helpSchema?: 'public'|'sim',        v1345: field help keys <schema>.project_mandates.<column>
  * }} props
  */
 import MultiLineListInput from './MultiLineListInput'
+import FieldLabelWithHelp from './FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+
+// v1345 slice 3: help keys for the mandate fields and the deliverable / dependency rows on the last tab.
+const MANDATE_HELP_COLUMNS = [
+  'mandate_reference', 'mandate_title', 'project_code', 'project_name', 'purpose', 'background', 'authority_responsible',
+  'scope', 'scope_exclusions', 'interfaces', 'proposed_executive_name', 'proposed_pm_name', 'project_objectives',
+  'constraints', 'assumptions', 'outline_risks', 'quality_expectations', 'quality_priority', 'outline_business_case',
+  'key_deliverables', 'dependencies',
+]
+const DELIVERABLE_HELP_COLUMNS = ['deliverable_name', 'deliverable_description', 'estimated_completion', 'is_in_scope', 'is_major_deliverable']
+const DEPENDENCY_HELP_COLUMNS = ['dependency_description', 'dependency_type', 'dependency_status', 'impact_during_project', 'impact_after_implementation']
+
+/** All help keys used by the mandate edit / create forms for one schema. */
+export function mandateHelpKeys(schema = 'public') {
+  return [
+    ...MANDATE_HELP_COLUMNS.map((c) => `${schema}.project_mandates.${c}`),
+    ...DELIVERABLE_HELP_COLUMNS.map((c) => `${schema}.mandate_deliverables.${c}`),
+    ...DEPENDENCY_HELP_COLUMNS.map((c) => `${schema}.mandate_dependencies.${c}`),
+  ]
+}
 
 export const MANDATE_TABS = [
   { value: 'purpose', label: 'Purpose' },
@@ -64,10 +86,10 @@ const labelCls = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-
 const hint = 'text-sm text-gray-600 dark:text-gray-400 mb-4'
 const err = (msg) => (msg ? <p className="mt-1 text-sm text-red-600 dark:text-red-400">{msg}</p> : null)
 
-function ListCard({ title, help, name, formData, onListChange, errors, viewModePrefix, placeholder, itemLabel }) {
+function ListCard({ title, help, name, formData, onListChange, errors, viewModePrefix, placeholder, itemLabel, helpSchema }) {
   return (
     <div className={card}>
-      <h2 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">{title}</h2>
+      <FieldLabelWithHelp as="h2" helpKey={`${helpSchema}.project_mandates.${name}`} className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">{title}</FieldLabelWithHelp>
       <p className={hint}>{help}</p>
       <MultiLineListInput
         viewModeId={`${viewModePrefix}-${name}`}
@@ -83,10 +105,10 @@ function ListCard({ title, help, name, formData, onListChange, errors, viewModeP
   )
 }
 
-function TextCard({ title, help, name, formData, onChange, rows = 4, placeholder }) {
+function TextCard({ title, help, name, formData, onChange, rows = 4, placeholder, helpSchema }) {
   return (
     <div className={card}>
-      <label htmlFor={`mandate_${name}`} className="text-lg font-semibold mb-1 text-gray-900 dark:text-white block">{title}</label>
+      <FieldLabelWithHelp helpKey={`${helpSchema}.project_mandates.${name}`} htmlFor={`mandate_${name}`} className="text-lg font-semibold mb-1 text-gray-900 dark:text-white block">{title}</FieldLabelWithHelp>
       <p className={hint}>{help}</p>
       <textarea id={`mandate_${name}`} name={name} rows={rows} className={input} value={formData[name] || ''}
         onChange={onChange} placeholder={placeholder} />
@@ -94,10 +116,22 @@ function TextCard({ title, help, name, formData, onChange, rows = 4, placeholder
   )
 }
 
-export default function MandateFieldTabs({
-  activeTab, formData, errors = {}, onChange, onListChange, showPeople = true, deliverables = null, dependencies = null, viewModePrefix,
+export default function MandateFieldTabs(props) {
+  const schema = props.helpSchema || 'public'
+  return (
+    <FieldHelpScope helpKeys={mandateHelpKeys(schema)}>
+      <MandateTabBody {...props} helpSchema={schema} />
+    </FieldHelpScope>
+  )
+}
+
+function MandateTabBody({
+  activeTab, formData, errors = {}, onChange, onListChange, showPeople = true, deliverables = null, dependencies = null, viewModePrefix, helpSchema,
 }) {
-  const shared = { formData, onChange, onListChange, errors, viewModePrefix }
+  const shared = { formData, onChange, onListChange, errors, viewModePrefix, helpSchema }
+  const L = (column, htmlFor, children, extra = {}) => (
+    <FieldLabelWithHelp helpKey={`${helpSchema}.project_mandates.${column}`} htmlFor={htmlFor} className={labelCls} {...extra}>{children}</FieldLabelWithHelp>
+  )
 
   if (activeTab === 'purpose') {
     return (
@@ -106,23 +140,23 @@ export default function MandateFieldTabs({
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <label htmlFor="mandate_reference" className={labelCls}>Mandate Code</label>
+              {L('mandate_reference', 'mandate_reference', 'Mandate Code')}
               <input id="mandate_reference" name="mandate_reference" className={input} value={formData.mandate_reference || ''}
                 onChange={onChange} maxLength={50} placeholder="e.g., MAN-2026-001" />
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional: auto-generated if not provided</p>
             </div>
             <div>
-              <label htmlFor="mandate_title" className={labelCls}>Mandate Title <span className="text-red-500">*</span></label>
+              {L('mandate_title', 'mandate_title', <>Mandate Title <span className="text-red-500">*</span></>, { required: true })}
               <input id="mandate_title" name="mandate_title" className={input} value={formData.mandate_title || ''} onChange={onChange} required />
               {err(errors.mandate_title)}
             </div>
             <div>
-              <label htmlFor="project_code" className={labelCls}>Project Code</label>
+              {L('project_code', 'project_code', 'Project Code')}
               <input id="project_code" name="project_code" className={input} value={formData.project_code || ''} onChange={onChange}
                 placeholder="Enter project code if known..." />
             </div>
             <div>
-              <label htmlFor="project_name" className={labelCls}>Project Name</label>
+              {L('project_name', 'project_name', 'Project Name')}
               <input id="project_name" name="project_name" className={input} value={formData.project_name || ''} onChange={onChange}
                 placeholder="Enter project name if known..." />
             </div>
@@ -157,12 +191,12 @@ export default function MandateFieldTabs({
         {showPeople ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="proposed_executive_name" className={labelCls}>Executive</label>
+              {L('proposed_executive_name', 'proposed_executive_name', 'Executive')}
               <input id="proposed_executive_name" name="proposed_executive_name" className={input}
                 value={formData.proposed_executive_name || ''} onChange={onChange} placeholder="Name of the Executive" />
             </div>
             <div>
-              <label htmlFor="proposed_pm_name" className={labelCls}>Project Manager</label>
+              {L('proposed_pm_name', 'proposed_pm_name', 'Project Manager')}
               <input id="proposed_pm_name" name="proposed_pm_name" className={input}
                 value={formData.proposed_pm_name || ''} onChange={onChange} placeholder="Name of the Project Manager (if known)" />
             </div>
@@ -196,7 +230,7 @@ export default function MandateFieldTabs({
         <ListCard {...shared} title="Quality expectations" name="quality_expectations" itemLabel="Expectation"
           help="What the customer expects the result to be like." placeholder="e.g. 99.9% availability" />
         <div className={card}>
-          <label htmlFor="quality_priority" className="text-lg font-semibold mb-1 text-gray-900 dark:text-white block">Quality priority</label>
+          <FieldLabelWithHelp helpKey={`${helpSchema}.project_mandates.quality_priority`} htmlFor="quality_priority" className="text-lg font-semibold mb-1 text-gray-900 dark:text-white block" options={QUALITY_PRIORITIES}>Quality priority</FieldLabelWithHelp>
           <p className={hint}>Which matters most if trade-offs are needed.</p>
           {/* Values match the CHECK constraint on project_mandates.quality_priority (v160 / sim v80). */}
           <select id="quality_priority" name="quality_priority" className={input} value={formData.quality_priority || 'balanced'} onChange={onChange}>
@@ -224,17 +258,17 @@ export default function MandateFieldTabs({
 }
 
 /** Read-only Assumptions and Known risks cards for the mandate view pages (v1344). */
-export function MandateAssumptionsRisksView({ mandate }) {
+export function MandateAssumptionsRisksView({ mandate, helpSchema = 'public' }) {
   const lists = [
-    { title: 'Assumptions', items: mandateListToMultiline(mandate?.assumptions) },
-    { title: 'Known risks and issues', items: mandateListToMultiline(mandate?.outline_risks) },
+    { title: 'Assumptions', column: 'assumptions', items: mandateListToMultiline(mandate?.assumptions) },
+    { title: 'Known risks and issues', column: 'outline_risks', items: mandateListToMultiline(mandate?.outline_risks) },
   ].filter((l) => l.items.trim())
   if (!lists.length) return null
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {lists.map((l) => (
         <div key={l.title} className={card}>
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{l.title}</h2>
+          <FieldLabelWithHelp as="h2" helpKey={`${helpSchema}.project_mandates.${l.column}`} className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{l.title}</FieldLabelWithHelp>
           <ul className="list-disc pl-5 space-y-1 text-gray-700 dark:text-gray-300">
             {l.items.split('\n').filter(Boolean).map((it, i) => <li key={i}>{it}</li>)}
           </ul>

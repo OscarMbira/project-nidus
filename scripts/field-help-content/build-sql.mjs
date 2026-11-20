@@ -4,6 +4,7 @@
  *   node scripts/field-help-content/build-sql.mjs <content.mjs> <SQL/vNNNN_name.sql> "<header title>" [prerequisites]
  * The content module exports MODULE (module_code) and ROWS:
  *   [help_key, title, purpose, examples[], format_notes?, extra_notes?]
+ * Optional ALIASES: [[sim.<table>.<column>, public.<table>.<column>], …] → public.field_help_aliases.
  * Output: one idempotent INSERT … ON CONFLICT DO UPDATE plus a coverage check query.
  * Refuses text containing the word "into" (Supabase SQL editor trap) and duplicate keys.
  */
@@ -33,7 +34,22 @@ export function buildRowsSql(rows, moduleCode) {
   }).join(',\n')
 }
 
-export function buildSql({ rows, moduleCode, title, prerequisites, sourceFile }) {
+export function buildAliasesSql(aliases = []) {
+  if (!aliases.length) return ''
+  for (const [alias, key] of aliases) {
+    if (!/^sim\.[a-z0-9_]+\.[a-z0-9_]+$/.test(alias) || !/^public\.[a-z0-9_]+\.[a-z0-9_]+$/.test(key)) throw new Error(`Bad alias: ${alias} → ${key}`)
+  }
+  const values = aliases.map(([a, k]) => `  (${sqlText(a)}, ${sqlText(k)})`).join(',\n')
+  return `
+-- Simulator keys read the Platform help (PRD G-D3).
+INSERT INTO public.field_help_aliases (alias_key, help_key)
+VALUES
+${values}
+ON CONFLICT (alias_key) DO UPDATE SET help_key = EXCLUDED.help_key;
+`
+}
+
+export function buildSql({ rows, moduleCode, title, prerequisites, sourceFile, aliases = [] }) {
   return `-- ============================================================================
 -- ${title}
 -- ============================================================================
@@ -55,7 +71,7 @@ ON CONFLICT (help_key, form_key, locale) DO UPDATE SET
   extra_notes = EXCLUDED.extra_notes,
   module_code = EXCLUDED.module_code,
   is_active = TRUE;
-
+${buildAliasesSql(aliases)}
 -- Check: entries written by this file
 SELECT count(*) AS help_entries FROM public.field_help WHERE module_code = '${moduleCode}' AND is_active;
 `
@@ -64,7 +80,7 @@ SELECT count(*) AS help_entries FROM public.field_help WHERE module_code = '${mo
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1'))) {
   const [contentPath, outPath, title, prerequisites = 'v1490, v1497'] = process.argv.slice(2)
   const mod = await import(pathToFileURL(path.resolve(contentPath)).href)
-  const sql = buildSql({ rows: mod.ROWS, moduleCode: mod.MODULE, title, prerequisites, sourceFile: path.relative(process.cwd(), contentPath).replace(/\\/g, '/') })
+  const sql = buildSql({ rows: mod.ROWS, moduleCode: mod.MODULE, title, prerequisites, sourceFile: path.relative(process.cwd(), contentPath).replace(/\\/g, '/'), aliases: mod.ALIASES || [] })
   fs.writeFileSync(outPath, sql)
   console.log(`Wrote ${outPath}: ${mod.ROWS.length} entries`)
 }

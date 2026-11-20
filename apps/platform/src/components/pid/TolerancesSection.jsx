@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Gauge, Edit2, Trash2 } from 'lucide-react'
 import ToleranceCard from './ToleranceCard'
 
@@ -151,9 +152,9 @@ export default function TolerancesSection({
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_tolerances.tolerance_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Tolerance Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.tolerance_type}
                   onChange={(e) => handleTypeChange(e.target.value)}
@@ -168,9 +169,9 @@ export default function TolerancesSection({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_tolerances.baseline_value" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Baseline Value
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.baseline_value}
@@ -181,9 +182,9 @@ export default function TolerancesSection({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.pid_tolerances.upper_tolerance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Upper Tolerance (+)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.upper_tolerance}
@@ -193,9 +194,9 @@ export default function TolerancesSection({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <FieldLabelWithHelp helpKey="public.pid_tolerances.lower_tolerance" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Lower Tolerance (-)
-                  </label>
+                  </FieldLabelWithHelp>
                   <input
                     type="text"
                     value={formData.lower_tolerance}
@@ -206,9 +207,9 @@ export default function TolerancesSection({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_tolerances.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}

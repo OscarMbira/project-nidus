@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Info, Plus, Trash2 } from 'lucide-react'
 import { SmartAmountInput } from '@nidus/ui/SmartAmountInput'
 
@@ -43,9 +44,9 @@ export default function FinancialControlsSection({
         {/* 1. Single values at top: Currency, Budget Type */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.budget_currency" htmlFor="budget_currency" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Currency <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="budget_currency"
               name="budget_currency"
@@ -61,9 +62,9 @@ export default function FinancialControlsSection({
             </select>
           </div>
           <div>
-            <label htmlFor="budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="public.projects.budget_type" htmlFor="budget_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Budget Type <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <select
               id="budget_type"
               name="budget_type"
@@ -89,9 +90,9 @@ export default function FinancialControlsSection({
         {/* 2. Budget categories: category name, amount, funding source; total (hot) */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.projects.budget_categories" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Budget Categories
-            </label>
+            </FieldLabelWithHelp>
             <button
               type="button"
               onClick={addCategory}
@@ -190,9 +191,9 @@ export default function FinancialControlsSection({
 
         {/* 3. Budget Approval Status */}
         <div>
-          <label htmlFor="budget_approval_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <FieldLabelWithHelp helpKey="public.projects.budget_approval_status" htmlFor="budget_approval_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
             Budget Approval Status <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <select
             id="budget_approval_status"
             name="budget_approval_status"

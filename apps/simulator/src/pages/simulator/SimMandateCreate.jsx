@@ -10,6 +10,9 @@ import AuthorityList from '../../components/mandate/AuthorityList'
 import InterfacesList from '../../components/mandate/InterfacesList'
 import QualityExpectationsList from '../../components/mandate/QualityExpectationsList'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
+import { mandateHelpKeys } from '@nidus/ui/MandateFieldTabs'
 
 function SimMandateCreate() {
   const navigate = useNavigate()
@@ -158,15 +161,16 @@ function SimMandateCreate() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this mandate is saved.</p>
         </div>
       ) : (
+      <FieldHelpScope helpKeys={mandateHelpKeys('sim')}>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
           
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.project_mandates.mandate_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
               Mandate Title <span className="text-red-500">*</span>
-            </label>
+            </FieldLabelWithHelp>
             <input
               type="text"
               name="mandate_title"
@@ -184,9 +188,9 @@ function SimMandateCreate() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <FieldLabelWithHelp helpKey="sim.project_mandates.quality_priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Quality Priority
-            </label>
+            </FieldLabelWithHelp>
             <select
               name="quality_priority"
               value={formData.quality_priority}
@@ -203,7 +207,7 @@ function SimMandateCreate() {
 
         {/* Section 1: Purpose */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.purpose" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">1. Purpose</FieldLabelWithHelp>
           <textarea
             name="purpose"
             value={formData.purpose}
@@ -222,7 +226,7 @@ function SimMandateCreate() {
 
         {/* Section 3: Background */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.background" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">3. Background</FieldLabelWithHelp>
           <textarea
             name="background"
             value={formData.background}
@@ -241,7 +245,7 @@ function SimMandateCreate() {
 
         {/* Section 4: Project Objectives */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.project_objectives" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">4. Project Objectives</FieldLabelWithHelp>
           <textarea
             name="project_objectives"
             value={formData.project_objectives}
@@ -260,7 +264,7 @@ function SimMandateCreate() {
 
         {/* Section 9: Outline Business Case */}
         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</h2>
+          <FieldLabelWithHelp as="h2" helpKey="sim.project_mandates.outline_business_case" className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">9. Outline Business Case</FieldLabelWithHelp>
           <textarea
             name="outline_business_case"
             value={formData.outline_business_case}
@@ -296,6 +300,7 @@ function SimMandateCreate() {
           </button>
         </div>
       </form>
+      </FieldHelpScope>
       )}
     </div>
   )

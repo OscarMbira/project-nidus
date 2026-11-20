@@ -3,6 +3,7 @@
  * Section 4: From mandate, expanded — includes optional dis-benefits capture.
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function OutlineBusinessCaseSection({ formData, onChange, errors = {}, readOnly = false }) {
@@ -29,9 +30,9 @@ export default function OutlineBusinessCaseSection({ formData, onChange, errors 
 
       {/* Business Case Summary */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_briefs.outline_business_case_summary" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" required>
           Business Case Summary <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
             {formData.outline_business_case_summary || 'Not specified'}
@@ -61,9 +62,9 @@ export default function OutlineBusinessCaseSection({ formData, onChange, errors 
 
       {/* Business Option Selected */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey="public.project_briefs.business_option_selected" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Business Option Selected
-        </label>
+        </FieldLabelWithHelp>
         {readOnly ? (
           <p className="text-gray-900 dark:text-white">{formData.business_option_selected || 'Not specified'}</p>
         ) : (
@@ -93,18 +94,18 @@ export default function OutlineBusinessCaseSection({ formData, onChange, errors 
             onChange={(e) => onChange({ target: { name: 'dis_benefits_included', type: 'checkbox', checked: e.target.checked } })}
             className="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-gray-600 disabled:opacity-60"
           />
-          <label htmlFor="brief_dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <FieldLabelWithHelp helpKey="public.project_briefs.dis_benefits_included" htmlFor="brief_dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Capture dis-benefits for this outline business case
-          </label>
+          </FieldLabelWithHelp>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           Uncheck if your organisation does not track negative consequences here.
         </p>
         {disBenefitsIncluded && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <FieldLabelWithHelp helpKey="public.project_briefs.dis_benefits_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Dis-benefits / Negative Consequences
-            </label>
+            </FieldLabelWithHelp>
             {readOnly ? (
               <p className="text-sm whitespace-pre-wrap text-gray-900 dark:text-gray-100">
                 {formData.dis_benefits_description || '—'}

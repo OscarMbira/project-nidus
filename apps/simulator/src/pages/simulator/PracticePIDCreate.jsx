@@ -7,6 +7,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { createPracticePID } from '../../services/sim/practicePIDService'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 
 export default function PracticePIDCreate() {
   const navigate = useNavigate()
@@ -51,20 +53,22 @@ export default function PracticePIDCreate() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Audit details appear after this PID is saved.</p>
         </div>
       ) : (
+      <FieldHelpScope helpKeys={['pid_title', 'pid_description'].map((name) => `sim.practice_project_initiation_documents.${name}`)}>
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2">PID Title *</label>
-          <input type="text" required value={formData.pid_title} onChange={(e) => setFormData({ ...formData, pid_title: e.target.value })} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_project_initiation_documents.pid_title" htmlFor="practice-pid-title" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" required>PID Title *</FieldLabelWithHelp>
+          <input id="practice-pid-title" type="text" required value={formData.pid_title} onChange={(e) => setFormData({ ...formData, pid_title: e.target.value })} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <textarea value={formData.pid_description} onChange={(e) => setFormData({ ...formData, pid_description: e.target.value })} rows={4} className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-700" />
+          <FieldLabelWithHelp helpKey="sim.practice_project_initiation_documents.pid_description" htmlFor="practice-pid-description" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Description</FieldLabelWithHelp>
+          <textarea id="practice-pid-description" value={formData.pid_description} onChange={(e) => setFormData({ ...formData, pid_description: e.target.value })} rows={4} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
         </div>
         <div className="flex justify-end gap-4">
-          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border rounded-lg">Cancel</button>
+          <button type="button" onClick={() => navigate(-1)} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
           <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50">{loading ? 'Creating...' : 'Create PID'}</button>
         </div>
       </form>
+      </FieldHelpScope>
       )}
     </div>
   )

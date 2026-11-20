@@ -5,6 +5,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import BusinessCaseFinancials from './BusinessCaseFinancials'
 import { platformDb } from '@nidus/supabase'
 import DetailAuditTabList from '@nidus/ui/DetailAuditTabList'
@@ -47,7 +49,7 @@ const RISK_RATINGS = [
   { value: 'critical', label: 'Critical' },
 ]
 
-export default function BusinessCaseForm({ data, onChange, errors = {} }) {
+function BusinessCaseFormBody({ data, onChange, errors = {} }) {
   const [activeSection, setActiveSection] = useState('summary')
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
@@ -115,19 +117,19 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
       {activeSection === 'summary' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Business Case Title *</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.case_title" className={labelClass} required>Business Case Title *</FieldLabelWithHelp>
             <input type="text" {...field('case_title')} placeholder="A clear, concise title for this business case"
               className={`${inputClass} ${errors.case_title ? 'border-red-500' : ''}`} />
             {errors.case_title && <p className={errorClass}>{errors.case_title}</p>}
           </div>
           <div>
-            <label className={labelClass}>Executive Summary</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.executive_summary" className={labelClass}>Executive Summary</FieldLabelWithHelp>
             <textarea rows={4} {...field('executive_summary')}
               placeholder="A brief overview of the business case — what the project is, why it is needed, and the recommended course of action."
               className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Strategic Alignment</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.strategic_alignment" className={labelClass}>Strategic Alignment</FieldLabelWithHelp>
             <textarea rows={3} {...field('strategic_alignment')}
               placeholder="How does this project align with organisational strategy, goals, or corporate objectives?"
               className={inputClass} />
@@ -139,7 +141,7 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
       {activeSection === 'reasons' && (
         <div className="space-y-6">
           <div>
-            <label className={labelClass}>Reasons for the Project</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.reasons_for_project" className={labelClass}>Reasons for the Project</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="bc-reasons-for-project"
               id="bc_reasons_for_project"
@@ -151,7 +153,7 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
             />
           </div>
           <div>
-            <label className={labelClass}>Problem Statement</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.problem_statement" className={labelClass}>Problem Statement</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="bc-problem-statement"
               id="bc_problem_statement"
@@ -172,13 +174,13 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
             Summarise the recommended option here. Use the <strong>Options</strong> tab on the view page to add detailed option comparisons.
           </p>
           <div>
-            <label className={labelClass}>Recommended Option</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.recommended_option" className={labelClass}>Recommended Option</FieldLabelWithHelp>
             <select {...field('recommended_option')} className={inputClass}>
               {RECOMMENDED_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelClass}>Option Justification</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.option_justification" className={labelClass}>Option Justification</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="bc-option-justification"
               id="bc_option_justification"
@@ -197,22 +199,22 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Planned Start Date</label>
+              <FieldLabelWithHelp helpKey="public.business_cases.start_date" className={labelClass}>Planned Start Date</FieldLabelWithHelp>
               <input type="date" {...field('start_date')} className={inputClass} />
             </div>
             <div>
-              <label className={labelClass}>Planned End Date</label>
+              <FieldLabelWithHelp helpKey="public.business_cases.end_date" className={labelClass}>Planned End Date</FieldLabelWithHelp>
               <input type="date" {...field('end_date')} className={inputClass} />
             </div>
           </div>
           <div>
-            <label className={labelClass}>Timescale Description</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.timescale_description" className={labelClass}>Timescale Description</FieldLabelWithHelp>
             <textarea rows={3} {...field('timescale_description')}
               placeholder="Describe the overall timescale and any critical timing constraints."
               className={inputClass} />
           </div>
           <div>
-            <label className={labelClass}>Key Milestones</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.key_milestones" className={labelClass}>Key Milestones</FieldLabelWithHelp>
             <TableListInput
               viewModeId="bc-key-milestones"
               columns={KEY_MILESTONE_COLUMNS}
@@ -237,7 +239,7 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
       {activeSection === 'risks' && (
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Major Risks Summary</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.major_risks" className={labelClass}>Major Risks Summary</FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="bc-major-risks"
               id="bc_major_risks"
@@ -249,7 +251,7 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
             />
           </div>
           <div>
-            <label className={labelClass}>Overall Risk Rating</label>
+            <FieldLabelWithHelp helpKey="public.business_cases.overall_risk_rating" className={labelClass}>Overall Risk Rating</FieldLabelWithHelp>
             <select {...field('overall_risk_rating')} className={inputClass}>
               {RISK_RATINGS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
             </select>
@@ -268,16 +270,16 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
               onChange={(e) => onChange({ dis_benefits_included: e.target.checked })}
               className="w-5 h-5 text-blue-600 rounded border-gray-300 dark:border-gray-600"
             />
-            <label htmlFor="bc_dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <FieldLabelWithHelp helpKey="public.business_cases.dis_benefits_included" htmlFor="bc_dis_benefits_included" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Capture dis-benefits for this business case
-            </label>
+            </FieldLabelWithHelp>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Uncheck if your organisation does not track negative consequences for this case.
           </p>
           {data.dis_benefits_included !== false && (
             <div>
-              <label className={labelClass}>Dis-benefits / Negative Consequences</label>
+              <FieldLabelWithHelp helpKey="public.business_cases.dis_benefits_description" className={labelClass}>Dis-benefits / Negative Consequences</FieldLabelWithHelp>
               <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
                 Add one dis-benefit per line.
               </p>
@@ -326,5 +328,19 @@ export default function BusinessCaseForm({ data, onChange, errors = {} }) {
         )}
       </div>
     </div>
+  )
+}
+
+// v1345 slice 3: field help for this component (public.business_cases.<column>). The component carries its
+// own scope so every page that renders it shows the help.
+const HELP_KEYS = [
+  'case_title', 'executive_summary', 'strategic_alignment', 'reasons_for_project', 'problem_statement', 'recommended_option', 'option_justification', 'start_date', 'end_date', 'timescale_description', 'key_milestones', 'major_risks', 'overall_risk_rating', 'dis_benefits_included', 'dis_benefits_description',
+].map((name) => `public.business_cases.${name}`)
+
+export default function BusinessCaseForm(props) {
+  return (
+    <FieldHelpScope helpKeys={HELP_KEYS}>
+      <BusinessCaseFormBody {...props} />
+    </FieldHelpScope>
   )
 }

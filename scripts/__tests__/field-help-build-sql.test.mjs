@@ -16,3 +16,11 @@ test('builds rows and rejects bad content', () => {
   assert.throws(() => buildRowsSql([['register:*:a', 'A', 'P', []]], 'm'), /example/)
   assert.throws(() => buildRowsSql([['bad key', 'A', 'P', ['x']]], 'm'), /Bad help key/)
 })
+
+test('builds Simulator alias rows and rejects bad aliases', async () => {
+  const { buildAliasesSql } = await import('../field-help-content/build-sql.mjs')
+  assert.equal(buildAliasesSql([]), '')
+  const sql = buildAliasesSql([['sim.practice_projects.status_id', 'public.projects.project_status_id']])
+  assert.match(sql, /\('sim\.practice_projects\.status_id', 'public\.projects\.project_status_id'\)\nON CONFLICT \(alias_key\)/)
+  assert.throws(() => buildAliasesSql([['public.x.y', 'public.x.y']]), /Bad alias/)
+})

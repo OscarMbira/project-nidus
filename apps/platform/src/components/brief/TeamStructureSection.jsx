@@ -3,6 +3,7 @@
  * Team organization — multi-line description list (rule 67) + diagram upload/paste.
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
 import { ClipboardPaste, Trash2, Upload } from 'lucide-react'
@@ -142,9 +143,9 @@ export default function TeamStructureSection({ formData, onChange, errors = {}, 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.team_structure_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Team structure description <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Organisation, reporting lines, and structure. One point per line.
         </p>

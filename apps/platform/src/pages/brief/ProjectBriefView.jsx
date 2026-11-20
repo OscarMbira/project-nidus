@@ -21,6 +21,7 @@ import {
 } from '@nidus/shared/utils/briefCharterTerminology.js'
 
 import ProjectBriefForm from '../../components/brief/ProjectBriefForm'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useBriefExportChildren } from '../../lib/useBriefExportChildren'
 import BriefApprovals from '../../components/brief/BriefApprovals'
 import BriefRevisionHistory from '../../components/brief/BriefRevisionHistory'
@@ -179,7 +180,7 @@ export default function ProjectBriefView() {
 
       {/* Distribution List */}
       <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <BriefDistribution briefId={brief.id} readOnly={true} />
+        <FieldHelpScope helpKeys={['recipient_id', 'recipient_name', 'recipient_title', 'version_distributed'].map((name) => `public.brief_distribution.${name}`)}><BriefDistribution briefId={brief.id} readOnly={true} /></FieldHelpScope>
       </div>
 
       {/* Print View */}

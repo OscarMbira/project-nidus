@@ -5,6 +5,8 @@
  * Unsaved-changes guard (rule 52); success confirmation (rule 16).
  */
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Save } from 'lucide-react'
 import { getPracticeBriefById, updatePracticeBrief } from '../../services/sim/practiceBriefService'
@@ -40,6 +42,11 @@ function toForm(data) {
   f.project_objectives = Array.isArray(data?.project_objectives) ? data.project_objectives.join('\n') : (data?.project_objectives || '')
   return f
 }
+
+// v1345 slice 3: Simulator practice brief keys (some alias to the Platform brief help).
+const PRACTICE_BRIEF_HELP_KEYS = [
+  'brief_title', 'brief_description', 'project_definition', 'project_objectives', 'project_scope', 'out_of_scope', 'project_approach', 'quality_approach', 'risk_approach', 'target_start_date', 'target_end_date',
+].map((name) => `sim.practice_project_briefs.${name}`)
 
 export default function PracticeBriefEdit() {
   const { id } = useParams()
@@ -148,24 +155,25 @@ export default function PracticeBriefEdit() {
           )}
         </div>
       ) : (
+        <FieldHelpScope helpKeys={PRACTICE_BRIEF_HELP_KEYS}>
         <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6">
           {tab === 'definition' && (
             <>
               <div>
-                <label htmlFor="brief_title" className={labelCls}>Brief Title <span className="text-red-500">*</span></label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.brief_title" htmlFor="brief_title" className={labelCls} required>Brief Title <span className="text-red-500">*</span></FieldLabelWithHelp>
                 <input id="brief_title" className={input} required value={formData.brief_title} onChange={set('brief_title')} />
               </div>
               <div>
-                <label htmlFor="brief_description" className={labelCls}>Description</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.brief_description" htmlFor="brief_description" className={labelCls}>Description</FieldLabelWithHelp>
                 <textarea id="brief_description" rows={3} className={input} value={formData.brief_description} onChange={set('brief_description')} />
               </div>
               <div>
-                <label htmlFor="project_definition" className={labelCls}>Project definition</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.project_definition" htmlFor="project_definition" className={labelCls}>Project definition</FieldLabelWithHelp>
                 <textarea id="project_definition" rows={4} className={input} value={formData.project_definition} onChange={set('project_definition')}
                   placeholder="What the project must achieve and its background" />
               </div>
               <div>
-                <label className={labelCls}>Objectives</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.project_objectives" className={labelCls}>Objectives</FieldLabelWithHelp>
                 <MultiLineListInput viewModeId="practice-brief-objectives" id="practice_brief_objectives" value={formData.project_objectives}
                   onChange={(v) => setFormData((f) => ({ ...f, project_objectives: v }))} ariaLabelPrefix="objective" itemColumnLabel="Objective" />
               </div>
@@ -174,11 +182,11 @@ export default function PracticeBriefEdit() {
           {tab === 'scope' && (
             <>
               <div>
-                <label htmlFor="project_scope" className={labelCls}>In scope</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.project_scope" htmlFor="project_scope" className={labelCls}>In scope</FieldLabelWithHelp>
                 <textarea id="project_scope" rows={5} className={input} value={formData.project_scope} onChange={set('project_scope')} />
               </div>
               <div>
-                <label htmlFor="out_of_scope" className={labelCls}>Out of scope</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.out_of_scope" htmlFor="out_of_scope" className={labelCls}>Out of scope</FieldLabelWithHelp>
                 <textarea id="out_of_scope" rows={4} className={input} value={formData.out_of_scope} onChange={set('out_of_scope')} />
               </div>
             </>
@@ -186,15 +194,15 @@ export default function PracticeBriefEdit() {
           {tab === 'approach' && (
             <>
               <div>
-                <label htmlFor="project_approach" className={labelCls}>Project approach</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.project_approach" htmlFor="project_approach" className={labelCls}>Project approach</FieldLabelWithHelp>
                 <textarea id="project_approach" rows={4} className={input} value={formData.project_approach} onChange={set('project_approach')} />
               </div>
               <div>
-                <label htmlFor="quality_approach" className={labelCls}>Quality approach</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.quality_approach" htmlFor="quality_approach" className={labelCls}>Quality approach</FieldLabelWithHelp>
                 <textarea id="quality_approach" rows={3} className={input} value={formData.quality_approach} onChange={set('quality_approach')} />
               </div>
               <div>
-                <label htmlFor="risk_approach" className={labelCls}>Risk approach</label>
+                <FieldLabelWithHelp helpKey="sim.practice_project_briefs.risk_approach" htmlFor="risk_approach" className={labelCls}>Risk approach</FieldLabelWithHelp>
                 <textarea id="risk_approach" rows={3} className={input} value={formData.risk_approach} onChange={set('risk_approach')} />
               </div>
             </>
@@ -203,11 +211,11 @@ export default function PracticeBriefEdit() {
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="target_start_date" className={labelCls}>Target start</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_project_briefs.target_start_date" htmlFor="target_start_date" className={labelCls}>Target start</FieldLabelWithHelp>
                   <input id="target_start_date" type="date" className={input} value={formData.target_start_date || ''} onChange={set('target_start_date')} />
                 </div>
                 <div>
-                  <label htmlFor="target_end_date" className={labelCls}>Target end</label>
+                  <FieldLabelWithHelp helpKey="sim.practice_project_briefs.target_end_date" htmlFor="target_end_date" className={labelCls}>Target end</FieldLabelWithHelp>
                   <input id="target_end_date" type="date" className={input} value={formData.target_end_date || ''} onChange={set('target_end_date')} />
                 </div>
               </div>
@@ -226,6 +234,7 @@ export default function PracticeBriefEdit() {
             </button>
           </div>
         </form>
+        </FieldHelpScope>
       )}
       {modal}
     </div>

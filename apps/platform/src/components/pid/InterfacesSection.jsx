@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { Plus, Link as LinkIcon, Edit2, Trash2 } from 'lucide-react'
 
 export default function InterfacesSection({
@@ -152,9 +153,9 @@ export default function InterfacesSection({
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_interfaces.interface_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
                   Interface Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.interface_name}
@@ -163,9 +164,9 @@ export default function InterfacesSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_interfaces.interface_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Interface Type
-                </label>
+                </FieldLabelWithHelp>
                 <select
                   value={formData.interface_type}
                   onChange={(e) => setFormData({ ...formData, interface_type: e.target.value })}
@@ -180,9 +181,9 @@ export default function InterfacesSection({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_interfaces.external_entity" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   External Entity
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
                   value={formData.external_entity}
@@ -191,9 +192,9 @@ export default function InterfacesSection({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <FieldLabelWithHelp helpKey="public.pid_interfaces.description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Description
-                </label>
+                </FieldLabelWithHelp>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}

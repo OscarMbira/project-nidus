@@ -3,6 +3,7 @@
  * Scope, exclusions, constraints, assumptions — multi-line list fields (rule 67).
  */
 
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import MultiLineListInput from '@nidus/ui/MultiLineListInput'
 
 export default function ScopeSection({ formData, onChange, errors = {}, readOnly = false }) {
@@ -22,9 +23,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.project_scope" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
           Project scope <span className="text-red-500">*</span>
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Major deliverables and work included. One item per line.
         </p>
@@ -44,9 +45,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.scope_exclusions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Scope exclusions
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Explicitly out of scope. One item per line.
         </p>
@@ -63,9 +64,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.constraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Constraints
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           Limitations (resources, time, budget, regulatory, technical). One per line.
         </p>
@@ -82,9 +83,9 @@ export default function ScopeSection({ formData, onChange, errors = {}, readOnly
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <FieldLabelWithHelp helpKey="public.project_briefs.assumptions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Assumptions
-        </label>
+        </FieldLabelWithHelp>
         <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
           What must be true for the project to succeed. One per line.
         </p>

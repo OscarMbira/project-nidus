@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
 import { X, Save } from 'lucide-react'
 import { addTeamMember, updateTeamMember } from '../../services/pidTeamStructureService'
 import { supabase } from '../../services/supabaseClient'
@@ -171,9 +172,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
       ) : (
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.role_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" required>
             Role Name <span className="text-red-500">*</span>
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="role_name"
@@ -189,9 +190,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.role_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Role Type
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="role_type"
             value={formData.role_type}
@@ -208,9 +209,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.role_description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Role Description
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="role_description"
             value={formData.role_description}
@@ -222,9 +223,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.assigned_user_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" listOptions={false}>
             Assign to User (Optional)
-          </label>
+          </FieldLabelWithHelp>
           <select
             name="assigned_user_id"
             value={formData.assigned_user_id || ''}
@@ -241,9 +242,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.assigned_user_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             User Name (if external)
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="assigned_user_name"
@@ -255,9 +256,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.responsibilities" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Responsibilities
-          </label>
+          </FieldLabelWithHelp>
           <textarea
             name="responsibilities"
             value={formData.responsibilities}
@@ -269,9 +270,9 @@ export default function TeamMemberForm({ pidId, teamMember = null, mode = 'creat
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <FieldLabelWithHelp helpKey="public.pid_team_structure.authority_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Authority Level
-          </label>
+          </FieldLabelWithHelp>
           <input
             type="text"
             name="authority_level"

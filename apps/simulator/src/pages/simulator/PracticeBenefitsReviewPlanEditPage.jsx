@@ -4,6 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import {
@@ -102,9 +104,11 @@ export default function PracticeBenefitsReviewPlanEditPage() {
         </div>
       )}
 
+      <FieldHelpScope helpKeys={['plan_title', 'scope_description', 'measurement_approach'].map((name) => `sim.practice_benefits_review_plans.${name}`)}>
+
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Plan Title *</label>
+          <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.plan_title" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300" required>Plan Title *</FieldLabelWithHelp>
           <input
             type="text"
             required
@@ -114,7 +118,7 @@ export default function PracticeBenefitsReviewPlanEditPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Scope Description</label>
+          <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.scope_description" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Scope Description</FieldLabelWithHelp>
           <textarea
             value={formData.scope_description}
             onChange={(e) => setFormData({ ...formData, scope_description: e.target.value })}
@@ -123,7 +127,7 @@ export default function PracticeBenefitsReviewPlanEditPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Measurement Approach</label>
+          <FieldLabelWithHelp helpKey="sim.practice_benefits_review_plans.measurement_approach" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Measurement Approach</FieldLabelWithHelp>
           <textarea
             value={formData.measurement_approach}
             onChange={(e) => setFormData({ ...formData, measurement_approach: e.target.value })}
@@ -148,6 +152,8 @@ export default function PracticeBenefitsReviewPlanEditPage() {
           </button>
         </div>
       </form>
+
+      </FieldHelpScope>
     </div>
   )
 }
