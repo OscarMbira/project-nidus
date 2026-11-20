@@ -16,6 +16,7 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import { planSummaryText, toleranceLines } from '@nidus/shared/utils/practicePidForm'
 
 const PRACTICE_PID_VIEW_SECTIONS = [
   { title: 'PID', fields: [
@@ -36,7 +37,13 @@ export default function PracticePIDView() {
   const [auditUserLabels, setAuditUserLabels] = useState({})
 
   useEffect(() => {
-    if (id) loadPID()
+    if (!id) return undefined
+    let cancelled = false
+    getPracticePIDById(id)
+      .then((result) => { if (!cancelled && result.success) setPid(result.data) })
+      .catch((error) => console.error('Error loading PID:', error))
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [id])
 
   useEffect(() => {
@@ -46,18 +53,6 @@ export default function PracticePIDView() {
       setAuditUserLabels(labels || {})
     })()
   }, [activeTab, pid])
-
-  const loadPID = async () => {
-    try {
-      setLoading(true)
-      const result = await getPracticePIDById(id)
-      if (result.success) setPid(result.data)
-    } catch (error) {
-      console.error('Error loading PID:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   if (loading) return <div className="text-center py-12">Loading...</div>
   if (!pid) return <div className="text-center py-12">PID not found</div>
@@ -82,7 +77,7 @@ export default function PracticePIDView() {
           <RowActionButton
             variant="edit"
             label="Edit PID"
-            onClick={() => navigate(`/simulator/practice-pids/${id}/edit?projectId=${projectId}`)}
+            onClick={() => navigate(`edit${projectId ? `?projectId=${projectId}` : ''}`)}
           />
         </div>
       </div>
@@ -114,17 +109,17 @@ export default function PracticePIDView() {
           ['Objectives', Array.isArray(pid.project_objectives) ? pid.project_objectives.join('\n') : pid.project_objectives],
           ['Project Scope', pid.project_scope],
           ['Exclusions', pid.exclusions],
-          ['Interfaces', pid.interfaces],
+          ['Interfaces', Array.isArray(pid.interfaces) ? pid.interfaces.join('\n') : pid.interfaces],
           ['Project Approach', pid.project_approach],
           ['Quality Approach', pid.quality_approach],
           ['Risk Approach', pid.risk_approach],
           ['Change Control Approach', pid.change_control_approach],
           ['Communication Approach', pid.communication_approach],
-          ['Tolerances', typeof pid.tolerance_levels === 'object' && pid.tolerance_levels ? JSON.stringify(pid.tolerance_levels) : pid.tolerance_levels],
+          ['Tolerances', toleranceLines(pid.tolerance_levels)],
           ['Reporting Arrangements', pid.reporting_arrangements],
           ['Monitoring and Control', pid.monitoring_and_control],
-          ['Project Plan Summary', pid.project_plan_summary],
-          ['Current Stage Plan Summary', pid.stage_plan_summary],
+          ['Project Plan Summary', planSummaryText(pid.project_plan_summary)],
+          ['Current Stage Plan Summary', planSummaryText(pid.stage_plan_summary)],
         ].filter(([, v]) => v && String(v).trim()).map(([title, value]) => (
           <div key={title}>
             <h3 className="font-medium mb-1 text-gray-900 dark:text-white">{title}</h3>

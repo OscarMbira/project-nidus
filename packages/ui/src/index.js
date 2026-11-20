@@ -15,6 +15,7 @@ export { default as EmptyState } from './EmptyState.jsx'
 export { default as ViewToggle } from './ViewToggle.jsx'
 export { default as RowActionButton } from './RowActionButton.jsx'
 export { default as MultiLineListInput, parseMultiLineValue, joinMultiLineValue } from './MultiLineListInput.jsx'
+export { default as FieldLabelWithHelp } from './FieldLabelWithHelp.jsx' // v1345 field-level help
 export { default as MultiSelectDropdown } from './MultiSelectDropdown.jsx'
 export { default as RegisterFieldInput } from './RegisterFieldInput.jsx'
 export { default as RegisterCustomFieldsHeader } from './RegisterCustomFieldsHeader.jsx'

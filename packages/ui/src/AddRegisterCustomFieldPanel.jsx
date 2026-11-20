@@ -11,6 +11,8 @@ import { useMemo, useState } from 'react'
 import { ChevronDown, ChevronRight, Search, X } from 'lucide-react'
 import Button from './Button'
 import CustomFieldSettingsFields from './CustomFieldSettingsFields'
+import FieldHelpInputs from './FieldHelpInputs'
+import { isFieldHelpComplete } from '@nidus/shared/utils/fieldHelp'
 import MultiLineListInput from './MultiLineListInput'
 import {
   CUSTOM_FIELD_TYPES,
@@ -51,6 +53,7 @@ function AddRegisterCustomFieldPanelContent({
   // Optional settings (v1314): default value, min/max, allowed characters.
   const [settings, setSettings] = useState({})
   const [showSettings, setShowSettings] = useState(false)
+  const [help, setHelp] = useState({ help_purpose: '', help_example: '', help_format: '' }) // v1345 slice 1b
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -76,7 +79,7 @@ function AddRegisterCustomFieldPanelContent({
     : fieldType
   const settingsErrors = customFieldSettingsErrors(effectiveType, settings, options)
   const settingsCount = Object.values(settings).filter((v) => v !== undefined && v !== '' && v !== 'any' && !(Array.isArray(v) && !v.length)).length
-  const canCreate = !busy && !atLimit && name.trim().length >= 2 && !exact && (!needsOptions || options.length > 0) && settingsErrors.length === 0
+  const canCreate = !busy && !atLimit && name.trim().length >= 2 && !exact && (!needsOptions || options.length > 0) && settingsErrors.length === 0 && isFieldHelpComplete(help)
 
   const attach = async (definitionId) => {
     setBusy(true)
@@ -89,7 +92,7 @@ function AddRegisterCustomFieldPanelContent({
   const create = async () => {
     setBusy(true)
     setError('')
-    const result = await onCreate({ name: name.trim(), label: fieldLabel.trim() || name.trim(), fieldType: effectiveType, options, required, rules: settings })
+    const result = await onCreate({ name: name.trim(), label: fieldLabel.trim() || name.trim(), fieldType: effectiveType, options, required, rules: settings, help })
     setBusy(false)
     if (result?.status === 'duplicate') {
       setError(`A field called “${result.existing?.label}” already exists in your organisation. Use it from the list instead.`)
@@ -300,6 +303,7 @@ function AddRegisterCustomFieldPanelContent({
                 </div>
               )}
             </div>
+            <FieldHelpInputs idPrefix="lr-cf-help" value={help} onChange={setHelp} compact />
             {settingsErrors.length > 0 && (
               <ul className="list-disc pl-5 text-sm text-red-600 dark:text-red-400">
                 {settingsErrors.map((m) => <li key={m}>{m}</li>)}

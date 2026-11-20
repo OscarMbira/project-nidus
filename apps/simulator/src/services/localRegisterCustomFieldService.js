@@ -35,7 +35,7 @@ export function listCustomFieldLibrary(registerId, accountId) {
  * rules = optional settings (default value, min/max, allowed characters), validated server-side (SQL v1314).
  * @returns data = {status:'created', field} | {status:'duplicate', existing}
  */
-export function addRegisterCustomField(registerId, accountId, { name = null, label, fieldType, options = [], required = false, rules = {} }) {
+export function addRegisterCustomField(registerId, accountId, { name = null, label, fieldType, options = [], required = false, rules = {}, help = {} }) {
   return call('local_register_add_custom_field', {
     p_register_id: registerId,
     p_account_id: accountId,
@@ -45,6 +45,10 @@ export function addRegisterCustomField(registerId, accountId, { name = null, lab
     p_required: required,
     p_rules: rules,
     p_name: name || null,
+    // v1345 slice 1b (CF-D2): help is required (SQL v1496)
+    p_help_purpose: help.help_purpose || null,
+    p_help_example: help.help_example || null,
+    p_help_format: help.help_format || null,
   }, null)
 }
 

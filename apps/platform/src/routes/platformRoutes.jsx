@@ -746,6 +746,8 @@ import {
   PracticePIDList,
   PracticePIDCreate,
   PracticePIDView,
+  PracticePIDEdit,
+  HelpArticlePage,
   PracticeBenefitsReviewPlan,
   PracticeBenefitsReviewPlanList,
   PracticeBenefitsReviewPlanViewPage,
@@ -1943,6 +1945,14 @@ export function PlatformRouteElements() {
                                 <Suspense fallback={<LoadingFallback />}>
                                   <ProtectedRoute>
                                     <StakeholderRegisterPage />
+                                  </ProtectedRoute>
+                                </Suspense>
+                              } />
+                              {/* v1345 PD4: help article page — Learn more target, no menu item */}
+                              <Route path="help/articles/:slug" element={
+                                <Suspense fallback={<LoadingFallback />}>
+                                  <ProtectedRoute>
+                                    <HelpArticlePage />
                                   </ProtectedRoute>
                                 </Suspense>
                               } />
@@ -5684,6 +5694,7 @@ export function PlatformRouteElements() {
                   <Route path="simulator/practice-pids" element={<PracticePIDList />} />
                   <Route path="simulator/practice-pids/create" element={<PracticePIDCreate />} />
                   <Route path="simulator/practice-pids/:id" element={<PracticePIDView />} />
+                  <Route path="simulator/practice-pids/:id/edit" element={<PracticePIDEdit />} />
                   <Route path="simulator/benefits/create" element={<PracticeBenefitsRedirectPage />} />
                   <Route path="simulator/benefits/:id/edit" element={<PracticeBenefitsRedirectPage />} />
                   <Route path="simulator/benefits/:id" element={<PracticeBenefitsRedirectPage />} />

@@ -58,6 +58,10 @@ export function toRegisterField(definition, registerId) {
     dropdown_options: (definition.options || []).map((o) => ({ value: o.value, label: o.label })),
     rules: definition.rules || {},
     is_custom: true,
+    // v1345 slice 1b: the creator's help (shown in the ⓘ popover)
+    help_purpose: definition.help_purpose || null,
+    help_example: definition.help_example || null,
+    help_format: definition.help_format || null,
   }
 }
 

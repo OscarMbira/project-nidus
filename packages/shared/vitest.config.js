@@ -33,6 +33,7 @@ export default defineConfig({
       'src/services/__tests__/entityDeliveryMethodologyService.test.js',
       'src/services/__tests__/deliveryMethodologyOptionsService.test.js',
       'src/services/__tests__/projectAttributeOptionsService.test.js',
+      'src/services/__tests__/fieldHelpService.test.js',
       'src/services/__tests__/pmTemplateCopyService.test.js',
       'src/services/__tests__/pmTemplateOverrideService.test.js',
       'src/services/__tests__/pmTemplateContentService.test.js',

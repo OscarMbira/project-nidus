@@ -170,7 +170,6 @@ import {
   MyQualityActions,
   Stakeholders,
   StakeholderRegisterPage,
-  StakeholderFormPage,
   StakeholderProfilePage,
   StakeholderAnalysisPage,
   StakeholderEngagementPage,
@@ -669,6 +668,8 @@ import {
   PracticePIDList,
   PracticePIDCreate,
   PracticePIDView,
+  PracticePIDEdit,
+  HelpArticlePage,
   PracticeBenefitsReviewPlan,
   PracticeBenefitsReviewPlanList,
   PracticeBenefitsReviewPlanViewPage,
@@ -3075,6 +3076,33 @@ export function SimulatorRouteElements() {
                         <ProtectedRoute requiredPlatform="simulator">
                           <Layout>
                             <PracticePIDView />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                {/* v1345 PD4: help article page — Learn more target, no menu item */}
+                <Route path="simulator/help/articles/:slug" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <HelpArticlePage />
+                          </Layout>
+                        </ProtectedRoute>
+                      </ToastProvider>
+                    </ThemeProvider>
+                  </Suspense>
+                } />
+                <Route path="simulator/practice-pids/:id/edit" element={
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ThemeProvider>
+                      <ToastProvider>
+                        <ProtectedRoute requiredPlatform="simulator">
+                          <Layout>
+                            <PracticePIDEdit />
                           </Layout>
                         </ProtectedRoute>
                       </ToastProvider>

@@ -20,6 +20,18 @@ import AuditField from '@nidus/ui/AuditField';
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair';
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils';
 import MultiLineListInput, { joinMultiLineValue, parseMultiLineValue } from '@nidus/ui/MultiLineListInput';
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp';
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext';
+
+/** v1345: field-level help keys for every field on this form (help text in public.field_help, SQL v1491). */
+const STAKEHOLDER_HELP_KEYS = [
+  'photo_path', 'stakeholder_reference', 'stakeholder_name', 'stakeholder_title', 'stakeholder_organization',
+  'stakeholder_department', 'identification_source', 'identification_date', 'stakeholder_type', 'stakeholder_category',
+  'stakeholder_role', 'emails', 'phones', 'mobiles', 'preferred_contact_method', 'office_location', 'project_role',
+  'organization_level', 'reports_to_stakeholder_id', 'is_decision_maker', 'is_influencer', 'is_powerful',
+  'is_negatively_affected', 'is_positively_affected', 'interest_level', 'availability_hours_per_week', 'time_zone',
+  'stakeholder_status', 'availability_constraints', 'notes', 'special_requirements', 'expectations', 'assigned_projects',
+].map((name) => `public.stakeholders.${name}`);
 
 function filledContactEntries(list) {
   return (list || [])
@@ -642,9 +654,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
     const missing = primaryIndexMissing(values, selectedIndex);
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <FieldLabelWithHelp helpKey={`public.stakeholders.${field}`} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {label}
-        </label>
+        </FieldLabelWithHelp>
         {showPrimary && (
           <p className="mb-2 text-sm text-gray-800 dark:text-gray-100">
             More than one {noun}. Choose one primary.
@@ -775,9 +787,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 </p>
               ) : (
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Select one or more projects
-                  </label>
+                  <FieldLabelWithHelp helpKey="public.stakeholders.assigned_projects" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Select one or more projects
+                </FieldLabelWithHelp>
                   <p className="text-sm text-gray-700 dark:text-gray-200">
                     Check the projects this stakeholder belongs to. Leave every project unchecked to add them to all projects in the organisation. A PMO, project manager, team manager, or team member can later remove them from a project that does not need them.
                   </p>
@@ -838,6 +850,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <StakeholderPhotoField
+                helpKey="public.stakeholders.photo_path"
                 db={platformDb}
                 stakeholder={stakeholder
                   ? { ...stakeholder, stakeholder_name: formData.stakeholder_name }
@@ -849,11 +862,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                 onPendingFile={setPendingPhoto}
               />
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_reference" htmlFor="stk-stakeholder_reference" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Stakeholder Reference
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
+                  id="stk-stakeholder_reference"
                   name="stakeholder_reference"
                   value={formData.stakeholder_reference}
                   onChange={handleChange}
@@ -867,11 +881,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_name" htmlFor="stk-stakeholder_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Stakeholder Name *
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
+                  id="stk-stakeholder_name"
                   name="stakeholder_name"
                   value={formData.stakeholder_name}
                   onChange={handleChange}
@@ -882,11 +897,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_title" htmlFor="stk-stakeholder_title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Title
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
+                  id="stk-stakeholder_title"
                   name="stakeholder_title"
                   value={formData.stakeholder_title}
                   onChange={handleChange}
@@ -897,9 +913,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Organization
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   value={formData.stakeholder_organization}
                   onChange={(value) => setFormData((prev) => ({ ...prev, stakeholder_organization: value || '' }))}
@@ -920,9 +936,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_department" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Department
-                </label>
+                </FieldLabelWithHelp>
                 <SelectField
                   value={formData.stakeholder_department}
                   onChange={(value) => setFormData((prev) => ({ ...prev, stakeholder_department: value || '' }))}
@@ -946,10 +962,11 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.identification_source" htmlFor="stk-identification_source" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Identification source
-                </label>
+                </FieldLabelWithHelp>
                 <select
+                  id="stk-identification_source"
                   name="identification_source"
                   value={formData.identification_source}
                   onChange={handleChange}
@@ -967,11 +984,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.identification_date" htmlFor="stk-identification_date" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Identification date
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="date"
+                  id="stk-identification_date"
                   name="identification_date"
                   value={formData.identification_date}
                   onChange={handleChange}
@@ -980,10 +998,11 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_type" htmlFor="stk-stakeholder_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Stakeholder Type *
-                </label>
+                </FieldLabelWithHelp>
                 <select
+                  id="stk-stakeholder_type"
                   name="stakeholder_type"
                   value={formData.stakeholder_type}
                   onChange={handleChange}
@@ -1001,10 +1020,11 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_category" htmlFor="stk-stakeholder_category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Category
-                </label>
+                </FieldLabelWithHelp>
                 <select
+                  id="stk-stakeholder_category"
                   name="stakeholder_category"
                   value={formData.stakeholder_category}
                   onChange={handleChange}
@@ -1018,9 +1038,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Stakeholder Role
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={roleOptions}
                   value={formData.stakeholder_role}
@@ -1069,10 +1089,11 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               })}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.preferred_contact_method" htmlFor="stk-preferred_contact_method" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Preferred Contact Method
-                </label>
+                </FieldLabelWithHelp>
                 <select
+                  id="stk-preferred_contact_method"
                   name="preferred_contact_method"
                   value={formData.preferred_contact_method}
                   onChange={handleChange}
@@ -1086,11 +1107,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.office_location" htmlFor="stk-office_location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Office Location
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="text"
+                  id="stk-office_location"
                   name="office_location"
                   value={formData.office_location}
                   onChange={handleChange}
@@ -1108,9 +1130,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.project_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Project roles
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={roleOptions}
                   value=""
@@ -1147,10 +1169,11 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.organization_level" htmlFor="stk-organization_level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Organization Level
-                </label>
+                </FieldLabelWithHelp>
                 <select
+                  id="stk-organization_level"
                   name="organization_level"
                   value={formData.organization_level}
                   onChange={handleChange}
@@ -1166,11 +1189,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
 
               {stakeholders.length > 0 && projectIds.length <= 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Reports To
-                  </label>
+                  <FieldLabelWithHelp helpKey="public.stakeholders.reports_to_stakeholder_id" htmlFor="stk-reports_to_stakeholder_id" listOptions={false} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Reports To
+                </FieldLabelWithHelp>
                   <select
-                    name="reports_to_stakeholder_id"
+                    id="stk-reports_to_stakeholder_id"
+                  name="reports_to_stakeholder_id"
                     value={formData.reports_to_stakeholder_id}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1202,14 +1226,14 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
                       onChange={handleChange}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <FieldLabelWithHelp as="span" control="checkbox" helpKey={`public.stakeholders.${item.name}`} className="text-sm font-medium text-gray-900 dark:text-gray-100">
                       {item.label}
-                    </span>
+                    </FieldLabelWithHelp>
                   </label>
                 ))}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
                   <span className="w-6 shrink-0 text-sm tabular-nums text-gray-700 dark:text-gray-200">6</span>
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Interest</span>
+                  <FieldLabelWithHelp as="span" control="radio" helpKey="public.stakeholders.interest_level" className="text-sm font-medium text-gray-900 dark:text-gray-100">Interest</FieldLabelWithHelp>
                   {[
                     { value: 'high', label: 'High' },
                     { value: 'medium', label: 'Medium' },
@@ -1239,11 +1263,12 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.availability_hours_per_week" htmlFor="stk-availability_hours_per_week" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Hours per Week
-                </label>
+                </FieldLabelWithHelp>
                 <input
                   type="number"
+                  id="stk-availability_hours_per_week"
                   name="availability_hours_per_week"
                   value={formData.availability_hours_per_week || ''}
                   onChange={handleChange}
@@ -1255,9 +1280,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.time_zone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Time Zone
-                </label>
+                </FieldLabelWithHelp>
                 <SearchableSelect
                   options={timezoneOptions}
                   value={formData.time_zone}
@@ -1274,10 +1299,11 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.stakeholder_status" htmlFor="stk-stakeholder_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Status *
-                </label>
+                </FieldLabelWithHelp>
                 <select
+                  id="stk-stakeholder_status"
                   name="stakeholder_status"
                   value={formData.stakeholder_status}
                   onChange={handleChange}
@@ -1291,9 +1317,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
               </div>
 
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <FieldLabelWithHelp helpKey="public.stakeholders.availability_constraints" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Availability constraints
-                </label>
+                </FieldLabelWithHelp>
                 <MultiLineListInput
                   viewModeId="stakeholder-availability-constraints"
                   value={formData.availability_constraints || ''}
@@ -1308,9 +1334,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
           </div>
 
           <div className="space-y-4" style={{ display: activeTab === 'notes' ? 'block' : 'none' }}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+            <FieldLabelWithHelp as="h3" helpKey="public.stakeholders.notes" className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Notes
-            </h3>
+            </FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="stakeholder-notes"
               value={formData.notes || ''}
@@ -1323,9 +1349,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
           </div>
 
           <div className="space-y-4" style={{ display: activeTab === 'requirements' ? 'block' : 'none' }}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+            <FieldLabelWithHelp as="h3" helpKey="public.stakeholders.special_requirements" className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Requirements
-            </h3>
+            </FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="stakeholder-requirements"
               value={formData.special_requirements || ''}
@@ -1338,9 +1364,9 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
           </div>
 
           <div className="space-y-4" style={{ display: activeTab === 'expectations' ? 'block' : 'none' }}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+            <FieldLabelWithHelp as="h3" helpKey="public.stakeholders.expectations" className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
               Expectations
-            </h3>
+            </FieldLabelWithHelp>
             <MultiLineListInput
               viewModeId="stakeholder-expectations"
               value={formData.expectations || ''}
@@ -1392,7 +1418,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           {header}
-          {formContent}
+          <FieldHelpScope helpKeys={STAKEHOLDER_HELP_KEYS}>{formContent}</FieldHelpScope>
         </div>
       </div>
     );
@@ -1402,7 +1428,7 @@ export default function StakeholderForm({ stakeholder, projectId, onSave, onCanc
     <div className="w-full px-3 sm:px-4 lg:px-5 xl:px-6 py-6">
       <div className="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-visible">
         {header}
-        {formContent}
+        <FieldHelpScope helpKeys={STAKEHOLDER_HELP_KEYS}>{formContent}</FieldHelpScope>
       </div>
     </div>
   );

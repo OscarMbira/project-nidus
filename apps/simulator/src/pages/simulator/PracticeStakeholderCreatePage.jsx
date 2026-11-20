@@ -11,7 +11,14 @@ import { useDraftQueue } from '../../lib/useDraftQueue'
 import { createPracticeStakeholder } from '../../services/sim/practiceStakeholderService'
 import { simDb } from '../../services/supabase/supabaseClient'
 import StakeholderPhotoField from '@nidus/ui/StakeholderPhotoField'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { FieldHelpScope } from '@nidus/shared/context/FieldHelpContext'
 import { saveStakeholderPhoto } from '@nidus/shared/services/stakeholderPhotoService'
+
+/** v1345: field-help keys (Simulator keys resolve to the Platform help through public.field_help_aliases, SQL v1491). */
+const PRACTICE_STAKEHOLDER_HELP_KEYS = [
+  'photo_path', 'stakeholder_name', 'stakeholder_organization', 'stakeholder_type', 'stakeholder_status', 'project_role', 'notes',
+].map((name) => `sim.practice_stakeholder_register.${name}`)
 
 const DEFAULT_FORM = {
   stakeholder_name: '',
@@ -176,8 +183,10 @@ export default function PracticeStakeholderCreatePage() {
         </div>
       )}
 
+      <FieldHelpScope helpKeys={PRACTICE_STAKEHOLDER_HELP_KEYS}>
       <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
         <StakeholderPhotoField
+          helpKey="sim.practice_stakeholder_register.photo_path"
           db={simDb}
           stakeholder={{ stakeholder_name: formData.stakeholder_name }}
           category="individual"
@@ -186,17 +195,17 @@ export default function PracticeStakeholderCreatePage() {
           onPendingFile={setPendingPhoto}
         />
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
-          <input name="stakeholder_name" value={formData.stakeholder_name} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Stakeholder name" />
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_name" htmlFor="pstk-stakeholder_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</FieldLabelWithHelp>
+          <input id="pstk-stakeholder_name" name="stakeholder_name" value={formData.stakeholder_name} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Stakeholder name" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
-          <input name="stakeholder_organization" value={formData.stakeholder_organization} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Organization" />
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_organization" htmlFor="pstk-stakeholder_organization" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</FieldLabelWithHelp>
+          <input id="pstk-stakeholder_organization" name="stakeholder_organization" value={formData.stakeholder_organization} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Organization" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-            <select name="stakeholder_type" value={formData.stakeholder_type} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_type" htmlFor="pstk-stakeholder_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</FieldLabelWithHelp>
+            <select id="pstk-stakeholder_type" name="stakeholder_type" value={formData.stakeholder_type} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
               <option value="internal">Internal</option>
               <option value="external">External</option>
               <option value="customer">Customer</option>
@@ -207,8 +216,8 @@ export default function PracticeStakeholderCreatePage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-            <select name="stakeholder_status" value={formData.stakeholder_status} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.stakeholder_status" htmlFor="pstk-stakeholder_status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</FieldLabelWithHelp>
+            <select id="pstk-stakeholder_status" name="stakeholder_status" value={formData.stakeholder_status} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
               <option value="departed">Departed</option>
@@ -216,12 +225,12 @@ export default function PracticeStakeholderCreatePage() {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project role</label>
-          <input name="project_role" value={formData.project_role} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="e.g. Sponsor" />
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.project_role" htmlFor="pstk-project_role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project role</FieldLabelWithHelp>
+          <input id="pstk-project_role" name="project_role" value={formData.project_role} onChange={handleChange} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="e.g. Sponsor" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
-          <textarea name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Notes" />
+          <FieldLabelWithHelp helpKey="sim.practice_stakeholder_register.notes" htmlFor="pstk-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</FieldLabelWithHelp>
+          <textarea id="pstk-notes" name="notes" value={formData.notes} onChange={handleChange} rows={2} className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" placeholder="Notes" />
         </div>
 
         <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -238,6 +247,7 @@ export default function PracticeStakeholderCreatePage() {
           </button>
         </div>
       </form>
+      </FieldHelpScope>
     </div>
   )
 }

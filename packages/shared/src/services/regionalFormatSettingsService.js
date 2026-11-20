@@ -201,7 +201,8 @@ export async function listRegionalFormatLocalFields(accountId, opts = {}) {
 
 /**
  * Create a local field definition (org or project-only).
- * @param {{ accountId: string, projectId?: string|null, fieldKey: string, label: string, valueType: string, defaultValue?: string|null, sortOrder?: number }} input
+ * @param {{ accountId: string, projectId?: string|null, fieldKey: string, label: string, valueType: string, defaultValue?: string|null, sortOrder?: number, help?: { help_purpose: string, help_example: string, help_format?: string } }} input
+ * v1345 slice 1b: help purpose + example are required (SQL v1494 also refuses a field without them).
  */
 export async function createRegionalFormatLocalField(input) {
   const accountId = input?.accountId
@@ -213,6 +214,11 @@ export async function createRegionalFormatLocalField(input) {
   const fieldKey = String(input.fieldKey || '').trim()
   const label = String(input.label || '').trim()
   if (!fieldKey || !label) return { success: false, data: null, error: 'Label and key are required' }
+  const helpPurpose = String(input.help?.help_purpose || '').trim()
+  const helpExample = String(input.help?.help_example || '').trim()
+  if (!helpPurpose || !helpExample) {
+    return { success: false, data: null, error: 'Add the help: what the field is for and an example value' }
+  }
 
   const uid = await currentUserRowId()
   const payload = {
@@ -225,6 +231,9 @@ export async function createRegionalFormatLocalField(input) {
       ? String(input.defaultValue)
       : null,
     sort_order: Number.isFinite(input.sortOrder) ? input.sortOrder : 0,
+    help_purpose: helpPurpose,
+    help_example: helpExample,
+    help_format: String(input.help?.help_format || '').trim() || null,
     is_deleted: false,
     created_by: uid,
     updated_by: uid,

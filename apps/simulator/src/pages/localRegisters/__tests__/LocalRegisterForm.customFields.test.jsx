@@ -136,10 +136,12 @@ describe('LocalRegisterForm custom fields', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add custom field' }))
     const dialog = await screen.findByRole('region', { name: 'Add custom field' })
     fireEvent.change(within(dialog).getByLabelText('Field name *'), { target: { value: 'Cost Centre' } })
+    fireEvent.change(within(dialog).getByLabelText('What is this field for? *'), { target: { value: 'Which cost centre pays for this item' } })
+    fireEvent.change(within(dialog).getByLabelText('Example of a good value *'), { target: { value: 'LON-FIN-01' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Create field' }))
 
     await waitFor(() =>
-      expect(addRegisterCustomField).toHaveBeenCalledWith('reg1', 'acct1', { name: 'Cost Centre', label: 'Cost Centre', fieldType: 'text', options: [], required: false, rules: {} })
+      expect(addRegisterCustomField).toHaveBeenCalledWith('reg1', 'acct1', { name: 'Cost Centre', label: 'Cost Centre', fieldType: 'text', options: [], required: false, rules: {}, help: { help_purpose: 'Which cost centre pays for this item', help_example: 'LON-FIN-01', help_format: '' } })
     )
     expect(await screen.findByLabelText('Cost Centre')).toBeInTheDocument()
   })

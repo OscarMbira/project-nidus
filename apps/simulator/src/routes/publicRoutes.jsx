@@ -165,7 +165,6 @@ import {
   MyQualityActions,
   Stakeholders,
   StakeholderRegisterPage,
-  StakeholderFormPage,
   StakeholderProfilePage,
   StakeholderAnalysisPage,
   StakeholderEngagementPage,

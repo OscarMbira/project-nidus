@@ -16,6 +16,9 @@ on:
       - 'packages/config/**'
       - 'apps/*/vite.config.js'
       - 'scripts/check-shared-drift.mjs'
+      - 'scripts/check-field-help.mjs'
+      - 'scripts/field-help-allowlist.json'
+      - 'SQL/**'
       - 'pnpm-lock.yaml'
   pull_request:
     paths:
@@ -25,6 +28,9 @@ on:
       - 'packages/config/**'
       - 'apps/*/vite.config.js'
       - 'scripts/check-shared-drift.mjs'
+      - 'scripts/check-field-help.mjs'
+      - 'scripts/field-help-allowlist.json'
+      - 'SQL/**'
 
 jobs:
   drift-build-test:
@@ -53,6 +59,13 @@ jobs:
 
       - name: Simulator placement route check unit tests (v1341 R8)
         run: node --test scripts/__tests__/check-sim-placement-routes.test.mjs
+
+      # v1345: field-level help coverage. Warn-only until phase 5 (G-D16), except that every key of an
+      # adopted module must have help (Stakeholders from slice 1).
+      - name: Field help coverage (warn; adopted modules enforced)
+        run: |
+          node --test scripts/__tests__/check-field-help.test.mjs
+          node scripts/check-field-help.mjs --module stakeholders
 
       - name: Build and test every dependent of the changed packages
         run: pnpm turbo build test --continue --filter="...[HEAD^1]"

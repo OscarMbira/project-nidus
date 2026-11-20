@@ -14,6 +14,9 @@ const DEFINITION_UPSERT_KEYS = new Set([
   'include_in_export',
   'is_sensitive',
   'field_metadata',
+  'help_purpose', // v1345 slice 1b
+  'help_example',
+  'help_format',
   'is_deleted',
 ])
 

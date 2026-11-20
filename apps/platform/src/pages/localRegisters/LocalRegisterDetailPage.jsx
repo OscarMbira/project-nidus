@@ -13,6 +13,8 @@ import { recordPlaceholderSummary } from '@nidus/shared/utils/registerPlaceholde
 import { canManageRegisterTemplates, listRegisterTemplates, saveRecordAsTemplate } from '@nidus/shared/services/localRegisterTemplateService'
 import DocumentAttachmentsPanel from '@nidus/ui/DocumentAttachmentsPanel'
 import { platformDb } from '@nidus/supabase'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { inlineHelpFromDefinition } from '@nidus/shared/utils/fieldHelp'
 import { localRegisterAttachmentPanelService } from '@nidus/shared/services/localRegisterAttachmentService'
 import { isRecordLockedForSignoff } from '@nidus/shared/services/localRegisterSignoffService'
 import { exportRegisterRecordDocument, buildRegisterRecordDocumentPdfBlob } from '@nidus/shared/services/registerDocumentExportService'
@@ -417,7 +419,7 @@ export default function LocalRegisterDetailPage() {
           )}
           {visibleFields.map((field) => (
             <div key={field.id} className={['multi_line', 'long_text', 'table', 'linked_records'].includes(field.field_type) ? 'md:col-span-2' : ''}>
-              <p className="text-xs uppercase text-gray-400 mb-1">{field.field_label}</p>
+              <FieldLabelWithHelp as="p" helpKey={field.is_custom ? `custom:${field.definition_id}` : null} help={field.is_custom ? inlineHelpFromDefinition({ label: field.field_label, help_purpose: field.help_purpose, help_example: field.help_example, help_format: field.help_format }) : null} className="text-xs uppercase text-gray-400 mb-1">{field.field_label}</FieldLabelWithHelp>
               {field.field_type === 'linked_records' ? (
                 <LinkedRecordsView
                   linked={linked.data[field.field_key] || null}

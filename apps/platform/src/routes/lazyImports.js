@@ -828,6 +828,8 @@ export const PracticeBusinessCaseEdit = lazy(() => import('../pages/simulator/Pr
 export const PracticePIDList = lazy(() => import('../pages/simulator/PracticePIDList'))
 export const PracticePIDCreate = lazy(() => import('../pages/simulator/PracticePIDCreate'))
 export const PracticePIDView = lazy(() => import('../pages/simulator/PracticePIDView'))
+export const PracticePIDEdit = lazy(() => import('../pages/simulator/PracticePIDEdit')) // v1344 follow-up
+export const HelpArticlePage = lazy(() => import('@nidus/ui/HelpArticlePage')) // v1345 field help Learn more (PD4)
 export const PracticeBenefitsReviewPlan = lazy(() => import('../pages/simulator/PracticeBenefitsReviewPlan'))
 export const PracticeBenefitsReviewPlanList = lazy(() => import('../pages/simulator/PracticeBenefitsReviewPlanList'))
 export const PracticeBenefitsReviewPlanViewPage = lazy(() => import('../pages/simulator/PracticeBenefitsReviewPlanViewPage'))

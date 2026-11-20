@@ -150,7 +150,7 @@ export default function ProjectRegionalFormatSettingsPage() {
     if (!on) setLocalValues((prev) => ({ ...prev, [id]: localOrgDefaults[id] }))
   }
 
-  const handleCreateDefinition = async ({ label, fieldKey, valueType, defaultValue }) => {
+  const handleCreateDefinition = async ({ label, fieldKey, valueType, defaultValue, help }) => {
     if (!accountId || !projectId) return { success: false, error: 'No project' }
     const res = await createRegionalFormatLocalField({
       accountId,
@@ -159,6 +159,7 @@ export default function ProjectRegionalFormatSettingsPage() {
       fieldKey,
       valueType,
       defaultValue,
+      help,
       sortOrder: localDefinitions.filter((d) => d.project_id).length,
     })
     if (!res.success) return res

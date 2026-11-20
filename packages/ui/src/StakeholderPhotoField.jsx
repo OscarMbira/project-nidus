@@ -4,6 +4,7 @@ import { ClipboardPaste, Trash2, Upload } from 'lucide-react'
 import { fileFromClipboardData, normalizeImageFile } from '@nidus/shared/utils/imageFileUtils'
 import { withTimeout } from '@nidus/shared/utils/asyncUtils'
 import { validateAvatarFile } from '@nidus/shared/services/userAvatarService'
+import FieldLabelWithHelp from './FieldLabelWithHelp.jsx'
 import {
   linkedUserHasProfilePhoto,
   removeStakeholderPhoto,
@@ -28,6 +29,8 @@ export default function StakeholderPhotoField({
   isPractice = false,
   pendingFile = null,
   onPendingFile,
+  /** v1345: field-help key for the heading (help shows only when help text exists). */
+  helpKey = null,
 }) {
   const [photoPath, setPhotoPath] = useState(stakeholder?.photo_path || null)
   const [refreshNonce, setRefreshNonce] = useState(0)
@@ -171,7 +174,7 @@ export default function StakeholderPhotoField({
 
   return (
     <div className="md:col-span-2 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-      <h3 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</h3>
+      <FieldLabelWithHelp as="h3" helpKey={helpKey} className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</FieldLabelWithHelp>
       <div className="flex flex-wrap items-center gap-4">
         <StakeholderAvatar
           db={db}

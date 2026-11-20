@@ -102,11 +102,6 @@ export default function StakeholderRegisterPage() {
     return () => cancelAnimationFrame(raf)
   }, [projectId, debouncedSearch, projectCtxLoading, currentProjectId, loadStakeholders])
 
-  // Preload form chunk so /register/new opens fast
-  useEffect(() => {
-    import('./StakeholderFormPage')
-  }, [])
-
   const exportData = useMemo(
     () =>
       stakeholders.map((s) => ({

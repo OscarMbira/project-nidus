@@ -15,6 +15,8 @@ import AuditCard from '@nidus/ui/AuditCard'
 import AuditField from '@nidus/ui/AuditField'
 import AuditTimestampPair from '@nidus/ui/AuditTimestampPair'
 import { humanizeAuditToken, resolveAuditUserLabels } from '@nidus/shared/utils/auditDisplayUtils'
+import FieldHelpInputs, { pickFieldHelp } from '@nidus/ui/FieldHelpInputs'
+import { isFieldHelpComplete } from '@nidus/shared/utils/fieldHelp'
 
 export default function CustomFieldAdminBuilder({
   platformDb,
@@ -46,7 +48,9 @@ export default function CustomFieldAdminBuilder({
     is_sensitive: !!initial?.is_sensitive,
     display_sort_order: initial?.display_sort_order ?? 0,
     options: [],
+    help: pickFieldHelp(initial || {}), // v1345 slice 1b: required help (CF-D1/CF-D2)
   }))
+  const [helpErrors, setHelpErrors] = useState(false)
 
   const initialSyncKey = useMemo(
     () =>
@@ -65,6 +69,7 @@ export default function CustomFieldAdminBuilder({
       include_in_export: initial?.include_in_export !== false,
       is_sensitive: !!initial?.is_sensitive,
       display_sort_order: initial?.display_sort_order ?? 0,
+      help: pickFieldHelp(initial || {}),
       options: Array.isArray(initial?.options)
         ? initial.options.map((o, idx) => ({
             option_value: o.option_value,
@@ -86,6 +91,11 @@ export default function CustomFieldAdminBuilder({
       window.alert('Code and label are required.')
       return
     }
+    if (!isFieldHelpComplete(form.help)) {
+      setHelpErrors(true)
+      setTab('basic')
+      return
+    }
     setSaving(true)
     try {
       const workflow_status = asDraft ? WORKFLOW_STATUS.DRAFT : form.workflow_status
@@ -101,6 +111,9 @@ export default function CustomFieldAdminBuilder({
         include_in_export: form.include_in_export,
         is_sensitive: form.is_sensitive,
         display_sort_order: Number(form.display_sort_order) || 0,
+        help_purpose: form.help.help_purpose.trim(),
+        help_example: form.help.help_example.trim(),
+        help_format: form.help.help_format?.trim() || null,
       }
       const res = await upsertDefinition(platformDb, payload, userInternalId)
       if (!res.success) {
@@ -175,6 +188,12 @@ export default function CustomFieldAdminBuilder({
                   onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
                 />
               </label>
+              <FieldHelpInputs
+                idPrefix="cfd-help"
+                value={form.help}
+                onChange={(help) => setForm((f) => ({ ...f, help }))}
+                showErrors={helpErrors}
+              />
               <label className="block text-sm">
                 Description
                 <textarea

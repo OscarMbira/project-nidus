@@ -9,6 +9,9 @@ import { useViewMode } from '@nidus/shared/hooks/useViewMode'
 import ViewToggle from '@nidus/ui/ViewToggle'
 import SelectField from '@nidus/ui/SelectField'
 import RowActionButton from '@nidus/ui/RowActionButton'
+import FieldHelpInputs from '@nidus/ui/FieldHelpInputs'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { inlineHelpFromDefinition, isFieldHelpComplete } from '@nidus/shared/utils/fieldHelp'
 import { platformDb } from '@nidus/supabase'
 import { buildIanaTimezoneSelectOptions } from '@nidus/shared/utils/ianaTimezoneOptions.js'
 import { slugifyLocalFieldKey } from '@nidus/shared/utils/resolveRegionalFormatSettings.js'
@@ -262,6 +265,9 @@ export default function RegionalFormatFields({
   const [newKey, setNewKey] = useState('')
   const [newType, setNewType] = useState('text')
   const [newDefault, setNewDefault] = useState('')
+  const EMPTY_HELP = { help_purpose: '', help_example: '', help_format: '' }
+  const [newHelp, setNewHelp] = useState(EMPTY_HELP) // v1345 slice 1b: required help
+  const [newHelpErrors, setNewHelpErrors] = useState(false)
   const [keyTouched, setKeyTouched] = useState(false)
 
   useEffect(() => {
@@ -361,6 +367,8 @@ export default function RegionalFormatFields({
     setNewKey('')
     setNewType('text')
     setNewDefault('')
+    setNewHelp(EMPTY_HELP)
+    setNewHelpErrors(false)
     setKeyTouched(false)
   }
 
@@ -373,6 +381,11 @@ export default function RegionalFormatFields({
       toast.error('Label and key are required')
       return
     }
+    if (!isFieldHelpComplete(newHelp)) {
+      setNewHelpErrors(true)
+      toast.error('Add the help: what the field is for and an example value')
+      return
+    }
     setAdding(true)
     try {
       const res = await onCreateDefinition({
@@ -382,6 +395,7 @@ export default function RegionalFormatFields({
         defaultValue: newType === 'boolean'
           ? (newDefault === 'true' || newDefault === true ? 'true' : 'false')
           : newDefault,
+        help: newHelp,
       })
       if (!res?.success) throw new Error(res?.error || 'Create failed')
       resetAddForm()
@@ -403,7 +417,7 @@ export default function RegionalFormatFields({
         <div className="flex items-start justify-between gap-2">
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{def.label}</span>
+              <FieldLabelWithHelp as="span" helpKey={`local:${def.id}`} help={inlineHelpFromDefinition(def)} className="text-sm font-medium text-gray-900 dark:text-gray-100">{def.label}</FieldLabelWithHelp>
               <LocalBadge projectOnly={projectOnly} />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">#{index + 1} · {def.field_key}</p>
@@ -705,6 +719,7 @@ export default function RegionalFormatFields({
                   )}
                 </div>
               </div>
+              <FieldHelpInputs idPrefix="local-field-help" value={newHelp} onChange={setNewHelp} showErrors={newHelpErrors} compact />
               <div className="flex justify-end gap-2">
                 <button
                   type="button"

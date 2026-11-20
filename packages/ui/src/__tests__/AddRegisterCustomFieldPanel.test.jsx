@@ -14,6 +14,13 @@ function addValue(label, value) {
   fireEvent.keyDown(input, { key: 'Enter' })
 }
 
+/** v1345 slice 1b: help is required before a field can be created. */
+const HELP = { help_purpose: 'How risky delivery is for this item', help_example: 'High – London depot backlog', help_format: '' }
+function fillHelp() {
+  fireEvent.change(screen.getByLabelText('What is this field for? *'), { target: { value: HELP.help_purpose } })
+  fireEvent.change(screen.getByLabelText('Example of a good value *'), { target: { value: HELP.help_example } })
+}
+
 function renderDialog(props = {}) {
   const onAttach = vi.fn(async () => ({ success: true }))
   const onCreate = vi.fn(async () => ({ success: true, status: 'created' }))
@@ -34,6 +41,17 @@ function renderDialog(props = {}) {
 }
 
 describe('AddRegisterCustomFieldPanel', () => {
+  it('cannot create a field until its help has a purpose and an example (v1345 CF-D2)', () => {
+    renderDialog()
+    fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'Supplier tier' } })
+    expect(screen.getByRole('button', { name: 'Create field' })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('What is this field for? *'), { target: { value: 'How important this supplier is' } })
+    expect(screen.getByRole('button', { name: 'Create field' })).toBeDisabled()
+    fireEvent.change(screen.getByLabelText('Example of a good value *'), { target: { value: 'Tier 1 – Dubai' } })
+    expect(screen.getByRole('button', { name: 'Create field' })).toBeEnabled()
+  })
+
   it('starts on the organisation library and attaches an existing field', async () => {
     const { onAttach } = renderDialog()
     expect(screen.getByText('Vendor Ticket Reference')).toBeInTheDocument()
@@ -45,6 +63,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('blocks an exact duplicate name and offers the existing field', () => {
     renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'vendor ticket-reference' } })
     expect(screen.getByText(/already exists in your organisation/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create field' })).toBeDisabled()
@@ -53,6 +72,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('suggests similar names but still allows creating', () => {
     renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'Vendor Ticket' } })
     expect(screen.getByText(/Did you mean/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create field' })).toBeEnabled()
@@ -61,6 +81,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('requires options for a dropdown and sends them with Required', async () => {
     const { onCreate } = renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'Delivery Risk' } })
     fireEvent.change(screen.getByLabelText('Type *'), { target: { value: 'dropdown' } })
     expect(screen.getByRole('button', { name: 'Create field' })).toBeDisabled()
@@ -69,7 +90,7 @@ describe('AddRegisterCustomFieldPanel', () => {
     fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: 'Create field' }))
     await waitFor(() =>
-      expect(onCreate).toHaveBeenCalledWith({ name: 'Delivery Risk', label: 'Delivery Risk', fieldType: 'dropdown', options: ['High', 'Low'], required: true, rules: {} })
+      expect(onCreate).toHaveBeenCalledWith({ name: 'Delivery Risk', label: 'Delivery Risk', fieldType: 'dropdown', options: ['High', 'Low'], required: true, rules: {}, help: HELP })
     )
   })
 
@@ -94,6 +115,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('offers optional settings, blocks impossible ranges and sends the settings', async () => {
     const { onCreate } = renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'Headcount' } })
     fireEvent.change(screen.getByLabelText('Type *'), { target: { value: 'number' } })
     fireEvent.click(screen.getByRole('button', { name: /More options/ }))
@@ -108,7 +130,7 @@ describe('AddRegisterCustomFieldPanel', () => {
     await waitFor(() =>
       expect(onCreate).toHaveBeenCalledWith({
         name: 'Headcount', label: 'Headcount', fieldType: 'number', options: [], required: false,
-        rules: { min: '10', max: '500', defaultValue: '25' },
+        rules: { min: '10', max: '500', defaultValue: '25' }, help: HELP,
       })
     )
   })
@@ -116,6 +138,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('lets a dropdown default be picked from the values just entered', () => {
     renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Type *'), { target: { value: 'dropdown' } })
     addValue('Dropdown values *', 'Low')
     addValue('Dropdown values *', 'High')
@@ -127,6 +150,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('sends a separate field label, and blocks a label that duplicates an existing field', async () => {
     const { onCreate } = renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'VTR' } })
     fireEvent.change(screen.getByLabelText('Field label'), { target: { value: 'Vendor Ticket Reference' } })
     expect(screen.getByText(/already exists in your organisation/)).toBeInTheDocument()
@@ -142,6 +166,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('limits a text field to a list of values by turning it into a dropdown', async () => {
     const { onCreate } = renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Field name *'), { target: { value: 'Region' } })
     addValue('Dropdown values (optional)', 'North')
     addValue('Dropdown values (optional)', 'South')
@@ -156,6 +181,7 @@ describe('AddRegisterCustomFieldPanel', () => {
   it('hides the values box for types that cannot be a list', () => {
     renderDialog()
     fireEvent.click(screen.getByRole('tab', { name: 'Create a new field' }))
+    fillHelp()
     fireEvent.change(screen.getByLabelText('Type *'), { target: { value: 'date' } })
     expect(screen.queryByLabelText(/Dropdown values/)).not.toBeInTheDocument()
   })

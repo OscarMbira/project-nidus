@@ -1,4 +1,6 @@
 import { isOptionBackedType } from '../utils/fieldTypeRegistry'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { inlineHelpFromDefinition } from '@nidus/shared/utils/fieldHelp'
 
 export default function CustomFieldInput({
   definition,
@@ -15,10 +17,10 @@ export default function CustomFieldInput({
   const sensitive = definition.is_sensitive && disabled
 
   const commonLabel = showLabel ? (
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+    <FieldLabelWithHelp helpKey={definition.id ? `custom:${definition.id}` : null} help={inlineHelpFromDefinition(definition)} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
       {label}
       {definition.validation_rules?.required ? <span className="text-red-500 ml-0.5">*</span> : null}
-    </label>
+    </FieldLabelWithHelp>
   ) : null
 
   const errBlock =

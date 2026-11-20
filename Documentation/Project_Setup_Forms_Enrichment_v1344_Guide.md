@@ -55,7 +55,7 @@ Each file ends with a check query.
 
 ## 5. Known limits
 
-- The Simulator practice PID has a view page but no separate edit page in this change.
+- ~~The Simulator practice PID has no edit page.~~ Added as a follow-up: **Edit** on the practice PID view opens `simulator/practice-pids/:id/edit` (both apps). Tabs: Definition, Approach, Controls (tolerances, reporting, monitoring), Plans, Audit details. Read-only while the PID awaits authorisation. Saves set `updated_by` to the sign-in id, as the table requires; access stays with the PID owner.
 - Brief milestones are read-only on the brief; add or change them in the Milestones register.
 - Health status is shown, never edited, on Project Details.
 - The Benefits Review Plan form itself was already complete and is unchanged; only the view gained tabs.

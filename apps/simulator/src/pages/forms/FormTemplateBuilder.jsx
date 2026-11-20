@@ -75,6 +75,8 @@ import { useSuccessModal } from '@nidus/shared/hooks/useSuccessModal'
 import FormTranslationBulkImport from '../../components/forms/FormTranslationBulkImport'
 import FormExcelSchemaImportModal from '../../components/forms/FormExcelSchemaImportModal'
 import { getSessionPMOAdminStatus } from '../../services/pmoAdminService'
+import FieldHelpInputs from '@nidus/ui/FieldHelpInputs'
+import { isFieldHelpComplete } from '@nidus/shared/utils/fieldHelp'
 import { DEFAULT_MAX_FILES_PER_FIELD, HARD_MAX_FILES_CEILING } from '../../services/formFieldAttachmentService'
 import {
   addFieldForOrg,
@@ -164,6 +166,18 @@ function defaultFormState(suggestedCode = '') {
   }
 }
 
+/**
+ * v1345 slice 1b (CF-D3): a template field needs help when it is new or its label, type or help
+ * changed since the template was loaded — the same rule the database applies (SQL v1494).
+ */
+function fieldHelpSignature(field) {
+  return JSON.stringify([field.label || '', field.type || '', field.help_purpose || '', field.help_example || '', field.help_format || ''])
+}
+
+function fieldNeedsHelp(field) {
+  return (!field.loadedSignature || field.loadedSignature !== fieldHelpSignature(field)) && !isFieldHelpComplete(field)
+}
+
 function snapshotForm(form) {
   return JSON.stringify(form)
 }
@@ -180,6 +194,13 @@ function schemaFromForm(form) {
           type: field.type,
         }
         if (field.required) out.required = true
+        const helpPurpose = String(field.help_purpose || '').trim()
+        if (helpPurpose) {
+          out.help_purpose = helpPurpose
+          out.help = helpPurpose // older readers (exports, guidance fallback) use "help"
+        }
+        if (String(field.help_example || '').trim()) out.help_example = String(field.help_example).trim()
+        if (String(field.help_format || '').trim()) out.help_format = String(field.help_format).trim()
         if (field.type === 'select') {
           out.options = (field.options || []).map(parseOptionLine).filter(Boolean)
         }
@@ -215,7 +236,10 @@ function formFromTemplate(template) {
           maxLength: field.maxLength != null && field.maxLength !== '' ? String(field.maxLength) : '',
           accept: field.accept === 'image' ? 'image' : 'any',
           maxFiles: field.maxFiles != null ? Number(field.maxFiles) : DEFAULT_MAX_FILES_PER_FIELD,
-        })),
+          help_purpose: field.help_purpose || field.help || '',
+          help_example: field.help_example || '',
+          help_format: field.help_format || '',
+        })).map((f) => ({ ...f, loadedSignature: fieldHelpSignature(f) })),
       }))
     : [emptySection()]
 
@@ -431,6 +455,15 @@ function SortableFieldCard({
           </p>
         </div>
       )}
+      <div className="mt-3">
+        <FieldHelpInputs
+          idPrefix={`ftb-help-${section.key}-${field.key}`}
+          value={{ help_purpose: field.help_purpose || '', help_example: field.help_example || '', help_format: field.help_format || '' }}
+          onChange={(help) => updateField(sectionIndex, fieldIndex, help)}
+          showErrors={fieldNeedsHelp(field)}
+          compact
+        />
+      </div>
     </div>
   )
 }
@@ -979,6 +1012,12 @@ export default function FormTemplateBuilder({ mode = 'platform' }) {
           return
         }
       }
+    }
+
+    const missingHelp = (form.sections || []).flatMap((section) => (section.fields || []).filter(fieldNeedsHelp))
+    if (missingHelp.length) {
+      setError(`Add help (what the field is for and an example value) to: ${missingHelp.map((f) => f.label || f.key).join(', ')}. Open each field in Card view to fill it in.`)
+      return
     }
 
     setSaving(true)

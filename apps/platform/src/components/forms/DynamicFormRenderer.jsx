@@ -6,6 +6,8 @@ import { calculateEvmMetrics, calculateRiskScore, calculateThreePointDuration } 
 import { buildTranslationIndex, resolveFieldLabel, resolveOptionLabel } from '@nidus/shared/utils/formTranslations'
 
 import CalculatedMetricsSummary from '@nidus/ui/CalculatedMetricsSummary'
+import FieldLabelWithHelp from '@nidus/ui/FieldLabelWithHelp'
+import { inlineHelpFromDefinition } from '@nidus/shared/utils/fieldHelp'
 
 export default function DynamicFormRenderer({
   schema, values = {}, rows = {}, onValueChange, onRowsChange, translations = [], languageCode,
@@ -28,11 +30,16 @@ export default function DynamicFormRenderer({
         <FormSectionCard key={section.key} title={section.title}>
           {(section.fields || []).map((field) => (
             <div key={field.key} className="space-y-1">
-              <label className="text-xs text-gray-600 dark:text-gray-300">
+              <FieldLabelWithHelp
+                helpKey={`form:${section.key}.${field.key}`}
+                help={field.help_example ? inlineHelpFromDefinition({ ...field, label: resolveFieldLabel(field, translationIndex, section.key) }) : null}
+                className="text-xs text-gray-600 dark:text-gray-300"
+              >
                 {resolveFieldLabel(field, translationIndex, section.key)}
                 {field.required && <span className="ml-0.5 text-red-500 dark:text-red-400">*</span>}
-              </label>
-              {field.help ? (
+              </FieldLabelWithHelp>
+              {/* Guidance text stays visible; the creator's help (v1345) is in the ⓘ popover. */}
+              {field.help && field.help !== field.help_purpose ? (
                 <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-pre-wrap">
                   {field.help}
                 </p>

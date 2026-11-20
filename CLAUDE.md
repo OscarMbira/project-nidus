@@ -578,6 +578,26 @@ check its data-loading path for the specific classes of waste this rule exists b
    - **Forbidden:** creating a parallel "Industry" block or industry-named top-level section; re-parenting `menu_items` to fake a placement; hard-coding a consolidated tree or section list in React (rule 25.1); adding an industry item without its `industry_pack_menu_items` link.
    - **Platform–Simulator parity** (rule 34.1): place the Simulator equivalent in the same section. Admin's own menus are out of scope.
 
+76) **Field-level contextual help (mandatory for every NEW user-facing field, and for every field you touch when amending a form or view page — Platform + Simulator, v1345).** Users get little training, so each capture field (and the same field on its view page) must explain itself.
+   - **Use the shared control:** label the field with `FieldLabelWithHelp` (`@nidus/ui`, `helpKey` + `htmlFor`) inside a `FieldHelpScope` (`@nidus/shared/context/FieldHelpContext`) that lists the form's keys. No help row → plain label, no ⓘ (never ship placeholder help).
+   - **Ship the help in the same change:** a seed row in `public.field_help` (key `public.<table>.<column>`; register fields `register:<register_key>:<field_key>`) with `purpose`, `examples`, `format_notes` when relevant, optional `learn_more_kind` + `learn_more_key` (a help article slug or documentation guide — never a free URL). Simulator fields use `sim.<table>.<column>` keys mapped through `public.field_help_aliases` to the Platform row.
+   - **Do not write derivable rules as text:** required, max length, allowed values and min / max are read from the field at runtime. Formats use tokens (`{date_format}`, `{example_date}`, `{currency}`, `{decimals}`) filled from the regional settings (rule 68); mark amount fields `isAmount` (rule 36).
+   - **User-created fields need help too (v1345 Amendment A):** every screen where users define a field (organisation / register custom fields, Regional & Format local fields, form template fields, and any new one) must use `FieldHelpInputs` (`@nidus/ui`) with purpose + example required, store it on the definition (`help_purpose`, `help_example`, `help_format`), and show it through `FieldLabelWithHelp`'s `help` prop. The database refuses users' new or edited definitions without it (SQL v1494 / v1496).
+   - **Examples follow rule 77:** no real-looking names (role titles, "Example … Ltd"), globally familiar places.
+   - **Record / people pickers never list their options in help:** pass `listOptions={false}` on the label of any field whose choices are other records or people (e.g. Reports To, owner, assignee), so live names are never copied into the popover.
+   - **Plain text only:** line breaks and `- ` bullets; no HTML. Help text is database content (rule 25.1), never hard-coded in React.
+   - **Exclusions:** chrome (Cancel / Close, tab and view toggles, export menus), `#` / pagination, Audit-only technical IDs, transient search / filter boxes, bulk-action confirmations, table column headers.
+   - **Check:** `node scripts/check-field-help.mjs` (warns now; an adopted module must stay at 100% — `--module <name>`; enforcement for all gaps from v1345 phase 5). Do not grow `scripts/field-help-allowlist.json`.
+   - See `projectprd/v1345_field_level_contextual_help_PRD.md` / `projectplan/v1345_field_level_contextual_help_plan.md`.
+
+77) **No real names, globally familiar examples (mandatory for all NEW and AMENDED example, sample and demo content — Platform + Simulator + Admin, owner decision 2026-11-20).** Applies to field help text, placeholders, hints, documentation and guides, export/template samples, and seed / sample / demo data.
+   - **No real names:** never use anything that looks like a real person, real organisation or real brand. Use role titles ("Head of Finance", "Project Sponsor") and obviously fictional organisations ("Example Freight Ltd", "Example Roads Authority"). Avoid realistic full personal names and the names of real companies, government bodies or public figures. This avoids future claims or compensation over names used in the product.
+   - **Globally familiar places:** use places users anywhere recognise at once (London, Cairo, Dubai, Singapore, New York) rather than locally specific towns, regions, languages or phone codes. Phone examples use reserved/fictional numbers with familiar codes (e.g. +44 20 7946 0xxx).
+   - **Emails and web addresses** use the reserved `.example` domain (e.g. `head.of.finance@company.example`).
+   - **Never show live record names as examples:** help for record / people pickers must not list their options (`listOptions={false}`, rule 76).
+   - **Adopt when creating or next amending** that content; existing seed data is replaced opportunistically, not in one pass. **Admin parity:** apply the same rule to Admin content.
+
+
 ## Simulator Module Architecture Rules
 
 The platform contains ONE unified application with TWO major domains that must be kept strictly separate. **The folder paths below reflect the current active phase — see the Architecture Roadmap section for how these paths evolve.**

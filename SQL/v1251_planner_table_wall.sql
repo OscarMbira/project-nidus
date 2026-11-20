@@ -31,6 +31,8 @@ GRANT ALL ON public.planner_table_allowlist TO service_role;
 -- BEGIN GENERATED planner_table_allowlist (scripts/generate-planner-table-allowlist.mjs --write)
 INSERT INTO public.planner_table_allowlist (table_name) VALUES
   ('account_billing_delegates'),
+  ('account_industries'),
+  ('account_menu_settings'),
   ('accounts'),
   ('ai_conversations'),
   ('ai_docs_index'),
@@ -41,14 +43,26 @@ INSERT INTO public.planner_table_allowlist (table_name) VALUES
   ('ai_v_projects'),
   ('custom_field_definitions'),
   ('custom_field_values'),
+  ('field_help'),
+  ('field_help_aliases'),
+  ('field_help_events'),
   ('governance_rules'),
   ('import_column_mappings'),
   ('intelligence_rules'),
   ('inter_project_dependencies'),
   ('languages'),
+  ('local_register_record_versions'),
+  ('local_register_templates'),
+  ('local_registers'),
+  ('menu_item_placements'),
+  ('menu_items'),
+  ('menu_placement_version'),
+  ('menu_sections'),
+  ('menu_slots'),
   ('micro_plan_activities'),
   ('micro_plan_comments'),
   ('micro_plan_versions'),
+  ('notifications'),
   ('organisation_invitations'),
   ('organisation_regional_format_settings'),
   ('payment_transactions'),
@@ -75,6 +89,9 @@ INSERT INTO public.planner_table_allowlist (table_name) VALUES
   ('practice_portfolio_projects'),
   ('practice_programme_projects'),
   ('practice_programmes'),
+  ('practice_project_disabled_menu_items'),
+  ('practice_project_industries'),
+  ('practice_project_memberships'),
   ('practice_teams'),
   ('process_template_document_signatories'),
   ('process_template_node_links'),
@@ -86,7 +103,10 @@ INSERT INTO public.planner_table_allowlist (table_name) VALUES
   ('project_baselines'),
   ('project_calendar_exceptions'),
   ('project_calendars'),
+  ('project_disabled_menu_items'),
+  ('project_industries'),
   ('project_memberships'),
+  ('project_menu_item_switch_log'),
   ('project_micro_plans'),
   ('project_regional_format_settings'),
   ('project_roles'),
@@ -117,7 +137,7 @@ INSERT INTO public.planner_table_allowlist (table_name) VALUES
   ('user_signature_images'),
   ('users')
 ON CONFLICT (table_name) DO NOTHING;
-DELETE FROM public.planner_table_allowlist WHERE table_name NOT IN ('account_billing_delegates', 'accounts', 'ai_conversations', 'ai_docs_index', 'ai_feedback', 'ai_messages', 'ai_settings', 'ai_ui_messages', 'ai_v_projects', 'custom_field_definitions', 'custom_field_values', 'governance_rules', 'import_column_mappings', 'intelligence_rules', 'inter_project_dependencies', 'languages', 'micro_plan_activities', 'micro_plan_comments', 'micro_plan_versions', 'organisation_invitations', 'organisation_regional_format_settings', 'payment_transactions', 'plan_ai_sessions', 'plan_collision_alerts', 'plan_confidence_forecasts', 'plan_governance_findings', 'plan_governance_rules', 'plan_health_scores', 'plan_intelligence_findings', 'plan_intelligence_rules', 'plan_pbs_nodes', 'plan_pfd_edges', 'plan_recovery_options', 'plan_scenario_task_snapshots', 'plan_scenarios', 'planner_plan_limits', 'platform_subscriptions', 'pm_template_entity_assignment', 'pm_template_field_links', 'pm_template_nodes', 'portfolio_projects', 'portfolios', 'practice_portfolio_projects', 'practice_programme_projects', 'practice_programmes', 'practice_teams', 'process_template_document_signatories', 'process_template_node_links', 'process_template_signatory_requirements', 'process_template_signatory_scope_policies', 'profiles', 'programme_projects', 'programmes', 'project_baselines', 'project_calendar_exceptions', 'project_calendars', 'project_memberships', 'project_micro_plans', 'project_regional_format_settings', 'project_roles', 'project_statuses', 'projects', 'regional_format_local_field_definitions', 'report_templates', 'resource_assignments', 'resource_calendar', 'resources', 'risks', 'roles', 'site_content', 'site_nav_links', 'site_pages', 'site_products', 'stakeholders', 'subscription_plans', 'task_assignments', 'task_dependencies', 'task_statuses', 'tasks', 'team_members', 'teams', 'timesheet_entries', 'user_projects', 'user_roles', 'user_signature_images', 'users');
+DELETE FROM public.planner_table_allowlist WHERE table_name NOT IN ('account_billing_delegates', 'account_industries', 'account_menu_settings', 'accounts', 'ai_conversations', 'ai_docs_index', 'ai_feedback', 'ai_messages', 'ai_settings', 'ai_ui_messages', 'ai_v_projects', 'custom_field_definitions', 'custom_field_values', 'field_help', 'field_help_aliases', 'field_help_events', 'governance_rules', 'import_column_mappings', 'intelligence_rules', 'inter_project_dependencies', 'languages', 'local_register_record_versions', 'local_register_templates', 'local_registers', 'menu_item_placements', 'menu_items', 'menu_placement_version', 'menu_sections', 'menu_slots', 'micro_plan_activities', 'micro_plan_comments', 'micro_plan_versions', 'notifications', 'organisation_invitations', 'organisation_regional_format_settings', 'payment_transactions', 'plan_ai_sessions', 'plan_collision_alerts', 'plan_confidence_forecasts', 'plan_governance_findings', 'plan_governance_rules', 'plan_health_scores', 'plan_intelligence_findings', 'plan_intelligence_rules', 'plan_pbs_nodes', 'plan_pfd_edges', 'plan_recovery_options', 'plan_scenario_task_snapshots', 'plan_scenarios', 'planner_plan_limits', 'platform_subscriptions', 'pm_template_entity_assignment', 'pm_template_field_links', 'pm_template_nodes', 'portfolio_projects', 'portfolios', 'practice_portfolio_projects', 'practice_programme_projects', 'practice_programmes', 'practice_project_disabled_menu_items', 'practice_project_industries', 'practice_project_memberships', 'practice_teams', 'process_template_document_signatories', 'process_template_node_links', 'process_template_signatory_requirements', 'process_template_signatory_scope_policies', 'profiles', 'programme_projects', 'programmes', 'project_baselines', 'project_calendar_exceptions', 'project_calendars', 'project_disabled_menu_items', 'project_industries', 'project_memberships', 'project_menu_item_switch_log', 'project_micro_plans', 'project_regional_format_settings', 'project_roles', 'project_statuses', 'projects', 'regional_format_local_field_definitions', 'report_templates', 'resource_assignments', 'resource_calendar', 'resources', 'risks', 'roles', 'site_content', 'site_nav_links', 'site_pages', 'site_products', 'stakeholders', 'subscription_plans', 'task_assignments', 'task_dependencies', 'task_statuses', 'tasks', 'team_members', 'teams', 'timesheet_entries', 'user_projects', 'user_roles', 'user_signature_images', 'users');
 -- END GENERATED planner_table_allowlist
 
 -- Planner tables created by v1239 itself are always allowed.

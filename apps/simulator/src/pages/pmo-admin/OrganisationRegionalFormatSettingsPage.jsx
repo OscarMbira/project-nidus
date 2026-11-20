@@ -90,7 +90,7 @@ export default function OrganisationRegionalFormatSettingsPage() {
   const onChange = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
   const onLocalValueChange = (id, value) => setLocalValues((prev) => ({ ...prev, [id]: value }))
 
-  const handleCreateDefinition = async ({ label, fieldKey, valueType, defaultValue }) => {
+  const handleCreateDefinition = async ({ label, fieldKey, valueType, defaultValue, help }) => {
     const res = await createRegionalFormatLocalField({
       accountId,
       projectId: null,
@@ -98,6 +98,7 @@ export default function OrganisationRegionalFormatSettingsPage() {
       fieldKey,
       valueType,
       defaultValue,
+      help,
       sortOrder: localDefinitions.length,
     })
     if (!res.success) return res

@@ -167,7 +167,6 @@ export const QualityActivityView = lazy(() => import('../pages/QualityActivityVi
 export const MyQualityActions = lazy(() => import('../pages/MyQualityActions'))
 export const Stakeholders = lazy(() => import('../pages/platform-app/Stakeholders'))
 export const StakeholderRegisterPage = lazy(() => import('../pages/platform-app/StakeholderRegisterPage'))
-export const StakeholderFormPage = lazy(() => import('../pages/platform-app/StakeholderFormPage'))
 export const StakeholderProfilePage = lazy(() => import('../pages/platform-app/StakeholderProfilePage'))
 export const StakeholderAnalysisPage = lazy(() => import('../pages/platform-app/StakeholderAnalysisPage'))
 export const StakeholderAnalysisFormPage = lazy(() => import('../pages/platform-app/StakeholderAnalysisFormPage'))
@@ -701,6 +700,8 @@ export const PracticeBusinessCaseEdit = lazy(() => import('../pages/simulator/Pr
 export const PracticePIDList = lazy(() => import('../pages/simulator/PracticePIDList'))
 export const PracticePIDCreate = lazy(() => import('../pages/simulator/PracticePIDCreate'))
 export const PracticePIDView = lazy(() => import('../pages/simulator/PracticePIDView'))
+export const PracticePIDEdit = lazy(() => import('../pages/simulator/PracticePIDEdit')) // v1344 follow-up
+export const HelpArticlePage = lazy(() => import('@nidus/ui/HelpArticlePage')) // v1345 field help Learn more (PD4)
 // Practice Benefits Review Plan
 export const PracticeBenefitsReviewPlan = lazy(() => import('../pages/simulator/PracticeBenefitsReviewPlan'))
 export const PracticeBenefitsReviewPlanList = lazy(() => import('../pages/simulator/PracticeBenefitsReviewPlanList'))

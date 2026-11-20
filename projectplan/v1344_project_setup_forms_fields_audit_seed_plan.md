@@ -174,7 +174,7 @@
 - New table `project_attribute_options` is registered in `database_tables`; re-run `SQL/v1251_planner_table_wall.sql` after `v1480`.
 
 ### Known limits / follow-ups
-- Simulator practice PID: no edit page; its Edit button points at a route that does not exist yet.
+- ~~Simulator practice PID: no edit page.~~ **Done (follow-up, 19 Nov 2026):** `PracticePIDEdit.jsx` (Platform + Simulator copies) at `simulator/practice-pids/:id/edit`; helpers `@nidus/shared/utils/practicePidForm` (TEXT[] lists, JSONB plan summaries and tolerances); `practicePIDService` now writes the sign-in id to `created_by` / `updated_by` / `deleted_by` (they reference `auth.users`, v230) and leaves owner access to the v242 rule; the practice PID view no longer crashes on JSON plan summaries and its Edit button is relative. Tests: `practicePidForm` (4), `PracticePIDEdit` (3).
 - Brief milestones are maintained in the Milestones register, not on the brief.
 - Wizard save still uses its existing confirmation (success modal not adopted this time).
 - Approvals History rows don't link, Simulator meeting follow-ups aren't project-filtered (from v1343, unchanged).
